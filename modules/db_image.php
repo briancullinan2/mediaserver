@@ -1,0 +1,266 @@
+<?php
+
+require_once 'modules/db_file.php';
+
+// include the id handler
+require_once 'ID3/getid3.php';
+
+// set up id3 reader incase any files need it
+$getID3 = new getID3();
+
+// music handler
+class db_image extends db_file
+{
+	const DATABASE = 'image';
+	
+	const NAME = 'Image';
+
+	static function DETAILS($detail)
+	{
+		$details = array(
+				1 => array('id'),
+				2 => array('Height', 'Width'),
+				3 => array('Height', 'Width', 'Make', 'Model'),
+				4 => array('Height', 'Width', 'Make', 'Model', 'Keywords'),
+				5 => array('Height', 'Width', 'Make', 'Model', 'Title', 'Keywords'),
+				6 => array('Height', 'Width', 'Make', 'Model', 'Title', 'Keywords', 'Author'),
+				7 => array('Height', 'Width', 'Make', 'Model', 'Title', 'Keywords', 'Author', 'Comments'),
+				8 => array('Height', 'Width', 'Make', 'Model', 'Title', 'Keywords', 'Author', 'Comments', 'ExposureTime'),
+				9 => array('id', 'Height', 'Width', 'Make', 'Model', 'Title', 'Keywords', 'Author', 'Comments', 'ExposureTime'),
+				10 => array('id', 'Height', 'Width', 'Make', 'Model', 'Title', 'Keywords', 'Author', 'Comments', 'ExposureTime', 'Filepath'),
+			);
+		
+		if(isset($details[$detail]))
+		{
+			return $details[$detail];
+		}
+		else
+		{
+			return;
+		}
+	}
+	
+	
+	// this is the priority of sections to check for picture information
+	// from most accurate --> least accurate
+	static function PRIORITY()
+	{
+		return array('COMPUTED', 'WINXP', 'IFD0', 'EXIF', 'THUMBNAIL');
+	}
+
+	// COMPUTED usually contains the most accurate height and width values
+	// IFD0 contains the make and model we are looking for
+	// WINXP contains comments we should copy
+	// EXIF contains a cool exposure time
+	// THUMBNAIL just incase the thumbnail has some missing information
+	
+
+	static function handles($file)
+	{
+				
+		// get file extension
+		$ext = getExt($file);
+		$type = getExtType($ext);
+		
+		if( $type == 'image' )
+		{
+			return true;
+		}
+		
+		return false;
+
+	}
+
+	static function handle($mysql, $file)
+	{
+
+		if(db_image::handles($file))
+		{
+			// check to see if it is in the database
+			$db_image = $mysql->get('image',
+				array(
+					'SELECT' => 'id',
+					'WHERE' => 'Filepath = "' . $file . '"'
+				)
+			);
+			
+			// try to get music information
+			if( count($db_image) == 0 )
+			{
+				$fileid = db_image::add($mysql, $file);
+			}
+			else
+			{
+				// check to see if the file was changed
+				$db_file = $mysql->get('files',
+					array(
+						'SELECT' => 'Filedate',
+						'WHERE' => 'Filepath = "' . $file . '"'
+					)
+				);
+				
+				// update audio if modified date has changed
+				if( date("Y-m-d h:i:s", filemtime($file)) != $db_file[0]['Filedate'] )
+				{
+					$id = db_image::add($mysql, $file, $db_image[0]['id']);
+				}
+				
+			}
+
+		}
+		
+	}
+
+	static function add($mysql, $file, $image_id = NULL)
+	{
+		global $getID3;
+		$priority = array_reverse(db_image::PRIORITY());
+	
+		$info = $getID3->analyze($file);
+		
+		// pull information from $info
+		$fileinfo = array();
+		$fileinfo['Filepath'] = $file;
+		
+		// get information from sections
+		if(isset($info['fileformat']) && isset($info[$info['fileformat']]['exif']))
+		{
+			$exif = $info[$info['fileformat']]['exif'];
+			foreach($priority as $i => $section)
+			{
+				if(isset($exif[$section]))
+				{
+					foreach($exif[$section] as $key => $value)
+					{
+						if($key == 'Height' || $key == 'Width' || $key == 'Make' || $key == 'Model' || $key == 'Comments' || $key == 'Keywords' || $key == 'Title' || $key == 'Author' || $key == 'ExposureTime')
+						{
+							$fileinfo[$key] = $value;
+						}
+					}
+				}
+			}
+		}
+	
+		// get thumbnails of image
+		$fileinfo['Thumbnail'] = addslashes(db_image::makeThumbs($file));
+	
+		if( $image_id != NULL )
+		{
+			print 'Modifying image: ' . $file . "\n";
+			
+			// update database
+			$id = $mysql->set('image', $fileinfo, array('id' => $image_id));
+		
+			return $audio_id;
+		}
+		else
+		{
+			print 'Adding image: ' . $file . "\n";
+			
+			// add to database
+			$id = $mysql->set('image', $fileinfo);
+			
+			return $id;
+		}
+		
+		usleep(1);
+		
+		ob_flush();
+			
+	}
+	
+	
+	// generate three different size thumbnails
+	// returns an array of thumbnails
+	static function makeThumbs($file)
+	{
+		$tmp_name = SITE_LOCALROOT . md5($file) . '.jpg';
+		
+		// first make highest size thumb
+		$cmd = 'convert "' . $file . '" -resize "512x512" -format jpeg "' . $tmp_name . '"';
+		exec($cmd, $out, $ret);
+		
+		// read in image into array
+		$fp = fopen($tmp_name, 'r');
+		$output = fread($fp, filesize($tmp_name));
+		fclose($fp);
+
+		// delete tmp file
+		unlink($tmp_name);
+		
+		print 'Created thumbs: ' . $file . "\n";
+		
+		usleep(1);
+		
+		ob_flush();
+
+		return $output;
+	}
+	
+	
+	static function get($mysql, $props)
+	{
+		$files = array();
+		
+		if($mysql == NULL)
+		{
+			if (is_dir($props['DIR']))
+			{
+				// if we are over 5.0 use the scandir method
+				if( version_compare(phpversion(), "5.0.0") >= 0 )
+				{
+					return scandir($props['DIR']);
+				}
+				else
+				{
+					// create file array
+					if ($dh = opendir($props['DIR']))
+					{
+						while (($file = readdir($dh)) !== false)
+						{
+							if(db_image::handles($props['DIR'] . $file))
+							{
+								$files[] = ($props['DIR'] . $file);
+							}
+						}
+						closedir($dh);
+					}
+					
+				}
+				
+			}
+		}
+		else
+		{
+			// construct where statement
+			if(isset($props['DIR']) && !isset($props['WHERE']))
+			{
+				$props['WHERE'] = 'Filepath REGEXP "^' . $dir . '"';
+			}
+		
+			if(isset($props['DETAIL']))
+			{
+				$props['SELECT'] = db_image::DETAILS($props['DETAIL']);
+			}
+			else
+			{
+				$props['SELECT'] = db_image::DETAILS(10);
+			}
+		
+			// get directory from database
+			$files = $mysql->get(db_image::DATABASE, $props);
+		}
+			
+		return $files;
+	}
+
+	
+	static function cleanup($mysql, $watched)
+	{
+		// call default cleanup function
+		parent::cleanup($mysql, $watched, get_class_const(get_class(), 'DATABASE'));
+	}
+
+}
+
+?>

@@ -18,13 +18,23 @@ define('DB_PREFIX',				         'db_');
 
 // site constants these are used throughout the entire system
 define('SITE_LOCALROOT',                '/var/www/mediaserver/');
-define('SITE_HTMLPATH',             'http://www.bjcullinan.com');
-define('SITE_HTMLROOT',                                     '/');
-define('SITE_TEMPLATE',            SITE_LOCALROOT . 'templates/default/');
+
+// the directory that contains all the different modules
+define('MODULES_DIR', SITE_LOCALROOT . 'modules/');
+
+define('SITE_HTMLPATH',            			    'http://209.250.30.30/');
+define('SITE_HTMLROOT',                                  'mediaserver/');
+define('SITE_DEFAULT',            SITE_LOCALROOT . 'templates/default/');
+define('SITE_TEMPLATE',           SITE_LOCALROOT . 'templates/default/');
+define('SITE_PLUGINS', 						 SITE_HTMLROOT . 'plugins/');
+
+// extra constants
+define('DELIMITER', 							' - ');
+define('SITE_NAME',			 'Brian\'s Media Website');
 
 // comment-out-able
 ini_set('error_reporting', E_ALL);
-ini_set('include_path', '.:' . SITE_LOCALROOT . ':' . SITE_LOCALROOT . 'include/');
+ini_set('include_path', './:' . SITE_LOCALROOT . ':' . SITE_LOCALROOT . 'include/');
 
 
 loadMime();

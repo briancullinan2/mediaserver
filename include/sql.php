@@ -55,7 +55,6 @@ Lastwatch (the last time the directory was searched, even partially)
 class sql_global
 {
 	var $db_connect_id;
-	var $query_result;
 	var $rowset = array();
 	var $num_queries = 0;
 	var $table_prefix = DB_PREFIX;
@@ -81,7 +80,14 @@ class sql_global
 				id 				INT NOT NULL AUTO_INCREMENT,
 								PRIMARY KEY(id),
 				Filepath		TEXT NOT NULL,
-				Lastwatch		DATETIME
+				Lastwatch		DATETIME,
+				FULLTEXT		(Filepath)
+			)') or print_r(mysql_error());
+			
+		$this->query('CREATE TABLE IF NOT EXISTS ' . $this->table_prefix . 'watch_list (
+				id 				INT NOT NULL AUTO_INCREMENT,
+								PRIMARY KEY(id),
+				Filepath		TEXT NOT NULL
 			)') or print_r(mysql_error());
 		
 		$this->query('CREATE TABLE IF NOT EXISTS ' . $this->table_prefix . 'files (
@@ -89,28 +95,45 @@ class sql_global
 								PRIMARY KEY(id),
 				Filename		TEXT NOT NULL,
 				Filepath		TEXT NOT NULL,
-				Filesize		BIGINT NOT NULL,
+				Filesize		TEXT NOT NULL,
 				Filemime		TEXT NOT NULL,
 				Filedate		DATETIME,
 				Filetype		TEXT NOT NULL,
-				Fileinfo		INT NOT NULL
+				FULLTEXT		(Filename, Filepath, Filesize, Filemime, Filetype)
 			)') or print_r(mysql_error());
 		
 		$this->query('CREATE TABLE IF NOT EXISTS ' . $this->table_prefix . 'audio (
 				id 				INT NOT NULL AUTO_INCREMENT,
 								PRIMARY KEY(id),
+				Filepath		TEXT NOT NULL,
 				Title			TEXT NOT NULL,
 				Artist			TEXT NOT NULL,
 				Album			TEXT NOT NULL,
-				Track			INT NOT NULL,
-				Year			INT NOT NULL,
+				Track			TEXT NOT NULL,
+				Year			TEXT NOT NULL,
 				Genre			TEXT NOT NULL,
-				Length			REAL NOT NULL,
+				Length			TEXT NOT NULL,
 				Comments		TEXT NOT NULL,
-				Bitrate			INT NOT NULL,
-				Fileinfo		INT NOT NULL
+				Bitrate			TEXT NOT NULL,
+				FULLTEXT		(Filepath, Title, Artist, Album, Track, Year, Genre, Length, Comments, Bitrate)
 			)') or print_r(mysql_error());
 
+		$this->query('CREATE TABLE IF NOT EXISTS ' . $this->table_prefix . 'image (
+				id 				INT NOT NULL AUTO_INCREMENT,
+								PRIMARY KEY(id),
+				Filepath		TEXT NOT NULL,
+				Height			TEXT NOT NULL,
+				Width			TEXT NOT NULL,
+				Make			TEXT NOT NULL,
+				Model			TEXT NOT NULL,
+				Comments		TEXT NOT NULL,
+				Keywords		TEXT NOT NULL,
+				Title			TEXT NOT NULL,
+				Author			TEXT NOT NULL,
+				ExposureTime	TEXT NOT NULL,
+				Thumbnail		BLOB NOT NULL,
+				FULLTEXT		(Filepath, Height, Width, Make, Model, Comments, Keywords, Title, Author, ExposureTime)
+			)') or print_r(mysql_error());
 		
 	}
 	
@@ -123,43 +146,36 @@ class sql_global
 		return $this->result();
 	}
 	
+	// compile the statmeent based on an abstract representation
+	function statement_builder($props)
+	{
+		if(is_string($props))
+		{
+			return $props;
+		}
+		elseif(is_array($props))
+		{
+			
+		}
+	}
+	
 	// get function that gets the listed colums and returns the assiciated array
-	function get($table, $items, $where = NULL)
+	function get($table, $props)
 	{
 		$select = '';
 		
-		foreach($items as $i => $item)
-		{
-			$select .= $item . ',';
-		}
-		// remove last comma
-		$select = substr($select, 0, strlen($select)-1);
+		if(!isset($props['SELECT'])) $select = '*';
+		elseif(is_array($props['SELECT'])) $select = join(', ', $props['SELECT']);
+		elseif(is_string($props['SELECT'])) $select = $props['SELECT'];
+
+		if(!isset($props['WHERE'])) $where = '';
+		elseif(is_array($props['WHERE'])) $where = ' WHERE ' . join(' AND ', $props['SELECT']);
+		elseif(is_string($props['WHERE'])) $where = ' WHERE ' . $props['WHERE'];
 		
-		if( $where == NULL )
-		{
-			// select
-			$this->query('SELECT ' . $select . ' FROM ' . $this->table_prefix . $table);
-		}
-		else
-		{
-			$where_str = '';
-			if( is_array($where) )
-			{
-				foreach($where as $key => $value)
-				{
-					$where_str .= ' ' . $key . ' = "' . $value . '" AND';
-				}
-				// remove last AND
-				$where_str = substr($where_str, 0, strlen($where_str)-3);
-			}
-			elseif( is_string($where) )
-			{
-				$where_str = $where;
-			}
-			
-			// select
-			$this->query('SELECT ' . $select . ' FROM ' . $this->table_prefix . $table . ' WHERE ' . $where_str);
-		}
+		if(!isset($props['OTHER'])) $other = '';
+		elseif(is_string($props['OTHER'])) $other = $props['OTHER'];
+		
+		$this->query('SELECT ' . $select . ' FROM ' . $this->table_prefix . $table . ' ' . $where . ' ' . $other);
 		
 		return $this->result();
 		

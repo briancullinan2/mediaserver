@@ -21,7 +21,7 @@ $error = '';
 // get the current list of watches
 $mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 
-$watched = $mysql->get('watch', array('id','Filepath'));
+$watched = $mysql->get('watch', array('SELECT' => array('id','Filepath')));
 
 if( isset($_REQUEST['add']) )
 {
@@ -50,7 +50,7 @@ if( isset($_REQUEST['add']) )
 				$mysql->set('watch', array('Filepath' => $addpath));
 				
 				// and reget the full list
-				$watched = $mysql->get('watch', array('id','Filepath'));
+				$watched = $mysql->get('watch', array('SELECT' => array('id','Filepath')));
 				
 				// clear post
 				unset($_REQUEST['addpath']);
@@ -71,7 +71,7 @@ elseif( isset($_REQUEST['remove']) )
 	$mysql->set('watch', NULL, array('id' => $_REQUEST['watch']));
 	
 	// and reget the full list
-	$watched = $mysql->get('watch', array('id','Filepath'));
+	$watched = $mysql->get('watch', array('SELECT' => array('id','Filepath')));
 
 	// clear post
 	unset($_REQUEST['addpath']);

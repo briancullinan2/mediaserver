@@ -1,1 +1,27 @@
-<?xml version="1.0" encoding="utf-8"?>
+<!-- BEGIN RSS_XML --><?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0">
+{CHANNELS}
+</rss>
+<!-- END RSS_XML -->
+
+
+	<!-- BEGIN CHANNEL -->
+	<channel>
+		<title>{SITE_NAME} - {CATEGORY}</title>
+		<link>{LINK}</link>
+		<description>{DESCRIPTION}</description>
+{ITEMS}
+	</channel>
+
+	<!-- END CHANNEL -->
+
+
+		<!-- BEGIN ITEM -->
+		<item>
+			<title>{TITLE}</title>
+			<link>{LINK}</link>
+			<description>{DESCRIPTION}</description>
+		</item>
+
+		<!-- END ITEM -->
+		

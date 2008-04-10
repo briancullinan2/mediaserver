@@ -19,12 +19,20 @@ class sql extends sql_global
 
 	function result()
 	{
-		$this->rowset[$this->query_result] = array();
+		$result = array();
 		while($row = mysql_fetch_assoc($this->query_result))
 		{
-			$this->rowset[$this->query_result][] = $row;
+			$result[] = $row;
 		}
-		return $this->rowset[$this->query_result];
+		return $result;
+	}
+	
+	function result_callback($function, $arguments)
+	{
+		while($row = mysql_fetch_assoc($this->query_result))
+		{
+			call_user_func($function, $row, $arguments);
+		}
 	}
 	
 	function query($query = "")
@@ -42,9 +50,6 @@ class sql extends sql_global
 		}
 		if($this->query_result)
 		{
-			unset($this->rowset[$this->query_result]);
-			$this->rowset[$this->query_result] = array();
-			
 			return $this->query_result;
 		}
 		else

@@ -1,0 +1,32 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>RSS Feed Builder</title>
+</head>
+
+<body>
+	Use this form to generate the type of RSS Feed you would like to view:
+	<br />
+	<span class="error">{ERROR}</span>
+	<form action="" method="get">
+		<select name="cat">
+{MODULES}
+		</select>
+		<br />
+		Contains <input name="includes" type="text" value="" /> (Enter keywords)
+		<br />
+		Limit <select name="lim">
+			<option value="10">10</option>
+			<option value="20">20</option>
+			<option value="30">30</option>
+			<option value="40">40</option>
+			<option value="50">50</option>
+		</select>
+		<br />
+		Submit to go to the RSS feed, if your RSS client isn't automatically started then copy the URL and connect with your client of choice.
+		<br />
+		<input name="submit" type="submit" value="Submit" /><input type="reset" value="Reset" />
+	</form>
+</body>
+</html>
