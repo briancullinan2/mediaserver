@@ -1,0 +1,21 @@
+<!-- BEGIN WPL_XML --><?wpl version="1.0"?>
+<smil>
+    <head>
+        <meta name="Generator" content="Microsoft Windows Media Player -- 11.0.5721.5230"/>
+        <meta name="ContentPartnerListID"/>
+        <meta name="ContentPartnerNameType"/>
+        <meta name="ContentPartnerName"/>
+        <meta name="Subtitle"/>
+        <author/>
+        <title>{SITE_NAME} - {CATEGORY}</title>
+    </head>
+    <body>
+        <seq>
+		{ITEMS}
+        </seq>
+    </body>
+</smil>
+<!-- END WPL_XML -->
+	<!-- BEGIN ITEM -->
+            <media src="{LINK}" />
+	<!-- END ITEM -->

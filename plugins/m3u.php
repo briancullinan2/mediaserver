@@ -16,10 +16,9 @@ $error = '';
 if(isset($_REQUEST['submit']))
 {
 	// if rss parameters are not specify display builder
-	$template->setFile('RSS', 'rss.xml');
-	$template->setBlock('RSS', 'RSS_XML');
-	$template->setBlock('RSS', 'CHANNEL');
-	$template->setBlock('RSS', 'ITEM');
+	$template->setFile('M3U', 'm3u.txt');
+	$template->setBlock('M3U', 'M3U_TXT');
+	$template->setBlock('M3U', 'ITEM');
 		
 
 	// set up limit
@@ -97,11 +96,11 @@ if(isset($_REQUEST['submit']))
 		// loop though and create items
 		foreach($files as $i => $file)
 		{
-			$template->setVar('TITLE', htmlspecialchars($file['Filepath']));
+			$template->setVar('TITLE', htmlspecialchars(basename($file['Filepath'])));
 
 			$template->setVar('DESCRIPTION', '');
 			
-			$template->setVar('LINK', htmlspecialchars(SITE_HTMLPATH . SITE_PLUGINS . 'file.php?cat=' . $_REQUEST['cat'] . '&id=' . $file['id']));
+			$template->setVar('LINK', SITE_HTMLPATH . SITE_PLUGINS . 'file.php?cat=' . $_REQUEST['cat'] . '&id=' . $file['id']);
 			
 			$template->fparse('ITEMS', 'ITEM', true);
 		}
@@ -122,14 +121,12 @@ if(isset($_REQUEST['submit']))
 		
 		$template->setVar('LINK', htmlspecialchars(SITE_HTMLPATH . $link));
 		
-		// parse the channel
-		$template->fparse('CHANNELS', 'CHANNEL', true);
-		
 		// finally parse the RSS feed
-		$template->fparse('OUTPUT', 'RSS_XML');
+		$template->fparse('OUTPUT', 'M3U_TXT');
 		
 		// set the header so the browser can recognize it
-		header('Content-Type: application/rss+xml');
+		header('Content-Type: audio/x-mpegurl');
+		header('Content-Disposition: attachment; filename="' . $name . '.m3u"'); 
 		
 	}
 	else
@@ -169,8 +166,8 @@ if(isset($_REQUEST['submit']))
 			$_REQUEST['show'] = 0;
 		
 		// there is no limit so bring up selector
-		$template->setFile('RSS_LIST', 'rss-list.html');
-		$template->setBlock('RSS_LIST', 'ITEM', 'ITEMS');
+		$template->setFile('M3U_LIST', 'rss-list.html');
+		$template->setBlock('M3U_LIST', 'ITEM', 'ITEMS');
 		
 		unset($props['OTHER']);
 		$props['SELECT'] = 'count(*)';
@@ -214,7 +211,7 @@ if(isset($_REQUEST['submit']))
 			$request_str = '';
 			foreach($request as $key => $value) $request_str .= '&amp;' . $key . '=' . $value;
 			$request_str = substr($request_str, 5, strlen($request_str) - 5);
-			$template->setVar('LINK_PREV', '<a href="' . SITE_HTMLPATH . SITE_PLUGINS . 'rss.php?' . $request_str . '">Prev</a>');
+			$template->setVar('LINK_PREV', '<a href="' . SITE_HTMLPATH . SITE_PLUGINS . 'm3u.php?' . $request_str . '">Prev</a>');
 		}
 			
 		if($_REQUEST['show'] < $result[0]['count(*)'] - 15)
@@ -223,19 +220,21 @@ if(isset($_REQUEST['submit']))
 			$request_str = '';
 			foreach($request as $key => $value) $request_str .= '&amp;' . $key . '=' . $value;
 			$request_str = substr($request_str, 5, strlen($request_str) - 5);
-			$template->setVar('LINK_NEXT', '<a href="' . SITE_HTMLPATH . SITE_PLUGINS . 'rss.php?' . $request_str . '">Next</a>');
+			$template->setVar('LINK_NEXT', '<a href="' . SITE_HTMLPATH . SITE_PLUGINS . 'm3u.php?' . $request_str . '">Next</a>');
 		}
 		
-		$template->setVar('BACK', '/' . SITE_PLUGINS . 'rss.php');
+		$template->setVar('BACK', '/' . SITE_PLUGINS . 'm3u.php');
 		
 		// finally parse the RSS lister
-		$template->fparse('OUTPUT', 'RSS_LIST');
+		$template->fparse('OUTPUT', 'M3U_LIST');
 		
 	}
 }
 // display rss builder if there is an error
 else
 {
+
+	$_SESSION['selected'] = array();
 
 	// output rss builder
 	$template->setFile('OUTPUT', 'rss-builder.html');

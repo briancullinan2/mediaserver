@@ -2,6 +2,7 @@
 
 class sql extends sql_global
 {
+
 	function sql($SQL_server, $SQL_username, $SQL_password, $SQL_db_name = "")
 	{
 		$this->db_connect_id = mysql_connect($SQL_server, $SQL_username, $SQL_password) or print_r(mysql_error());
@@ -62,6 +63,7 @@ class sql extends sql_global
 	{
 		mysql_close($this->db_connect_id);
 	}
+	
 }
 
 

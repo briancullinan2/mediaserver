@@ -16,10 +16,9 @@ $error = '';
 if(isset($_REQUEST['submit']))
 {
 	// if rss parameters are not specify display builder
-	$template->setFile('RSS', 'rss.xml');
-	$template->setBlock('RSS', 'RSS_XML');
-	$template->setBlock('RSS', 'CHANNEL');
-	$template->setBlock('RSS', 'ITEM');
+	$template->setFile('WPL', 'wpl.xml');
+	$template->setBlock('WPL', 'WPL_XML');
+	$template->setBlock('WPL', 'ITEM');
 		
 
 	// set up limit
@@ -122,14 +121,12 @@ if(isset($_REQUEST['submit']))
 		
 		$template->setVar('LINK', htmlspecialchars(SITE_HTMLPATH . $link));
 		
-		// parse the channel
-		$template->fparse('CHANNELS', 'CHANNEL', true);
-		
 		// finally parse the RSS feed
-		$template->fparse('OUTPUT', 'RSS_XML');
+		$template->fparse('OUTPUT', 'WPL_XML');
 		
 		// set the header so the browser can recognize it
-		header('Content-Type: application/rss+xml');
+		header('Content-Type: application/vnd.ms-wpl');
+		header('Content-Disposition: attachment; filename="' . $name . '.wpl"'); 
 		
 	}
 	else
@@ -169,8 +166,8 @@ if(isset($_REQUEST['submit']))
 			$_REQUEST['show'] = 0;
 		
 		// there is no limit so bring up selector
-		$template->setFile('RSS_LIST', 'rss-list.html');
-		$template->setBlock('RSS_LIST', 'ITEM', 'ITEMS');
+		$template->setFile('WPL_LIST', 'rss-list.html');
+		$template->setBlock('WPL_LIST', 'ITEM', 'ITEMS');
 		
 		unset($props['OTHER']);
 		$props['SELECT'] = 'count(*)';
@@ -214,7 +211,7 @@ if(isset($_REQUEST['submit']))
 			$request_str = '';
 			foreach($request as $key => $value) $request_str .= '&amp;' . $key . '=' . $value;
 			$request_str = substr($request_str, 5, strlen($request_str) - 5);
-			$template->setVar('LINK_PREV', '<a href="' . SITE_HTMLPATH . SITE_PLUGINS . 'rss.php?' . $request_str . '">Prev</a>');
+			$template->setVar('LINK_PREV', '<a href="' . SITE_HTMLPATH . SITE_PLUGINS . 'wpl.php?' . $request_str . '">Prev</a>');
 		}
 			
 		if($_REQUEST['show'] < $result[0]['count(*)'] - 15)
@@ -223,13 +220,13 @@ if(isset($_REQUEST['submit']))
 			$request_str = '';
 			foreach($request as $key => $value) $request_str .= '&amp;' . $key . '=' . $value;
 			$request_str = substr($request_str, 5, strlen($request_str) - 5);
-			$template->setVar('LINK_NEXT', '<a href="' . SITE_HTMLPATH . SITE_PLUGINS . 'rss.php?' . $request_str . '">Next</a>');
+			$template->setVar('LINK_NEXT', '<a href="' . SITE_HTMLPATH . SITE_PLUGINS . 'wpl.php?' . $request_str . '">Next</a>');
 		}
 		
-		$template->setVar('BACK', '/' . SITE_PLUGINS . 'rss.php');
+		$template->setVar('BACK', '/' . SITE_PLUGINS . 'wpl.php');
 		
 		// finally parse the RSS lister
-		$template->fparse('OUTPUT', 'RSS_LIST');
+		$template->fparse('OUTPUT', 'WPL_LIST');
 		
 	}
 }

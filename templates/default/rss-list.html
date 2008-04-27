@@ -1,0 +1,22 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>RSS Feed Selector</title>
+</head>
+
+<body>
+	Click the checkbox to add an item to your RSS Feed:<br />
+	There are {COUNT} result(s).<br />
+	Displaying items {RANGE}.
+	<form action="" method="post">
+		<!-- BEGIN ITEM -->
+		<input type="radio" name="item[{ID}]" value="on" {ON_CHECKED} /><input type="radio" name="item[{ID}]" value="off" {OFF_CHECKED} />{TITLE}<br />
+		<!-- END ITEM -->
+		<input name="submit" type="submit" value="Save" /><input type="reset" value="Reset" /><br />
+		<input name="list" type="submit" value="Get Feed" />
+	</form>
+	{LINK_PREV} | {LINK_NEXT}<br />
+	<a href="{BACK}">Back to Feed Builder</a>
+</body>
+</html>

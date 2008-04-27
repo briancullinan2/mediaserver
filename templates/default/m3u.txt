@@ -1,0 +1,8 @@
+<!-- BEGIN M3U_TXT -->#EXTM3U
+{ITEMS}
+<!-- END M3U_TXT -->
+<!-- BEGIN ITEM -->
+
+#EXTINF:0,{TITLE}
+{LINK}
+<!-- END ITEM -->

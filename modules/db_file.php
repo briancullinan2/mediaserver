@@ -186,14 +186,14 @@ class db_file
 	}
 	
 	// callback for the sql file list query
-	static function cleanup_remove($row, $database)
+	static function cleanup_remove($row, $args)
 	{
 		if( !file_exists($row['Filepath']) )
 		{
 			// remove row from database
-			$mysql->set($db, NULL, array('Filepath' => $row['Filepath']));
+			$args['SQL']->set($args['DB'], NULL, array('Filepath' => $row['Filepath']));
 			
-			print 'Removing ' . $database . ': ' . $row['Filepath'] . "\n";
+			print 'Removing ' . $args['DB'] . ': ' . $row['Filepath'] . "\n";
 			
 			// pause so browser can recieve data
 			usleep(1);
@@ -232,7 +232,7 @@ class db_file
 		// since all the ones not apart of a watched directory is removed, now just check is every file still in the database exists on disk
 		$mysql->query('SELECT Filepath FROM ' . $mysql->table_prefix . $db);
 		
-		$mysql->result_callback(array('db_file', 'cleanup_remove'), $db);
+		$mysql->result_callback(array('db_file', 'cleanup_remove'), array('SQL' => new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME), 'DB' => $db));
 				
 		// remove any duplicates
 		$files = $mysql->get($db,
