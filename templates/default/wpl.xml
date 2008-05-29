@@ -1,4 +1,5 @@
-<!-- BEGIN WPL_XML --><?wpl version="1.0"?>
+<!-- LIST XML "Windows Media Playlist" -->
+<!-- BEGIN LIST --><?wpl version="1.0"?>
 <smil>
     <head>
         <meta name="Generator" content="Microsoft Windows Media Player -- 11.0.5721.5230"/>
@@ -15,7 +16,7 @@
         </seq>
     </body>
 </smil>
-<!-- END WPL_XML -->
+<!-- END LIST -->
 	<!-- BEGIN ITEM -->
             <media src="{LINK}" />
 	<!-- END ITEM -->

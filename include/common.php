@@ -19,6 +19,9 @@ if( DB_TYPE == 'mysql' )
 	include_once 'mysql.php';
 }
 
+// load templating system
+require_once 'Smarty/Smarty.class.php';
+
 // include the modules
 $tmp_modules = array();
 if ($dh = opendir(MODULES_DIR))
@@ -59,6 +62,52 @@ while(count($tmp_modules) > 0 && $error_count < 1000)
 }
 $GLOBALS['modules'] = $new_modules;
 
+// merge some session variables with the request so modules only have to look in one place
+if(isset($_SESSION['search']))
+	$_REQUEST = array_merge($_SESSION['search'], $_REQUEST);
+if(isset($_SESSION['display']))
+	$_REQUEST = array_merge($_SESSION['display'], $_REQUEST);
+
+//set the detail for the template
+if( !isset($_REQUEST['detail']) || !is_numeric($_REQUEST['detail']) )
+	$_REQUEST['detail'] = 0;
+
+
+
+function getRequestString($request)
+{
+	$request_str = '';
+	foreach($request as $key => $value) $request_str .= '&amp;' . $key . '=' . $value;
+	return substr($request_str, 5, strlen($request_str) - 5);
+}
+
+
+function parseCommandArgs($string)
+{
+	$args = array();
+	$current = '';
+	$quote_switch = false;
+	for($i = 0; $i < strlen($string); $i++)
+	{
+		if(substr($string, $i, 1) == ' ' && $quote_switch == false)
+		{
+			$args[] = $current;
+			$current = '';
+		}
+		elseif(substr($string, $i, 1) == '"')
+		{
+			$quote_switch = !$quote_switch;
+		}
+		else
+		{
+			$current .= substr($string, $i, 1);
+		}
+	}
+	if($current != '')
+		$args[] = $current;
+		
+	return $args;
+}
 
 function roundFileSize($dirsize)
 {

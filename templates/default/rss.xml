@@ -1,27 +1,21 @@
-<!-- BEGIN RSS_XML --><?xml version="1.0" encoding="utf-8"?>
+<!-- LIST XML "RSS Feed" -->
+<!-- BEGIN LIST --><?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0">
-{CHANNELS}
-</rss>
-<!-- END RSS_XML -->
-
-
-	<!-- BEGIN CHANNEL -->
 	<channel>
 		<title>{SITE_NAME} - {CATEGORY}</title>
 		<link>{LINK}</link>
 		<description>{DESCRIPTION}</description>
-{ITEMS}
+		{ITEMS}
 	</channel>
-
-	<!-- END CHANNEL -->
-
-
+</rss>
+<!-- END LIST -->
+	
 		<!-- BEGIN ITEM -->
 		<item>
 			<title>{TITLE}</title>
 			<link>{LINK}</link>
 			<description>{DESCRIPTION}</description>
 		</item>
-
+	
 		<!-- END ITEM -->
 		

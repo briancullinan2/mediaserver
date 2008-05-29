@@ -1,0 +1,129 @@
+{debug}
+{if $smarty.request.detail == 0 || $smarty.request.detail == 1 || $smarty.request.detail == 2}
+<div id="select">
+	There are {$total_count} result(s).<br />
+	{assign var=page value=$smarty.request.show|intval}
+	{assign var=item_count value=$files|@count}
+	Displaying items {$smarty.request.show} to {$page+$item_count}.
+	<form name="select" action="" method="post">
+		<input type="submit" name="select" value="All" /><input type="submit" name="select" value="None" /><br />
+		Select<br />
+		On : Off<br />
+		{section name=file loop=$files}
+			{if isset($smarty.session.selected)}
+				{assign var=item_selected value=$files[file].id|in_array:$smarty.session.selected}
+			{else}
+				{assign var=item_selected value=false}
+			{/if}
+			<input type="radio" name="item[{$files[file].id}]" value="on" {if $item_selected}checked="checked"{/if} />
+			<input type="radio" name="item[{$files[file].id}]" value="off" {if !$item_selected}checked="checked"{/if} />
+			{$files[file].Filepath}
+			{if $smarty.request.detail == 2}
+				{foreach from=$display item=column_value key=column_key}
+					{if $column_value eq 'on' && isset($files[file].$column_key)}
+						- {$files[file].$column_key}
+					{/if}
+				{/foreach}
+			{/if}
+			<br />
+		{/section}
+		<input name="select" type="submit" value="Save" /><input type="reset" value="Reset" /><br />
+	</form>
+	{assign var=page_count value=$smarty.request.count}
+	Page {if $page > 0}
+			{if $page > $page_count}
+				<a href="{$smarty.server.PHP_SELF}?show=0">First</a>
+				<a href="{$smarty.server.PHP_SELF}?show={$page-$page_count}">Prev</a>
+			{else}
+				<a href="{$smarty.server.PHP_SELF}?show=0">First</a>
+			{/if}
+			|
+		{/if}
+	{assign var=page_int value=$page/$page_count}
+	{assign var=lower value=$page_int-8}
+	{assign var=upper value=$page_int+8}
+	{assign var=pages value=$total_count/$page_count|floor}
+	{if $lower < 0}{assign var=upper value=$upper-$lower}{assign var=lower value=0}{/if}
+	{if $upper > $pages}{assign var=upper value=$pages}{assign var=lower value=$pages-$page_count-1}{/if}
+	{if $lower < 0}{assign var=lower value=0}{/if}
+	{section name=page_select start=$lower loop=$upper+1 step=1}
+		{if $smarty.section.page_select.index == $page_int}
+		<b>{$page_int+1}</b>
+		{else}
+		<a href="{$smarty.server.PHP_SELF}?show={$smarty.section.page_select.index*$page_count}">{$smarty.section.page_select.index+1}</a>
+		{/if}
+	{/section}
+	{if $page < $total_count-$page_count}
+		|
+		{assign var=last_page value=$total_count/$page_count|floor}
+		{if $page < $total_count-$page_count-$page_count}
+			<a href="{$smarty.server.PHP_SELF}?show={$page+$page_count}">Next</a>
+			<a href="{$smarty.server.PHP_SELF}?show={$last_page*$page_count}">Last</a>
+		{else}
+			<a href="{$smarty.server.PHP_SELF}?show={$last_page*$page_count}">Last</a>
+		{/if}
+	{/if}<br />
+</div>
+{elseif $smarty.request.detail == 3}
+<div id="select">
+	There are {$total_count} result(s).<br />
+	{assign var=page value=$smarty.request.show|intval}
+	{assign var=item_count value=$files|@count}
+	Displaying items {$smarty.request.show} to {$page+$item_count}.
+	<form name="select" action="" method="post">
+		<input type="submit" name="select" value="All" /><input type="submit" name="select" value="None" /><br />
+		Select<br />
+		On : Off<br />
+		{section name=file loop=$files}
+			{if isset($smarty.session.selected)}
+				{assign var=item_selected value=$files[file].id|in_array:$smarty.session.selected}
+			{else}
+				{assign var=item_selected value=false}
+			{/if}
+			<span class="column"><input type="radio" name="item[{$files[file].id}]" value="on" {if $item_selected}checked="checked"{/if} /><input type="radio" name="item[{$files[file].id}]" value="off" {if !$item_selected}checked="checked"{/if} /></span>
+			{foreach from=$display item=column_value key=column_key}
+				{if $column_value eq 'on' && isset($files[file].$column_key)}
+					<span class="column">{$files[file].$column_key}</span>
+				{/if}
+			{/foreach}
+			<span style="display:block; float:left; clear:both;"></span><br />
+		{/section}
+		<span style="display:block; float:left; clear:both;"></span><br />
+		<input name="select" type="submit" value="Save" /><input type="reset" value="Reset" /><br />
+	</form>
+	{assign var=page_count value=$smarty.request.count}
+	Page {if $page > 0}
+			{if $page > $page_count}
+				<a href="{$smarty.server.PHP_SELF}?show=0">First</a>
+				<a href="{$smarty.server.PHP_SELF}?show={$page-$page_count}">Prev</a>
+			{else}
+				<a href="{$smarty.server.PHP_SELF}?show=0">First</a>
+			{/if}
+			|
+		{/if}
+	{assign var=page_int value=$page/$page_count}
+	{assign var=lower value=$page_int-8}
+	{assign var=upper value=$page_int+8}
+	{assign var=pages value=$total_count/$page_count|floor}
+	{if $lower < 0}{assign var=upper value=$upper-$lower}{assign var=lower value=0}{/if}
+	{if $upper > $pages}{assign var=upper value=$pages}{assign var=lower value=$pages-$page_count-1}{/if}
+	{if $lower < 0}{assign var=lower value=0}{/if}
+	{section name=page_select start=$lower loop=$upper+1 step=1}
+		{if $smarty.section.page_select.index == $page_int}
+		<b>{$page_int+1}</b>
+		{else}
+		<a href="{$smarty.server.PHP_SELF}?show={$smarty.section.page_select.index*$page_count}">{$smarty.section.page_select.index+1}</a>
+		{/if}
+	{/section}
+	{if $page < $total_count-$page_count}
+		|
+		{assign var=last_page value=$total_count/$page_count|floor}
+		{if $page < $total_count-$page_count-$page_count}
+			<a href="{$smarty.server.PHP_SELF}?show={$page+$page_count}">Next</a>
+			<a href="{$smarty.server.PHP_SELF}?show={$last_page*$page_count}">Last</a>
+		{else}
+			<a href="{$smarty.server.PHP_SELF}?show={$last_page*$page_count}">Last</a>
+		{/if}
+	{/if}<br />
+</div>
+{/if}

@@ -1,0 +1,22 @@
+2008-05-15
+Added a type selector
+
+2008-05-14
+Add levels to templating system (a function that searches for levels and selects the closest one to preferred level)
+Add a function for settings and array of values in the template
+Added a function for settings request variables in template so form could recall the values it submits
+
+
+2008-05-13
+Add a button to clear search query
+Make a page that holds the search form and the list selector
+Move the button for creating a list (add it to builder)
+Fixed image magick thumbnail creator in db_image.php module to only create 1 image on gifs and icons that contain multiple images
+
+
+2008-05-12
+Dividing up search form into a seperate processing page
+List handles displaying a list of files processed from the search fields
+Search query is kept in $_SESSION['search']
+Everything displayed should be filterable by the search fields
+Seperate selector and list output

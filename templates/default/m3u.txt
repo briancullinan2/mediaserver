@@ -1,6 +1,7 @@
-<!-- BEGIN M3U_TXT -->#EXTM3U
+<!-- LIST TEXT "M3U Playlist" -->
+<!-- BEGIN LIST -->#EXTM3U
 {ITEMS}
-<!-- END M3U_TXT -->
+<!-- END LIST -->
 <!-- BEGIN ITEM -->
 
 #EXTINF:0,{TITLE}

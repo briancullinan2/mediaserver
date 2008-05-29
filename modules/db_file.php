@@ -255,6 +255,10 @@ class db_file
 			ob_flush();
 		}
 		
+		print 'Cleanup for ' . (($database==NULL)?'files':$database) . " complete.\n";
+		usleep(1);
+		ob_flush();
+		
 	}
 	
 }

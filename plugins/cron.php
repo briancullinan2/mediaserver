@@ -18,8 +18,8 @@ set_time_limit( DIRECTORY_SEEK_TIME + FILE_SEEK_TIME + CLEAN_UP_BUFFER_TIME);
 $tm_start = array_sum(explode(' ', microtime()));
 
 // this is an iterator to update the server database and all the media listings
-
-require '../include/common.php';
+// use some extra code so cron can be run from any directory
+require substr(__FILE__, 0, strlen(__FILE__) - strlen(basename(__FILE__))) . '../include/common.php';
 
 // some things to take into consideration:
 // Access the database in intervals of files, not every individual file
@@ -96,49 +96,71 @@ for($i; $i < count($watched); $i++)
 	}
 }
 
+
+// clean up the watch_list and remove stuff that doesn't exist in watch anymore
+$where_str = '';
+foreach($watched as $i => $watch)
+{
+	$where_str .= ' Filepath REGEXP "^' . $watch['Filepath'] . '" OR';
+}
+// remove last OR
+$where_str = substr($where_str, 0, strlen($where_str)-2);
+$where_str = ' !(' . $where_str . ')';
+
+// remove items
+$mysql->set('watch_list', NULL, $where_str);
+
+print 'Cleaned watch_list.' . "\n";
+usleep(1);
+ob_flush();
+
+
 // now scan some files
 $tm_start = array_sum(explode(' ', microtime()));
 
 do
 {
 
-		// get 1 folder from the database to search the files for
-		$db_dirs = $mysql->get('watch_list', 
-			array(
-				'SELECT' => 'Filepath',
-				'OTHER' => 'LIMIT 1'
-			)
-		);
+	// get 1 folder from the database to search the files for
+	$db_dirs = $mysql->get('watch_list', 
+		array(
+			'SELECT' => 'Filepath',
+			'OTHER' => 'LIMIT 1'
+		)
+	);
+	
+	if(count($db_dirs) > 0)
+	{
+		$dir = $db_dirs[0]['Filepath'];
 		
-		if(count($db_dirs) > 0)
+		print 'Searching directory: ' . $dir . "\n";
+		
+		// search all the files in the directory
+		
+		// get directory contents
+		$files = db_file::get(NULL, array('DIR' => $dir));
+		
+		foreach($files as $i => $file)
 		{
-			$dir = $db_dirs[0]['Filepath'];
-			
-			print 'Searching directory: ' . $dir . "\n";
-			
-			// search all the files in the directory
-			
-			// get directory contents
-			$files = db_file::get(NULL, array('DIR' => $dir));
-			
-			foreach($files as $i => $file)
+		
+			// if $file isn't this directory or its parent, 
+			if ($file != '.' && $file != '..' && !is_dir($dir . $file))
 			{
-			
-				// if $file isn't this directory or its parent, 
-				if ($file != '.' && $file != '..' && !is_dir($dir . $file))
-				{
-					getfile($dir . $file);
-				}
-
+				getfile($dir . $file);
 			}
-		
-			// delete the selected folder from the database
-			$mysql->set('watch_list', NULL, array('Filepath' => $dir));
-		}
 
-		// check if execution time is too long
-		$secs_total = array_sum(explode(' ', microtime())) - $tm_start;
-		
+		}
+	
+		// delete the selected folder from the database
+		$mysql->set('watch_list', NULL, array('Filepath' => $dir));
+	}
+
+	// check if execution time is too long
+	$secs_total = array_sum(explode(' ', microtime())) - $tm_start;
+	
+	usleep(1);
+	ob_flush();
+	
 } while( $secs_total < FILE_SEEK_TIME && count($db_dirs) > 0 );
 
 

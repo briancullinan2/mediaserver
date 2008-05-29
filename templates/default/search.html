@@ -1,0 +1,28 @@
+<div id="builder">
+	Use this form to generate the list of files you would like to view:
+	<br />
+	<form name="search" action="{$smarty.server.PHP_SELF}" method="post">
+		<select name="cat">
+		{section name=module loop=$modules}
+			{assign var=module value=$modules[module]}
+			<option value="{$modules[module]}" {if isset($search.cat) && $search.cat eq $modules[module]}selected{/if}>{php}
+				$module = $this->get_template_vars('module');
+				echo get_class_const($module, 'NAME');
+			{/php}</option>
+		{/section}
+		</select>
+		<br />
+		Contains <input name="includes" type="text" value="{if isset($search.includes)}{$search.includes}{/if}" /> (Enter keywords)
+		<br />
+		Limit <select name="lim">
+			{section name=lim start=10 loop=51 step=10}
+			<option value="{$smarty.section.lim.index}" {if isset($search.lim) && $search.lim == $smarty.section.lim.index}selected{/if}>{$smarty.section.lim.index}</option>
+			{/section}
+			<option value="-1" {if isset($search.lim) && $search.lim == -1}selected{/if}>No Limit</option>
+		</select>
+		<br />
+		Submit to apply filter.
+		<br />
+		<input name="search" type="submit" value="Submit" /><input type="reset" value="Reset" />
+	</form>
+</div>

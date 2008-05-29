@@ -1,0 +1,38 @@
+{if $smarty.request.detail < 3}
+<div id="display">
+	<form action="" method="post">
+		Detail <select name="detail">
+			{section name=detail start=0 loop=11 step=1}
+			<option value="{$smarty.section.detail.index}" {if isset($display.detail) && $display.detail == $smarty.section.detail.index}selected{/if}>{if $smarty.section.detail.index == 0}None{else}{$smarty.section.detail.index}{/if}</option>
+			{/section}			
+		</select><br />
+		<input type="checkbox" name="column_Filepath" value="on" checked="checked" disabled="disabled" />Filepath<br />
+		{if $smarty.request.detail == 2}
+			{section name=column loop=$columns}
+			{assign var=column_key value=$columns[column]}
+				{if $column_key neq 'Filepath'}
+				<input type="checkbox" name="column_{$columns[column]}" value="on" {if isset($display[$column_key]) && $display[$column_key] eq 'on'}checked="checked"{/if} />{$columns[column]}<br />
+				{/if}
+			{/section}		
+		{/if}	
+		Apply Settings.
+		<input type="submit" name="display" value="Go" />
+	</form>
+</div>
+{elseif $smarty.request.detail == 3}
+<div id="display">
+	<form action="" method="post">
+		Detail <select name="detail">
+			{section name=detail start=0 loop=11 step=1}
+			<option value="{$smarty.section.detail.index}" {if isset($display.detail) && $display.detail == $smarty.section.detail.index}selected{/if}>{if $smarty.section.detail.index == 0}None{else}{$smarty.section.detail.index}{/if}</option>
+			{/section}			
+		</select><br />
+		{section name=column loop=$columns}
+		{assign var=column_key value=$columns[column]}
+		<input type="checkbox" name="column_{$columns[column]}" value="on" {if isset($display[$column_key]) && $display[$column_key] eq 'on'}checked="checked"{/if} />{$columns[column]}<br />
+		{/section}		
+		Apply Settings.
+		<input type="submit" name="display" value="Go" />
+	</form>
+</div>
+{/if}

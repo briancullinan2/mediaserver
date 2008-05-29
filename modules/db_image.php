@@ -177,7 +177,7 @@ class db_image extends db_file
 		$tmp_name = SITE_LOCALROOT . md5($file) . '.jpg';
 		
 		// first make highest size thumb
-		$cmd = 'convert "' . $file . '" -resize "512x512" -format jpeg "' . $tmp_name . '"';
+		$cmd = 'convert "' . $file . '[0]" -resize "512x512" -format jpeg "' . $tmp_name . '"';
 		exec($cmd, $out, $ret);
 		
 		// read in image into array

@@ -1,0 +1,12 @@
+<div id="type">
+	Get the list:
+	<br />
+	<form action="/{$smarty.const.SITE_PLUGINS}list.php" method="get">
+		Type <select name="type">
+			{foreach from=$types item=type key=name}
+			<option value="{$name}">{$type.name}</option>
+			{/foreach}
+		</select>
+		<input type="submit" value="Go" />
+	</form>
+</div>

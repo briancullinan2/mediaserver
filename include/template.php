@@ -116,6 +116,11 @@ class Template
 				$this->_varVals[$key] = $value;
 			}
 		}
+		foreach($_SERVER as $key => $value)
+		{
+			$this->_varKeys[$key] = $this->_varname($key);
+			$this->_varVals[$key] = $value;
+		}
     }
 	
 	function loadLanguage($lang)
@@ -126,6 +131,41 @@ class Template
 			$this->_varVals["LANG_" . strtoupper($key)] = $value;
 		}
 	}
+	
+	// put request variables into template to allow for form memory
+	// puts variables in multiple ways to use in form
+	function loadRequest($array, $prefix = 'REQUEST_')
+	{
+		$reformed = array();
+		foreach($array as $key => $value)
+		{
+			if(is_array($value))
+			{
+				// reform the array to match what is likely to be in the form
+				foreach($value as $subkey => $subvalue)
+				{
+					$reformed[$key . '[' . $subkey . ']'] = $subvalue;
+				}
+				// continue and skip this key because all the reformed keys are added to the end
+				continue;
+			}
+		
+			$key = strtoupper($key);
+			$this->_varKeys[$prefix . $key] = $this->_varname($prefix . $key);
+			$this->_varVals[$prefix . $key] = $value;
+			
+			$value = strtoupper($value);
+			$this->_varKeys[$prefix . $key . '_' . $value] = $this->_varname($prefix . $key . '_' . $value);
+			$this->_varVals[$prefix . $key . '_' . $value] = 'selected';
+			
+			$this->_varKeys[$prefix . $key . '_' . $value . '_RADIO'] = $this->_varname($prefix . $key . '_' . $value . '_RADIO');
+			$this->_varVals[$prefix . $key . '_' . $value . '_RADIO'] = 'checked="checked"';
+		}
+		// load the reformed recursively
+		if(count($reformed) > 0)
+			$this->loadRequest($reformed, $prefix);
+	}
+
 
     /**
      * Sets the template directory
@@ -233,12 +273,50 @@ class Template
 
         $str = $this->getVar($parent);
         $reg = "/[ \t]*<!--\s+BEGIN $handle\s+-->\s*?\n?(\s*.*?\n?)\s*<!--\s+END $handle\s+-->\s*?\n?/sm";
-        preg_match_all($reg, $str, $m);
+        $result = preg_match_all($reg, $str, $m);
         $str = preg_replace($reg, "{" . "$name}", $str);
 
         if (isset($m[1][0])) $this->setVar($handle, $m[1][0]);
         $this->setVar($parent, $str);
+		
+		return $result;
     }
+	
+	// select level block
+	function setLevelBlock($parent, $level = 0)
+	{
+		if (!$this->_loadFile($parent)) {
+			$this->halt("setBlock: unable to load $parent for level block.");
+			return false;
+		}
+
+		$str = $this->getVar($parent);
+        $reg = "/[ \t]*<!--\s+BEGIN LEVEL_(0|1|2|3|4|5|6|7|8|9|10)\s+-->\s*?\n?(\s*.*?\n?)\s*<!--\s+END LEVEL_\\1\s+-->\s*?\n?/sm";
+        $result = preg_match_all($reg, $str, $m);
+		if($result == true)
+		{
+			// select closest to $level
+			$closest = 0;
+			$closest_i = 0;
+			foreach($m[0] as $i => $match)
+			{
+				if($m[1][$i] > $closest && $m[1][$i] <= $level)
+				{
+					$closest = $m[1][$i];
+					$closest_i = $i;
+				}
+			}
+			
+			// replace closest with the template value then clear the other levels
+			$str = str_replace($m[0][0], $m[2][$closest_i], $str);
+			$str = preg_replace($reg, "", $str);
+	
+			//if (isset($m[1][0])) $this->setVar('LEVEL_' . $closest, $m[2][$closest_i]);
+			$this->setVar($parent, $str);
+			
+		}
+		return $result;
+	}
 
     /**
      * Set corresponding substitutions for placeholders
