@@ -24,13 +24,13 @@ define('MODULES_DIR', SITE_LOCALROOT . 'modules/');
 
 define('SITE_HTMLPATH',            			    'http://209.250.30.30/');
 define('SITE_HTMLROOT',                                  'mediaserver/');
-define('SITE_DEFAULT',            SITE_LOCALROOT . 'templates/default/');
-define('SITE_TEMPLATE',           SITE_LOCALROOT . 'templates/default/');
+define('SITE_DEFAULT',            				   'templates/default/');
+define('SITE_TEMPLATE',            					 'templates/extjs/');
 define('SITE_PLUGINS', 						 SITE_HTMLROOT . 'plugins/');
 
 // extra constants
-define('DELIMITER', 							' - ');
 define('SITE_NAME',			 'Brian\'s Media Website');
+define('BUFFER_SIZE', 						  24*1024);
 
 // comment-out-able
 ini_set('error_reporting', E_ALL);

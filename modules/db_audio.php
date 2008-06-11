@@ -15,29 +15,9 @@ class db_audio extends db_file
 	
 	const NAME = 'Audio';
 
-	static function DETAILS($detail)
+	static function columns()
 	{
-		$details = array(
-				1 => array('id'),
-				2 => array('Title'),
-				3 => array('Title', 'Artist'),
-				4 => array('Title', 'Artist', 'Album'),
-				5 => array('Title', 'Artist', 'Album', 'Track'),
-				6 => array('Title', 'Artist', 'Album', 'Track', 'Genre'),
-				7 => array('Title', 'Artist', 'Album', 'Track', 'Genre', 'Year'),
-				8 => array('Title', 'Artist', 'Album', 'Track', 'Genre', 'Year', 'Length'),
-				9 => array('Title', 'Artist', 'Album', 'Track', 'Genre', 'Year', 'Length', 'Bitrate'),
-				10 => array('id', 'Title', 'Artist', 'Album', 'Track', 'Genre', 'Year', 'Length', 'Bitrate', 'Comments', 'Filepath'),
-			);
-		
-		if(isset($details[$detail]))
-		{
-			return $details[$detail];
-		}
-		else
-		{
-			return;
-		}
+		return array('id', 'Title', 'Artist', 'Album', 'Track', 'Genre', 'Year', 'Length', 'Bitrate', 'Comments', 'Filepath');
 	}
 	
 
@@ -183,15 +163,7 @@ class db_audio extends db_file
 				$props['WHERE'] = 'Filepath REGEXP "^' . $dir . '"';
 			}
 		
-		
-			if(isset($props['DETAIL']))
-			{
-				$props['SELECT'] = db_audio::DETAILS($props['DETAIL']);
-			}
-			else
-			{
-				$props['SELECT'] = db_audio::DETAILS(10);
-			}
+			$props['SELECT'] = db_audio::columns();
 
 			// get directory from database
 			$files = $mysql->get(db_audio::DATABASE, $props);

@@ -1,9 +1,6 @@
-<!-- LIST TEXT "M3U Playlist" -->
-<!-- BEGIN LIST -->#EXTM3U
-{ITEMS}
-<!-- END LIST -->
-<!-- BEGIN ITEM -->
-
-#EXTINF:0,{TITLE}
-{LINK}
-<!-- END ITEM -->
+{* LIST TEXT "M3U Playlist" *}
+#EXTM3U
+{section name=file loop=$files}
+#EXTINF:0,{$files[file].Filename}
+{$smarty.const.SITE_HTMLPATH}{$smarty.const.SITE_PLUGINS}file/{$smarty.request.cat}/{$files[file].id}/{$files[file].Filename}
+{/section}

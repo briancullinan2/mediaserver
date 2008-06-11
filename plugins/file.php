@@ -32,34 +32,33 @@ if(isset($_REQUEST['cat']) && isset($_REQUEST['id']) && is_numeric($_REQUEST['id
 		if(class_exists($_REQUEST['cat'] . '_browser') && call_user_func(array($_REQUEST['cat'], 'handles'), $files[0]['Filepath']))
 		{
 			// output that mime type and the file
-			if($fp = fopen($files[0]['Filepath'], 'r'))
+			if($fp = fopen($files[0]['Filepath'], 'rb'))
 			{
-				$output = fread($fp, filesize($files[0]['Filepath']));
-				
-				fclose($fp);
-				
 				header('Content-Type: ' . $files[0]['Filemime']);
 				header('Content-Length: ' . $files[0]['Filesize']);
 				
-				print $output;
+				while (!feof($fp)) {
+					print fread($fp, BUFFER_SIZE);
+				}				
+				fclose($fp);
+				
 			}
 			
 		}
 		else
 		{
 			// output file and displace
-			if($fp = fopen($files[0]['Filepath'], 'r'))
+			if($fp = fopen($files[0]['Filepath'], 'rb'))
 			{
-				$output = fread($fp, filesize($files[0]['Filepath']));
-				
-				fclose($fp);
-				
 				header('Content-Transfer-Encoding: binary');
 				header('Content-Type: ' . $files[0]['Filemime']);
 				header('Content-Length: ' . $files[0]['Filesize']);
 				header('Content-Disposition: attachment; filename="' . $files[0]['Filename'] . '"'); 
 				
-				print $output;
+				while (!feof($fp)) {
+					print fread($fp, BUFFER_SIZE);
+				}				
+				fclose($fp);
 			}
 		}
 	}

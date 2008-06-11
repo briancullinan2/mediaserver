@@ -1,0 +1,34 @@
+{assign var=page_count value=$smarty.request.limit}
+Page {if $page > 0}
+		{if $page > $page_count}
+			<a href="{$smarty.server.PHP_SELF}?start=0">First</a>
+			<a href="{$smarty.server.PHP_SELF}?start={$page-$page_count}">Prev</a>
+		{else}
+			<a href="{$smarty.server.PHP_SELF}?start=0">First</a>
+		{/if}
+		|
+	{/if}
+{assign var=page_int value=$page/$page_count}
+{assign var=lower value=$page_int-8}
+{assign var=upper value=$page_int+8}
+{assign var=pages value=$total_count/$page_count|floor}
+{if $lower < 0}{assign var=upper value=$upper-$lower}{assign var=lower value=0}{/if}
+{if $upper > $pages}{assign var=upper value=$pages}{assign var=lower value=$pages-$page_count-1}{/if}
+{if $lower < 0}{assign var=lower value=0}{/if}
+{section name=page_select start=$lower loop=$upper+1 step=1}
+	{if $smarty.section.page_select.index == $page_int}
+	<b>{$page_int+1}</b>
+	{else}
+	<a href="{$smarty.server.PHP_SELF}?start={$smarty.section.page_select.index*$page_count}">{$smarty.section.page_select.index+1}</a>
+	{/if}
+{/section}
+{if $page < $total_count-$page_count}
+	|
+	{assign var=last_page value=$total_count/$page_count|floor}
+	{if $page < $total_count-$page_count-$page_count}
+		<a href="{$smarty.server.PHP_SELF}?start={$page+$page_count}">Next</a>
+		<a href="{$smarty.server.PHP_SELF}?start={$last_page*$page_count}">Last</a>
+	{else}
+		<a href="{$smarty.server.PHP_SELF}?start={$last_page*$page_count}">Last</a>
+	{/if}
+{/if}

@@ -27,7 +27,7 @@ foreach($type_files as $i => $type_file)
 	fclose($fp);
 	
 	// check if it is LIST tag
-	$result = preg_match('/\<\!--\s+LIST\s+(.*)\s+--\>.*/', $line, $matches);
+	$result = preg_match('/\{\*\s+LIST\s+(.*)\s+\*\}.*/', $line, $matches);
 	
 	if($result == true)
 	{

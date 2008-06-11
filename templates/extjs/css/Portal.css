@@ -1,0 +1,122 @@
+
+.x-panel {
+	margin-bottom:3px;
+}
+.portal-window .thumb { 
+    padding: 3px; 
+} 
+.portal-window .thumb img { 
+    height: 60px; 
+    width: 60px;
+	margin: 0px 10px 0px 10px;
+} 
+.portal-window .thumb-wrap { 
+    float: left; 
+    margin: 4px; 
+    margin-right: 0; 
+    padding: 5px;
+} 
+.portal-window .thumb-wrap span { 
+    display: block; 
+    overflow: hidden; 
+    text-align: center; 
+} 
+.portal-window .x-view-over{
+    border:1px solid #dddddd;
+    background: #efefef url('../extjs/resources/images/default/grid/row-over.gif') repeat-x left top;
+	padding: 4px;
+}
+
+.portal-window .x-view-selected{
+	background: #eff5fb url('../images/selected.gif') no-repeat right bottom;
+	border:1px solid #99bbe8;
+	padding: 4px;
+}
+.portal-window .x-view-selected .thumb{
+	background:transparent;
+}
+.portal-window .x-view-selected span { 
+    color:#1A4D8F;
+}
+.portal-window .loading-indicator { 
+    font-size:11px; 
+    background-image:url('../extjs/resources/images/default/grid/loading.gif'); 
+    background-repeat: no-repeat; 
+    background-position: left; 
+    padding-left:20px; 
+    margin:10px; 
+}
+.tool-tip .x-tip-body {
+	white-space:nowrap;
+	overflow:hidden;
+} 
+
+.ux-address {
+	width:100%;
+	margin:0px -10px 0px 0px;
+	height:22px;
+}
+
+.ux-address .x-form-field-wrap {
+	height:22px;
+}
+
+.ux-address .ux-form-active {
+	padding-right:20px;
+}
+
+.ux-address input {
+	width:100%;
+	border:0px;
+	background:none;
+	padding:3px 0px 0px 2px;
+	margin:0px -17px 0px 0px;
+}
+
+.ux-address-button {
+	display:inline;
+	padding:0px 0px 0px 1px;
+	float:left;
+}
+
+.ux-address .ux-form-inactive .x-form-trigger {
+	display:block;
+	float:right;
+	position:relative;
+}
+
+.ux-address .ux-form-active .x-form-trigger {
+	display:inline;
+	float:none;
+}
+
+
+.ux-button-inactive .x-btn-menu-arrow-el {
+	background-image:url(../images/btn-arrow.gif) !important;
+}
+
+
+.ux-data-view {
+	overflow:hidden;
+}
+.back-button {
+    background-image:url(../images/back.png) !important;
+}
+.forward-button {
+    background-image:url(../images/forward.png) !important;
+}
+.up-button {
+    background-image:url(../images/up.png) !important;
+}
+.reload-button {
+    background-image:url(../images/reload.png) !important;
+}
+
+#portal-win-shortcut span {
+	display:block;
+	margin:8px 8px 0px 8px;
+    width:48px;
+    height:48px;
+    background-image: url(../images/im48x48.png);
+    filter:progid:DXImageTransform.Microsoft.AlphaImageLoader(src='images/im48x48.png', sizingMethod='scale');
+}

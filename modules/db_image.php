@@ -15,29 +15,9 @@ class db_image extends db_file
 	
 	const NAME = 'Image';
 
-	static function DETAILS($detail)
+	static function columns()
 	{
-		$details = array(
-				1 => array('id'),
-				2 => array('Height', 'Width'),
-				3 => array('Height', 'Width', 'Make', 'Model'),
-				4 => array('Height', 'Width', 'Make', 'Model', 'Keywords'),
-				5 => array('Height', 'Width', 'Make', 'Model', 'Title', 'Keywords'),
-				6 => array('Height', 'Width', 'Make', 'Model', 'Title', 'Keywords', 'Author'),
-				7 => array('Height', 'Width', 'Make', 'Model', 'Title', 'Keywords', 'Author', 'Comments'),
-				8 => array('Height', 'Width', 'Make', 'Model', 'Title', 'Keywords', 'Author', 'Comments', 'ExposureTime'),
-				9 => array('id', 'Height', 'Width', 'Make', 'Model', 'Title', 'Keywords', 'Author', 'Comments', 'ExposureTime'),
-				10 => array('id', 'Height', 'Width', 'Make', 'Model', 'Title', 'Keywords', 'Author', 'Comments', 'ExposureTime', 'Filepath'),
-			);
-		
-		if(isset($details[$detail]))
-		{
-			return $details[$detail];
-		}
-		else
-		{
-			return;
-		}
+		return array('id', 'Height', 'Width', 'Make', 'Model', 'Title', 'Keywords', 'Author', 'Comments', 'ExposureTime', 'Filepath');
 	}
 	
 	
@@ -238,14 +218,7 @@ class db_image extends db_file
 				$props['WHERE'] = 'Filepath REGEXP "^' . $dir . '"';
 			}
 		
-			if(isset($props['DETAIL']))
-			{
-				$props['SELECT'] = db_image::DETAILS($props['DETAIL']);
-			}
-			else
-			{
-				$props['SELECT'] = db_image::DETAILS(10);
-			}
+			$props['SELECT'] = db_image::columns();
 		
 			// get directory from database
 			$files = $mysql->get(db_image::DATABASE, $props);

@@ -1,0 +1,5 @@
+
+RewriteEngine on
+
+RewriteBase   /mediaserver/plugins/
+RewriteRule ^file\.php/([^/]*)/([0-9]*)/(.*)$ file.php?cat=$1&id=$2&Filename=$3 [R,L]

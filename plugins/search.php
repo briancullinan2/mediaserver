@@ -9,6 +9,10 @@ require_once '../include/common.php';
 // load template to create output
 if($_SERVER['SCRIPT_FILENAME'] == __FILE__)
 	$smarty = new Smarty;
+	
+// get all columns from every module
+$columns = getAllColumns();
+$smarty->assign('columns', $columns);
 
 // process search query and save in session
 if(isset($_REQUEST['search']))
@@ -19,6 +23,8 @@ if(isset($_REQUEST['search']))
 	$_SESSION['search']['cat'] = @$_REQUEST['cat'];
 	$_SESSION['search']['includes'] = @$_REQUEST['includes'];
 	$_SESSION['search']['lim'] = @$_REQUEST['lim'];
+	$_SESSION['search']['dir'] = @$_REQUEST['dir'];
+	$_SESSION['search']['order_by'] = @$_REQUEST['order_by'];
 	
 	// redirect if this page is called specifically
 	if($_SERVER['SCRIPT_FILENAME'] == __FILE__)

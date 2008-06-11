@@ -211,6 +211,12 @@ function getdir( $dir )
 		
 		// add to watch list
 		$mysql->set('watch_list', array('Filepath' => $dir), NULL);
+		
+		print 'Queueing directory: ' . $dir . "\n";
+		
+		usleep(1);
+		
+		ob_flush();
 
 	}
 	

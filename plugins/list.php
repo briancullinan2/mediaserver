@@ -5,13 +5,13 @@
 
 // load template
 require_once '../include/common.php';
-require_once 'template.php';
 
 // load mysql to query the database
 $mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 
 // load template to create output
-$template =& new Template(SITE_TEMPLATE, 'remove', SITE_DEFAULT);
+if($_SERVER['SCRIPT_FILENAME'] == __FILE__)
+	$smarty = new Smarty;
 
 // get all the possible types for a list from templates directory
 $files = db_file::get(NULL, array('DIR' => SITE_TEMPLATE));
@@ -25,7 +25,7 @@ foreach($files as $i => $file)
 	fclose($fp);
 	
 	// check if it is LIST tag
-	$result = preg_match('/\<\!--\s+LIST\s+(.*)\s+--\>.*/', $line, $matches);
+	$result = preg_match('/\{\*\s+LIST\s+(.*)\s+\*\}.*/', $line, $matches);
 	
 	if($result == true)
 	{
@@ -40,11 +40,7 @@ foreach($files as $i => $file)
 if(!isset($_REQUEST['type']) || !isset($types[$_REQUEST['type']]))
 	$_REQUEST['type'] = 'rss';
 	
-	
-$template->setFile('TYPE', $types[$_REQUEST['type']]['file']);
-$template->setBlock('TYPE', 'LIST');
-$template->setBlock('TYPE', 'ITEM');
-
+$smarty->assign('types', $types);
 
 // initialize properties for select statement
 $props = array();
@@ -59,9 +55,9 @@ if($_REQUEST['lim'] > 0)
 }
 else
 {
-	if(isset($_REQUEST['show']) && is_numeric($_REQUEST['show']))
+	if(isset($_REQUEST['start']) && is_numeric($_REQUEST['start']))
 	{
-		$props['OTHER'] = 'ORDER BY Filepath LIMIT ' . $_REQUEST['show'] . ',15';
+		$props['OTHER'] = 'ORDER BY Filepath LIMIT ' . $_REQUEST['start'] . ',15';
 	}
 	else
 	{
@@ -85,7 +81,7 @@ if(isset($_SESSION['selected']) && count($_SESSION['selected']) > 0)
 else
 {
 	
-	$columns = call_user_func(array($_REQUEST['cat'], 'DETAILS'), 10);
+	$columns = call_user_func(array($_REQUEST['cat'], 'columns'));
 	
 	if(isset($_REQUEST['includes']) && $_REQUEST['includes'] != '')
 	{
@@ -107,48 +103,22 @@ else
 // make select call
 $files = call_user_func(array($_REQUEST['cat'], 'get'), $mysql, $props);
 
-
-// loop though and create items
-foreach($files as $i => $file)
+// get all the other information from other modules
+foreach($files as $index => $file)
 {
-	if($types[$_REQUEST['type']]['encoding'] == 'XML')
+	// merge all the other information to each file
+	foreach($GLOBALS['modules'] as $i => $module)
 	{
-		$template->setVar('TITLE', htmlspecialchars(basename($file['Filepath'])));
-	
-		$template->setVar('DESCRIPTION', '');
-		
-		$template->setVar('LINK', htmlspecialchars(SITE_HTMLPATH . SITE_PLUGINS . 'file.php?cat=' . $_REQUEST['cat'] . '&id=' . $file['id']));
+		if($module != $_REQUEST['cat'] && call_user_func(array($module, 'handles'), $file['Filepath']))
+		{
+			$return = call_user_func(array($module, 'get'), $mysql, array('WHERE' => 'Filepath = "' . $file['Filepath'] . '"'));
+			if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
+		}
 	}
-	else
-	{
-		$template->setVar('TITLE', basename($file['Filepath']));
-	
-		$template->setVar('DESCRIPTION', '');
-		
-		$template->setVar('LINK', SITE_HTMLPATH . SITE_PLUGINS . 'file.php?cat=' . $_REQUEST['cat'] . '&id=' . $file['id']);
-	}
-	
-	$template->fparse('ITEMS', 'ITEM', true);
 }
 
-$template->setVar('CATEGORY', constant($_REQUEST['cat'] . '::NAME'));
+$smarty->assign('files', $files);
 
-$template->setVar('DESCRIPTION', '');
-
-// remove beginning slash
-if(substr($_SERVER['REQUEST_URI'], 0, 1) == '/')
-{
-	$link = substr($_SERVER['REQUEST_URI'], 1);
-}
-else
-{
-	$link = $_SERVER['REQUEST_URI'];
-}
-
-$template->setVar('LINK', htmlspecialchars(SITE_HTMLPATH . $link));
-
-// finally parse the RSS feed
-$template->fparse('OUTPUT', 'LIST');
 
 if($_REQUEST['type'] == 'rss')
 {
@@ -171,9 +141,7 @@ elseif($_REQUEST['type'] == 'wpl')
 // this is how we implement FRAME functionality! very tricky
 // this makes the caller in charge of using the output whereever it wants
 if($_SERVER['SCRIPT_FILENAME'] == __FILE__)
-	print $template->fparse('out', 'OUTPUT');
-else
-	$template->fparse(basename(__FILE__), 'OUTPUT');
+	$smarty->display(SITE_TEMPLATE . $types[$_REQUEST['type']]['file']);
 	
 	
 

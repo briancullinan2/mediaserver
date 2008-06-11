@@ -11,29 +11,9 @@ class db_file
 	const NAME = 'File';
 	
 	// this function specifies the level of detail for the array of file info, ORDER matters!
-	static function DETAILS($detail)
+	static function columns()
 	{
-		$details = array(
-				1 => array('id'),
-				2 => array('Filename'),
-				3 => array('Filename', 'Filemime'),
-				4 => array('Filename', 'Filemime', 'Filesize'),
-				5 => array('Filename', 'Filemime', 'Filesize', 'Filedate'),
-				6 => array('Filename', 'Filemime', 'Filesize', 'Filedate'),
-				7 => array('Filename', 'Filemime', 'Filesize', 'Filedate', 'Filetype'),
-				8 => array('id', 'Filename', 'Filemime', 'Filesize', 'Filedate', 'Filetype'),
-				9 => array('id', 'Filename', 'Filemime', 'Filesize', 'Filedate', 'Filetype', 'Filepath'),
-				10 => array('id', 'Filename', 'Filemime', 'Filesize', 'Filedate', 'Filetype', 'Filepath')
-			);
-		
-		if(isset($details[$detail]))
-		{
-			return $details[$detail];
-		}
-		else
-		{
-			return;
-		}
+		return array('id', 'Filename', 'Filemime', 'Filesize', 'Filedate', 'Filetype', 'Filepath');
 	}
 
 	
@@ -90,16 +70,13 @@ class db_file
 	{
 	
 		// get file extension
-		$ext = getExt($file);
-		$type = getExtType($ext);
-		
 		$fileinfo = array();
 		$fileinfo['Filepath'] = $file;
 		$fileinfo['Filename'] = basename($file);
 		$fileinfo['Filesize'] = filesize($file);
-		$fileinfo['Filemime'] = getFileType($file);
+		$fileinfo['Filemime'] = getMime($file);
 		$fileinfo['Filedate'] = date("Y-m-d h:i:s", filemtime($file));
-		$fileinfo['Filetype'] = $type;
+		$fileinfo['Filetype'] = getFileType($file);
 			
 		// if the id is set then we are updating and entry
 		if( $id != NULL )
@@ -169,14 +146,7 @@ class db_file
 				$props['WHERE'] = 'Filepath REGEXP "^' . $dir . '"';
 			}
 		
-			if(isset($props['DETAIL']))
-			{
-				$props['SELECT'] = db_file::DETAILS($props['DETAIL']);
-			}
-			else
-			{
-				$props['SELECT'] = db_file::DETAILS(10);
-			}
+			$props['SELECT'] = db_file::columns();
 		
 			// get directory from database
 			$files = $mysql->get(db_file::DATABASE, $props);

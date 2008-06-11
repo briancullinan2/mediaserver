@@ -11,6 +11,12 @@ session_start();
 // require the settings
 require_once 'settings.php';
 
+// include template constants
+require_once SITE_LOCALROOT . SITE_DEFAULT . 'config.php';
+
+if(file_exists(SITE_LOCALROOT . SITE_TEMPLATE . 'config.php'))
+	require_once SITE_LOCALROOT . SITE_TEMPLATE . 'config.php';
+
 require_once 'sql.php';
 
 // include the sql class so it can be used by any page
@@ -72,6 +78,21 @@ if(isset($_SESSION['display']))
 if( !isset($_REQUEST['detail']) || !is_numeric($_REQUEST['detail']) )
 	$_REQUEST['detail'] = 0;
 
+
+
+// get all columns from every modules
+function getAllColumns()
+{
+	$columns = array();
+	foreach($GLOBALS['modules'] as $i => $module)
+	{
+		$columns = array_merge($columns, array_flip(call_user_func(array($module, 'columns'))));
+	}
+	
+	$columns = array_keys($columns);
+
+	return $columns;
+}
 
 
 function getRequestString($request)
@@ -181,7 +202,7 @@ function getFileType($file)
 			}
 			else
 			{
-				return getMime($ext);
+				return strtoupper($ext);
 			}
 		}
 	}
@@ -226,7 +247,7 @@ function getMime($ext)
 	}
 	else
 	{
-		return strtoupper($ext);
+		return '';
 	}
 }
 
