@@ -1,11 +1,11 @@
 // JavaScript Document
 
 
-Ext.MultilineToolbar = function(config){
-    Ext.MultilineToolbar.superclass.constructor.call(this, config);
-};
+//Ext.MultilineToolbar = function(config){
+//    Ext.MultilineToolbar.superclass.constructor.call(this, config);
+//};
 
-Ext.extend(Ext.MultilineToolbar, Ext.Toolbar, {
+Ext.override(Ext.Toolbar, {
 	add : function() {
 		var a = arguments, l = a.length;
 		for(var i = 0; i < l; i++){
@@ -85,6 +85,7 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 	emptyText:'Type in a folder to browse to...',
 	selectOnFocus:true,
 	enableKeyEvents: true,
+	grow: true,
 	 
     initComponent : function(){
         Ext.Address.superclass.initComponent.call(this);
@@ -95,12 +96,54 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 		}
 
 	},
-	
-						 
+
 	onRender : function(ct, position){
 		
+		// triggerfield superclass
+        Ext.form.TriggerField.superclass.onRender.call(this, ct, position);
+		this.toolsParent = ct.createChild({tag: 'table', children: [{tag: 'tr'}]});
+		this.tools = this.toolsParent.child('tr');
+        this.wrap = this.el.wrap({cls: "x-form-field-wrap"});
+		//this.wrap.appendTo(this.tools);
+        //this.wrap = this.el.wrap({cls: "x-form-field-wrap"});
+        this.trigger = this.wrap.createChild(this.triggerConfig ||
+                {tag: "img", src: Ext.BLANK_IMAGE_URL, cls: "x-form-trigger " + this.triggerClass});
+        if(this.hideTrigger){
+            this.trigger.setDisplayed(false);
+        }
+        this.initTrigger();
+        if(!this.width){
+            this.wrap.setWidth(this.el.getWidth()+this.trigger.getWidth());
+        }
+		
+		// combo superclass
+        if(this.hiddenName){
+            this.hiddenField = this.el.insertSibling({tag:'input', type:'hidden', name: this.hiddenName, id: (this.hiddenId||this.hiddenName)},
+                    'before', true);
+            this.hiddenField.value =
+                this.hiddenValue !== undefined ? this.hiddenValue :
+                this.value !== undefined ? this.value : '';
+
+            // prevent input submission
+            this.el.dom.removeAttribute('name');
+        }
+        if(Ext.isGecko){
+            this.el.dom.setAttribute('autocomplete', 'off');
+        }
+
+        if(!this.lazyInit){
+            this.initList();
+        }else{
+            this.on('focus', this.initList, this, {single: true});
+        }
+
+        if(!this.editable){
+            this.editable = true;
+            this.setEditable(false);
+        }
+		
 		// call superclass
-        Ext.Address.superclass.onRender.call(this, ct, position);
+        //Ext.Address.superclass.onRender.call(this, ct, position);
 		
 		// set up important events
 		this.on({
@@ -154,16 +197,12 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 		this.wrap.on({
 			'click': {
 				fn: function() {
-					if(this.el.isDisplayed() == false && !this.isMenu)
-					{
-						this.clearButtons();
-						this.el.setDisplayed(true);
-						this.wrap.addClass('ux-form-active')
-						this.wrap.removeClass('ux-form-inactive')
-						this.el.dom.disabled = false;
-						this.focus(true);
-					}
-					this.isMenu = false;
+					this.clearButtons();
+					this.el.setDisplayed(true);
+					this.wrap.addClass('ux-form-active')
+					this.wrap.removeClass('ux-form-inactive')
+					this.el.dom.disabled = false;
+					this.focus(true);
 				},
 				scope: this
 			}
@@ -200,6 +239,7 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 		{
 			// move menu for button because it is cached
 			this.buttons[i].menu = null;
+			this.buttons[i].el.parent().remove();
 			this.buttons[i].destroy();
 		}
 		this.buttons = Array();
@@ -214,7 +254,7 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 		// split the items and make drop downs for each
 		var folders = this.getValue().split('/');
 		var current_dir = '/';
-		
+		var first = true;
 		for(var i = 0; i < folders.length; i++)
 		{
 			if(folders[i] != '')
@@ -256,12 +296,11 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 							scope: this
 						},
 						'menuhide': {
-							fn: function(button) { this.menu = null; button.el.addClass('ux-button-inactive'); },
+							fn: function(button) { button.el.addClass('ux-button-inactive'); },
 							scope: this
 						},
 						'click': {
 							fn: function() {
-								this.address.isMenu = true;
 								this.address.startValue = this.path;
 								if(String(this.address.getValue()) !== String(this.address.startValue)){
 									this.address.fireEvent('change', this.address, this.path, this.startValue);
@@ -271,9 +310,11 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 						}
 					}
 				});
-				folder_dropdown.render(this.wrap, this.el.dom);
+				//this.tools.createChild({tag: 'td', cls: 'x-form-text ' + (first ? 'ux-address-start' : 'ux-address-middle')}, this.wrap);
+				//folder_dropdown.render();
 				this.buttons[this.buttons.length] = folder_dropdown;
-				folder_dropdown.render();
+				//folder_dropdown.render();
+				first = false;
 			}
 		}
 		
@@ -284,9 +325,6 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 	},
 	
 	loadMenu : function(button, menu) {
-		
-		this.isMenu = true;
-		this.menu = menu;
 		
 		button.el.removeClass("ux-button-inactive");
 		

@@ -18,6 +18,7 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 		var File = Ext.data.Record.create([
 			{name: 'name'},
 			{name: 'icon'},
+			{name: 'index'},
 			{name: 'id'},
 			{name: 'tip'},
 			{name: 'short'},
@@ -31,7 +32,7 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 			success: "success",
 			totalRecords: "count", // The element which contains the total dataset size (optional)
 			record: "file",           // The repeated element which contains row information
-			id: "id"                 // The element within the row that provides an ID for the record (optional)
+			id: "index"                 // The element within the row that provides an ID for the record (optional)
 		}, File);
 		
 		var combo = new Ext.Address({
@@ -42,7 +43,6 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 					dirs_only: true
 				}
 			}),
-			ctCls: 'ux-address x-form-text',
 			value: '/home/share/Music/',
 			displayField: 'path',
 			queryParam: 'dir',
@@ -112,7 +112,7 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 			}
 		});
 		
-		var toolbar = new Ext.MultilineToolbar();
+		//var toolbar = new Ext.Toolbar();
 		
 		var win = desktop.createWindow({
 			title: 'Portal Window',
@@ -135,7 +135,7 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 					scope: this
 				}
 			},
-			tbar: toolbar,
+			tbar: [],
 			bbar: new Ext.StatusBar({
 			}),
 			layout: 'border',
@@ -159,9 +159,6 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 			'Address: ',
 			combo
 		);
-
-		win.getTopToolbar().addSpacer();
-		view.window = win;
 
         win.show();
 

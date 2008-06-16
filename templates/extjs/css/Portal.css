@@ -49,41 +49,21 @@
 .tool-tip .x-tip-body {
 	white-space:nowrap;
 	overflow:hidden;
-} 
-
-.ux-address {
-	width:100%;
-	margin:0px -10px 0px 0px;
-	height:22px;
 }
 
-.ux-address .x-form-field-wrap {
-	height:22px;
+.ux-address .ux-address-middle {
+	border-right:0px;
+	border-left:0px;
 }
 
-.ux-address .ux-form-active {
-	padding-right:20px;
+.ux-address .ux-address-start {
+	border-right:0px;
 }
 
-.ux-address input {
-	width:100%;
-	border:0px;
-	background:none;
-	padding:3px 0px 0px 2px;
-	margin:0px -17px 0px 0px;
-}
-
-.ux-address-button {
-	display:inline;
-	padding:0px 0px 0px 1px;
-	float:left;
-}
-
-.ux-address .ux-form-inactive .x-form-trigger {
-	display:block;
-	float:right;
+.ux-address .x-form-trigger {
 	position:relative;
 }
+
 
 .ux-address .ux-form-active .x-form-trigger {
 	display:inline;

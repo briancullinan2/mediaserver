@@ -13,6 +13,11 @@ $mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 if($_SERVER['SCRIPT_FILENAME'] == __FILE__)
 	$smarty = new Smarty;
 	
+$smarty->compile_check = true;
+$smarty->debugging = false;
+$smarty->caching = false;
+$smarty->force_compile = true;
+	
 // get all columns from every module
 $columns = getAllColumns();
 $smarty->assign('columns', $columns);

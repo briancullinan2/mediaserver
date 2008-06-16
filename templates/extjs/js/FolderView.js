@@ -13,7 +13,7 @@ Ext.FolderView = Ext.extend(Ext.DataView, {
 		
         Ext.FolderView.superclass.initComponent.call(this);
 		
-		this.addEvents('reload', 'move', 'storefinished');
+		this.addEvents('reload', 'move');
 
     },
 	
@@ -33,14 +33,17 @@ Ext.FolderView = Ext.extend(Ext.DataView, {
 
     // private
     afterRender : function(){
-        Ext.FolderView.superclass.afterRender.call(this);
-
 		this.on({
 			"reload": {
 				fn: this.onReload,
 				scope: this,
 				buffer: 200
-			},
+			}
+		});
+
+		Ext.FolderView.superclass.afterRender.call(this);
+
+		this.on({
 			"move": {
 				fn: this.onMove,
 				scope: this
@@ -53,11 +56,6 @@ Ext.FolderView = Ext.extend(Ext.DataView, {
 			"dblclick": {
 				fn: this.dblClick,
 				scope: this
-			},
-			"storefinished": {
-				fn: this.finishStoreLoad,
-				scope: this,
-				buffer: 100
 			}
 		});
  		
@@ -119,10 +117,28 @@ Ext.FolderView = Ext.extend(Ext.DataView, {
      * Refreshes the view by reloading the data from the store and re-rendering the template.
      */
     refresh : function(){
+		// get some variables to use with the get range
+		var itemCount = this.getItemCount();
+		var itemSize = this.getItemSize();
+		if(this.all.getCount() == 0 && this.store.lastOptions && this.store.lastOptions.itemSize)
+			itemSize = this.store.lastOptions.itemSize;
+		if(this.all.getCount() == 0 && this.store.lastOptions && this.store.lastOptions.itemCount)
+			itemCount = this.store.lastOptions.itemCount;
+		var start = Math.floor(this.container.dom.scrollTop / itemSize.height) * itemCount.x;
+		var limit = itemCount.x * itemCount.y;
+		
+		// get records by id
+		var records = [];
+		for(var i = start; i < start + limit; i++)
+		{
+			if(this.store.getById(i) != undefined)
+				records[records.length] = this.store.getById(i);
+		}
+		
         this.clearSelections(false, true, true);
         this.el.update("");
         var html = [];
-        var records = this.store.getRange();
+        //var records = this.store.getRange(start, start + limit - 1);
         if(records.length < 1){
             if(!this.deferEmptyText || this.hasSkippedEmptyText){
                 this.el.update('');
@@ -145,6 +161,19 @@ Ext.FolderView = Ext.extend(Ext.DataView, {
         this.all.fill(Ext.query(this.itemSelector, this.el.dom));
         this.updateIndexes(0);
 		
+		
+		// resize page to total size instead of just the items
+		if(this.all.getCount() > 0)
+		{
+			var offset = this.container.dom.scrollTop % itemSize.height;
+				
+			var new_height = (Math.floor(this.store.getTotalCount() / itemCount.x + 0.5) || 1) * itemSize.height;
+			this.el.dom.style.marginTop = (this.container.dom.scrollTop - offset) + 'px';
+			this.el.dom.style.height = new_height - (this.container.dom.scrollTop - offset) + 'px';
+		}
+		
+		
+		// set up a tooltip that all the items can use
 		if(!this.tooltip)
 			this.tooltip = new Ext.ToolTip({
 				html: 'Click the X to close me',
@@ -154,7 +183,8 @@ Ext.FolderView = Ext.extend(Ext.DataView, {
 		// set the actions for all the items
 		for(var i = 0; i < this.all.getCount(); i++)
 		{
-			var itemEl = Ext.Element.get(this.all.elements[i]);
+		
+			var itemEl = this.all.item(i);
 			itemEl.tooltip = this.tooltip;
 			itemEl.title = records[i].get('name');
 			itemEl.html = records[i].get('tip');
@@ -201,170 +231,125 @@ Ext.FolderView = Ext.extend(Ext.DataView, {
 	onReload : function () {
 			
 		// reload items with new count
-		if(!this.sampleItem)
-			this.sampleItem = this.getSampleItem();
-			
-		var scrollerEl = Ext.Element.get(this.el.dom.parentNode);
-		var sampleSize = this.sampleItem.getSize();
+		var itemCount = this.getItemCount();
+		var itemSize = this.getItemSize();
 		
-		// scroll to top if dir changes
-		if(this.dir && this.store.lastOptions && (this.store.lastOptions.params.dir == undefined || this.store.lastOptions.params.dir != this.dir))
-			scrollerEl.dom.scrollTop = 0;
-		
-		var items_per_row = 1;
-		if(!this.store.lastOptions)
-			items_per_row = Math.floor(scrollerEl.getWidth() / (sampleSize.width + this.sampleItem.getMargins('lr')));
-		else
-			items_per_row = Math.floor(this.el.getWidth() / (sampleSize.width + this.sampleItem.getMargins('lr')));
+		var params = {
+			start: Math.floor(this.container.dom.scrollTop / itemSize.height) * itemCount.x,
+			limit: itemCount.x * itemCount.y,
+			dir: this.dir || '/'
+		}
 			
-		var rows_per_page = Math.ceil(scrollerEl.getHeight() / (sampleSize.height + this.sampleItem.getMargins('tb')));
-			
-		var itemIndex = Math.floor(scrollerEl.getScroll().top / (sampleSize.height + this.sampleItem.getMargins('tb')) / rows_per_page) * items_per_row * rows_per_page - (items_per_row * rows_per_page);
-		if(itemIndex < 0) itemIndex = 0;
-		var itemCount = rows_per_page * items_per_row ;
-
-		// only do this part if a field as changed
-		if(!this.store.lastOptions || !this.store.lastOptions.params ||
-		   this.store.lastOptions.params.limit == undefined || this.store.lastOptions.params.limit != itemCount ||
-		   this.store.lastOptions.params.start == undefined || this.store.lastOptions.params.start != itemIndex ||
-		   (this.dir && (this.store.lastOptions.params.dir == undefined || this.store.lastOptions.params.dir != this.dir)))
+		// select range of files to get based on empty spots in store
+		var newStart = -1;
+		var newEnd = params.start + params.limit;
+		for(var i = params.start; i < params.start + params.limit; i++)
 		{
-			
-			// check if it is already displaying all the items
-			if(this.dir && this.store.lastOptions && this.store.lastOptions.params.dir && this.store.lastOptions.params.dir == this.dir)
+			if(this.store.getById(i) == undefined)
 			{
-				// reload not needed because all the items fit on one page
-				if(this.store.totalLength && itemCount > this.store.getTotalCount())
-				{
-					// don't reload it just exit
-					this.loading.setVisible(false);
-					return;
-				}
-				
-				// same dir as last time, so save selections for new load
-				this.selectCache = this.selectCache || []
-				var s = this.selected.elements;
-				for(var i = 0, len = s.length; i < len; i++){
-					this.selectCache.push(this.store.getAt(s[i].viewIndex).id);
-				}
-					
+				if(newStart == -1) newStart = i;
+				newEnd = i+1;
 			}
-			
-			var params = {
-				start: itemIndex,
-				limit: itemCount * 3
-			};
-			if(this.dir)
-				params.dir = this.dir;
-				
-			var add = false;
-			var insert = false;
-			// if it is only changing by 1 page then add a single pages items
-			if(this.store.lastOptions && this.store.lastOptions.params)
+		}
+
+		// if dir changed reset buffer
+		var add = true;
+		if(!this.dir || !this.store.lastOptions || !this.store.lastOptions.params || !this.store.lastOptions.params.dir || this.store.lastOptions.params.dir != this.dir)
+		{
+			add = false;
+			params.start = 0;
+		}
+		
+		// make sure it has changed by at least a row
+		// item count must also be the same for it to exit
+		if(this.store.lastOptions && this.store.lastOptions.params && 
+			this.store.lastOptions.params.start && 
+			(Math.abs(this.store.lastOptions.params.start - params.start) < itemCount.x || Math.abs(params.start - this.store.lastOptions.params.start) < itemCount.x) && 
+			this.store.lastOptions.params.limit && params.limit == this.store.lastOptions.params.limit &&
+			add == true)
+		{
+			return;
+		}
+		else
+		{
+			// if the difference is zero then don't reload
+			if(newStart == -1 && add == true)
 			{
-				if(itemIndex == this.store.lastOptions.params.start + itemCount)
+				this.refresh();
+			}
+			else
+			{
+				// if it is less then a page in difference then display loading in status
+				if(this.store.lastOptions && this.store.lastOptions.params && 
+					this.store.lastOptions.params.start && 
+					(Math.abs(this.store.lastOptions.params.start - params.start) < params.limit || Math.abs(params.start - this.store.lastOptions.params.start) < params.limit))
 				{
-					params.start = itemIndex + itemCount * 2;
-					params.limit = itemCount;
-					add = true;
+					this.ownerCt.ownerCt.bottomToolbar.setText(this.loadingText);
 				}
 				else
 				{
-					if(itemIndex == this.store.lastOptions.params.start - itemCount)
-					{
-						//params.start = itemIndex - itemCount;
-						params.limit = itemCount;
-						add = true;
-						insert = true;
-						//if(params.start < 0) return;
-					}
-					else
-					{
-						this.showLoading();
-					}
+					this.showLoading();
 				}
+				
+				
+					
+				if(add == true)
+				{
+					params.start = newStart;
+					params.limit = newEnd - newStart;
+				}
+				
+				// finally load new items
+				this.store.load({
+					callback: this.finishStoreLoad,
+					scope: this,
+					add: add,
+					itemSize: itemSize,
+					itemCount: itemCount,
+					params: params
+				});
 			}
-			else
-			{
-				this.showLoading();
-			}
-			
-			// finally load new items
-			this.store.load({
-				callback: function(r, options, success) { this.fireEvent("storefinished", r, options, success); },
-				items_per_row: items_per_row,
-				sampleSize: this.sampleItem.getSize(),
-				scope: this,
-				add: add,
-				insert: insert,
-				params: params
-			});
 		}
-		else
-		{
-			this.loading.setVisible(false);
-		}
+		
 	},
 
 	onResize : function() {
-		
-		if(!this.sampleItem)
-			this.sampleItem = this.getSampleItem();
-	
-		var previousIndex = 0;
-		if(this.store.lastOptions && this.store.lastOptions.params && this.store.lastOptions.params.start != undefined)
-			var previousIndex = this.store.lastOptions.params.start;
-			
-		var scrollerEl = Ext.Element.get(this.el.dom.parentNode);
-		var sampleSize = this.sampleItem.getSize();
-		
-		var items_per_row = Math.floor(this.el.getWidth() / (sampleSize.width + this.sampleItem.getMargins('lr')));
-		
-		var new_height = (Math.floor(this.store.getTotalCount() / items_per_row) || 1) * (sampleSize.height + this.sampleItem.getMargins('tb'));
-		
-		var new_scroll_pos = Math.floor(previousIndex / items_per_row) * (sampleSize.height + this.sampleItem.getMargins('tb'));
-		if(new_scroll_pos > new_height - scrollerEl.getHeight() + (sampleSize.height + this.sampleItem.getMargins('tb')))
-			new_scroll_pos = new_height - scrollerEl.getHeight() + (sampleSize.height + this.sampleItem.getMargins('tb'));
-
-		scrollerEl.dom.scrollTop = new_scroll_pos;
-		
-		this.showLoading();
-
-		this.onReload();
+		this.fireEvent('reload');
 	},
 
 	onMove : function() {
-		if(!this.sampleItem)
-			this.sampleItem = this.getSampleItem();
-		
-		var sampleSize = this.sampleItem.getSize();
-		var scrollerEl = Ext.Element.get(this.el.dom.parentNode);
-		
-		var items_per_row = Math.floor(this.el.getWidth() / (sampleSize.width + this.sampleItem.getMargins('lr')));
-		var rows_per_page = Math.ceil(scrollerEl.getHeight() / (sampleSize.height + this.sampleItem.getMargins('tb')));
-
-		var itemIndex = Math.floor(scrollerEl.getScroll().top / (sampleSize.height + this.sampleItem.getMargins('tb')) / rows_per_page) * items_per_row * rows_per_page - (items_per_row * rows_per_page);
-		if(itemIndex < 0) itemIndex = 0;
-		//var itemCount = rows_per_page * items_per_row * 3;
-		
-		if(!this.store.lastOptions || !this.store.lastOptions.params ||
-		   this.store.lastOptions.params.start == undefined || this.store.lastOptions.params.start != itemIndex)
+		this.fireEvent('reload');
+	},
+	
+	getItemSize : function() {
+		if(this.all.getCount() > 0)
 		{
-			// don't show loading unless it is more then a page difference
-			if(this.store.lastOptions && this.store.lastOptions.params &&  Math.abs(this.store.lastOptions.params.start - itemIndex) <= items_per_row * rows_per_page)
-			{
-				this.window.bottomToolbar.setText(this.loadingText);
-				
-				this.fireEvent("reload");
-			}
-			else
-			{
-				this.showLoading();
-				
-				this.fireEvent("reload");
-			}
+			var width = this.all.item(0).getWidth() + this.all.item(0).getMargins('lr');
+			var height = this.all.item(0).getHeight() + this.all.item(0).getMargins('tb');
+			
+			return {width: width, height: height};
+		}
+		else
+		{
+			return {width: 100, height: 97};
 		}
 	},
+	
+	getItemCount : function() {
+		if(this.all.getCount() > 0)
+		{
+			var itemSize = this.getItemSize();
+			var items_per_row = Math.floor(this.container.getWidth() / itemSize.width);
+			var rows_per_page = Math.ceil(this.container.getHeight() / itemSize.height);
+			
+			return {x: items_per_row, y: rows_per_page};
+		}
+		else
+		{
+			return {x: 4, y: 5};
+		}
+	},
+	
 	
 	showLoading : function() {
 		if(this.loading)
@@ -379,101 +364,18 @@ Ext.FolderView = Ext.extend(Ext.DataView, {
 		// make sure last read was a success if there is no items
 		if(success)
 		{
-			// if an add was done, remove the first items
-			if((options.add || options.insert) && options.params && options.params.limit)
-			{
-				this.store.lastOptions = this.store.lastOptions || {};
-				this.store.lastOptions.params = this.store.lastOptions.params || {};
-				if(options.add && !options.insert)
-				{
-					for(var i = 0; i < options.params.limit; i++)
-					{
-						this.store.remove(this.store.getAt(0));
-					}
-					// change last params value so it doesn't try to load again
-					this.store.lastOptions.params.start = options.params.start - options.params.limit * 2;
-				}
-				else
-				{
-					// remove the ones added
-					for(var i = 0; i < r.length; i++)
-					{
-						this.store.remove(r[i]);
-						this.store.insert(i, r[i]);
-					}
-					// remove off the end
-					for(var i = 0; i < r.length; i++)
-					{
-						this.store.remove(this.store.getAt(this.store.getCount()-1));
-					}
-					//this.store.lastOptions.params.start = options.params.start + options.params.limit;
-				}
-				this.store.lastOptions.params.limit = options.params.limit * 3;
-				
-			}
-			
-			// make sure there was no error
-			if(r.length == 0)
-			{
-				var error_element = Ext.Element.get(this.store.reader.xmlData.documentElement).child('error');
-				if(error_element)
-				{
-					Ext.Msg.show({
-						title: 'Error',
-						msg: error_element.dom.textContent,
-						buttons: Ext.MessageBox.ERROR
-					});
-					
-					// go to previous directory
-					this.address.fireEvent('change', this.address, this.address.startValue, this.address.getValue())
-					return;
-				}
-			}
-			
-			if(!this.sampleItem)
-				this.sampleItem = this.getSampleItem();
-				
-			var scrollerEl = Ext.Element.get(this.el.dom.parentNode);
-			var items_per_row = 1;
-			var sampleSize = this.sampleItem.getSize();
-			if(this.sampleItem.getWidth() == 0 && options.sampleSize != undefined)
-			{
-				sampleSize = options.sampleSize;
-			}
-			if(this.el.getWidth() == 0 && options.items_per_row != undefined)
-			{
-				items_per_row = options.items_per_row || 1;
-			}
-			else
-			{
-				items_per_row = Math.floor(this.el.getWidth() / (sampleSize.width + this.sampleItem.getMargins('lr'))) || 1;
-			}
-			var rows_per_page = Math.ceil(scrollerEl.getHeight() / (sampleSize.height + this.sampleItem.getMargins('tb')));
-			if(items_per_row < this.store.getTotalCount()) rows_per_page = rows_per_page || 1;
-			//var rows_per_page = Math.ceil(scrollerEl.getHeight() / (sampleSize.height + this.sampleItem.getMargins('tb'))) || 1;
-			
-			var itemIndex = Math.floor(scrollerEl.getScroll().top / (sampleSize.height + this.sampleItem.getMargins('tb')) / rows_per_page) * items_per_row * rows_per_page - (items_per_row * rows_per_page);
-			
-			// set height based on total count
-			var offset = (scrollerEl.getScroll().top / (rows_per_page || 1)) % 
-				(sampleSize.height + this.sampleItem.getMargins('tb')) * rows_per_page + 
-				((itemIndex<0)?0:(rows_per_page * (sampleSize.height + this.sampleItem.getMargins('tb'))));
-				
-			var new_height = Math.floor(this.store.getTotalCount() / items_per_row + 0.5) * (sampleSize.height + this.sampleItem.getMargins('tb'));
-			this.el.dom.style.marginTop = (scrollerEl.getScroll().top - offset) + 'px';
-			this.el.dom.style.height = new_height - (scrollerEl.getScroll().top - offset) + 'px';
-			
-	
-			// set window title
-			var address = this.address.getValue().split('/');
-			this.ownerCt.ownerCt.setTitle(address[address.length-2]);
 	
 			if(this.loading)
 			{
 				this.loading.setVisible(false);
 			}
+	
+			// set window title
+			var address = this.address.getValue().split('/');
+			this.ownerCt.ownerCt.setTitle(address[address.length-2]);
+			
 			// change the status bar text
-			this.window.bottomToolbar.setText('Displaying ' + this.store.getTotalCount() + ' item' + ((this.store.getTotalCount() != 1)?'s.':'.'));
+			this.ownerCt.ownerCt.bottomToolbar.setText('Displaying ' + this.store.getTotalCount() + ' item' + ((this.store.getTotalCount() != 1)?'s.':'.'));
 		}
 	},
 	
@@ -511,12 +413,13 @@ Ext.FolderView = Ext.extend(Ext.DataView, {
 
     // private
     onBeforeLoad : function(){
-        if(this.loadingText){
+        if(this.loadingText)
+		{
 			this.clearSelections(false, true, true);
 			if(this.empty)
 				this.empty.setVisible(false);
-			this.all.clear();
         }
+		this.all.clear();
     },
 	
     /**
