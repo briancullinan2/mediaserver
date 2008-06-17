@@ -35,7 +35,7 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 			id: "index"                 // The element within the row that provides an ID for the record (optional)
 		}, File);
 		
-		var combo = new Ext.Address({
+		var address = new Ext.Address({
 			store: new Ext.data.Store({
 				url: '/mediaserver/plugins/select.php',
 				reader: FileReader,
@@ -64,10 +64,16 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 			itemSelector:'div.thumb-wrap',
 			overClass:'x-view-over',
 			cls: 'ux-data-view',
-			address: combo
+			address: address
 		});
 		
-		combo.folderview = view;
+		var backbutton = new Ext.Toolbar.SplitButton({text: 'Back', menu: [], cls:"x-btn-text-icon", iconCls: 'ux-back-button'});
+		var forwardbutton = new Ext.Toolbar.SplitButton({menu: [], cls:"x-btn-icon", iconCls: 'ux-forward-button', backbutton: backbutton});
+		backbutton.forwardbutton = forwardbutton;
+		
+		address.folderview = view;
+		address.backbutton = backbutton;
+		address.forwardbutton = forwardbutton;
 		
 		var folderTasks = new Ext.Panel({
 			frame:true,
@@ -150,14 +156,13 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 		
 		var topToolbar = win.getTopToolbar()
 		topToolbar.add(
-			{xtype: 'tbsplit', text: 'Back', menu: [], cls:"x-btn-text-icon", iconCls: 'back-button'},
-			{xtype: 'tbsplit', menu: [], cls:"x-btn-icon", iconCls: 'forward-button'},
-			{xtype: 'tbbutton', cls:"x-btn-icon", iconCls: 'up-button'},
-			{xtype: 'tbbutton', cls:"x-btn-icon", iconCls: 'reload-button'},
+			backbutton, forwardbutton,
+			{xtype: 'tbbutton', cls:"x-btn-icon", iconCls: 'ux-up-button', tooltip: 'Up'},
+			{xtype: 'tbbutton', cls:"x-btn-icon", iconCls: 'ux-reload-button', tooltip: 'Refresh'},
 			'->',
 			'|',
-			'Address: ',
-			combo
+			'Address:',
+			address
 		);
 
         win.show();

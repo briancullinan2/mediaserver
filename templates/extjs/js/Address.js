@@ -101,9 +101,11 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 		
 		// triggerfield superclass
         Ext.form.TriggerField.superclass.onRender.call(this, ct, position);
-		this.toolsParent = ct.createChild({tag: 'table', children: [{tag: 'tr'}]});
+		this.toolsParent = ct.createChild({tag: 'table', cls: 'ux-address', children: [{tag: 'tr', children: [{tag: 'td', cls: 'x-form-text ux-address-end'}]}]});
 		this.tools = this.toolsParent.child('tr');
-        this.wrap = this.el.wrap({cls: "x-form-field-wrap"});
+		this.wrap = this.toolsParent.child('td');
+		this.tools.createChild({tag: 'td', cls: 'x-form-text ux-address-start', children: [{html: '&nbsp;'}]}, this.wrap);
+        //this.wrap = this.tools.createChild({tag: 'td', cls: "x-form-field-wrap"});
 		//this.wrap.appendTo(this.tools);
         //this.wrap = this.el.wrap({cls: "x-form-field-wrap"});
         this.trigger = this.wrap.createChild(this.triggerConfig ||
@@ -115,6 +117,11 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
         if(!this.width){
             this.wrap.setWidth(this.el.getWidth()+this.trigger.getWidth());
         }
+		
+		this.el.remove();
+		this.trigger.remove();
+		this.wrap.appendChild(this.el);
+		this.tools.createChild({tag: 'td', cls: 'x-form-field-wrap'}).appendChild(this.trigger);
 		
 		// combo superclass
         if(this.hiddenName){
@@ -166,6 +173,32 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 						this.folderview.dir = this.getValue();
 						this.folderview.fireEvent("reload");
 					}
+					if(oldValue)
+					{
+						var dirname = '';
+						var oldDirs = oldValue.split('/');
+						for(var i = oldDirs.length-1; i >= 0; i--)
+						{
+							if(oldDirs[i] != '')
+							{
+								dirname = oldDirs[i];
+								break;
+							}
+						}
+						this.backbutton.menu.insert(0, new Ext.menu.Item({
+							text: dirname,
+							hideDelay: 100,
+							showDelay: 100,
+							path: oldValue,
+							listeners: {
+								'click': {
+									fn: this.backclick,
+									delay: 150,
+									scope: this
+								}
+							}
+						}));
+					}
 					return true;
 				},
 				scope: this
@@ -181,7 +214,7 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 					if(this.el.isVisible() == false)
 					{
 						this.clearButtons();
-						this.el.setDisplayed(true);
+						this.el.setVisible(true);
 						this.wrap.addClass('ux-form-active')
 						this.wrap.removeClass('ux-form-inactive')
 						this.el.dom.disabled = false;
@@ -197,12 +230,15 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 		this.wrap.on({
 			'click': {
 				fn: function() {
-					this.clearButtons();
-					this.el.setDisplayed(true);
-					this.wrap.addClass('ux-form-active')
-					this.wrap.removeClass('ux-form-inactive')
-					this.el.dom.disabled = false;
-					this.focus(true);
+					if(this.el.isVisible() == false)
+					{
+						this.clearButtons();
+						this.el.setVisible(true);
+						this.wrap.addClass('ux-form-active')
+						this.wrap.removeClass('ux-form-inactive')
+						this.el.dom.disabled = false;
+						this.focus(true);
+					}
 				},
 				scope: this
 			}
@@ -210,14 +246,48 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 		
 		
 		// add some extra stuff to toolbar
-		if(this.wrap)
-			this.wrap.dom.style.width = '100%';
+		this.el.dom.style.width = '100%';
+		this.wrap.dom.style.width = '100%';
+		this.container.dom.style.width = '100%';
 
 		if(!this.buttons)
 			this.buttons = [];
 		
 		this.setButtons();
 		
+	},
+	
+	forwardclick : function(menuitem) {
+	},
+	
+	backclick : function(menuitem) {
+		this.startValue = menuitem.path;
+		if(String(this.getValue()) !== String(this.startValue)){
+			this.fireEvent('change', this.el, menuitem.path, null);
+			var menu = this.backbutton.menu;
+			for(var i = 0; i < menu.items.getCount(); i++)
+			{
+				var item = menu.items.item(0);
+				this.forwardbutton.menu.insert(0, new Ext.menu.Item({
+					text: item.text,
+					hideDelay: 100,
+					showDelay: 100,
+					path: item.path,
+					listeners: {
+						'click': {
+							fn: this.forwardclick,
+							delay: 150,
+							scope: this
+						}
+					}
+				}));
+				menu.remove(item);
+				if(item == this)
+				{
+					break;
+				}
+			}
+		}
 	},
 	
     // private
@@ -246,7 +316,7 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 	},
 	
 	setButtons : function() {
-		this.el.setDisplayed(false);
+		this.el.setVisible(false);
 		this.wrap.removeClass('ux-form-active')
 		this.wrap.addClass('ux-form-inactive')
 		this.clearButtons();
@@ -254,7 +324,6 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 		// split the items and make drop downs for each
 		var folders = this.getValue().split('/');
 		var current_dir = '/';
-		var first = true;
 		for(var i = 0; i < folders.length; i++)
 		{
 			if(folders[i] != '')
@@ -303,18 +372,17 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 							fn: function() {
 								this.address.startValue = this.path;
 								if(String(this.address.getValue()) !== String(this.address.startValue)){
-									this.address.fireEvent('change', this.address, this.path, this.startValue);
+									this.address.fireEvent('change', this.address.el, this.path, this.address.getValue());
 								}
 							},
 							delay: 100
 						}
 					}
 				});
-				//this.tools.createChild({tag: 'td', cls: 'x-form-text ' + (first ? 'ux-address-start' : 'ux-address-middle')}, this.wrap);
+				var newCell = this.tools.createChild({tag: 'td', cls: 'x-form-text ux-address-middle'}, this.wrap);
 				//folder_dropdown.render();
 				this.buttons[this.buttons.length] = folder_dropdown;
-				//folder_dropdown.render();
-				first = false;
+				folder_dropdown.render(newCell);
 			}
 		}
 		

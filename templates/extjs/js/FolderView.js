@@ -82,8 +82,9 @@ Ext.FolderView = Ext.extend(Ext.DataView, {
 		{
 			if(this.address)
 			{
-				this.address.setValue(record.get('path'));
-				this.address.triggerBlur();
+				this.address.fireEvent('change', this.address.el, record.get('path'), this.address.getValue());
+				//this.address.setValue(record.get('path'));
+				//this.address.triggerBlur();
 			}
 		}
 		else
@@ -263,9 +264,7 @@ Ext.FolderView = Ext.extend(Ext.DataView, {
 		// make sure it has changed by at least a row
 		// item count must also be the same for it to exit
 		if(this.store.lastOptions && this.store.lastOptions.params && 
-			this.store.lastOptions.params.start && 
-			(Math.abs(this.store.lastOptions.params.start - params.start) < itemCount.x || Math.abs(params.start - this.store.lastOptions.params.start) < itemCount.x) && 
-			this.store.lastOptions.params.limit && params.limit == this.store.lastOptions.params.limit &&
+			this.store.lastOptions.params.start == params.start &&
 			add == true)
 		{
 			return;
@@ -275,13 +274,16 @@ Ext.FolderView = Ext.extend(Ext.DataView, {
 			// if the difference is zero then don't reload
 			if(newStart == -1 && add == true)
 			{
+				this.store.lastOptions = this.store.lastOptions || {};
+				this.store.lastOptions.params = this.store.lastOptions.params || {};
+				this.store.lastOptions.params.start = params.start;
+				this.store.lastOptions.params.limit = params.limit;
 				this.refresh();
 			}
 			else
 			{
 				// if it is less then a page in difference then display loading in status
 				if(this.store.lastOptions && this.store.lastOptions.params && 
-					this.store.lastOptions.params.start && 
 					(Math.abs(this.store.lastOptions.params.start - params.start) < params.limit || Math.abs(params.start - this.store.lastOptions.params.start) < params.limit))
 				{
 					this.ownerCt.ownerCt.bottomToolbar.setText(this.loadingText);

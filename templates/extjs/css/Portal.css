@@ -51,17 +51,42 @@
 	overflow:hidden;
 }
 
+
+.ux-address {
+	width:100%;
+	border-collapse:collapse;
+}
+
+.ux-address .x-form-field {
+	background:none;
+	border:0px;
+	padding:2px;
+	margin:1px;
+}
+
 .ux-address .ux-address-middle {
 	border-right:0px;
 	border-left:0px;
+	padding:0px 0px 0px 1px;
 }
 
 .ux-address .ux-address-start {
-	border-right:0px;
+	background:none;
+	border-left:0px;
+	border-top:0px;
+	border-bottom:0px;
+	padding:0px;
 }
 
-.ux-address .x-form-trigger {
+.ux-address .ux-address-end {
+	border-left:0px;
+	padding:0px;
+}
+
+.ux-address .x-form-field-wrap .x-form-trigger {
 	position:relative;
+	height: 24px;
+	top:-1;
 }
 
 
@@ -79,16 +104,16 @@
 .ux-data-view {
 	overflow:hidden;
 }
-.back-button {
+.ux-back-button {
     background-image:url(../images/back.png) !important;
 }
-.forward-button {
+.ux-forward-button {
     background-image:url(../images/forward.png) !important;
 }
-.up-button {
+.ux-up-button {
     background-image:url(../images/up.png) !important;
 }
-.reload-button {
+.ux-reload-button {
     background-image:url(../images/reload.png) !important;
 }
 
