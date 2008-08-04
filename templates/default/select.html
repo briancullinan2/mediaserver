@@ -29,8 +29,7 @@
 		</p>
 		<input name="select" type="submit" value="Save" /><input type="reset" value="Reset" /><br />
 	</form>
-	{assign var=site_template value=$smarty.const.SITE_TEMPLATE}
-	{include file="$site_template/pages.html"}<br />
+	{include file=$templates.TEMPLATE_PAGES}<br />
 {elseif $smarty.request.detail == 3}
 	There are {$total_count} result(s).<br />
 	{assign var=page value=$smarty.request.start|intval}
@@ -81,8 +80,7 @@
 		</p>
 		<input name="select" type="submit" value="Save" /><input type="reset" value="Reset" /><br />
 	</form>
-	{assign var=site_template value=$smarty.const.SITE_TEMPLATE}
-	{include file="$site_template/pages.html"}<br />
+	{include file=$templates.TEMPLATE_PAGES}<br />
 {elseif $smarty.request.detail == 4}
 	There are {$total_count} result(s).<br />
 	{assign var=page value=$smarty.request.start|intval}
@@ -92,7 +90,7 @@
 		<input type="submit" name="select" value="All" /><input type="submit" name="select" value="None" /><br />
 		<table class="select_list">
 			<thead>
-				<td>On/Off</td>
+				</thead><td>On/Off</td>
 {assign var=columns value=$smarty.session.columns}{assign var=column_count value=$columns|@count}
 {foreach name=columns from=$columns item=column_value}{assign var=items_after value=''}{assign var=items_before value=''}
 {section name=link_column loop=$columns}
@@ -121,8 +119,7 @@
 		</table>
 		<input name="select" type="submit" value="Save" /><input type="reset" value="Reset" /><br />
 	</form>
-	{assign var=site_template value=$smarty.const.SITE_TEMPLATE}
-	{include file="$site_template/pages.html"}<br />
+	{include file=$templates.TEMPLATE_PAGES}<br />
 {elseif $smarty.request.detail == 5}
 	There are {$total_count} result(s).<br />
 	{assign var=page value=$smarty.request.start|intval}
@@ -131,7 +128,7 @@
 	<form name="select" action="" method="post">
 		<input type="submit" name="select" value="All" /><input type="submit" name="select" value="None" /><br />
 		<table class="select_list">
-			<thead>
+			<thead></thead>
 {assign var=columns value=$smarty.session.columns}{assign var=column_count value=$columns|@count}
 {foreach name=columns from=$columns item=column_value}{assign var=items_after value=''}{assign var=items_before value=''}
 {section name=link_column loop=$columns}
@@ -159,6 +156,5 @@
 		</table>
 		<input name="select" type="submit" value="Save" /><input type="reset" value="Reset" /><br />
 	</form>
-	{assign var=site_template value=$smarty.const.SITE_TEMPLATE}
-	{include file="$site_template/pages.html"}<br />
+	{include file=$templates.TEMPLATE_PAGES}<br />
 {/if}

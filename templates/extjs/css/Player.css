@@ -1,0 +1,13 @@
+@charset "utf-8";
+/* CSS Document */
+
+.player {
+    background-image:url(../images/player16x16.png) !important;
+}
+#player-win-shortcut span {
+	display:block;
+	margin:8px 8px 0px 8px;
+    width:48px;
+    height:48px;
+    background-image: url(../images/player48x48.png) !important;
+}

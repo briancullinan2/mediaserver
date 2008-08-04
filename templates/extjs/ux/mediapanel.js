@@ -325,6 +325,23 @@ Ext.apply(Ext.ux.MediaBase.prototype , {
                          }
              }
           :false)
+   ,"_VLC" : Ext.apply({
+             tag      : 'object'
+            ,cls      : 'x-media'
+            ,type     : "application/x-vlc-plugin"
+            ,data     : '@url'
+            ,params   : {autostart    :'@start'}
+       },Ext.isIE?
+            { classid      :'clsid:9BE31822-FDAD-461B-AD51-BE1D1C159921'
+             ,codebase     :'http://www.videolan.org'
+             ,type         : 'application/x-vlc-plugin'
+             ,params   : { src   : "@url"
+                          ,controller   :'@controls'
+                          ,autostart    :'@start'
+                         }
+             }
+          :false)
+
 
 });
 

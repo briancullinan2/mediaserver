@@ -25,16 +25,34 @@ define('MODULES_DIR', SITE_LOCALROOT . 'modules/');
 define('SITE_HTMLPATH',            			    'http://209.250.30.30/');
 define('SITE_HTMLROOT',                                  'mediaserver/');
 define('SITE_DEFAULT',            				   'templates/default/');
-define('SITE_TEMPLATE',            					 'templates/extjs/');
+// set the template
+if(isset($_REQUEST['template']))
+{
+	if(substr($_REQUEST['template'], strlen($_REQUEST['template']) - 1, 1) != '/')
+		$_REQUEST['template'] .= '/';
+	define('SITE_TEMPLATE',            					 'templates/' . $_REQUEST['template']);
+	$_SESSION['template'] = $_REQUEST['template'];
+}
+elseif(isset($_SESSION['template']))
+{
+	define('SITE_TEMPLATE',            					 'templates/' . $_SESSION['template']);
+}
+else
+{
+	define('SITE_TEMPLATE',            					 'templates/extjs/');
+}
+
+// plugins directory	
 define('SITE_PLUGINS', 						 SITE_HTMLROOT . 'plugins/');
 
 // extra constants
-define('SITE_NAME',			 'Brian\'s Media Website');
-define('BUFFER_SIZE', 						  24*1024);
+define('SITE_NAME',			 'Brian\'s Media Website'); // name for the website
+define('CONVERT', 				   '/usr/bin/convert'); // image magick's convert program
+define('BUFFER_SIZE', 						  24*1024); // max amount to output when accessing a file
+define('TMP_DIR', 						      '/tmp/'); // a temporary directory to use for creating thumbnails
 
 // comment-out-able
 ini_set('error_reporting', E_ALL);
-ini_set('include_path', './:' . SITE_LOCALROOT . ':' . SITE_LOCALROOT . 'include/');
 
 
 loadMime();

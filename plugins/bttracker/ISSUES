@@ -1,0 +1,9 @@
+In no particular order
+
+- For reasons that make no sense, the summary page can occasionally get
+  negative numbers in the results. That's what sanity.php is for, but this
+  script causes the tracker to become unresponsive while working. Use
+  sanity.php?nolock=y to avoid.
+- Speed tracking is rough at best. When starting or after long periods of
+  inactivity, it might take up to half an hour to become accurate. It will
+  most likely be understated most of the time.

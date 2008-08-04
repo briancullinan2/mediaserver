@@ -1,21 +1,16 @@
-<!-- LIST XML "RSS Feed" -->
-<!-- BEGIN LIST --><?xml version="1.0" encoding="utf-8"?>
+{* LIST XML "RSS Feed" *}
+<?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0">
 	<channel>
-		<title>{SITE_NAME} - {CATEGORY}</title>
-		<link>{LINK}</link>
-		<description>{DESCRIPTION}</description>
-		{ITEMS}
+		<title>{$smarty.const.SITE_NAME|utf8_encode|htmlspecialchars} - {$smarty.request.cat}</title>
+		<link>{$smarty.const.SITE_HTMLPATH}</link>
+		<description></description>
+		{section name=file loop=$files}
+			<item>
+				<title>{$files[file].Filename|utf8_encode|htmlspecialchars}</title>
+				<link>{$smarty.const.SITE_HTMLPATH}{$smarty.const.SITE_PLUGINS}file/{$smarty.request.cat}/{$files[file].id}/{$files[file].Filename|utf8_encode|urlencode|htmlspecialchars}</link>
+				<description></description>
+			</item>
+		{/section}
 	</channel>
 </rss>
-<!-- END LIST -->
-	
-		<!-- BEGIN ITEM -->
-		<item>
-			<title>{TITLE}</title>
-			<link>{LINK}</link>
-			<description>{DESCRIPTION}</description>
-		</item>
-	
-		<!-- END ITEM -->
-		

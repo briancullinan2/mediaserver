@@ -13,8 +13,7 @@ $smarty->caching = false;
 $smarty->force_compile = true;
 
 
-
 if($_SERVER['SCRIPT_FILENAME'] == __FILE__)
-	$smarty->display(SITE_LOCALROOT . SITE_TEMPLATE . 'index.html');
+	$smarty->display($templates['TEMPLATE_INDEX']);
 
 ?>

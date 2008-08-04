@@ -8,8 +8,8 @@ require_once '../include/common.php';
 
 // load template to create output
 if($_SERVER['SCRIPT_FILENAME'] == __FILE__)
-	$smarty = new Smarty;
-	
+	$smarty = new Smarty();
+
 // get all columns from every module
 $columns = getAllColumns();
 $smarty->assign('columns', $columns);
@@ -18,6 +18,9 @@ $smarty->assign('columns', $columns);
 if(isset($_REQUEST['search']))
 {
 
+	if(isset($_POST['clear']) || isset($_GET['clear']))
+		unset($_REQUEST['includes']);
+
 	// store this query in the session
 	$_SESSION['search'] = array();
 	$_SESSION['search']['cat'] = @$_REQUEST['cat'];
@@ -25,17 +28,6 @@ if(isset($_REQUEST['search']))
 	$_SESSION['search']['lim'] = @$_REQUEST['lim'];
 	$_SESSION['search']['dir'] = @$_REQUEST['dir'];
 	$_SESSION['search']['order_by'] = @$_REQUEST['order_by'];
-	
-	// redirect if this page is called specifically
-	if($_SERVER['SCRIPT_FILENAME'] == __FILE__)
-	{
-		// redirect to select if there is no limit
-		if($_SESSION['search']['lim'] == -1)
-			header('Location: /' . SITE_PLUGINS . 'select.php');
-		// redirect if limit is set
-		else
-			header('Location: /' . SITE_PLUGINS . 'list.php');
-	}
 	
 	// redirect back to self to clear post
 	elseif(isset($_POST['search']))
@@ -52,8 +44,9 @@ if(isset($_SESSION['search']))
 
 $smarty->assign('modules', $GLOBALS['modules']);
 
+$smarty->assign('templates', $templates);
 if($_SERVER['SCRIPT_FILENAME'] == __FILE__)
-	$smarty->display(SITE_TEMPLATE . 'search.html');
+	$smarty->display($templates['TEMPLATE_SEARCH']);
 
 
 

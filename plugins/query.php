@@ -11,12 +11,13 @@ $smarty->debugging = false;
 $smarty->caching = false;
 $smarty->force_compile = true;
 
-include 'search.php';
-include 'select.php';
-include 'type.php';
-include 'display.php';
+include_once 'search.php';
+include_once 'select.php';
+include_once 'type.php';
+include_once 'display.php';
 
+$smarty->assign('templates', $templates);
 if($_SERVER['SCRIPT_FILENAME'] == __FILE__)
-	$smarty->display(SITE_LOCALROOT . SITE_TEMPLATE . 'query.html');
+	$smarty->display($templates['TEMPLATE_QUERY']);
 
 ?>

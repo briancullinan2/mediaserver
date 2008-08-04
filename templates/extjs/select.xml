@@ -1,3 +1,4 @@
+{* LIST XML "XML File List" *}
 {php}
 global $smarty;
 $ext_icons = array();
@@ -31,7 +32,7 @@ $smarty->assign('type_icons', $type_icons);
 {/foreach}
 		</tip>
 		<path>{$files[file].Filepath|utf8_encode|htmlspecialchars}</path>
-		<link>/{$smarty.const.SITE_PLUGINS}file.php?cat={$smarty.request.cat}&amp;id={$files[file].id}</link>
+		<link>{$smarty.const.SITE_HTMLPATH}{$smarty.const.SITE_PLUGINS}file/{$smarty.request.cat}/{$files[file].id}/{$files[file].Filename|utf8_encode|urlencode|htmlspecialchars}</link>
 		<short>{$files[file].Filename|truncate:13:"...":true|utf8_encode|htmlspecialchars}</short>
 	</file>
 {/section}

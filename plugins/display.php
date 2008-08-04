@@ -100,8 +100,9 @@ if(isset($_SESSION['display']))
 	$smarty->assign('display', $_SESSION['display']);
 
 
+$smarty->assign('templates', $templates);
 if($_SERVER['SCRIPT_FILENAME'] == __FILE__)
-	$smarty->display(SITE_TEMPLATE . 'display.html');
+	$smarty->display($templates['TEMPLATE_DISPLAY']);
 
 
 ?>

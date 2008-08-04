@@ -58,7 +58,7 @@ if( isset($state_current) && isset($watched[$state_current['index']]) && $watche
 {
 	$i = $state_current['index'];
 }
-else
+elseif(isset($state_current))
 {
 	// put it back on because it doesn't match
 	array_push($state, $state_current);
@@ -88,7 +88,13 @@ for($i; $i < count($watched); $i++)
 		// clear state information
 		if(file_exists(SITE_LOCALROOT . "state_dirs.txt"))
 		{
-			unlink(SITE_LOCALROOT . "state_dirs.txt");
+			@unlink(SITE_LOCALROOT . "state_dirs.txt");
+			if(file_exists(SITE_LOCALROOT . 'state_dirs.txt')) $fp = fopen(SITE_LOCALROOT . "state_dirs.txt", "w");
+			if(isset($fp))
+			{
+				fwrite($fp, '');
+				fclose($fp);
+			}
 		}
 		
 		// set the last updated time in the watched table
@@ -171,6 +177,21 @@ foreach($GLOBALS['modules'] as $i => $module)
 	call_user_func(array($module, 'cleanup'), $mysql, $watched);
 }
 
+// readd all the folders that lead up to the watched folder
+// these will always be deleted by the cleanup, but there are only a couple
+for($i = 0; $i < count($watched); $i++)
+{
+	$folders = split('/', $watched[$i]['Filepath']);
+	$curr_dir = '/';
+	for($j = 0; $j < count($folders); $j++)
+	{
+		if($folders[$j] != '')
+		{
+			$curr_dir .= $folders[$j] . '/';
+			getfile($curr_dir);
+		}
+	}
+}
 
 // close output buffer
 ob_end_flush();
@@ -233,7 +254,7 @@ function getdir( $dir )
 	{
 		$i = $state_current['index'];
 	}
-	else
+	elseif(isset($state_current))
 	{
 		// put it back on because it doesn't match
 		array_push($state, $state_current);

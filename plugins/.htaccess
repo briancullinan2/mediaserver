@@ -2,4 +2,5 @@
 RewriteEngine on
 
 RewriteBase   /mediaserver/plugins/
-RewriteRule ^file\.php/([^/]*)/([0-9]*)/(.*)$ file.php?cat=$1&id=$2&Filename=$3 [R,L]
+RewriteRule ^file/(.*)/([0-9]*)/(.*)$ file.php?cat=$1&id=$2&filename=$3 [L]
+RewriteRule ^bt/(([0-9]*,?)*)/(.*)$ bt.php?item=$1&btorrent= [L]

@@ -35,11 +35,10 @@ table.select_list thead a {
 </head>
 
 <body>
-{assign var=site_template value=$smarty.const.SITE_TEMPLATE}
-{include file="$site_template/search.html"}<br />
-{include file="$site_template/select.html"}<br />
-{include file="$site_template/type.html"}<br />
-{include file="$site_template/display.html"}<br />
+{include file=$templates.TEMPLATE_SEARCH}<br />
+{include file=$templates.TEMPLATE_SELECT}<br />
+{include file=$templates.TEMPLATE_TYPE}<br />
+{include file=$templates.TEMPLATE_DISPLAY}<br />
 </body>
 </html>
 {elseif $smarty.request.detail == 5}
@@ -51,12 +50,11 @@ table.select_list thead a {
 </head>
 
 <body>
-{assign var=site_template value=$smarty.const.SITE_TEMPLATE}
-{include file="$site_template/address.html"}<br />
-{include file="$site_template/search.html"}<br />
-{include file="$site_template/select.html"}<br />
-{include file="$site_template/type.html"}<br />
-{include file="$site_template/display.html"}<br />
+{include file=$templates.TEMPLATE_ADDRESS}<br />
+{include file=$templates.TEMPLATE_SEARCH}<br />
+{include file=$templates.TEMPLATE_SELECT}<br />
+{include file=$templates.TEMPLATE_TYPE}<br />
+{include file=$templates.TEMPLATE_DISPLAY}<br />
 </body>
 </html>
 {/if}

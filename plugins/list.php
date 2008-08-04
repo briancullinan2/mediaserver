@@ -13,34 +13,11 @@ $mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 if($_SERVER['SCRIPT_FILENAME'] == __FILE__)
 	$smarty = new Smarty;
 
-// get all the possible types for a list from templates directory
-$files = db_file::get(NULL, array('DIR' => SITE_TEMPLATE));
-
-$types = array();
-foreach($files as $i => $file)
-{
-	// read first line of file to check if it is a list tag
-	$fp = fopen(SITE_TEMPLATE . $file, 'r');
-	$line = fgets($fp, 128); // unlikely that it will ever be longer then this
-	fclose($fp);
-	
-	// check if it is LIST tag
-	$result = preg_match('/\{\*\s+LIST\s+(.*)\s+\*\}.*/', $line, $matches);
-	
-	if($result == true)
-	{
-		$args = parseCommandArgs($matches[1]);
-		// get filename without extension
-		$type = substr($file, 0, strrpos($file, '.'));
-		$types[$type] = array('file' => $file, 'encoding' => $args[0], 'name' => $args[1]);
-	}
-}
+include_once 'type.php';
 
 // select type of output
 if(!isset($_REQUEST['type']) || !isset($types[$_REQUEST['type']]))
 	$_REQUEST['type'] = 'rss';
-	
-$smarty->assign('types', $types);
 
 // initialize properties for select statement
 $props = array();
@@ -73,9 +50,12 @@ if(!isset($_REQUEST['cat']))
 }
 
 // add where includes
-if(isset($_SESSION['selected']) && count($_SESSION['selected']) > 0)
+if((isset($_SESSION['selected']) && count($_SESSION['selected']) > 0) || isset($_REQUEST['selected_only']))
 {
-	$props['WHERE'] = 'id=' . join(' OR id=', $_SESSION['selected']);
+	if(isset($_SESSION['selected']) && count($_SESSION['selected']) > 0)
+		$props['WHERE'] = 'id=' . join(' OR id=', $_SESSION['selected']);
+	elseif(isset($_REQUEST['selected_only']))
+		$props['WHERE'] = 'id=0';
 	unset($props['OTHER']);
 }
 else
@@ -96,9 +76,7 @@ else
 		}
 		$props['WHERE'] .= join(' OR ', $columns) . ')';
 	}
-
 }
-
 
 // make select call
 $files = call_user_func(array($_REQUEST['cat'], 'get'), $mysql, $props);
@@ -134,6 +112,10 @@ elseif($_REQUEST['type'] == 'wpl')
 {
 	header('Content-Type: application/vnd.ms-wpl');
 }
+else
+{
+	header('Content-Type: ' . getMime($types[$_REQUEST['type']]['file']));
+}
 
 
 // output entire template
@@ -141,7 +123,7 @@ elseif($_REQUEST['type'] == 'wpl')
 // this is how we implement FRAME functionality! very tricky
 // this makes the caller in charge of using the output whereever it wants
 if($_SERVER['SCRIPT_FILENAME'] == __FILE__)
-	$smarty->display(SITE_TEMPLATE . $types[$_REQUEST['type']]['file']);
+	$smarty->display($types[$_REQUEST['type']]['file']);
 	
 	
 

@@ -78,6 +78,14 @@ elseif( isset($_REQUEST['remove']) )
 }
 
 ?>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+	<meta http-equiv="Pragma" content="no-cache">
+	<meta http-equiv="Expires" content="-1">
+	<title><?=SITE_NAME?></title>
+</head>
+<body>
 
 This is a list of folders on the server to watch for media files:<br />
 <?
@@ -88,23 +96,25 @@ if( $error != '' )
 <?
 }
 ?>
-
-<form action="" method="post">
-	<select name="watch" size="10">
-	
-	<?
-		foreach($watched as $i => $watch)
-		{
-		?>
-			<option value="<?=$watch['id']?>"><?=$watch['Filepath']?></option>
+	<form action="" method="post">
+		<select name="watch" size="10">
+		
 		<?
-		}
-	?>
-	</select>
-	<br />
-	<input type="submit" value="Remove" name="remove" />
-	<br />
-	<input type="text" name="addpath" value="<?=(isset($_REQUEST['addpath'])?$_REQUEST['addpath']:"")?>" />
-	<input type="submit" value="Add" name="add" />
-	<br />
-</form>
+			foreach($watched as $i => $watch)
+			{
+			?>
+				<option value="<?=$watch['id']?>"><?=$watch['Filepath']?></option>
+			<?
+			}
+		?>
+		</select>
+		<br />
+		<input type="submit" value="Remove" name="remove" />
+	</form>
+	<form action="" method="post">
+		<input type="text" name="addpath" value="<?=(isset($_REQUEST['addpath'])?$_REQUEST['addpath']:"")?>" />
+		<input type="submit" value="Add" name="add" />
+		<br />
+	</form>
+</body>
+</html>

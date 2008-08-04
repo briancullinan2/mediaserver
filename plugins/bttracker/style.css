@@ -1,0 +1,61 @@
+th {
+	background-color: #CCCC99;
+	padding: 4px;
+	border-bottom: 2px solid #664D33;
+}
+tr.row0 {
+	background-color: #A7BCD3;
+}
+tr.row1 {
+	background-color: #8AA9C6;
+}
+body {
+	font: 12px tahoma, verdana, arial, sans-serif;
+	background-color: #99B2CC;
+	color: #333333;
+}
+h1 { /* Tracker Header/Title */
+	font: 24px verdana, sans-serif;
+	text-align: center;
+	text-decoration: underline;
+}
+h2 { /* "Notes" / Smaller Page Headers */
+	font: 18px verdana, sans-serif;
+}
+a {
+	color: white;
+	text-decoration: none;
+	background-color: transparent;
+}
+a:hover {
+	text-decoration: underline;
+}
+table.torrentlist td {
+	padding: 4px;
+}
+.details {
+	font: 10px verdana, arial, sans-serif;
+	height: 0px;
+}
+p.error {
+	color: red;
+	text-align: center;
+	font-weight: bold;
+}
+table {
+	width: 100%;
+}
+/* table.torrentlist changes are visible only if you set	cellspacing > 0 
+	in the php source (this will be the color between cells)
+table.torrentlist {
+	background: #999999;
+}*/
+.center {	
+	text-align: center; 
+}
+.left {
+	text-align: left;
+}
+.right {
+	text-align: right;
+}

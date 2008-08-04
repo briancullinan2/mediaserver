@@ -1,9 +1,9 @@
 <?php
 
-require_once 'modules/db_file.php';
+require_once SITE_LOCALROOT . 'modules/db_file.php';
 
 // include the id handler
-require_once 'ID3/getid3.php';
+require_once SITE_LOCALROOT . 'include/ID3/getid3.php';
 
 // set up id3 reader incase any files need it
 $getID3 = new getID3();
@@ -154,11 +154,18 @@ class db_image extends db_file
 	// returns an array of thumbnails
 	static function makeThumbs($file)
 	{
-		$tmp_name = SITE_LOCALROOT . md5($file) . '.jpg';
+		$tmp_name = TMP_DIR . md5($file) . '.jpg';
+		if(file_exists($tmp_name)) $tmp_name = $tmp_name = TMP_DIR . md5($file . microtime()) . '.jpg';
 		
 		// first make highest size thumb
-		$cmd = 'convert "' . $file . '[0]" -resize "512x512" -format jpeg "' . $tmp_name . '"';
+		$cmd = CONVERT . ' "' . $file . '[0]" -resize "512x512" -format jpeg "' . $tmp_name . '"';
 		exec($cmd, $out, $ret);
+		
+		if($ret != 0)
+		{
+			print 'Error: Cannot create thumbnail (' . $file . ' -> ' . $tmp_name . ').';
+			return '';
+		}
 		
 		// read in image into array
 		$fp = fopen($tmp_name, 'r');

@@ -102,6 +102,7 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 		// triggerfield superclass
         Ext.form.TriggerField.superclass.onRender.call(this, ct, position);
 		this.toolsParent = ct.createChild({tag: 'table', cls: 'ux-address', children: [{tag: 'tr', children: [{tag: 'td', cls: 'x-form-text ux-address-end'}]}]});
+		this.toolsParent.set({'cellspacing': 0, 'cellpadding': 0, 'border': 0})
 		this.tools = this.toolsParent.child('tr');
 		this.wrap = this.toolsParent.child('td');
 		this.tools.createChild({tag: 'td', cls: 'x-form-text ux-address-start', children: [{html: '&nbsp;'}]}, this.wrap);
@@ -165,14 +166,9 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 				scope: this
 			},
 			'change': {
-				fn: function(input, newValue, oldValue) {
+				fn: function(input, newValue, oldValue, params) {
 					this.setValue(newValue);
 					this.setButtons();
-					if(this.folderview)
-					{
-						this.folderview.dir = this.getValue();
-						this.folderview.fireEvent("reload");
-					}
 					if(oldValue)
 					{
 						var dirname = '';
@@ -185,20 +181,14 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 								break;
 							}
 						}
-						this.backbutton.menu.insert(0, new Ext.menu.Item({
-							text: dirname,
-							hideDelay: 100,
-							showDelay: 100,
-							path: oldValue,
-							listeners: {
-								'click': {
-									fn: this.backclick,
-									delay: 150,
-									scope: this
-								}
-							}
-						}));
+						this.addMenuItem(dirname, this.grid.store.lastOptions.params, this.backbutton.menu, this.backclick);
+						if(!this.forwardbutton.disabled)
+							this.forwardbutton.menu.removeAll();
+						this.forwardbutton.disable();
+						this.backbutton.enable();
 					}
+					this.grid.store.baseParams.dir = (params)?(params.dir || this.getValue()):this.getValue();
+					this.grid.store.load({params: params});
 					return true;
 				},
 				scope: this
@@ -257,37 +247,126 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 		
 	},
 	
+	addMenuItem : function(itemtext, itemParams, targetmenu, targetfunction)
+	{
+		// copy the itemParams into new object
+		var params = Ext.apply({}, itemParams);
+		
+		var newitem = new Ext.menu.Item({
+			text: itemtext,
+			hideDelay: 100,
+			showDelay: 100,
+			params: params,
+			listeners: {
+				'click': {
+					fn: targetfunction,
+					delay: 150,
+					scope: this
+				}
+			}
+		});
+		
+		if(targetmenu.items.getCount() == 0)
+		{
+			targetmenu.add(newitem);
+		}
+		else
+		{
+			targetmenu.insert(0, newitem);
+		}
+	},
+	
+	
 	forwardclick : function(menuitem) {
+		this.startValue = menuitem.path;
+		//if(String(this.getValue()) !== String(this.startValue)){
+			// add current directory to menus
+			var dirname = '';
+			var oldDirs = this.getValue().split('/');
+			for(var i = oldDirs.length-1; i >= 0; i--)
+			{
+				if(oldDirs[i] != '')
+				{
+					dirname = oldDirs[i];
+					break;
+				}
+			}
+			
+			this.addMenuItem(dirname, this.grid.store.lastOptions.params, this.backbutton.menu, this.backclick);
+
+			// change address
+			this.fireEvent('change', this.el, menuitem.params.dir, null, menuitem.params);
+			
+			// add other directory history to back menu
+			var menu = this.forwardbutton.menu;
+			var limit = menu.items.getCount();
+			for(var i = 0; i < limit; i++)
+			{
+				var item = menu.items.item(0);
+				if(item == menuitem)
+				{
+					menu.remove(item);
+					break;
+				}
+				else
+				{
+					this.addMenuItem(item.text, item.params, this.backbutton.menu, this.backclick);
+					menu.remove(item);
+				}
+			}
+			
+			// make it disabled if it can't go forward or back
+			if(this.backbutton.menu.items.getCount() > 0){ this.backbutton.enable(); }
+			else{ this.backbutton.disable(); }
+			if(this.forwardbutton.menu.items.getCount() > 0){ this.forwardbutton.enable(); }
+			else{ this.forwardbutton.disable(); }
+		//}
 	},
 	
 	backclick : function(menuitem) {
 		this.startValue = menuitem.path;
-		if(String(this.getValue()) !== String(this.startValue)){
-			this.fireEvent('change', this.el, menuitem.path, null);
-			var menu = this.backbutton.menu;
-			for(var i = 0; i < menu.items.getCount(); i++)
+		//if(String(this.getValue()) !== String(this.startValue)){
+			// add current directory to menus
+			var dirname = '';
+			var oldDirs = this.getValue().split('/');
+			for(var i = oldDirs.length-1; i >= 0; i--)
 			{
-				var item = menu.items.item(0);
-				this.forwardbutton.menu.insert(0, new Ext.menu.Item({
-					text: item.text,
-					hideDelay: 100,
-					showDelay: 100,
-					path: item.path,
-					listeners: {
-						'click': {
-							fn: this.forwardclick,
-							delay: 150,
-							scope: this
-						}
-					}
-				}));
-				menu.remove(item);
-				if(item == this)
+				if(oldDirs[i] != '')
 				{
+					dirname = oldDirs[i];
 					break;
 				}
 			}
-		}
+			
+			this.addMenuItem(dirname, this.grid.store.lastOptions.params, this.forwardbutton.menu, this.forwardclick);
+
+			// change address
+			this.fireEvent('change', this.el, menuitem.params.dir, null, menuitem.params);
+			
+			// add other directory history to forward menu
+			var menu = this.backbutton.menu;
+			var limit = menu.items.getCount();
+			for(var i = 0; i < limit; i++)
+			{
+				var item = menu.items.item(0);
+				if(item == menuitem)
+				{
+					menu.remove(item);
+					break;
+				}
+				else
+				{
+					this.addMenuItem(item.text, item.params, this.forwardbutton.menu, this.forwardclick);
+					menu.remove(item);
+				}
+			}
+			
+			// make it disabled if it can't go forward or back
+			if(this.backbutton.menu.items.getCount() > 0){ this.backbutton.enable(); }
+			else{ this.backbutton.disable(); }
+			if(this.forwardbutton.menu.items.getCount() > 0){ this.forwardbutton.enable(); }
+			else{ this.forwardbutton.disable(); }
+		//}
 	},
 	
     // private
@@ -343,7 +422,7 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 				}
 				
 				// set the file split_button
-				var folder_dropdown = new Ext.SplitButton({
+				var folder_dropdown = new Ext.Toolbar.SplitButton({
 					text: folders[i],
 					menu: file_menu,
 					cls: 'ux-address-button ux-button-inactive', //inactive arrow by default
@@ -383,6 +462,7 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 				//folder_dropdown.render();
 				this.buttons[this.buttons.length] = folder_dropdown;
 				folder_dropdown.render(newCell);
+				this.toolbar.initMenuTracking(folder_dropdown);
 			}
 		}
 		
@@ -399,12 +479,6 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 		if(!button.loaded)
 		{
 			var current_dir = button.path;
-		
-			if(!this.cachedMenus)
-				this.cachedMenus = Array();
-				
-			// save items
-			this.cachedMenus[current_dir] = menu;
 			
 			// set loading on menu
 			menu.removeAll();
@@ -417,7 +491,7 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 			this.store.baseParams[this.queryParam] = current_dir;
 			this.store.load({
 				menu: menu,
-				callback: this.addMenuItems,
+				callback: this.addAddressButtons,
 				scope: this,
 				params: {
 					count: 40,
@@ -425,13 +499,23 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 				}
 			});
 			button.loaded = true;
+			this.lastQuery = '';
 		}
 	},
 	
-	addMenuItems : function(r, options, success) {
+	addAddressButtons : function(r, options, success) {
 		if(options.menu)
 		{
+			// cache the menu for this directory
+			if(!this.cachedMenus)
+				this.cachedMenus = Array();
+				
+			// save items
+			this.cachedMenus[options.params.dir] = options.menu;
+			
+			// remove loading sign
 			options.menu.removeAll();
+			
 			// only do this if there is less then 40 items
 			if(this.store.getTotalCount() <= 40 && r.length != 0)
 			{
@@ -465,7 +549,11 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 					options.menu.add({
 						text: this.store.getTotalCount() + ' folder' + ((this.store.getTotalCount() != 1)?'s':''),
 						disabled: true},
-						{text: 'Search...'}
+						{
+							text: 'Search...',
+							handler: function() {this.search.toggle(true);},
+							scope: this
+						}
 					);
 				}
 				// display no items

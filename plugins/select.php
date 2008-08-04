@@ -65,7 +65,7 @@ if(isset($_REQUEST['select']))
 		$_REQUEST['on'] = split(',', $_REQUEST['on']);
 		foreach($_REQUEST['on'] as $i => $id)
 		{
-			if(!in_array($id, $_SESSION['selected']))
+			if(!in_array($id, $_SESSION['selected']) && $id != '')
 			{
 				$_SESSION['selected'][] = $id;
 			}
@@ -136,7 +136,7 @@ if(isset($_REQUEST['dir']))
 {
 	if($_REQUEST['dir'] == '') $_REQUEST['dir'] = '/';
 	// only search for file if is valid dir
-	if(realpath($_REQUEST['dir']) !== false || isset($_REQUEST['includes']))
+	if((file_exists($_REQUEST['dir']) && realpath($_REQUEST['dir']) !== false) || isset($_REQUEST['includes']))
 	{
 		if(!isset($props['WHERE'])) $props['WHERE'] = '';
 		elseif($props['WHERE'] != '') $props['WHERE'] .= ' AND ';
@@ -184,13 +184,16 @@ $order_keys_values = array();
 // get all the other information from other modules
 foreach($files as $index => $file)
 {
-	// merge all the other information to each file
-	foreach($GLOBALS['modules'] as $i => $module)
+	if(!isset($_REQUEST['short']))
 	{
-		if($module != $_REQUEST['cat'] && call_user_func(array($module, 'handles'), $file['Filepath']))
+		// merge all the other information to each file
+		foreach($GLOBALS['modules'] as $i => $module)
 		{
-			$return = call_user_func(array($module, 'get'), $mysql, array('WHERE' => 'Filepath = "' . $file['Filepath'] . '"'));
-			if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
+			if($module != $_REQUEST['cat'] && call_user_func(array($module, 'handles'), $file['Filepath']))
+			{
+				$return = call_user_func(array($module, 'get'), $mysql, array('WHERE' => 'Filepath = "' . $file['Filepath'] . '"'));
+				if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
+			}
 		}
 	}
 	
@@ -232,6 +235,7 @@ $smarty->assign('error', $error);
 if(isset($_SESSION['select']))
 	$smarty->assign('select', $_SESSION['select']);
 
+$smarty->assign('templates', $templates);
 if($_SERVER['SCRIPT_FILENAME'] == __FILE__)
 {
 	header('Content-Type: ' . getMime($templates['TEMPLATE_SELECT']));
