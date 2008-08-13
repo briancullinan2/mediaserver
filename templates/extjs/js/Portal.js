@@ -66,6 +66,25 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 		
 		var bufferedSelectionModel = new Ext.ux.grid.BufferedRowSelectionModel();
 		
+		var actions = {
+			'downloads-button' : function(app){
+				var selections = bufferedSelectionModel.getSelections();
+				var selectedIds = '';
+				for(var i = 0; i < selections.length; i++)
+				{
+					selectedIds += selections[i].data.id + ((i!=selections.length-1)?',':'');
+				}
+				Ext.Ajax.request({
+					url: '/mediaserver/plugins/select.php',
+					params: {
+						on: selectedIds,
+						select: true
+					}
+				});
+				app.getModule('downloads-win').createWindow();
+			}
+		};
+		
 		var colModel = new Ext.grid.ColumnModel([
 		{header: "id", align : 'right', sortable: true, dataIndex: 'id', hidden: true},
 		{header: "Filename", align : 'left', sortable: true, dataIndex: 'name', hidden: true},
@@ -81,7 +100,17 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 			loadMask : {
 				msg : 'Loading...'
 			},
-			view : bufferedView
+			view : bufferedView,
+			rowContext: new Ext.menu.Menu({
+				items: [{
+					text: 'Send to Downloads',
+					iconCls: 'ux-downloads-button',
+					handler: function(e, t) {
+						actions['downloads-button'](this.app);
+					},
+					scope: this
+				}]
+			})
 		});
 		
 		grid.on({
@@ -96,6 +125,12 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 					{
 						window.location = r.data.link;
 					}
+				}
+			},
+			'rowcontextmenu': {
+				fn: function(grid, rowIndex, e) {
+					this.selModel.selectRow(rowIndex, this.selModel.isSelected(rowIndex));
+					this.rowContext.showAt(e.getXY());
 				}
 			}
 		});
@@ -149,6 +184,7 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 			baseCls:'x-plain',
 			items: [folderTasks, otherPlaces, details]
 		});
+		
 		
 		var dirField = new Ext.form.ComboBox({
 			fieldLabel: 'Look in',
@@ -259,26 +295,8 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 			},
 			items: [grid, leftPanel]
 		});
-		
-		
-		var actions = {
-			'downloads-button' : function(app){
-				var selections = bufferedSelectionModel.getSelections();
-				var selectedIds = '';
-				for(var i = 0; i < selections.length; i++)
-				{
-					selectedIds += selections[i].data.id + ((i!=selections.length-1)?',':'');
-				}
-				Ext.Ajax.request({
-					url: '/mediaserver/plugins/select.php',
-					params: {
-						on: selectedIds,
-						select: true
-					}
-				});
-				app.getModule('downloads-win').createWindow();
-			}
-		};
+
+		grid.view.el.on('contextmenu', function (e, t) { e.preventDefault(); }, this);
 		tasksPanel.body.on('mousedown', function(e, t){
 				e.stopEvent();
 				actions[t.id](this.app);
