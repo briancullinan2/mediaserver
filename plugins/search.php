@@ -30,7 +30,7 @@ if(isset($_REQUEST['search']))
 	$_SESSION['search']['order_by'] = @$_REQUEST['order_by'];
 	
 	// redirect back to self to clear post
-	elseif(isset($_POST['search']))
+	if(isset($_POST['search']))
 	{
 		header('Location: ' . $_SERVER['REQUEST_URI']);
 		exit();

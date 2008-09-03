@@ -47,7 +47,7 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 			paramNames: {
 				"start" : "start",
 				"limit" : "limit",
-				"sort" : "sort_by",
+				"sort" : "order_by",
 				"dir" : "direction"
 			}
 		});
@@ -86,9 +86,36 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 		};
 		
 		var colModel = new Ext.grid.ColumnModel([
-		{header: "id", align : 'right', sortable: true, dataIndex: 'id', hidden: true},
-		{header: "Filename", align : 'left', sortable: true, dataIndex: 'name', hidden: true},
-		{header: "Extension", align : 'left', sortable: true, dataIndex: 'ext', hidden: true}
+		{header: "", align : 'right', sortable: false, dataIndex: 'tip', hidden: true, width: 24, fixed: true, menuDisabled: true,
+			renderer: function(value, metadata, record, rowIndex, colIndex, store) {
+				// add the extra values to the record
+				var tipInfo = value.split("<br />");
+				for(var i = 0; i < tipInfo.length; i++) {
+					// extract name and value pairs
+					var nameVal = String(tipInfo[i]).split(": ");
+					if(nameVal[0] != '')
+					{
+						record.data[nameVal[0]] = tipInfo[i].substring(nameVal[0].length + 2);
+						var cm = bufferedView.grid.getColumnModel();
+						if(cm.findColumnIndex(nameVal[0]) == -1)
+						{
+							// add the field name to the store
+							bufferedView.defaultRecord[bufferedView.defaultRecord.length] = {name: nameVal[0]};
+							// add column to colmodel
+							cm.config[cm.config.length] = {
+								header: nameVal[0],
+								align : (isNaN(record.data[nameVal[0]]))?'left':'right',
+								sortable: true,
+								dataIndex: nameVal[0],
+								hidden: (this.viewMode != 'Details')
+							};
+							bufferedView.colModelChanged = true;
+						}
+					}
+				}
+			}
+		},
+		{header: "id", align : 'right', sortable: true, dataIndex: 'id', hidden: true}
 		]);
 		
 		var grid = new Ext.grid.GridPanel({
@@ -433,12 +460,12 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 								buttons: Ext.MessageBox.OK,
 								fn: function () {
 									// go back to previous directory
-									address.fireEvent('change', address.el, backbutton.menu.items.item(0).path, null);
+									address.fireEvent('change', this, backbutton.menu.items.item(0).params.dir, null);
 									backbutton.menu.remove(backbutton.menu.items.item(0));
 									if(backbutton.menu.items.getCount() > 0){ backbutton.enable(); }
 									else{ backbutton.disable(); }
 								},
-								scope: this
+								scope: address
 							});
 						}
 					}

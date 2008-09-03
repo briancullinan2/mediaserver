@@ -126,11 +126,8 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 		
 		// combo superclass
         if(this.hiddenName){
-            this.hiddenField = this.el.insertSibling({tag:'input', type:'hidden', name: this.hiddenName, id: (this.hiddenId||this.hiddenName)},
-                    'before', true);
-            this.hiddenField.value =
-                this.hiddenValue !== undefined ? this.hiddenValue :
-                this.value !== undefined ? this.value : '';
+            this.hiddenField = this.el.insertSibling({tag:'input', type:'hidden', name: this.hiddenName,
+                    id: (this.hiddenId||this.hiddenName)}, 'before', true);
 
             // prevent input submission
             this.el.dom.removeAttribute('name');
@@ -401,7 +398,7 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 		this.clearButtons();
 		
 		// split the items and make drop downs for each
-		var folders = this.getValue().split('/');
+		var folders = this.value.split('/');
 		var current_dir = '/';
 		for(var i = 0; i < folders.length; i++)
 		{

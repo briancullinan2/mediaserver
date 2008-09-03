@@ -24,6 +24,8 @@ $smarty->assign('columns', $columns);
 
 $error = '';
 
+//print_r($_SESSION['selected']);
+
 // check if trying to change selected items
 if(isset($_REQUEST['select']))
 {
@@ -113,8 +115,10 @@ if( !isset($_REQUEST['limit']) || !is_numeric($_REQUEST['limit']) || $_REQUEST['
 	$_REQUEST['limit'] = 15;
 if( !isset($_REQUEST['order_by']) || !in_array($_REQUEST['order_by'], $columns) )
 	$_REQUEST['order_by'] = 'Filepath';
+if( !isset($_REQUEST['direction']) || ($_REQUEST['direction'] != 'ASC' && $_REQUEST['direction'] != 'DESC') )
+	$_REQUEST['direction'] = 'ASC';
 	
-$props['OTHER'] = ' ORDER BY ' . $_REQUEST['order_by'] . ' LIMIT ' . $_REQUEST['start'] . ',' . $_REQUEST['limit'];
+$props['OTHER'] = ' ORDER BY ' . $_REQUEST['order_by'] . ' ' . $_REQUEST['direction'] . ' LIMIT ' . $_REQUEST['start'] . ',' . $_REQUEST['limit'];
 
 // add where includes
 if(isset($_REQUEST['includes']) && $_REQUEST['includes'] != '')
@@ -134,6 +138,7 @@ if(isset($_REQUEST['includes']) && $_REQUEST['includes'] != '')
 // add dir filter to where
 if(isset($_REQUEST['dir']))
 {
+	$_REQUEST['dir'] = stripslashes($_REQUEST['dir']);
 	if($_REQUEST['dir'] == '') $_REQUEST['dir'] = '/';
 	// only search for file if is valid dir
 	if((file_exists($_REQUEST['dir']) && realpath($_REQUEST['dir']) !== false) || isset($_REQUEST['includes']))
@@ -177,7 +182,7 @@ else
 
 // do display order
 if(!isset($_REQUEST['order']))
-	$_REQUEST['order'] = 'Filepath';
+	$_REQUEST['order'] = $_REQUEST['order_by'];
 
 $order_keys_values = array();
 
@@ -197,6 +202,7 @@ foreach($files as $index => $file)
 		}
 	}
 	
+	// pick out the value for the field to sort by
 	if(isset($files[$index][$_REQUEST['order']]))
 	{
 		$order_keys_values[] = $files[$index][$_REQUEST['order']];

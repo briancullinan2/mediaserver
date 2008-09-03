@@ -85,11 +85,11 @@ Ext.app.DownloadsWindow = Ext.extend(Ext.app.Module, {
 		
 		var colModel = new Ext.grid.ColumnModel([
 		{
-			header: "DL",
 			align : 'right',
 			sortable: false,
 			resizable: false,
 			hideable: false,
+			menuDisabled: true,
 			width: 38,
 			renderer: function(value, metadata, record, rowIndex, colIndex, store) {
 				

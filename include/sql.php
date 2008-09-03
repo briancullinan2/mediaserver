@@ -80,8 +80,7 @@ class sql_global
 				id 				INT NOT NULL AUTO_INCREMENT,
 								PRIMARY KEY(id),
 				Filepath		TEXT NOT NULL,
-				Lastwatch		DATETIME,
-				FULLTEXT		(Filepath)
+				Lastwatch		DATETIME
 			)') or print_r(mysql_error());
 			
 		$this->query('CREATE TABLE IF NOT EXISTS ' . $this->table_prefix . 'watch_list (
@@ -95,11 +94,10 @@ class sql_global
 								PRIMARY KEY(id),
 				Filename		TEXT NOT NULL,
 				Filepath		TEXT NOT NULL,
-				Filesize		TEXT NOT NULL,
+				Filesize		BIGINT NOT NULL,
 				Filemime		TEXT NOT NULL,
 				Filedate		DATETIME,
-				Filetype		TEXT NOT NULL,
-				FULLTEXT		(Filename, Filepath, Filesize, Filemime, Filetype)
+				Filetype		TEXT NOT NULL
 			)') or print_r(mysql_error());
 		
 		$this->query('CREATE TABLE IF NOT EXISTS ' . $this->table_prefix . 'audio (
@@ -109,21 +107,20 @@ class sql_global
 				Title			TEXT NOT NULL,
 				Artist			TEXT NOT NULL,
 				Album			TEXT NOT NULL,
-				Track			TEXT NOT NULL,
-				Year			TEXT NOT NULL,
+				Track			INT NOT NULL,
+				Year			INT NOT NULL,
 				Genre			TEXT NOT NULL,
-				Length			TEXT NOT NULL,
+				Length			DOUBLE NOT NULL,
 				Comments		TEXT NOT NULL,
-				Bitrate			TEXT NOT NULL,
-				FULLTEXT		(Filepath, Title, Artist, Album, Track, Year, Genre, Length, Comments, Bitrate)
+				Bitrate			DOUBLE NOT NULL
 			)') or print_r(mysql_error());
 
 		$this->query('CREATE TABLE IF NOT EXISTS ' . $this->table_prefix . 'image (
 				id 				INT NOT NULL AUTO_INCREMENT,
 								PRIMARY KEY(id),
 				Filepath		TEXT NOT NULL,
-				Height			TEXT NOT NULL,
-				Width			TEXT NOT NULL,
+				Height			INT NOT NULL,
+				Width			INT NOT NULL,
 				Make			TEXT NOT NULL,
 				Model			TEXT NOT NULL,
 				Comments		TEXT NOT NULL,
@@ -131,8 +128,7 @@ class sql_global
 				Title			TEXT NOT NULL,
 				Author			TEXT NOT NULL,
 				ExposureTime	TEXT NOT NULL,
-				Thumbnail		BLOB NOT NULL,
-				FULLTEXT		(Filepath, Height, Width, Make, Model, Comments, Keywords, Title, Author, ExposureTime)
+				Thumbnail		BLOB NOT NULL
 			)') or print_r(mysql_error());
 		
 	}

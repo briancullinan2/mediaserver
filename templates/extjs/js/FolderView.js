@@ -60,7 +60,20 @@ Ext.extend(Ext.ux.FolderView, Ext.ux.grid.BufferedGridView, {
 			)
 		}
 	},
-	
+	    
+    removeRow : function(row){
+        Ext.removeNode(this.getRow(row));
+        //this.focusRow(row);
+    },
+    
+    removeRows : function(firstRow, lastRow){
+        var bd = this.mainBody.dom;
+        for(var rowIndex = firstRow; rowIndex <= lastRow; rowIndex++){
+            Ext.removeNode(bd.childNodes[firstRow]);
+        }
+        //this.focusRow(firstRow);
+    },
+
     renderUI : function()
     {
         Ext.ux.FolderView.superclass.renderUI.call(this);
@@ -144,8 +157,9 @@ Ext.extend(Ext.ux.FolderView, Ext.ux.grid.BufferedGridView, {
         
         var c  = g.getGridEl();
 
-        //var scrollbar = this.cm.getTotalWidth()+this.scrollOffset > c.getSize().width;
-        var scrollbar = false;
+		
+        var scrollbar = (this.cm.getTotalWidth()+this.scrollOffset > c.getSize().width && this.viewMode == 'Details');
+        //var scrollbar = false;
         
         // adjust the height of the scrollbar
         this.liveScroller.dom.style.height = this.liveScroller.dom.parentNode.offsetHeight + 
@@ -199,7 +213,7 @@ Ext.extend(Ext.ux.FolderView, Ext.ux.grid.BufferedGridView, {
         
         var vw = size.width-this.scrollOffset;        
         // horizontal scrollbar shown?
-        if (cm.getTotalWidth() > vw) {
+        if (cm.getTotalWidth() > vw && this.viewMode == 'Details') {
             // yes!
             vh -= this.horizontalScrollOffset;
         }
@@ -228,6 +242,38 @@ Ext.extend(Ext.ux.FolderView, Ext.ux.grid.BufferedGridView, {
         } 
     },
 	
+	renderBody: function() {
+        var markup = this.renderRows(0, this.visibleRows-1);
+		
+		if( this.viewMode == 'Details' && this.colModelChanged)
+		{
+			// check if columns have changed
+			this.colModelChanged = false;
+			var cm = this.grid.getColumnModel();
+			cm.setConfig(cm.config);
+			this.ds.reader.recordType = Ext.data.Record.create(this.defaultRecord);
+			this.ds.recordType = this.ds.reader.recordType;
+			this.ds.fields = this.ds.recordType.prototype.fields
+			markup = this.renderRows(0, this.visibleRows-1);
+		}
+		
+        return this.templates.body.apply({rows: markup});
+
+	},
+	
+	defaultRecord: [
+		{name: 'name'},
+		{name: 'icon'},
+		{name: 'index'},
+		{name: 'id'},
+		{name: 'tip'},
+		{name: 'short'},
+		{name: 'link'},
+		{name: 'path'},
+		{name: 'ext'},
+		{name: 'selected'}
+	],
+	
     // private
     doRender : function(cs, rs, ds, startRow, colCount, stripe){
 
@@ -238,6 +284,7 @@ Ext.extend(Ext.ux.FolderView, Ext.ux.grid.BufferedGridView, {
         for(var j = 0, len = rs.length; j < len; j++){
 			var rp = {tstyle: tstyle};
             r = rs[j]; cb = [];
+			
             var rowIndex = (j+startRow);
             for(var i = 0; i < colCount; i++){
                 c = cs[i];

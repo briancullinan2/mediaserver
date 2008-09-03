@@ -21,16 +21,13 @@ $smarty->assign('type_icons', $type_icons);
 		<index>{$index}</index>
 		<id>{$files[file].id}</id>
 		<name>{$files[file].Filename|utf8_encode|htmlspecialchars}</name>
+		<text>{$files[file].Filename|utf8_encode|htmlspecialchars}</text>
 {assign var=type_arr value='/'|@split:$files[file].Filemime}
 {assign var=type value=$type_arr.0}
 {assign var=ext value=$files[file].Filetype}
 		<icon>{if isset($ext_icons.$ext)}{$ext_icons.$ext}{elseif isset($type_icons.$type)}{$type_icons.$type}{else}{$ext_icons.FILE}{/if}</icon>
 		<ext>{$ext|htmlspecialchars}</ext>
-		<tip>
-{foreach from=$columns item=column_value}
-{if isset($files[file].$column_value)}{$column_value}: {$files[file].$column_value|utf8_encode|htmlspecialchars}&lt;br /&gt;{/if}
-{/foreach}
-		</tip>
+		<tip>{foreach from=$columns item=column_value}{if isset($files[file].$column_value)}{$column_value}: {$files[file].$column_value|utf8_encode|htmlspecialchars}&lt;br /&gt;{/if}{/foreach}</tip>
 		<path>{$files[file].Filepath|utf8_encode|htmlspecialchars}</path>
 		<link>{$smarty.const.SITE_HTMLPATH}{$smarty.const.SITE_PLUGINS}file/{$smarty.request.cat}/{$files[file].id}/{$files[file].Filename|utf8_encode|urlencode|htmlspecialchars}</link>
 		<short>{$files[file].Filename|truncate:13:"...":true|utf8_encode|htmlspecialchars}</short>

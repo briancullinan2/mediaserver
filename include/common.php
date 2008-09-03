@@ -6,7 +6,7 @@
 // get the file mime type
 // 
 
-session_cache_limiter('public');
+//session_cache_limiter('public');
 session_start();
 
 // require the settings
