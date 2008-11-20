@@ -22,8 +22,8 @@ define('SITE_LOCALROOT',                '/var/www/mediaserver/');
 // the directory that contains all the different modules
 define('MODULES_DIR', SITE_LOCALROOT . 'modules/');
 
-define('SITE_HTMLPATH',            			    'http://209.250.30.30/');
-define('SITE_HTMLROOT',                                  'mediaserver/');
+define('SITE_HTMLPATH',            			    'http://media.bjcullinan.com/');
+define('SITE_HTMLROOT',                                  '');
 define('SITE_DEFAULT',            				   'templates/default/');
 // set the template
 if(isset($_REQUEST['template']))
@@ -48,6 +48,7 @@ define('SITE_PLUGINS', 						 SITE_HTMLROOT . 'plugins/');
 // extra constants
 define('SITE_NAME',			 'Brian\'s Media Website'); // name for the website
 define('CONVERT', 				   '/usr/bin/convert'); // image magick's convert program
+define('ZIP', 						   '/usr/bin/zip');
 define('BUFFER_SIZE', 						  24*1024); // max amount to output when accessing a file
 define('TMP_DIR', 						      '/tmp/'); // a temporary directory to use for creating thumbnails
 

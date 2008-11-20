@@ -40,9 +40,9 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 			autoLoad : true,
 			bufferSize : 300,
 			reader : FileReader,
-			url: '/mediaserver/plugins/select.php',
+			url: site_path + 'plugins/select.php',
 			baseParams: {
-				dir: '/home/share/Music/'
+				dir: '/'
 			},
 			paramNames: {
 				"start" : "start",
@@ -75,7 +75,7 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 					selectedIds += selections[i].data.id + ((i!=selections.length-1)?',':'');
 				}
 				Ext.Ajax.request({
-					url: '/mediaserver/plugins/select.php',
+					url: site_path + 'plugins/select.php',
 					params: {
 						on: selectedIds,
 						select: true
@@ -164,13 +164,13 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 
 		var address = new Ext.Address({
 			store: new Ext.data.Store({
-				url: '/mediaserver/plugins/select.php',
+				url: site_path + 'plugins/select.php',
 				reader: FileReader,
 				baseParams: {
 					dirs_only: true
 				}
 			}),
-			value: '/home/share/Music/',
+			value: '/',
 			displayField: 'path',
 			queryParam: 'dir',
 			allQuery: '/'
@@ -261,7 +261,7 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 				path: '/'
 			}),
 			loader: new Ext.data.Store({
-				url: '/mediaserver/plugins/select.php',
+				url: site_path + 'plugins/select.php',
 				reader: FileReader,
 				baseParams: {
 					dirs_only: true,

@@ -284,6 +284,110 @@ function getExtType($ext)
 	}
 }
 
+function crc32_file($filename)
+{
+    $fp=fopen($filename, "rb");
+    $old_crc=false;
+
+    if ($fp != false) {
+        $buffer = '';
+       
+        while (!feof($fp)) {
+            $buffer=fread($fp, BUFFER_SIZE);
+            $len=strlen($buffer);      
+            $t=crc32($buffer);   
+       
+            if ($old_crc) {
+                $crc32=crc32_combine($old_crc, $t, $len);
+                $old_crc=$crc32;
+            } else {
+                $crc32=$old_crc=$t;
+            }
+        }
+        fclose($fp);
+    } else {
+        print "Cannot open file\n";
+    }
+
+    return $crc32;
+}
+
+function crc32_combine($crc1, $crc2, $len2)
+{
+    $odd[0]=0xedb88320;
+    $row=1;
+
+    for($n=1;$n<32;$n++) {
+        $odd[$n]=$row;
+        $row<<=1;
+    }
+
+    gf2_matrix_square($even,$odd);
+    gf2_matrix_square($odd,$even);
+
+    do {
+        /* apply zeros operator for this bit of len2 */
+        gf2_matrix_square($even, $odd);
+
+        if ($len2 & 1)
+            $crc1=gf2_matrix_times($even, $crc1);
+
+        $len2>>=1;
+   
+        /* if no more bits set, then done */
+        if ($len2==0)
+            break;
+   
+        /* another iteration of the loop with odd and even swapped */
+        gf2_matrix_square($odd, $even);
+        if ($len2 & 1)
+            $crc1=gf2_matrix_times($odd, $crc1);
+        $len2>>= 1;
+   
+    } while ($len2 != 0);
+
+    $crc1 ^= $crc2;
+    return $crc1;
+}
+
+function gf2_matrix_square(&$square, &$mat)
+{
+    for ($n=0;$n<32;$n++) {
+        $square[$n]=gf2_matrix_times($mat, $mat[$n]);
+    }
+}
+
+function gf2_matrix_times($mat, $vec)
+{
+    $sum=0;
+    $i=0;
+    while ($vec) {
+        if ($vec & 1) {
+            $sum ^= $mat[$i];
+        }
+        $vec>>= 1;
+        $i++;
+    }
+    return $sum;
+}
+
+function unix2DosTime($unixtime = 0)
+{
+	$timearray = ($unixtime == 0) ? getdate() : getdate($unixtime);
+
+	if ($timearray['year'] < 1980) {
+		$timearray['year']    = 1980;
+		$timearray['mon']     = 1;
+		$timearray['mday']    = 1;
+		$timearray['hours']   = 0;
+		$timearray['minutes'] = 0;
+		$timearray['seconds'] = 0;
+	} // end if
+
+	return (($timearray['year'] - 1980) << 25) | ($timearray['mon'] << 21) | ($timearray['mday'] << 16) |
+			($timearray['hours'] << 11) | ($timearray['minutes'] << 5) | ($timearray['seconds'] >> 1);
+} // end of the 'unix2DosTime()' method
+
 
 
 ?>

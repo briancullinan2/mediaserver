@@ -3,4 +3,452 @@
 // create zip of selected files in list
 
 
+require_once '../include/common.php';
+
+define('SOCKET_PATH', '/home/bjcullinan/.config/transmission/daemon/socket'); // path to socket that transmission is started using
+
+require_once SITE_LOCALROOT . 'plugins/bttracker/BEncode.php';
+require_once SITE_LOCALROOT . 'plugins/bttracker/config.php';
+require_once SITE_LOCALROOT . 'plugins/bttracker/funcsv2.php';
+
+// load mysql to query the database
+$mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+
+// get listed items from database
+if(isset($_REQUEST['zip']))
+{
+	$selected = array();
+	
+	if(isset($_REQUEST['item']))
+	{
+		if(is_string($_REQUEST['item']))
+		{
+			$selected = split(',', $_REQUEST['item']);
+		}
+		elseif(is_array($_REQUEST['item']))
+		{
+			foreach($_REQUEST['item'] as $id => $value)
+			{
+				if(($value == 'on' || $_REQUEST['select'] == 'All') && !in_array($id, $selected))
+				{
+					$selected[] = $id;
+				}
+				elseif(($value == 'off' || $_REQUEST['select'] == 'None') && ($key = array_search($id, $selected)) !== false)
+				{
+					unset($selected[$key]);
+				}
+			}
+		}
+	}
+	
+	if(isset($_REQUEST['on']))
+	{
+		$_REQUEST['on'] = split(',', $_REQUEST['on']);
+		foreach($_REQUEST['on'] as $i => $id)
+		{
+			if(!in_array($id, $selected) && $id != '')
+			{
+				$selected[] = $id;
+			}
+		}
+	}
+	
+	if(isset($_REQUEST['off']))
+	{
+		$_REQUEST['off'] = split(',', $_REQUEST['off']);
+		foreach($_REQUEST['off'] as $i => $id)
+		{
+			if(($key = array_search($id, $selected)) !== false)
+			{
+				unset($selected[$key]);
+			}
+		}
+	}
+	
+	$selected = array_values($selected);	
+	if(count($selected) == 0) unset($selected);
+
+}
+
+// initialize properties for select statement
+$props = array();
+
+// add category
+if(!isset($_REQUEST['cat']))
+{
+	$_REQUEST['cat'] = 'db_file';
+}
+
+$files = array();
+
+// add where includes
+if( isset($selected) && count($selected) > 0 )
+{
+	$props['WHERE'] = 'id=' . join(' OR id=', $selected);
+	unset($props['OTHER']);
+
+	$files = call_user_func(array($_REQUEST['cat'], 'get'), $mysql, $props);
+}
+
+// get all the other information from other modules
+foreach($files as $index => $file)
+{
+	// merge all the other information to each file
+	foreach($GLOBALS['modules'] as $i => $module)
+	{
+		if($module != $_REQUEST['cat'] && call_user_func(array($module, 'handles'), $file['Filepath']))
+		{
+			$return = call_user_func(array($module, 'get'), $mysql, array('WHERE' => 'Filepath = "' . $file['Filepath'] . '"'));
+			if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
+		}
+	}
+
+	// for the second pass go through and get all the files inside of folders
+	if($file['Filetype'] == 'FOLDER')
+	{
+		// remove folder from list since it can't be apart of the .torrent
+		unset($files[$index]);
+		// get all files in directory
+		$props = array();
+		$props['WHERE'] = 'Filepath REGEXP "^' . $file['Filepath'] . '" AND Filetype != "FOLDER"';
+		$sub_files = array();
+		$sub_files = db_file::get($mysql, $props);
+		// put these files on the end of the array so they also get processed
+		$files = array_merge($files, $sub_files);
+	}
+}
+
+
+if(count($files) > 0)
+{
+	header('Content-Transfer-Encoding: binary');
+	header('Content-Type: application/zip');
+	header('Content-Disposition: filename="' . SITE_NAME . '-' . time() . '.zip"'); 
+	// loop through files and generate and expected file length
+	$length = 22;
+	foreach($files as $index => $file) {
+        $name     = str_replace('\\', '/', ($file['Filepath'][0] == '/')?substr($file['Filepath'], 1, strlen($file['Filepath'])-1):$file['Filepath']);
+		$length += 30 + strlen($name);
+		$length += filesize($file['Filepath']) + 12;
+		$length += 46 + strlen($name);
+	}
+	header('Content-Length: ' . $length);
+	
+	$ctrl_dir = array();
+	$old_offset = 0;
+	$eof_ctrl_dir = "\x50\x4b\x05\x06\x00\x00\x00\x00";
+	
+	foreach($files as $index => $file)
+	{
+		$fr_offset = 0;
+        $name     = str_replace('\\', '/', ($file['Filepath'][0] == '/')?substr($file['Filepath'], 1, strlen($file['Filepath'])-1):$file['Filepath']);
+
+        $dtime    = dechex(unix2DosTime(0));
+        $hexdtime = '\x' . $dtime[6] . $dtime[7]
+                  . '\x' . $dtime[4] . $dtime[5]
+                  . '\x' . $dtime[2] . $dtime[3]
+                  . '\x' . $dtime[0] . $dtime[1];
+        eval('$hexdtime = "' . $hexdtime . '";');
+
+        $fr   = "\x50\x4b\x03\x04";
+        $fr   .= "\x14\x00";            // ver needed to extract
+        $fr   .= "\x20\x00";            // gen purpose bit flag
+        $fr   .= "\x00\x00";            // compression method
+        $fr   .= $hexdtime;             // last mod time and date
+
+        // "local file header" segment
+        $unc_len = filesize($file['Filepath']);
+        //$crc     = 0; //crc32_file($file['Filepath']); generated below!!!!!!
+        $c_len   = filesize($file['Filepath']);
+		
+        $fr      .= pack('V', 0);             // crc32
+        $fr      .= pack('V', 0);           // compressed filesize
+        $fr      .= pack('V', 0);         // uncompressed filesize
+        $fr      .= pack('v', strlen($name));    // length of filename
+        $fr      .= pack('v', 0);                // extra field length
+        $fr      .= $name;
+
+		print $fr;
+		$fr_offset += strlen($fr);
+		
+		// generate crc32 from stream
+        // "file data" segment
+		$fp = fopen($file['Filepath'], 'rb');
+		$old_crc=false;
+		while (!feof($fp)) {
+			$buffer=fread($fp, BUFFER_SIZE);
+            $len=strlen($buffer);      
+            $t=crc32($buffer);   
+       
+            if ($old_crc) {
+                $crc32=crc32_combine($old_crc, $t, $len);
+                $old_crc=$crc32;
+            } else {
+                $crc32=$old_crc=$t;
+            }
+			
+			print $buffer;
+		}				
+		fclose($fp);
+		$fr_offset += filesize($file['Filepath']);
+		
+
+        // "data descriptor" segment (optional but necessary if archive is not
+        // served as file)
+        $fr = pack('V', $crc32);                 // crc32
+        $fr .= pack('V', $c_len);               // compressed filesize
+        $fr .= pack('V', $unc_len);             // uncompressed filesize
+		print $fr;
+		$fr_offset += strlen($fr);
+
+        // now add to central directory record
+        $cdrec = "\x50\x4b\x01\x02";
+        $cdrec .= "\x00\x00";                // version made by
+        $cdrec .= "\x14\x00";                // version needed to extract
+        $cdrec .= "\x20\x00";                // gen purpose bit flag
+        $cdrec .= "\x00\x00";                // compression method
+        $cdrec .= $hexdtime;                 // last mod time & date
+        $cdrec .= pack('V', $crc32);           // crc32
+        $cdrec .= pack('V', $c_len);         // compressed filesize
+        $cdrec .= pack('V', $unc_len);       // uncompressed filesize
+        $cdrec .= pack('v', strlen($name) ); // length of filename
+        $cdrec .= pack('v', 0 );             // extra field length
+        $cdrec .= pack('v', 0 );             // file comment length
+        $cdrec .= pack('v', 0 );             // disk number start
+        $cdrec .= pack('v', 0 );             // internal file attributes
+        $cdrec .= pack('V', 32 );            // external file attributes - 'archive' bit set
+
+        $cdrec .= pack('V', $old_offset); // relative offset of local header
+        $old_offset += $fr_offset;
+
+        $cdrec .= $name;
+
+        // optional extra field, file comment goes here
+        // save to central directory
+        $ctrl_dir[] = $cdrec;
+	}
+
+	$ctrldir = implode('', $ctrl_dir);
+	print $ctrldir .
+	$eof_ctrl_dir .
+	pack('v', sizeof($ctrl_dir)) .  // total # of entries "on this disk"
+	pack('v', sizeof($ctrl_dir)) .  // total # of entries overall
+	pack('V', strlen($ctrldir)) .           // size of central dir
+	pack('V', $old_offset) .              // offset to start of central dir
+	"\x00\x00";                             // .zip file comment length
+	
+
+}
+else
+{
+	header('Content-Type: application/zip');
+	$zip = new zipfile();
+	$zip->addFile(implode('', file('/home/share/Music/10,000 Maniacs/MTV Unplugged/10,000 Maniacs - 01 - These Are Days.mp3')), 'home/share/Music/10,000 Maniacs/MTV Unplugged/10,000 Maniacs - 01 - These Are Days.mp3');
+	$zip->addFile(implode('', file('/home/share/Music/10,000 Maniacs/MTV Unplugged/10,000 Maniacs - 02 - Eat for Two.mp3')), 'home/share/Music/10,000 Maniacs/MTV Unplugged/10,000 Maniacs - 02 - Eat for Two.mp3');
+	print $zip->file();
+}
+
+class zipfile
+{
+    /**
+     * Array to store compressed data
+     *
+     * @var  array    $datasec
+     */
+    var $datasec      = array();
+
+    /**
+     * Central directory
+     *
+     * @var  array    $ctrl_dir
+     */
+    var $ctrl_dir     = array();
+
+    /**
+     * End of central directory record
+     *
+     * @var  string   $eof_ctrl_dir
+     */
+    var $eof_ctrl_dir = "\x50\x4b\x05\x06\x00\x00\x00\x00";
+
+    /**
+     * Last offset position
+     *
+     * @var  integer  $old_offset
+     */
+    var $old_offset   = 0;
+
+
+    /**
+     * Converts an Unix timestamp to a four byte DOS date and time format (date
+     * in high two bytes, time in low two bytes allowing magnitude comparison).
+     *
+     * @param  integer  the current Unix timestamp
+     *
+     * @return integer  the current date in a four byte DOS format
+     *
+     * @access private
+     */
+    function unix2DosTime($unixtime = 0) {
+        $timearray = ($unixtime == 0) ? getdate() : getdate($unixtime);
+
+        if ($timearray['year'] < 1980) {
+            $timearray['year']    = 1980;
+            $timearray['mon']     = 1;
+            $timearray['mday']    = 1;
+            $timearray['hours']   = 0;
+            $timearray['minutes'] = 0;
+            $timearray['seconds'] = 0;
+        } // end if
+
+        return (($timearray['year'] - 1980) << 25) | ($timearray['mon'] << 21) | ($timearray['mday'] << 16) |
+                ($timearray['hours'] << 11) | ($timearray['minutes'] << 5) | ($timearray['seconds'] >> 1);
+    } // end of the 'unix2DosTime()' method
+
+
+    /**
+     * Adds "file" to archive
+     *
+     * @param  string   file contents
+     * @param  string   name of the file in the archive (may contains the path)
+     * @param  integer  the current timestamp
+     *
+     * @access public
+     */
+    function addFile($data, $name, $time = 0)
+    {
+        $name     = str_replace('\\', '/', $name);
+
+        $dtime    = dechex($this->unix2DosTime($time));
+        $hexdtime = '\x' . $dtime[6] . $dtime[7]
+                  . '\x' . $dtime[4] . $dtime[5]
+                  . '\x' . $dtime[2] . $dtime[3]
+                  . '\x' . $dtime[0] . $dtime[1];
+        eval('$hexdtime = "' . $hexdtime . '";');
+
+        $fr   = "\x50\x4b\x03\x04";
+        $fr   .= "\x14\x00";            // ver needed to extract
+        $fr   .= "\x00\x00";            // gen purpose bit flag
+        $fr   .= "\x00\x00";            // compression method
+        $fr   .= $hexdtime;             // last mod time and date
+
+        // "local file header" segment
+        $unc_len = strlen($data);
+        $crc     = crc32($data);
+        $zdata   = $data;
+        //$zdata   = gzcompress($data);
+        //$zdata   = substr(substr($zdata, 0, strlen($zdata) - 4), 2); // fix crc bug
+        $c_len   = strlen($zdata);
+        $fr      .= pack('V', $crc);             // crc32
+        $fr      .= pack('V', $c_len);           // compressed filesize
+        $fr      .= pack('V', $unc_len);         // uncompressed filesize
+        $fr      .= pack('v', strlen($name));    // length of filename
+        $fr      .= pack('v', 0);                // extra field length
+        $fr      .= $name;
+
+        // "file data" segment
+        $fr .= $zdata;
+
+        // "data descriptor" segment (optional but necessary if archive is not
+        // served as file)
+        $fr .= pack('V', $crc);                 // crc32
+        $fr .= pack('V', $c_len);               // compressed filesize
+        $fr .= pack('V', $unc_len);             // uncompressed filesize
+
+        // add this entry to array
+        $this -> datasec[] = $fr;
+
+        // now add to central directory record
+        $cdrec = "\x50\x4b\x01\x02";
+        $cdrec .= "\x00\x00";                // version made by
+        $cdrec .= "\x14\x00";                // version needed to extract
+        $cdrec .= "\x00\x00";                // gen purpose bit flag
+        $cdrec .= "\x00\x00";                // compression method
+        $cdrec .= $hexdtime;                 // last mod time & date
+        $cdrec .= pack('V', $crc);           // crc32
+        $cdrec .= pack('V', $c_len);         // compressed filesize
+        $cdrec .= pack('V', $unc_len);       // uncompressed filesize
+        $cdrec .= pack('v', strlen($name) ); // length of filename
+        $cdrec .= pack('v', 0 );             // extra field length
+        $cdrec .= pack('v', 0 );             // file comment length
+        $cdrec .= pack('v', 0 );             // disk number start
+        $cdrec .= pack('v', 0 );             // internal file attributes
+        $cdrec .= pack('V', 32 );            // external file attributes - 'archive' bit set
+
+        $cdrec .= pack('V', $this -> old_offset ); // relative offset of local header
+        $this -> old_offset += strlen($fr);
+
+        $cdrec .= $name;
+
+        // optional extra field, file comment goes here
+        // save to central directory
+        $this -> ctrl_dir[] = $cdrec;
+    } // end of the 'addFile()' method
+
+
+    /**
+     * Dumps out file
+     *
+     * @return  string  the zipped file
+     *
+     * @access public
+     */
+    function file()
+    {
+        $data    = implode('', $this -> datasec);
+        $ctrldir = implode('', $this -> ctrl_dir);
+
+        return
+            $data .
+            $ctrldir .
+            $this -> eof_ctrl_dir .
+            pack('v', sizeof($this -> ctrl_dir)) .  // total # of entries "on this disk"
+            pack('v', sizeof($this -> ctrl_dir)) .  // total # of entries overall
+            pack('V', strlen($ctrldir)) .           // size of central dir
+            pack('V', strlen($data)) .              // offset to start of central dir
+            "\x00\x00";                             // .zip file comment length
+    } // end of the 'file()' method
+   
+
+    /**
+     * A Wrapper of original addFile Function
+     *
+     * Created By Hasin Hayder at 29th Jan, 1:29 AM
+     *
+     * @param array An Array of files with relative/absolute path to be added in Zip File
+     *
+     * @access public
+     */
+    function addFiles($files /*Only Pass Array*/)
+    {
+        foreach($files as $file)
+        {
+        if (is_file($file)) //directory check
+        {
+            $data = implode("",file($file));
+                    $this->addFile($data,$file);
+                }
+        }
+    }
+   
+    /**
+     * A Wrapper of original file Function
+     *
+     * Created By Hasin Hayder at 29th Jan, 1:29 AM
+     *
+     * @param string Output file name
+     *
+     * @access public
+     */
+    function output($file)
+    {
+        $fp=fopen($file,"w");
+        fwrite($fp,$this->file());
+        fclose($fp);
+    }
+
+   
+
+} // end of the 'zipfile' class 
+
 ?>

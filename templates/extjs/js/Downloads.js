@@ -69,7 +69,11 @@ Ext.app.DownloadsWindow = Ext.extend(Ext.app.Module, {
 						}
 					},{
 						iconCls: 'ux-zipfile',
-						text: 'Zip File'
+						text: 'Zip File',
+						handler: function(item) {
+							var path = plugins_path + 'zip/' + this.parentMenu.record.data.id + '/' + this.parentMenu.record.data.id + '.zip';
+							window.location = path;
+						}
 					},{
 						iconCls: 'ux-torrentfile',
 						text: 'Torrent File',
@@ -108,7 +112,7 @@ Ext.app.DownloadsWindow = Ext.extend(Ext.app.Module, {
 		var grid = new Ext.grid.GridPanel({
 			region: 'center',
 			ds : new Ext.data.Store({
-				url: '/mediaserver/plugins/list.php',
+				url: site_path + 'plugins/list.php',
 				reader: FileReader,
 				baseParams: {
 					type: 'select',
@@ -155,7 +159,7 @@ Ext.app.DownloadsWindow = Ext.extend(Ext.app.Module, {
 					selectedIds += selections[i].data.id + ((i!=selections.length-1)?',':'');
 				}
 				Ext.Ajax.request({
-					url: '/mediaserver/plugins/select.php',
+					url: site_path + 'plugins/select.php',
 					params: {
 						off: selectedIds,
 						select: true
@@ -177,7 +181,7 @@ Ext.app.DownloadsWindow = Ext.extend(Ext.app.Module, {
 					selectedIds += selections[i].data.id + ((i!=selections.length-1)?',':'');
 				}
 				Ext.Ajax.request({
-					url: '/mediaserver/plugins/select.php',
+					url: site_path + 'plugins/select.php',
 					params: {
 						off: selectedIds,
 						select: true
@@ -197,7 +201,18 @@ Ext.app.DownloadsWindow = Ext.extend(Ext.app.Module, {
 			menu: new Ext.menu.Menu({
 				items: [{
 					iconCls: 'ux-zipfile',
-					text: 'Zip File'
+					text: 'Zip File',
+					handler: function(item) {
+						var selections = this.store.data.items;
+						var selectedIds = '';
+						for(var i = 0; i < selections.length; i++)
+						{
+							selectedIds += selections[i].data.id + ((i!=selections.length-1)?',':'');
+						}
+						var path = plugins_path + 'zip/' + selectedIds + '/files.zip';
+						window.location = path;
+					},
+					scope: grid
 				},{
 					iconCls: 'ux-torrentfile',
 					text: 'Torrent File',
