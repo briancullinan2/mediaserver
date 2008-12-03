@@ -29,7 +29,7 @@ $error = '';
 // check if trying to change selected items
 if(isset($_REQUEST['select']))
 {
-		
+	
 	// store this query in the session
 	$_SESSION['select'] = array();
 	$_SESSION['select']['on'] = @$_REQUEST['on'];
@@ -150,9 +150,9 @@ if(isset($_REQUEST['dir']))
 		if(!isset($_REQUEST['includes']))
 		{
 			if(isset($_REQUEST['dirs_only']))
-				$props['WHERE'] .= 'Filepath REGEXP "^' . $_REQUEST['dir'] . '[^/]*/$" AND Filepath != "' . $_REQUEST['dir'] . '"';
+				$props['WHERE'] .= 'Filepath != "' . $_REQUEST['dir'] . '" AND Filepath REGEXP "^' . $_REQUEST['dir'] . '[^/]*/$"';
 			else
-				$props['WHERE'] .= '(Filepath REGEXP "^' . $_REQUEST['dir'] . '[^/]*/$" OR Filepath REGEXP "^' . $_REQUEST['dir'] . '[^/]*$") AND Filepath != "' . $_REQUEST['dir'] . '"';
+				$props['WHERE'] .= 'Filepath != "' . $_REQUEST['dir'] . '" AND (Filepath REGEXP "^' . $_REQUEST['dir'] . '[^/]*/?$")';
 		}
 		// show all results underneath directory
 		else
