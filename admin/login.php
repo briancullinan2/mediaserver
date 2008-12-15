@@ -2,7 +2,7 @@
 
 // a simple login script for the admin section
 
-require_once '../include/common.php';
+require_once dirname(__FILE__) . '/../include/common.php';
 
 $error = '';
 

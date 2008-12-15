@@ -3,7 +3,7 @@
 // handles selecting the display options
 
 // load template
-require_once '../include/common.php';
+require_once dirname(__FILE__) . '/../include/common.php';
 
 // load template to create output
 if($_SERVER['SCRIPT_FILENAME'] == __FILE__)

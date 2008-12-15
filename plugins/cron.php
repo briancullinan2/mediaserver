@@ -19,7 +19,7 @@ $tm_start = array_sum(explode(' ', microtime()));
 
 // this is an iterator to update the server database and all the media listings
 // use some extra code so cron can be run from any directory
-require substr(__FILE__, 0, strlen(__FILE__) - strlen(basename(__FILE__))) . '../include/common.php';
+require dirname(__FILE__) . '/../include/common.php';
 
 // some things to take into consideration:
 // Access the database in intervals of files, not every individual file

@@ -2,7 +2,7 @@
 
 // handle bit torrenting of selected files
 
-require_once '../include/common.php';
+require_once dirname(__FILE__) . '/../include/common.php';
 
 define('SOCKET_PATH', '/home/bjcullinan/.config/transmission/daemon/socket'); // path to socket that transmission is started using
 

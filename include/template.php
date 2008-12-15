@@ -12,7 +12,7 @@
 //
 
 // get out common because it has the root path
-require_once "common.php";
+require_once dirname(__FILE__) . '/common.php';
 
 /**
  * Converted PHPLIB template class

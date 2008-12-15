@@ -39,7 +39,12 @@ elseif(isset($_SESSION['template']))
 }
 else
 {
-	define('SITE_TEMPLATE',            					 'templates/extjs/');
+	define('SITE_TEMPLATE',            					 'templates/default/');
+	if(preg_match('/.*mobile.*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
+	{
+		$_SESSION['template'] = 'default/';
+	}
+	// don't set a template, allow them to choose
 }
 
 // plugins directory	

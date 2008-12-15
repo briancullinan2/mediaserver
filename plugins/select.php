@@ -4,7 +4,7 @@
 
 
 // load template
-require_once '../include/common.php';
+require_once dirname(__FILE__) . '/../include/common.php';
 
 // load mysql to query the database
 $mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);

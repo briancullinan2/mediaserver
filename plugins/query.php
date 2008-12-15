@@ -1,7 +1,7 @@
 <?php
 
 // load template
-require_once '../include/common.php';
+require_once dirname(__FILE__) . '/../include/common.php';
 
 if($_SERVER['SCRIPT_FILENAME'] == __FILE__)
 	$smarty = new Smarty;

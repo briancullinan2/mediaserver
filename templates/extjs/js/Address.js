@@ -165,6 +165,7 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 			'change': {
 				fn: function(input, newValue, oldValue, params) {
 					this.setValue(newValue);
+					this.allQuery = this.getValue();
 					this.setButtons();
 					if(oldValue)
 					{

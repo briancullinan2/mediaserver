@@ -1,6 +1,6 @@
 <?php
 
-require_once '../include/common.php';
+require_once dirname(__FILE__) . '/../include/common.php';
 
 // make sure user in logged in
 if( loggedIn() )

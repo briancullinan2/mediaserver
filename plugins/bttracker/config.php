@@ -1,6 +1,6 @@
 <?php
 
-@include_once '../../include/common.php';
+include_once dirname(__FILE__) . '/../../include/common.php';
 
 /* Tracker Configuration
  *

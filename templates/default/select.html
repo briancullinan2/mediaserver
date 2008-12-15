@@ -24,6 +24,7 @@
 					{/if}
 				{/foreach}
 			{/if}
+            - Download: <a href="/{$smarty.const.SITE_PLUGINS}zip/{$files[file].id}/Files.zip">zip</a>:<a href="/{$smarty.const.SITE_PLUGINS}bt/{$files[file].id}/Files.torrent">torrent</a>
 			<br />
 		{/section}
 		</p>
@@ -53,13 +54,12 @@
 		$smarty->assign('column_lengths', $column_lengths);
 		{/php}
 		<span class="column">On/Off</span>
-		{foreach from=$display item=column_value key=column_key}
-			{if $column_value eq 'on'}
-				{assign var=column_len value=$column_lengths.$column_key}
-				{assign var=format_str value="%-"|cat:$column_len+2|cat:"s"}
-				<span class="column">{$column_key|string_format:$format_str}</span>
-			{/if}
+		{foreach from=$smarty.session.columns item=column_value key=column_key}
+            {assign var=column_len value=$column_lengths.$column_value}
+            {assign var=format_str value="%-"|cat:$column_len+2|cat:"s"}
+            <span class="column">{$column_value|string_format:$format_str}</span>
 		{/foreach}
+		<span class="column">Download</span>
 		<br />
 		{section name=file loop=$files}
 			{if isset($smarty.session.selected)}
@@ -75,6 +75,7 @@
 					<span class="column">{$files[file].$column_value|string_format:$format_str}</span>
 				{/if}
 			{/foreach}
+			<span class="column"><a href="/{$smarty.const.SITE_PLUGINS}zip/{$files[file].id}/Files.zip">zip</a>:<a href="/{$smarty.const.SITE_PLUGINS}bt/{$files[file].id}/Files.torrent">torrent</a></span>
 			<span style="display:block; float:left; clear:both;"></span><br />
 		{/section}
 		</p>
@@ -90,7 +91,7 @@
 		<input type="submit" name="select" value="All" /><input type="submit" name="select" value="None" /><br />
 		<table class="select_list">
 			<thead>
-				</thead><td>On/Off</td>
+				<td>On/Off</td>
 {assign var=columns value=$smarty.session.columns}{assign var=column_count value=$columns|@count}
 {foreach name=columns from=$columns item=column_value}{assign var=items_after value=''}{assign var=items_before value=''}
 {section name=link_column loop=$columns}
@@ -105,6 +106,7 @@
 {assign var=column_link_len value=$items_before|strlen}{assign var=items_before value=$items_before|substr:0:$column_link_len-1}{assign var=column_link_len value=$items_after|strlen}{assign var=items_after value=$items_after|substr:0:$column_link_len-1}
 				<td>{if $smarty.foreach.columns.index > 0}<a href="{$smarty.server.PHP_SELF}?column={$items_before}&display=">&lt;</a> {/if}{if isset($display.order) && $display.order eq $column_value}{$column_value}{else}<a href="{$smarty.server.PHP_SELF}?order={$column_value}&display=">{$column_value}</a>{/if}{if $smarty.foreach.columns.index < $column_count-1} <a href="{$smarty.server.PHP_SELF}?column={$items_after}&display=">&gt;</a>{/if}</td>
 {/foreach}
+				<td>Download</td>
 			</thead>
 {section name=file loop=$files}
 			<tr>
@@ -114,6 +116,7 @@
 {foreach from=$smarty.session.columns item=column_value}
 				<td>{if isset($files[file].$column_value)}{$files[file].$column_value}{/if}</td>
 {/foreach}
+				<td><a href="/{$smarty.const.SITE_PLUGINS}zip/{$files[file].id}/Files.zip">zip</a>:<a href="/{$smarty.const.SITE_PLUGINS}bt/{$files[file].id}/Files.torrent">torrent</a></td>
 			</tr>
 {/section}
 		</table>
@@ -128,7 +131,7 @@
 	<form name="select" action="" method="post">
 		<input type="submit" name="select" value="All" /><input type="submit" name="select" value="None" /><br />
 		<table class="select_list">
-			<thead></thead>
+			<thead>
 {assign var=columns value=$smarty.session.columns}{assign var=column_count value=$columns|@count}
 {foreach name=columns from=$columns item=column_value}{assign var=items_after value=''}{assign var=items_before value=''}
 {section name=link_column loop=$columns}
@@ -143,6 +146,7 @@
 {assign var=column_link_len value=$items_before|strlen}{assign var=items_before value=$items_before|substr:0:$column_link_len-1}{assign var=column_link_len value=$items_after|strlen}{assign var=items_after value=$items_after|substr:0:$column_link_len-1}
 				<td>{if $smarty.foreach.columns.index > 0}<a href="{$smarty.server.PHP_SELF}?column={$items_before}&display=">&lt;</a> {/if}{if isset($display.order) && $display.order eq $column_value}{$column_value}{else}<a href="{$smarty.server.PHP_SELF}?order={$column_value}&display=">{$column_value}</a>{/if}{if $smarty.foreach.columns.index < $column_count-1} <a href="{$smarty.server.PHP_SELF}?column={$items_after}&display=">&gt;</a>{/if}</td>
 {/foreach}
+				<td>Download</td>
 			</thead>
 {section name=file loop=$files}
 			<tr>
@@ -151,6 +155,7 @@
 {foreach from=$smarty.session.columns item=column_value}
 				<td>{if isset($files[file].$column_value)}{$files[file].$column_value}{/if}</td>
 {/foreach}
+				<td><a href="/{$smarty.const.SITE_PLUGINS}zip/{$files[file].id}/Files.zip">zip</a>:<a href="/{$smarty.const.SITE_PLUGINS}bt/{$files[file].id}/Files.torrent">torrent</a></td>
 			</tr>
 {/section}
 		</table>
