@@ -50,6 +50,8 @@ if( file_exists(SITE_LOCALROOT . 'state_dirs.txt') )
 
 $i = 0;
 
+print_r($state);
+	
 // check state information
 if( isset($state) && is_array($state) ) $state_current = array_pop($state);
 
@@ -60,15 +62,17 @@ if( isset($state_current) && isset($watched[$state_current['index']]) && $watche
 }
 elseif(isset($state_current))
 {
-	// put it back on because it doesn't match
-	array_push($state, $state_current);
+	// if it isn't set in the watched list at all 
+	//   something must be wrong with our state so reset it
+	@unlink(SITE_LOCALROOT . "state_dirs.txt");
+	$state = array();
 }
 
 // loop through each watched folder and get a list of all the files
 for($i; $i < count($watched); $i++)
 {
 	$watch = $watched[$i];
-	
+
 	$status = getdir($watch['Filepath']);
 	
 	// if exited because of time, then save state
@@ -78,10 +82,14 @@ for($i; $i < count($watched); $i++)
 		array_push($state, array('index' => $i, 'file' => $watch['Filepath']));
 		
 		// serialize and save
+		print "State saved\n";
 		$fp = fopen(SITE_LOCALROOT . "state_dirs.txt", "w");
 		fwrite($fp, serialize($state));
 		fclose($fp);
 		
+		// since it exited because of time we don't want to continue our for loop
+		//   exit out of the loop so it start off in the same place next time
+		break;
 	}
 	else
 	{
@@ -89,9 +97,10 @@ for($i; $i < count($watched); $i++)
 		if(file_exists(SITE_LOCALROOT . "state_dirs.txt"))
 		{
 			@unlink(SITE_LOCALROOT . "state_dirs.txt");
-			if(file_exists(SITE_LOCALROOT . 'state_dirs.txt')) $fp = fopen(SITE_LOCALROOT . "state_dirs.txt", "w");
+			if(file_exists(SITE_LOCALROOT . "state_dirs.txt")) $fp = fopen(SITE_LOCALROOT . "state_dirs.txt", "w");
 			if(isset($fp))
 			{
+				print "State cleared\n";
 				fwrite($fp, '');
 				fclose($fp);
 			}
@@ -177,7 +186,7 @@ foreach($GLOBALS['modules'] as $i => $module)
 	call_user_func(array($module, 'cleanup'), $mysql, $watched);
 }
 
-// readd all the folders that lead up to the watched folder
+// read all the folders that lead up to the watched folder
 // these will always be deleted by the cleanup, but there are only a couple
 for($i = 0; $i < count($watched); $i++)
 {

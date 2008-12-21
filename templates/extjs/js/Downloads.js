@@ -139,7 +139,6 @@ Ext.app.DownloadsWindow = Ext.extend(Ext.app.Module, {
 			layout: 'border',
 			border: false,
 			items: [grid],
-			closeAction: 'hide',
 			listeners: {
 				'activate': function() {
 					this.items.get(0).store.load();

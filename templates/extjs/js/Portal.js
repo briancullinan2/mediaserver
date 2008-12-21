@@ -61,29 +61,11 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 		
 		var bufferedGridToolbar = new Ext.ux.BufferedGridToolbar({
 			view : bufferedView,
-			displayInfo : true
+			displayInfo : true,
+			cls: 'ux-toolbar'
 		});
 		
 		var bufferedSelectionModel = new Ext.ux.grid.BufferedRowSelectionModel();
-		
-		var actions = {
-			'downloads-button' : function(app){
-				var selections = bufferedSelectionModel.getSelections();
-				var selectedIds = '';
-				for(var i = 0; i < selections.length; i++)
-				{
-					selectedIds += selections[i].data.id + ((i!=selections.length-1)?',':'');
-				}
-				Ext.Ajax.request({
-					url: site_path + 'plugins/select.php',
-					params: {
-						on: selectedIds,
-						select: true
-					}
-				});
-				app.getModule('downloads-win').createWindow();
-			}
-		};
 		
 		var colModel = new Ext.grid.ColumnModel([
 		{header: "", align : 'right', sortable: false, dataIndex: 'tip', hidden: true, width: 24, fixed: true, menuDisabled: true,
@@ -120,6 +102,7 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 		
 		var grid = new Ext.grid.GridPanel({
 			region: 'center',
+			bodyStyle: 'border-bottom:0px;border-top:0px;',
 			ds : bufferedDataStore,
 			enableDragDrop : false,
 			cm : colModel,
@@ -156,6 +139,7 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 			},
 			'rowcontextmenu': {
 				fn: function(grid, rowIndex, e) {
+					e.preventDefault();
 					this.selModel.selectRow(rowIndex, this.selModel.isSelected(rowIndex));
 					this.rowContext.showAt(e.getXY());
 				}
@@ -180,6 +164,7 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 		var folderTasks = new Ext.Panel({
 			frame:true,
 			title: 'File and Folder Tasks',
+			cls: 'ux-task-panel',
 			collapsible:true,
 			titleCollapse: true,
 			html: '<ul>' +
@@ -190,9 +175,29 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 			'</ul>'
 		});
 		
+		var actions = {
+			'downloads-button' : function(app){
+				var selections = bufferedSelectionModel.getSelections();
+				var selectedIds = '';
+				for(var i = 0; i < selections.length; i++)
+				{
+					selectedIds += selections[i].data.id + ((i!=selections.length-1)?',':'');
+				}
+				Ext.Ajax.request({
+					url: site_path + 'plugins/select.php',
+					params: {
+						on: selectedIds,
+						select: true
+					}
+				});
+				app.getModule('downloads-win').createWindow();
+			}
+		};
+		
 		var otherPlaces = new Ext.Panel({
 			frame:true,
 			title: 'Other Places',
+			cls: 'ux-task-panel',
 			collapsible:true,
 			titleCollapse: true
 		});
@@ -200,27 +205,43 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 		var details = new Ext.Panel({
 			frame:true,
 			title: 'Details',
+			cls: 'ux-task-panel',
 			collapsible:true,
 			titleCollapse: true
 		});
 		
 		var tasksPanel = new Ext.Panel({
+			title: 'Tasks',
 			autoScroll: true,
 			anchor: '100% 100%',
 			border: false,
 			baseCls:'x-plain',
-			items: [folderTasks, otherPlaces, details]
+			items: [folderTasks, otherPlaces, details],
+			listeners: {
+				'render': {
+					fn: function(panel) {
+						panel.body.on('mousedown', function(e, t){
+							e.stopEvent();
+							actions[t.id](this.app);
+						}, 
+						this, {delegate:'a'});
+						panel.body.on('click', Ext.emptyFn, null, {delegate:'a', preventDefault:true});
+					},
+					scope: this
+				}
+			}
 		});
 		
 		
 		var dirField = new Ext.form.ComboBox({
 			fieldLabel: 'Look in',
 			name: 'dir',
-			width: 183,
 			value: address.getValue()
 		});
 		
 		var searchPanel = new Ext.form.FormPanel({
+			title: 'Search',
+			cls: 'ux-search-panel',
 			autoScroll: true,
 			border: false,
 			baseCls:'x-plain',
@@ -253,8 +274,9 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 		});
 		
 		var foldersPanel = new Ext.tree.TreePanel({
+			title: 'Folders',
 			autoScroll: true,
-			anchor: '100% 100%',
+			//anchor: '100% 100%',
 			address: address,
 			root: new Ext.ux.XMLTreeNode({
 				text:'Media Server',
@@ -280,56 +302,44 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 			}
 		});
 		
-		var leftPanel = new Ext.Panel({
-			region:'west',
-			split:true,
-			collapsible: true,
-			collapseMode: 'mini',
-			animCollapse: false,
-			width:200,
-			minWidth: 150,
+		var tabPanel = new Ext.TabPanel({
+			region:'center',
+			tabPosition: 'bottom',
+			activeTab: 0,
+			deferredRender: false,
 			border: false,
-			baseCls:'x-plain',
-			margins:'3 3 0 3',
-			layout: 'anchor',
+			bodyStyle: 'background: none;',
+			listeners: {
+				'tabchange': {
+					fn: function(tabpanel, tab)
+					{
+						if(searchPanel.rendered)
+							dirField.setWidth(searchPanel.getSize().width - 6);
+						//tabpanel.setTitle(tab.title);
+					}
+				}
+			},
 			items: [tasksPanel, searchPanel, foldersPanel]
 		});
-		leftPanel.on({
+		tabPanel.on({
 			'resize': function () {
 				if(searchPanel.rendered)
-					dirField.setWidth(searchPanel.getSize().width);
+					dirField.setWidth(searchPanel.getSize().width - 6);
 			}
 		});
 		
-		searchPanel.hide();
-		foldersPanel.hide();
-		
-		var win = desktop.createWindow({
-			title: 'Portal Window',
-			width: 700,
-			height: 450,
-			iconCls: 'portal',
-			shim: false,
-			animCollapse: false,
-			constrainHeader: true,
-			cls: 'portal-window',
-			tbar: [],
-			bbar: bufferedGridToolbar,
+		var leftPanel = new Ext.Panel({
+			title: 'Folders',
+			region:'west',
+			cls: 'ux-leftpanel',
+			bodyStyle: 'border-bottom:0px;border-top:0px;',
+			split:true,
+			collapsible: true,
+			width:200,
+			minWidth: 170,
 			layout: 'border',
-			border: false,
-			layoutConfig: {
-				animate: false
-			},
-			items: [grid, leftPanel]
+			items: [tabPanel]
 		});
-
-		grid.view.el.on('contextmenu', function (e, t) { e.preventDefault(); }, this);
-		tasksPanel.body.on('mousedown', function(e, t){
-				e.stopEvent();
-				actions[t.id](this.app);
-			}, 
-		this, {delegate:'a'});
-		tasksPanel.body.on('click', Ext.emptyFn, null, {delegate:'a', preventDefault:true});
 		
 		var refreshbutton = new Ext.Toolbar.Button({
 			cls:"x-btn-icon",
@@ -385,18 +395,15 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 				fn: function(item, pressed) {
 					if(pressed == false && foldersbutton.pressed == false)
 					{
-						tasksPanel.show();
-						searchPanel.hide();
-						foldersPanel.hide();
+						tabPanel.activate(0);
 					}
 					else
 					{
 						if(pressed == true)
 						{
 							foldersbutton.toggle(false);
-							tasksPanel.hide();
-							searchPanel.show();
-							foldersPanel.hide();
+							tabPanel.activate(1);
+							dirField.setValue(address.getValue());
 						}
 					}
 				}
@@ -407,18 +414,14 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 				fn: function(item, pressed) {
 					if(pressed == false && searchbutton.pressed == false)
 					{
-						tasksPanel.show();
-						searchPanel.hide();
-						foldersPanel.hide();
+						tabPanel.activate(0);
 					}
 					else
 					{
 						if(pressed == true)
 						{
 							searchbutton.toggle(false);
-							tasksPanel.hide();
-							searchPanel.hide();
-							foldersPanel.show();
+							tabPanel.activate(2);
 						}
 					}
 				}
@@ -513,25 +516,44 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 		});
 		
 		
+		var topToolbar = new Ext.Toolbar({
+			cls: 'ux-toolbar',
+			items: [backbutton, forwardbutton,
+				upbutton, refreshbutton,
+				'-',
+				searchbutton, foldersbutton,
+				'-',
+				viewbutton,
+				'->',
+				'|',
+				'Address:',
+				address]
+		});
+
 		address.backbutton = backbutton;
 		address.forwardbutton = forwardbutton;
-		address.toolbar = win.getTopToolbar();
+		address.toolbar = topToolbar;
 		address.search = searchbutton;
 		address.grid = grid;
 		
-		var topToolbar = win.getTopToolbar();
-		topToolbar.add(
-			backbutton, forwardbutton,
-			upbutton, refreshbutton,
-			'-',
-			searchbutton, foldersbutton,
-			'-',
-			viewbutton,
-			'->',
-			'|',
-			'Address:',
-			address
-		);
+		var win = desktop.createWindow({
+			title: 'Portal Window',
+			width: 700,
+			height: 450,
+			iconCls: 'portal',
+			shim: false,
+			animCollapse: false,
+			constrainHeader: true,
+			cls: 'portal-window',
+			tbar: topToolbar,
+			bbar: bufferedGridToolbar,
+			layout: 'border',
+			border: false,
+			layoutConfig: {
+				animate: false
+			},
+			items: [grid, leftPanel]
+		});
 
         win.show();
     }

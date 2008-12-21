@@ -15,7 +15,7 @@ Ext.ux.FolderView = function(config) {
 	this.templates.master = new Ext.Template(
         '<div class="x-grid3" hidefocus="true"><div style="z-index:2000;background:none;position:relative;height:321px; float:right; width: 18px;overflow: scroll;"><div style="background:none;width:1px;overflow:hidden;font-size:1px;height:0px;"></div></div>',
             '<div class="x-grid3-viewport" style="float:left">',
-                '<div class="x-grid3-header"><div class="x-grid3-header-inner"><div class="x-grid3-header-offset">{header}</div></div><div class="x-clear"></div></div>',
+                '<div class="x-grid3-header ux-grid3-header"><div class="x-grid3-header-inner"><div class="x-grid3-header-offset">{header}</div></div><div class="x-clear"></div></div>',
                 '<div class="x-grid3-scroller" style="overflow-y:hidden !important;"><div class="x-grid3-body" style="position:relative;">{body}</div><a href="#" class="x-grid3-focus" tabIndex="-1"></a></div>',
             "</div>",
             '<div class="x-grid3-resize-marker">&#160;</div>',
