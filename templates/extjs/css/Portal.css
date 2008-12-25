@@ -9,7 +9,7 @@
 }
 .portal-window .thumb {
 }
-.portal-window .thumb img {
+.portal-window .thumb div {
     height: 64px; 
     width: 64px;
 	margin: 0px 8px 0px 8px;
@@ -107,7 +107,9 @@
 }
 
 .x-toolbar.ux-toolbar {
-	border:1px solid #A9BFD3;
+	border-color:#99BBE8;
+	border-style:solid;
+	border-width:1px;
 }
 
 .ux-leftpanel .x-panel-header {

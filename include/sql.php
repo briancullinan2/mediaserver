@@ -89,6 +89,15 @@ class sql_global
 				Filepath		TEXT NOT NULL
 			)') or print_r(mysql_error());
 		
+		$this->query('CREATE TABLE IF NOT EXISTS ' . $this->table_prefix . 'alias (
+				id 				INT NOT NULL AUTO_INCREMENT,
+								PRIMARY KEY(id),
+				Paths			TEXT NOT NULL,
+				Alias			TEXT NOT NULL,
+				Paths_regexp	TEXT NOT NULL,
+				Alias_regexp	TEXT NOT NULL
+			)') or print_r(mysql_error());
+		
 		$this->query('CREATE TABLE IF NOT EXISTS ' . $this->table_prefix . 'files (
 				id 				INT NOT NULL AUTO_INCREMENT,
 								PRIMARY KEY(id),
@@ -171,7 +180,9 @@ class sql_global
 		if(!isset($props['OTHER'])) $other = '';
 		elseif(is_string($props['OTHER'])) $other = $props['OTHER'];
 		
-		$this->query('SELECT ' . $select . ' FROM ' . $this->table_prefix . $table . ' ' . $where . ' ' . $other);
+		$result = $this->query('SELECT ' . $select . ' FROM ' . $this->table_prefix . $table . ' ' . $where . ' ' . $other);
+		
+		if($result === false) return false;
 		
 		return $this->result();
 		
@@ -276,6 +287,10 @@ class sql_global
 		
 	}
 
+	function error()
+	{
+		
+	}
 	
 //=============================================
 //  close()

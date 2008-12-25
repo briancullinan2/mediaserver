@@ -46,9 +46,10 @@ class db_file
 			}
 			else
 			{
-	
+				$filename = $file;
+				//if(USE_ALIAS) $filename = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 				// update file if modified date has changed
-				if( date("Y-m-d h:i:s", filemtime($file)) != $db_file[0]['Filedate'] )
+				if( date("Y-m-d h:i:s", filemtime($filename)) != $db_file[0]['Filedate'] )
 				{
 					$id = db_file::add($mysql, $file, $db_file[0]['id']);
 				}
@@ -73,6 +74,7 @@ class db_file
 		$fileinfo = array();
 		$fileinfo['Filepath'] = $file;
 		$fileinfo['Filename'] = basename($file);
+		//if(USE_ALIAS) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 		$fileinfo['Filesize'] = filesize($file);
 		$fileinfo['Filemime'] = getMime($file);
 		$fileinfo['Filedate'] = date("Y-m-d h:i:s", filemtime($file));

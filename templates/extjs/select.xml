@@ -31,6 +31,9 @@ $smarty->assign('type_icons', $type_icons);
 		<path>{$files[file].Filepath|utf8_encode|htmlspecialchars}</path>
 		<link>{$smarty.const.SITE_HTMLPATH}{$smarty.const.SITE_PLUGINS}file/{$smarty.request.cat}/{$files[file].id}/{$files[file].Filename|utf8_encode|urlencode|htmlspecialchars}</link>
 		<short>{$files[file].Filename|truncate:13:"...":true|utf8_encode|htmlspecialchars}</short>
+{foreach from=$columns item=column_value}
+		<info-{$column_value}>{if isset($files[file].$column_value)}{$files[file].$column_value|utf8_encode|htmlspecialchars}{/if}</info-{$column_value}>
+{/foreach}
 	</file>
 {/section}
 {else}

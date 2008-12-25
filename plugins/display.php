@@ -102,7 +102,9 @@ if(isset($_SESSION['display']))
 
 $smarty->assign('templates', $templates);
 if($_SERVER['SCRIPT_FILENAME'] == __FILE__)
+{
+	header('Content-Type: ' . getMime($templates['TEMPLATE_DISPLAY']));
 	$smarty->display($templates['TEMPLATE_DISPLAY']);
-
+}
 
 ?>

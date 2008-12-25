@@ -46,7 +46,9 @@ Ext.app.DownloadsWindow = Ext.extend(Ext.app.Module, {
 			id: "index"                 // The element within the row that provides an ID for the record (optional)
 		}, File);
 		
-		var windowToolbar = new Ext.Toolbar();
+		var windowToolbar = new Ext.Toolbar({
+			cls: 'ux-toolbar'
+		});
 		
 		var createGridButton = function(record, id) {
 			var newButton = new Ext.Toolbar.SplitButton({
@@ -111,6 +113,7 @@ Ext.app.DownloadsWindow = Ext.extend(Ext.app.Module, {
 		
 		var grid = new Ext.grid.GridPanel({
 			region: 'center',
+			bodyStyle: 'border-top:0px;',
 			ds : new Ext.data.Store({
 				url: site_path + 'plugins/list.php',
 				reader: FileReader,

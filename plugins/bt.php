@@ -92,6 +92,7 @@ if( isset($selected) && count($selected) > 0 )
 // get all the other information from other modules
 foreach($files as $index => $file)
 {
+
 	// merge all the other information to each file
 	foreach($GLOBALS['modules'] as $i => $module)
 	{
@@ -115,6 +116,10 @@ foreach($files as $index => $file)
 		// put these files on the end of the array so they also get processed
 		$files = array_merge($files, $sub_files);
 	}
+	
+	// do alias replacement on every file path
+	$files[$index]['Filepath_alias'] = $files[$index]['Filepath'];
+	if(USE_ALIAS == true) $files[$index]['Filepath_alias'] = preg_replace($GLOBALS['paths_regexp'], $GLOBALS['alias'], $file['Filepath']);
 }
 
 
@@ -130,8 +135,8 @@ if(count($files) > 0)
 	{
 		$file_info = array();
 		$file_info['length'] = intval($file['Filesize']);
-		$file_info['path'] = split('/', substr($file['Filepath'], 1));
-		$file_into['md5sum'] = md5_file($file['Filepath']);
+		$file_info['path'] = split('/', substr($file['Filepath_alias'], 1));
+		$file_into['md5sum'] = md5_file($file['Filepath_alias']);
 		$torrent['info']['files'][] = $file_info;
 		$total_size += $file['Filesize'];
 	}

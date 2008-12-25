@@ -12,21 +12,52 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
         }
     },
 	
+	defaultRecord: [
+		{name: 'name'},
+		{name: 'icon'},
+		{name: 'index'},
+		{name: 'id'},
+		{name: 'tip'},
+		{name: 'short'},
+		{name: 'link'},
+		{name: 'path'},
+		{name: 'ext'},
+		{name: 'selected'}
+	],
+	
+	displayColumns: function(options, success, response) {
+		var columns = response.responseXML.documentElement.getElementsByTagName('columns')[0];
+		var columns_arr = columns.textContent.split(',');
+		for(var i = 0; i < columns_arr.length; i++)
+		{
+			if(columns_arr[i] != '') this.defaultRecord[this.defaultRecord.length] = {name: 'info-' + columns_arr[i]};
+		}
+		
+		var tmp_col = [];
+		for(var i = 0; i < this.defaultRecord.length; i++)
+		{
+			if(this.defaultRecord[i].name.substring(0, 5) == 'info-')
+			{
+				tmp_col[tmp_col.length] = {
+					header: this.defaultRecord[i].name.substring(5),
+					sortable: true,
+					dataIndex: this.defaultRecord[i].name,
+					hidden: true
+				}
+			}
+		}
+		
+		options.colModel.setConfig(tmp_col);
+		options.ds.reader.recordType = Ext.data.Record.create(this.defaultRecord);
+		options.ds.recordType = options.ds.reader.recordType;
+		options.ds.fields = options.ds.recordType.prototype.fields
+	},
+	
     createWindow : function(){
         var desktop = this.app.getDesktop();
 		
-		var File = Ext.data.Record.create([
-			{name: 'name'},
-			{name: 'icon'},
-			{name: 'index'},
-			{name: 'id'},
-			{name: 'tip'},
-			{name: 'short'},
-			{name: 'link'},
-			{name: 'path'},
-			{name: 'ext'},
-			{name: 'selected'}
-		]);
+		// set up records		
+		var File = Ext.data.Record.create(this.defaultRecord);
 		
 		var FileReader = new Ext.data.XmlReader({
 			success: "success",
@@ -54,6 +85,7 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 		
 		var bufferedView = new Ext.ux.FolderView({
 			nearLimit : 100,
+			defaultRecord: this.defaultRecord,
 			loadMask : {
 				msg : 'Please wait...'
 			}
@@ -67,39 +99,19 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 		
 		var bufferedSelectionModel = new Ext.ux.grid.BufferedRowSelectionModel();
 		
-		var colModel = new Ext.grid.ColumnModel([
-		{header: "", align : 'right', sortable: false, dataIndex: 'tip', hidden: true, width: 24, fixed: true, menuDisabled: true,
-			renderer: function(value, metadata, record, rowIndex, colIndex, store) {
-				// add the extra values to the record
-				var tipInfo = value.split("<br />");
-				for(var i = 0; i < tipInfo.length; i++) {
-					// extract name and value pairs
-					var nameVal = String(tipInfo[i]).split(": ");
-					if(nameVal[0] != '')
-					{
-						record.data[nameVal[0]] = tipInfo[i].substring(nameVal[0].length + 2);
-						var cm = bufferedView.grid.getColumnModel();
-						if(cm.findColumnIndex(nameVal[0]) == -1)
-						{
-							// add the field name to the store
-							bufferedView.defaultRecord[bufferedView.defaultRecord.length] = {name: nameVal[0]};
-							// add column to colmodel
-							cm.config[cm.config.length] = {
-								header: nameVal[0],
-								align : (isNaN(record.data[nameVal[0]]))?'left':'right',
-								sortable: true,
-								dataIndex: nameVal[0],
-								hidden: (this.viewMode != 'Details')
-							};
-							bufferedView.colModelChanged = true;
-						}
-					}
-				}
-			}
-		},
-		{header: "id", align : 'right', sortable: true, dataIndex: 'id', hidden: true}
-		]);
+		// set up colmodel
+		var colModel = new Ext.grid.ColumnModel([]);
+		// get some settings
+		Ext.Ajax.request({
+			url: site_path + 'plugins/display.php',
+			callback: this.displayColumns,
+			scope: this,
+			colModel: colModel,
+			ds: bufferedDataStore
+		});
 		
+		
+		// set up grid
 		var grid = new Ext.grid.GridPanel({
 			region: 'center',
 			bodyStyle: 'border-bottom:0px;border-top:0px;',
@@ -123,6 +135,15 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 			})
 		});
 		
+		var details = new Ext.Panel({
+			frame:true,
+			title: 'Details',
+			cls: 'ux-task-panel',
+			collapsible:true,
+			titleCollapse: true,
+			bodyStyle: 'margin-bottom:3px;'
+		});
+
 		grid.on({
 			'rowdblclick': {
 				fn: function(grid, rowIndex, e) {
@@ -135,6 +156,12 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 					{
 						window.location = r.data.link;
 					}
+				}
+			},
+			'rowclick': {
+				fn: function(grid, rowIndex, e) {
+					var r = grid.store.getAt(rowIndex);
+					details.body.dom.innerHTML = '<b>' + r.data.name + '</b><br />' + r.data['info-Filetype'] + '<br /><br />' + r.data.tip;
 				}
 			},
 			'rowcontextmenu': {
@@ -161,20 +188,6 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 		});
 		
 		// set up action panels
-		var folderTasks = new Ext.Panel({
-			frame:true,
-			title: 'File and Folder Tasks',
-			cls: 'ux-task-panel',
-			collapsible:true,
-			titleCollapse: true,
-			html: '<ul>' +
-				'<li>' +
-				'<img src="' + Ext.BLANK_IMAGE_URL + '" class="ux-downloads-button"/>' +
-				'<a id="downloads-button" href="#">Send selected items to Downloads.</a>' +
-				'</li>' +
-			'</ul>'
-		});
-		
 		var actions = {
 			'downloads-button' : function(app){
 				var selections = bufferedSelectionModel.getSelections();
@@ -193,18 +206,24 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 				app.getModule('downloads-win').createWindow();
 			}
 		};
+
+		var folderTasks = new Ext.Panel({
+			frame:true,
+			title: 'File and Folder Tasks',
+			cls: 'ux-task-panel',
+			collapsible:true,
+			titleCollapse: true,
+			html: '<ul>' +
+				'<li>' +
+				'<img src="' + Ext.BLANK_IMAGE_URL + '" class="ux-downloads-button"/>' +
+				'<a id="downloads-button" href="#">Send selected items to Downloads.</a>' +
+				'</li>' +
+			'</ul>'
+		});
 		
 		var otherPlaces = new Ext.Panel({
 			frame:true,
 			title: 'Other Places',
-			cls: 'ux-task-panel',
-			collapsible:true,
-			titleCollapse: true
-		});
-		
-		var details = new Ext.Panel({
-			frame:true,
-			title: 'Details',
 			cls: 'ux-task-panel',
 			collapsible:true,
 			titleCollapse: true
@@ -342,15 +361,16 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 		});
 		
 		var refreshbutton = new Ext.Toolbar.Button({
-			cls:"x-btn-icon",
-			iconCls: 'ux-reload-button',
+			cls:'x-btn-icon',
+			iconCls: 'x-tbar-loading',
 			tooltip: 'Refresh',
 			handler: function() {
-				this.view.reset(true)
+				this.view.reset(true);
 			},
 			scope: grid
 		});
 		
+		// setup the botton to go up a directory
 		var upbutton = new Ext.Toolbar.Button({
 			cls:"x-btn-icon",
 			iconCls: 'ux-up-button',
@@ -359,25 +379,21 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 		upbutton.on({
 			'click': {
 				fn: function() {
-					var newDir = '';
+					var newDir = '/';
 					var oldDirs = this.getValue().split('/');
 					
-					for(var i = oldDirs.length-1; i >= 0; i--)
+					for(var i = 1; i < oldDirs.length-2; i++)
 					{
-						if(oldDirs[i] != '')
-						{
-							oldDirs[i] = '';
-							break;
-						}
+						newDir += oldDirs[i] + '/';
 					}
 					
-					newDir = oldDirs.join('/');
 					this.fireEvent('change', this.el, newDir, this.getValue());
 				},
 				scope: address
 			}
 		});
 		
+		// set up the search and folders toggle buttons
 		var searchbutton = new Ext.Toolbar.Button({
 			cls:"x-btn-text-icon",
 			iconCls: 'ux-search-button',
@@ -390,6 +406,8 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 			text: 'Folders',
 			enableToggle: true
 		});
+		
+		// select the correct tab panel when the search button is pressed
 		searchbutton.on({
 			'toggle': {
 				fn: function(item, pressed) {
@@ -409,6 +427,8 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 				}
 			}
 		});
+		
+		// select the correct tab panel when the folders button is pressed
 		foldersbutton.on({
 			'toggle': {
 				fn: function(item, pressed) {
@@ -423,6 +443,36 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 							searchbutton.toggle(false);
 							tabPanel.activate(2);
 						}
+						else
+						{
+							searchbutton.toggle(false);
+							foldersbutton.toggle(false);
+						}
+					}
+				}
+			}
+		});
+		
+		// add the button selection based on which tab is selected
+		tabPanel.on({
+			'tabchange': function(panel, tab)
+			{
+				if(tab.title == 'Search')
+				{
+					searchbutton.toggle(true);
+					foldersbutton.toggle(false);
+				}
+				else
+				{
+					if(tab.title == 'Folders')
+					{
+						searchbutton.toggle(false);
+						foldersbutton.toggle(true);
+					}
+					else
+					{
+						searchbutton.toggle(false);
+						foldersbutton.toggle(false);
 					}
 				}
 			}

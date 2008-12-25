@@ -40,7 +40,7 @@ Ext.extend(Ext.ux.FolderView, Ext.ux.grid.BufferedGridView, {
 		'Thumbnails' : {
 			row : new Ext.Template(
 				'<div class="x-grid3-row {alt} thumb-wrap" style="margin:4px;">',
-				'<div class="thumb file_type_{type} file_ext_{ext}"><img src="{icon}" title=""></div>',
+				'<div class="thumb file_type_{type} file_ext_{ext}"><div></div></div>',
 				'<span class="x-editable">{short}</span>',
 				'</div>'
 			)
@@ -261,18 +261,17 @@ Ext.extend(Ext.ux.FolderView, Ext.ux.grid.BufferedGridView, {
 
 	},
 	
-	defaultRecord: [
-		{name: 'name'},
-		{name: 'icon'},
-		{name: 'index'},
-		{name: 'id'},
-		{name: 'tip'},
-		{name: 'short'},
-		{name: 'link'},
-		{name: 'path'},
-		{name: 'ext'},
-		{name: 'selected'}
-	],
+    focusCell : function(row, col, hscroll){
+        row = Math.min(row, Math.max(0, this.getRows().length-1));
+        var xy = this.ensureVisible(row, col, hscroll);
+        this.focusEl.setXY(xy||this.scroller.getXY());
+        
+        if(Ext.isGecko){
+            this.focusEl.focus();
+        }else{
+            this.focusEl.focus.defer(1, this.focusEl);
+        }
+    },
 	
     // private
     doRender : function(cs, rs, ds, startRow, colCount, stripe){

@@ -78,6 +78,28 @@ if(isset($_SESSION['display']))
 //set the detail for the template
 if( !isset($_REQUEST['detail']) || !is_numeric($_REQUEST['detail']) )
 	$_REQUEST['detail'] = 0;
+	
+// get the aliases to use to replace parts of the filepath
+if(USE_ALIAS == true)
+{
+	$mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+	$aliases = $mysql->get('alias', array('SELECT' => '*'));
+	
+	if($aliases !== false)
+	{
+		$GLOBALS['paths_regexp'] = array();
+		$GLOBALS['alias_regexp'] = array();
+		$GLOBALS['paths'] = array();
+		$GLOBALS['alias'] = array();
+		foreach($aliases as $key => $alias_props)
+		{
+			$GLOBALS['paths_regexp'][] = $alias_props['Paths_regexp'];
+			$GLOBALS['alias_regexp'][] = $alias_props['Alias_regexp'];
+			$GLOBALS['paths'][] = $alias_props['Paths'];
+			$GLOBALS['alias'][] = $alias_props['Alias'];
+		}
+	}
+}
 
 function selfURL()
 {

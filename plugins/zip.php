@@ -91,8 +91,9 @@ if( isset($selected) && count($selected) > 0 )
 }
 
 // get all the other information from other modules
-foreach($files as $index => $file)
+foreach($files as $index => &$file)
 {
+	
 	// merge all the other information to each file
 	foreach($GLOBALS['modules'] as $i => $module)
 	{
@@ -102,7 +103,7 @@ foreach($files as $index => $file)
 			if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
 		}
 	}
-
+	
 	// for the second pass go through and get all the files inside of folders
 	if($file['Filetype'] == 'FOLDER')
 	{
@@ -116,6 +117,12 @@ foreach($files as $index => $file)
 		// put these files on the end of the array so they also get processed
 		$files = array_merge($files, $sub_files);
 	}
+	
+	// do alias replacement on every file path
+	$files[$index]['Filepath_alias'] = $files[$index]['Filepath'];
+	if(USE_ALIAS == true) $files[$index]['Filepath_alias'] = preg_replace($GLOBALS['paths_regexp'], $GLOBALS['alias'], $file['Filepath']);
+	$files[$index]['Filepath_alias'] = str_replace('\\', '/', ($file['Filepath_alias'][0] == '/')?substr($file['Filepath_alias'], 1, strlen($file['Filepath_alias'])-1):$file['Filepath_alias']);
+
 }
 
 
@@ -127,7 +134,7 @@ if(count($files) > 0)
 	// loop through files and generate and expected file length
 	$length = 22;
 	foreach($files as $index => $file) {
-        $name     = str_replace('\\', '/', ($file['Filepath'][0] == '/')?substr($file['Filepath'], 1, strlen($file['Filepath'])-1):$file['Filepath']);
+        $name     = $file['Filepath_alias'];
 		$length += 30 + strlen($name);
 		$length += filesize($file['Filepath']) + 12;
 		$length += 46 + strlen($name);
@@ -141,7 +148,7 @@ if(count($files) > 0)
 	foreach($files as $index => $file)
 	{
 		$fr_offset = 0;
-        $name     = str_replace('\\', '/', ($file['Filepath'][0] == '/')?substr($file['Filepath'], 1, strlen($file['Filepath'])-1):$file['Filepath']);
+        $name     = $file['Filepath_alias'];
 
         $dtime    = dechex(unix2DosTime(0));
         $hexdtime = '\x' . $dtime[6] . $dtime[7]

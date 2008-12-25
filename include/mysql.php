@@ -47,7 +47,8 @@ class sql extends sql_global
 		{
 			$this->num_queries++;
 
-			$this->query_result = mysql_query($query, $this->db_connect_id) or print_r( mysql_error() );
+			$this->query_result = mysql_query($query, $this->db_connect_id) or $error = true;
+			if(isset($error)) return false;
 		}
 		if($this->query_result)
 		{
@@ -57,6 +58,11 @@ class sql extends sql_global
 		{
 			return false;
 		}
+	}
+	
+	function error()
+	{
+		return mysql_error($this->db_connect_id);
 	}
 
 	function close()

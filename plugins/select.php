@@ -140,6 +140,9 @@ if(isset($_REQUEST['dir']))
 {
 	$_REQUEST['dir'] = stripslashes($_REQUEST['dir']);
 	if($_REQUEST['dir'] == '') $_REQUEST['dir'] = '/';
+	// replace aliased path with actual path
+	if(USE_ALIAS == true) $_REQUEST['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $_REQUEST['dir']);
+	
 	// only search for file if is valid dir
 	if((file_exists($_REQUEST['dir']) && realpath($_REQUEST['dir']) !== false) || isset($_REQUEST['includes']))
 	{
@@ -187,8 +190,10 @@ if(!isset($_REQUEST['order']))
 $order_keys_values = array();
 
 // get all the other information from other modules
-foreach($files as $index => $file)
+foreach($files as $index => &$file)
 {
+
+	// short results to not include information from all the modules
 	if(!isset($_REQUEST['short']))
 	{
 		// merge all the other information to each file
@@ -200,6 +205,15 @@ foreach($files as $index => $file)
 				if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
 			}
 		}
+	}
+	
+	// do alias replacement on every file path
+	if(USE_ALIAS == true) $files[$index]['Filepath'] = preg_replace($GLOBALS['paths_regexp'], $GLOBALS['alias'], $file['Filepath']);
+	$alias_flipped = array_flip($GLOBALS['alias']);
+	if(isset($alias_flipped[$file['Filepath']]))
+	{
+		$index = $alias_flipped[$file['Filepath']];
+		$files[$index]['Filename'] = substr($GLOBALS['alias'][$index], 1, strlen($GLOBALS['alias'][$index]) - 2);
 	}
 	
 	// pick out the value for the field to sort by

@@ -164,10 +164,14 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 			},
 			'change': {
 				fn: function(input, newValue, oldValue, params) {
+					if(params && params.includes)
+					{
+						newValue = '/Search Results/';
+					}
 					this.setValue(newValue);
 					this.allQuery = this.getValue();
 					this.setButtons();
-					if(oldValue)
+					if(oldValue && (String(oldValue) != String(newValue) || newValue == '/Search Results/'))
 					{
 						var dirname = '';
 						var oldDirs = oldValue.split('/');
@@ -399,14 +403,15 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 		this.clearButtons();
 		
 		// split the items and make drop downs for each
-		var folders = this.value.split('/');
+		var folders = this.getValue().split('/');
 		var current_dir = '/';
 		for(var i = 0; i < folders.length; i++)
 		{
-			if(folders[i] != '')
+			if(folders[i] != '' || i == 0)
 			{
 				// set up menu that loads files
-				current_dir += folders[i] + '/';
+				if(i != 0) current_dir += folders[i] + '/';
+				else folders[i] = 'Portal';
 				
 				// check to see if the buttons path items are cached
 				var file_menu = null;
@@ -447,10 +452,7 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 						},
 						'click': {
 							fn: function() {
-								this.address.startValue = this.path;
-								if(String(this.address.getValue()) !== String(this.address.startValue)){
-									this.address.fireEvent('change', this.address.el, this.path, this.address.getValue());
-								}
+								this.address.fireEvent('change', this.address.el, this.path, this.address.getValue());
 							},
 							delay: 100
 						}
@@ -474,7 +476,7 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 		
 		button.el.removeClass("ux-button-inactive");
 		
-		if(!button.loaded)
+		if(!button.loaded || button.text == 'Search Results')
 		{
 			var current_dir = button.path;
 			
@@ -485,16 +487,27 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 				disabled: true
 			});
 			
+			var params = {
+				limit: 40,
+				start: 0
+			}
+			if(button.path == '/Search Results/' && button.address.grid.store.lastOptions.params)
+			{
+				if(button.address.grid.store.lastOptions.params.includes)
+					params.includes = button.address.grid.store.lastOptions.params.includes;
+				params.dir = button.address.grid.store.lastOptions.params.dir;
+			}
+			else
+			{
+				this.store.baseParams[this.queryParam] = current_dir;
+			}
+			
 			// use the store to get folders
-			this.store.baseParams[this.queryParam] = current_dir;
 			this.store.load({
 				menu: menu,
 				callback: this.addAddressButtons,
 				scope: this,
-				params: {
-					count: 40,
-					start: 0
-				}
+				params: params
 			});
 			button.loaded = true;
 			this.lastQuery = '';
@@ -528,10 +541,7 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 						listeners: {
 							'click': {
 								fn: function() {
-										this.address.startValue = this.path;
-										if(String(this.address.getValue()) !== String(this.address.startValue)){
-											this.address.fireEvent('change', this.address, this.path, this.startValue);
-										}
+										this.address.fireEvent('change', this.address, this.path, this.address.getValue());
 									},
 								delay: 150
 							}

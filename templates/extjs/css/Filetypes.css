@@ -1,0 +1,25 @@
+@charset "utf-8";
+/* CSS Document */
+
+.detail, .thumb {
+	background-repeat:no-repeat;
+}
+.detail.file_type_, .detail.file_ext_ {
+	background-image:url(/templates/extjs/images/filetypes/file_16x16.png);
+}
+.detail.file_ext_FOLDER {
+	background-image:url(/templates/extjs/images/filetypes/folder_16x16.png);
+}
+.detail.file_type_audio.file_ext_MP3 {
+	background-image:url(/templates/extjs/images/filetypes/music_16x16.png);
+}
+.thumb.file_type_, .detail.file_ext_ {
+	background-image:url(/templates/extjs/images/filetypes/file_96x96.png);
+}
+.thumb.file_ext_FOLDER {
+	background-image:url(/templates/extjs/images/filetypes/folder_96x96.png);
+}
+.thumb.file_type_audio.file_ext_MP3 {
+	background-image:url(/templates/extjs/images/filetypes/music_96x96.png);
+}
+
