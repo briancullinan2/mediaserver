@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<display>
+	<columns>{foreach from=$columns item=column_value}{$column_value},{/foreach}</columns>
+</display>
