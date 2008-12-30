@@ -40,7 +40,7 @@ Ext.extend(Ext.ux.FolderView, Ext.ux.grid.BufferedGridView, {
 		'Thumbnails' : {
 			row : new Ext.Template(
 				'<div class="x-grid3-row {alt} thumb-wrap" style="margin:4px;">',
-				'<div class="thumb file_type_{type} file_ext_{ext}"><div></div></div>',
+				'<div class="thumb file_ext_{ext}"><div></div></div>',
 				'<span class="x-editable">{short}</span>',
 				'</div>'
 			)
@@ -122,7 +122,10 @@ Ext.extend(Ext.ux.FolderView, Ext.ux.grid.BufferedGridView, {
 		var cm = this.grid.getColumnModel();
 		for(var i = 0; i < cm.getColumnCount(); i++)
 		{
-			cm.setHidden(i, (this.viewMode != 'Details'));
+			if(this.viewMode == 'Details' && cm.config[i].isBlank == false)
+				cm.setHidden(i, false);
+			else
+				cm.setHidden(i, true);
 		}
 	},
 	
@@ -222,7 +225,10 @@ Ext.extend(Ext.ux.FolderView, Ext.ux.grid.BufferedGridView, {
         vh -= this.mainHd.getHeight();
         
 		//------------------------------------------------------------------------------- items on a page vertically and horizontally 
-		this.itemCount = {x: Math.floor(vw/this.rowWidth), y: Math.floor(vh/this.rowHeight)};
+		this.itemCount = {
+			x: Math.floor(vw / this.rowWidth),
+			y: Math.floor(vh / this.rowHeight)
+		};
         var visibleRows = Math.max(1, this.itemCount.x * this.itemCount.y);
         
         var totalLength = ds.getTotalCount();
@@ -261,20 +267,84 @@ Ext.extend(Ext.ux.FolderView, Ext.ux.grid.BufferedGridView, {
 
 	},
 	
-    focusCell : function(row, col, hscroll){
-        row = Math.min(row, Math.max(0, this.getRows().length-1));
+    focusCell : function(row, col, hscroll)
+    {
         var xy = this.ensureVisible(row, col, hscroll);
-        this.focusEl.setXY(xy||this.scroller.getXY());
-        
+		
+        if (!xy) {
+        	return;
+		}
+
+		xy[0] = xy[0] - this.scroller.dom.scrollLeft;
+
+		this.focusEl.setXY(xy);
+
         if(Ext.isGecko){
             this.focusEl.focus();
         }else{
             this.focusEl.focus.defer(1, this.focusEl);
         }
+
     },
 	
     // private
-    doRender : function(cs, rs, ds, startRow, colCount, stripe){
+	ensureVisible : function(row, col, hscroll)
+    {
+        if(typeof row != "number"){
+            row = row.rowIndex;
+        }
+
+        if(row < 0 || row >= this.ds.totalLength){
+            return;
+        }
+
+        col = (col !== undefined ? col : 0);
+
+        var rowInd = row-this.rowIndex;
+
+        if (this.rowClipped && row == this.rowIndex+this.visibleRows-1) {
+            this.adjustScrollerPos(this.rowHeight );
+        } else if (row >= this.rowIndex+this.visibleRows) {
+            this.adjustScrollerPos(((row-(this.rowIndex+this.visibleRows))+1)*this.rowHeight);
+        } else if (row <= this.rowIndex) {
+            this.adjustScrollerPos((rowInd)*this.rowHeight);
+        }
+
+        var rowEl = this.getRow(row), cellEl;
+
+        if(!rowEl){
+            return;
+        }
+
+        if(!(hscroll === false && col === 0)){
+            while(this.cm.isHidden(col)){
+                col++;
+            }
+            cellEl = this.getCell(row, col);
+        }
+
+        var c = this.scroller.dom;
+
+        if(hscroll !== false){
+            var cleft = parseInt(cellEl.offsetLeft, 10);
+            var cright = cleft + cellEl.offsetWidth;
+
+            var sleft = parseInt(c.scrollLeft, 10);
+            var sright = sleft + c.clientWidth;
+            if(cleft < sleft){
+                c.scrollLeft = cleft;
+            }else if(cright > sright){
+                c.scrollLeft = cright-c.clientWidth;
+            }
+        }
+
+
+        return cellEl ?
+            Ext.fly(cellEl).getXY() :
+            [c.scrollLeft+this.el.getX(), Ext.fly(rowEl).getY()];
+    },
+
+	doRender : function(cs, rs, ds, startRow, colCount, stripe){
 
 		var ts = this.templates, ct = ts.cell, rt = ts.row, last = colCount-1;
         var tstyle = 'width:'+this.getTotalWidth()+';';

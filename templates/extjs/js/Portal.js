@@ -27,10 +27,35 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 	
 	displayColumns: function(options, success, response) {
 		var columns = response.responseXML.documentElement.getElementsByTagName('columns')[0];
-		var columns_arr = columns.textContent.split(',');
+		var columns_arr = columns.firstChild.data.split(',');
 		for(var i = 0; i < columns_arr.length; i++)
 		{
 			if(columns_arr[i] != '') this.defaultRecord[this.defaultRecord.length] = {name: 'info-' + columns_arr[i]};
+		}
+		
+		var check_row = function(value, metadata, record, rowIndex, colIndex, store)
+		{
+			// reset all isBlank values
+			if(rowIndex == 0 && colIndex == 0)
+			{
+				for(var i = 0; i < options.colModel.getColumnCount(); i++)
+				{
+					options.colModel.config[i].isBlank = true;
+				}
+			}
+			if(value != '' && options.view.viewMode == 'Details')
+				options.colModel.config[colIndex].isBlank = false;
+			// in last cell, make the columns hidden
+			if(rowIndex == store.getCount() && colIndex == options.colModel.getColumnCount() - 1)
+			{
+				// reset all isBlank values
+				for(var i = 0; i < colIndex; i++)
+				{
+					if(options.colModel.config[i].isBlank)
+						options.colModel.setHidden(i, true);
+				}
+			}
+			return value;
 		}
 		
 		var tmp_col = [];
@@ -42,7 +67,8 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 					header: this.defaultRecord[i].name.substring(5),
 					sortable: true,
 					dataIndex: this.defaultRecord[i].name,
-					hidden: true
+					hidden: true,
+					renderer: check_row
 				}
 			}
 		}
@@ -107,7 +133,8 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 			callback: this.displayColumns,
 			scope: this,
 			colModel: colModel,
-			ds: bufferedDataStore
+			ds: bufferedDataStore,
+			view: bufferedView
 		});
 		
 		

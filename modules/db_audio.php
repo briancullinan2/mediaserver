@@ -17,7 +17,7 @@ class db_audio extends db_file
 
 	static function columns()
 	{
-		return array('id', 'Title', 'Artist', 'Album', 'Track', 'Genre', 'Year', 'Length', 'Bitrate', 'Comments', 'Filepath');
+		return array('id', 'Track', 'Title', 'Artist', 'Album', 'Genre', 'Year', 'Length', 'Bitrate', 'Comments', 'Filepath');
 	}
 	
 
