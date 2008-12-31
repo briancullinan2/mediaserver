@@ -122,7 +122,7 @@ Ext.extend(Ext.ux.FolderView, Ext.ux.grid.BufferedGridView, {
 		var cm = this.grid.getColumnModel();
 		for(var i = 0; i < cm.getColumnCount(); i++)
 		{
-			if(this.viewMode == 'Details' && cm.config[i].isBlank == false)
+			if(this.viewMode == 'Details' && cm.config[i].isBlank === false)
 				cm.setHidden(i, false);
 			else
 				cm.setHidden(i, true);
@@ -160,9 +160,7 @@ Ext.extend(Ext.ux.FolderView, Ext.ux.grid.BufferedGridView, {
         
         var c  = g.getGridEl();
 
-		
-        var scrollbar = (this.cm.getTotalWidth()+this.scrollOffset > c.getSize().width && this.viewMode == 'Details');
-        //var scrollbar = false;
+        var scrollbar = this.cm.getTotalWidth()+this.scrollOffset > c.getSize().width;
         
         // adjust the height of the scrollbar
         this.liveScroller.dom.style.height = this.liveScroller.dom.parentNode.offsetHeight + 
@@ -196,7 +194,7 @@ Ext.extend(Ext.ux.FolderView, Ext.ux.grid.BufferedGridView, {
     // protected
     adjustVisibleRows : function()
     {
-		if (this.rowHeight == -1) {
+        if (this.rowHeight == -1) {
 			var row = this.getRows()[0];
 			if (row) {
 				this.rowHeight = row.offsetHeight + Ext.get(row).getMargins('tb'); 
@@ -204,7 +202,7 @@ Ext.extend(Ext.ux.FolderView, Ext.ux.grid.BufferedGridView, {
 			} else {
 				return;
 			}
-		} 
+        } 
         
         
         var g = this.grid, ds = g.store;
@@ -219,7 +217,7 @@ Ext.extend(Ext.ux.FolderView, Ext.ux.grid.BufferedGridView, {
         if (cm.getTotalWidth() > vw && this.viewMode == 'Details') {
             // yes!
             vh -= this.horizontalScrollOffset;
-        }
+        }        
 		if(this.viewMode == 'Details') this.rowWidth = vw;
         
         vh -= this.mainHd.getHeight();

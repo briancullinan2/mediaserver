@@ -42,19 +42,17 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 				{
 					options.colModel.config[i].isBlank = true;
 				}
+				options.colModel.config[0].isBlank = false;
 			}
+			if(colIndex == 0)
+			{
+				metadata.css = 'detail file_ext_' + record.data.ext;
+				return '';
+			}
+			// set the isBlank to false if there is any text what so ever.
 			if(value != '' && options.view.viewMode == 'Details')
 				options.colModel.config[colIndex].isBlank = false;
-			// in last cell, make the columns hidden
-			if(rowIndex == store.getCount() && colIndex == options.colModel.getColumnCount() - 1)
-			{
-				// reset all isBlank values
-				for(var i = 0; i < colIndex; i++)
-				{
-					if(options.colModel.config[i].isBlank)
-						options.colModel.setHidden(i, true);
-				}
-			}
+				
 			return value;
 		}
 		
@@ -63,12 +61,17 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 		{
 			if(this.defaultRecord[i].name.substring(0, 5) == 'info-')
 			{
+				var isId = (this.defaultRecord[i].name == 'info-id');
 				tmp_col[tmp_col.length] = {
-					header: this.defaultRecord[i].name.substring(5),
+					header: isId?'':this.defaultRecord[i].name.substring(5),
 					sortable: true,
 					dataIndex: this.defaultRecord[i].name,
 					hidden: true,
-					renderer: check_row
+					renderer: check_row,
+					width: isId?24:100,
+					fixed: isId,
+					menuDisabled: isId,
+					sortable: !isId
 				}
 			}
 		}
