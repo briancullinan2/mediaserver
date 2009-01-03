@@ -66,7 +66,7 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 					header: isId?'':this.defaultRecord[i].name.substring(5),
 					sortable: true,
 					dataIndex: this.defaultRecord[i].name,
-					hidden: true,
+					hidden: false,
 					renderer: check_row,
 					width: isId?24:100,
 					fixed: isId,
@@ -96,7 +96,7 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 		}, File);
 		
 		
-		var bufferedDataStore = new Ext.ux.grid.BufferedStore({
+		var bufferedStore = new Ext.ux.grid.livegrid.Store({
 			autoLoad : true,
 			bufferSize : 300,
 			reader : FileReader,
@@ -112,7 +112,7 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 			}
 		});
 		
-		var bufferedView = new Ext.ux.FolderView({
+		var bufferedGridView = new Ext.ux.FolderView({
 			nearLimit : 100,
 			defaultRecord: this.defaultRecord,
 			loadMask : {
@@ -120,13 +120,13 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 			}
 		});
 		
-		var bufferedGridToolbar = new Ext.ux.BufferedGridToolbar({
-			view : bufferedView,
+		var bufferedToolbar = new Ext.ux.grid.livegrid.Toolbar({
+			view : bufferedGridView,
 			displayInfo : true,
 			cls: 'ux-toolbar'
 		});
 		
-		var bufferedSelectionModel = new Ext.ux.grid.BufferedRowSelectionModel();
+		var bufferedSelectionModel = new Ext.ux.grid.livegrid.RowSelectionModel();
 		
 		// set up colmodel
 		var colModel = new Ext.grid.ColumnModel([]);
@@ -136,23 +136,23 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 			callback: this.displayColumns,
 			scope: this,
 			colModel: colModel,
-			ds: bufferedDataStore,
-			view: bufferedView
+			ds: bufferedStore,
+			view: bufferedGridView
 		});
 		
 		
 		// set up grid
-		var grid = new Ext.grid.GridPanel({
+		var grid = new Ext.ux.grid.livegrid.GridPanel({
 			region: 'center',
 			bodyStyle: 'border-bottom:0px;border-top:0px;',
-			ds : bufferedDataStore,
+			store : bufferedStore,
 			enableDragDrop : false,
-			cm : colModel,
-			sm : bufferedSelectionModel,
+			colModel : colModel,
+			selModel : bufferedSelectionModel,
 			loadMask : {
 				msg : 'Loading...'
 			},
-			view : bufferedView,
+			view : bufferedGridView,
 			rowContext: new Ext.menu.Menu({
 				items: [{
 					text: 'Send to Downloads',
@@ -528,7 +528,7 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 			}
 		});
 		
-		bufferedDataStore.on({
+		bufferedStore.on({
 			'load' : {
 				fn: function(store, records, options) {
 					// check if there was an error
@@ -626,7 +626,7 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 			constrainHeader: true,
 			cls: 'portal-window',
 			tbar: topToolbar,
-			bbar: bufferedGridToolbar,
+			bbar: bufferedToolbar,
 			layout: 'border',
 			border: false,
 			layoutConfig: {

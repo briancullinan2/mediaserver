@@ -4,7 +4,7 @@ Ext.ux.FolderView = function(config) {
         'buffer' : true,
         'cursormove' : true
     });   
-    this.horizontalScrollOffset = 16; 
+    this.horizontalScrollOffset = 17; 
     
     this.loadMask = false;
     
@@ -12,23 +12,25 @@ Ext.ux.FolderView = function(config) {
 
     this.templates = {};
 
-	this.templates.master = new Ext.Template(
-        '<div class="x-grid3" hidefocus="true"><div style="z-index:2000;background:none;position:relative;height:321px; float:right; width: 18px;overflow: scroll;"><div style="background:none;width:1px;overflow:hidden;font-size:1px;height:0px;"></div></div>',
-            '<div class="x-grid3-viewport" style="float:left">',
-                '<div class="x-grid3-header ux-grid3-header"><div class="x-grid3-header-inner"><div class="x-grid3-header-offset">{header}</div></div><div class="x-clear"></div></div>',
-                '<div class="x-grid3-scroller" style="overflow-y:hidden !important;"><div class="x-grid3-body" style="position:relative;">{body}</div><a href="#" class="x-grid3-focus" tabIndex="-1"></a></div>',
+    this.templates.master = new Ext.Template(
+        '<div class="x-grid3" hidefocus="true"><div class="ext-ux-livegrid-liveScroller"><div></div></div>',
+            '<div class="x-grid3-viewport"">',
+                '<div class="x-grid3-header"><div class="x-grid3-header-inner"><div class="x-grid3-header-offset">{header}</div></div><div class="x-clear"></div></div>',
+                '<div class="x-grid3-scroller" style="overflow-y:hidden !important;"><div class="x-grid3-body">{body}</div><a href="#" class="x-grid3-focus" tabIndex="-1"></a></div>',
             "</div>",
             '<div class="x-grid3-resize-marker">&#160;</div>',
             '<div class="x-grid3-resize-proxy">&#160;</div>',
         "</div>"
-    );    
+    );
 	
 	this.templates = Ext.apply(this.templates, this.views[this.viewMode]);
     
-    Ext.ux.grid.BufferedGridView.superclass.constructor.call(this);
+    this._gridViewSuperclass = Ext.ux.grid.livegrid.GridView.superclass;
+
+    this._gridViewSuperclass.constructor.call(this);
 };
 
-Ext.extend(Ext.ux.FolderView, Ext.ux.grid.BufferedGridView, {
+Ext.extend(Ext.ux.FolderView, Ext.ux.grid.livegrid.GridView, {
 	tooltip : new Ext.ToolTip({
 		html: 'Click the X to close me',
 		title: 'My Tip Title'
@@ -60,34 +62,13 @@ Ext.extend(Ext.ux.FolderView, Ext.ux.grid.BufferedGridView, {
 			)
 		}
 	},
-	    
-    removeRow : function(row){
-        Ext.removeNode(this.getRow(row));
-        //this.focusRow(row);
-    },
-    
-    removeRows : function(firstRow, lastRow){
-        var bd = this.mainBody.dom;
-        for(var rowIndex = firstRow; rowIndex <= lastRow; rowIndex++){
-            Ext.removeNode(bd.childNodes[firstRow]);
-        }
-        //this.focusRow(firstRow);
-    },
-
-    renderUI : function()
-    {
-        Ext.ux.FolderView.superclass.renderUI.call(this);
-		
-		this.mainBody.on("mousemove", function(e){this.tooltip.onMouseMove(e);}, this);
-		this.mainBody.unselectable();
-	},
 	
     onRowOver : function(e, t)
     {
+		Ext.ux.FolderView.superclass.onRowOver.call(this, e, t);
         var row;
         if((row = this.findRowIndex(t)) !== false){
             var viewIndex = row-this.rowIndex;
-            this.addRowClass(viewIndex, "x-grid3-row-over");
 			
 			this.tooltip.target = this.fly(this.getRow(viewIndex));
 			var row = this.ds.getById(row);
@@ -101,16 +82,14 @@ Ext.extend(Ext.ux.FolderView, Ext.ux.grid.BufferedGridView, {
 			// reset the elapsed time so it will show based on new delay
 			this.tooltip.lastActive = this.tooltip.lastActive.add(Date.MILLI, -this.tooltip.quickShowInterval);
 			this.tooltip.onTargetOver(e);
-
         }
     },
 	
     onRowOut : function(e, t)
     {
-        var row;
+		Ext.ux.FolderView.superclass.onRowOut.call(this, e, t);
+		var row;
         if((row = this.findRowIndex(t)) !== false && row !== this.findRowIndex(e.getRelatedTarget())){
-            var viewIndex = row-this.rowIndex;
-            this.removeRowClass(viewIndex, "x-grid3-row-over");
 			this.tooltip.onTargetOut(e);
         }
     },    
@@ -131,7 +110,7 @@ Ext.extend(Ext.ux.FolderView, Ext.ux.grid.BufferedGridView, {
 	
 	changeView : function(viewMode) {
 		this.viewMode = viewMode;
-		this.rowHeight = -1;
+		this.viewModeChanged = true;
 		this.grid.store.removeAll();
 		this.templates = Ext.apply(this.templates, this.views[viewMode]);
 		this.grid.store.reload();
@@ -139,209 +118,144 @@ Ext.extend(Ext.ux.FolderView, Ext.ux.grid.BufferedGridView, {
 	
     onLiveScroll : function()
     {
-        var scrollTop     = this.liveScroller.dom.scrollTop; 
-        
+        var scrollTop = this.liveScroller.dom.scrollTop;
+
 		//------------------------------------------------------------------------------- increment by the number of items in a row
         var cursor = Math.floor((scrollTop)/this.rowHeight) * this.itemCount.x;
+        //var cursor = Math.floor((scrollTop)/this.rowHeight);
+
         this.rowIndex = cursor;
         // the lastRowIndex will be set when refreshing the view has finished
         if (cursor == this.lastRowIndex) {
             return;
         }
-        
+
         this.updateLiveRows(cursor);
-        this.lastScrollPos = this.liveScroller.dom.scrollTop; 
-    },    
+
+        this.lastScrollPos = this.liveScroller.dom.scrollTop;
+    },
 	
     // protected
     adjustBufferInset : function()
     {
+        var liveScrollerDom = this.liveScroller.dom;
         var g = this.grid, ds = g.store;
-        
         var c  = g.getGridEl();
+        var elWidth = c.getSize().width;
 
-        var scrollbar = this.cm.getTotalWidth()+this.scrollOffset > c.getSize().width;
-        
+        // hidden rows is the number of rows which cannot be
+        // displayed and for which a scrollbar needs to be
+        // rendered. This does also take clipped rows into account
+        var hiddenRows = (ds.totalLength == this.visibleRows-this.rowClipped)
+                       ? 0
+                       : Math.max(0, ds.totalLength-(this.visibleRows-this.rowClipped));
+
+        if (hiddenRows == 0) {
+            this.scroller.setWidth(elWidth);
+            liveScrollerDom.style.display = 'none';
+            return;
+        } else {
+            this.scroller.setWidth(elWidth-this.scrollOffset);
+            liveScrollerDom.style.display = '';
+        }
+
+        var scrollbar = this.cm.getTotalWidth()+this.scrollOffset > elWidth;
+
         // adjust the height of the scrollbar
-        this.liveScroller.dom.style.height = this.liveScroller.dom.parentNode.offsetHeight + 
-                                             (Ext.isGecko 
-                                             ? ((ds.totalLength > 0 && scrollbar)
-                                                ? - this.horizontalScrollOffset
-                                                : 0)
-                                             : (((ds.totalLength > 0 && scrollbar)
-                                                ? 0 : this.horizontalScrollOffset)))+"px";                
+        var contHeight = liveScrollerDom.parentNode.offsetHeight +
+                         ((ds.totalLength > 0 && scrollbar)
+                         ? - this.horizontalScrollOffset
+                         : 0)
+                         - this.hdHeight;
+
+        liveScrollerDom.style.height = Math.max(contHeight, this.horizontalScrollOffset*2)+"px";
+
         if (this.rowHeight == -1) {
             return;
         }
-               
-        if (ds.totalLength <= this.visibleRows) {
-            this.liveScrollerInset.style.height = "0px";
-            return;
-        } 
-        
+
 		//------------------------------------------------------------------------------- total items vertically and horizontally 
-        var height = this.rowHeight * Math.ceil(ds.totalLength / this.itemCount.x);
-        
-        height += (c.getSize().height-(this.itemCount.y * this.rowHeight));
-        
-        if (scrollbar) {
-            height -= this.horizontalScrollOffset;
-        }
-        
-        this.liveScrollerInset.style.height = (height)+"px";
+        this.liveScrollerInset.style.height = (hiddenRows == 0 ? 0 : contHeight+(Math.ceil(hiddenRows / this.itemCount.x)*this.rowHeight))+"px";
     },
 		   
     // protected
     adjustVisibleRows : function()
     {
         if (this.rowHeight == -1) {
-			var row = this.getRows()[0];
-			if (row) {
-				this.rowHeight = row.offsetHeight + Ext.get(row).getMargins('tb'); 
-				this.rowWidth = row.offsetWidth + Ext.get(row).getMargins('lr');
-			} else {
-				return;
-			}
-        } 
-        
-        
+            if (this.getRows()[0]) {
+                this.rowHeight = this.getRows()[0].offsetHeight + Ext.get(this.getRows()[0]).getMargins('tb');
+                this.rowWidth = this.getRows()[0].offsetWidth + Ext.get(this.getRows()[0]).getMargins('lr');
+
+				if (this.rowHeight <= 0) {
+                    this.rowHeight = -1;
+                    return;
+                }
+
+            } else {
+                return;
+            }
+        }
+
+
         var g = this.grid, ds = g.store;
-        
-        var c    = g.getGridEl();
-        var cm   = this.cm;
-        var size = c.getSize(true);
-        var vh   = size.height;    
-        
-        var vw = size.width-this.scrollOffset;        
+
+        var c     = g.getGridEl();
+        var cm    = this.cm;
+        var size  = c.getSize();
+        var width = size.width;
+        var vh    = size.height;
+
+        var vw = width-this.scrollOffset;
+		//------------------------------------------------------------------------------- Horizontal scrollbar only used in detailed mode
         // horizontal scrollbar shown?
         if (cm.getTotalWidth() > vw && this.viewMode == 'Details') {
             // yes!
             vh -= this.horizontalScrollOffset;
-        }        
+        }
+		//------------------------------------------------------------------------------- Row width is the entire row!
 		if(this.viewMode == 'Details') this.rowWidth = vw;
-        
+
         vh -= this.mainHd.getHeight();
-        
+
+        var totalLength = ds.totalLength || 0;
+
 		//------------------------------------------------------------------------------- items on a page vertically and horizontally 
 		this.itemCount = {
 			x: Math.floor(vw / this.rowWidth),
 			y: Math.floor(vh / this.rowHeight)
 		};
         var visibleRows = Math.max(1, this.itemCount.x * this.itemCount.y);
-        
-        var totalLength = ds.getTotalCount();
-        
-        if (totalLength < this.visibleRows || this.visibleRows == visibleRows) {
+
+        this.rowClipped = 0;
+        // only compute the clipped row if the total length of records
+        // exceeds the number of visible rows displayable
+        if (totalLength > visibleRows && this.rowHeight / 3 < (vh - (this.itemCount.y * this.rowHeight))) {
+            visibleRows = Math.min(visibleRows+this.itemCount.x, totalLength);
+            this.rowClipped = this.itemCount.x;
+			this.itemCount.y += 1
+        }
+
+        // if visibleRows   didn't change, simply void and return.
+        if (this.visibleRows == visibleRows) {
             return;
         }
-        
+
         this.visibleRows = visibleRows;
-        
-        if (this.rowIndex + visibleRows > totalLength) {
-            this.rowIndex     = Math.max(0, ds.totalLength-this.visibleRows);
+
+        // skip recalculating the row index if we are currently buffering.
+        if (this.isBuffering) {
+            return;
+        }
+
+        // when re-rendering, do not take the clipped row into account
+        if (this.rowIndex + (visibleRows-this.rowClipped) > totalLength) {
+            this.rowIndex     = Math.max(0, totalLength-(visibleRows-this.rowClipped));
             this.lastRowIndex = this.rowIndex;
-            this.updateLiveRows(this.rowIndex, true);
-        } else {
-            this.updateLiveRows(this.rowIndex, true);
-        } 
+        }
+
+        this.updateLiveRows(this.rowIndex, true);
     },
 	
-	renderBody: function() {
-        var markup = this.renderRows(0, this.visibleRows-1);
-		
-		if( this.viewMode == 'Details' && this.colModelChanged)
-		{
-			// check if columns have changed
-			this.colModelChanged = false;
-			var cm = this.grid.getColumnModel();
-			cm.setConfig(cm.config);
-			this.ds.reader.recordType = Ext.data.Record.create(this.defaultRecord);
-			this.ds.recordType = this.ds.reader.recordType;
-			this.ds.fields = this.ds.recordType.prototype.fields
-			markup = this.renderRows(0, this.visibleRows-1);
-		}
-		
-        return this.templates.body.apply({rows: markup});
-
-	},
-	
-    focusCell : function(row, col, hscroll)
-    {
-        var xy = this.ensureVisible(row, col, hscroll);
-		
-        if (!xy) {
-        	return;
-		}
-
-		xy[0] = xy[0] - this.scroller.dom.scrollLeft;
-
-		this.focusEl.setXY(xy);
-
-        if(Ext.isGecko){
-            this.focusEl.focus();
-        }else{
-            this.focusEl.focus.defer(1, this.focusEl);
-        }
-
-    },
-	
-    // private
-	ensureVisible : function(row, col, hscroll)
-    {
-        if(typeof row != "number"){
-            row = row.rowIndex;
-        }
-
-        if(row < 0 || row >= this.ds.totalLength){
-            return;
-        }
-
-        col = (col !== undefined ? col : 0);
-
-        var rowInd = row-this.rowIndex;
-
-        if (this.rowClipped && row == this.rowIndex+this.visibleRows-1) {
-            this.adjustScrollerPos(this.rowHeight );
-        } else if (row >= this.rowIndex+this.visibleRows) {
-            this.adjustScrollerPos(((row-(this.rowIndex+this.visibleRows))+1)*this.rowHeight);
-        } else if (row <= this.rowIndex) {
-            this.adjustScrollerPos((rowInd)*this.rowHeight);
-        }
-
-        var rowEl = this.getRow(row), cellEl;
-
-        if(!rowEl){
-            return;
-        }
-
-        if(!(hscroll === false && col === 0)){
-            while(this.cm.isHidden(col)){
-                col++;
-            }
-            cellEl = this.getCell(row, col);
-        }
-
-        var c = this.scroller.dom;
-
-        if(hscroll !== false){
-            var cleft = parseInt(cellEl.offsetLeft, 10);
-            var cright = cleft + cellEl.offsetWidth;
-
-            var sleft = parseInt(c.scrollLeft, 10);
-            var sright = sleft + c.clientWidth;
-            if(cleft < sleft){
-                c.scrollLeft = cleft;
-            }else if(cright > sright){
-                c.scrollLeft = cright-c.clientWidth;
-            }
-        }
-
-
-        return cellEl ?
-            Ext.fly(cellEl).getXY() :
-            [c.scrollLeft+this.el.getX(), Ext.fly(rowEl).getY()];
-    },
-
 	doRender : function(cs, rs, ds, startRow, colCount, stripe){
 
 		var ts = this.templates, ct = ts.cell, rt = ts.row, last = colCount-1;
@@ -383,6 +297,13 @@ Ext.extend(Ext.ux.FolderView, Ext.ux.grid.BufferedGridView, {
 			rp = Ext.applyIf(rp, r.data);
             buf[buf.length] =  rt.apply(rp);
         }
+		
+		//------------------------------------------------------------------------------- Row height must be recalculated after the render
+		if(this.viewModeChanged == true)
+		{
+			this.viewModeChanged = false;
+			this.rowHeight = -1;
+		}
 		
         return buf.join("");
     }
