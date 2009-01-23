@@ -41,6 +41,7 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 				for(var i = 0; i < options.colModel.getColumnCount(); i++)
 				{
 					options.colModel.config[i].isBlank = true;
+					options.colModel.config[i].longest = 0;
 				}
 				options.colModel.config[0].isBlank = false;
 			}
@@ -50,8 +51,12 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 				return '';
 			}
 			// set the isBlank to false if there is any text what so ever.
-			if(value != '' && options.view.viewMode == 'Details')
+			if(value.length != 0 && options.view.viewMode == 'Details')
+			{
 				options.colModel.config[colIndex].isBlank = false;
+				if(value.length > options.colModel.config[colIndex].longest)
+					options.colModel.config[colIndex].longest = value.length;
+			}
 				
 			return value;
 		}

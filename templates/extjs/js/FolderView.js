@@ -102,9 +102,12 @@ Ext.extend(Ext.ux.FolderView, Ext.ux.grid.livegrid.GridView, {
 		for(var i = 0; i < cm.getColumnCount(); i++)
 		{
 			if(this.viewMode == 'Details' && cm.config[i].isBlank === false)
+			{
 				cm.setHidden(i, false);
-			else
+				if(i > 0) cm.setColumnWidth(i, cm.config[i].longest * 6 + 20);
+			} else {
 				cm.setHidden(i, true);
+			}
 		}
 	},
 	

@@ -125,6 +125,8 @@ if(isset($_REQUEST['includes']) && $_REQUEST['includes'] != '')
 {
 	$props['WHERE'] = '';
 	
+	// incase an aliased path is being searched for replace it here too!
+	if(USE_ALIAS == true) $_REQUEST['includes'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $_REQUEST['includes']);
 	$regexp = $_REQUEST['includes'];
 	
 	$props['WHERE'] .= '(';

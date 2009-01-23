@@ -194,6 +194,20 @@ class db_file
 		{
 			$where_str .= ' Filepath REGEXP "^' . $watch['Filepath'] . '" OR';
 		}
+		// but keep the ones leading up to watched directories
+		for($i = 0; $i < count($watched); $i++)
+		{
+			$folders = split('/', $watched[$i]['Filepath']);
+			$curr_dir = '/';
+			for($j = 0; $j < count($folders); $j++)
+			{
+				if($folders[$j] != '')
+				{
+					$curr_dir .= $folders[$j] . '/';
+					$where_str .= ' Filepath = "' . $curr_dir . '" OR';
+				}
+			}
+		}
 		// remove last OR
 		$where_str = substr($where_str, 0, strlen($where_str)-2);
 		$where_str = ' !(' . $where_str . ')';
