@@ -18,10 +18,10 @@ Ext.app.PlayerWindow = Ext.extend(Ext.app.Module, {
 		var main = new Ext.ux.MediaPanel({
 			region: 'center',
 			mediaCfg: {
-				mediaType: 'VLC',
-				url: template_path + 'player.swf',
+				mediaType: 'WMV',
+				url: 'http://dev.bjcullinan.com/plugins/passthru/file7.wmv',
 				params: {
-					'flashvars' : 'file=http://209.250.30.30/Share/Videos/test.flv'
+					'autostart' : true
 				}
 			}
 		});

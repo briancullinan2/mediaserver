@@ -1,3 +1,10 @@
+2009-01-05
+Lots of improvments made
+Finished Default template
+Added template selector
+Working on Ext JS template
+Updated Ext library and livegrid library
+
 2008-05-15
 Added a type selector
 
