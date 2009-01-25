@@ -18,10 +18,11 @@ Ext.app.PlayerWindow = Ext.extend(Ext.app.Module, {
 		var main = new Ext.ux.MediaPanel({
 			region: 'center',
 			mediaCfg: {
-				mediaType: 'WMV',
-				url: 'http://dev.bjcullinan.com/plugins/passthru/file7.wmv',
+				mediaType: 'JWP',
+				url: template_path + 'player.swf',
 				params: {
-					'autostart' : true
+					'flashvars' : 'file=http://dev.bjcullinan.com/plugins/passthru/file.wmv'
+					//'autostart' : true
 				}
 			}
 		});
