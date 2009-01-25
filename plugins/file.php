@@ -9,8 +9,14 @@ require_once dirname(__FILE__) . '/../include/common.php';
 // load mysql to query the database
 $mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 
+// add category
+if(!isset($_REQUEST['cat']))
+{
+	$_REQUEST['cat'] = 'db_file';
+}
+
 // check if category is set, this is required
-if(isset($_REQUEST['cat']) && isset($_REQUEST['id']) && is_numeric($_REQUEST['id']))
+if(isset(isset($_REQUEST['id']) && is_numeric($_REQUEST['id']))
 {
 	// get the file path from the database
 	$files = call_user_func(array($_REQUEST['cat'], 'get'), $mysql,

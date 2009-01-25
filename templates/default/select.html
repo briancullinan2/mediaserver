@@ -9,6 +9,8 @@
 		Select<br />
 		On : Off<br />
 		{section name=file loop=$files}
+            {assign var=type_arr value='/'|@split:$files[file].Filemime}
+            {assign var=type value=$type_arr.0}
 			{if isset($smarty.session.selected)}
 				{assign var=item_selected value=$files[file].id|in_array:$smarty.session.selected}
 			{else}
@@ -25,6 +27,7 @@
 				{/foreach}
 			{/if}
             - Download: <a href="/{$smarty.const.SITE_PLUGINS}zip/{$files[file].id}/Files.zip">zip</a>:<a href="/{$smarty.const.SITE_PLUGINS}bt/{$files[file].id}/Files.torrent">torrent</a>
+            {if $type=="audio"||$type=="video"}:<a href="/{$smarty.const.SITE_PLUGINS}passthru/{$files[file].id}/WMV/File{$files[file].id}.wmv">WMV</a>{/if}
 			<br />
 		{/section}
 		</p>
