@@ -26,8 +26,19 @@
 					{/if}
 				{/foreach}
 			{/if}
-            - Download: <a href="/{$smarty.const.SITE_PLUGINS}zip/{$files[file].id}/Files.zip">zip</a>:<a href="/{$smarty.const.SITE_PLUGINS}bt/{$files[file].id}/Files.torrent">torrent</a>
-            {if $type=="audio"||$type=="video"}:<a href="/{$smarty.const.SITE_PLUGINS}passthru/{$files[file].id}/WMV/File{$files[file].id}.wmv">WMV</a>{/if}
+            - Download:
+            	<a href="/{$smarty.const.SITE_PLUGINS}zip/{$files[file].id}/Files.zip">zip</a> :
+                <a href="/{$smarty.const.SITE_PLUGINS}bt/{$files[file].id}/Files.torrent">torrent</a>
+                {if $type=="video"}
+                : <a href="/{$smarty.const.SITE_PLUGINS}passthru/{$files[file].id}/MP4/File{$files[file].id}.mp4">mp4</a>
+                : <a href="/{$smarty.const.SITE_PLUGINS}passthru/{$files[file].id}/MPG/File{$files[file].id}.mpeg">mpg</a>
+                : <a href="/{$smarty.const.SITE_PLUGINS}passthru/{$files[file].id}/WMV/File{$files[file].id}.wmv">wmv</a>
+                {elseif $type=="audio"}
+                : <a href="/{$smarty.const.SITE_PLUGINS}passthru/{$files[file].id}/MP4A/File{$files[file].id}.mp4">mp4</a>
+                : <a href="/{$smarty.const.SITE_PLUGINS}passthru/{$files[file].id}/MP3/File{$files[file].id}.mp3">mp3</a>
+                : <a href="/{$smarty.const.SITE_PLUGINS}passthru/{$files[file].id}/WMA/File{$files[file].id}.wma">wma</a>
+                : <a href="/{$smarty.const.SITE_PLUGINS}passthru/{$files[file].id}/AAC/File{$files[file].id}.aac">aac</a>
+                {/if}
 			<br />
 		{/section}
 		</p>
