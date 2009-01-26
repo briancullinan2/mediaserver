@@ -1,4 +1,7 @@
 <?php
+set_time_limit(0);
+ignore_user_abort(1);
+
 if($_REQUEST['encode'] == 'MP4')
 {
 	header('Content-Type: video/mp4');
@@ -9,7 +12,7 @@ elseif($_REQUEST['encode'] == 'MPG')
 }
 elseif($_REQUEST['encode'] == 'WMV')
 {
-	header('Content-Type: video/x-ms-wmv');
+	//header('Content-Type: video/x-ms-wmv');
 }
 
 require_once dirname(__FILE__) . '/../include/common.php';
@@ -43,34 +46,57 @@ if(isset($_REQUEST['id']) && is_numeric($_REQUEST['id']))
 		
 		if($_REQUEST['encode'] == 'MP4')
 		{
-			$cmd = '/usr/bin/vlc --intf dummy -v "' . $files[0]['Filepath'] . '" :sout=\'#transcode{vcodec=mp4v,acodec=mp4a,vb=300,ab=64,channels=2,deinterlace,audio-sync}:std{mux=ts,access=file,dst=-}\' vlc://quit';
+			$cmd = '/usr/bin/vlc -I dummy -v "' . $files[0]['Filepath'] . '" :sout=\'#transcode{vcodec=mp4v,acodec=mp4a,vb=512,ab=64,channels=2,deinterlace,audio-sync}:std{mux=ts,access=file,dst=-}\' vlc://quit';
 		}
 		elseif($_REQUEST['encode'] == 'MPG')
 		{
-			$cmd = '/usr/bin/vlc --intf dummy -v "' . $files[0]['Filepath'] . '" :sout=\'#transcode{vcodec=mp1v,acodec=mpga,vb=300,ab=64,channels=2,deinterlace,audio-sync}:std{mux=mpeg1,access=file,dst=-}\' vlc://quit';
+			$cmd = '/usr/bin/vlc -I dummy -v "' . $files[0]['Filepath'] . '" :sout=\'#transcode{vcodec=mp1v,acodec=mpga,vb=512,ab=64,channels=2,deinterlace,audio-sync}:std{mux=mpeg1,access=file,dst=-}\' vlc://quit';
 		}
 		elseif($_REQUEST['encode'] == 'WMV')
 		{
-			$cmd = '/usr/bin/vlc --intf dummy -v "' . $files[0]['Filepath'] . '" :sout=\'#transcode{vcodec=WMV2,acodec=mp3,vb=300,ab=64,channels=2,deinterlace,audio-sync}:std{mux=asf,access=file,dst=-}\' vlc://quit';
+			$cmd = '/usr/bin/vlc -I dummy -v "' . $files[0]['Filepath'] . '" :sout=\'#transcode{vcodec=WMV2,acodec=mp3,vb=512,ab=64,channels=2,deinterlace,audio-sync}:std{mux=asf,access=file,dst=-}\' vlc://quit';
 		}
 
-//header('Content-Length: 1824164');
-//header('Content-Disposition: attachment; filename="file.wmv');
+		$descriptorspec = array(
+		   1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
+		);
 
-//$cmd = '/usr/bin/vlc --intf dummy -v /home/share/Videos/Other/strip-poker.wmv :sout=\'#transcode{vcodec=mp4v,acodec=mp4a,vb=512,ab=96,channels=2,deinterlace,audio-sync}:std{mux=ts,access=file,dst=-}\' vlc://quit';
-//$cmd = '/usr/bin/vlc --intf dummy -v /home/share/Videos/Other/strip-poker.wmv :sout=\'#transcode{vcodec=mp1v,acodec=mpga,vb=512,ab=96,channels=2,deinterlace,audio-sync}:std{mux=mpeg1,access=file,dst=-}\' vlc://quit';
-//$cmd = '/usr/bin/vlc --intf dummy -v /home/share/Videos/Other/strip-poker.wmv :sout=\'#transcode{vcodec=WMV2,acodec=mp3,vb=512,ab=96,channels=2,deinterlace,audio-sync}:std{mux=asf,access=file,dst=-}\' vlc://quit';
-
-		//passthru($cmd);
-
-		$handle = popen($cmd, 'r');
-		while($read = fread($handle, 1024))
+		if(isset($_SESSION['play']) && $_SESSION['play']['resource'] && is_resource($_SESSION['play']['resource']))
 		{
-			echo $read;
+			//$process = $_SESSION['play']['resource'];
+			//$pipes[1] = $_SESSION['play']['pipe'];
 		}
-		pclose($handle);
-		
+		else
+		{
+			//$_SESSION['play']['resource'] = $process;
+			//$_SESSION['play']['pipe'] = $pipes[1];
+			//$_SESSION['play']['id'] = $files[0]['id'];
+		}
+		$process = proc_open($cmd, $descriptorspec, $pipes, TMP_DIR, NULL);
+
+		if(is_resource($process)) {
+			
+			while(!feof($pipes[1]))
+			{
+				//print fread($pipes[1], 1024);
+				if(connection_aborted())
+				{
+					proc_terminate($process);
+					break;
+				}
+			}
+			fclose($pipes[1]);
+			
+			$status = proc_get_status($process);
+			$fp = fopen('/tmp/error_output.txt', 'w');
+			fwrite($fp, $status['pid']);
+			fclose($fp);
+			shell_exec('kill ' . $status['pid']+1);
+			
+			$return_value = proc_close($process);
+		}
 	}
 }
+
 
 ?>

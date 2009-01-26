@@ -47,7 +47,7 @@ class db_file
 			else
 			{
 				$filename = $file;
-				//if(USE_ALIAS) $filename = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+
 				// update file if modified date has changed
 				if( date("Y-m-d h:i:s", filemtime($filename)) != $db_file[0]['Filedate'] )
 				{
