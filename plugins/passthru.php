@@ -68,16 +68,13 @@ if(isset($_REQUEST['id']) && is_numeric($_REQUEST['id']))
 				$cmd = '/usr/bin/vlc -I dummy -v "' . $files[0]['Filepath'] . '" :sout=\'#transcode{vcodec=WMV2,acodec=mp3,vb=512,ab=64,samplerate=44100,channels=2,deinterlace,audio-sync}:std{mux=asf,access=file,dst=-}\' vlc://quit';
 				break;
 			case 'MP4A':
-				$cmd = '/usr/bin/vlc -I dummy -v --no-video "' . $files[0]['Filepath'] . '" :sout=\'#transcode{acodec=mp4a,ab=160,samplerate=44100,channels=2}:std{mux=ts,access=file,dst=-}\' vlc://quit';
+				$cmd = '/usr/bin/vlc -I dummy -v --no-video "' . $files[0]['Filepath'] . '" :sout=\'#transcode{acodec=mp4a,ab=160,samplerate=44100,channels=2}:std{mux=mp4,access=file,dst=-}\' vlc://quit';
 				break;
 			case 'MP3':
 				$cmd = '/usr/bin/vlc -I dummy -v --no-video "' . $files[0]['Filepath'] . '" :sout=\'#transcode{acodec=mp3,ab=160,samplerate=44100,channels=2}:std{mux=dummy,access=file,dst=-}\' vlc://quit';
 				break;
 			case 'WMA':
 				$cmd = '/usr/bin/vlc -I dummy -v --no-video "' . $files[0]['Filepath'] . '" :sout=\'#transcode{acodec=wma2,ab=160,samplerate=44100,channels=2}:std{mux=asf,access=file,dst=-}\' vlc://quit';
-				break;
-			case 'AAC':
-				$cmd = '/usr/bin/vlc -I dummy -v --no-video "' . $files[0]['Filepath'] . '" :sout=\'#transcode{acodec=mp4a,ab=160,samplerate=44100,channels=2}:std{mux=mov,access=file,dst=-}\' vlc://quit';
 				break;
 		}
 

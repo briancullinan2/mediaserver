@@ -5,4 +5,4 @@ RewriteBase   /plugins/
 RewriteRule ^file/(.*)/([0-9]*)/(.*)$ file.php?cat=$1&id=$2&filename=$3 [L]
 RewriteRule ^bt/(([0-9]*,?)*)/(.*)$ bt.php?item=$1&btorrent= [L]
 RewriteRule ^zip/(([0-9]*,?)*)/(.*)$ zip.php?item=$1&zip= [L]
-RewriteRule ^passthru/([0-9]*)/(WMV|MPG|MP4|MP4A|MP3|WMA|AAC)/(.*)$ passthru.php?id=$1&encode=$2 [L]
+RewriteRule ^passthru/([0-9]*)/(WMV|MPG|MP4|MP4A|MP3|WMA)/(.*)$ passthru.php?id=$1&encode=$2 [L]
