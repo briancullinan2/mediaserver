@@ -188,7 +188,7 @@ foreach($GLOBALS['modules'] as $i => $module)
 
 // read all the folders that lead up to the watched folder
 // these will always be deleted by the cleanup, but there are only a couple
-for($i = 0; $i < count($watched); $i++)
+/*for($i = 0; $i < count($watched); $i++)
 {
 	$folders = split('/', $watched[$i]['Filepath']);
 	$curr_dir = '/';
@@ -197,10 +197,11 @@ for($i = 0; $i < count($watched); $i++)
 		if($folders[$j] != '')
 		{
 			$curr_dir .= $folders[$j] . '/';
-			getfile($curr_dir);
+			// don't add directory here because it must be added to the watch list first!
+			if($curr_dir != $watched[$i]['Filepath']) getfile($curr_dir);
 		}
 	}
-}
+}*/
 
 // close output buffer
 ob_end_flush();

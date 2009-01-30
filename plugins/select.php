@@ -99,14 +99,14 @@ if(isset($_REQUEST['select']))
 
 }
 
+// initialize properties for select statement
+$props = array();
+
 // add category
 if(!isset($_REQUEST['cat']))
 	$_REQUEST['cat'] = 'db_file';
 
 $columns = call_user_func(array($_REQUEST['cat'], 'columns'));
-
-// initialize properties for select statement
-$props = array();
 
 // set a show in the request
 if( !isset($_REQUEST['start']) || !is_numeric($_REQUEST['start']) || $_REQUEST['start'] < 0 )

@@ -15,12 +15,73 @@ if($_SERVER['SCRIPT_FILENAME'] == __FILE__)
 
 include_once 'type.php';
 
-// select type of output
-if(!isset($_REQUEST['type']) || !isset($types[$_REQUEST['type']]))
-	$_REQUEST['type'] = 'rss';
+// get these listed items over the ones saved in the session!
+if(isset($_REQUEST['zip']))
+{
+	$selected = array();
+	
+	if(isset($_REQUEST['item']))
+	{
+		if(is_string($_REQUEST['item']))
+		{
+			$selected = split(',', $_REQUEST['item']);
+		}
+		elseif(is_array($_REQUEST['item']))
+		{
+			foreach($_REQUEST['item'] as $id => $value)
+			{
+				if(($value == 'on' || $_REQUEST['select'] == 'All') && !in_array($id, $selected))
+				{
+					$selected[] = $id;
+				}
+				elseif(($value == 'off' || $_REQUEST['select'] == 'None') && ($key = array_search($id, $selected)) !== false)
+				{
+					unset($selected[$key]);
+				}
+			}
+		}
+	}
+	
+	if(isset($_REQUEST['on']))
+	{
+		$_REQUEST['on'] = split(',', $_REQUEST['on']);
+		foreach($_REQUEST['on'] as $i => $id)
+		{
+			if(!in_array($id, $selected) && $id != '')
+			{
+				$selected[] = $id;
+			}
+		}
+	}
+	
+	if(isset($_REQUEST['off']))
+	{
+		$_REQUEST['off'] = split(',', $_REQUEST['off']);
+		foreach($_REQUEST['off'] as $i => $id)
+		{
+			if(($key = array_search($id, $selected)) !== false)
+			{
+				unset($selected[$key]);
+			}
+		}
+	}
+	
+	$selected = array_values($selected);
+	// use the session stuff instead
+	if(count($selected) == 0) $selected = $_SESSION['selected'];
+
+}
+elseif(isset($_SESSION['selected']))
+{
+	$selected = $_SESSION['selected'];
+}
 
 // initialize properties for select statement
 $props = array();
+
+// select type of output
+if(!isset($_REQUEST['type']) || !isset($types[$_REQUEST['type']]))
+	$_REQUEST['type'] = 'rss';
 
 // set up limit
 if(!isset($_REQUEST['lim']) || !is_numeric($_REQUEST['lim']))
@@ -45,22 +106,22 @@ else
 
 // add category
 if(!isset($_REQUEST['cat']))
-{
 	$_REQUEST['cat'] = 'db_file';
-}
 
 // add where includes
-if((isset($_SESSION['selected']) && count($_SESSION['selected']) > 0) || isset($_REQUEST['selected_only']))
+if((isset($selected) && count($selected) > 0) || isset($_REQUEST['selected_only']))
 {
-	if(isset($_SESSION['selected']) && count($_SESSION['selected']) > 0)
-		$props['WHERE'] = 'id=' . join(' OR id=', $_SESSION['selected']);
+	if(isset($selected) && count($selected) > 0)
+		$props['WHERE'] = 'id=' . join(' OR id=', $selected);
+	// if we only want selected files this will give an empty list if there aren't any!!!1
 	elseif(isset($_REQUEST['selected_only']))
+		// id=0 is used because no files exist with that id
 		$props['WHERE'] = 'id=0';
 	unset($props['OTHER']);
 }
 else
 {
-	
+	// this returns some files based on other input if there aren't any selected
 	$columns = call_user_func(array($_REQUEST['cat'], 'columns'));
 	
 	if(isset($_REQUEST['includes']) && $_REQUEST['includes'] != '')
