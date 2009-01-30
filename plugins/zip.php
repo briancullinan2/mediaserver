@@ -5,12 +5,6 @@
 
 require_once dirname(__FILE__) . '/../include/common.php';
 
-define('SOCKET_PATH', '/home/bjcullinan/.config/transmission/daemon/socket'); // path to socket that transmission is started using
-
-require_once SITE_LOCALROOT . 'plugins/bttracker/BEncode.php';
-require_once SITE_LOCALROOT . 'plugins/bttracker/config.php';
-require_once SITE_LOCALROOT . 'plugins/bttracker/funcsv2.php';
-
 // load mysql to query the database
 $mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 

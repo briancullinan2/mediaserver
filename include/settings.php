@@ -25,6 +25,7 @@ define('MODULES_DIR', SITE_LOCALROOT . 'modules/');
 define('SITE_HTMLPATH',            			    'http://dev.bjcullinan.com/');
 define('SITE_HTMLROOT',                                  '');
 define('SITE_DEFAULT',            				   'templates/default/');
+
 // set the template
 if(isset($_REQUEST['template']))
 {
@@ -56,6 +57,9 @@ define('CONVERT', 				   '/usr/bin/convert'); // image magick's convert program
 define('BUFFER_SIZE', 						  24*1024); // max amount to output when accessing a file
 define('TMP_DIR', 						      '/tmp/'); // a temporary directory to use for creating thumbnails
 define('USE_ALIAS', 							 true); // set to true in order to use aliased paths for output of Filepath
+if(!defined('DIR_SEP')) {
+    define('DIR_SEP', DIRECTORY_SEPARATOR);
+}
 
 // comment-out-able
 ini_set('error_reporting', E_ALL);

@@ -187,21 +187,34 @@ foreach($GLOBALS['modules'] as $i => $module)
 }
 
 // read all the folders that lead up to the watched folder
-// these will always be deleted by the cleanup, but there are only a couple
-/*for($i = 0; $i < count($watched); $i++)
+// these might be delete by cleanup, so check again because there are only a couple
+for($i = 0; $i < count($watched); $i++)
 {
 	$folders = split('/', $watched[$i]['Filepath']);
 	$curr_dir = '/';
+	// don't add the watch directory here because it must be added to the watch list first!
+	$length = count($folders);
+	unset($folders[$length-1]); // remove the blank at the end
+	unset($folders[$length-2]); // remove the last folder which is the watch
+	// add the directories leading up to the watch
 	for($j = 0; $j < count($folders); $j++)
 	{
 		if($folders[$j] != '')
 		{
 			$curr_dir .= $folders[$j] . '/';
-			// don't add directory here because it must be added to the watch list first!
-			if($curr_dir != $watched[$i]['Filepath']) getfile($curr_dir);
+			// if using aliases then only add the revert from the watch directory to the alias
+			// ex. Watch = /home/share/Pictures/, Alias = /home/share/ => /Shared/
+			//     only /home/share/ is added here
+			if(!USE_ALIAS || in_array($curr_dir, $GLOBALS['paths']) !== false)
+			{
+				// if the USE_ALIAS is true this will only add the folder
+				//    if it is in the list of aliases
+				getfile($curr_dir);
+			}
 		}
 	}
-}*/
+}
+
 
 // close output buffer
 ob_end_flush();

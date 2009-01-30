@@ -4,8 +4,6 @@
 
 require_once dirname(__FILE__) . '/../include/common.php';
 
-define('SOCKET_PATH', '/home/bjcullinan/.config/transmission/daemon/socket'); // path to socket that transmission is started using
-
 require_once SITE_LOCALROOT . 'plugins/bttracker/BEncode.php';
 require_once SITE_LOCALROOT . 'plugins/bttracker/config.php';
 require_once SITE_LOCALROOT . 'plugins/bttracker/funcsv2.php';
@@ -189,7 +187,7 @@ if(count($files) > 0)
 	}
 	$torrent['info']['pieces'] = $output;
 	
-	$torrent['announce'] = 'http://192.168.1.101/' . SITE_PLUGINS . 'bttracker/announce.php';
+	$torrent['announce'] = SITE_HTMLPATH . SITE_PLUGINS . 'bttracker/announce.php';
 	$torrent['creation date'] = time();
 	$torrent['comment'] = SITE_NAME;
 	$torrent['created by'] = SITE_NAME;

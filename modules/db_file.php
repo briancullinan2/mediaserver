@@ -192,6 +192,7 @@ class db_file
 		$where_str = '';
 		foreach($watched as $i => $watch)
 		{
+			// add the files that begin with a path from a watch directory
 			$where_str .= ' Filepath REGEXP "^' . $watch['Filepath'] . '" OR';
 		}
 		// but keep the ones leading up to watched directories
@@ -199,12 +200,23 @@ class db_file
 		{
 			$folders = split('/', $watched[$i]['Filepath']);
 			$curr_dir = '/';
+			// don't add the watch directory here because it is already added by the previous loop!
+			$length = count($folders);
+			unset($folders[$length-1]); // remove the blank at the end
+			unset($folders[$length-2]); // remove the last folder which is the watch
+			// add the directories leading up to the watch
 			for($j = 0; $j < count($folders); $j++)
 			{
 				if($folders[$j] != '')
 				{
 					$curr_dir .= $folders[$j] . '/';
-					$where_str .= ' Filepath = "' . $curr_dir . '" OR';
+					// if using aliases then only add the revert from the watch directory to the alias
+					// ex. Watch = /home/share/Pictures/, Alias = /home/share/ => /Shared/
+					//     only /home/share/ is added here
+					if(!USE_ALIAS || in_array($curr_dir, $GLOBALS['paths']) !== false)
+					{
+						$where_str .= ' Filepath = "' . $curr_dir . '" OR';
+					}
 				}
 			}
 		}

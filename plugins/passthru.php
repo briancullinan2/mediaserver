@@ -11,7 +11,7 @@ switch($_REQUEST['encode'])
 		header('Content-Type: video/mpg');
 		break;
 	case 'WMV':
-		header('Content-Type: video/x-ms-wmv');
+		//header('Content-Type: video/x-ms-wmv');
 		break;
 	case 'MP4A':
 		header('Content-Type: audio/mp4');
@@ -21,9 +21,6 @@ switch($_REQUEST['encode'])
 		break;
 	case 'WMA':
 		header('Content-Type: audio/x-ms-wma');
-		break;
-	case 'AAC':
-		header('Content-Type: audio/x-aac');
 		break;
 }
 
@@ -93,29 +90,18 @@ if(isset($_REQUEST['id']) && is_numeric($_REQUEST['id']))
 			//$_SESSION['play']['pipe'] = $pipes[1];
 			//$_SESSION['play']['id'] = $files[0]['id'];
 		}
-		$process = proc_open($cmd, $descriptorspec, $pipes, TMP_DIR, NULL);
+		$process = popen($cmd, 'rb'); //$descriptorspec, $pipes, TMP_DIR, NULL);
 
 		if(is_resource($process)) {
 			
-			while(!feof($pipes[1]))
+			while(!feof($process) && (connection_aborted() == 0))
 			{
-				if(connection_aborted())
-				{
-					proc_terminate($process);
-					break;
-				}
-				print fread($pipes[1], 1024);
+				//print fread($pipes[1], 2048);
 			}
-			fclose($pipes[1]);
-			proc_terminate($process);
+			//fclose($pipes[1]);
+			//proc_terminate($process);
 			
-			$status = proc_get_status($process);
-			$fp = fopen('/tmp/error_output.txt', 'w');
-			fwrite($fp, $status['pid']);
-			fclose($fp);
-			shell_exec('kill ' . $status['pid']+1);
-			
-			$return_value = proc_close($process);
+			$return_value = pclose($process);
 		}
 	}
 }
