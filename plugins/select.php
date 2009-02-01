@@ -86,6 +86,8 @@ if(isset($_REQUEST['select']))
 		}
 	}
 	
+	// make sure all selected items are numerics
+	foreach($_SESSION['selected'] as $i => $value) if(!is_numeric($value)) unset($selected[$i]);
 	$_SESSION['selected'] = array_values($_SESSION['selected']);	
 	if(count($_SESSION['selected']) == 0) unset($_SESSION['selected']);
 	
@@ -103,12 +105,12 @@ if(isset($_REQUEST['select']))
 $props = array();
 
 // add category
-if(!isset($_REQUEST['cat']))
+if(!isset($_REQUEST['cat']) || !in_array($GLOBALS['modules']))
 	$_REQUEST['cat'] = 'db_file';
 
 $columns = call_user_func(array($_REQUEST['cat'], 'columns'));
 
-// set a show in the request
+// set a show in the request and do validation!
 if( !isset($_REQUEST['start']) || !is_numeric($_REQUEST['start']) || $_REQUEST['start'] < 0 )
 	$_REQUEST['start'] = 0;
 if( !isset($_REQUEST['limit']) || !is_numeric($_REQUEST['limit']) || $_REQUEST['limit'] < 0 )
@@ -127,7 +129,7 @@ if(isset($_REQUEST['includes']) && $_REQUEST['includes'] != '')
 	
 	// incase an aliased path is being searched for replace it here too!
 	if(USE_ALIAS == true) $_REQUEST['includes'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $_REQUEST['includes']);
-	$regexp = $_REQUEST['includes'];
+	$regexp = addslashes($_REQUEST['includes']);
 	
 	// add a regular expression matching for each column in the table being searched
 	$props['WHERE'] .= '(';
@@ -148,26 +150,38 @@ if(isset($_REQUEST['dir']))
 	if(USE_ALIAS == true) $_REQUEST['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $_REQUEST['dir']);
 	
 	// only search for file if is valid dir
-	if((file_exists($_REQUEST['dir']) && realpath($_REQUEST['dir']) !== false) || isset($_REQUEST['includes']))
+	if((file_exists($_REQUEST['dir']) && realpath($_REQUEST['dir']) !== false))
 	{
-		if(!isset($props['WHERE'])) $props['WHERE'] = '';
-		elseif($props['WHERE'] != '') $props['WHERE'] .= ' AND ';
+		// make sure directory is in the database
+		$dirs = call_user_func(array('db_file', 'get'), $mysql, array('WHERE' => 'Filepath = "' . $_REQUEST['dir'] . '"'));
 		
-		// if the includes is blank then only show files from current directory
-		if(!isset($_REQUEST['includes']))
+		// top level directory / should always exist
+		if($_REQUEST['dir'] == '/' || count($dirs) > 0)
 		{
-			if(isset($_REQUEST['dirs_only']))
-				$props['WHERE'] .= 'Filepath != "' . $_REQUEST['dir'] . '" AND Filepath REGEXP "^' . $_REQUEST['dir'] . '[^/]*/$"';
+			if(!isset($props['WHERE'])) $props['WHERE'] = '';
+			elseif($props['WHERE'] != '') $props['WHERE'] .= ' AND ';
+			
+			// if the includes is blank then only show files from current directory
+			if(!isset($_REQUEST['includes']))
+			{
+				if(isset($_REQUEST['dirs_only']))
+					$props['WHERE'] .= 'Filepath REGEXP "^' . $_REQUEST['dir'] . '[^/]+/$"';
+				else
+					$props['WHERE'] .= 'Filepath REGEXP "^' . $_REQUEST['dir'] . '[^/]+/?$"';
+			}
+			// show all results underneath directory
 			else
-				$props['WHERE'] .= 'Filepath != "' . $_REQUEST['dir'] . '" AND (Filepath REGEXP "^' . $_REQUEST['dir'] . '[^/]*/?$")';
+			{
+				if(isset($_REQUEST['dirs_only']))
+					$props['WHERE'] .= 'Filepath REGEXP "^' . $_REQUEST['dir'] . '([^/]+/)*$"';
+				else
+					$props['WHERE'] .= 'Filepath REGEXP "^' . $_REQUEST['dir'] . '"';
+			}
 		}
-		// show all results underneath directory
 		else
 		{
-			if(isset($_REQUEST['dirs_only']))
-				$props['WHERE'] .= 'Filepath REGEXP "^' . $_REQUEST['dir'] . '([^/]*/)*$"';
-			else
-				$props['WHERE'] .= 'Filepath REGEXP "^' . $_REQUEST['dir'] . '"';
+			// set smarty error
+			$error = 'Directory does not exist.';
 		}
 	}
 	else

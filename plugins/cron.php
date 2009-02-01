@@ -4,10 +4,10 @@
 // add calls to that function in the getfile procedure
 
 // how long to search for directories that have changed
-define('DIRECTORY_SEEK_TIME',		30);
+define('DIRECTORY_SEEK_TIME',		0);
 
 // how long to search for changed files or add new files
-define('FILE_SEEK_TIME', 		   60);
+define('FILE_SEEK_TIME', 		   0);
 
 // how long to clean up files
 define('CLEAN_UP_BUFFER_TIME',				45);
@@ -37,6 +37,18 @@ $mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 
 // get the watched directories
 $watched = $mysql->getWatched();
+
+// sort out the files we don't want watched they begin ith the ! (NOT) sign
+$ignored = array();
+foreach($watched as $index => $watch)
+{
+	if($watch['Filepath'][0] == '!')
+	{
+		$ignored[] = substr($watch['Filepath'], 1);
+		unset($watched[$index]);
+	}
+}
+$watched = array_values($watched); // remove missing indeces
 
 // directories that have already been scanned used to prevent recursion
 $dirs = array();
@@ -120,7 +132,12 @@ foreach($watched as $i => $watch)
 }
 // remove last OR
 $where_str = substr($where_str, 0, strlen($where_str)-2);
-$where_str = ' !(' . $where_str . ')';
+$where_str = ' !(' . $where_str . ') OR';
+// clean up items that are in the ignore list
+foreach($ignored as $i => $ignore)
+{
+	$where_str = 'Filepath REGEXP "^' . $ignore . '" OR ' . $where_str;
+}
 
 // remove items
 $mysql->set('watch_list', NULL, $where_str);
@@ -147,6 +164,9 @@ do
 	if(count($db_dirs) > 0)
 	{
 		$dir = $db_dirs[0]['Filepath'];
+		
+		if(in_array($dir, $ignored)) // just precautionary measure
+			continue;
 		
 		print 'Searching directory: ' . $dir . "\n";
 		
@@ -183,7 +203,7 @@ do
 
 foreach($GLOBALS['modules'] as $i => $module)
 {
-	call_user_func(array($module, 'cleanup'), $mysql, $watched);
+	call_user_func(array($module, 'cleanup'), $mysql, $watched, $ignored);
 }
 
 // read all the folders that lead up to the watched folder
@@ -196,6 +216,7 @@ for($i = 0; $i < count($watched); $i++)
 	$length = count($folders);
 	unset($folders[$length-1]); // remove the blank at the end
 	unset($folders[$length-2]); // remove the last folder which is the watch
+	$between = false; // directory must be between an aliased path and a watched path
 	// add the directories leading up to the watch
 	for($j = 0; $j < count($folders); $j++)
 	{
@@ -207,8 +228,16 @@ for($i = 0; $i < count($watched); $i++)
 			//     only /home/share/ is added here
 			if(!USE_ALIAS || in_array($curr_dir, $GLOBALS['paths']) !== false)
 			{
+				// this allows for us to make sure that at least the beginning 
+				//   of the path is an aliased path
+				$between = true;
 				// if the USE_ALIAS is true this will only add the folder
 				//    if it is in the list of aliases
+				getfile($curr_dir);
+			}
+			// but make an exception for folders between an alias and the watch path
+			elseif(USE_ALIAS && $between)
+			{
 				getfile($curr_dir);
 			}
 		}
@@ -237,7 +266,7 @@ function getfile( $file )
 // a function for iterating through each directory and returning the files
 function getdir( $dir )
 {
-	global $dirs, $tm_start, $state, $mysql;
+	global $dirs, $tm_start, $state, $mysql, $ignored;
 					
 	// check directory passed in, only add directory to watch list if it has changed
 	$db_file = $mysql->get('files', 
@@ -247,9 +276,12 @@ function getdir( $dir )
 		)
 	);
 	
+	// make sure directory is not in ignored list
+	if(in_array($dir, $ignored))
+		return true; // return true and just pretend directory is complete
+	
 	if( count($db_file) == 0 || date("Y-m-d h:i:s", filemtime($dir)) != $db_file[0]['Filedate'] )
 	{
-
 		// add directory then continue into directory
 		getfile( $dir );
 		
@@ -318,9 +350,12 @@ function getdir( $dir )
 				$new_file .= '/';
 				
 				// prevent recursion by making sure it isn't already in the list of directories
-				if( in_array($new_file, $dirs) == false )
+				if( in_array($new_file, $dirs) == false && in_array(realpath($new_file), $dirs) == false )
 				{
 					$dirs[] = $new_file;
+					// add the real path incase they are different
+					if(realpath($new_file) != $new_file)
+						$dirs[] = realpath($new_file);
 					
 					// always descend and search for more directories
 					$status = getdir( $new_file );

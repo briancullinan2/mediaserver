@@ -421,5 +421,31 @@ function unix2DosTime($unixtime = 0)
 } // end of the 'unix2DosTime()' method
 
 
+function kill9($command, $startpid, $limit = 2)
+{
+	$ps = `ps -u www-data --sort=pid -o comm= -o pid=`;
+	$ps_lines = explode("\n", $ps);
+	
+	$pattern = "/(\S{1,})(\s{1,})(\d{1,})/";
+	
+	foreach($ps_lines as $line)
+	{
+		if(preg_match($pattern, $line, $matches))
+		{
+			//this limits us to finding the command within $limit pid's of the parent;
+			//eg, if ppid = 245, limit = 3, we won't search past 248
+			if($matches[3] > $startpid + $limit)
+				break;
+	
+			//try to match a ps line where the command matches our search
+			//at a higher pid than our parent
+			if($matches[1] == $command && $matches[3] > $startpid)
+			{
+				system('/bin/kill -9 ' . $matches[3]);
+			}
+		}
+	}
+	
+}
 
 ?>

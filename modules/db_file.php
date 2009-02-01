@@ -167,16 +167,13 @@ class db_file
 			
 			print 'Removing ' . $args['DB'] . ': ' . $row['Filepath'] . "\n";
 			
-			// pause so browser can recieve data
-			usleep(1);
-			
 			ob_flush();
 		}
 	}
 	
 	
 	// cleanup the non-existant files
-	static function cleanup($mysql, $watched, $database = NULL)
+	static function cleanup($mysql, $watched, $ignored, $database = NULL)
 	{
 		if( $database == NULL )
 		{
@@ -200,10 +197,12 @@ class db_file
 		{
 			$folders = split('/', $watched[$i]['Filepath']);
 			$curr_dir = '/';
+			// ----------THIS IS THE SAME FUNCTIONALITY FROM THE CRON.PHP SCRIPT
 			// don't add the watch directory here because it is already added by the previous loop!
 			$length = count($folders);
 			unset($folders[$length-1]); // remove the blank at the end
 			unset($folders[$length-2]); // remove the last folder which is the watch
+			$between = false; // directory must be between an aliased path and a watched path
 			// add the directories leading up to the watch
 			for($j = 0; $j < count($folders); $j++)
 			{
@@ -215,6 +214,16 @@ class db_file
 					//     only /home/share/ is added here
 					if(!USE_ALIAS || in_array($curr_dir, $GLOBALS['paths']) !== false)
 					{
+						// this allows for us to make sure that at least the beginning 
+						//   of the path is an aliased path
+						$between = true;
+						// if the USE_ALIAS is true this will only add the folder
+						//    if it is in the list of aliases
+						$where_str .= ' Filepath = "' . $curr_dir . '" OR';
+					}
+					// but make an exception for folders between an alias and the watch path
+					elseif(USE_ALIAS && $between)
+					{
 						$where_str .= ' Filepath = "' . $curr_dir . '" OR';
 					}
 				}
@@ -223,6 +232,11 @@ class db_file
 		// remove last OR
 		$where_str = substr($where_str, 0, strlen($where_str)-2);
 		$where_str = ' !(' . $where_str . ')';
+		// clean up items that are in the ignore list
+		foreach($ignored as $i => $ignore)
+		{
+			$where_str = 'Filepath REGEXP "^' . $ignore . '" OR ' . $where_str;
+		}
 		
 		// remove items
 		$mysql->set($db, NULL, $where_str);

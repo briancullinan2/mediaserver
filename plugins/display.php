@@ -30,16 +30,7 @@ if(isset($_REQUEST['display']))
 	{
 		if(is_string($_REQUEST['column']))
 		{
-			$tmp_columns = split(',', $_REQUEST['column']);
-			// unset all the ones that aren't columns
-			foreach($tmp_columns as $i => $value)
-			{
-				if(!in_array($value, $columns))
-				{
-					unset($tmp_columns[$i]);
-				}
-			}
-			$_SESSION['columns'] = $tmp_columns;
+			$_SESSION['columns'] = split(',', $_REQUEST['column']);
 		}
 		elseif(is_array($_REQUEST['column']))
 		{
@@ -83,6 +74,8 @@ if(isset($_REQUEST['display']))
 		}
 	}
 	
+	// make sure all selected items are numerics
+	foreach($_SESSION['columns'] as $i => $value) if(!in_array($value, $columns)) unset($_SESSION['columns'][$i]);
 	$_SESSION['columns'] = array_values($_SESSION['columns']);	
 	if(count($_SESSION['columns']) == 0) unset($_SESSION['columns']);
 

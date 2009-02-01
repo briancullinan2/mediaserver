@@ -1,0 +1,11 @@
+2009-01-31
+Add support for creating thumbnails in convert.php script
+Fix arrow-key movement in extjs template, in thumbnails view of the FolderView.js
+Add desktop.ini/folder.ini files and fix up thumbnails in FolderView.js
+Fix initial load time in FolderView.js
+Work on category view/show in groups in FolderView.js, add items that take up whole line and have headers
+Fix tooltip popup in FolderView.js, in wrong panel maybe?
+Press letter on the keyboard to go to that folder in FolderView.js and select.php
+Change desktop style to be buttons like folders in Desktop.js but render buttons to index.html
+Get settings dialog working and set up user accounts to control it
+File uploading and personal folders

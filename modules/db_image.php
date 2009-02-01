@@ -121,8 +121,8 @@ class db_image extends db_file
 			}
 		}
 	
-		// get thumbnails of image
-		$fileinfo['Thumbnail'] = addslashes(db_image::makeThumbs($file));
+		// do not get thumbnails of image
+		//$fileinfo['Thumbnail'] = addslashes(db_image::makeThumbs($file));
 	
 		if( $image_id != NULL )
 		{
@@ -158,7 +158,7 @@ class db_image extends db_file
 		if(file_exists($tmp_name)) $tmp_name = $tmp_name = TMP_DIR . md5($file . microtime()) . '.jpg';
 		
 		// first make highest size thumb
-		$cmd = CONVERT . ' "' . $file . '[0]" -resize "512x512" -format jpeg "' . $tmp_name . '"';
+		$cmd = CONVERT . ' "' . $file . '[0]" -resize "512x512" -format jpeg:-';
 		exec($cmd, $out, $ret);
 		
 		if($ret != 0)
@@ -235,10 +235,10 @@ class db_image extends db_file
 	}
 
 	
-	static function cleanup($mysql, $watched)
+	static function cleanup($mysql, $watched, $ignored)
 	{
 		// call default cleanup function
-		parent::cleanup($mysql, $watched, get_class_const(get_class(), 'DATABASE'));
+		parent::cleanup($mysql, $watched, $ignored, get_class_const(get_class(), 'DATABASE'));
 	}
 
 }

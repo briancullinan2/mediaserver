@@ -16,7 +16,7 @@ if($_SERVER['SCRIPT_FILENAME'] == __FILE__)
 include_once 'type.php';
 
 // get these listed items over the ones saved in the session!
-if(isset($_REQUEST['zip']))
+if(isset($_REQUEST['list']))
 {
 	$selected = array();
 	
@@ -66,6 +66,8 @@ if(isset($_REQUEST['zip']))
 		}
 	}
 	
+	// make sure all selected items are numerics
+	foreach($selected as $i => $value) if(!is_numeric($value)) unset($selected[$i]);
 	$selected = array_values($selected);
 	// use the session stuff instead
 	if(count($selected) == 0) $selected = $_SESSION['selected'];
@@ -78,6 +80,10 @@ elseif(isset($_SESSION['selected']))
 
 // initialize properties for select statement
 $props = array();
+
+// add category
+if(!isset($_REQUEST['cat']) || !in_array($GLOBALS['modules']))
+	$_REQUEST['cat'] = 'db_file';
 
 // select type of output
 if(!isset($_REQUEST['type']) || !isset($types[$_REQUEST['type']]))
@@ -103,11 +109,6 @@ else
 	}
 }
 
-
-// add category
-if(!isset($_REQUEST['cat']))
-	$_REQUEST['cat'] = 'db_file';
-
 // add where includes
 if((isset($selected) && count($selected) > 0) || isset($_REQUEST['selected_only']))
 {
@@ -128,7 +129,7 @@ else
 	{
 		$props['WHERE'] = '';
 		
-		$regexp = $_REQUEST['includes'];
+		$regexp = addslashes($_REQUEST['includes']);
 		
 		$props['WHERE'] .= '(';
 		foreach($columns as $i => $column)
@@ -167,7 +168,7 @@ elseif($_REQUEST['type'] == 'm3u')
 {
 	// set the header so the browser can recognize it
 	header('Content-Type: audio/x-mpegurl');
-	header('Content-Disposition: attachment; filename="' . constant($_REQUEST['cat'] . '::NAME') . '.m3u"'); 
+	header('Content-Disposition: attachment; filename="' . (isset($_REQUEST['filename'])?$_REQUEST['filename']:constant($_REQUEST['cat'] . '::NAME')) . '.m3u"'); 
 }
 elseif($_REQUEST['type'] == 'wpl')
 {

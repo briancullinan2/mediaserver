@@ -26,6 +26,12 @@ $watched = $mysql->get('watch', array('SELECT' => array('id','Filepath')));
 if( isset($_REQUEST['add']) )
 {
 	$addpath = $_REQUEST['addpath'];
+	$exclude = false;
+	if($addpath[0] == '!')
+	{
+		$addpath = substr($addpath, 1);
+		$exclude = true;
+	}
 	// make sure addpath doesn't already exist in the list and is not a symbolic link
 	if( file_exists($addpath) )
 	{
@@ -47,7 +53,7 @@ if( isset($_REQUEST['add']) )
 			if($dont_add == false)
 			{
 				// finally add the path to the database
-				$mysql->set('watch', array('Filepath' => $addpath));
+				$mysql->set('watch', array('Filepath' => ($exclude?'!':'') . $addpath));
 				
 				// and reget the full list
 				$watched = $mysql->get('watch', array('SELECT' => array('id','Filepath')));

@@ -1,8 +1,18 @@
+2009-01-31
+Fixed some bugs in the cron.php script, folders leading up to the watch directories were being added and in turn causing them not to be scanned
+Added an ignore directory option, folders in watch list can now be preceeded with ! sign in order to be ignored
+Also added the same filtering to the cleanup scripts in each module
+Fixed some problems in select.php, if folders exist on disk but are not in the database the script will not return an error
+Added the usual item/on/off api for selecting files in list.php
+Added a convert.php script for converting images
+Added a kill9() function to common.php for killing processes after connection_abort() != 0
+Added some links to the default select template for accessing the convert.php script
+Modified the .htaccess for the plugins directory to redirect traffic for encoding and converting
+
 2009-01-25
 Started on re-encoding script, currently named encode.php under plugins
 Updated EXT and Livegrid libraries successfully
 Column information displays safely by downloading column titles
-
 
 2009-01-05
 Lots of improvments made

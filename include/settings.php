@@ -23,11 +23,24 @@ define('SITE_LOCALROOT',                '/var/www/mediaserver/');
 define('MODULES_DIR', SITE_LOCALROOT . 'modules/');
 
 define('SITE_HTMLPATH',            			    'http://dev.bjcullinan.com/');
-define('SITE_HTMLROOT',                                  '');
-define('SITE_DEFAULT',            				   'templates/default/');
+define('SITE_HTMLROOT',                                                   '');
+define('SITE_DEFAULT',            				        'templates/default/');
+
+// get the list of templates
+$templates = array();
+if ($dh = opendir(SITE_LOCALROOT . 'templates/'))
+{
+	while (($file = readdir($dh)) !== false)
+	{
+		if ($file != '.' && $file != '..' && is_dir(SITE_LOCALROOT . 'templates/' . $file))
+		{
+			$templates[] = $file;
+		}
+	}
+}
 
 // set the template
-if(isset($_REQUEST['template']))
+if(isset($_REQUEST['template']) && in_array($_REQUEST['template'], $templates))
 {
 	if(substr($_REQUEST['template'], strlen($_REQUEST['template']) - 1, 1) != '/')
 		$_REQUEST['template'] .= '/';
@@ -54,6 +67,7 @@ define('SITE_PLUGINS', 						 SITE_HTMLROOT . 'plugins/');
 // extra constants
 define('SITE_NAME',			 'Brian\'s Media Website'); // name for the website
 define('CONVERT', 				   '/usr/bin/convert'); // image magick's convert program
+define('ENCODE', 				       '/usr/bin/vlc'); // a program that can convert video and audio streams
 define('BUFFER_SIZE', 						  24*1024); // max amount to output when accessing a file
 define('TMP_DIR', 						      '/tmp/'); // a temporary directory to use for creating thumbnails
 define('USE_ALIAS', 							 true); // set to true in order to use aliased paths for output of Filepath

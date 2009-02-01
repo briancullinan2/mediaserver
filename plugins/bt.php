@@ -62,7 +62,9 @@ if(isset($_REQUEST['btorrent']))
 		}
 	}
 	
-	$selected = array_values($selected);	
+	// make sure all selected items are numerics
+	foreach($selected as $i => $value) if(!is_numeric($value)) unset($selected[$i]);
+	$selected = array_values($selected);
 	if(count($selected) == 0) unset($selected);
 
 }
@@ -70,11 +72,9 @@ if(isset($_REQUEST['btorrent']))
 // initialize properties for select statement
 $props = array();
 
-// add category
-if(!isset($_REQUEST['cat']))
-{
+// add category and validate it!
+if(!isset($_REQUEST['cat']) || !in_array($GLOBALS['modules']))
 	$_REQUEST['cat'] = 'db_file';
-}
 
 $files = array();
 
