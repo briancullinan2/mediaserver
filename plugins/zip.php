@@ -70,7 +70,7 @@ if(isset($_REQUEST['zip']))
 $props = array();
 
 // add category
-if(!isset($_REQUEST['cat']) || !in_array($GLOBALS['modules']))
+if(!isset($_REQUEST['cat']) || !in_array($_REQUEST['cat'], $GLOBALS['modules']))
 {
 	$_REQUEST['cat'] = 'db_file';
 }

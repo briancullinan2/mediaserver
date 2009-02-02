@@ -82,7 +82,7 @@ elseif(isset($_SESSION['selected']))
 $props = array();
 
 // add category
-if(!isset($_REQUEST['cat']) || !in_array($GLOBALS['modules']))
+if(!isset($_REQUEST['cat']) || !in_array($_REQUEST['cat'], $GLOBALS['modules']))
 	$_REQUEST['cat'] = 'db_file';
 
 // select type of output

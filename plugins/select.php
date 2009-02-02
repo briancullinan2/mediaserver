@@ -105,7 +105,7 @@ if(isset($_REQUEST['select']))
 $props = array();
 
 // add category
-if(!isset($_REQUEST['cat']) || !in_array($GLOBALS['modules']))
+if(!isset($_REQUEST['cat']) || !in_array($_REQUEST['cat'], $GLOBALS['modules']))
 	$_REQUEST['cat'] = 'db_file';
 
 $columns = call_user_func(array($_REQUEST['cat'], 'columns'));
@@ -145,6 +145,7 @@ if(isset($_REQUEST['dir']))
 {
 	$_REQUEST['dir'] = stripslashes($_REQUEST['dir']);
 	if($_REQUEST['dir'] == '') $_REQUEST['dir'] = '/';
+	if($_REQUEST['dir'] == '/') $_REQUEST['dir'] = '/Shared/';
 	
 	// replace aliased path with actual path
 	if(USE_ALIAS == true) $_REQUEST['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $_REQUEST['dir']);

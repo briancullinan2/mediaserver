@@ -21,7 +21,7 @@ require_once dirname(__FILE__) . '/../include/common.php';
 $mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 
 // add category and validate!
-if(!isset($_REQUEST['cat']) || !in_array($GLOBALS['modules']))
+if(!isset($_REQUEST['cat']) || !in_array($_REQUEST['cat'], $GLOBALS['modules']))
 	$_REQUEST['cat'] = 'db_file';
 
 if(isset($_REQUEST['id']) && is_numeric($_REQUEST['id']))
