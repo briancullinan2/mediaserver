@@ -160,6 +160,7 @@ foreach($files as $index => $file)
 $smarty->assign('files', $files);
 
 
+header('Cache-Control: no-cache');
 if($_REQUEST['type'] == 'rss')
 {
 	header('Content-Type: application/rss+xml');
