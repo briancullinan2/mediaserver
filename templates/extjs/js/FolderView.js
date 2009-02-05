@@ -51,8 +51,6 @@ Ext.extend(Ext.ux.FolderView, Ext.ux.grid.livegrid.GridView, {
 		},
 		'Icons' : {
 		},
-		'List' : {
-		},
 		'Details' : {
 			row : new Ext.Template(
 				'<div class="x-grid3-row {alt}" style="{tstyle}"><table class="x-grid3-row-table" border="0" cellspacing="0" cellpadding="0" style="{tstyle}">',

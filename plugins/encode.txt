@@ -1,4 +1,0 @@
-#!/bin/bash
-trap 'exit 0' HUP
-trap 'kill -s HUP 0' EXIT
-/usr/bin/vlc -I dummy "$1" :sout='#transcode{vcodec=WMV2,acodec=mp3,vb=512,ab=64,channels=2,deinterlace,audio-sync}:std{mux=asf,access=file,dst=-}' vlc:quit

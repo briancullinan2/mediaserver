@@ -8,7 +8,7 @@
 				{assign var=module value=$modules[module]}
 				<option value="{$modules[module]}" {if isset($search.cat) && $search.cat eq $modules[module]}selected{/if}>{php}
 					$module = $this->get_template_vars('module');
-					echo get_class_const($module, 'NAME');
+					echo constant($module . '::NAME');
 				{/php}</option>
 			{/section}
 			</select>
@@ -30,7 +30,7 @@
 				{assign var=module value=$modules[module]}
 				<option value="{$modules[module]}" {if isset($search.cat) && $search.cat eq $modules[module]}selected{/if}>{php}
 					$module = $this->get_template_vars('module');
-					echo get_class_const($module, 'NAME');
+					echo constant($module . '::NAME');
 				{/php}</option>
 			{/section}
 			</select>

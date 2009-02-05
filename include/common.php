@@ -169,11 +169,62 @@ function roundFileSize($dirsize)
 	return $dirsize;
 }
 
-
-// get the constant from a class
-function get_class_const($class, $const)
+function getIDsFromRequest($request, &$selected)
 {
-	return constant(sprintf('%s::%s', $class, $const));
+	if(!isset($selected))
+		$selected = array();
+	
+	if(isset($request['item']))
+	{
+		if(is_string($request['item']))
+		{
+			$selected = split(',', $request['item']);
+		}
+		elseif(is_array($request['item']))
+		{
+			foreach($request['item'] as $id => $value)
+			{
+				if(($value == 'on' || $request['select'] == 'All') && !in_array($id, $selected))
+				{
+					$selected[] = $id;
+				}
+				elseif(($value == 'off' || $request['select'] == 'None') && ($key = array_search($id, $selected)) !== false)
+				{
+					unset($selected[$key]);
+				}
+			}
+		}
+	}
+	
+	if(isset($request['on']))
+	{
+		$request['on'] = split(',', $request['on']);
+		foreach($request['on'] as $i => $id)
+		{
+			if(!in_array($id, $selected) && $id != '')
+			{
+				$selected[] = $id;
+			}
+		}
+	}
+	
+	if(isset($request['off']))
+	{
+		$request['off'] = split(',', $request['off']);
+		foreach($request['off'] as $i => $id)
+		{
+			if(($key = array_search($id, $selected)) !== false)
+			{
+				unset($selected[$key]);
+			}
+		}
+	}
+	
+	// make sure all selected items are numerics
+	foreach($selected as $i => $value) if(!is_numeric($value)) unset($selected[$i]);
+	$selected = array_values($selected);
+	
+	if(count($selected) == 0) unset($selected);
 }
 
 // notify of ascii problems when reading data

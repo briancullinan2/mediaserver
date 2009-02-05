@@ -177,7 +177,7 @@ class db_file
 	{
 		if( $database == NULL )
 		{
-			$db = get_class_const(get_class(), 'DATABASE');
+			$db = constant(get_class() . '::DATABASE');
 		}
 		else
 		{

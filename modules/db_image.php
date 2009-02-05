@@ -238,7 +238,7 @@ class db_image extends db_file
 	static function cleanup($mysql, $watched, $ignored)
 	{
 		// call default cleanup function
-		parent::cleanup($mysql, $watched, $ignored, get_class_const(get_class(), 'DATABASE'));
+		parent::cleanup($mysql, $watched, $ignored, constant(get_class() . '::DATABASE'));
 	}
 
 }

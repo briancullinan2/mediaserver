@@ -1,0 +1,87 @@
+{* LIST TEXT "M3U Playlist" *}
+{if !isset($smarty.request.m3u_type)}
+{section name=file loop=$files}
+{if !isset($ids)}
+{assign var=ids value=$files[file].id}
+{else}
+{assign var=ids value=$ids|cat:','|cat:$files[file].id}
+{/if}
+{/section}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>{$smarty.const.SITE_NAME}: M3U List</title>
+</head>
+<body>
+Note: All non-media types will be filtered out using this list type.<br />
+Select your audio/video format:<br />
+<a href="/{$smarty.const.SITE_PLUGINS}list/{$ids}/MP4/Files.m3u">mp4</a>
+: <a href="/{$smarty.const.SITE_PLUGINS}list/{$ids}/MPG/Files.m3u">mpg/mp3</a>
+: <a href="/{$smarty.const.SITE_PLUGINS}list/{$ids}/WM/Files.m3u">wmv/wma</a>
+</body>
+</html>
+{elseif $smarty.request.m3u_type == 'MP4'}
+{php}
+header('Content-Type: audio/x-mpegurl');
+header('Content-Disposition: attachment; filename="' . (isset($_REQUEST['filename'])?$_REQUEST['filename']:constant($_REQUEST['cat'] . '::NAME') . '.m3u"')); 
+{/php}
+#EXTM3U
+{section name=file loop=$files}
+{assign var=length value=0}
+{if isset($files[file].Length)}{assign var=length value=$files[file].Length|ceil}{/if}
+{assign var=title value=$files[file].Filename}
+{if isset($files[file].Artist) && isset($files[file].Title)}{assign var=title value=$files[file].Artist|cat:' - '|cat:$files[file].Title}{/if}
+{assign var=type_arr value='/'|@split:$files[file].Filemime}
+{assign var=type value=$type_arr.0}
+{if $type=="video"}
+#EXTINF:{$length},{$title}
+{$smarty.const.SITE_HTMLPATH}{$smarty.const.SITE_PLUGINS}encode/{$files[file].id}/MP4/{$files[file].id}.mp4
+{elseif $type=="audio"}
+#EXTINF:{$length},{$title}
+{$smarty.const.SITE_HTMLPATH}{$smarty.const.SITE_PLUGINS}encode/{$files[file].id}/MP4A/{$files[file].id}.mp4
+{/if}
+{/section}
+{elseif $smarty.request.m3u_type == 'WM'}
+{php}
+header('Content-Type: audio/x-mpegurl');
+header('Content-Disposition: attachment; filename="' . (isset($_REQUEST['filename'])?$_REQUEST['filename']:constant($_REQUEST['cat'] . '::NAME') . '.m3u"')); 
+{/php}
+#EXTM3U
+{section name=file loop=$files}
+{assign var=length value=0}
+{if isset($files[file].Length)}{assign var=length value=$files[file].Length|ceil}{/if}
+{assign var=title value=$files[file].Filename}
+{if isset($files[file].Artist) && isset($files[file].Title)}{assign var=title value=$files[file].Artist|cat:' - '|cat:$files[file].Title}{/if}
+{assign var=type_arr value='/'|@split:$files[file].Filemime}
+{assign var=type value=$type_arr.0}
+{if $type=="video"}
+#EXTINF:{$length},{$title}
+{$smarty.const.SITE_HTMLPATH}{$smarty.const.SITE_PLUGINS}encode/{$files[file].id}/WMV/{$files[file].id}.wmv
+{elseif $type=="audio"}
+#EXTINF:{$length},{$title}
+{$smarty.const.SITE_HTMLPATH}{$smarty.const.SITE_PLUGINS}encode/{$files[file].id}/WMA/{$files[file].id}.wma
+{/if}
+{/section}
+{elseif $smarty.request.m3u_type == 'MPG'}
+{php}
+header('Content-Type: audio/x-mpegurl');
+header('Content-Disposition: attachment; filename="' . (isset($_REQUEST['filename'])?$_REQUEST['filename']:constant($_REQUEST['cat'] . '::NAME') . '.m3u"')); 
+{/php}
+#EXTM3U
+{section name=file loop=$files}
+{assign var=length value=0}
+{if isset($files[file].Length)}{assign var=length value=$files[file].Length|ceil}{/if}
+{assign var=title value=$files[file].Filename}
+{if isset($files[file].Artist) && isset($files[file].Title)}{assign var=title value=$files[file].Artist|cat:' - '|cat:$files[file].Title}{/if}
+{assign var=type_arr value='/'|@split:$files[file].Filemime}
+{assign var=type value=$type_arr.0}
+{if $type=="video"}
+#EXTINF:{$length},{$title}
+{$smarty.const.SITE_HTMLPATH}{$smarty.const.SITE_PLUGINS}encode/{$files[file].id}/MPG/{$files[file].id}.mpg
+{elseif $type=="audio"}
+#EXTINF:{$length},{$title}
+{$smarty.const.SITE_HTMLPATH}{$smarty.const.SITE_PLUGINS}encode/{$files[file].id}/MP3/{$files[file].id}.mp3
+{/if}
+{/section}
+{/if}

@@ -1,6 +1,0 @@
-{* LIST TEXT "M3U Playlist" *}
-#EXTM3U
-{section name=file loop=$files}
-#EXTINF:0,{$files[file].Filename}
-{$smarty.const.SITE_HTMLPATH}{$smarty.const.SITE_PLUGINS}encode/{$files[file].id}/MP3/{$files[file].Filename}
-{/section}

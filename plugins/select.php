@@ -35,61 +35,8 @@ if(isset($_REQUEST['select']))
 	$_SESSION['select']['on'] = @$_REQUEST['on'];
 	$_SESSION['select']['off'] = @$_REQUEST['off'];
 	$_SESSION['select']['item'] = @$_REQUEST['item'];
-
-	// check for selected files
-	if(!isset($_SESSION['selected']))
-		$_SESSION['selected'] = array();
 	
-	if(isset($_REQUEST['item']))
-	{
-		if(is_string($_REQUEST['item']))
-		{
-			$_SESSION['selected'] = split(',', $_REQUEST['item']);
-		}
-		elseif(is_array($_REQUEST['item']))
-		{
-			foreach($_REQUEST['item'] as $id => $value)
-			{
-				if(($value == 'on' || $_REQUEST['select'] == 'All') && !in_array($id, $_SESSION['selected']))
-				{
-					$_SESSION['selected'][] = $id;
-				}
-				elseif(($value == 'off' || $_REQUEST['select'] == 'None') && ($key = array_search($id, $_SESSION['selected'])) !== false)
-				{
-					unset($_SESSION['selected'][$key]);
-				}
-			}
-		}
-	}
-	
-	if(isset($_REQUEST['on']))
-	{
-		$_REQUEST['on'] = split(',', $_REQUEST['on']);
-		foreach($_REQUEST['on'] as $i => $id)
-		{
-			if(!in_array($id, $_SESSION['selected']) && $id != '')
-			{
-				$_SESSION['selected'][] = $id;
-			}
-		}
-	}
-	
-	if(isset($_REQUEST['off']))
-	{
-		$_REQUEST['off'] = split(',', $_REQUEST['off']);
-		foreach($_REQUEST['off'] as $i => $id)
-		{
-			if(($key = array_search($id, $_SESSION['selected'])) !== false)
-			{
-				unset($_SESSION['selected'][$key]);
-			}
-		}
-	}
-	
-	// make sure all selected items are numerics
-	foreach($_SESSION['selected'] as $i => $value) if(!is_numeric($value)) unset($selected[$i]);
-	$_SESSION['selected'] = array_values($_SESSION['selected']);	
-	if(count($_SESSION['selected']) == 0) unset($_SESSION['selected']);
+	getIDsFromRequest($_REQUEST, $_SESSION['selected']);
 	
 	// clear post and redirect back to self, this is so there is no stupid post messages
 	if(isset($_POST['select']))
@@ -268,7 +215,7 @@ unset($props['OTHER']);
 $props['SELECT'] = 'count(*)';
 
 // get count
-$result = $mysql->get(get_class_const($_REQUEST['cat'], 'DATABASE'), $props);
+$result = $mysql->get(constant($_REQUEST['cat'] . '::DATABASE'), $props);
 
 $smarty->assign('total_count', intval($result[0]['count(*)']));
 

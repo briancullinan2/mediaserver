@@ -51,7 +51,7 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 				return '';
 			}
 			// set the isBlank to false if there is any text what so ever.
-			if(value.length != 0 && options.view.viewMode == 'Details')
+			if(value && value.length != 0 && options.view.viewMode == 'Details')
 			{
 				options.colModel.config[colIndex].isBlank = false;
 				if(value.length > options.colModel.config[colIndex].longest)
@@ -189,9 +189,28 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 					}
 					else
 					{
-						window.location = r.data.link;
+						if(r.data['info-Filemime'])
+						{
+							type = r.data['info-Filemime'].split('/')[0];
+							switch(type)
+							{
+								case 'audio':
+								case 'video':
+								case 'image':
+									module = this.app.getModule('player-win');
+									player = module.createWindow(r);
+								break;
+								default:
+									window.location = r.data.link;
+							}
+						}
+						else
+						{
+							window.location = r.data.link;
+						}
 					}
-				}
+				},
+				scope: this
 			},
 			'rowclick': {
 				fn: function(grid, rowIndex, e) {
@@ -587,11 +606,6 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 					group: 'view',
 					checkHandler: viewChangeFn
 				},{
-					text: 'List',
-					checked: false,
-					group: 'view',
-					checkHandler: viewChangeFn
-				},{
 					text: 'Details',
 					checked: false,
 					group: 'view',
@@ -600,24 +614,73 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 			}
 		});
 		
-		
-		var topToolbar = new Ext.Toolbar({
-			cls: 'ux-toolbar',
-			items: [backbutton, forwardbutton,
-				upbutton, refreshbutton,
-				'-',
-				searchbutton, foldersbutton,
-				'-',
-				viewbutton,
-				'->',
-				'|',
-				'Address:',
-				address]
+		var filemenu = new Ext.menu.Menu({
+			items: [
+				{text: 'Close'}
+			]
 		});
-
+		
+		var filemenu = new Ext.menu.Menu({
+			items: [
+				{text: 'New'},
+				'-',
+				{text: 'Delete'},
+				{text: 'Rename'},
+				{text: 'Properties'},
+				'-',
+				{text: 'Close'}
+			]
+		});
+		
+		var editmenu = new Ext.menu.Menu({
+			items: [
+				{text: 'Undo'},
+				'-',
+				{text: 'Cut'},
+				{text: 'Copy'},
+				{text: 'Paste'},
+				'-',
+				{text: 'Select All'},
+				{text: 'Invert Selection'}
+			]
+		});
+		
+		var viewmenu = new Ext.menu.Menu({
+			items: [
+				{text: 'Status Bar'},
+				{text: 'Explorer Bar', menu: {
+					items: [{text: 'Search'}, {text: 'Folders'}]
+					}},
+				'-',
+				{text: 'Thumbnails'},
+				{text: 'Tiles'},
+				{text: 'Icons'},
+				{text: 'Details'},
+				'-',
+				{text: 'Arrange By', menu: {
+					items: [{text: 'Name'}, {text: 'Size'}, {text: 'Type'}, {text: 'Modified'}, '-', {text: 'Show In Groups'}]
+					}},
+				'-',
+				{text: 'Columns'},
+				{text: 'Go To', menu: {
+					items: [{text: 'Back'}, {text: 'Forward'}, {text: 'Up One Level'}]
+					}},
+				{text: 'Refresh'}
+			]
+		});
+		
+		var toolsmenu = new Ext.menu.Menu({
+			items: [
+				{text: 'Folder Options'}
+			]
+		});
+		
+		var menubar = new Ext.Toolbar({
+			items: [{text: 'File', menu: filemenu}, {text: 'Edit', menu: editmenu}, {text: 'View', menu: viewmenu}, {text: 'Tools', menu: toolsmenu}, '->']
+		});
+		
 		address.backbutton = backbutton;
 		address.forwardbutton = forwardbutton;
-		address.toolbar = topToolbar;
 		address.search = searchbutton;
 		address.grid = grid;
 		
@@ -630,7 +693,7 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 			animCollapse: false,
 			constrainHeader: true,
 			cls: 'portal-window',
-			tbar: topToolbar,
+			tbar: menubar,
 			bbar: bufferedToolbar,
 			layout: 'border',
 			border: false,
@@ -639,6 +702,17 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 			},
 			items: [grid, leftPanel]
 		});
+		
+		var buttonsbar = new Ext.Toolbar({
+			renderTo: win.tbar,
+			items: [backbutton, forwardbutton, upbutton, refreshbutton, '-', searchbutton, foldersbutton, '-', viewbutton, '->']
+		});
+		
+		var addressbar = new Ext.Toolbar({
+			renderTo: win.tbar,
+			items: ['Address:', address]
+		});
+		address.toolbar = addressbar;
 
         win.show();
     }

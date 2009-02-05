@@ -1,66 +1,5 @@
 // JavaScript Document
 
-
-//Ext.MultilineToolbar = function(config){
-//    Ext.MultilineToolbar.superclass.constructor.call(this, config);
-//};
-
-Ext.override(Ext.Toolbar, {
-	add : function() {
-		var a = arguments, l = a.length;
-		for(var i = 0; i < l; i++){
-			var el = a[i];
-			if(el.isFormField){ // some kind of form field
-				this.addField(el);
-			}else if(el.render){ // some kind of Toolbar.Item
-				this.addItem(el);
-			}else if(typeof el == "string"){ // string
-				if(el == "separator" || el == "-"){
-					this.addSeparator();
-				}else if(el == " "){
-					this.addSpacer();
-				}else if(el == "->"){
-					this.addFill();
-				}else if(el == "|"){
-					var new_row = Ext.DomHelper.append(this.el, {tag:'table', html:'<tr></tr>'}, true);
-					new_row.dom.setAttribute("cellspacing", "0");
-					this.tr = new_row.child("tr", true);
-				}else{
-					this.addText(el);
-				}
-			}else if(el.tagName){ // element
-				this.addElement(el);
-			}else if(typeof el == "object"){ // must be button config?
-				if(el.xtype){
-					this.addField(Ext.ComponentMgr.create(el, 'button'));
-				}else{
-					this.addButton(el);
-				}
-			}
-		}
-	},
-
-	insertButton : function(index, item){
-        if(Ext.isArray(item)){
-            var buttons = [];
-            for(var i = 0, len = item.length; i < len; i++) {
-               buttons.push(this.insertButton(index + i, item[i]));
-            }
-            return buttons;
-        }
-        if (!(item instanceof Ext.Toolbar.Button) && !(item instanceof Ext.Toolbar.SplitButton)){
-           item = new Ext.Toolbar.Button(item);
-        }
-        var td = document.createElement("td");
-        this.tr.insertBefore(td, this.tr.childNodes[index]);
-        this.initMenuTracking(item);
-        item.render(td);
-        this.items.insert(index, item);
-        return item;
-    }
-	
-});
-
 /*
  * Ext JS Library 2.1
  * Copyright(c) 2006-2008, Ext JS, LLC.
@@ -462,7 +401,7 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 				//folder_dropdown.render();
 				this.buttons[this.buttons.length] = folder_dropdown;
 				folder_dropdown.render(newCell);
-				this.toolbar.initMenuTracking(folder_dropdown);
+				if(this.toolbar) this.toolbar.initMenuTracking(folder_dropdown);
 			}
 		}
 		

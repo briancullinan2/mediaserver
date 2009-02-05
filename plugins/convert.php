@@ -4,8 +4,8 @@ ignore_user_abort(1);
 
 switch($_REQUEST['convert'])
 {
-	case 'JPEG':
-		header('Content-Type: image/jpeg');
+	case 'JPG':
+		header('Content-Type: image/jpg');
 		break;
 	case 'GIF':
 		header('Content-Type: image/gif');
@@ -44,7 +44,7 @@ if(isset($_REQUEST['id']) && is_numeric($_REQUEST['id']))
 	
 		switch($_REQUEST['convert'])
 		{
-			case 'JPEG':
+			case 'JPG':
 				$cmd = CONVERT . ' "' . $files[0]['Filepath'] . '" jpeg:-';
 				break;
 			case 'GIF':

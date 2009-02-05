@@ -18,60 +18,9 @@ include_once 'type.php';
 // get these listed items over the ones saved in the session!
 if(isset($_REQUEST['list']))
 {
-	$selected = array();
-	
-	if(isset($_REQUEST['item']))
-	{
-		if(is_string($_REQUEST['item']))
-		{
-			$selected = split(',', $_REQUEST['item']);
-		}
-		elseif(is_array($_REQUEST['item']))
-		{
-			foreach($_REQUEST['item'] as $id => $value)
-			{
-				if(($value == 'on' || $_REQUEST['select'] == 'All') && !in_array($id, $selected))
-				{
-					$selected[] = $id;
-				}
-				elseif(($value == 'off' || $_REQUEST['select'] == 'None') && ($key = array_search($id, $selected)) !== false)
-				{
-					unset($selected[$key]);
-				}
-			}
-		}
-	}
-	
-	if(isset($_REQUEST['on']))
-	{
-		$_REQUEST['on'] = split(',', $_REQUEST['on']);
-		foreach($_REQUEST['on'] as $i => $id)
-		{
-			if(!in_array($id, $selected) && $id != '')
-			{
-				$selected[] = $id;
-			}
-		}
-	}
-	
-	if(isset($_REQUEST['off']))
-	{
-		$_REQUEST['off'] = split(',', $_REQUEST['off']);
-		foreach($_REQUEST['off'] as $i => $id)
-		{
-			if(($key = array_search($id, $selected)) !== false)
-			{
-				unset($selected[$key]);
-			}
-		}
-	}
-	
-	// make sure all selected items are numerics
-	foreach($selected as $i => $value) if(!is_numeric($value)) unset($selected[$i]);
-	$selected = array_values($selected);
+	getIDsFromRequest($_REQUEST, $selected);
 	// use the session stuff instead
-	if(count($selected) == 0) $selected = $_SESSION['selected'];
-
+	if(!isset($selected)) $selected = $_SESSION['selected'];
 }
 elseif(isset($_SESSION['selected']))
 {
@@ -164,12 +113,6 @@ header('Cache-Control: no-cache');
 if($_REQUEST['type'] == 'rss')
 {
 	header('Content-Type: application/rss+xml');
-}
-elseif($_REQUEST['type'] == 'm3u')
-{
-	// set the header so the browser can recognize it
-	header('Content-Type: audio/x-mpegurl');
-	header('Content-Disposition: attachment; filename="' . (isset($_REQUEST['filename'])?$_REQUEST['filename']:constant($_REQUEST['cat'] . '::NAME')) . '.m3u"'); 
 }
 elseif($_REQUEST['type'] == 'wpl')
 {
