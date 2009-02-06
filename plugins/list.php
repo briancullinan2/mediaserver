@@ -13,7 +13,7 @@ $mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
 	$smarty = new Smarty;
 
-include_once 'type.php';
+include_once LOCAL_ROOT . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'type.php';
 
 // get these listed items over the ones saved in the session!
 if(isset($_REQUEST['list']))

@@ -1,6 +1,6 @@
 <?php
 
-require_once 'settings2.php';
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings2.php';
 
 // control lower level handling of each database
 // things to consider:

@@ -189,11 +189,11 @@ class db_file
 			$where_str .= ' Filepath REGEXP "^' . addslashes(addslashes($watch['Filepath'])) . '" OR';
 		}
 		// but keep the ones leading up to watched directories
+		// ----------THIS IS THE SAME FUNCTIONALITY FROM THE CRON.PHP SCRIPT
 		for($i = 0; $i < count($watched); $i++)
 		{
 			$folders = split(addslashes(DIRECTORY_SEPARATOR), $watched[$i]['Filepath']);
-			$curr_dir = DIRECTORY_SEPARATOR;
-			// ----------THIS IS THE SAME FUNCTIONALITY FROM THE CRON.PHP SCRIPT
+			$curr_dir = (realpath('/') == '/')?'/':'';
 			// don't add the watch directory here because it is already added by the previous loop!
 			$length = count($folders);
 			unset($folders[$length-1]); // remove the blank at the end

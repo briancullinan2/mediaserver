@@ -2,6 +2,7 @@
 set_time_limit(0);
 ignore_user_abort(1);
 
+// set the header first thing so browser doesn't stall or get tired of waiting for the process to start
 switch($_REQUEST['encode'])
 {
 	case 'MP4':
@@ -33,7 +34,11 @@ $mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 if(!isset($_REQUEST['cat']) || !in_array($_REQUEST['cat'], $GLOBALS['modules']))
 	$_REQUEST['cat'] = 'db_file';
 
-if(isset($_REQUEST['id']) && is_numeric($_REQUEST['id']))
+if(!isset($_REQUEST['%IF']) && isset($_REQUEST['id']))
+	$_REQUEST['%IF'] = $_REQUEST['id'];
+
+// check the id and stuff
+if(isset($_REQUEST['%IF']) && is_numeric($_REQUEST['%IF']))
 {
 	// get the file path from the database
 	$files = call_user_func(array($_REQUEST['cat'], 'get'), $mysql,
@@ -50,56 +55,134 @@ if(isset($_REQUEST['id']) && is_numeric($_REQUEST['id']))
 		{
 			$files[0] = array_merge($file[0], $files[0]);
 		}
-		
-		switch($_REQUEST['encode'])
-		{
-			case 'MP4':
-				$cmd = basename(ENCODE) . ' -I dummy -v "' . $files[0]['Filepath'] . '" :sout=\'#transcode{vcodec=mp4v,acodec=mp4a,vb=512,ab=64,samplerate=44100,channels=2,deinterlace,audio-sync}:std{mux=ts,access=file,dst=-}\' vlc://quit';
-				break;
-			case 'MPG':
-				$cmd = basename(ENCODE) . ' -I dummy -v "' . $files[0]['Filepath'] . '" :sout=\'#transcode{vcodec=mp1v,acodec=mpga,vb=512,ab=64,samplerate=44100,channels=2,deinterlace,audio-sync}:std{mux=mpeg1,access=file,dst=-}\' vlc://quit';
-				break;
-			case 'WMV':
-				$cmd = basename(ENCODE) . ' -v "' . $files[0]['Filepath'] . '" :sout=#transcode{vcodec=WMV2,acodec=mp3,vb=512,ab=64,samplerate=44100,channels=2,deinterlace,audio-sync}:std{mux=asf,access=file,dst=-} vlc://quit';
-				break;
-			case 'MP4A':
-				$cmd = basename(ENCODE) . ' -I dummy -v --no-video "' . $files[0]['Filepath'] . '" :sout=\'#transcode{acodec=mp4a,ab=160,samplerate=44100,channels=2}:std{mux=mp4,access=file,dst=-}\' vlc://quit';
-				break;
-			case 'MP3':
-				$cmd = basename(ENCODE) . ' -I dummy -v --no-video "' . $files[0]['Filepath'] . '" :sout=\'#transcode{acodec=mp3,ab=160,samplerate=44100,channels=2}:std{mux=dummy,access=file,dst=-}\' vlc://quit';
-				break;
-			case 'WMA':
-				$cmd = basename(ENCODE) . ' -I dummy -v --no-video "' . $files[0]['Filepath'] . '" :sout=\'#transcode{acodec=wma2,ab=160,samplerate=44100,channels=2}:std{mux=asf,access=file,dst=-}\' vlc://quit';
-				break;
-		}
-
-		$descriptorspec = array(
-		   1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
-		);
-		
-		$process = proc_open($cmd, $descriptorspec, $pipes, dirname(ENCODE), NULL, array('binary_pipes' => true, 'bypass_shell' => true));
-		
-		// output file
-		if(is_resource($process))
-		{
-			while(!feof($pipes[1]))
-			{
-				if(connection_status()!=0)
-				{
-					proc_terminate($process);
-					break;
-				}
-				print fread($pipes[1], BUFFER_SIZE);
-				flush();
-			}
-			fclose($pipes[1]);
-			
-			$status = proc_get_status($process);
-			kill9('vlc', $status['pid']);
-			
-			$return_value = proc_close($process);
-		}
 	}
+	
+	$_REQUEST['%IF'] = $files[0]['Filepath'];
+}
+else
+{
+	exit;
+}
+
+// do the validation for all the input options!
+// first filter out all the unwanted request vars
+foreach($_REQUEST as $key => $value)
+{
+	if(!in_array($key, array('encode', '%IF', '%VC', '%AC', '%VB', '%AB', '%SR', '%CH', '%MX')))
+		unset($_REQUEST[$key]);
+}
+
+// here is some presets:
+switch($_REQUEST['encode'])
+{
+	case 'MP4':
+		$_REQUEST['%VC'] = 'mp4v';
+		$_REQUEST['%AC'] = 'mp4a';
+		$_REQUEST['%VB'] = 512;
+		$_REQUEST['%AB'] = 64;
+		$_REQUEST['%SR'] = 44100;
+		$_REQUEST['%CH'] = 2;
+		$_REQUEST['%MX'] = 'ts';
+		break;
+	case 'MPG':
+		$_REQUEST['%VC'] = 'mp1v';
+		$_REQUEST['%AC'] = 'mpga';
+		$_REQUEST['%VB'] = 512;
+		$_REQUEST['%AB'] = 64;
+		$_REQUEST['%SR'] = 44100;
+		$_REQUEST['%CH'] = 2;
+		$_REQUEST['%MX'] = 'mpeg1';
+		break;
+	case 'WMV':
+		$_REQUEST['%VC'] = 'WMV2';
+		$_REQUEST['%AC'] = 'mp3';
+		$_REQUEST['%VB'] = 512;
+		$_REQUEST['%AB'] = 64;
+		$_REQUEST['%SR'] = 44100;
+		$_REQUEST['%CH'] = 2;
+		$_REQUEST['%MX'] = 'asf';
+		break;
+	case 'MP4A':
+		$_REQUEST['%VC'] = 'dummy';
+		$_REQUEST['%AC'] = 'mp4a';
+		$_REQUEST['%VB'] = 0;
+		$_REQUEST['%AB'] = 160;
+		$_REQUEST['%SR'] = 44100;
+		$_REQUEST['%CH'] = 2;
+		$_REQUEST['%MX'] = 'mp4';
+		break;
+	case 'MP3':
+		$_REQUEST['%VC'] = 'dummy';
+		$_REQUEST['%AC'] = 'mp3';
+		$_REQUEST['%VB'] = 0;
+		$_REQUEST['%AB'] = 160;
+		$_REQUEST['%SR'] = 44100;
+		$_REQUEST['%CH'] = 2;
+		$_REQUEST['%MX'] = 'dummy';
+		break;
+	case 'WMA':
+		$_REQUEST['%VC'] = 'dummy';
+		$_REQUEST['%AC'] = 'wma2';
+		$_REQUEST['%VB'] = 0;
+		$_REQUEST['%AB'] = 160;
+		$_REQUEST['%SR'] = 44100;
+		$_REQUEST['%CH'] = 2;
+		$_REQUEST['%MX'] = 'asf';
+		break;
+}
+
+// validate each individually, these also go to default if there is invalid input! (in this case it uses mpg1 settings)
+if(!in_array($_REQUEST['%VC'], array('mp4v', 'mp1v', 'WMV2', 'dummy')))
+	$_REQUEST['%VC'] = 'mp1v';
+	
+if(!in_array($_REQUEST['%AC'], array('mp4a', 'mpga', 'mp3', 'wma2', 'dummy')))
+	$_REQUEST['%AC'] = 'mpga';
+
+if(!is_numeric($_REQUEST['%VB']))
+	$_REQUEST['%VB'] = 512;
+	
+if(!is_numeric($_REQUEST['%AB']))
+	$_REQUEST['%AB'] = 64;
+
+if(!is_numeric($_REQUEST['%SR']))
+	$_REQUEST['%SR'] = 44100;
+	
+if(!is_numeric($_REQUEST['%CH']))
+	$_REQUEST['%CH'] = 2;
+
+if(!in_array($_REQUEST['%MX'], array('ts', 'ps', 'mpeg1', 'asf', 'mp4', 'dummy')))
+	$_REQUEST['%MX'] = 'mpeg1';
+
+// replace the argument string with the contents of $_REQUEST
+//  without validation this is VERY DANGEROUS!
+$cmd = basename(ENCODE) . ' ' . str_replace(array_keys($_REQUEST), array_values($_REQUEST), ENCODE_ARGS);
+
+// run process and output binary from pipe
+$descriptorspec = array(
+   1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
+);
+
+$process = proc_open($cmd, $descriptorspec, $pipes, dirname(ENCODE), NULL, array('binary_pipes' => true, 'bypass_shell' => true));
+
+// output file
+if(is_resource($process))
+{
+	while(!feof($pipes[1]))
+	{
+		if(connection_status()!=0)
+		{
+			proc_terminate($process);
+			break;
+		}
+		print fread($pipes[1], BUFFER_SIZE);
+		flush();
+	}
+	fclose($pipes[1]);
+	
+	$status = proc_get_status($process);
+	kill9('vlc', $status['pid']);
+	
+	$return_value = proc_close($process);
 }
 
 ?>

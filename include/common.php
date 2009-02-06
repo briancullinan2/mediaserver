@@ -63,30 +63,30 @@ require_once LOCAL_ROOT . LOCAL_DEFAULT . 'config.php';
 if(file_exists(LOCAL_ROOT . LOCAL_TEMPLATE . 'config.php'))
 	require_once LOCAL_ROOT . LOCAL_TEMPLATE . 'config.php';
 
-require_once 'sql.php';
+require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'sql.php';
 
 // include the sql class so it can be used by any page
 if( DB_TYPE == 'mysql' )
 {
-	include_once 'mysql.php';
+	include_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'mysql.php';
 }
 
 // load templating system
-require_once 'Smarty/Smarty.class.php';
+require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'Smarty' . DIRECTORY_SEPARATOR . 'Smarty.class.php';
 
 // some modules depend on the mime-types in order to determine if it can handle that type of file
 loadMime();
 
 // include the modules
 $tmp_modules = array();
-if ($dh = opendir(LOCAL_ROOT . LOCAL_MODULES))
+if ($dh = opendir(LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR))
 {
 	while (($file = readdir($dh)) !== false)
 	{
-		if ($file[0] != '.' && !is_dir(LOCAL_ROOT . LOCAL_MODULES . $file))
+		if ($file[0] != '.' && !is_dir(LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . $file))
 		{
 			// include all the modules
-			require_once LOCAL_ROOT . LOCAL_MODULES . $file;
+			require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . $file;
 			$class_name = substr($file, 0, strrpos($file, '.'));
 			
 			// only use the module if it is properly defined

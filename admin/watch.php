@@ -118,7 +118,7 @@ if( $error != '' )
 		<input type="submit" value="Remove" name="remove" />
 	</form>
 	<form action="" method="post">
-		<input type="text" name="addpath" value="<?php echo (isset($_REQUEST['addpath'])?$_REQUEST['addpath']:"")?>" />
+		<input type="text" name="addpath" size="50" value="<?php echo (isset($_REQUEST['addpath'])?$_REQUEST['addpath']:"")?>" />
 		<input type="submit" value="Add" name="add" />
 		<br />
 	</form>

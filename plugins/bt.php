@@ -140,7 +140,7 @@ if(count($files) > 0)
 	}
 	$torrent['info']['pieces'] = $output;
 	
-	$torrent['announce'] = HTML_DOMAIN . HTML_PLUGINS . 'bttracker/announce.php';
+	$torrent['announce'] = HTML_DOMAIN . HTML_ROOT . HTML_PLUGINS . 'bttracker/announce.php';
 	$torrent['creation date'] = time();
 	$torrent['comment'] = HTML_NAME;
 	$torrent['created by'] = HTML_NAME;

@@ -29,7 +29,7 @@ $smarty->assign('type_icons', $type_icons);
 		<ext>{$ext|htmlspecialchars}</ext>
 		<tip>{foreach from=$columns item=column_value}{if isset($files[file].$column_value)}{$column_value}: {$files[file].$column_value|utf8_encode|htmlspecialchars}&lt;br /&gt;{/if}{/foreach}</tip>
 		<path>{$files[file].Filepath|utf8_encode|htmlspecialchars}</path>
-		<link>{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_PLUGINS}file/{$smarty.request.cat}/{$files[file].id}/{$files[file].Filename|utf8_encode|urlencode|htmlspecialchars}</link>
+		<link>{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}file/{$smarty.request.cat}/{$files[file].id}/{$files[file].Filename|utf8_encode|urlencode|htmlspecialchars}</link>
 		<short>{$files[file].Filename|truncate:13:"...":true|utf8_encode|htmlspecialchars}</short>
 {foreach from=$columns item=column_value}
 		<info-{$column_value}>{if isset($files[file].$column_value)}{$files[file].$column_value|utf8_encode|htmlspecialchars}{/if}</info-{$column_value}>

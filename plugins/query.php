@@ -11,10 +11,10 @@ $smarty->debugging = false;
 $smarty->caching = false;
 $smarty->force_compile = true;
 
-include_once 'search.php';
-include_once 'select.php';
-include_once 'type.php';
-include_once 'display.php';
+include_once LOCAL_ROOT . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'search.php';
+include_once LOCAL_ROOT . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'select.php';
+include_once LOCAL_ROOT . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'type.php';
+include_once LOCAL_ROOT . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'display.php';
 
 $smarty->assign('templates', $templates);
 if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)

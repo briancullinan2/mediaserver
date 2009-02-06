@@ -1,9 +1,11 @@
 <?php
 
-require_once LOCAL_ROOT . 'modules/db_file.php';
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'settings2.php';
+
+require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'db_file.php';
 
 // include the id handler
-require_once LOCAL_ROOT . 'include/ID3/getid3.php';
+require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'ID3' . DIRECTORY_SEPARATOR . 'getid3.php';
 
 // set up id3 reader incase any files need it
 $getID3 = new getID3();
