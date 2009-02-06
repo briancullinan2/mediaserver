@@ -91,7 +91,7 @@ if(isset($_REQUEST['includes']) && $_REQUEST['includes'] != '')
 if(isset($_REQUEST['dir']))
 {
 	//$_REQUEST['dir'] = stripslashes($_REQUEST['dir']);
-	if($_REQUEST['dir'] == '') $_REQUEST['dir'] = '/';
+	if($_REQUEST['dir'] == '') $_REQUEST['dir'] = DIRECTORY_SEPARATOR;
 	// this is necissary for dealing with windows and cross platform queries coming from templates
 	//  yes: the template should probably handle this by itself, but this is convenient and easy
 	//   it is purely for making all the paths look prettier
