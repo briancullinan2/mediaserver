@@ -93,11 +93,11 @@ if(isset($_SESSION['display']))
 	$smarty->assign('display', $_SESSION['display']);
 
 
-$smarty->assign('templates', $templates);
+$smarty->assign('templates', $GLOBALS['templates']);
 if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
 {
-	header('Content-Type: ' . getMime($templates['TEMPLATE_DISPLAY']));
-	$smarty->display($templates['TEMPLATE_DISPLAY']);
+	header('Content-Type: ' . getMime($GLOBALS['templates']['TEMPLATE_DISPLAY']));
+	$smarty->display($GLOBALS['templates']['TEMPLATE_DISPLAY']);
 }
 
 ?>

@@ -56,8 +56,8 @@ foreach($type_files as $i => $type_file)
 
 $smarty->assign('types', $types);
 
-$smarty->assign('templates', $templates);
+$smarty->assign('templates', $GLOBALS['templates']);
 if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
-	$smarty->display($templates['TEMPLATE_TYPE']);
+	$smarty->display($GLOBALS['templates']['TEMPLATE_TYPE']);
 
 ?>

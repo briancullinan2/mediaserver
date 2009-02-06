@@ -229,11 +229,11 @@ $smarty->assign('error', $error);
 if(isset($_SESSION['select']))
 	$smarty->assign('select', $_SESSION['select']);
 
-$smarty->assign('templates', $templates);
+$smarty->assign('templates', $GLOBALS['templates']);
 if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
 {
-	header('Content-Type: ' . getMime($templates['TEMPLATE_SELECT']));
-	$smarty->display($templates['TEMPLATE_SELECT']);
+	header('Content-Type: ' . getMime($GLOBALS['templates']['TEMPLATE_SELECT']));
+	$smarty->display($GLOBALS['templates']['TEMPLATE_SELECT']);
 }
 
 

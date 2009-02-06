@@ -12,142 +12,151 @@ session_start();
 // require the settings
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings2.php';
 
-// get the list of templates
-$GLOBALS['templates'] = array();
-if ($dh = opendir(LOCAL_ROOT . 'templates'))
+if(!isset($no_setup) || !$no_setup == true)
+	setup();
+
+function setup()
 {
-	while (($file = readdir($dh)) !== false)
+	
+	// get the list of templates
+	$GLOBALS['templates'] = array();
+	if ($dh = opendir(LOCAL_ROOT . 'templates'))
 	{
-		if ($file != '.' && $file != '..' && is_dir(LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR . $file))
+		while (($file = readdir($dh)) !== false)
 		{
-			$GLOBALS['templates'][] = $file;
-		}
-	}
-}
-
-// set the template if a permenent one isn't already set in the settings file
-if(!defined('LOCAL_TEMPLATE'))
-{
-	if(isset($_REQUEST['template']) && in_array($_REQUEST['template'], $GLOBALS['templates']))
-	{
-		if(substr($_REQUEST['template'], strlen($_REQUEST['template']) - 1, 1) != DIRECTORY_SEPARATOR)
-			$_REQUEST['template'] .= DIRECTORY_SEPARATOR;
-		define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . $_REQUEST['template']);
-		$_SESSION['template'] = $_REQUEST['template'];
-	}
-	elseif(isset($_SESSION['template']))
-	{
-		define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . $_SESSION['template']);
-	}
-	else
-	{
-		define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR);
-		if(preg_match('/.*mobile.*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
-		{
-			$_SESSION['template'] = 'default' . DIRECTORY_SEPARATOR;
-		}
-		// don't set a template, allow them to choose
-	}
-}
-else
-{
-	$_SESSION['template'] = basename(LOCAL_TEMPLATE) . DIRECTORY_SEPARATOR;
-}
-
-// set the HTML_TEMPLATE for templates to refer to their own directory to provide resources
-define('HTML_TEMPLATE', str_replace(DIRECTORY_SEPARATOR, '/', LOCAL_TEMPLATE));
-
-// include template constants
-require_once LOCAL_ROOT . LOCAL_DEFAULT . 'config.php';
-
-if(file_exists(LOCAL_ROOT . LOCAL_TEMPLATE . 'config.php'))
-	require_once LOCAL_ROOT . LOCAL_TEMPLATE . 'config.php';
-
-require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'sql.php';
-
-// include the sql class so it can be used by any page
-if( DB_TYPE == 'mysql' )
-{
-	include_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'mysql.php';
-}
-
-// load templating system
-require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'Smarty' . DIRECTORY_SEPARATOR . 'Smarty.class.php';
-
-// some modules depend on the mime-types in order to determine if it can handle that type of file
-loadMime();
-
-// include the modules
-$tmp_modules = array();
-if ($dh = opendir(LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR))
-{
-	while (($file = readdir($dh)) !== false)
-	{
-		if ($file[0] != '.' && !is_dir(LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . $file))
-		{
-			// include all the modules
-			require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . $file;
-			$class_name = substr($file, 0, strrpos($file, '.'));
-			
-			// only use the module if it is properly defined
-			if(class_exists($class_name))
+			if ($file != '.' && $file != '..' && is_dir(LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR . $file))
 			{
-				$tmp_modules[] = $class_name;
+				$GLOBALS['templates'][] = $file;
 			}
 		}
 	}
-	closedir($dh);
-}
-
-$error_count = 0;
-$new_modules = array();
-// reorganize modules to reflect heirarchy
-while(count($tmp_modules) > 0 && $error_count < 1000)
-{
-	foreach($tmp_modules as $i => $module)
+	
+	// set the template if a permenent one isn't already set in the settings file
+	if(!defined('LOCAL_TEMPLATE'))
 	{
-		$tmp_override = get_parent_class($module);
-		if(in_array($tmp_override, $new_modules) || $tmp_override == '')
+		if(isset($_REQUEST['template']) && in_array($_REQUEST['template'], $GLOBALS['templates']))
 		{
-			$new_modules[] = $module;
-			unset($tmp_modules[$i]);
+			if(substr($_REQUEST['template'], strlen($_REQUEST['template']) - 1, 1) != DIRECTORY_SEPARATOR)
+				$_REQUEST['template'] .= DIRECTORY_SEPARATOR;
+			define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . $_REQUEST['template']);
+			$_SESSION['template'] = $_REQUEST['template'];
+		}
+		elseif(isset($_SESSION['template']))
+		{
+			define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . $_SESSION['template']);
+		}
+		else
+		{
+			define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR);
+			if(preg_match('/.*mobile.*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
+			{
+				$_SESSION['template'] = 'default' . DIRECTORY_SEPARATOR;
+			}
+			// don't set a template, allow them to choose
 		}
 	}
-	$error_count++;
-}
-$GLOBALS['modules'] = $new_modules;
-
-// merge some session variables with the request so modules only have to look in one place
-if(isset($_SESSION['search']))
-	$_REQUEST = array_merge($_SESSION['search'], $_REQUEST);
-if(isset($_SESSION['display']))
-	$_REQUEST = array_merge($_SESSION['display'], $_REQUEST);
-
-//set the detail for the template
-if( !isset($_REQUEST['detail']) || !is_numeric($_REQUEST['detail']) )
-	$_REQUEST['detail'] = 0;
-	
-// get the aliases to use to replace parts of the filepath
-if(USE_ALIAS == true)
-{
-	$mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
-	$aliases = $mysql->get('alias', array('SELECT' => '*'));
-	
-	if($aliases !== false)
+	else
 	{
-		$GLOBALS['paths_regexp'] = array();
-		$GLOBALS['alias_regexp'] = array();
-		$GLOBALS['paths'] = array();
-		$GLOBALS['alias'] = array();
-		foreach($aliases as $key => $alias_props)
+		$_SESSION['template'] = basename(LOCAL_TEMPLATE) . DIRECTORY_SEPARATOR;
+	}
+	
+	// set the HTML_TEMPLATE for templates to refer to their own directory to provide resources
+	define('HTML_TEMPLATE', str_replace(DIRECTORY_SEPARATOR, '/', LOCAL_TEMPLATE));
+	
+	// include template constants
+	require_once LOCAL_ROOT . LOCAL_DEFAULT . 'config.php';
+	
+	if(file_exists(LOCAL_ROOT . LOCAL_TEMPLATE . 'config.php'))
+		require_once LOCAL_ROOT . LOCAL_TEMPLATE . 'config.php';
+	
+	require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'sql.php';
+	
+	// include the sql class so it can be used by any page
+	if( DB_TYPE == 'mysql' )
+	{
+		include_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'mysql.php';
+	}
+	
+	// load templating system
+	require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'Smarty' . DIRECTORY_SEPARATOR . 'Smarty.class.php';
+	
+	// some modules depend on the mime-types in order to determine if it can handle that type of file
+	loadMime();
+	
+	// include the modules
+	$tmp_modules = array();
+	if ($dh = opendir(LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR))
+	{
+		while (($file = readdir($dh)) !== false)
 		{
-			$GLOBALS['paths_regexp'][] = $alias_props['Paths_regexp'];
-			$GLOBALS['alias_regexp'][] = $alias_props['Alias_regexp'];
-			$GLOBALS['paths'][] = $alias_props['Paths'];
-			$GLOBALS['alias'][] = $alias_props['Alias'];
+			if ($file[0] != '.' && !is_dir(LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . $file))
+			{
+				// include all the modules
+				require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . $file;
+				$class_name = substr($file, 0, strrpos($file, '.'));
+				
+				// only use the module if it is properly defined
+				if(class_exists($class_name))
+				{
+					$tmp_modules[] = $class_name;
+				}
+			}
+		}
+		closedir($dh);
+	}
+	
+	$error_count = 0;
+	$new_modules = array();
+	// reorganize modules to reflect heirarchy
+	while(count($tmp_modules) > 0 && $error_count < 1000)
+	{
+		foreach($tmp_modules as $i => $module)
+		{
+			$tmp_override = get_parent_class($module);
+			if(in_array($tmp_override, $new_modules) || $tmp_override == '')
+			{
+				$new_modules[] = $module;
+				unset($tmp_modules[$i]);
+			}
+		}
+		$error_count++;
+	}
+	$GLOBALS['modules'] = $new_modules;
+	
+	// merge some session variables with the request so modules only have to look in one place
+	if(isset($_SESSION['search']))
+		$_REQUEST = array_merge($_SESSION['search'], $_REQUEST);
+	if(isset($_SESSION['display']))
+		$_REQUEST = array_merge($_SESSION['display'], $_REQUEST);
+	
+	//set the detail for the template
+	if( !isset($_REQUEST['detail']) || !is_numeric($_REQUEST['detail']) )
+		$_REQUEST['detail'] = 0;
+		
+	// get the aliases to use to replace parts of the filepath
+	if(USE_ALIAS == true)
+	{
+		$mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+		$aliases = $mysql->get('alias', array('SELECT' => '*'));
+		
+		if($aliases !== false)
+		{
+			$GLOBALS['paths_regexp'] = array();
+			$GLOBALS['alias_regexp'] = array();
+			$GLOBALS['paths'] = array();
+			$GLOBALS['alias'] = array();
+			foreach($aliases as $key => $alias_props)
+			{
+				$GLOBALS['paths_regexp'][] = $alias_props['Paths_regexp'];
+				$GLOBALS['alias_regexp'][] = $alias_props['Alias_regexp'];
+				$GLOBALS['paths'][] = $alias_props['Paths'];
+				$GLOBALS['alias'][] = $alias_props['Alias'];
+			}
 		}
 	}
 }
+
+
 
 function selfURL()
 {

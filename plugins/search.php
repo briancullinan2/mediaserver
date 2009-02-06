@@ -44,9 +44,9 @@ if(isset($_SESSION['search']))
 
 $smarty->assign('modules', $GLOBALS['modules']);
 
-$smarty->assign('templates', $templates);
+$smarty->assign('templates', $GLOBALS['templates']);
 if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
-	$smarty->display($templates['TEMPLATE_SEARCH']);
+	$smarty->display($GLOBALS['templates']['TEMPLATE_SEARCH']);
 
 
 

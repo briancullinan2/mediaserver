@@ -16,8 +16,8 @@ include_once LOCAL_ROOT . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR 
 include_once LOCAL_ROOT . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'type.php';
 include_once LOCAL_ROOT . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'display.php';
 
-$smarty->assign('templates', $templates);
+$smarty->assign('templates', $GLOBALS['templates']);
 if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
-	$smarty->display($templates['TEMPLATE_QUERY']);
+	$smarty->display($GLOBALS['templates']['TEMPLATE_QUERY']);
 
 ?>

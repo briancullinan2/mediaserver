@@ -21,18 +21,18 @@ $smarty->force_compile = true;
 if(!isset($_SESSION['template']))
 {
 	if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
-		$smarty->display($templates['TEMPLATE_INDEX']);
+		$smarty->display($GLOBALS['templates']['TEMPLATE_INDEX']);
 }
 elseif($_SESSION['template'] == 'default' . DIRECTORY_SEPARATOR)
 {
 	include_once LOCAL_ROOT . 'plugins' . DIRECTORY_SEPARATOR . 'query.php';
 	if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
-		$smarty->display($templates['TEMPLATE_QUERY']);
+		$smarty->display($GLOBALS['templates']['TEMPLATE_QUERY']);
 }
 else
 {
 	if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
-		$smarty->display($templates['TEMPLATE_INDEX']);
+		$smarty->display($GLOBALS['templates']['TEMPLATE_INDEX']);
 }
 
 ?>
