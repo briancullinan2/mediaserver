@@ -1,6 +1,7 @@
 <?php
 
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings2.php';
+$no_setup = true;
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'common.php';
 
 // control lower level handling of each database
 // things to consider:

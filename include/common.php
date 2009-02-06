@@ -7,11 +7,13 @@
 // 
 
 //session_cache_limiter('public');
-session_start();
+if(!isset($no_setup) || !$no_setup == true)
+	session_start();
 
 // require the settings
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings2.php';
 
+// classes that this function uses to set up stuff should use the $no_setup = true option
 if(!isset($no_setup) || !$no_setup == true)
 	setup();
 
