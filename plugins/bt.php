@@ -2,11 +2,11 @@
 
 // handle bit torrenting of selected files
 
-require_once dirname(__FILE__) . '/../include/common.php';
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
-require_once SITE_LOCALROOT . 'plugins/bttracker/BEncode.php';
-require_once SITE_LOCALROOT . 'plugins/bttracker/config.php';
-require_once SITE_LOCALROOT . 'plugins/bttracker/funcsv2.php';
+require_once LOCAL_ROOT . 'plugins' . DIRECTORY_SEPARATOR . 'bttracker' . DIRECTORY_SEPARATOR . 'BEncode.php';
+require_once LOCAL_ROOT . 'plugins' . DIRECTORY_SEPARATOR . 'bttracker' . DIRECTORY_SEPARATOR . 'config.php';
+require_once LOCAL_ROOT . 'plugins' . DIRECTORY_SEPARATOR . 'bttracker' . DIRECTORY_SEPARATOR . 'funcsv2.php';
 
 // load mysql to query the database
 $mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
@@ -37,16 +37,18 @@ if( isset($selected) && count($selected) > 0 )
 	$files = call_user_func(array($_REQUEST['cat'], 'get'), $mysql, $props);
 }
 
+$files_length = count($files);
 // get all the other information from other modules
-foreach($files as $index => $file)
+for($index = 0; $index < $files_length; $index++)
 {
+	$file = $files[$index];
 
 	// merge all the other information to each file
 	foreach($GLOBALS['modules'] as $i => $module)
 	{
 		if($module != $_REQUEST['cat'] && call_user_func(array($module, 'handles'), $file['Filepath']))
 		{
-			$return = call_user_func(array($module, 'get'), $mysql, array('WHERE' => 'Filepath = "' . $file['Filepath'] . '"'));
+			$return = call_user_func(array($module, 'get'), $mysql, array('WHERE' => 'Filepath = "' . addslashes($file['Filepath']) . '"'));
 			if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
 		}
 	}
@@ -58,16 +60,17 @@ foreach($files as $index => $file)
 		unset($files[$index]);
 		// get all files in directory
 		$props = array();
-		$props['WHERE'] = 'Filepath REGEXP "^' . $file['Filepath'] . '" AND Filetype != "FOLDER"';
+		$props['WHERE'] = 'Filepath REGEXP "^' . addslashes(addslashes($file['Filepath'])) . '" AND Filetype != "FOLDER"';
 		$sub_files = array();
 		$sub_files = db_file::get($mysql, $props);
 		// put these files on the end of the array so they also get processed
 		$files = array_merge($files, $sub_files);
+		$files_length = count($files);
 	}
 	
 	// do alias replacement on every file path
 	$files[$index]['Filepath_alias'] = $files[$index]['Filepath'];
-	if(USE_ALIAS == true) $files[$index]['Filepath_alias'] = preg_replace($GLOBALS['paths_regexp'], $GLOBALS['alias'], $file['Filepath']);
+	if(USE_ALIAS == true) $files[$index]['Filepath_alias'] = preg_replace($GLOBALS['paths_regexp'], $GLOBALS['alias'], $files[$index]['Filepath']);
 }
 
 
@@ -83,14 +86,14 @@ if(count($files) > 0)
 	{
 		$file_info = array();
 		$file_info['length'] = intval($file['Filesize']);
-		$file_info['path'] = split('/', substr($file['Filepath_alias'], 1));
+		$file_info['path'] = split(DIRECTORY_SEPARATOR, substr($file['Filepath_alias'], 1));
 		$file_into['md5sum'] = md5_file($file['Filepath_alias']);
 		$torrent['info']['files'][] = $file_info;
 		$total_size += $file['Filesize'];
 	}
 	$torrent['info']['private'] = 0;
 	// use a . as the name so that it can use the root of the file system
-	$torrent['info']['name'] = 'Files from ' . SITE_NAME;
+	$torrent['info']['name'] = 'Files from ' . HTML_NAME;
 	$torrent['info']['piece length'] = ($total_size < 1024*1024*10)?pow(2,18):(($total_size < 1024*1024*1024*10)?pow(2,19):pow(2,20));
 	$torrent['info']['pieces'] = '';
 	
@@ -137,10 +140,10 @@ if(count($files) > 0)
 	}
 	$torrent['info']['pieces'] = $output;
 	
-	$torrent['announce'] = SITE_HTMLPATH . SITE_PLUGINS . 'bttracker/announce.php';
+	$torrent['announce'] = HTML_DOMAIN . HTML_PLUGINS . 'bttracker/announce.php';
 	$torrent['creation date'] = time();
-	$torrent['comment'] = SITE_NAME;
-	$torrent['created by'] = SITE_NAME;
+	$torrent['comment'] = HTML_NAME;
+	$torrent['created by'] = HTML_NAME;
 	
 	// encode info to sha1 it and get hash value
 	$info_hash = sha1(BEncode($torrent['info']));
@@ -182,7 +185,7 @@ if(count($files) > 0)
 	shell_exec($command);
 	
 	header('Content-Type: application/x-bittorrent');
-	header('Content-Disposition: filename="' . SITE_NAME . '-' . time() . '.torrent"'); 
+	header('Content-Disposition: filename="' . HTML_NAME . '-' . time() . '.torrent"'); 
 	
 	print BEncode($torrent);
 	

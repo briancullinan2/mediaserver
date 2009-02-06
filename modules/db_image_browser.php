@@ -1,9 +1,9 @@
 <?php
 
-require_once SITE_LOCALROOT . 'modules/db_file.php';
+require_once LOCAL_ROOT . 'modules/db_file.php';
 
 // include the id handler
-require_once SITE_LOCALROOT . 'include/ID3/getid3.php';
+require_once LOCAL_ROOT . 'include/ID3/getid3.php';
 
 // set up id3 reader incase any files need it
 $getID3 = new getID3();

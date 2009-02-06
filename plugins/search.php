@@ -4,10 +4,10 @@
 
 
 // load template
-require_once dirname(__FILE__) . '/../include/common.php';
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
 // load template to create output
-if($_SERVER['SCRIPT_FILENAME'] == __FILE__)
+if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
 	$smarty = new Smarty();
 
 // get all columns from every module
@@ -45,7 +45,7 @@ if(isset($_SESSION['search']))
 $smarty->assign('modules', $GLOBALS['modules']);
 
 $smarty->assign('templates', $templates);
-if($_SERVER['SCRIPT_FILENAME'] == __FILE__)
+if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
 	$smarty->display($templates['TEMPLATE_SEARCH']);
 
 

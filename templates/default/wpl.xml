@@ -8,7 +8,7 @@
         <meta name="ContentPartnerName"/>
         <meta name="Subtitle"/>
         <author/>
-        <title>{SITE_NAME} - {CATEGORY}</title>
+        <title>{HTML_NAME} - {CATEGORY}</title>
     </head>
     <body>
         <seq>

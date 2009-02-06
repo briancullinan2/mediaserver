@@ -36,7 +36,7 @@ if (isset($_GET["logout"]))
 <h1>Login</h1>
 <? if(isset($_GET['msg']))echo $_GET['msg'] . "<br/>";?>
 
-    <form action="<?=$PHP_SELF?>" method="post">
+    <form action="<?php echo $PHP_SELF?>" method="post">
       <h2>Username</h2>
       <input type="text" name="username">
       <h2>Password</h2>

@@ -2,7 +2,7 @@
 
 // a simple login script for the admin section
 
-require_once dirname(__FILE__) . '/../include/common.php';
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
 $error = '';
 
@@ -49,14 +49,14 @@ else
 if( $error != '' )
 {
 ?>
-	<span style="color:#990000; font-weight:bold;"><?=$error?></span><br />
-<?
+	<span style="color:#990000; font-weight:bold;"><?php echo $error?></span><br />
+<?php
 }
 ?>
 
 <form action="" method="post">
 
-	Username: <input type="text" name="username" value="<?=(isset($_REQUEST['username'])?$_REQUEST['username']:"")?>" /><br />
+	Username: <input type="text" name="username" value="<?php echo (isset($_REQUEST['username'])?$_REQUEST['username']:"")?>" /><br />
 	Password: <input type="password" name="password" value="" /><br />
 	<input type="submit" value="Login" /><input type="reset" value="Reset" />
 	

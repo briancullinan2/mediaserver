@@ -1,9 +1,9 @@
 <?php
 
-require_once SITE_LOCALROOT . 'modules/db_file.php';
+require_once LOCAL_ROOT . 'modules/db_file.php';
 
 // include the id handler
-require_once SITE_LOCALROOT . 'include/ID3/getid3.php';
+require_once LOCAL_ROOT . 'include/ID3/getid3.php';
 
 // set up id3 reader incase any files need it
 $getID3 = new getID3();
@@ -60,7 +60,7 @@ class db_image extends db_file
 			$db_image = $mysql->get('image',
 				array(
 					'SELECT' => 'id',
-					'WHERE' => 'Filepath = "' . $file . '"'
+					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
 				)
 			);
 			
@@ -75,7 +75,7 @@ class db_image extends db_file
 				$db_file = $mysql->get('files',
 					array(
 						'SELECT' => 'Filedate',
-						'WHERE' => 'Filepath = "' . $file . '"'
+						'WHERE' => 'Filepath = "' . addslashes($file) . '"'
 					)
 				);
 				
@@ -100,7 +100,7 @@ class db_image extends db_file
 		
 		// pull information from $info
 		$fileinfo = array();
-		$fileinfo['Filepath'] = $file;
+		$fileinfo['Filepath'] = addslashes($file);
 		
 		// get information from sections
 		if(isset($info['fileformat']) && isset($info[$info['fileformat']]['exif']))
@@ -222,7 +222,7 @@ class db_image extends db_file
 			// construct where statement
 			if(isset($props['DIR']) && !isset($props['WHERE']))
 			{
-				$props['WHERE'] = 'Filepath REGEXP "^' . $dir . '"';
+				$props['WHERE'] = 'Filepath REGEXP "^' . addslashes(addslashes($dir)) . '"';
 			}
 		
 			$props['SELECT'] = db_image::columns();

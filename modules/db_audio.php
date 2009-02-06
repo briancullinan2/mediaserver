@@ -1,9 +1,9 @@
 <?php
 
-require_once SITE_LOCALROOT . 'modules/db_file.php';
+require_once LOCAL_ROOT . 'modules/db_file.php';
 
 // include the id handler
-require_once SITE_LOCALROOT . 'include/ID3/getid3.php';
+require_once LOCAL_ROOT . 'include/ID3/getid3.php';
 
 // set up id3 reader incase any files need it
 $getID3 = new getID3();
@@ -39,14 +39,13 @@ class db_audio extends db_file
 
 	static function handle($mysql, $file)
 	{
-			
 		if(db_audio::handles($file))
 		{
 			// check to see if it is in the database
 			$db_audio = $mysql->get('audio',
 				array(
 					'SELECT' => 'id',
-					'WHERE' => 'Filepath = "' . $file . '"'
+					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
 				)
 			);
 			
@@ -61,7 +60,7 @@ class db_audio extends db_file
 				$db_file = $mysql->get('files', 
 					array(
 						'SELECT' => 'Filedate',
-						'WHERE' => 'Filepath = "' . $file . '"'
+						'WHERE' => 'Filepath = "' . addslashes($file) . '"'
 					)
 				);
 				
@@ -86,7 +85,7 @@ class db_audio extends db_file
 		
 		// pull information from $info
 		$fileinfo = array();
-		$fileinfo['Filepath'] = $file;
+		$fileinfo['Filepath'] = addslashes($file);
 		$fileinfo['Title'] = @$info['comments_html']['title'][0];
 		$fileinfo['Artist'] = @$info['comments_html']['artist'][0];
 		$fileinfo['Album'] = @$info['comments_html']['album'][0];
@@ -160,7 +159,7 @@ class db_audio extends db_file
 			// construct where statement
 			if(isset($props['DIR']) && !isset($props['WHERE']))
 			{
-				$props['WHERE'] = 'Filepath REGEXP "^' . $dir . '"';
+				$props['WHERE'] = 'Filepath REGEXP "^' . addslashes(addslashes($dir)) . '"';
 			}
 		
 			$props['SELECT'] = db_audio::columns();

@@ -15,11 +15,12 @@ define('CLEAN_UP_BUFFER_TIME',				45);
 // add 30 seconds becase the cleanup shouldn't take any longer then that
 set_time_limit( DIRECTORY_SEEK_TIME + FILE_SEEK_TIME + CLEAN_UP_BUFFER_TIME);
 
+
 $tm_start = array_sum(explode(' ', microtime()));
 
 // this is an iterator to update the server database and all the media listings
 // use some extra code so cron can be run from any directory
-require dirname(__FILE__) . '/../include/common.php';
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
 // some things to take into consideration:
 // Access the database in intervals of files, not every individual file
@@ -27,7 +28,7 @@ require dirname(__FILE__) . '/../include/common.php';
 // Only update files that don't exist in database, have changed timestamps, have changed in size
 
 // start the page with a pre to output messages that can be viewed in a browser
-?><pre><?
+?><pre><?php
 
 // turn on output buffer
 ob_start();
@@ -57,8 +58,8 @@ $dirs = array();
 $state = array();
 
 // get previous state if it exists
-if( file_exists(SITE_LOCALROOT . 'state_dirs.txt') )
-	$state = unserialize(implode("", @file(SITE_LOCALROOT . "state_dirs.txt")));
+if( file_exists(LOCAL_ROOT . 'state_dirs.txt') )
+	$state = unserialize(implode("", @file(LOCAL_ROOT . "state_dirs.txt")));
 
 $i = 0;
 
@@ -76,7 +77,7 @@ elseif(isset($state_current))
 {
 	// if it isn't set in the watched list at all 
 	//   something must be wrong with our state so reset it
-	@unlink(SITE_LOCALROOT . "state_dirs.txt");
+	@unlink(LOCAL_ROOT . "state_dirs.txt");
 	$state = array();
 }
 
@@ -95,7 +96,7 @@ for($i; $i < count($watched); $i++)
 		
 		// serialize and save
 		print "State saved\n";
-		$fp = fopen(SITE_LOCALROOT . "state_dirs.txt", "w");
+		$fp = fopen(LOCAL_ROOT . "state_dirs.txt", "w");
 		fwrite($fp, serialize($state));
 		fclose($fp);
 		
@@ -106,10 +107,10 @@ for($i; $i < count($watched); $i++)
 	else
 	{
 		// clear state information
-		if(file_exists(SITE_LOCALROOT . "state_dirs.txt"))
+		if(file_exists(LOCAL_ROOT . "state_dirs.txt"))
 		{
-			@unlink(SITE_LOCALROOT . "state_dirs.txt");
-			if(file_exists(SITE_LOCALROOT . "state_dirs.txt")) $fp = fopen(SITE_LOCALROOT . "state_dirs.txt", "w");
+			@unlink(LOCAL_ROOT . "state_dirs.txt");
+			if(file_exists(LOCAL_ROOT . "state_dirs.txt")) $fp = fopen(LOCAL_ROOT . "state_dirs.txt", "w");
 			if(isset($fp))
 			{
 				print "State cleared\n";
@@ -119,7 +120,7 @@ for($i; $i < count($watched); $i++)
 		}
 		
 		// set the last updated time in the watched table
-		$mysql->set('watch', array('Lastwatch' => date("Y-m-d h:i:s")), array('Filepath' => $watch));
+		$mysql->set('watch', array('Lastwatch' => date("Y-m-d h:i:s")), array('Filepath' => addslashes($watch['Filepath'])));
 	}
 }
 
@@ -128,15 +129,15 @@ for($i; $i < count($watched); $i++)
 $where_str = '';
 foreach($watched as $i => $watch)
 {
-	$where_str .= ' Filepath REGEXP "^' . $watch['Filepath'] . '" OR';
+	$where_str .= ' Filepath REGEXP "^' . addslashes(addslashes($watch['Filepath'])) . '" OR';
 }
 // remove last OR
 $where_str = substr($where_str, 0, strlen($where_str)-2);
-$where_str = ' !(' . $where_str . ') OR';
+$where_str = ' !(' . $where_str . ')';
 // clean up items that are in the ignore list
 foreach($ignored as $i => $ignore)
 {
-	$where_str = 'Filepath REGEXP "^' . $ignore . '" OR ' . $where_str;
+	$where_str = 'Filepath REGEXP "^' . addslashes(addslashes($ignore)) . '" OR ' . $where_str;
 }
 
 // remove items
@@ -187,7 +188,7 @@ do
 		}
 	
 		// delete the selected folder from the database
-		$mysql->set('watch_list', NULL, array('Filepath' => $dir));
+		$mysql->set('watch_list', NULL, array('Filepath' => addslashes($dir)));
 	}
 
 	// check if execution time is too long
@@ -210,8 +211,8 @@ foreach($GLOBALS['modules'] as $i => $module)
 // these might be delete by cleanup, so check again because there are only a couple
 for($i = 0; $i < count($watched); $i++)
 {
-	$folders = split('/', $watched[$i]['Filepath']);
-	$curr_dir = '/';
+	$folders = split(addslashes(DIRECTORY_SEPARATOR), $watched[$i]['Filepath']);
+	$curr_dir = (realpath('/') == '/')?'/':'';
 	// don't add the watch directory here because it must be added to the watch list first!
 	$length = count($folders);
 	unset($folders[$length-1]); // remove the blank at the end
@@ -222,7 +223,7 @@ for($i = 0; $i < count($watched); $i++)
 	{
 		if($folders[$j] != '')
 		{
-			$curr_dir .= $folders[$j] . '/';
+			$curr_dir .= $folders[$j] . DIRECTORY_SEPARATOR;
 			// if using aliases then only add the revert from the watch directory to the alias
 			// ex. Watch = /home/share/Pictures/, Alias = /home/share/ => /Shared/
 			//     only /home/share/ is added here
@@ -272,7 +273,7 @@ function getdir( $dir )
 	$db_file = $mysql->get('files', 
 		array(
 			'SELECT' => array('id', 'Filedate'),
-			'WHERE' => 'Filepath = "' . $dir . '"'
+			'WHERE' => 'Filepath = "' . addslashes($dir) . '"'
 		)
 	);
 	
@@ -286,7 +287,7 @@ function getdir( $dir )
 		getfile( $dir );
 		
 		// add to watch list
-		$mysql->set('watch_list', array('Filepath' => $dir), NULL);
+		$mysql->set('watch_list', array('Filepath' => addslashes($dir)), NULL);
 		
 		print 'Queueing directory: ' . $dir . "\n";
 		
@@ -347,7 +348,7 @@ function getdir( $dir )
 			if( is_dir($new_file) )
 			{
 				// add a slash then add it to the filelist
-				$new_file .= '/';
+				$new_file .= DIRECTORY_SEPARATOR;
 				
 				// prevent recursion by making sure it isn't already in the list of directories
 				if( in_array($new_file, $dirs) == false && in_array(realpath($new_file), $dirs) == false )

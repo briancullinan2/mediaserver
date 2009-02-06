@@ -4,7 +4,7 @@
 // recognize category because that will determine what the id is refering to
 // if the type can be handled by a browser then output it, otherwise disposition it
 
-require_once dirname(__FILE__) . '/../include/common.php';
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
 // load mysql to query the database
 $mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
@@ -25,7 +25,7 @@ if(isset($_REQUEST['id']) && is_numeric($_REQUEST['id']))
 	if(count($files) > 0)
 	{
 	
-		$file = $mysql->get(db_file::DATABASE, array('WHERE' => 'Filepath = "' . $files[0]['Filepath'] . '"'));
+		$file = $mysql->get(db_file::DATABASE, array('WHERE' => 'Filepath = "' . addslashes($files[0]['Filepath']) . '"'));
 		if(count($file) > 0)
 		{
 			$files[0] = array_merge($file[0], $files[0]);

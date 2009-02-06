@@ -3,7 +3,7 @@
 // create zip of selected files in list
 
 
-require_once dirname(__FILE__) . '/../include/common.php';
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
 // load mysql to query the database
 $mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
@@ -36,16 +36,18 @@ if( isset($selected) && count($selected) > 0 )
 	$files = call_user_func(array($_REQUEST['cat'], 'get'), $mysql, $props);
 }
 
+$files_length = count($files);
 // get all the other information from other modules
-foreach($files as $index => &$file)
+for($index = 0; $index < $files_length; $index++)
 {
+	$file = $files[$index];
 	
 	// merge all the other information to each file
 	foreach($GLOBALS['modules'] as $i => $module)
 	{
 		if($module != $_REQUEST['cat'] && call_user_func(array($module, 'handles'), $file['Filepath']))
 		{
-			$return = call_user_func(array($module, 'get'), $mysql, array('WHERE' => 'Filepath = "' . $file['Filepath'] . '"'));
+			$return = call_user_func(array($module, 'get'), $mysql, array('WHERE' => 'Filepath = "' . addslashes($file['Filepath']) . '"'));
 			if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
 		}
 	}
@@ -57,18 +59,19 @@ foreach($files as $index => &$file)
 		unset($files[$index]);
 		// get all files in directory
 		$props = array();
-		$props['WHERE'] = 'Filepath REGEXP "^' . $file['Filepath'] . '" AND Filetype != "FOLDER"';
+		$props['WHERE'] = 'Filepath REGEXP "^' . addslashes(addslashes($file['Filepath'])) . '" AND Filetype != "FOLDER"';
 		$sub_files = array();
 		$sub_files = db_file::get($mysql, $props);
 		// put these files on the end of the array so they also get processed
 		$files = array_merge($files, $sub_files);
+		$files_length = count($files);
 	}
 	
 	// do alias replacement on every file path
 	$files[$index]['Filepath_alias'] = $files[$index]['Filepath'];
-	if(USE_ALIAS == true) $files[$index]['Filepath_alias'] = preg_replace($GLOBALS['paths_regexp'], $GLOBALS['alias'], $file['Filepath']);
-	$files[$index]['Filepath_alias'] = str_replace('\\', '/', ($file['Filepath_alias'][0] == '/')?substr($file['Filepath_alias'], 1, strlen($file['Filepath_alias'])-1):$file['Filepath_alias']);
-
+	if(USE_ALIAS == true) $files[$index]['Filepath_alias'] = preg_replace($GLOBALS['paths_regexp'], $GLOBALS['alias'], $files[$index]['Filepath']);
+	if($files[$index]['Filepath_alias'][0] == '/') $files[$index]['Filepath_alias'] = substr($files[$index]['Filepath_alias'], 1, strlen($files[$index]['Filepath_alias'])-1);
+	$files[$index]['Filepath_alias'] = str_replace('\\', '/', $files[$index]['Filepath_alias']);
 }
 
 
@@ -76,7 +79,7 @@ if(count($files) > 0)
 {
 	header('Content-Transfer-Encoding: binary');
 	header('Content-Type: application/zip');
-	header('Content-Disposition: filename="' . SITE_NAME . '-' . time() . '.zip"'); 
+	header('Content-Disposition: filename="' . HTML_NAME . '-' . time() . '.zip"'); 
 	// loop through files and generate and expected file length
 	$length = 22;
 	foreach($files as $index => $file) {
@@ -132,6 +135,7 @@ if(count($files) > 0)
         // "file data" segment
 		$fp = fopen($file['Filepath'], 'rb');
 		$old_crc=false;
+		$buffer = '';
 		while (!feof($fp)) {
 			$buffer=fread($fp, BUFFER_SIZE);
             $len=strlen($buffer);      

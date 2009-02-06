@@ -27,20 +27,20 @@
 				{/foreach}
 			{/if}
             - Download:
-            	<a href="/{$smarty.const.SITE_PLUGINS}zip/{$files[file].id}/Files.zip">zip</a> :
-                <a href="/{$smarty.const.SITE_PLUGINS}bt/{$files[file].id}/Files.torrent">torrent</a>
+            	<a href="/{$smarty.const.HTML_PLUGINS}zip/{$files[file].id}/Files.zip">zip</a> :
+                <a href="/{$smarty.const.HTML_PLUGINS}bt/{$files[file].id}/Files.torrent">torrent</a>
                 {if $type=="video"}
-                : <a href="/{$smarty.const.SITE_PLUGINS}encode/{$files[file].id}/MP4/File{$files[file].id}.mp4">mp4</a>
-                : <a href="/{$smarty.const.SITE_PLUGINS}encode/{$files[file].id}/MPG/File{$files[file].id}.mpeg">mpg</a>
-                : <a href="/{$smarty.const.SITE_PLUGINS}encode/{$files[file].id}/WMV/File{$files[file].id}.wmv">wmv</a>
+                : <a href="/{$smarty.const.HTML_PLUGINS}encode/{$files[file].id}/MP4/File{$files[file].id}.mp4">mp4</a>
+                : <a href="/{$smarty.const.HTML_PLUGINS}encode/{$files[file].id}/MPG/File{$files[file].id}.mpeg">mpg</a>
+                : <a href="/{$smarty.const.HTML_PLUGINS}encode/{$files[file].id}/WMV/File{$files[file].id}.wmv">wmv</a>
                 {elseif $type=="audio"}
-                : <a href="/{$smarty.const.SITE_PLUGINS}encode/{$files[file].id}/MP4A/File{$files[file].id}.mp4">mp4</a>
-                : <a href="/{$smarty.const.SITE_PLUGINS}encode/{$files[file].id}/MP3/File{$files[file].id}.mp3">mp3</a>
-                : <a href="/{$smarty.const.SITE_PLUGINS}encode/{$files[file].id}/WMA/File{$files[file].id}.wma">wma</a>
+                : <a href="/{$smarty.const.HTML_PLUGINS}encode/{$files[file].id}/MP4A/File{$files[file].id}.mp4">mp4</a>
+                : <a href="/{$smarty.const.HTML_PLUGINS}encode/{$files[file].id}/MP3/File{$files[file].id}.mp3">mp3</a>
+                : <a href="/{$smarty.const.HTML_PLUGINS}encode/{$files[file].id}/WMA/File{$files[file].id}.wma">wma</a>
                 {elseif $type=="image"}
-                : <a href="/{$smarty.const.SITE_PLUGINS}convert/{$files[file].id}/JPG/File{$files[file].id}.jpg">jpg</a>
-                : <a href="/{$smarty.const.SITE_PLUGINS}convert/{$files[file].id}/GIF/File{$files[file].id}.gif">gif</a>
-                : <a href="/{$smarty.const.SITE_PLUGINS}convert/{$files[file].id}/PNG/File{$files[file].id}.png">png</a>
+                : <a href="/{$smarty.const.HTML_PLUGINS}convert/{$files[file].id}/JPG/File{$files[file].id}.jpg">jpg</a>
+                : <a href="/{$smarty.const.HTML_PLUGINS}convert/{$files[file].id}/GIF/File{$files[file].id}.gif">gif</a>
+                : <a href="/{$smarty.const.HTML_PLUGINS}convert/{$files[file].id}/PNG/File{$files[file].id}.png">png</a>
                 {/if}
 			<br />
 		{/section}
@@ -92,7 +92,7 @@
 					<span class="column">{$files[file].$column_value|string_format:$format_str}</span>
 				{/if}
 			{/foreach}
-			<span class="column"><a href="/{$smarty.const.SITE_PLUGINS}zip/{$files[file].id}/Files.zip">zip</a>:<a href="/{$smarty.const.SITE_PLUGINS}bt/{$files[file].id}/Files.torrent">torrent</a></span>
+			<span class="column"><a href="/{$smarty.const.HTML_PLUGINS}zip/{$files[file].id}/Files.zip">zip</a>:<a href="/{$smarty.const.HTML_PLUGINS}bt/{$files[file].id}/Files.torrent">torrent</a></span>
 			<span style="display:block; float:left; clear:both;"></span><br />
 		{/section}
 		</p>
@@ -133,7 +133,7 @@
 {foreach from=$smarty.session.columns item=column_value}
 				<td>{if isset($files[file].$column_value)}{$files[file].$column_value}{/if}</td>
 {/foreach}
-				<td><a href="/{$smarty.const.SITE_PLUGINS}zip/{$files[file].id}/Files.zip">zip</a>:<a href="/{$smarty.const.SITE_PLUGINS}bt/{$files[file].id}/Files.torrent">torrent</a></td>
+				<td><a href="/{$smarty.const.HTML_PLUGINS}zip/{$files[file].id}/Files.zip">zip</a>:<a href="/{$smarty.const.HTML_PLUGINS}bt/{$files[file].id}/Files.torrent">torrent</a></td>
 			</tr>
 {/section}
 		</table>
@@ -172,7 +172,7 @@
 {foreach from=$smarty.session.columns item=column_value}
 				<td>{if isset($files[file].$column_value)}{$files[file].$column_value}{/if}</td>
 {/foreach}
-				<td><a href="/{$smarty.const.SITE_PLUGINS}zip/{$files[file].id}/Files.zip">zip</a>:<a href="/{$smarty.const.SITE_PLUGINS}bt/{$files[file].id}/Files.torrent">torrent</a></td>
+				<td><a href="/{$smarty.const.HTML_PLUGINS}zip/{$files[file].id}/Files.zip">zip</a>:<a href="/{$smarty.const.HTML_PLUGINS}bt/{$files[file].id}/Files.torrent">torrent</a></td>
 			</tr>
 {/section}
 		</table>

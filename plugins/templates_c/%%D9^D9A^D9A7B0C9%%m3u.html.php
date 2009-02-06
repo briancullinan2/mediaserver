@@ -37,19 +37,19 @@ $this->_sections['file']['last']       = ($this->_sections['file']['iteration'] 
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title><?php echo @SITE_NAME; ?>
+<title><?php echo @HTML_NAME; ?>
 : M3U List</title>
 </head>
 <body>
 Note: All non-media types will be filtered out using this list type.<br />
 Select your audio/video format:<br />
-<a href="/<?php echo @SITE_PLUGINS; ?>
+<a href="/<?php echo @HTML_PLUGINS; ?>
 list/<?php echo $this->_tpl_vars['ids']; ?>
 /MP4/Files.m3u">mp4</a>
-: <a href="/<?php echo @SITE_PLUGINS; ?>
+: <a href="/<?php echo @HTML_PLUGINS; ?>
 list/<?php echo $this->_tpl_vars['ids']; ?>
 /MPG/Files.m3u">mpg/mp3</a>
-: <a href="/<?php echo @SITE_PLUGINS; ?>
+: <a href="/<?php echo @HTML_PLUGINS; ?>
 list/<?php echo $this->_tpl_vars['ids']; ?>
 /WM/Files.m3u">wmv/wma</a>
 </body>
@@ -89,16 +89,16 @@ $this->_sections['file']['last']       = ($this->_sections['file']['iteration'] 
 <?php if ($this->_tpl_vars['type'] == 'video'): ?>
 #EXTINF:0,<?php echo $this->_tpl_vars['files'][$this->_sections['file']['index']]['Filename']; ?>
 
-<?php echo @SITE_HTMLPATH; ?>
-<?php echo @SITE_PLUGINS; ?>
+<?php echo @HTML_DOMAIN; ?>
+<?php echo @HTML_PLUGINS; ?>
 encode/<?php echo $this->_tpl_vars['files'][$this->_sections['file']['index']]['id']; ?>
 /MP4/<?php echo $this->_tpl_vars['files'][$this->_sections['file']['index']]['id']; ?>
 .mp4
 <?php elseif ($this->_tpl_vars['type'] == 'audio'): ?>
 #EXTINF:0,<?php echo $this->_tpl_vars['files'][$this->_sections['file']['index']]['Filename']; ?>
 
-<?php echo @SITE_HTMLPATH; ?>
-<?php echo @SITE_PLUGINS; ?>
+<?php echo @HTML_DOMAIN; ?>
+<?php echo @HTML_PLUGINS; ?>
 encode/<?php echo $this->_tpl_vars['files'][$this->_sections['file']['index']]['id']; ?>
 /MP4A/<?php echo $this->_tpl_vars['files'][$this->_sections['file']['index']]['id']; ?>
 .mp4
@@ -135,16 +135,16 @@ $this->_sections['file']['last']       = ($this->_sections['file']['iteration'] 
 <?php if ($this->_tpl_vars['type'] == 'video'): ?>
 #EXTINF:0,<?php echo $this->_tpl_vars['files'][$this->_sections['file']['index']]['Filename']; ?>
 
-<?php echo @SITE_HTMLPATH; ?>
-<?php echo @SITE_PLUGINS; ?>
+<?php echo @HTML_DOMAIN; ?>
+<?php echo @HTML_PLUGINS; ?>
 encode/<?php echo $this->_tpl_vars['files'][$this->_sections['file']['index']]['id']; ?>
 /WMV/<?php echo $this->_tpl_vars['files'][$this->_sections['file']['index']]['id']; ?>
 .wmv
 <?php elseif ($this->_tpl_vars['type'] == 'audio'): ?>
 #EXTINF:0,<?php echo $this->_tpl_vars['files'][$this->_sections['file']['index']]['Filename']; ?>
 
-<?php echo @SITE_HTMLPATH; ?>
-<?php echo @SITE_PLUGINS; ?>
+<?php echo @HTML_DOMAIN; ?>
+<?php echo @HTML_PLUGINS; ?>
 encode/<?php echo $this->_tpl_vars['files'][$this->_sections['file']['index']]['id']; ?>
 /WMA/<?php echo $this->_tpl_vars['files'][$this->_sections['file']['index']]['id']; ?>
 .wma
@@ -181,16 +181,16 @@ $this->_sections['file']['last']       = ($this->_sections['file']['iteration'] 
 <?php if ($this->_tpl_vars['type'] == 'video'): ?>
 #EXTINF:0,<?php echo $this->_tpl_vars['files'][$this->_sections['file']['index']]['Filename']; ?>
 
-<?php echo @SITE_HTMLPATH; ?>
-<?php echo @SITE_PLUGINS; ?>
+<?php echo @HTML_DOMAIN; ?>
+<?php echo @HTML_PLUGINS; ?>
 encode/<?php echo $this->_tpl_vars['files'][$this->_sections['file']['index']]['id']; ?>
 /MPG/<?php echo $this->_tpl_vars['files'][$this->_sections['file']['index']]['id']; ?>
 .mpg
 <?php elseif ($this->_tpl_vars['type'] == 'audio'): ?>
 #EXTINF:0,<?php echo $this->_tpl_vars['files'][$this->_sections['file']['index']]['Filename']; ?>
 
-<?php echo @SITE_HTMLPATH; ?>
-<?php echo @SITE_PLUGINS; ?>
+<?php echo @HTML_DOMAIN; ?>
+<?php echo @HTML_PLUGINS; ?>
 encode/<?php echo $this->_tpl_vars['files'][$this->_sections['file']['index']]['id']; ?>
 /MP3/<?php echo $this->_tpl_vars['files'][$this->_sections['file']['index']]['id']; ?>
 .mp3

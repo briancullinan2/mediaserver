@@ -4,13 +4,13 @@
 
 
 // load template
-require_once dirname(__FILE__) . '/../include/common.php';
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
 // load mysql to query the database
 $mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 
 // load template to create output
-if($_SERVER['SCRIPT_FILENAME'] == __FILE__)
+if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
 	$smarty = new Smarty;
 	
 $smarty->compile_check = true;
@@ -76,7 +76,7 @@ if(isset($_REQUEST['includes']) && $_REQUEST['includes'] != '')
 	
 	// incase an aliased path is being searched for replace it here too!
 	if(USE_ALIAS == true) $_REQUEST['includes'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $_REQUEST['includes']);
-	$regexp = addslashes($_REQUEST['includes']);
+	$regexp = addslashes(addslashes($_REQUEST['includes']));
 	
 	// add a regular expression matching for each column in the table being searched
 	$props['WHERE'] .= '(';
@@ -92,7 +92,7 @@ if(isset($_REQUEST['dir']))
 {
 	$_REQUEST['dir'] = stripslashes($_REQUEST['dir']);
 	if($_REQUEST['dir'] == '') $_REQUEST['dir'] = '/';
-	if($_REQUEST['dir'] == '/') $_REQUEST['dir'] = '/Shared/';
+	if($_REQUEST['dir'][0] == '/') $_REQUEST['dir'] = realpath('/') . substr($_REQUEST['dir'], 1);
 	
 	// replace aliased path with actual path
 	if(USE_ALIAS == true) $_REQUEST['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $_REQUEST['dir']);
@@ -101,10 +101,10 @@ if(isset($_REQUEST['dir']))
 	if((file_exists($_REQUEST['dir']) && realpath($_REQUEST['dir']) !== false))
 	{
 		// make sure directory is in the database
-		$dirs = call_user_func(array('db_file', 'get'), $mysql, array('WHERE' => 'Filepath = "' . $_REQUEST['dir'] . '"'));
+		$dirs = call_user_func(array('db_file', 'get'), $mysql, array('WHERE' => 'Filepath = "' . addslashes($_REQUEST['dir']) . '"'));
 		
 		// top level directory / should always exist
-		if($_REQUEST['dir'] == '/' || count($dirs) > 0)
+		if($_REQUEST['dir'] == realpath('/') || count($dirs) > 0)
 		{
 			if(!isset($props['WHERE'])) $props['WHERE'] = '';
 			elseif($props['WHERE'] != '') $props['WHERE'] .= ' AND ';
@@ -113,17 +113,17 @@ if(isset($_REQUEST['dir']))
 			if(!isset($_REQUEST['includes']))
 			{
 				if(isset($_REQUEST['dirs_only']))
-					$props['WHERE'] .= 'Filepath REGEXP "^' . $_REQUEST['dir'] . '[^/]+/$"';
+					$props['WHERE'] .= 'Filepath REGEXP "^' . addslashes(addslashes($_REQUEST['dir'])) . '[^' . addslashes(addslashes(DIRECTORY_SEPARATOR)) . ']+' . addslashes(addslashes(DIRECTORY_SEPARATOR)) . '$"';
 				else
-					$props['WHERE'] .= 'Filepath REGEXP "^' . $_REQUEST['dir'] . '[^/]+/?$"';
+					$props['WHERE'] .= 'Filepath REGEXP "^' . addslashes(addslashes($_REQUEST['dir'])) . '[^' . addslashes(addslashes(DIRECTORY_SEPARATOR)) . ']+' . addslashes(addslashes(DIRECTORY_SEPARATOR)) . '?$"';
 			}
 			// show all results underneath directory
 			else
 			{
 				if(isset($_REQUEST['dirs_only']))
-					$props['WHERE'] .= 'Filepath REGEXP "^' . $_REQUEST['dir'] . '([^/]+/)*$"';
+					$props['WHERE'] .= 'Filepath REGEXP "^' . addslashes(addslashes($_REQUEST['dir'])) . '([^' . addslashes(addslashes(DIRECTORY_SEPARATOR)) . ']+' . addslashes(addslashes(DIRECTORY_SEPARATOR)) . ')*$"';
 				else
-					$props['WHERE'] .= 'Filepath REGEXP "^' . $_REQUEST['dir'] . '"';
+					$props['WHERE'] .= 'Filepath REGEXP "^' . addslashes(addslashes($_REQUEST['dir'])) . '"';
 			}
 		}
 		else
@@ -167,7 +167,7 @@ foreach($files as $index => &$file)
 		{
 			if($module != $_REQUEST['cat'] && call_user_func(array($module, 'handles'), $file['Filepath']))
 			{
-				$return = call_user_func(array($module, 'get'), $mysql, array('WHERE' => 'Filepath = "' . $file['Filepath'] . '"'));
+				$return = call_user_func(array($module, 'get'), $mysql, array('WHERE' => 'Filepath = "' . addslashes($file['Filepath']) . '"'));
 				if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
 			}
 		}
@@ -227,7 +227,7 @@ if(isset($_SESSION['select']))
 	$smarty->assign('select', $_SESSION['select']);
 
 $smarty->assign('templates', $templates);
-if($_SERVER['SCRIPT_FILENAME'] == __FILE__)
+if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
 {
 	header('Content-Type: ' . getMime($templates['TEMPLATE_SELECT']));
 	$smarty->display($templates['TEMPLATE_SELECT']);

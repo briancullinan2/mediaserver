@@ -2,13 +2,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0">
 	<channel>
-		<title>{$smarty.const.SITE_NAME|utf8_encode|htmlspecialchars} - {$smarty.request.cat}</title>
-		<link>{$smarty.const.SITE_HTMLPATH}</link>
+		<title>{$smarty.const.HTML_NAME|utf8_encode|htmlspecialchars} - {$smarty.request.cat}</title>
+		<link>{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_ROOT}</link>
 		<description></description>
 		{section name=file loop=$files}
 			<item>
 				<title>{$files[file].Filename|utf8_encode|htmlspecialchars}</title>
-				<link>{$smarty.const.SITE_HTMLPATH}{$smarty.const.SITE_PLUGINS}file/{$smarty.request.cat}/{$files[file].id}/{$files[file].Filename|utf8_encode|urlencode|htmlspecialchars}</link>
+				<link>{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_PLUGINS}file/{$smarty.request.cat}/{$files[file].id}/{$files[file].Filename|utf8_encode|urlencode|htmlspecialchars}</link>
 				<description></description>
 			</item>
 		{/section}

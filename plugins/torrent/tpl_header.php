@@ -14,7 +14,7 @@
 <body>
 
 <div id="top">
-<div id="title">torrential.<?=$page?></div>
+<div id="title">torrential.<?php echo $page?></div>
 <div id="navigation">
 <?php if($page!="login") { ?>
 <ul>

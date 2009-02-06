@@ -12,7 +12,7 @@
 //
 
 // get out common because it has the root path
-require_once dirname(__FILE__) . '/common.php';
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'common.php';
 
 /**
  * Converted PHPLIB template class
@@ -50,7 +50,7 @@ class Template
      * Relative filenames are relative to this pathname
      * @var string
      */
-    var $root   = SITE_LOCALROOT;
+    var $root   = LOCAL_ROOT;
 
     /*
      * $_varKeys[key] = "key"

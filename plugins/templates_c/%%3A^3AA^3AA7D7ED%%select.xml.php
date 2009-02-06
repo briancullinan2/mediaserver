@@ -5,11 +5,11 @@ smarty_core_load_plugins(array('plugins' => array(array('modifier', 'utf8_encode
 <?php 
 global $smarty;
 $ext_icons = array();
-$ext_icons['FOLDER'] = '/' . SITE_HTMLROOT . SITE_TEMPLATE . 'images/filetypes/folder_96x96.png';
-$ext_icons['FILE'] = '/' . SITE_HTMLROOT . SITE_TEMPLATE . 'images/filetypes/file_96x96.png';
+$ext_icons['FOLDER'] = '/' . HTML_ROOT . HTML_TEMPLATE . 'images/filetypes/folder_96x96.png';
+$ext_icons['FILE'] = '/' . HTML_ROOT . HTML_TEMPLATE . 'images/filetypes/file_96x96.png';
 
 $type_icons = array();
-$type_icons['audio'] = '/' . SITE_HTMLROOT . SITE_TEMPLATE . 'images/filetypes/music_96x96.png';
+$type_icons['audio'] = '/' . HTML_ROOT . HTML_TEMPLATE . 'images/filetypes/music_96x96.png';
 
 $smarty->assign('ext_icons', $ext_icons);
 $smarty->assign('type_icons', $type_icons);
@@ -73,8 +73,8 @@ $this->_sections['file']['last']       = ($this->_sections['file']['iteration'] 
 		</tip>
 		<path><?php echo ((is_array($_tmp=((is_array($_tmp=$this->_tpl_vars['files'][$this->_sections['file']['index']]['Filepath'])) ? $this->_run_mod_handler('utf8_encode', true, $_tmp) : utf8_encode($_tmp)))) ? $this->_run_mod_handler('htmlspecialchars', true, $_tmp) : htmlspecialchars($_tmp)); ?>
 </path>
-		<link><?php echo @SITE_HTMLPATH; ?>
-<?php echo @SITE_PLUGINS; ?>
+		<link><?php echo @HTML_DOMAIN; ?>
+<?php echo @HTML_PLUGINS; ?>
 file/<?php echo $_REQUEST['cat']; ?>
 /<?php echo $this->_tpl_vars['files'][$this->_sections['file']['index']]['id']; ?>
 /<?php echo ((is_array($_tmp=((is_array($_tmp=((is_array($_tmp=$this->_tpl_vars['files'][$this->_sections['file']['index']]['Filename'])) ? $this->_run_mod_handler('utf8_encode', true, $_tmp) : utf8_encode($_tmp)))) ? $this->_run_mod_handler('urlencode', true, $_tmp) : urlencode($_tmp)))) ? $this->_run_mod_handler('htmlspecialchars', true, $_tmp) : htmlspecialchars($_tmp)); ?>
@@ -88,4 +88,4 @@ file/<?php echo $_REQUEST['cat']; ?>
 	<error><?php echo $this->_tpl_vars['error']; ?>
 </error>
 <?php endif; ?>
-</request>
+</request>

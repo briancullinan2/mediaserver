@@ -1,9 +1,9 @@
 <?php
 
-$templates['TEMPLATE_SELECT'] = SITE_LOCALROOT . SITE_TEMPLATE . 'select.xml';
-$templates['TEMPLATE_INDEX'] = SITE_LOCALROOT . SITE_TEMPLATE . 'index.html';
-$templates['TEMPLATE_SEARCH'] = SITE_LOCALROOT . SITE_TEMPLATE . 'search.xml';
-$templates['TEMPLATE_DISPLAY'] = SITE_LOCALROOT . SITE_TEMPLATE . 'display.xml';
+$templates['TEMPLATE_SELECT'] = LOCAL_ROOT . LOCAL_TEMPLATE . 'select.xml';
+$templates['TEMPLATE_INDEX'] = LOCAL_ROOT . LOCAL_TEMPLATE . 'index.html';
+//$templates['TEMPLATE_SEARCH'] = LOCAL_ROOT . LOCAL_TEMPLATE . 'search.xml';
+$templates['TEMPLATE_DISPLAY'] = LOCAL_ROOT . LOCAL_TEMPLATE . 'display.xml';
 
 
 ?>

@@ -1,4 +1,4 @@
-<?include "inc_security.php";?>
+<?php include "inc_security.php"; ?>
 <?php
 if(isset($_POST['save'])) {       
 include("inc_config.php");
@@ -35,7 +35,7 @@ $fd = fopen ("inc_config.php", "r");
 <?php $page="config"; include("tpl_header.php"); ?>
 <?php if(isset($result)) echo $result;?>
 <h1>Configuration</h1>
-<form method="POST" action="<?$PHP_SELF?>" enctype="multipart/form-data">
+<form method="POST" action="<?php echo $PHP_SELF; ?>" enctype="multipart/form-data">
 <table>
 	
 <?

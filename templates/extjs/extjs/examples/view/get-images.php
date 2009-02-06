@@ -1,4 +1,4 @@
-<?
+<?php
 $dir = "images/thumbs/";
 $images = array();
 $d = dir($dir);

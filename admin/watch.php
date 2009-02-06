@@ -2,7 +2,7 @@
 
 // handles the watch tables
 
-require_once dirname(__FILE__) . '/../include/common.php';
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
 // make sure user in logged in
 if( loggedIn() )
@@ -39,7 +39,7 @@ if( isset($_REQUEST['add']) )
 		{
 			$addpath = realpath($addpath);
 			// add ending backslash
-			if( substr($addpath, strlen($addpath)-1) != '/' ) $addpath .= '/';
+			if( substr($addpath, strlen($addpath)-1) != DIRECTORY_SEPARATOR ) $addpath .= DIRECTORY_SEPARATOR;
 			$dont_add = false;
 			foreach($watched as $i => $watch)
 			{
@@ -53,7 +53,7 @@ if( isset($_REQUEST['add']) )
 			if($dont_add == false)
 			{
 				// finally add the path to the database
-				$mysql->set('watch', array('Filepath' => ($exclude?'!':'') . $addpath));
+				$mysql->set('watch', array('Filepath' => ($exclude?'!':'') . addslashes($addpath)));
 				
 				// and reget the full list
 				$watched = $mysql->get('watch', array('SELECT' => array('id','Filepath')));
@@ -89,28 +89,28 @@ elseif( isset($_REQUEST['remove']) )
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
 	<meta http-equiv="Pragma" content="no-cache">
 	<meta http-equiv="Expires" content="-1">
-	<title><?=SITE_NAME?></title>
+	<title><?php echo HTML_NAME?></title>
 </head>
 <body>
 
 This is a list of folders on the server to watch for media files:<br />
-<?
+<?php
 if( $error != '' )
 {
 ?>
-	<span style="color:#990000; font-weight:bold;"><?=$error?></span><br />
-<?
+	<span style="color:#990000; font-weight:bold;"><?php echo $error?></span><br />
+<?php
 }
 ?>
 	<form action="" method="post">
 		<select name="watch" size="10">
 		
-		<?
+		<?php
 			foreach($watched as $i => $watch)
 			{
 			?>
-				<option value="<?=$watch['id']?>"><?=$watch['Filepath']?></option>
-			<?
+				<option value="<?php echo $watch['id']; ?>"><?php echo $watch['Filepath']; ?></option>
+			<?php
 			}
 		?>
 		</select>
@@ -118,7 +118,7 @@ if( $error != '' )
 		<input type="submit" value="Remove" name="remove" />
 	</form>
 	<form action="" method="post">
-		<input type="text" name="addpath" value="<?=(isset($_REQUEST['addpath'])?$_REQUEST['addpath']:"")?>" />
+		<input type="text" name="addpath" value="<?php echo (isset($_REQUEST['addpath'])?$_REQUEST['addpath']:"")?>" />
 		<input type="submit" value="Add" name="add" />
 		<br />
 	</form>

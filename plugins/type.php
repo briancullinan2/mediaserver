@@ -4,10 +4,10 @@
 
 
 // load template
-require_once dirname(__FILE__) . '/../include/common.php';
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
 // load template to create output
-if($_SERVER['SCRIPT_FILENAME'] == __FILE__)
+if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
 	$smarty = new Smarty;
 
 if(isset($_REQUEST['type_select']))
@@ -16,19 +16,23 @@ if(isset($_REQUEST['type_select']))
 }
 
 // get all the possible types for a list from templates directory
-$type_files = db_file::get(NULL, array('DIR' => SITE_LOCALROOT . SITE_DEFAULT));
-foreach($type_files as $i => $type_file)
+$type_files = array();
+$files = db_file::get(NULL, array('DIR' => LOCAL_ROOT . LOCAL_DEFAULT));
+foreach($files as $i => $type_file)
 {
-	$type_files[$i] = SITE_LOCALROOT . SITE_DEFAULT . $type_files[$i];
+	if ($type_file[0] != '.' && !is_dir(LOCAL_ROOT . LOCAL_DEFAULT . $files[$i]))
+		$type_files[] = LOCAL_ROOT . LOCAL_DEFAULT . $files[$i];
 }
 
-$type_files2 = db_file::get(NULL, array('DIR' => SITE_LOCALROOT . SITE_TEMPLATE));
-foreach($type_files2 as $i => $type_file)
+if(LOCAL_TEMPLATE != LOCAL_DEFAULT)
 {
-	$type_files2[$i] = SITE_LOCALROOT . SITE_TEMPLATE . $type_files2[$i];
+	$files = db_file::get(NULL, array('DIR' => LOCAL_ROOT . LOCAL_TEMPLATE));
+	foreach($files as $i => $type_file)
+	{
+		if ($type_file[0] != '.' && !is_dir(LOCAL_ROOT . LOCAL_TEMPLATE . $files[$i]))
+			$type_files[] = LOCAL_ROOT . LOCAL_TEMPLATE . $files[$i];
+	}
 }
-
-$type_files = array_unique(array_merge($type_files, $type_files2));
 
 $types = array();
 foreach($type_files as $i => $type_file)
@@ -53,7 +57,7 @@ foreach($type_files as $i => $type_file)
 $smarty->assign('types', $types);
 
 $smarty->assign('templates', $templates);
-if($_SERVER['SCRIPT_FILENAME'] == __FILE__)
+if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
 	$smarty->display($templates['TEMPLATE_TYPE']);
 
 ?>

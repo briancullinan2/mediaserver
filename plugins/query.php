@@ -1,9 +1,9 @@
 <?php
 
 // load template
-require_once dirname(__FILE__) . '/../include/common.php';
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
-if($_SERVER['SCRIPT_FILENAME'] == __FILE__)
+if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
 	$smarty = new Smarty;
 	
 $smarty->compile_check = true;
@@ -17,7 +17,7 @@ include_once 'type.php';
 include_once 'display.php';
 
 $smarty->assign('templates', $templates);
-if($_SERVER['SCRIPT_FILENAME'] == __FILE__)
+if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
 	$smarty->display($templates['TEMPLATE_QUERY']);
 
 ?>

@@ -1,15 +1,15 @@
 <?php
 
 // load template
-require_once dirname(__FILE__) . '/include/common.php';
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
-if(substr(selfURL(), 0, strlen(SITE_HTMLPATH)) != SITE_HTMLPATH)
+if(substr(selfURL(), 0, strlen(HTML_DOMAIN)) != HTML_DOMAIN)
 {
-	header('Location: ' . SITE_HTMLPATH);
+	header('Location: ' . HTML_DOMAIN . HTML_ROOT);
 	exit();
 }
 
-if($_SERVER['SCRIPT_FILENAME'] == __FILE__)
+if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
 	$smarty = new Smarty;
 
 	
@@ -20,20 +20,19 @@ $smarty->force_compile = true;
 
 if(!isset($_SESSION['template']))
 {
-	if($_SERVER['SCRIPT_FILENAME'] == __FILE__)
+	if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
 		$smarty->display($templates['TEMPLATE_INDEX']);
 }
-elseif($_SESSION['template'] == 'default/')
+elseif($_SESSION['template'] == 'default' . DIRECTORY_SEPARATOR)
 {
-	include_once SITE_LOCALROOT . 'plugins/query.php';
-	if($_SERVER['SCRIPT_FILENAME'] == __FILE__)
+	include_once LOCAL_ROOT . 'plugins' . DIRECTORY_SEPARATOR . 'query.php';
+	if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
 		$smarty->display($templates['TEMPLATE_QUERY']);
 }
-elseif($_SESSION['template'] == 'extjs/')
+else
 {
-	if($_SERVER['SCRIPT_FILENAME'] == __FILE__)
+	if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
 		$smarty->display($templates['TEMPLATE_INDEX']);
 }
-
 
 ?>

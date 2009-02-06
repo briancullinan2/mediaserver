@@ -35,7 +35,7 @@ class db_file
 			$db_file = $mysql->get('files', 
 				array(
 					'SELECT' => array('id', 'Filedate'),
-					'WHERE' => 'Filepath = "' . $file . '"'
+					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
 				)
 			);
 			
@@ -72,7 +72,7 @@ class db_file
 	
 		// get file extension
 		$fileinfo = array();
-		$fileinfo['Filepath'] = $file;
+		$fileinfo['Filepath'] = addslashes($file);
 		$fileinfo['Filename'] = basename($file);
 		//if(USE_ALIAS) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 		$fileinfo['Filesize'] = filesize($file);
@@ -145,7 +145,7 @@ class db_file
 			// construct where statement
 			if(isset($props['DIR']) && !isset($props['WHERE']))
 			{
-				$props['WHERE'] = 'Filepath REGEXP "^' . $dir . '"';
+				$props['WHERE'] = 'Filepath REGEXP "^' . addslashes(addslashes($dir)) . '"';
 			}
 		
 			$props['SELECT'] = db_file::columns();
@@ -163,7 +163,7 @@ class db_file
 		if( !file_exists($row['Filepath']) )
 		{
 			// remove row from database
-			$args['SQL']->set($args['DB'], NULL, array('Filepath' => $row['Filepath']));
+			$args['SQL']->set($args['DB'], NULL, array('Filepath' => addslashes($row['Filepath'])));
 			
 			print 'Removing ' . $args['DB'] . ': ' . $row['Filepath'] . "\n";
 			
@@ -190,13 +190,13 @@ class db_file
 		foreach($watched as $i => $watch)
 		{
 			// add the files that begin with a path from a watch directory
-			$where_str .= ' Filepath REGEXP "^' . $watch['Filepath'] . '" OR';
+			$where_str .= ' Filepath REGEXP "^' . addslashes(addslashes($watch['Filepath'])) . '" OR';
 		}
 		// but keep the ones leading up to watched directories
 		for($i = 0; $i < count($watched); $i++)
 		{
-			$folders = split('/', $watched[$i]['Filepath']);
-			$curr_dir = '/';
+			$folders = split(addslashes(DIRECTORY_SEPARATOR), $watched[$i]['Filepath']);
+			$curr_dir = DIRECTORY_SEPARATOR;
 			// ----------THIS IS THE SAME FUNCTIONALITY FROM THE CRON.PHP SCRIPT
 			// don't add the watch directory here because it is already added by the previous loop!
 			$length = count($folders);
@@ -208,7 +208,7 @@ class db_file
 			{
 				if($folders[$j] != '')
 				{
-					$curr_dir .= $folders[$j] . '/';
+					$curr_dir .= $folders[$j] . DIRECTORY_SEPARATOR;
 					// if using aliases then only add the revert from the watch directory to the alias
 					// ex. Watch = /home/share/Pictures/, Alias = /home/share/ => /Shared/
 					//     only /home/share/ is added here
@@ -219,12 +219,12 @@ class db_file
 						$between = true;
 						// if the USE_ALIAS is true this will only add the folder
 						//    if it is in the list of aliases
-						$where_str .= ' Filepath = "' . $curr_dir . '" OR';
+						$where_str .= ' Filepath = "' . addslashes($curr_dir) . '" OR';
 					}
 					// but make an exception for folders between an alias and the watch path
 					elseif(USE_ALIAS && $between)
 					{
-						$where_str .= ' Filepath = "' . $curr_dir . '" OR';
+						$where_str .= ' Filepath = "' . addslashes($curr_dir) . '" OR';
 					}
 				}
 			}
@@ -235,7 +235,7 @@ class db_file
 		// clean up items that are in the ignore list
 		foreach($ignored as $i => $ignore)
 		{
-			$where_str = 'Filepath REGEXP "^' . $ignore . '" OR ' . $where_str;
+			$where_str = 'Filepath REGEXP "^' . addslashes(addslashes($ignore)) . '" OR ' . $where_str;
 		}
 		
 		// remove items

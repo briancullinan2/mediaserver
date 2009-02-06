@@ -39,7 +39,7 @@ License details: http://www.gnu.org/licenses/lgpl.html
   <script type="text/javascript" src="./js/Ext.ux.IconCombo.js"></script>
   <script type="text/javascript" src="./js/Ext.ux.LangSelectCombo.js"></script>
   <script type="text/javascript" src="./filetree.js"></script>
-	<script type="text/javascript" src="./locale/<?=@$_REQUEST['locale']?$_REQUEST['locale']:(@$_COOKIE['locale']?$_COOKIE['locale']:'en_US');?>.js"></script>
+	<script type="text/javascript" src="./locale/<?php echo @$_REQUEST['locale']?$_REQUEST['locale']:(@$_COOKIE['locale']?$_COOKIE['locale']:'en_US');?>.js"></script>
   <title id="page-title">Ext.ux.FileTreePanel Extension by Saki</title>
 </head>
 
@@ -97,7 +97,7 @@ License details: http://www.gnu.org/licenses/lgpl.html
 	</div>
 	<!-- digg -->
 
-	<a href="http://www.stumbleupon.com/submit?url=<?=urlencode('http://'.$_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI']);?>"><img border=0 src="../img/stumble7.gif" alt="StumbleUpon Toolbar" /></a>	
+	<a href="http://www.stumbleupon.com/submit?url=<?php echo urlencode('http://'.$_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI']);?>"><img border=0 src="../img/stumble7.gif" alt="StumbleUpon Toolbar" /></a>	
 
 </div>
 

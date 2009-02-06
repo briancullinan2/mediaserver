@@ -1,12 +1,9 @@
-<?
+<?php
 
-// figure out what type of view
-// parse filter is any
-// get items based on filter
-// load template
-// parse template based on view type
-// loop through items and output in template
-
+// allow templates to save settings
+// get all template settings from database
+// parse out selected template setting
+// return settings in manner that the template understands
 
 
 ?>

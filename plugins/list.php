@@ -4,13 +4,13 @@
 
 
 // load template
-require_once dirname(__FILE__) . '/../include/common.php';
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
 // load mysql to query the database
 $mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 
 // load template to create output
-if($_SERVER['SCRIPT_FILENAME'] == __FILE__)
+if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
 	$smarty = new Smarty;
 
 include_once 'type.php';
@@ -100,7 +100,7 @@ foreach($files as $index => $file)
 	{
 		if($module != $_REQUEST['cat'] && call_user_func(array($module, 'handles'), $file['Filepath']))
 		{
-			$return = call_user_func(array($module, 'get'), $mysql, array('WHERE' => 'Filepath = "' . $file['Filepath'] . '"'));
+			$return = call_user_func(array($module, 'get'), $mysql, array('WHERE' => 'Filepath = "' . addslashes($file['Filepath']) . '"'));
 			if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
 		}
 	}
@@ -128,7 +128,7 @@ else
 // if this is the file being called as opposed to an include
 // this is how we implement FRAME functionality! very tricky
 // this makes the caller in charge of using the output whereever it wants
-if($_SERVER['SCRIPT_FILENAME'] == __FILE__)
+if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
 	$smarty->display($types[$_REQUEST['type']]['file']);
 	
 	

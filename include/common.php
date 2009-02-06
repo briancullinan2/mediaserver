@@ -10,13 +10,58 @@
 session_start();
 
 // require the settings
-require_once 'settings.php';
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings2.php';
+
+// get the list of templates
+$GLOBALS['templates'] = array();
+if ($dh = opendir(LOCAL_ROOT . 'templates'))
+{
+	while (($file = readdir($dh)) !== false)
+	{
+		if ($file != '.' && $file != '..' && is_dir(LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR . $file))
+		{
+			$GLOBALS['templates'][] = $file;
+		}
+	}
+}
+
+// set the template if a permenent one isn't already set in the settings file
+if(!defined('LOCAL_TEMPLATE'))
+{
+	if(isset($_REQUEST['template']) && in_array($_REQUEST['template'], $GLOBALS['templates']))
+	{
+		if(substr($_REQUEST['template'], strlen($_REQUEST['template']) - 1, 1) != DIRECTORY_SEPARATOR)
+			$_REQUEST['template'] .= DIRECTORY_SEPARATOR;
+		define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . $_REQUEST['template']);
+		$_SESSION['template'] = $_REQUEST['template'];
+	}
+	elseif(isset($_SESSION['template']))
+	{
+		define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . $_SESSION['template']);
+	}
+	else
+	{
+		define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR);
+		if(preg_match('/.*mobile.*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
+		{
+			$_SESSION['template'] = 'default' . DIRECTORY_SEPARATOR;
+		}
+		// don't set a template, allow them to choose
+	}
+}
+else
+{
+	$_SESSION['template'] = basename(LOCAL_TEMPLATE) . DIRECTORY_SEPARATOR;
+}
+
+// set the HTML_TEMPLATE for templates to refer to their own directory to provide resources
+define('HTML_TEMPLATE', str_replace(DIRECTORY_SEPARATOR, '/', LOCAL_TEMPLATE));
 
 // include template constants
-require_once SITE_LOCALROOT . SITE_DEFAULT . 'config.php';
+require_once LOCAL_ROOT . LOCAL_DEFAULT . 'config.php';
 
-if(file_exists(SITE_LOCALROOT . SITE_TEMPLATE . 'config.php'))
-	require_once SITE_LOCALROOT . SITE_TEMPLATE . 'config.php';
+if(file_exists(LOCAL_ROOT . LOCAL_TEMPLATE . 'config.php'))
+	require_once LOCAL_ROOT . LOCAL_TEMPLATE . 'config.php';
 
 require_once 'sql.php';
 
@@ -29,16 +74,19 @@ if( DB_TYPE == 'mysql' )
 // load templating system
 require_once 'Smarty/Smarty.class.php';
 
+// some modules depend on the mime-types in order to determine if it can handle that type of file
+loadMime();
+
 // include the modules
 $tmp_modules = array();
-if ($dh = opendir(MODULES_DIR))
+if ($dh = opendir(LOCAL_ROOT . LOCAL_MODULES))
 {
 	while (($file = readdir($dh)) !== false)
 	{
-		if ($file != '.' && $file != '..')
+		if ($file[0] != '.' && !is_dir(LOCAL_ROOT . LOCAL_MODULES . $file))
 		{
 			// include all the modules
-			require_once MODULES_DIR . $file;
+			require_once LOCAL_ROOT . LOCAL_MODULES . $file;
 			$class_name = substr($file, 0, strrpos($file, '.'));
 			
 			// only use the module if it is properly defined
@@ -449,6 +497,7 @@ function gf2_matrix_times($mat, $vec)
             $sum ^= $mat[$i];
         }
         $vec>>= 1;
+        $vec &= 0x7fffffff;
         $i++;
     }
     return $sum;
@@ -495,6 +544,59 @@ function kill9($command, $startpid, $limit = 2)
 				system('/bin/kill -9 ' . $matches[3]);
 			}
 		}
+	}
+	
+}
+
+function loadMime()
+{
+	// this will load the mime-types from a linux dist mime.types file stored in includes
+	// this will organize the types for easy lookup
+	if(file_exists(LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'mime.types'))
+	{
+		$handle = fopen(LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'mime.types', 'r');
+		$mime_text = fread($handle, filesize(LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'mime.types'));
+		fclose($handle);
+		
+		$mimes = split("\n", $mime_text);
+		
+		$mime_to_ext = array();
+		$ext_to_mime = array();
+		$ext_to_type = array();
+		$type_to_ext = array();
+		foreach($mimes as $index => $mime)
+		{
+			$mime = preg_replace('/#.*?$/', '', $mime);
+			if($mime != '')
+			{
+				// mime to ext
+				$file_types = preg_split('/[\s,]+/', $mime);
+				$mime_type = $file_types[0];
+				// general type
+				$tmp_type = split('/', $mime_type);	
+				$type = $tmp_type[0];
+				// unset mime part to get all its filetypes
+				unset($file_types[0]);
+				
+				// ext to mime
+				foreach($file_types as $index => $ext)
+				{
+					$ext_to_mime[$ext] = $mime_type;
+					$ext_to_type[$ext] = $type;
+					$type_to_ext[$type][] = $ext;
+					$mime_to_ext[$mime_type][] = $ext;
+				}
+			}
+		}
+		
+		
+		// set global variables
+		$GLOBALS['ext_to_mime'] = $ext_to_mime;
+		$GLOBALS['mime_to_ext'] = $mime_to_ext;
+		$GLOBALS['ext_to_type'] = $ext_to_type;
+		$GLOBALS['type_to_ext'] = $type_to_ext;
+		
+
 	}
 	
 }

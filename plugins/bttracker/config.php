@@ -1,6 +1,6 @@
 <?php
 
-include_once dirname(__FILE__) . '/../../include/common.php';
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
 /* Tracker Configuration
  *
