@@ -545,7 +545,6 @@ function kill9($command, $startpid, $limit = 2)
 			}
 		}
 	}
-	
 }
 
 function loadMime()

@@ -30,9 +30,6 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATO
 // start the page with a pre to output messages that can be viewed in a browser
 ?><pre><?php
 
-// turn on output buffer
-ob_start();
-
 // get the directories to watch from the watch database
 $mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 
@@ -144,8 +141,7 @@ foreach($ignored as $i => $ignore)
 $mysql->set('watch_list', NULL, $where_str);
 
 print 'Cleaned watch_list.' . "\n";
-usleep(1);
-ob_flush();
+flush();
 
 
 // now scan some files
@@ -194,8 +190,7 @@ do
 	// check if execution time is too long
 	$secs_total = array_sum(explode(' ', microtime())) - $tm_start;
 	
-	usleep(1);
-	ob_flush();
+	flush();
 	
 } while( $secs_total < FILE_SEEK_TIME && count($db_dirs) > 0 );
 
@@ -246,10 +241,6 @@ for($i = 0; $i < count($watched); $i++)
 }
 
 
-// close output buffer
-ob_end_flush();
-
-
 // check if file is already in database
 function getfile( $file )
 {
@@ -291,9 +282,7 @@ function getdir( $dir )
 		
 		print 'Queueing directory: ' . $dir . "\n";
 		
-		usleep(1);
-		
-		ob_flush();
+		flush();
 
 	}
 	

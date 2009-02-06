@@ -433,12 +433,12 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 		upbutton.on({
 			'click': {
 				fn: function() {
-					var newDir = '/';
-					var oldDirs = this.getValue().split('/');
+					var newDir = dir_sep;
+					var oldDirs = this.getValue().split(/\/|\\/);
 					
 					for(var i = 1; i < oldDirs.length-2; i++)
 					{
-						newDir += oldDirs[i] + '/';
+						newDir += oldDirs[i] + dir_sep;
 					}
 					
 					this.fireEvent('change', this.el, newDir, this.getValue());

@@ -113,7 +113,7 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 					if(oldValue && (String(oldValue) != String(newValue) || newValue == '/Search Results/'))
 					{
 						var dirname = '';
-						var oldDirs = oldValue.split('/');
+						var oldDirs = oldValue.split(/\/|\\/);
 						for(var i = oldDirs.length-1; i >= 0; i--)
 						{
 							if(oldDirs[i] != '')
@@ -223,7 +223,7 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 		//if(String(this.getValue()) !== String(this.startValue)){
 			// add current directory to menus
 			var dirname = '';
-			var oldDirs = this.getValue().split('/');
+			var oldDirs = this.getValue().split(/\/|\\/);
 			for(var i = oldDirs.length-1; i >= 0; i--)
 			{
 				if(oldDirs[i] != '')
@@ -269,7 +269,7 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 		//if(String(this.getValue()) !== String(this.startValue)){
 			// add current directory to menus
 			var dirname = '';
-			var oldDirs = this.getValue().split('/');
+			var oldDirs = this.getValue().split(/\/|\\/);
 			for(var i = oldDirs.length-1; i >= 0; i--)
 			{
 				if(oldDirs[i] != '')
@@ -342,14 +342,14 @@ Ext.Address = Ext.extend(Ext.form.ComboBox, {
 		this.clearButtons();
 		
 		// split the items and make drop downs for each
-		var folders = this.getValue().split('/');
-		var current_dir = '/';
+		var folders = this.getValue().split(/\/|\\/);
+		var current_dir = dir_sep;
 		for(var i = 0; i < folders.length; i++)
 		{
 			if(folders[i] != '' || i == 0)
 			{
 				// set up menu that loads files
-				if(i != 0) current_dir += folders[i] + '/';
+				if(i != 0) current_dir += folders[i] + dir_sep;
 				else folders[i] = 'Portal';
 				
 				// check to see if the buttons path items are cached

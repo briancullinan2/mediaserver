@@ -101,9 +101,7 @@ class db_file
 		}
 		
 		
-		usleep(1);
-		
-		ob_flush();
+		flush();
 		
 	}
 	
@@ -166,8 +164,6 @@ class db_file
 			$args['SQL']->set($args['DB'], NULL, array('Filepath' => addslashes($row['Filepath'])));
 			
 			print 'Removing ' . $args['DB'] . ': ' . $row['Filepath'] . "\n";
-			
-			ob_flush();
 		}
 	}
 	
@@ -260,16 +256,10 @@ class db_file
 			$mysql->set($db, NULL, array('id' => $file['id']));
 			
 			print 'Removing ' . $db . ': ' . $file['Filepath'] . "\n";
-			
-			// pause so browser can recieve data
-			usleep(1);
-			
-			ob_flush();
 		}
 		
 		print 'Cleanup for ' . (($database==NULL)?'files':$database) . " complete.\n";
-		usleep(1);
-		ob_flush();
+		flush();
 		
 	}
 	

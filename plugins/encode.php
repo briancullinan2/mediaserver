@@ -54,22 +54,22 @@ if(isset($_REQUEST['id']) && is_numeric($_REQUEST['id']))
 		switch($_REQUEST['encode'])
 		{
 			case 'MP4':
-				$cmd = ENCODE . ' -I dummy -v "' . $files[0]['Filepath'] . '" :sout=\'#transcode{vcodec=mp4v,acodec=mp4a,vb=512,ab=64,samplerate=44100,channels=2,deinterlace,audio-sync}:std{mux=ts,access=file,dst=-}\' vlc://quit';
+				$cmd = basename(ENCODE) . ' -I dummy -v "' . $files[0]['Filepath'] . '" :sout=\'#transcode{vcodec=mp4v,acodec=mp4a,vb=512,ab=64,samplerate=44100,channels=2,deinterlace,audio-sync}:std{mux=ts,access=file,dst=-}\' vlc://quit';
 				break;
 			case 'MPG':
-				$cmd = ENCODE . ' -I dummy -v "' . $files[0]['Filepath'] . '" :sout=\'#transcode{vcodec=mp1v,acodec=mpga,vb=512,ab=64,samplerate=44100,channels=2,deinterlace,audio-sync}:std{mux=mpeg1,access=file,dst=-}\' vlc://quit';
+				$cmd = basename(ENCODE) . ' -I dummy -v "' . $files[0]['Filepath'] . '" :sout=\'#transcode{vcodec=mp1v,acodec=mpga,vb=512,ab=64,samplerate=44100,channels=2,deinterlace,audio-sync}:std{mux=mpeg1,access=file,dst=-}\' vlc://quit';
 				break;
 			case 'WMV':
-				$cmd = ENCODE . ' -I dummy -v "' . $files[0]['Filepath'] . '" :sout=\'#transcode{vcodec=WMV2,acodec=mp3,vb=512,ab=64,samplerate=44100,channels=2,deinterlace,audio-sync}:std{mux=asf,access=file,dst=-}\' vlc://quit';
+				$cmd = basename(ENCODE) . ' -v "' . $files[0]['Filepath'] . '" :sout=#transcode{vcodec=WMV2,acodec=mp3,vb=512,ab=64,samplerate=44100,channels=2,deinterlace,audio-sync}:std{mux=asf,access=file,dst=-} vlc://quit';
 				break;
 			case 'MP4A':
-				$cmd = ENCODE . ' -I dummy -v --no-video "' . $files[0]['Filepath'] . '" :sout=\'#transcode{acodec=mp4a,ab=160,samplerate=44100,channels=2}:std{mux=mp4,access=file,dst=-}\' vlc://quit';
+				$cmd = basename(ENCODE) . ' -I dummy -v --no-video "' . $files[0]['Filepath'] . '" :sout=\'#transcode{acodec=mp4a,ab=160,samplerate=44100,channels=2}:std{mux=mp4,access=file,dst=-}\' vlc://quit';
 				break;
 			case 'MP3':
-				$cmd = ENCODE . ' -I dummy -v --no-video "' . $files[0]['Filepath'] . '" :sout=\'#transcode{acodec=mp3,ab=160,samplerate=44100,channels=2}:std{mux=dummy,access=file,dst=-}\' vlc://quit';
+				$cmd = basename(ENCODE) . ' -I dummy -v --no-video "' . $files[0]['Filepath'] . '" :sout=\'#transcode{acodec=mp3,ab=160,samplerate=44100,channels=2}:std{mux=dummy,access=file,dst=-}\' vlc://quit';
 				break;
 			case 'WMA':
-				$cmd = ENCODE . ' -I dummy -v --no-video "' . $files[0]['Filepath'] . '" :sout=\'#transcode{acodec=wma2,ab=160,samplerate=44100,channels=2}:std{mux=asf,access=file,dst=-}\' vlc://quit';
+				$cmd = basename(ENCODE) . ' -I dummy -v --no-video "' . $files[0]['Filepath'] . '" :sout=\'#transcode{acodec=wma2,ab=160,samplerate=44100,channels=2}:std{mux=asf,access=file,dst=-}\' vlc://quit';
 				break;
 		}
 
@@ -77,19 +77,22 @@ if(isset($_REQUEST['id']) && is_numeric($_REQUEST['id']))
 		   1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
 		);
 		
-		$process = proc_open($cmd, $descriptorspec, $pipes, TMP_DIR, NULL);
-
+		$process = proc_open($cmd, $descriptorspec, $pipes, dirname(ENCODE), NULL, array('binary_pipes' => true, 'bypass_shell' => true));
+		
+		// output file
 		if(is_resource($process))
 		{
 			while(!feof($pipes[1]))
 			{
-				if(connection_aborted())
+				if(connection_status()!=0)
 				{
 					proc_terminate($process);
 					break;
 				}
-				print fread($pipes[1], 2048);
+				print fread($pipes[1], BUFFER_SIZE);
+				flush();
 			}
+			fclose($pipes[1]);
 			
 			$status = proc_get_status($process);
 			kill9('vlc', $status['pid']);
@@ -98,6 +101,5 @@ if(isset($_REQUEST['id']) && is_numeric($_REQUEST['id']))
 		}
 	}
 }
-
 
 ?>

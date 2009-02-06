@@ -142,10 +142,8 @@ class db_image extends db_file
 			
 			return $id;
 		}
-		
-		usleep(1);
-		
-		ob_flush();
+
+		flush();
 			
 	}
 	
@@ -176,10 +174,6 @@ class db_image extends db_file
 		unlink($tmp_name);
 		
 		print 'Created thumbs: ' . $file . "\n";
-		
-		usleep(1);
-		
-		ob_flush();
 
 		return $output;
 	}

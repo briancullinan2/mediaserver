@@ -90,15 +90,18 @@ if(isset($_REQUEST['includes']) && $_REQUEST['includes'] != '')
 // add dir filter to where
 if(isset($_REQUEST['dir']))
 {
-	$_REQUEST['dir'] = stripslashes($_REQUEST['dir']);
+	//$_REQUEST['dir'] = stripslashes($_REQUEST['dir']);
 	if($_REQUEST['dir'] == '') $_REQUEST['dir'] = '/';
-	if($_REQUEST['dir'][0] == '/') $_REQUEST['dir'] = realpath('/') . substr($_REQUEST['dir'], 1);
+	// this is necissary for dealing with windows and cross platform queries coming from templates
+	//  yes: the template should probably handle this by itself, but this is convenient and easy
+	//   it is purely for making all the paths look prettier
+	if($_REQUEST['dir'][0] == '/' || $_REQUEST['dir'][0] == '\\') $_REQUEST['dir'] = realpath('/') . substr($_REQUEST['dir'], 1);
 	
 	// replace aliased path with actual path
 	if(USE_ALIAS == true) $_REQUEST['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $_REQUEST['dir']);
 	
 	// only search for file if is valid dir
-	if((file_exists($_REQUEST['dir']) && realpath($_REQUEST['dir']) !== false))
+	if(realpath($_REQUEST['dir']) !== false && is_dir(realpath($_REQUEST['dir'])))
 	{
 		// make sure directory is in the database
 		$dirs = call_user_func(array('db_file', 'get'), $mysql, array('WHERE' => 'Filepath = "' . addslashes($_REQUEST['dir']) . '"'));

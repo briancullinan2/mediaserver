@@ -115,9 +115,7 @@ class db_audio extends db_file
 			return $id;
 		}
 		
-		usleep(1);
-		
-		ob_flush();
+		flush();
 		
 	}
 	

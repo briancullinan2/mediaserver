@@ -66,16 +66,18 @@ if(isset($_REQUEST['id']) && is_numeric($_REQUEST['id']))
 		{
 			while(!feof($pipes[1]))
 			{
-				if(connection_aborted())
+				if(connection_status()!=0)
 				{
 					proc_terminate($process);
 					break;
 				}
-				print fread($pipes[1], 2048);
+				print fread($pipes[1], BUFFER_SIZE);
+				flush();
 			}
+			fclose($pipes[1]);
 			
 			$status = proc_get_status($process);
-			//kill9('convert', $status['pid']);
+			kill9('convert', $status['pid']);
 			
 			$return_value = proc_close($process);
 		}

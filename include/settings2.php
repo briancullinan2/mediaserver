@@ -40,12 +40,12 @@ define('LOCAL_DEFAULT',            				        'templates\default\\');
 define('HTML_PLUGINS', 						 HTML_ROOT . 'plugins/');
 
 // extra constants
-define('HTML_NAME',			 'Brian\'s Media Website'); // name for the website
+define('HTML_NAME',			                                   'Brian\'s Media Website'); // name for the website
 define('CONVERT', 				   'C:\Program Files\ImageMagick-6.4.9-Q16\convert.exe'); // image magick's convert program
-define('ENCODE', 				       '/usr/bin/vlc'); // a program that can convert video and audio streams
-define('BUFFER_SIZE', 						  24*1024); // max amount to output when accessing a file
-define('TMP_DIR', 						      '/tmp/'); // a temporary directory to use for creating thumbnails
-define('USE_ALIAS', 							 false); // set to true in order to use aliased paths for output of Filepath
+define('ENCODE',                                'C:\Program Files\VideoLAN\VLC\vlc.exe'); // a program that can convert video and audio streams
+define('BUFFER_SIZE', 	                                                           2048); // max amount to output when accessing a file
+define('TMP_DIR', 	                                                            '/tmp/'); // a temporary directory to use for creating thumbnails
+define('USE_ALIAS', 	                                                          false); // set to true in order to use aliased paths for output of Filepath
 
 // comment-out-able
 ini_set('error_reporting', E_ALL);
