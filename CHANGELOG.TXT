@@ -1,3 +1,10 @@
+2009-02-06
+Finished Windows compatibility
+Fixed many directory and file reference structure
+Eliminated unnecissary settings
+Added more $_request options to encode.php and convert.php plugins
+Standardized settings so that ROOT_ always refers to a path on the filesystem and HTML_ always refers to something a template will use to access files
+
 2009-01-31
 Fixed some bugs in the cron.php script, folders leading up to the watch directories were being added and in turn causing them not to be scanned
 Added an ignore directory option, folders in watch list can now be preceeded with ! sign in order to be ignored
