@@ -19,14 +19,14 @@ define('DB_TYPE',				       'mysql');
 define('DB_PREFIX',				         'db_');
 
 // site constants these are used throughout the entire system
-define('LOCAL_ROOT',                '/var/www/mediaserver/');
+define('LOCAL_ROOT',                '/var/www/mediaserver/cross_platform/');
 
 // this is the path used by html pages to refer back to the website domain, HTML_ROOT is usually appended to this
 define('HTML_DOMAIN',            			    'http://dev.bjcullinan.com/');
 // this is the root directory of the site, this is needed if the site is not running on it's own domain
 // this is so HTML pages can refer to the root of the site, without making the brower validate the entire domain, this saves time loading pages
 // a slash / is always preppended to this when the HTML_DOMAIN is not preceeding this
-define('HTML_ROOT',                                           '');
+define('HTML_ROOT',                                        'cross_platform/');
 // this is the local filesystem path to the default template, this path should not be used in web pages, instead use HTML_TEMPLATE
 define('LOCAL_DEFAULT',            				        'templates/default/');
 // this is the optional template that will be used

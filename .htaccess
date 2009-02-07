@@ -1,0 +1,15 @@
+<IfModule mod_rewrite.c>
+
+RewriteEngine on
+
+RewriteBase /cross_platform/
+RewriteRule ^plugins/file/(.*)/([0-9]*)/(.*)$ 							plugins/file.php?cat=$1&id=$2&filename=$3 [L]
+RewriteRule ^plugins/bt/(([0-9]*,?)*)/(.*)$ 							plugins/bt.php?item=$1&btorrent= [L]
+RewriteRule ^plugins/zip/(([0-9]*,?)*)/(.*)$ 							plugins/zip.php?item=$1&zip= [L]
+RewriteRule ^plugins/list/(([0-9]*,?)*)/(WM|MP4|MPG)/(.*)$ 				plugins/list.php?item=$1&m3u_type=$3&filename=$4&type=m3u&list= [L]
+RewriteRule ^plugins/list/(([0-9]*,?)*)/(.*)$							plugins/list.php?item=$1&filename=$3&list= [L]
+RewriteRule ^plugins/list/(.*)$ 										plugins/list.php?filename=$1&list= [L]
+RewriteRule ^plugins/encode/([0-9]*)/(WMV|MPG|MP4|MP4A|MP3|WMA)/(.*)$ 	plugins/encode.php?id=$1&encode=$2 [L]
+RewriteRule ^plugins/convert/([0-9]*)/(JPG|GIF|PNG)/(.*)$ 				plugins/convert.php?id=$1&convert=$2 [L]
+
+</IfModule>
