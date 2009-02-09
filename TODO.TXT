@@ -4,6 +4,7 @@ This will enable doing things like passing in a zip using the fs_zip category an
 The file.php should also use the modules, passing in a stream STDOUT should be written to by the module, this will enable us to use the modules for writing out zipped files
 Any raw file access should refer to the module, this should enable us to turn off database support, and run completely on the modules returnin the right information
 What optimizations can be put in cron that the modules should support? How about returning false for ->handles? When you pass a file in that is inside the ignored paths
+Add a no database options first, this will help us figure out how to allow some modules to always run without a database
 
 2009-01-31
 Add support for creating thumbnails in convert.php script

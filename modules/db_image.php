@@ -6,10 +6,10 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATO
 require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'db_file.php';
 
 // include the id handler
-require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'ID3' . DIRECTORY_SEPARATOR . 'getid3.php';
+require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.php';
 
 // set up id3 reader incase any files need it
-$getID3 = new getID3();
+$GLOBALS['getID3'] = new getID3();
 
 // music handler
 class db_image extends db_file
@@ -96,10 +96,10 @@ class db_image extends db_file
 
 	static function add($mysql, $file, $image_id = NULL)
 	{
-		global $getID3;
 		$priority = array_reverse(db_image::PRIORITY());
 	
-		$info = $getID3->analyze($file);
+		$info = $GLOBALS['getID3']->analyze($file);
+
 		
 		// pull information from $info
 		$fileinfo = array();

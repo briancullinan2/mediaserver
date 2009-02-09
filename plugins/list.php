@@ -11,8 +11,13 @@ $mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 
 // load template to create output
 if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
-	$smarty = new Smarty;
+	$smarty = new Smarty();
 $smarty->compile_dir = LOCAL_ROOT . 'templates_c' . DIRECTORY_SEPARATOR;
+
+$smarty->compile_check = true;
+$smarty->debugging = false;
+$smarty->caching = false;
+$smarty->force_compile = true;
 
 include_once LOCAL_ROOT . 'plugins' . DIRECTORY_SEPARATOR . 'type.php';
 

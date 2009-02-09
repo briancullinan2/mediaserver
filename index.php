@@ -10,9 +10,9 @@ if(substr(selfURL(), 0, strlen(HTML_DOMAIN)) != HTML_DOMAIN)
 }
 
 if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
-	$smarty = new Smarty;
-
+	$smarty = new Smarty();
 $smarty->compile_dir = LOCAL_ROOT . 'templates_c' . DIRECTORY_SEPARATOR;
+
 $smarty->compile_check = true;
 $smarty->debugging = false;
 $smarty->caching = false;

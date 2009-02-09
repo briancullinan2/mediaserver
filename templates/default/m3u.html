@@ -29,7 +29,7 @@ foreach($files as $i => $file)
 	$type = split('/', $file['Filemime']);
 	if($type[0] == 'audio' || $type[0] == 'video')
     {
-    	print $file['Filename'];
+    	print $file['Filename'] . '<br />';
         $count++;
     }
     if($count == 10)

@@ -20,7 +20,10 @@ class db_file
 	// return whether or not this module handles trhe specified type of file
 	static function handles($file)
 	{
-		return true;
+		if(is_dir($file) || is_file($file))
+			return true;
+		else
+			return false;
 	}
 	
 	// this function determines if the file qualifies for this type and handles it according
@@ -64,6 +67,20 @@ class db_file
 		
 	}
 	
+	static function getInfo($file)
+	{
+		// get file extension
+		$fileinfo = array();
+		$fileinfo['Filepath'] = addslashes($file);
+		$fileinfo['Filename'] = basename($file);
+		$fileinfo['Filesize'] = filesize($file);
+		$fileinfo['Filemime'] = getMime($file);
+		$fileinfo['Filedate'] = date("Y-m-d h:i:s", filemtime($file));
+		$fileinfo['Filetype'] = getFileType($file);
+		
+		return $fileinfo;
+	}
+	
 	// add a given file to the given database
 	// returns the id of the entry
 	// if the id is given then it updates the entry
@@ -71,14 +88,7 @@ class db_file
 	{
 	
 		// get file extension
-		$fileinfo = array();
-		$fileinfo['Filepath'] = addslashes($file);
-		$fileinfo['Filename'] = basename($file);
-		//if(USE_ALIAS) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
-		$fileinfo['Filesize'] = filesize($file);
-		$fileinfo['Filemime'] = getMime($file);
-		$fileinfo['Filedate'] = date("Y-m-d h:i:s", filemtime($file));
-		$fileinfo['Filetype'] = getFileType($file);
+		$fileinfo = db_file::getInfo($file);
 			
 		// if the id is set then we are updating and entry
 		if( $id != NULL )
@@ -105,22 +115,64 @@ class db_file
 		
 	}
 	
+	// output provided file to given stream
+	static function out($mysql, $file, $stream)
+	{
+		// check to make sure file is valid
+		if(is_file($file))
+		{
+			$files = $mysql->get(db_file::DATABASE, array('WHERE' => 'Filepath = "' . addslashes($file) . '"'));
+			if(count($file) > 0)
+			{				
+				$file = $files[0];
+				header('Content-Transfer-Encoding: binary');
+				header('Content-Type: ' . $file['Filemime']);
+				header('Content-Length: ' . $file['Filesize']);
+				header('Content-Disposition: attachment; filename="' . $file['Filename'] . '"');
+				
+				if(is_string($stream))
+					$op = fopen($stream, 'wb');
+				else
+					$op = $stream;
+				
+				if($op !== false)
+				{
+					if($fp = fopen($files[0]['Filepath'], 'rb'))
+					{
+						while (!feof($fp)) {
+							fwrite($op, fread($fp, BUFFER_SIZE));
+						}				
+						fclose($fp);
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+	
 	
 	// the mysql can be left null to get the files from a directory, in which case a directory must be specified
 	// if the mysql is provided, then the file listings will be loaded from the database
-	// DETAIL!!!!111: the level of detail to display the files for see the DETAIL function!
 	static function get($mysql, $props)
 	{
 		$files = array();
 		
 		if($mysql == NULL)
 		{
+			if(!isset($props['DIR']))
+				$props['DIR'] = realpath('/');
 			if (is_dir($props['DIR']))
 			{
 				// if we are over 5.0 use the scandir method
 				if( version_compare(phpversion(), "5.0.0") >= 0 )
 				{
-					return scandir($props['DIR']);
+					$tmp_files = scandir($props['DIR']);
+					foreach($tmp_files as $i => $file)
+					{
+						$files[$i] = db_file::getInfo($props['DIR'] . $file);
+					}
+					return $files;
 				}
 				else
 				{
@@ -129,7 +181,7 @@ class db_file
 					{
 						while (($file = readdir($dh)) !== false)
 						{
-							$files[] = ($props['DIR'] . $file);
+							$files[] = db_file::getInfo($props['DIR'] . $file);
 						}
 						closedir($dh);
 					}

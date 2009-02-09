@@ -8,7 +8,7 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATO
 
 // load template to create output
 if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
-	$smarty = new Smarty;
+	$smarty = new Smarty();
 $smarty->compile_dir = LOCAL_ROOT . 'templates_c' . DIRECTORY_SEPARATOR;
 
 if(isset($_REQUEST['type_select']))
@@ -21,7 +21,7 @@ $type_files = array();
 $files = db_file::get(NULL, array('DIR' => LOCAL_ROOT . LOCAL_DEFAULT));
 foreach($files as $i => $type_file)
 {
-	if ($type_file[0] != '.' && !is_dir(LOCAL_ROOT . LOCAL_DEFAULT . $files[$i]))
+	if ($type_file['Filename'][0] != '.' && !is_dir(LOCAL_ROOT . LOCAL_DEFAULT . $files[$i]['']))
 		$type_files[] = LOCAL_ROOT . LOCAL_DEFAULT . $files[$i];
 }
 

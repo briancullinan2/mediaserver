@@ -24,45 +24,21 @@ if(isset($_REQUEST['id']) && is_numeric($_REQUEST['id']))
 	
 	if(count($files) > 0)
 	{
-	
-		$file = $mysql->get(db_file::DATABASE, array('WHERE' => 'Filepath = "' . addslashes($files[0]['Filepath']) . '"'));
-		if(count($file) > 0)
-		{
-			$files[0] = array_merge($file[0], $files[0]);
-		}
-		
+			
 		// output file
 		if(class_exists($_REQUEST['cat'] . '_browser') && call_user_func(array($_REQUEST['cat'], 'handles'), $files[0]['Filepath']))
 		{
 			// output that mime type and the file
-			if($fp = fopen($files[0]['Filepath'], 'rb'))
-			{
-				header('Content-Type: ' . $files[0]['Filemime']);
-				header('Content-Length: ' . $files[0]['Filesize']);
-				
-				while (!feof($fp)) {
-					print fread($fp, BUFFER_SIZE);
-				}				
-				fclose($fp);
-				
-			}
+			header('Content-Type: ' . $files[0]['Filemime']);
+			header('Content-Length: ' . $files[0]['Filesize']);
 			
+			call_user_func(array($_REQUEST['cat'], 'out'), $mysql, $files[0]['Filepath'], STDOUT);
 		}
 		else
 		{
 			// output file and displace
-			if($fp = fopen($files[0]['Filepath'], 'rb'))
-			{
-				header('Content-Transfer-Encoding: binary');
-				header('Content-Type: ' . $files[0]['Filemime']);
-				header('Content-Length: ' . $files[0]['Filesize']);
-				header('Content-Disposition: attachment; filename="' . $files[0]['Filename'] . '"'); 
-				
-				while (!feof($fp)) {
-					print fread($fp, BUFFER_SIZE);
-				}				
-				fclose($fp);
-			}
+			
+			call_user_func(array($_REQUEST['cat'], 'out'), $mysql, $files[0]['Filepath'], 'php://output');
 		}
 	}
 }

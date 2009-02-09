@@ -4,7 +4,7 @@
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
 if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
-	$smarty = new Smarty;
+	$smarty = new Smarty();
 $smarty->compile_dir = LOCAL_ROOT . 'templates_c' . DIRECTORY_SEPARATOR;
 	
 $smarty->compile_check = true;

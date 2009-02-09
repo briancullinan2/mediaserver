@@ -11,7 +11,7 @@ if(!isset($no_setup) || !$no_setup == true)
 	session_start();
 
 // require the settings
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.php';
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings2.php';
 
 // classes that this function uses to set up stuff should use the $no_setup = true option
 if(!isset($no_setup) || !$no_setup == true)
@@ -71,10 +71,10 @@ function setup()
 	if(file_exists(LOCAL_ROOT . LOCAL_TEMPLATE . 'config.php'))
 		require_once LOCAL_ROOT . LOCAL_TEMPLATE . 'config.php';
 	
-	require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'sql.php';
+	if( USE_DATABASE ) require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'sql.php';
 	
 	// include the sql class so it can be used by any page
-	if( DB_TYPE == 'mysql' )
+	if( USE_DATABASE && DB_TYPE == 'mysql' )
 	{
 		include_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'mysql.php';
 	}

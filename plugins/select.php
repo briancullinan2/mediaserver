@@ -7,11 +7,12 @@
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
 // load mysql to query the database
-$mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+if(USE_DATABASE) $mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+else $mysql = NULL;
 
 // load template to create output
 if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
-	$smarty = new Smarty;
+	$smarty = new Smarty();
 $smarty->compile_dir = LOCAL_ROOT . 'templates_c' . DIRECTORY_SEPARATOR;
 	
 $smarty->compile_check = true;
@@ -106,7 +107,7 @@ if(isset($_REQUEST['dir']))
 	if(realpath($_REQUEST['dir']) !== false && is_dir(realpath($_REQUEST['dir'])))
 	{
 		// make sure directory is in the database
-		$dirs = call_user_func(array('db_file', 'get'), $mysql, array('WHERE' => 'Filepath = "' . addslashes($_REQUEST['dir']) . '"'));
+		$dirs = call_user_func(array($_REQUEST['cat'], 'get'), $mysql, array('WHERE' => 'Filepath = "' . addslashes($_REQUEST['dir']) . '"'));
 		
 		// top level directory / should always exist
 		if($_REQUEST['dir'] == realpath('/') || count($dirs) > 0)
@@ -220,7 +221,8 @@ unset($props['OTHER']);
 $props['SELECT'] = 'count(*)';
 
 // get count
-$result = $mysql->get(constant($_REQUEST['cat'] . '::DATABASE'), $props);
+if(USE_DATABASE) $result = $mysql->get(constant($_REQUEST['cat'] . '::DATABASE'), $props);
+else $result[0]['count(*)'] = count($files);
 
 $smarty->assign('total_count', intval($result[0]['count(*)']));
 
