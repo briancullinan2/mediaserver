@@ -1,3 +1,7 @@
+2009-02-09
+Replaced includes with absolute path and ROOT_PATH, this enables the site to exist in a completely different location from the settings file and index page.
+Tested setup on two different environments, installation is down to about 15 minutes and working perfectly.
+
 2009-02-06
 Finished Windows compatibility
 Fixed many directory and file reference structure

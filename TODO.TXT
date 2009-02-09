@@ -1,3 +1,10 @@
+2009-02-09
+Work out a system for passing files to their module first, in select.php when a directory is used it should use the module to determine if it exists
+This will enable doing things like passing in a zip using the fs_zip category and getting files back from it
+The file.php should also use the modules, passing in a stream STDOUT should be written to by the module, this will enable us to use the modules for writing out zipped files
+Any raw file access should refer to the module, this should enable us to turn off database support, and run completely on the modules returnin the right information
+What optimizations can be put in cron that the modules should support? How about returning false for ->handles? When you pass a file in that is inside the ignored paths
+
 2009-01-31
 Add support for creating thumbnails in convert.php script
 Fix arrow-key movement in extjs template, in thumbnails view of the FolderView.js

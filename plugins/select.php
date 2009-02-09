@@ -88,6 +88,7 @@ if(isset($_REQUEST['includes']) && $_REQUEST['includes'] != '')
 	$props['WHERE'] .= join(' OR ', $columns) . ')';
 }
 
+// TODO: this should all be using the db_file->get function because if a zip file is passed in it should act like a directory
 // add dir filter to where
 if(isset($_REQUEST['dir']))
 {
