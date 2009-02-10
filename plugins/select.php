@@ -24,8 +24,6 @@ $smarty->force_compile = true;
 $columns = getAllColumns();
 $smarty->assign('columns', $columns);
 
-$error = '';
-
 //print_r($_SESSION['selected']);
 
 // check if trying to change selected items
@@ -50,114 +48,29 @@ if(isset($_REQUEST['select']))
 
 }
 
-// initialize properties for select statement
-$props = array();
-
 // add category
 if(!isset($_REQUEST['cat']) || !in_array($_REQUEST['cat'], $GLOBALS['modules']))
 	$_REQUEST['cat'] = 'db_file';
 
-$columns = call_user_func(array($_REQUEST['cat'], 'columns'));
-
-// set a show in the request and do validation!
+// do validation!
 if( !isset($_REQUEST['start']) || !is_numeric($_REQUEST['start']) || $_REQUEST['start'] < 0 )
 	$_REQUEST['start'] = 0;
 if( !isset($_REQUEST['limit']) || !is_numeric($_REQUEST['limit']) || $_REQUEST['limit'] < 0 )
 	$_REQUEST['limit'] = 15;
-if( !isset($_REQUEST['order_by']) || !in_array($_REQUEST['order_by'], $columns) )
-	$_REQUEST['order_by'] = 'Filepath';
 if( !isset($_REQUEST['direction']) || ($_REQUEST['direction'] != 'ASC' && $_REQUEST['direction'] != 'DESC') )
 	$_REQUEST['direction'] = 'ASC';
-	
-$props['OTHER'] = ' ORDER BY ' . $_REQUEST['order_by'] . ' ' . $_REQUEST['direction'] . ' LIMIT ' . $_REQUEST['start'] . ',' . $_REQUEST['limit'];
+if( !isset($_REQUEST['order_by']) || !in_array($_REQUEST['order_by'], $columns) )
+	$_REQUEST['order_by'] = 'Filepath';
+if(!isset($_REQUEST['order']))
+	$_REQUEST['order'] = $_REQUEST['order_by'];
 
-// add where includes
-if(isset($_REQUEST['includes']) && $_REQUEST['includes'] != '')
-{
-	$props['WHERE'] = '';
-	
-	// incase an aliased path is being searched for replace it here too!
-	if(USE_ALIAS == true) $_REQUEST['includes'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $_REQUEST['includes']);
-	$regexp = addslashes(addslashes($_REQUEST['includes']));
-	
-	// add a regular expression matching for each column in the table being searched
-	$props['WHERE'] .= '(';
-	foreach($columns as $i => $column)
-	{
-		$columns[$i] .= ' REGEXP "' . $regexp . '"';
-	}
-	$props['WHERE'] .= join(' OR ', $columns) . ')';
-}
+// make select call
+$files = call_user_func_array($_REQUEST['cat'] . '::get', array($mysql, $_REQUEST, &$count, &$error));
 
-// TODO: this should all be using the db_file->get function because if a zip file is passed in it should act like a directory
-// add dir filter to where
-if(isset($_REQUEST['dir']))
-{
-	//$_REQUEST['dir'] = stripslashes($_REQUEST['dir']);
-	if($_REQUEST['dir'] == '') $_REQUEST['dir'] = DIRECTORY_SEPARATOR;
-	// this is necissary for dealing with windows and cross platform queries coming from templates
-	//  yes: the template should probably handle this by itself, but this is convenient and easy
-	//   it is purely for making all the paths look prettier
-	if($_REQUEST['dir'][0] == '/' || $_REQUEST['dir'][0] == '\\') $_REQUEST['dir'] = realpath('/') . substr($_REQUEST['dir'], 1);
-	
-	// replace aliased path with actual path
-	if(USE_ALIAS == true) $_REQUEST['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $_REQUEST['dir']);
-	
-	// only search for file if is valid dir
-	if(realpath($_REQUEST['dir']) !== false && is_dir(realpath($_REQUEST['dir'])))
-	{
-		// make sure directory is in the database
-		$dirs = call_user_func(array($_REQUEST['cat'], 'get'), $mysql, array('WHERE' => 'Filepath = "' . addslashes($_REQUEST['dir']) . '"'));
-		
-		// top level directory / should always exist
-		if($_REQUEST['dir'] == realpath('/') || count($dirs) > 0)
-		{
-			if(!isset($props['WHERE'])) $props['WHERE'] = '';
-			elseif($props['WHERE'] != '') $props['WHERE'] .= ' AND ';
-			
-			// if the includes is blank then only show files from current directory
-			if(!isset($_REQUEST['includes']))
-			{
-				if(isset($_REQUEST['dirs_only']))
-					$props['WHERE'] .= 'Filepath REGEXP "^' . addslashes(addslashes($_REQUEST['dir'])) . '[^' . addslashes(addslashes(DIRECTORY_SEPARATOR)) . ']+' . addslashes(addslashes(DIRECTORY_SEPARATOR)) . '$"';
-				else
-					$props['WHERE'] .= 'Filepath REGEXP "^' . addslashes(addslashes($_REQUEST['dir'])) . '[^' . addslashes(addslashes(DIRECTORY_SEPARATOR)) . ']+' . addslashes(addslashes(DIRECTORY_SEPARATOR)) . '?$"';
-			}
-			// show all results underneath directory
-			else
-			{
-				if(isset($_REQUEST['dirs_only']))
-					$props['WHERE'] .= 'Filepath REGEXP "^' . addslashes(addslashes($_REQUEST['dir'])) . '([^' . addslashes(addslashes(DIRECTORY_SEPARATOR)) . ']+' . addslashes(addslashes(DIRECTORY_SEPARATOR)) . ')*$"';
-				else
-					$props['WHERE'] .= 'Filepath REGEXP "^' . addslashes(addslashes($_REQUEST['dir'])) . '"';
-			}
-		}
-		else
-		{
-			// set smarty error
-			$error = 'Directory does not exist.';
-		}
-	}
-	else
-	{
-		// set smarty error
-		$error = 'Directory does not exist.';
-	}
-}
-
-if($error == '')
-{
-	// make select call
-	$files = call_user_func(array($_REQUEST['cat'], 'get'), $mysql, $props);
-}
-else
+if($error != '')
 {
 	$files = array();
 }
-
-// do display order
-if(!isset($_REQUEST['order']))
-	$_REQUEST['order'] = $_REQUEST['order_by'];
 
 $order_keys_values = array();
 
@@ -173,7 +86,8 @@ foreach($files as $index => &$file)
 		{
 			if($module != $_REQUEST['cat'] && call_user_func(array($module, 'handles'), $file['Filepath']))
 			{
-				$return = call_user_func(array($module, 'get'), $mysql, array('WHERE' => 'Filepath = "' . addslashes($file['Filepath']) . '"'));
+				$tmp_count = 0;
+				$return = call_user_func(array($module, 'get'), $mysql, array('file' => $file['Filepath']), $tmp_count, $error);
 				if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
 			}
 		}
@@ -204,6 +118,8 @@ foreach($files as $index => &$file)
 	}
 }
 
+// only order it if the database is not already going to order it
+// this will unlikely be used when the database is in use
 if($_REQUEST['order'] != $_REQUEST['order_by'])
 {
 	if(isset($order_keys_values[0]) && is_numeric($order_keys_values[0]))
@@ -216,15 +132,7 @@ if($_REQUEST['order'] != $_REQUEST['order_by'])
 
 $smarty->assign('files', $files);
 
-// this is how we get the count of all the items
-unset($props['OTHER']);
-$props['SELECT'] = 'count(*)';
-
-// get count
-if(USE_DATABASE) $result = $mysql->get(constant($_REQUEST['cat'] . '::DATABASE'), $props);
-else $result[0]['count(*)'] = count($files);
-
-$smarty->assign('total_count', intval($result[0]['count(*)']));
+$smarty->assign('total_count', $count);
 
 $smarty->assign('error', $error);
 

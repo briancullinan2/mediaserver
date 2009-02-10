@@ -136,7 +136,7 @@ function setup()
 		$_REQUEST['detail'] = 0;
 		
 	// get the aliases to use to replace parts of the filepath
-	if(USE_ALIAS == true)
+	if(USE_ALIAS == true && USE_DATABASE == true)
 	{
 		$mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 		$aliases = $mysql->get('alias', array('SELECT' => '*'));

@@ -21,9 +21,17 @@ class db_file
 	static function handles($file)
 	{
 		if(is_dir($file) || is_file($file))
-			return true;
-		else
+		{
+			$filename = basename($file);
+
+			// make sure it isn't a hidden file
+			if($filename[0] != '.')
+				return true;
+			else
+				return false;
+		} else {
 			return false;
+		}
 	}
 	
 	// this function determines if the file qualifies for this type and handles it according
@@ -69,7 +77,6 @@ class db_file
 	
 	static function getInfo($file)
 	{
-		// get file extension
 		$fileinfo = array();
 		$fileinfo['Filepath'] = addslashes($file);
 		$fileinfo['Filename'] = basename($file);
@@ -86,8 +93,7 @@ class db_file
 	// if the id is given then it updates the entry
 	static function add($mysql, $file, $id = NULL)
 	{
-	
-		// get file extension
+		// get file information
 		$fileinfo = db_file::getInfo($file);
 			
 		// if the id is set then we are updating and entry
@@ -154,54 +160,180 @@ class db_file
 	
 	// the mysql can be left null to get the files from a directory, in which case a directory must be specified
 	// if the mysql is provided, then the file listings will be loaded from the database
-	static function get($mysql, $props)
+	static function get($mysql, $request, &$count, &$error)
 	{
+		// do validation! for the fields we use
+		if( !isset($request['start']) || !is_numeric($request['start']) || $request['start'] < 0 )
+			$request['start'] = 0;
+		if( !isset($request['limit']) || !is_numeric($request['limit']) || $request['limit'] < 0 )
+			$request['limit'] = 15;
+		if( !isset($request['order_by']) || !in_array($request['order_by'], db_file::columns()) )
+			$request['order_by'] = 'Filepath';
+		if( !isset($request['direction']) || ($request['direction'] != 'ASC' && $request['direction'] != 'DESC') )
+			$request['direction'] = 'ASC';
+		getIDsFromRequest($request, $request['selected']);
+
 		$files = array();
 		
 		if($mysql == NULL)
 		{
-			if(!isset($props['DIR']))
-				$props['DIR'] = realpath('/');
-			if (is_dir($props['DIR']))
+			if(isset($request['file']))
 			{
-				// if we are over 5.0 use the scandir method
-				if( version_compare(phpversion(), "5.0.0") >= 0 )
+			}
+			else
+			{
+				// set a directory is one isn't set already
+				if(!isset($request['dir']))
+					$request['dir'] = realpath('/');
+				// check to make sure is it a valid directory before continuing
+				if (is_dir($request['dir']))
 				{
-					$tmp_files = scandir($props['DIR']);
-					foreach($tmp_files as $i => $file)
+					// scandir - read in a list of the directory content
+					$tmp_files = scandir($request['dir']);
+					$count = count($tmp_files);
+					// parse out all the files that this module doesn't handle, just like a filter
+					for($j = 0; $j < $count; $j++)
+						if(!db_file::handles($request['dir'] . $tmp_files[$j])) unset($tmp_files[$j]);
+					// get the values again, this will reset all the indices
+					$tmp_files = array_values($tmp_files);
+					// set the count to the total length of the file list
+					$count = count($tmp_files);
+					// start the information getting and combining of file info
+					for($i = $request['start']; $i < min($request['start']+$request['limit'], $count); $i++)
 					{
-						$files[$i] = db_file::getInfo($props['DIR'] . $file);
+						// get the information from the module for 1 file
+						$info = db_file::getInfo($request['dir'] . $tmp_files[$i]);
+						// make some modifications
+						$info['Filepath'] = stripslashes($info['Filepath']);
+						if($info['Filetype'] == 'FOLDER') $info['Filepath'] .= DIRECTORY_SEPARATOR;
+						// set the informations in the total list of files
+						$files[] = $info;
 					}
 					return $files;
 				}
-				else
-				{
-					// create file array
-					if ($dh = opendir($props['DIR']))
-					{
-						while (($file = readdir($dh)) !== false)
-						{
-							$files[] = db_file::getInfo($props['DIR'] . $file);
-						}
-						closedir($dh);
-					}
-					
-				}
-				
+				else{ $error = 'Directory does not exist!'; return false; }
 			}
 		}
 		else
 		{
-			// construct where statement
-			if(isset($props['DIR']) && !isset($props['WHERE']))
+			$props = array();
+			
+			$props['OTHER'] = ' ORDER BY ' . $request['order_by'] . ' ' . $request['direction'] . ' LIMIT ' . $request['start'] . ',' . $request['limit'];
+			
+			// select an array of ids!
+			if( isset($request['selected']) && count($request['selected']) > 0 )
 			{
-				$props['WHERE'] = 'Filepath REGEXP "^' . addslashes(addslashes($dir)) . '"';
+				$props['WHERE'] = 'id=' . join(' OR id=', $selected);
+				unset($props['OTHER']);
+			}
+
+			// add where includes
+			if(isset($request['includes']) && $request['includes'] != '')
+			{
+				$props['WHERE'] = '';
+				
+				// incase an aliased path is being searched for replace it here too!
+				if(USE_ALIAS == true) $request['includes'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['includes']);
+				$regexp = addslashes(addslashes($request['includes']));
+				
+				// add a regular expression matching for each column in the table being searched
+				$props['WHERE'] .= '(';
+				foreach($columns as $i => $column)
+				{
+					$columns[$i] .= ' REGEXP "' . $regexp . '"';
+				}
+				$props['WHERE'] .= join(' OR ', $columns) . ')';
+			}
+			
+			// add dir filter to where
+			if(isset($request['dir']))
+			{
+				if($request['dir'] == '') $request['dir'] = DIRECTORY_SEPARATOR;
+				// this is necissary for dealing with windows and cross platform queries coming from templates
+				//  yes: the template should probably handle this by itself, but this is convenient and easy
+				//   it is purely for making all the paths look prettier
+				if($request['dir'][0] == '/' || $request['dir'][0] == '\\') $request['dir'] = realpath('/') . substr($request['dir'], 1);
+				
+				// replace aliased path with actual path
+				if(USE_ALIAS == true) $request['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
+				
+				// only search for file if is valid dir
+				if(realpath($request['dir']) !== false && is_dir(realpath($request['dir'])))
+				{
+					// make sure directory is in the database
+					$dirs = $mysql->get(db_file::DATABASE, array('WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
+					
+					// top level directory / should always exist
+					if($request['dir'] == realpath('/') || count($dirs) > 0)
+					{
+						if(!isset($props['WHERE'])) $props['WHERE'] = '';
+						elseif($props['WHERE'] != '') $props['WHERE'] .= ' AND ';
+						
+						// if the includes is blank then only show files from current directory
+						if(!isset($request['includes']))
+						{
+							if(isset($request['dirs_only']))
+								$props['WHERE'] .= 'Filepath REGEXP "^' . addslashes(addslashes($request['dir'])) . '[^' . addslashes(addslashes(DIRECTORY_SEPARATOR)) . ']+' . addslashes(addslashes(DIRECTORY_SEPARATOR)) . '$"';
+							else
+								$props['WHERE'] .= 'Filepath REGEXP "^' . addslashes(addslashes($request['dir'])) . '[^' . addslashes(addslashes(DIRECTORY_SEPARATOR)) . ']+' . addslashes(addslashes(DIRECTORY_SEPARATOR)) . '?$"';
+						}
+						// show all results underneath directory
+						else
+						{
+							if(isset($request['dirs_only']))
+								$props['WHERE'] .= 'Filepath REGEXP "^' . addslashes(addslashes($request['dir'])) . '([^' . addslashes(addslashes(DIRECTORY_SEPARATOR)) . ']+' . addslashes(addslashes(DIRECTORY_SEPARATOR)) . ')*$"';
+							else
+								$props['WHERE'] .= 'Filepath REGEXP "^' . addslashes(addslashes($request['dir'])) . '"';
+						}
+					}
+					else
+					{
+						$error = 'Directory does not exist!';
+					}
+				}
+				else
+				{
+					$error = 'Directory does not exist!';
+				}
+			}
+			
+			// add file filter to where
+			if(isset($request['file']))
+			{
+				// this is necissary for dealing with windows and cross platform queries coming from templates
+				if($request['file'][0] == '/' || $request['file'][0] == '\\') $request['file'] = realpath('/') . substr($request['file'], 1);
+
+				// replace aliased path with actual path
+				if(USE_ALIAS == true) $request['file'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']);
+				
+				// only search for file if is a valid file
+				if(realpath($request['file']) !== false && is_file(realpath($request['file'])))
+				{
+					if(!isset($props['WHERE'])) $props['WHERE'] = '';
+					elseif($props['WHERE'] != '') $props['WHERE'] .= ' AND ';
+					
+					// add file to where
+					$props['WHERE'] .= ' Filepath = "' . addslashes($request['file']) . '"';
+				}
+				// file does no exist
+				else
+				{
+					$error = 'File does not exist!';
+				}
 			}
 		
 			$props['SELECT'] = db_file::columns();
 		
 			// get directory from database
 			$files = $mysql->get(db_file::DATABASE, $props);
+			
+			// this is how we get the count of all the items
+			unset($props['OTHER']);
+			$props['SELECT'] = 'count(*)';
+			
+			$result = $mysql->get(db_file::DATABASE, $props);
+			
+			$count = intval($result[0]['count(*)']);
 		}
 			
 		return $files;

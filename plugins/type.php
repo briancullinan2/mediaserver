@@ -16,22 +16,24 @@ if(isset($_REQUEST['type_select']))
 	// redirect to list with type in the request
 }
 
+$count = 0;
+$error = '';
 // get all the possible types for a list from templates directory
 $type_files = array();
-$files = db_file::get(NULL, array('DIR' => LOCAL_ROOT . LOCAL_DEFAULT));
+$files = db_file::get(NULL, array('dir' => LOCAL_ROOT . LOCAL_DEFAULT), $count, $error);
 foreach($files as $i => $type_file)
 {
-	if ($type_file['Filename'][0] != '.' && !is_dir(LOCAL_ROOT . LOCAL_DEFAULT . $files[$i]['']))
-		$type_files[] = LOCAL_ROOT . LOCAL_DEFAULT . $files[$i];
+	if ($type_file['Filename'][0] != '.' && !is_dir($files[$i]['Filepath']))
+		$type_files[] = $files[$i]['Filepath'];
 }
 
 if(LOCAL_TEMPLATE != LOCAL_DEFAULT)
 {
-	$files = db_file::get(NULL, array('DIR' => LOCAL_ROOT . LOCAL_TEMPLATE));
+	$files = db_file::get(NULL, array('dir' => LOCAL_ROOT . LOCAL_TEMPLATE), $count, $error);
 	foreach($files as $i => $type_file)
 	{
-		if ($type_file[0] != '.' && !is_dir(LOCAL_ROOT . LOCAL_TEMPLATE . $files[$i]))
-			$type_files[] = LOCAL_ROOT . LOCAL_TEMPLATE . $files[$i];
+		if ($type_file[0] != '.' && !is_dir($files[$i]['Filepath']))
+			$type_files[] = $files[$i]['Filepath'];
 	}
 }
 

@@ -1,7 +1,11 @@
 2009-02-09
+Made select.php use the modules to get lists of files
+Modified all the modules to handle the returning of their own file types, lots of repetitive code but leaves it more open for expansion
+All modules can return a list of files off of the filesystem now, instead of using a database
 Replaced includes with absolute path and ROOT_PATH, this enables the site to exist in a completely different location from the settings file and index page.
 Tested setup on two different environments, installation is down to about 15 minutes and working perfectly.
 Added functionality to db_file module for outputting file, it takes a mysql object, filename, and stream to output to.
+Added links to default template for downloading files and browsing directories
 
 2009-02-06
 Finished Windows compatibility

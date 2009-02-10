@@ -1,4 +1,8 @@
 2009-02-09
+Work getIDsFromRequest() into the modules only, and make the modules able to return items based on a list of IDs
+Figure out how to download files out of a zip file
+Download files without USE_DATABASE set to true, allow the actual filename to be used?  with USE_DATASE check to make sure it is in the database?
+FIX detail options in default template
 Work out a system for passing files to their module first, in select.php when a directory is used it should use the module to determine if it exists
 This will enable doing things like passing in a zip using the fs_zip category and getting files back from it
 The file.php should also use the modules, passing in a stream STDOUT should be written to by the module, this will enable us to use the modules for writing out zipped files

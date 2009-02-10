@@ -30,6 +30,10 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATO
 // start the page with a pre to output messages that can be viewed in a browser
 ?><pre><?php
 
+// the cron script is useless if it has nowhere to store the information it reads
+if(USE_DATABASE == false)
+	exit;
+
 // get the directories to watch from the watch database
 $mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 

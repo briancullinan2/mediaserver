@@ -18,7 +18,8 @@
 			{/if}
 			<input type="radio" name="item[{$files[file].id}]" value="on" {if $item_selected}checked="checked"{/if} />
 			<input type="radio" name="item[{$files[file].id}]" value="off" {if !$item_selected}checked="checked"{/if} />
-			{$files[file].Filepath}
+			{if $files[file].Filetype=="FOLDER" || ('fs_archive::handles'|@call_user_func:$files[file].Filepath && $smarty.request.cat == 'db_file')}<a href="?dir={$files[file].Filepath}{if 'fs_archive::handles'|@call_user_func:$files[file].Filepath}&cat=fs_archive{/if}">{$files[file].Filepath}</a>
+            {else}<a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}file/{if 'fs_archive::handles'|@call_user_func:$files[file].Filepath}fs_archive{else}db_file{/if}/{$files[file].id}/{$files[file].Filename}">{$files[file].Filepath}</a>{/if}
 			{if $smarty.request.detail == 2}
 				{foreach from=$smarty.session.columns item=column_value}
 					{if isset($files[file].$column_value)}

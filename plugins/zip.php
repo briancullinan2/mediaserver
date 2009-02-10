@@ -8,33 +8,16 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATO
 // load mysql to query the database
 $mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 
-// get listed items from database
-if(isset($_REQUEST['zip']))
-{
-	getIDsFromRequest($_REQUEST, $selected);
-	// use the session stuff instead
-	if(!isset($selected)) $selected = $_SESSION['selected'];
-}
-
-// initialize properties for select statement
-$props = array();
-
 // add category
 if(!isset($_REQUEST['cat']) || !in_array($_REQUEST['cat'], $GLOBALS['modules']))
-{
 	$_REQUEST['cat'] = 'db_file';
-}
 
 $files = array();
 
-// add where includes
-if( isset($selected) && count($selected) > 0 )
-{
-	$props['WHERE'] = 'id=' . join(' OR id=', $selected);
-	unset($props['OTHER']);
-
-	$files = call_user_func(array($_REQUEST['cat'], 'get'), $mysql, $props);
-}
+$count = 0;
+$error = '';
+// make select call
+$files = call_user_func(array($_REQUEST['cat'], 'get'), $mysql, $_REQUEST, $count, $error);
 
 $files_length = count($files);
 // get all the other information from other modules
@@ -47,7 +30,8 @@ for($index = 0; $index < $files_length; $index++)
 	{
 		if($module != $_REQUEST['cat'] && call_user_func(array($module, 'handles'), $file['Filepath']))
 		{
-			$return = call_user_func(array($module, 'get'), $mysql, array('WHERE' => 'Filepath = "' . addslashes($file['Filepath']) . '"'));
+			$tmp_count = 0;
+			$return = call_user_func(array($module, 'get'), $mysql, array('file' => $file['Filepath']), $tmp_count, $error);
 			if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
 		}
 	}
@@ -75,7 +59,7 @@ for($index = 0; $index < $files_length; $index++)
 		$files[$index]['Filepath_alias'] = '/' . substr($files[$index]['Filepath_alias'], strlen(realpath('/')));
 	// remove first slash because it cannot contribute to the path
 	if($files[$index]['Filepath_alias'][0] == '/') $files[$index]['Filepath_alias'] = substr($files[$index]['Filepath_alias'], 1);
-	$files[$index]['Filepath_alias'] = str_replace('\\', '/', $files[$index]['Filepath_alias']);
+	$files[$index]['Filepath_alias'] = str_replace(DIRECTORY_SEPARATOR, '/', $files[$index]['Filepath_alias']);
 }
 
 

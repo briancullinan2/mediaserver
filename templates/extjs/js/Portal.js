@@ -22,6 +22,7 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 		{name: 'link'},
 		{name: 'path'},
 		{name: 'ext'},
+		{name: 'cat'},
 		{name: 'selected'}
 	],
 	
@@ -185,28 +186,42 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 					var r = grid.store.getAt(rowIndex);
 					if(r.data.ext == 'FOLDER')
 					{
-						address.fireEvent('change', address.el, r.data.path, address.getValue());
-					}
-					else
-					{
-						if(r.data['info-Filemime'])
+						if(r.data.cat)
 						{
-							type = r.data['info-Filemime'].split('/')[0];
-							switch(type)
-							{
-								case 'audio':
-								case 'video':
-								case 'image':
-									module = this.app.getModule('player-win');
-									player = module.createWindow(r);
-								break;
-								default:
-									window.location = r.data.link;
-							}
+							address.fireEvent('change', address.el, r.data.path, address.getValue(), {cat: r.data.cat});
 						}
 						else
 						{
-							window.location = r.data.link;
+							address.fireEvent('change', address.el, r.data.path, address.getValue());
+						}
+					}
+					else
+					{
+						if(r.data.cat)
+						{
+							address.fireEvent('change', address.el, r.data.path, address.getValue(), {cat: r.data.cat});
+						}
+						else
+						{
+							if(r.data['info-Filemime'])
+							{
+								type = r.data['info-Filemime'].split('/')[0];
+								switch(type)
+								{
+									case 'audio':
+									case 'video':
+									case 'image':
+										module = this.app.getModule('player-win');
+										player = module.createWindow(r);
+									break;
+									default:
+										window.location = r.data.link;
+								}
+							}
+							else
+							{
+								window.location = r.data.link;
+							}
 						}
 					}
 				},
@@ -567,7 +582,7 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 								buttons: Ext.MessageBox.OK,
 								fn: function () {
 									// go back to previous directory
-									address.fireEvent('change', this, backbutton.menu.items.item(0).params.dir, null);
+									address.fireEvent('change', this, backbutton.menu.items.item(0).params.dir, null, backbutton.menu.items.item(0).params);
 									backbutton.menu.remove(backbutton.menu.items.item(0));
 									if(backbutton.menu.items.getCount() > 0){ backbutton.enable(); }
 									else{ backbutton.disable(); }

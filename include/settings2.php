@@ -9,6 +9,7 @@ define('ADMIN_PASS',			  'Da1ddy23');
 
 
 // database connection constants
+define('USE_DATABASE', 	                   false); // set to false to make modules load information about every file on the fly
 //define('DB_SERVER',                'localhost');
 //define('DB_USER',                 'bjcullinan');
 //define('DB_PASS',                   'Da1ddy23');
@@ -71,8 +72,8 @@ define('ENCODE_ARGS',                           '"%IF" :sout=#transcode{vcodec=%
 // finally some general options, just used to avoid hardcoding stuff
 define('BUFFER_SIZE', 	                                                        2048); // max amount to output when accessing a file
 define('TMP_DIR', 	                                                            'C:\wamp\tmp\\'); // a temporary directory to use for creating thumbnails
+// USE_DATABASE must be enabled in order for this to be used!
 define('USE_ALIAS', 	                                                        false); // set to true in order to use aliased paths for output of Filepath
-define('USE_DATABASE', 	                                                        false); // set to false to make modules load information about every file on the fly
 
 // comment-out-able
 ini_set('error_reporting', E_ALL);
