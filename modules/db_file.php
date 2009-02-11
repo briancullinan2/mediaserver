@@ -171,6 +171,8 @@ class db_file
 			$request['order_by'] = 'Filepath';
 		if( !isset($request['direction']) || ($request['direction'] != 'ASC' && $request['direction'] != 'DESC') )
 			$request['direction'] = 'ASC';
+		if( isset($request['id']) )
+			$request['item'] = $request['id'];
 		getIDsFromRequest($request, $request['selected']);
 
 		$files = array();

@@ -201,6 +201,8 @@ class db_image extends db_file
 			$request['order_by'] = 'Title';
 		if( !isset($request['direction']) || ($request['direction'] != 'ASC' && $request['direction'] != 'DESC') )
 			$request['direction'] = 'ASC';
+		if( isset($request['id']) )
+			$request['item'] = $request['id'];
 		getIDsFromRequest($request, $request['selected']);
 
 		$files = array();

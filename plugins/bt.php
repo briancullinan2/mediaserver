@@ -21,7 +21,7 @@ $files = array();
 $count = 0;
 $error = '';
 // make select call
-$files = call_user_func(array($_REQUEST['cat'], 'get'), $mysql, $_REQUEST, $count, $error);
+$files = call_user_func_array($_REQUEST['cat'] . '::get', array($mysql, $_REQUEST, &$count, &$error));
 
 $files_length = count($files);
 // get all the other information from other modules
@@ -34,8 +34,7 @@ for($index = 0; $index < $files_length; $index++)
 	{
 		if($module != $_REQUEST['cat'] && call_user_func(array($module, 'handles'), $file['Filepath']))
 		{
-			$tmp_count = 0;
-			$return = call_user_func(array($module, 'get'), $mysql, array('file' => $file['Filepath']), $tmp_count, $error);
+			$return = call_user_func_array($_REQUEST['cat'] . '::get', array($mysql, $_REQUEST, &$tmp_count, &$error));
 			if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
 		}
 	}

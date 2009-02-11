@@ -32,11 +32,7 @@ if(!isset($_REQUEST['%IF']) && isset($_REQUEST['id']))
 if(isset($_REQUEST['%IF']) && is_numeric($_REQUEST['%IF']))
 {
 	// get the file path from the database
-	$files = call_user_func(array($_REQUEST['cat'], 'get'), $mysql,
-		array(
-			'WHERE' => 'id = ' . $_REQUEST['id'],
-		)
-	);
+	$files = call_user_func_array($_REQUEST['cat'] . '::get', array($mysql, array('id' => $_REQUEST['id']), &$count, &$error));
 	
 	if(count($files) > 0)
 	{

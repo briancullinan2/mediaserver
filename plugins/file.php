@@ -16,11 +16,7 @@ if(!isset($_REQUEST['cat']) || !in_array($_REQUEST['cat'], $GLOBALS['modules']))
 if(isset($_REQUEST['id']) && is_numeric($_REQUEST['id']))
 {
 	// get the file path from the database
-	$files = call_user_func(array($_REQUEST['cat'], 'get'), $mysql,
-		array(
-			'WHERE' => 'id = ' . $_REQUEST['id'],
-		)
-	);
+	$files = call_user_func_array($_REQUEST['cat'] . '::get', array($mysql, array('id' => $_REQUEST['id']), &$count, &$error));
 	
 	if(count($files) > 0)
 	{
