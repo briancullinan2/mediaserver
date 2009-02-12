@@ -1,6 +1,14 @@
 2009-02-11
 Added fs_ modules for handling reading files off the filesystem, this should make the use of a database a lot more modular
 Fixed broken plugins from the fs_ modules change.
+Fixed broken plugins by adding a little requirement to aliasing, in order to show bottom level directories an alias must match ^/$ alone
+getIDsFromRequest() is only accessed by modules
+Downloading files with database turned off works by using a hex encoded pathname to the file, it is automatically decoded by getIDsFromRequest() and each modules $request['selected'] handler
+All plugins use the appropriate modules for getting file information
+File.php plugin uses modules fully now
+Cron.php plugin doesn't run if not using a database
+Modules are now required to start with db_ for USE_DATABASE == true, and fs_ for USE_DATABASE == false
+Common.php only loads modules that are needed for the type of USE_DATABASE
 
 2009-02-09
 Made select.php use the modules to get lists of files

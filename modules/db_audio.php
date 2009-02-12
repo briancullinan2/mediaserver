@@ -133,23 +133,23 @@ class db_audio extends db_file
 	
 	static function get($mysql, $request, &$count, &$error)
 	{
-		// do validation! for the fields we use
-		if( !isset($request['start']) || !is_numeric($request['start']) || $request['start'] < 0 )
-			$request['start'] = 0;
-		if( !isset($request['limit']) || !is_numeric($request['limit']) || $request['limit'] < 0 )
-			$request['limit'] = 15;
-		if( !isset($request['order_by']) || !in_array($request['order_by'], db_audio::columns()) )
-			$request['order_by'] = 'Title';
-		if( !isset($request['direction']) || ($request['direction'] != 'ASC' && $request['direction'] != 'DESC') )
-			$request['direction'] = 'ASC';
-		if( isset($request['id']) )
-			$request['item'] = $request['id'];
-		getIDsFromRequest($request, $request['selected']);
-
 		$files = array();
 		
 		if(USE_DATABASE)
 		{
+			// do validation! for the fields we use
+			if( !isset($request['start']) || !is_numeric($request['start']) || $request['start'] < 0 )
+				$request['start'] = 0;
+			if( !isset($request['limit']) || !is_numeric($request['limit']) || $request['limit'] < 0 )
+				$request['limit'] = 15;
+			if( !isset($request['order_by']) || !in_array($request['order_by'], db_audio::columns()) )
+				$request['order_by'] = 'Title';
+			if( !isset($request['direction']) || ($request['direction'] != 'ASC' && $request['direction'] != 'DESC') )
+				$request['direction'] = 'ASC';
+			if( isset($request['id']) )
+				$request['item'] = $request['id'];
+			getIDsFromRequest($request, $request['selected']);
+
 			$props = array();
 			
 			$props['OTHER'] = ' ORDER BY ' . $request['order_by'] . ' ' . $request['direction'] . ' LIMIT ' . $request['start'] . ',' . $request['limit'];
@@ -225,6 +225,7 @@ class db_audio extends db_file
 			if(isset($request['file']))
 			{
 				if($request['file'][0] == '/' || $request['file'][0] == '\\') $request['file'] = realpath('/') . substr($request['file'], 1);
+				if(USE_ALIAS == true) $request['file'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']);
 				if(realpath($request['file']) !== false && is_file(realpath($request['file'])))
 				{
 					if(!isset($props['WHERE'])) $props['WHERE'] = '';
@@ -233,18 +234,26 @@ class db_audio extends db_file
 				} else { $error = 'File does not exist!11'; }
 			}
 		
-			$props['SELECT'] = db_audio::columns();
-
-			// get directory from database
-			$files = $mysql->get(db_audio::DATABASE, $props);
-			
-			// this is how we get the count of all the items
-			unset($props['OTHER']);
-			$props['SELECT'] = 'count(*)';
-			
-			$result = $mysql->get(db_audio::DATABASE, $props);
-			
-			$count = intval($result[0]['count(*)']);
+			if($error == '')
+			{
+				$props['SELECT'] = db_audio::columns();
+	
+				// get directory from database
+				$files = $mysql->get(db_audio::DATABASE, $props);
+				
+				// this is how we get the count of all the items
+				unset($props['OTHER']);
+				$props['SELECT'] = 'count(*)';
+				
+				$result = $mysql->get(db_audio::DATABASE, $props);
+				
+				$count = intval($result[0]['count(*)']);
+			}
+			else
+			{
+				$count = 0;
+				$files = array();
+			}
 		}
 			
 		return $files;

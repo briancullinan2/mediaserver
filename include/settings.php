@@ -9,11 +9,13 @@ define('ADMIN_PASS',			  'Da1ddy23');
 
 
 // database connection constants
+define('USE_DATABASE', 	                  true); // set to false to make modules load information about every file on the fly
 define('DB_SERVER',                'localhost');
 define('DB_USER',                 'bjcullinan');
 define('DB_PASS',                   'Da1ddy23');
 define('DB_NAME',                'mediaserver');
 define('DB_TYPE',				       'mysql');
+
 // this prefix can be used to include completely different sets of files in the same database
 // don't be decieved though, some files use the db_<file type> where <file type> refers to a module!
 define('DB_PREFIX',				         'db_');
@@ -23,10 +25,12 @@ define('LOCAL_ROOT',                '/var/www/mediaserver/cross_platform/');
 
 // this is the path used by html pages to refer back to the website domain, HTML_ROOT is usually appended to this
 define('HTML_DOMAIN',            			    'http://dev.bjcullinan.com/');
+
 // this is the root directory of the site, this is needed if the site is not running on it's own domain
 // this is so HTML pages can refer to the root of the site, without making the brower validate the entire domain, this saves time loading pages
 // a slash / is always preppended to this when the HTML_DOMAIN is not preceeding this
 define('HTML_ROOT',                                        'cross_platform/');
+
 // this is the local filesystem path to the default template, this path should not be used in web pages, instead use HTML_TEMPLATE
 define('LOCAL_DEFAULT',            				        'templates/default/');
 // this is the optional template that will be used

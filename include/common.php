@@ -91,7 +91,8 @@ function setup()
 	{
 		while (($file = readdir($dh)) !== false)
 		{
-			if ($file[0] != '.' && !is_dir(LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . $file))
+			// filter out only the modules for our USE_DATABASE setting
+			if ($file[0] != '.' && !is_dir(LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . $file) && (substr($file, 0, 3) == (USE_DATABASE?'db_':'fs_') || $file == 'fs_file.php'))
 			{
 				// include all the modules
 				require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . $file;
@@ -136,6 +137,10 @@ function setup()
 		$_REQUEST['detail'] = 0;
 		
 	// get the aliases to use to replace parts of the filepath
+	$GLOBALS['paths_regexp'] = array();
+	$GLOBALS['alias_regexp'] = array();
+	$GLOBALS['paths'] = array();
+	$GLOBALS['alias'] = array();
 	if(USE_ALIAS == true && USE_DATABASE == true)
 	{
 		$mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
@@ -143,10 +148,6 @@ function setup()
 		
 		if($aliases !== false)
 		{
-			$GLOBALS['paths_regexp'] = array();
-			$GLOBALS['alias_regexp'] = array();
-			$GLOBALS['paths'] = array();
-			$GLOBALS['alias'] = array();
 			foreach($aliases as $key => $alias_props)
 			{
 				$GLOBALS['paths_regexp'][] = $alias_props['Paths_regexp'];

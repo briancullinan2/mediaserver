@@ -35,7 +35,6 @@ class fs_image extends fs_file
 	// EXIF contains a cool exposure time
 	// THUMBNAIL just incase the thumbnail has some missing information
 	
-
 	static function handles($file)
 	{
 				
@@ -57,7 +56,7 @@ class fs_image extends fs_file
 
 	static function getInfo($file)
 	{
-		$priority = array_reverse(db_image::PRIORITY());
+		$priority = array_reverse(fs_image::PRIORITY());
 		$info = $GLOBALS['getID3']->analyze($file);
 		
 		// pull information from $info
@@ -85,30 +84,30 @@ class fs_image extends fs_file
 		}
 	
 		// do not get thumbnails of image
-		//$fileinfo['Thumbnail'] = addslashes(db_image::makeThumbs($file));
+		//$fileinfo['Thumbnail'] = addslashes(fs_image::makeThumbs($file));
 		
 		return $fileinfo;
 	}
 
 	static function get($mysql, $request, &$count, &$error)
 	{
-		// do validation! for the fields we use
-		if( !isset($request['start']) || !is_numeric($request['start']) || $request['start'] < 0 )
-			$request['start'] = 0;
-		if( !isset($request['limit']) || !is_numeric($request['limit']) || $request['limit'] < 0 )
-			$request['limit'] = 15;
-		if( !isset($request['order_by']) || !in_array($request['order_by'], db_image::columns()) )
-			$request['order_by'] = 'Title';
-		if( !isset($request['direction']) || ($request['direction'] != 'ASC' && $request['direction'] != 'DESC') )
-			$request['direction'] = 'ASC';
-		if( isset($request['id']) )
-			$request['item'] = $request['id'];
-		getIDsFromRequest($request, $request['selected']);
-
 		$files = array();
 		
 		if(!USE_DATABASE)
 		{
+			// do validation! for the fields we use
+			if( !isset($request['start']) || !is_numeric($request['start']) || $request['start'] < 0 )
+				$request['start'] = 0;
+			if( !isset($request['limit']) || !is_numeric($request['limit']) || $request['limit'] < 0 )
+				$request['limit'] = 15;
+			if( !isset($request['order_by']) || !in_array($request['order_by'], fs_image::columns()) )
+				$request['order_by'] = 'Title';
+			if( !isset($request['direction']) || ($request['direction'] != 'ASC' && $request['direction'] != 'DESC') )
+				$request['direction'] = 'ASC';
+			if( isset($request['id']) )
+				$request['item'] = $request['id'];
+			getIDsFromRequest($request, $request['selected']);
+
 			if(isset($request['selected']))
 			{
 				foreach($request['selected'] as $i => $id)
@@ -116,9 +115,9 @@ class fs_image extends fs_file
 					$file = pack('H*', $id);
 					if(is_file($file))
 					{
-						if(db_image::handles($file))
+						if(fs_image::handles($file))
 						{
-							$info = db_image::getInfo($file);
+							$info = fs_image::getInfo($file);
 							// make some modifications
 							$files[] = $info;
 						}
@@ -130,11 +129,11 @@ class fs_image extends fs_file
 			{
 				if(is_file($request['file']))
 				{
-					if(db_image::handles($request['file']))
+					if(fs_image::handles($request['file']))
 					{
-						return array(0 => db_image::getInfo($request['file']));
+						return array(0 => fs_image::getInfo($request['file']));
 					}
-					else{ $error = 'Invalid ' . db_image::NAME . ' file!'; }
+					else{ $error = 'Invalid ' . fs_image::NAME . ' file!'; }
 				}
 				else{ $error = 'File does not exist!'; }
 			}
@@ -147,12 +146,12 @@ class fs_image extends fs_file
 					$tmp_files = scandir($request['dir']);
 					$count = count($tmp_files);
 					for($j = 0; $j < $count; $j++)
-						if(!db_image::handles($request['dir'] . $tmp_files[$j])) unset($tmp_files[$j]);
+						if(!fs_image::handles($request['dir'] . $tmp_files[$j])) unset($tmp_files[$j]);
 					$tmp_files = array_values($tmp_files);
 					$count = count($tmp_files);
 					for($i = $request['start']; $i < min($request['start']+$request['limit'], $count); $i++)
 					{
-						$info = db_image::getInfo($request['dir'] . $tmp_files[$i]);
+						$info = fs_image::getInfo($request['dir'] . $tmp_files[$i]);
 						$files[] = $info;
 					}
 					return $files;

@@ -17,7 +17,7 @@ $files = array();
 $count = 0;
 $error = '';
 // make select call
-$files = call_user_func_array($_REQUEST['cat'] . '::get', array($mysql, $_REQUEST['id'], &$count, &$error));
+$files = call_user_func_array($_REQUEST['cat'] . '::get', array($mysql, $_REQUEST, &$count, &$error));
 
 $files_length = count($files);
 // get all the other information from other modules
@@ -36,15 +36,12 @@ for($index = 0; $index < $files_length; $index++)
 	}
 	
 	// for the second pass go through and get all the files inside of folders
-	if($file['Filetype'] == 'FOLDER')
+	if(isset($file['Filetype']) && $file['Filetype'] == 'FOLDER')
 	{
-		// remove folder from list since it can't be apart of the .torrent
-		unset($files[$index]);
 		// get all files in directory
-		$props = array();
-		$props['WHERE'] = 'Filepath REGEXP "^' . addslashes(addslashes($file['Filepath'])) . '" AND Filetype != "FOLDER"';
-		$sub_files = array();
-		$sub_files = db_file::get($mysql, $props);
+		$props = array('dir' => $file['Filepath']);
+		$sub_files = call_user_func_array((USE_DATABASE?'db_':'fs_') . 'file::get', array($mysql, $props, &$tmp_count, &$error));
+		
 		// put these files on the end of the array so they also get processed
 		$files = array_merge($files, $sub_files);
 		$files_length = count($files);
@@ -53,14 +50,21 @@ for($index = 0; $index < $files_length; $index++)
 	// do alias replacement on every file path
 	$files[$index]['Filepath_alias'] = $files[$index]['Filepath'];
 	if(USE_ALIAS == true) $files[$index]['Filepath_alias'] = preg_replace($GLOBALS['paths_regexp'], $GLOBALS['alias'], $files[$index]['Filepath']);
+	
 	// replace the root directory with a forward slash to remove C:\ on windows systems
 	if(substr($files[$index]['Filepath_alias'], 0, strlen(realpath('/'))) == realpath('/'))
 		$files[$index]['Filepath_alias'] = '/' . substr($files[$index]['Filepath_alias'], strlen(realpath('/')));
-	// remove first slash because it cannot contribute to the path
+		
+	// remove root because it cannot contribute to the path
 	if($files[$index]['Filepath_alias'][0] == '/') $files[$index]['Filepath_alias'] = substr($files[$index]['Filepath_alias'], 1);
 	$files[$index]['Filepath_alias'] = str_replace(DIRECTORY_SEPARATOR, '/', $files[$index]['Filepath_alias']);
 }
 
+// remove folders so we don't have to worry about them in the series of loops below
+foreach($files as $i => $file)
+	if(isset($file['Filetype']) && $file['Filetype'] == 'FOLDER')
+		unset($files[$i]);
+$files = array_values($files);
 
 if(count($files) > 0)
 {
@@ -136,6 +140,7 @@ if(count($files) > 0)
             }
 			
 			print $buffer;
+			flush();
 		}				
 		fclose($fp);
 		$fr_offset += filesize($file['Filepath']);

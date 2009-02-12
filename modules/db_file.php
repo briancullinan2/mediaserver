@@ -162,23 +162,23 @@ class db_file
 	// if the mysql is provided, then the file listings will be loaded from the database
 	static function get($mysql, $request, &$count, &$error)
 	{
-		// do validation! for the fields we use
-		if( !isset($request['start']) || !is_numeric($request['start']) || $request['start'] < 0 )
-			$request['start'] = 0;
-		if( !isset($request['limit']) || !is_numeric($request['limit']) || $request['limit'] < 0 )
-			$request['limit'] = 15;
-		if( !isset($request['order_by']) || !in_array($request['order_by'], db_file::columns()) )
-			$request['order_by'] = 'Filepath';
-		if( !isset($request['direction']) || ($request['direction'] != 'ASC' && $request['direction'] != 'DESC') )
-			$request['direction'] = 'ASC';
-		if( isset($request['id']) )
-			$request['item'] = $request['id'];
-		getIDsFromRequest($request, $request['selected']);
-
 		$files = array();
 		
 		if(USE_DATABASE)
 		{
+			// do validation! for the fields we use
+			if( !isset($request['start']) || !is_numeric($request['start']) || $request['start'] < 0 )
+				$request['start'] = 0;
+			if( !isset($request['limit']) || !is_numeric($request['limit']) || $request['limit'] < 0 )
+				$request['limit'] = 15;
+			if( !isset($request['order_by']) || !in_array($request['order_by'], db_file::columns()) )
+				$request['order_by'] = 'Filepath';
+			if( !isset($request['direction']) || ($request['direction'] != 'ASC' && $request['direction'] != 'DESC') )
+				$request['direction'] = 'ASC';
+			if( isset($request['id']) )
+				$request['item'] = $request['id'];
+			getIDsFromRequest($request, $request['selected']);
+
 			$props = array();
 			
 			$props['OTHER'] = ' ORDER BY ' . $request['order_by'] . ' ' . $request['direction'] . ' LIMIT ' . $request['start'] . ',' . $request['limit'];
@@ -238,7 +238,7 @@ class db_file
 				
 				// replace aliased path with actual path
 				if(USE_ALIAS == true) $request['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
-				
+
 				// only search for file if is valid dir
 				if(realpath($request['dir']) !== false && is_dir(realpath($request['dir'])))
 				{
@@ -285,6 +285,9 @@ class db_file
 				// this is necissary for dealing with windows and cross platform queries coming from templates
 				if($request['file'][0] == '/' || $request['file'][0] == '\\') $request['file'] = realpath('/') . substr($request['file'], 1);
 				
+				// replace aliased path with actual path
+				if(USE_ALIAS == true) $request['file'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']);
+				
 				// only search for file if is a valid file
 				if(realpath($request['file']) !== false && is_file(realpath($request['file'])))
 				{
@@ -301,18 +304,26 @@ class db_file
 				}
 			}
 		
-			$props['SELECT'] = db_file::columns();
-		
-			// get directory from database
-			$files = $mysql->get(db_file::DATABASE, $props);
-			
-			// this is how we get the count of all the items
-			unset($props['OTHER']);
-			$props['SELECT'] = 'count(*)';
-			
-			$result = $mysql->get(db_file::DATABASE, $props);
-			
-			$count = intval($result[0]['count(*)']);
+			if($error == '')
+			{
+				$props['SELECT'] = db_file::columns();
+	
+				// get directory from database
+				$files = $mysql->get(db_file::DATABASE, $props);
+				
+				// this is how we get the count of all the items
+				unset($props['OTHER']);
+				$props['SELECT'] = 'count(*)';
+				
+				$result = $mysql->get(db_file::DATABASE, $props);
+				
+				$count = intval($result[0]['count(*)']);
+			}
+			else
+			{
+				$count = 0;
+				$files = array();
+			}
 		}
 			
 		return $files;

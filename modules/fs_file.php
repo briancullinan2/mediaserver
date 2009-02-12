@@ -14,7 +14,6 @@ class fs_file
 		return array('id', 'Filename', 'Filemime', 'Filesize', 'Filedate', 'Filetype', 'Filepath');
 	}
 
-	
 	// return whether or not this module handles trhe specified type of file
 	static function handles($file)
 	{
@@ -83,25 +82,25 @@ class fs_file
 	// don't use $internals = true
 	static function get($mysql, $request, &$count, &$error, $internals = false)
 	{
-		// do validation! for the fields we use
-		if( !isset($request['start']) || !is_numeric($request['start']) || $request['start'] < 0 )
-			$request['start'] = 0;
-		if( !isset($request['limit']) || !is_numeric($request['limit']) || $request['limit'] < 0 )
-			$request['limit'] = 15;
-		if( !isset($request['order_by']) || !in_array($request['order_by'], fs_file::columns()) )
-			$request['order_by'] = 'Filepath';
-		if( !isset($request['direction']) || ($request['direction'] != 'ASC' && $request['direction'] != 'DESC') )
-			$request['direction'] = 'ASC';
-		if( isset($request['id']) )
-			$request['item'] = $request['id'];
-		getIDsFromRequest($request, $request['selected']);
-
 		$files = array();
 		
 		// only allow this section to run if the database is not being used
 		//  otherwise it could be vulnerable to people accessing any file even on a system restricted to database access
 		if(!USE_DATABASE || $internals)
 		{
+			// do validation! for the fields we use
+			if( !isset($request['start']) || !is_numeric($request['start']) || $request['start'] < 0 )
+				$request['start'] = 0;
+			if( !isset($request['limit']) || !is_numeric($request['limit']) || $request['limit'] < 0 )
+				$request['limit'] = 15;
+			if( !isset($request['order_by']) || !in_array($request['order_by'], fs_file::columns()) )
+				$request['order_by'] = 'Filepath';
+			if( !isset($request['direction']) || ($request['direction'] != 'ASC' && $request['direction'] != 'DESC') )
+				$request['direction'] = 'ASC';
+			if( isset($request['id']) )
+				$request['item'] = $request['id'];
+			getIDsFromRequest($request, $request['selected']);
+
 			if(isset($request['selected']))
 			{
 				foreach($request['selected'] as $i => $id)

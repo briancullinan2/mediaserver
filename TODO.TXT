@@ -1,5 +1,22 @@
+2009-02-11 (Full)
+Figure out how to download files out of a zip file
+FIX detail options in default template
+Add support for creating thumbnails in convert.php script
+File uploading and personal folders
+FIX bt.php plugin to work with command line torrent seeder on windows
+------------- All JS template stuff -------------
+Fix arrow-key movement in extjs template, in thumbnails view of the FolderView.js
+Add desktop.ini/folder.ini files and fix up thumbnails in FolderView.js
+Fix initial load time in FolderView.js
+Work on category view/show in groups in FolderView.js, add items that take up whole line and have headers
+Fix tooltip popup in FolderView.js, in wrong panel maybe?
+Press letter on the keyboard to go to that folder in FolderView.js and select.php
+Change desktop style to be buttons like folders in Desktop.js but render buttons to index.html
+Get settings dialog working and set up user accounts to control it
+
 2009-02-11
-Fix bt.php and zip.php plugins, severly broken with new changes
+Fix aliasing, and dealiasing in the modules
+Fix bt.php and zip.php plugins, severly broken with new changes, specifically the FOLDER handling
 Make common only load fs_ or db_ modules depending on USE_DATABASE definition, also load fs_file for internal use only!
 
 2009-02-09

@@ -42,12 +42,10 @@ for($index = 0; $index < $files_length; $index++)
 	// for the second pass go through and get all the files inside of folders
 	if($file['Filetype'] == 'FOLDER')
 	{
-		// remove folder from list since it can't be apart of the .torrent
-		unset($files[$index]);
 		// get all files in directory
-		$props = array();
-		$props['dir'] = $file['Filepath'];
-		$sub_files = db_file::get($mysql, $props);
+		$props = array('dir' => $file['Filepath']);
+		$sub_files = call_user_func_array((USE_DATABASE?'db_':'fs_') . 'file::get', array($mysql, $props, &$tmp_count, &$error));
+		
 		// put these files on the end of the array so they also get processed
 		$files = array_merge($files, $sub_files);
 		$files_length = count($files);
@@ -57,6 +55,12 @@ for($index = 0; $index < $files_length; $index++)
 	$files[$index]['Filepath_alias'] = $files[$index]['Filepath'];
 	if(USE_ALIAS == true) $files[$index]['Filepath_alias'] = preg_replace($GLOBALS['paths_regexp'], $GLOBALS['alias'], $files[$index]['Filepath']);
 }
+
+// remove folders so we don't have to worry about them in the series of loops below
+foreach($files as $i => $file)
+	if(isset($file['Filetype']) && $file['Filetype'] == 'FOLDER')
+		unset($files[$i]);
+$files = array_values($files);
 
 
 if(count($files) > 0)

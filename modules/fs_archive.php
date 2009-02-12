@@ -63,23 +63,23 @@ class fs_archive extends fs_file
 	
 	static function get($mysql, $request, &$count, &$error)
 	{
-		// do validation! for the fields we use
-		if( !isset($request['start']) || !is_numeric($request['start']) || $request['start'] < 0 )
-			$request['start'] = 0;
-		if( !isset($request['limit']) || !is_numeric($request['limit']) || $request['limit'] < 0 )
-			$request['limit'] = 15;
-		if( !isset($request['order_by']) || !in_array($request['order_by'], fs_archive::columns()) )
-			$request['order_by'] = 'Title';
-		if( !isset($request['direction']) || ($request['direction'] != 'ASC' && $request['direction'] != 'DESC') )
-			$request['direction'] = 'ASC';
-		if( isset($request['id']) )
-			$request['item'] = $request['id'];
-		getIDsFromRequest($request, $request['selected']);
-
 		$files = array();
 		
 		if(!USE_DATABASE)
 		{
+			// do validation! for the fields we use
+			if( !isset($request['start']) || !is_numeric($request['start']) || $request['start'] < 0 )
+				$request['start'] = 0;
+			if( !isset($request['limit']) || !is_numeric($request['limit']) || $request['limit'] < 0 )
+				$request['limit'] = 15;
+			if( !isset($request['order_by']) || !in_array($request['order_by'], fs_archive::columns()) )
+				$request['order_by'] = 'Title';
+			if( !isset($request['direction']) || ($request['direction'] != 'ASC' && $request['direction'] != 'DESC') )
+				$request['direction'] = 'ASC';
+			if( isset($request['id']) )
+				$request['item'] = $request['id'];
+			getIDsFromRequest($request, $request['selected']);
+
 			if(isset($request['selected']))
 			{
 				foreach($request['selected'] as $i => $id)
