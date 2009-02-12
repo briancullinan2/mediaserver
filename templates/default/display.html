@@ -72,7 +72,7 @@
 			{else}
 				{assign var=column_selected value=false}
 			{/if}
-			<input type="checkbox" name="on[]" value="{$columns[column]}" {if $column_selected}checked="checked"{/if} />{$columns[column]}<br />
+			<input type="checkbox" name="columns_on[]" value="{$columns[column]}" {if $column_selected}checked="checked"{/if} />{$columns[column]}<br />
 		{/section}		
 		Apply Settings.
 		<input type="submit" name="display" value="Go" />
@@ -105,7 +105,7 @@
 			{else}
 				{assign var=column_selected value=false}
 			{/if}
-			<input type="checkbox" name="on[]" value="{$columns[column]}" {if $column_selected}checked="checked"{/if} />{$columns[column]}<br />
+			<input type="checkbox" name="columns_on[]" value="{$columns[column]}" {if $column_selected}checked="checked"{/if} />{$columns[column]}<br />
 		{/section}		
 		Apply Settings.
 		<input type="submit" name="display" value="Go" />

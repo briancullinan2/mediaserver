@@ -6,7 +6,7 @@ class fs_file
 {
 	// most of these methods should just be static, no need to intantiate the class
 	// just good for organization purposes
-	const NAME = 'File';
+	const NAME = 'Files on Filesystem';
 	
 	// this function specifies the level of detail for the array of file info, ORDER matters!
 	static function columns()
@@ -80,7 +80,8 @@ class fs_file
 	
 	// the mysql can be left null to get the files from a directory, in which case a directory must be specified
 	// if the mysql is provided, then the file listings will be loaded from the database
-	static function get($mysql, $request, &$count, &$error)
+	// don't use $internals = true
+	static function get($mysql, $request, &$count, &$error, $internals = false)
 	{
 		// do validation! for the fields we use
 		if( !isset($request['start']) || !is_numeric($request['start']) || $request['start'] < 0 )
@@ -99,7 +100,7 @@ class fs_file
 		
 		// only allow this section to run if the database is not being used
 		//  otherwise it could be vulnerable to people accessing any file even on a system restricted to database access
-		if(!USE_DATABASE)
+		if(!USE_DATABASE || $internals)
 		{
 			if(isset($request['selected']))
 			{

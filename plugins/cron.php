@@ -173,8 +173,10 @@ do
 		
 		// search all the files in the directory
 		
+ 		$count = 0;
+		$error = '';
 		// get directory contents
-		$files = fs_file::get(NULL, array('dir' => $dir));
+		$files = fs_file::get(NULL, array('dir' => $dir), $count, $error, true);
 		
 		foreach($files as $i => $file)
 		{
@@ -291,8 +293,10 @@ function getdir( $dir )
 	}
 	
 	
+	$count = 0;
+	$error = '';
 	// get directory contents
-	$files = fs_file::get(NULL, array('dir' => $dir));
+	$files = fs_file::get(NULL, array('dir' => $dir), $count, $error, true);
 	
 	$i = 0;
 	

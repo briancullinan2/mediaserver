@@ -25,7 +25,7 @@ include_once LOCAL_ROOT . 'plugins' . DIRECTORY_SEPARATOR . 'type.php';
 // get these listed items over the ones saved in the session!
 if(!isset($_REQUEST['list']) && isset($_SESSION['selected']))
 {
-	$_REQUEST['item'] = $_SESSION['selected'];
+	$_REQUEST['item'] = join(',', $_SESSION['selected']);
 }
 
 // add category

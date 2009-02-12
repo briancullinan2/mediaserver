@@ -16,7 +16,7 @@ class db_audio extends db_file
 {
 	const DATABASE = 'audio';
 	
-	const NAME = 'Audio';
+	const NAME = 'Audio from Database';
 
 	static function columns()
 	{
@@ -105,7 +105,7 @@ class db_audio extends db_file
 	static function add($mysql, $file, $audio_id = NULL)
 	{
 		// pull information from $info
-		$fileinfo = db_file::getInfo($file);
+		$fileinfo = db_audio::getInfo($file);
 	
 		if( $audio_id != NULL )
 		{
@@ -148,64 +148,7 @@ class db_audio extends db_file
 
 		$files = array();
 		
-		if($mysql == NULL)
-		{
-			if(isset($request['selected']))
-			{
-				foreach($request['selected'] as $i => $id)
-				{
-					$file = pack('H*', $id);
-					if(is_file($file))
-					{
-						if(db_audio::handles($file))
-						{
-							$info = db_audio::getInfo($file);
-							// make some modifications
-							$info['Filepath'] = stripslashes($info['Filepath']);
-							if($info['Filetype'] == 'FOLDER') $info['Filepath'] .= DIRECTORY_SEPARATOR;
-							$files[] = $info;
-						}
-					}
-				}
-			}
-			
-			if(isset($request['file']))
-			{
-				if(is_file($request['file']))
-				{
-					if(db_audio::handles($request['file']))
-					{
-						return array(0 => db_audio::getInfo($request['file']));
-					}
-					else{ $error = 'Invalid ' . db_audio::NAME . ' file!'; }
-				}
-				else{ $error = 'File does not exist!'; }
-			}
-			else
-			{
-				if(!isset($request['dir']))
-					$request['dir'] = realpath('/');
-				if (is_dir($request['dir']))
-				{
-					$tmp_files = scandir($request['dir']);
-					$count = count($tmp_files);
-					for($j = 0; $j < $count; $j++)
-						if(!db_audio::handles($request['dir'] . $tmp_files[$j])) unset($tmp_files[$j]);
-					$tmp_files = array_values($tmp_files);
-					$count = count($tmp_files);
-					for($i = $request['start']; $i < min($request['start']+$request['limit'], $count); $i++)
-					{
-						$info = db_audio::getInfo($request['dir'] . $tmp_files[$i]);
-						$info['Filepath'] = stripslashes($info['Filepath']);
-						if($info['Filetype'] == 'FOLDER') $info['Filepath'] .= DIRECTORY_SEPARATOR;
-						$files[] = $info;
-					}
-					return $files;
-				}
-				else{ $error = 'Directory does not exist!'; }
-			}
-		}
-		else
+		if(USE_DATABASE)
 		{
 			$props = array();
 			
@@ -225,6 +168,7 @@ class db_audio extends db_file
 				}
 				$props['WHERE'] = substr($props['WHERE'], 0, strlen($props['WHERE'])-2);
 				unset($props['OTHER']);
+				unset($request);
 			}
 			
 			// add where includes
@@ -236,6 +180,7 @@ class db_audio extends db_file
 				if(USE_ALIAS == true) $request['includes'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['includes']);
 				$regexp = addslashes(addslashes($request['includes']));
 				
+				$columns = db_audio::columns();
 				// add a regular expression matching for each column in the table being searched
 				$props['WHERE'] .= '(';
 				foreach($columns as $i => $column)
@@ -280,13 +225,12 @@ class db_audio extends db_file
 			if(isset($request['file']))
 			{
 				if($request['file'][0] == '/' || $request['file'][0] == '\\') $request['file'] = realpath('/') . substr($request['file'], 1);
-				if(USE_ALIAS == true) $request['file'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']);
 				if(realpath($request['file']) !== false && is_file(realpath($request['file'])))
 				{
 					if(!isset($props['WHERE'])) $props['WHERE'] = '';
 					elseif($props['WHERE'] != '') $props['WHERE'] .= ' AND ';
 					$props['WHERE'] .= ' Filepath = "' . addslashes($request['file']) . '"';
-				} else { $error = 'File does not exist!'; }
+				} else { $error = 'File does not exist!11'; }
 			}
 		
 			$props['SELECT'] = db_audio::columns();

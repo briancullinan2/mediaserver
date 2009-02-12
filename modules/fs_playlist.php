@@ -14,9 +14,7 @@ require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'db_file.php';
 // music handler
 class fs_playlist extends db_file
 {
-	const DATABASE = 'files';
-	
-	const NAME = 'Playlist';
+	const NAME = 'Playlists on Filesystem';
 
 	static function handles($file)
 	{

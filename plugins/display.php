@@ -49,11 +49,11 @@ if(isset($_REQUEST['display']))
 		}
 	}
 	
-	if(isset($_REQUEST['on']))
+	if(isset($_REQUEST['columns_on']))
 	{
-		if($_REQUEST['on'] == '_All_') $_REQUEST['on'] = $columns;
-		if(is_string($_REQUEST['on'])) $_REQUEST['on'] = split(',', $_REQUEST['on']);
-		foreach($_REQUEST['on'] as $i => $id)
+		if($_REQUEST['columns_on'] == '_All_') $_REQUEST['columns_on'] = $columns;
+		if(is_string($_REQUEST['columns_on'])) $_REQUEST['columns_on'] = split(',', $_REQUEST['columns_on']);
+		foreach($_REQUEST['columns_on'] as $i => $id)
 		{
 			if(!in_array($id, $_SESSION['columns']))
 			{
@@ -62,13 +62,13 @@ if(isset($_REQUEST['display']))
 		}
 	}
 	
-	if(isset($_REQUEST['off']))
+	if(isset($_REQUEST['columns_off']))
 	{
-		if($_REQUEST['off'] == '_All_') $_REQUEST['off'] = $columns;
-		if(is_string($_REQUEST['off'])) $_REQUEST['off'] = split(',', $_REQUEST['off']);
-		foreach($_REQUEST['off'] as $i => $id)
+		if($_REQUEST['columns_off'] == '_All_') $_REQUEST['columns_off'] = $columns;
+		if(is_string($_REQUEST['columns_off'])) $_REQUEST['columns_off'] = split(',', $_REQUEST['columns_off']);
+		foreach($_REQUEST['columns_off'] as $i => $id)
 		{
-			if(((isset($_REQUEST['on']) && !in_array($id, $_REQUEST['on'])) || !isset($_REQUEST['on'])) && ($key = array_search($id, $_SESSION['columns'])) !== false)
+			if(((isset($_REQUEST['columns_off']) && !in_array($id, $_REQUEST['columns_off'])) || !isset($_REQUEST['columns_off'])) && ($key = array_search($id, $_SESSION['columns'])) !== false)
 			{
 				unset($_SESSION['columns'][$key]);
 			}

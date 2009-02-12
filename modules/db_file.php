@@ -8,7 +8,7 @@ class db_file
 	// just good for organization purposes
 	const DATABASE = 'files';
 	
-	const NAME = 'File';
+	const NAME = 'Files from Database';
 	
 	// this function specifies the level of detail for the array of file info, ORDER matters!
 	static function columns()
@@ -182,7 +182,7 @@ class db_file
 			$props = array();
 			
 			$props['OTHER'] = ' ORDER BY ' . $request['order_by'] . ' ' . $request['direction'] . ' LIMIT ' . $request['start'] . ',' . $request['limit'];
-			
+
 			// select an array of ids!
 			if( isset($request['selected']) && count($request['selected']) > 0 )
 			{
@@ -202,7 +202,10 @@ class db_file
 				}
 				// remove last or
 				$props['WHERE'] = substr($props['WHERE'], 0, strlen($props['WHERE'])-2);
+
+				// selected items have priority over all the other options!
 				unset($props['OTHER']);
+				unset($request);
 			}
 
 			// add where includes
@@ -214,6 +217,7 @@ class db_file
 				if(USE_ALIAS == true) $request['includes'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['includes']);
 				$regexp = addslashes(addslashes($request['includes']));
 				
+				$columns = db_file::columns();
 				// add a regular expression matching for each column in the table being searched
 				$props['WHERE'] .= '(';
 				foreach($columns as $i => $column)
@@ -275,14 +279,11 @@ class db_file
 				}
 			}
 			
-			// add file filter to where
+			// add file filter to where - this is mostly for internal use
 			if(isset($request['file']))
 			{
 				// this is necissary for dealing with windows and cross platform queries coming from templates
 				if($request['file'][0] == '/' || $request['file'][0] == '\\') $request['file'] = realpath('/') . substr($request['file'], 1);
-
-				// replace aliased path with actual path
-				if(USE_ALIAS == true) $request['file'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']);
 				
 				// only search for file if is a valid file
 				if(realpath($request['file']) !== false && is_file(realpath($request['file'])))

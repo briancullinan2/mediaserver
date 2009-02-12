@@ -10,7 +10,7 @@ class db_image_browser extends db_image
 {
 	const DATABASE = 'image';
 	
-	const NAME = 'Browser Image';
+	const NAME = 'Browser Images from Database';
 
 	static function handles($file)
 	{

@@ -227,6 +227,7 @@ class db_image extends db_file
 				}
 				$props['WHERE'] = substr($props['WHERE'], 0, strlen($props['WHERE'])-2);
 				unset($props['OTHER']);
+				unset($request);
 			}
 			
 			// add where includes
@@ -238,6 +239,7 @@ class db_image extends db_file
 				if(USE_ALIAS == true) $request['includes'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['includes']);
 				$regexp = addslashes(addslashes($request['includes']));
 				
+				$columns = db_image::columns();
 				// add a regular expression matching for each column in the table being searched
 				$props['WHERE'] .= '(';
 				foreach($columns as $i => $column)
@@ -282,7 +284,6 @@ class db_image extends db_file
 			if(isset($request['file']))
 			{
 				if($request['file'][0] == '/' || $request['file'][0] == '\\') $request['file'] = realpath('/') . substr($request['file'], 1);
-				if(USE_ALIAS == true) $request['file'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']);
 				if(realpath($request['file']) !== false && is_file(realpath($request['file'])))
 				{
 					if(!isset($props['WHERE'])) $props['WHERE'] = '';

@@ -8,7 +8,7 @@ require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'fs_image.php';
 // music handler
 class fs_image_browser extends fs_image
 {
-	const NAME = 'Browser Image';
+	const NAME = 'Browser Images on Filesystem';
 
 	static function handles($file)
 	{
