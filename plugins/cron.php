@@ -174,7 +174,7 @@ do
 		// search all the files in the directory
 		
 		// get directory contents
-		$files = db_file::get(NULL, array('DIR' => $dir));
+		$files = fs_file::get(NULL, array('dir' => $dir));
 		
 		foreach($files as $i => $file)
 		{
@@ -203,7 +203,7 @@ do
 
 foreach($GLOBALS['modules'] as $i => $module)
 {
-	call_user_func(array($module, 'cleanup'), $mysql, $watched, $ignored);
+	call_user_func_array($module . '::cleanup', array($mysql, $watched, $ignored));
 }
 
 // read all the folders that lead up to the watched folder
@@ -253,7 +253,7 @@ function getfile( $file )
 	// pass the file to each module to test if it should handle it
 	foreach($modules as $i => $name)
 	{
-		call_user_func(array($name, 'handle'), $mysql, $file);
+		call_user_func_array($name . '::handle', array($mysql, $file));
 	}
 
 }
@@ -292,7 +292,7 @@ function getdir( $dir )
 	
 	
 	// get directory contents
-	$files = db_file::get(NULL, array('DIR' => $dir));
+	$files = fs_file::get(NULL, array('dir' => $dir));
 	
 	$i = 0;
 	

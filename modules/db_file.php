@@ -177,46 +177,7 @@ class db_file
 
 		$files = array();
 		
-		if($mysql == NULL)
-		{
-			if(isset($request['file']))
-			{
-			}
-			else
-			{
-				// set a directory is one isn't set already
-				if(!isset($request['dir']))
-					$request['dir'] = realpath('/');
-				// check to make sure is it a valid directory before continuing
-				if (is_dir($request['dir']))
-				{
-					// scandir - read in a list of the directory content
-					$tmp_files = scandir($request['dir']);
-					$count = count($tmp_files);
-					// parse out all the files that this module doesn't handle, just like a filter
-					for($j = 0; $j < $count; $j++)
-						if(!db_file::handles($request['dir'] . $tmp_files[$j])) unset($tmp_files[$j]);
-					// get the values again, this will reset all the indices
-					$tmp_files = array_values($tmp_files);
-					// set the count to the total length of the file list
-					$count = count($tmp_files);
-					// start the information getting and combining of file info
-					for($i = $request['start']; $i < min($request['start']+$request['limit'], $count); $i++)
-					{
-						// get the information from the module for 1 file
-						$info = db_file::getInfo($request['dir'] . $tmp_files[$i]);
-						// make some modifications
-						$info['Filepath'] = stripslashes($info['Filepath']);
-						if($info['Filetype'] == 'FOLDER') $info['Filepath'] .= DIRECTORY_SEPARATOR;
-						// set the informations in the total list of files
-						$files[] = $info;
-					}
-					return $files;
-				}
-				else{ $error = 'Directory does not exist!'; return false; }
-			}
-		}
-		else
+		if(USE_DATABASE)
 		{
 			$props = array();
 			
@@ -225,7 +186,22 @@ class db_file
 			// select an array of ids!
 			if( isset($request['selected']) && count($request['selected']) > 0 )
 			{
-				$props['WHERE'] = 'id=' . join(' OR id=', $selected);
+				$props['WHERE'] = '';
+				// compile where statement for either numeric id or encoded path
+				foreach($request['selected'] as $i => $id)
+				{
+					if(is_numeric($id))
+					{
+						$props['WHERE'] .= ' id=' . $id . ' OR';
+					}
+					else
+					{
+						// unpack encoded path and add it to where
+						$props['WHERE'] .= ' Filepath="' . addslashes(pack('H*', $value)) . '" OR';
+					}
+				}
+				// remove last or
+				$props['WHERE'] = substr($props['WHERE'], 0, strlen($props['WHERE'])-2);
 				unset($props['OTHER']);
 			}
 
@@ -426,7 +402,7 @@ class db_file
 		// since all the ones not apart of a watched directory is removed, now just check is every file still in the database exists on disk
 		$mysql->query('SELECT Filepath FROM ' . $mysql->table_prefix . $db);
 		
-		$mysql->result_callback(array('db_file', 'cleanup_remove'), array('SQL' => new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME), 'DB' => $db));
+		$mysql->result_callback('db_file::cleanup_remove', array('SQL' => new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME), 'DB' => $db));
 				
 		// remove any duplicates
 		$files = $mysql->get($db,

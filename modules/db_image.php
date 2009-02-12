@@ -16,7 +16,7 @@ class db_image extends db_file
 {
 	const DATABASE = 'image';
 	
-	const NAME = 'Image';
+	const NAME = 'Images from Database';
 
 	static function columns()
 	{
@@ -133,7 +133,7 @@ class db_image extends db_file
 
 	static function add($mysql, $file, $image_id = NULL)
 	{
-		$fileinfo = db_file::getInfo($file);
+		$fileinfo = db_image::getInfo($file);
 	
 		if( $image_id != NULL )
 		{
@@ -207,45 +207,7 @@ class db_image extends db_file
 
 		$files = array();
 		
-		if($mysql == NULL)
-		{
-			if(isset($request['file']))
-			{
-				if(is_file($request['file']))
-				{
-					if(db_image::handles($request['file']))
-					{
-						return array(0 => db_image::getInfo($request['file']));
-					}
-					else{ $error = 'Invalid ' . db_image::NAME . ' file!'; }
-				}
-				else{ $error = 'File does not exist!'; }
-			}
-			else
-			{
-				if(!isset($request['dir']))
-					$request['dir'] = realpath('/');
-				if (is_dir($request['dir']))
-				{
-					$tmp_files = scandir($request['dir']);
-					$count = count($tmp_files);
-					for($j = 0; $j < $count; $j++)
-						if(!db_image::handles($request['dir'] . $tmp_files[$j])) unset($tmp_files[$j]);
-					$tmp_files = array_values($tmp_files);
-					$count = count($tmp_files);
-					for($i = $request['start']; $i < min($request['start']+$request['limit'], $count); $i++)
-					{
-						$info = db_image::getInfo($request['dir'] . $tmp_files[$i]);
-						$info['Filepath'] = stripslashes($info['Filepath']);
-						if($info['Filetype'] == 'FOLDER') $info['Filepath'] .= DIRECTORY_SEPARATOR;
-						$files[] = $info;
-					}
-					return $files;
-				}
-				else{ $error = 'Directory does not exist!'; }
-			}
-		}
-		else
+		if(USE_DATABASE)
 		{
 			$props = array();
 			
@@ -254,7 +216,16 @@ class db_image extends db_file
 			// select an array of ids!
 			if( isset($request['selected']) && count($request['selected']) > 0 )
 			{
-				$props['WHERE'] = 'id=' . join(' OR id=', $selected);
+				$props['WHERE'] = '';
+				foreach($request['selected'] as $i => $id)
+				{
+					if(is_numeric($id)) {
+						$props['WHERE'] .= ' id=' . $id . ' OR';
+					} else {
+						$props['WHERE'] .= ' Filepath="' . addslashes(pack('H*', $value)) . '" OR';
+					}
+				}
+				$props['WHERE'] = substr($props['WHERE'], 0, strlen($props['WHERE'])-2);
 				unset($props['OTHER']);
 			}
 			

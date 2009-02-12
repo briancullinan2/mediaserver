@@ -32,7 +32,7 @@ class sql extends sql_global
 	{
 		while($row = mysql_fetch_assoc($this->query_result))
 		{
-			call_user_func($function, $row, $arguments);
+			call_user_func_array($function, array(&$row, &$arguments));
 		}
 	}
 	

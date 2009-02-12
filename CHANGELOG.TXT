@@ -1,3 +1,7 @@
+2009-02-11
+Added fs_ modules for handling reading files off the filesystem, this should make the use of a database a lot more modular
+Fixed broken plugins from the fs_ modules change.
+
 2009-02-09
 Made select.php use the modules to get lists of files
 Modified all the modules to handle the returning of their own file types, lots of repetitive code but leaves it more open for expansion

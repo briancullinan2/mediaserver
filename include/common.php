@@ -178,7 +178,7 @@ function getAllColumns()
 	$columns = array();
 	foreach($GLOBALS['modules'] as $i => $module)
 	{
-		$columns = array_merge($columns, array_flip(call_user_func(array($module, 'columns'))));
+		$columns = array_merge($columns, array_flip(call_user_func($module . '::columns')));
 	}
 	
 	$columns = array_keys($columns);
@@ -243,11 +243,11 @@ function getIDsFromRequest($request, &$selected)
 		{
 			foreach($request['item'] as $id => $value)
 			{
-				if(($value == 'on' || $request['select'] == 'All') && !in_array($id, $selected))
+				if(($value == 'on' || (isset($request['select']) && $request['select'] == 'All')) && !in_array($id, $selected))
 				{
 					$selected[] = $id;
 				}
-				elseif(($value == 'off' || $request['select'] == 'None') && ($key = array_search($id, $selected)) !== false)
+				elseif(($value == 'off' || (isset($request['select']) && $request['select'] == 'None')) && ($key = array_search($id, $selected)) !== false)
 				{
 					unset($selected[$key]);
 				}
@@ -279,8 +279,15 @@ function getIDsFromRequest($request, &$selected)
 		}
 	}
 	
-	// make sure all selected items are numerics
-	foreach($selected as $i => $value) if(!is_numeric($value)) unset($selected[$i]);
+	// make sure all selected items are numeric or a valid file path
+	foreach($selected as $i => $value)
+	{
+		if(!is_numeric($value))
+		{
+			if(!file_exists(pack('H*', $value)))
+				unset($selected[$i]);
+		}
+	}
 	$selected = array_values($selected);
 	
 	if(count($selected) == 0) unset($selected);

@@ -32,7 +32,7 @@ for($index = 0; $index < $files_length; $index++)
 	// merge all the other information to each file
 	foreach($GLOBALS['modules'] as $i => $module)
 	{
-		if($module != $_REQUEST['cat'] && call_user_func(array($module, 'handles'), $file['Filepath']))
+		if($module != $_REQUEST['cat'] && call_user_func_array($module . '::handles'), array($file['Filepath'])))
 		{
 			$return = call_user_func_array($_REQUEST['cat'] . '::get', array($mysql, $_REQUEST, &$tmp_count, &$error));
 			if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
@@ -46,8 +46,7 @@ for($index = 0; $index < $files_length; $index++)
 		unset($files[$index]);
 		// get all files in directory
 		$props = array();
-		$props['WHERE'] = 'Filepath REGEXP "^' . addslashes(addslashes($file['Filepath'])) . '" AND Filetype != "FOLDER"';
-		$sub_files = array();
+		$props['dir'] = $file['Filepath'];
 		$sub_files = db_file::get($mysql, $props);
 		// put these files on the end of the array so they also get processed
 		$files = array_merge($files, $sub_files);

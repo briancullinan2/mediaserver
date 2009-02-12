@@ -50,7 +50,7 @@ if(isset($_REQUEST['select']))
 
 // add category
 if(!isset($_REQUEST['cat']) || !in_array($_REQUEST['cat'], $GLOBALS['modules']))
-	$_REQUEST['cat'] = 'db_file';
+	$_REQUEST['cat'] = USE_DATABASE?'db_file':'fs_file';
 
 // do validation!
 if( !isset($_REQUEST['start']) || !is_numeric($_REQUEST['start']) || $_REQUEST['start'] < 0 )
@@ -84,9 +84,9 @@ foreach($files as $index => &$file)
 		// merge all the other information to each file
 		foreach($GLOBALS['modules'] as $i => $module)
 		{
-			if($module != $_REQUEST['cat'] && call_user_func(array($module, 'handles'), $file['Filepath']))
+			if($module != $_REQUEST['cat'] && call_user_func_array($module . '::handles', array($file['Filepath'])))
 			{
-				$return = call_user_func_array($module . '::get', array($mysql, array('file' => $file['Filepath']), $tmp_count, &$error));
+				$return = call_user_func_array($module . '::get', array($mysql, array('file' => $file['Filepath']), &$tmp_count, &$error));
 				if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
 			}
 		}

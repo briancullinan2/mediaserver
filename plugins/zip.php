@@ -10,7 +10,7 @@ $mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 
 // add category
 if(!isset($_REQUEST['cat']) || !in_array($_REQUEST['cat'], $GLOBALS['modules']))
-	$_REQUEST['cat'] = 'db_file';
+	$_REQUEST['cat'] = USE_DATABASE?'db_file':'fs_file';
 
 $files = array();
 
@@ -28,7 +28,7 @@ for($index = 0; $index < $files_length; $index++)
 	// merge all the other information to each file
 	foreach($GLOBALS['modules'] as $i => $module)
 	{
-		if($module != $_REQUEST['cat'] && call_user_func(array($module, 'handles'), $file['Filepath']))
+		if($module != $_REQUEST['cat'] && call_user_func_array($module . '::handles', array($file['Filepath'])))
 		{
 			$return = call_user_func_array($_REQUEST['cat'] . '::get', array($mysql, $_REQUEST, &$tmp_count, &$error));
 			if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);

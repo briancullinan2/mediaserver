@@ -1,3 +1,6 @@
+2009-02-11
+Fix bt.php and zip.php plugins, severly broken with new changes
+
 2009-02-09
 Work getIDsFromRequest() into the modules only, and make the modules able to return items based on a list of IDs
 Figure out how to download files out of a zip file

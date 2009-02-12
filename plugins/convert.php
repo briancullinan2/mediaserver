@@ -19,32 +19,26 @@ switch($_REQUEST['convert'])
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
 // load mysql to query the database
-$mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+if(USE_DATABASE) $mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+else $mysql = NULL;
 
 // add category
 if(!isset($_REQUEST['cat']) || !in_array($_REQUEST['cat'], $GLOBALS['modules']))
-	$_REQUEST['cat'] = 'db_file';
+	$_REQUEST['cat'] = USE_DATABASE?'db_file':'fs_file';
 
 if(!isset($_REQUEST['%IF']) && isset($_REQUEST['id']))
 	$_REQUEST['%IF'] = $_REQUEST['id'];
 
 // check the id and stuff
-if(isset($_REQUEST['%IF']) && is_numeric($_REQUEST['%IF']))
+if(isset($_REQUEST['%IF']))
 {
 	// get the file path from the database
 	$files = call_user_func_array($_REQUEST['cat'] . '::get', array($mysql, array('id' => $_REQUEST['id']), &$count, &$error));
 	
 	if(count($files) > 0)
 	{
-	
-		$file = $mysql->get(db_file::DATABASE, array('WHERE' => 'Filepath = "' . addslashes($files[0]['Filepath']) . '"'));
-		if(count($file) > 0)
-		{
-			$files[0] = array_merge($file[0], $files[0]);
-		}
+		$_REQUEST['%IF'] = $files[0]['Filepath'];
 	}
-	
-	$_REQUEST['%IF'] = $files[0]['Filepath'];
 }
 else
 {

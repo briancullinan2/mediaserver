@@ -7,35 +7,29 @@
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
 // load mysql to query the database
-$mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+if(USE_DATABASE) $mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+else $mysql = NULL;
 
 // add category
 if(!isset($_REQUEST['cat']) || !in_array($_REQUEST['cat'], $GLOBALS['modules']))
-	$_REQUEST['cat'] = 'db_file';
+	$_REQUEST['cat'] = USE_DATABASE?'db_file':'fs_file';
 
-if(isset($_REQUEST['id']) && is_numeric($_REQUEST['id']))
+if(isset($_REQUEST['id']))
 {
 	// get the file path from the database
 	$files = call_user_func_array($_REQUEST['cat'] . '::get', array($mysql, array('id' => $_REQUEST['id']), &$count, &$error));
-	
-	if(count($files) > 0)
+
+	if($error == '')
 	{
-			
-		// output file
-		if(class_exists($_REQUEST['cat'] . '_browser') && call_user_func(array($_REQUEST['cat'], 'handles'), $files[0]['Filepath']))
+		if(count($files) > 0)
 		{
-			// output that mime type and the file
-			header('Content-Type: ' . $files[0]['Filemime']);
-			header('Content-Length: ' . $files[0]['Filesize']);
-			
-			call_user_func(array($_REQUEST['cat'], 'out'), $mysql, $files[0]['Filepath'], STDOUT);
+			// output file
+			call_user_func_array($_REQUEST['cat'] . '::out', array($mysql, $files[0]['Filepath'], 'php://output'));
 		}
-		else
-		{
-			// output file and displace
-			
-			call_user_func(array($_REQUEST['cat'], 'out'), $mysql, $files[0]['Filepath'], 'php://output');
-		}
+	}
+	else
+	{
+		print $error;
 	}
 }
 

@@ -150,6 +150,25 @@ class db_audio extends db_file
 		
 		if($mysql == NULL)
 		{
+			if(isset($request['selected']))
+			{
+				foreach($request['selected'] as $i => $id)
+				{
+					$file = pack('H*', $id);
+					if(is_file($file))
+					{
+						if(db_audio::handles($file))
+						{
+							$info = db_audio::getInfo($file);
+							// make some modifications
+							$info['Filepath'] = stripslashes($info['Filepath']);
+							if($info['Filetype'] == 'FOLDER') $info['Filepath'] .= DIRECTORY_SEPARATOR;
+							$files[] = $info;
+						}
+					}
+				}
+			}
+			
 			if(isset($request['file']))
 			{
 				if(is_file($request['file']))
@@ -195,7 +214,16 @@ class db_audio extends db_file
 			// select an array of ids!
 			if( isset($request['selected']) && count($request['selected']) > 0 )
 			{
-				$props['WHERE'] = 'id=' . join(' OR id=', $selected);
+				$props['WHERE'] = '';
+				foreach($request['selected'] as $i => $id)
+				{
+					if(is_numeric($id)) {
+						$props['WHERE'] .= ' id=' . $id . ' OR';
+					} else {
+						$props['WHERE'] .= ' Filepath="' . addslashes(pack('H*', $value)) . '" OR';
+					}
+				}
+				$props['WHERE'] = substr($props['WHERE'], 0, strlen($props['WHERE'])-2);
 				unset($props['OTHER']);
 			}
 			
