@@ -42,8 +42,8 @@ class fs_image_browser extends fs_image
 		// check to make sure file is valid
 		if(is_file($file))
 		{
-			header('Content-Type: ' . $file['Filemime']);
-			header('Content-Length: ' . $file['Filesize']);
+			header('Content-Type: ' . getMime($file));
+			header('Content-Length: ' . filesize($file));
 			
 			if(is_string($stream))
 				$op = fopen($stream, 'wb');
@@ -58,6 +58,7 @@ class fs_image_browser extends fs_image
 						fwrite($op, fread($fp, BUFFER_SIZE));
 					}				
 					fclose($fp);
+					fclose($op);
 					return true;
 				}
 			}

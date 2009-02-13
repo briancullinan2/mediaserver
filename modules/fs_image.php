@@ -105,7 +105,7 @@ class fs_image extends fs_file
 				$request['item'] = $request['id'];
 			getIDsFromRequest($request, $request['selected']);
 
-			if(isset($request['selected']))
+			if(isset($request['selected']) && count($request['selected']) > 0 )
 			{
 				foreach($request['selected'] as $i => $id)
 				{

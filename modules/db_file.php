@@ -149,6 +149,7 @@ class db_file
 							fwrite($op, fread($fp, BUFFER_SIZE));
 						}				
 						fclose($fp);
+						fclose($op);
 						return true;
 					}
 				}
@@ -184,7 +185,7 @@ class db_file
 			$props['OTHER'] = ' ORDER BY ' . $request['order_by'] . ' ' . $request['direction'] . ' LIMIT ' . $request['start'] . ',' . $request['limit'];
 
 			// select an array of ids!
-			if( isset($request['selected']) && count($request['selected']) > 0 )
+			if(isset($request['selected']) && count($request['selected']) > 0 )
 			{
 				$props['WHERE'] = '';
 				// compile where statement for either numeric id or encoded path
@@ -197,7 +198,7 @@ class db_file
 					else
 					{
 						// unpack encoded path and add it to where
-						$props['WHERE'] .= ' Filepath="' . addslashes(pack('H*', $value)) . '" OR';
+						$props['WHERE'] .= ' Filepath="' . addslashes(pack('H*', $id)) . '" OR';
 					}
 				}
 				// remove last or

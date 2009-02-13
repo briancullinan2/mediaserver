@@ -64,6 +64,7 @@ class db_image_browser extends db_image
 							fwrite($op, fread($fp, BUFFER_SIZE));
 						}				
 						fclose($fp);
+						fclose($op);
 						return true;
 					}
 				}

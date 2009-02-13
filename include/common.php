@@ -283,15 +283,7 @@ function getIDsFromRequest($request, &$selected)
 		}
 	}
 	
-	// make sure all selected items are numeric or a valid file path
-	foreach($selected as $i => $value)
-	{
-		if(!is_numeric($value))
-		{
-			if(!file_exists(pack('H*', $value)))
-				unset($selected[$i]);
-		}
-	}
+	// reset indices in this indexed array
 	$selected = array_values($selected);
 	
 	if(count($selected) == 0) unset($selected);

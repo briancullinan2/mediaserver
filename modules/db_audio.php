@@ -152,7 +152,7 @@ class db_audio extends db_file
 			$props['OTHER'] = ' ORDER BY ' . $request['order_by'] . ' ' . $request['direction'] . ' LIMIT ' . $request['start'] . ',' . $request['limit'];
 			
 			// select an array of ids!
-			if( isset($request['selected']) && count($request['selected']) > 0 )
+			if(isset($request['selected']) && count($request['selected']) > 0 )
 			{
 				$props['WHERE'] = '';
 				foreach($request['selected'] as $i => $id)
@@ -160,7 +160,7 @@ class db_audio extends db_file
 					if(is_numeric($id)) {
 						$props['WHERE'] .= ' id=' . $id . ' OR';
 					} else {
-						$props['WHERE'] .= ' Filepath="' . addslashes(pack('H*', $value)) . '" OR';
+						$props['WHERE'] .= ' Filepath="' . addslashes(pack('H*', $id)) . '" OR';
 					}
 				}
 				$props['WHERE'] = substr($props['WHERE'], 0, strlen($props['WHERE'])-2);

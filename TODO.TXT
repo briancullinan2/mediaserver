@@ -1,3 +1,10 @@
+2009-02-13
+Test zip stuff more, works fairly well
+Output contents of zip to other modules for images conversion
+Buffered gzinflate in archives modules
+Work on db_archive
+Fix adding a directory when archives don't store directories in the central directory, pick out all directories at right level?
+
 2009-02-11 (Full)
 Figure out how to download files out of a zip file
 FIX detail options in default template

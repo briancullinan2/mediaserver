@@ -52,8 +52,8 @@ class fs_file
 		if(is_file($file))
 		{
 			header('Content-Transfer-Encoding: binary');
-			header('Content-Type: ' . $file['Filemime']);
-			header('Content-Length: ' . $file['Filesize']);
+			header('Content-Type: ' .  getMime($file));
+			header('Content-Length: ' . filesize($file));
 			header('Content-Disposition: attachment; filename="' . basename($file) . '"');
 			
 			if(is_string($stream))
@@ -69,6 +69,7 @@ class fs_file
 						fwrite($op, fread($fp, BUFFER_SIZE));
 					}				
 					fclose($fp);
+					fclose($op);
 					return true;
 				}
 			}
@@ -101,7 +102,7 @@ class fs_file
 				$request['item'] = $request['id'];
 			getIDsFromRequest($request, $request['selected']);
 
-			if(isset($request['selected']))
+			if(isset($request['selected']) && count($request['selected']) > 0 )
 			{
 				foreach($request['selected'] as $i => $id)
 				{

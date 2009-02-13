@@ -87,7 +87,7 @@ class db_archive extends db_file
 				$request['item'] = $request['id'];
 			getIDsFromRequest($request, $request['selected']);
 		
-			if(isset($request['selected']))
+			if(isset($request['selected']) && count($request['selected']) > 0 )
 			{
 				foreach($request['selected'] as $i => $id)
 				{
@@ -147,7 +147,7 @@ class db_archive extends db_file
 					if(strpos($ext, DIRECTORY_SEPARATOR) !== false) $archive_dir = substr($ext, strpos($ext, DIRECTORY_SEPARATOR));
 					else $archive_dir = '';
 					$request['dir'] = substr($request['dir'], 0, strlen($request['dir']) - strlen($archive_dir));
-					if(strlen($archive_dir) > 0 && $archive_dir[0] == DIRECTORY_SEPARATOR) $archive_dir = substr($archive_dir, strlen(DIRECTORY_SEPARATOR));
+					if(strlen($archive_dir) > 0 && $archive_dir[0] == DIRECTORY_SEPARATOR) $archive_dir = substr($archive_dir, 1);
 					$archive_dir = str_replace(DIRECTORY_SEPARATOR, '\/', $archive_dir);
 					
 					// make sure the file they are trying is access is actually a file
