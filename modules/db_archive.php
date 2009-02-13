@@ -21,6 +21,11 @@ class db_archive extends db_file
 	
 	const NAME = 'Archives from Database';
 
+	static function columns()
+	{
+		return array('id', 'Filename', 'Filemime', 'Filesize', 'Compressed', 'Filedate', 'Filetype', 'Filepath');
+	}
+
 	static function handles($file)
 	{
 		// parse through the file path and try to find a zip

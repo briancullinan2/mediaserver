@@ -159,7 +159,10 @@ function setup()
 	}
 }
 
-
+function handles($file, $module)
+{
+	return call_user_func((USE_DATABASE?'db_':'fs_') . $module . '::handles', $file);
+}
 
 function selfURL()
 {

@@ -25,17 +25,14 @@ class fs_audio extends fs_file
 	{
 				
 		// get file extension
-		if(file_exists($file))
-		{
-			$ext = getExt($file);
-			$type = getExtType($ext);
-			
-			if( $type == 'audio' )
-			{
-				return true;
-			}
-		}
+		$ext = getExt(basename($file));
+		$type = getExtType($ext);
 		
+		if( $type == 'audio' )
+		{
+			return true;
+		}
+	
 		return false;
 
 	}

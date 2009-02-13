@@ -21,6 +21,7 @@ class fs_archive extends fs_file
 
 	static function handles($file)
 	{
+		
 		// parse through the file path and try to find a zip
 		$paths = split('\\' . DIRECTORY_SEPARATOR, $file);
 		$last_path = '';
@@ -29,7 +30,7 @@ class fs_archive extends fs_file
 		{
 			// this will continue until either the end of the requested file (a .zip extension for example)
 			// or if the entire path exists then it must be an actual folder on disk with a .zip in the name
-			if(file_exists($last_path . $tmp_file))
+			if(file_exists($last_path . $tmp_file) || $last_path == '')
 			{
 				$last_ext = getExt($last_path . $tmp_file);
 				$last_path = $last_path . $tmp_file . DIRECTORY_SEPARATOR;
@@ -149,24 +150,50 @@ class fs_archive extends fs_file
 						// analyze the file and output the files it contains
 						$info = $GLOBALS['getID3']->analyze($request['dir']);
 						
+						$count = 0;
 						// loop through central directory and list files with information
 						foreach($info['zip']['central_directory'] as $i => $file)
 						{
 							if(preg_match('/^' . $archive_dir . '[^\/]+\/?$/i', $file['filename']) !== 0)
 							{
-								$fileinfo = array();
-								$fileinfo['Filepath'] = $request['dir'] . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $file['filename']);
-								$fileinfo['id'] = bin2hex($fileinfo['Filepath']);
-								$fileinfo['Filename'] = basename($file['filename']);
-								if($file['filename'][strlen($file['filename'])-1] == '/')
-									$fileinfo['Filetype'] = 'FOLDER';
-								//$fileinfo['Filesize'] = filesize($file);
-								//$fileinfo['Filemime'] = getMime($file);
-								//$fileinfo['Filedate'] = date("Y-m-d h:i:s", filemtime($file));
-								$files[] = $fileinfo;
-								
+								if($count >= $request['start'] && $count < $request['start']+$request['limit'])
+								{
+									$fileinfo = array();
+									$fileinfo['Filepath'] = $request['dir'] . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $file['filename']);
+									$fileinfo['id'] = bin2hex($fileinfo['Filepath']);
+									$fileinfo['Filename'] = basename($file['filename']);
+									if($file['filename'][strlen($file['filename'])-1] == '/')
+										$fileinfo['Filetype'] = 'FOLDER';
+									else
+										$fileinfo['Filetype'] = getExt($file['filename']);
+									if($fileinfo['Filetype'] === false)
+										$fileinfo['Filetype'] = 'FILE';
+									$fileinfo['Filesize'] = $file['uncompressed_size'];
+									$fileinfo['Compressed'] = $file['compressed_size'];
+									$fileinfo['Filemime'] = getMime($file['filename']);
+									$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
+									$files[] = $fileinfo;
+								}
+								$count++;
 							}
 						}
+						unset($info['zip']['files']);
+						
+						print_r($info);
+						
+						//print_r($info);
+						$fp = fopen($request['dir'], 'rb');
+						$ThisFileInfo = array('fileformat'=>'', 'error'=>array(), 'filesize'=>filesize($request['dir']));
+						$getid3_zip = new getid3_zip($fp, $ThisFileInfo);
+						fseek($fp, $ThisFileInfo['zip']['central_directory'][0]['entry_offset']);
+						$LocalFileHeader = $getid3_zip->ZIPparseLocalFileHeader($fp);
+						fseek($fp, $LocalFileHeader['data_offset']);
+						$buffer = fread($fp, $LocalFileHeader['compressed_size']);
+						$buffer = gzinflate($buffer);
+						fclose($fp);
+						//header('Content-Type: image/x-icon');
+						print $buffer;
+						exit;
 					}
 					else
 					{

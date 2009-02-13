@@ -39,15 +39,12 @@ class fs_image extends fs_file
 	{
 				
 		// get file extension
-		if(file_exists($file))
+		$ext = getExt(basename($file));
+		$type = getExtType($ext);
+		
+		if( $type == 'image' )
 		{
-			$ext = getExt($file);
-			$type = getExtType($ext);
-			
-			if( $type == 'image' )
-			{
-				return true;
-			}
+			return true;
 		}
 		
 		return false;

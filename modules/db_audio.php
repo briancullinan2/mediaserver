@@ -28,17 +28,14 @@ class db_audio extends db_file
 	{
 				
 		// get file extension
-		if(file_exists($file))
-		{
-			$ext = getExt($file);
-			$type = getExtType($ext);
-			
-			if( $type == 'audio' )
-			{
-				return true;
-			}
-		}
+		$ext = getExt(basename($file));
+		$type = getExtType($ext);
 		
+		if( $type == 'audio' )
+		{
+			return true;
+		}
+	
 		return false;
 
 	}
