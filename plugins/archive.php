@@ -5,14 +5,11 @@ ignore_user_abort(1);
 // set the header first thing so browser doesn't stall or get tired of waiting for the process to start
 switch($_REQUEST['convert'])
 {
-	case 'JPG':
-		header('Content-Type: image/jpg');
+	case 'ZIPIN':
+		header('Content-Type: application/zip');
 		break;
-	case 'GIF':
-		header('Content-Type: image/gif');
-		break;
-	case 'PNG':
-		header('Content-Type: image/png');
+	case 'RARIN':
+		header('Content-Type: application/rar');
 		break;
 }
 
@@ -24,7 +21,7 @@ else $mysql = NULL;
 
 // add category
 if(!isset($_REQUEST['cat']) || !in_array($_REQUEST['cat'], $GLOBALS['modules']))
-	$_REQUEST['cat'] = USE_DATABASE?'db_image':'fs_image';
+	$_REQUEST['cat'] = USE_DATABASE?'db_archive':'fs_archive';
 
 if(!isset($_REQUEST['%IF']) && isset($_REQUEST['id']))
 	$_REQUEST['%IF'] = $_REQUEST['id'];

@@ -1,5 +1,6 @@
 2009-02-13
-Test zip stuff more, works fairly well
+Implement %IF and %OF options for commands
+Test zip stuff more, works fairly well, make archive out forward to archive.php plugin
 Output contents of zip to other modules for images conversion
 Buffered gzinflate in archives modules
 Work on db_archive

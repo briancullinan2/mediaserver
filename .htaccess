@@ -11,5 +11,6 @@ RewriteRule ^plugins/list/(([^/,]*,?)*)/(.*)$							plugins/list.php?item=$1&fil
 RewriteRule ^plugins/list/(.*)$ 										plugins/list.php?filename=$1&list= [L]
 RewriteRule ^plugins/encode/([^/]*)/(WMV|MPG|MP4|MP4A|MP3|WMA)/(.*)$ 	plugins/encode.php?id=$1&encode=$2 [L]
 RewriteRule ^plugins/convert/([^/]*)/(JPG|GIF|PNG)/(.*)$ 				plugins/convert.php?id=$1&convert=$2 [L]
+RewriteRule ^plugins/archive/([^/]*)/(ZIPIN|RARIN|OUT)/(.*)$ 			plugins/extract.php?id=$1&archive=$2 [L]
 
 </IfModule>

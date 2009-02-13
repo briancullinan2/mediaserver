@@ -15,14 +15,9 @@ require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY
 $GLOBALS['getID3'] = new getID3();
 
 // music handler
-class fs_archive extends fs_file
+class fs_diskimage extends fs_file
 {
 	const NAME = 'Archives from Filesystem';
-
-	static function columns()
-	{
-		return array('id', 'Filename', 'Filemime', 'Filesize', 'Compressed', 'Filedate', 'Filetype', 'Filepath');
-	}
 
 	static function handles($file)
 	{
@@ -53,11 +48,7 @@ class fs_archive extends fs_file
 		
 		switch($last_ext)
 		{
-			case 'zip':
-			case 'rar':
-			case 'gz':
-			case 'szip':
-			case 'tar':
+			case 'iso':
 				return true;
 			default:
 				return false;
@@ -176,7 +167,7 @@ class fs_archive extends fs_file
 				$request['start'] = 0;
 			if( !isset($request['limit']) || !is_numeric($request['limit']) || $request['limit'] < 0 )
 				$request['limit'] = 15;
-			if( !isset($request['order_by']) || !in_array($request['order_by'], fs_archive::columns()) )
+			if( !isset($request['order_by']) || !in_array($request['order_by'], fs_diskimage::columns()) )
 				$request['order_by'] = 'Title';
 			if( !isset($request['direction']) || ($request['direction'] != 'ASC' && $request['direction'] != 'DESC') )
 				$request['direction'] = 'ASC';
@@ -189,20 +180,20 @@ class fs_archive extends fs_file
 				foreach($request['selected'] as $i => $id)
 				{
 					$file = pack('H*', $id);
-					if(fs_archive::handles($file))
+					if(fs_diskimage::handles($file))
 					{
-						$files[] = fs_archive::getInfo($file);
+						$files[] = fs_diskimage::getInfo($file);
 					}
 				}
 			}
 			
 			if(isset($request['file']))
 			{
-				if(fs_archive::handles($request['file']))
+				if(fs_diskimage::handles($request['file']))
 				{
-					return array(0 => fs_archive::getInfo($request['file']));
+					return array(0 => fs_diskimage::getInfo($request['file']));
 				}
-				else{ $error = 'Invalid ' . fs_archive::NAME . ' file!'; }
+				else{ $error = 'Invalid ' . fs_diskimage::NAME . ' file!'; }
 			}
 			else
 			{
@@ -213,18 +204,18 @@ class fs_archive extends fs_file
 					$tmp_files = scandir($request['dir']);
 					$count = count($tmp_files);
 					for($j = 0; $j < $count; $j++)
-						if(!fs_archive::handles($request['dir'] . $tmp_files[$j])) unset($tmp_files[$j]);
+						if(!fs_diskimage::handles($request['dir'] . $tmp_files[$j])) unset($tmp_files[$j]);
 					$tmp_files = array_values($tmp_files);
 					$count = count($tmp_files);
 					for($i = $request['start']; $i < min($request['start']+$request['limit'], $count); $i++)
 					{
-						$files[] = fs_archive::getInfo($request['dir'] . $tmp_files[$i]);
+						$files[] = fs_diskimage::getInfo($request['dir'] . $tmp_files[$i]);
 					}
 					return $files;
 				}
 				// maybe they are trying to access a zip file as if it were a folder
 				// this is perfectly acceptable so lets check to see if this module handles it
-				if(fs_archive::handles($request['dir']))
+				if(fs_diskimage::handles($request['dir']))
 				{
 					$paths = split('\\' . DIRECTORY_SEPARATOR, $request['dir']);
 					$last_path = '';
@@ -247,34 +238,38 @@ class fs_archive extends fs_file
 					{
 						// analyze the file and output the files it contains
 						$info = $GLOBALS['getID3']->analyze($last_path);
-						
+
+//print_r($info);
 						$count = 0;
-						if(isset($info['zip']) && isset($info['zip']['central_directory']))
+						if(isset($info['iso']) && isset($info['iso']['directories']))
 						{
 							// loop through central directory and list files with information
-							foreach($info['zip']['central_directory'] as $i => $file)
+							foreach($info['iso']['directories'] as $i => $directory)
 							{
-								if(preg_match('/^' . $inside_path . '[^\/]+\/?$/i', $file['filename']) !== 0)
+								foreach($directory as $j => $file)
 								{
-									if($count >= $request['start'] && $count < $request['start']+$request['limit'])
+									if(preg_match('/^\/' . $inside_path . '[^\/]+\/?$/i', $file['filename']) !== 0)
 									{
-										$fileinfo = array();
-										$fileinfo['Filepath'] = $last_path . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $file['filename']);
-										$fileinfo['id'] = bin2hex($fileinfo['Filepath']);
-										$fileinfo['Filename'] = basename($file['filename']);
-										if($file['filename'][strlen($file['filename'])-1] == '/')
-											$fileinfo['Filetype'] = 'FOLDER';
-										else
-											$fileinfo['Filetype'] = getExt($file['filename']);
-										if($fileinfo['Filetype'] === false)
-											$fileinfo['Filetype'] = 'FILE';
-										$fileinfo['Filesize'] = $file['uncompressed_size'];
-										$fileinfo['Compressed'] = $file['compressed_size'];
-										$fileinfo['Filemime'] = getMime($file['filename']);
-										$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
-										$files[] = $fileinfo;
+										if($count >= $request['start'] && $count < $request['start']+$request['limit'])
+										{
+											$fileinfo = array();
+											$fileinfo['Filepath'] = $last_path . str_replace('/', DIRECTORY_SEPARATOR, $file['filename']);
+											$fileinfo['id'] = bin2hex($fileinfo['Filepath']);
+											$fileinfo['Filename'] = basename($file['filename']);
+											if($file['filename'][strlen($file['filename'])-1] == '/')
+												$fileinfo['Filetype'] = 'FOLDER';
+											else
+												$fileinfo['Filetype'] = getExt($file['filename']);
+											if($fileinfo['Filetype'] === false)
+												$fileinfo['Filetype'] = 'FILE';
+											//$fileinfo['Filesize'] = $file['uncompressed_size'];
+											//$fileinfo['Compressed'] = $file['compressed_size'];
+											$fileinfo['Filemime'] = getMime($file['filename']);
+											//$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
+											$files[] = $fileinfo;
+										}
+										$count++;
 									}
-									$count++;
 								}
 							}
 						}
