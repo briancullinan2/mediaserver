@@ -61,7 +61,8 @@ class fs_diskimage extends fs_file
 	static function getInfo($filename)
 	{
 		$fileinfo = array();
-		$paths = split('\\' . DIRECTORY_SEPARATOR, $filename);
+		
+		$paths = split('\\' . DIRECTORY_SEPARATOR, $request['dir']);
 		$last_path = '';
 		foreach($paths as $i => $tmp_file)
 		{
@@ -73,33 +74,42 @@ class fs_diskimage extends fs_file
 					break;
 			}
 		}
-		$inside_path = substr($filename, strlen($last_path));
+		$inside_path = substr($request['dir'], strlen($last_path));
+		$inside_path = str_replace(DIRECTORY_SEPARATOR, '\/', $inside_path);
+		if(strlen($inside_path) == 0 || $inside_path[0] != '/') $inside_path = '\/' . $inside_path;
 		if($last_path[strlen($last_path)-1] == DIRECTORY_SEPARATOR) $last_path = substr($last_path, 0, strlen($last_path)-1);
 		
 		$info = $GLOBALS['getID3']->analyze($last_path);
 		
 		if($inside_path != '')
 		{
-			
-			foreach($info['zip']['central_directory'] as $i => $file)
+			if(isset($info['iso']) && isset($info['iso']['directories']))
 			{
-				if($file['filename'] == $inside_path)
+				foreach($info['iso']['directories'] as $i => $directory)
 				{
-					$fileinfo['Filepath'] = $filename;
-					$fileinfo['id'] = bin2hex($fileinfo['Filepath']);
-					$fileinfo['Filename'] = basename($file['filename']);
-					if($file['filename'][strlen($file['filename'])-1] == '/')
-						$fileinfo['Filetype'] = 'FOLDER';
-					else
-						$fileinfo['Filetype'] = getExt($file['filename']);
-					if($fileinfo['Filetype'] === false)
-						$fileinfo['Filetype'] = 'FILE';
-					$fileinfo['Filesize'] = $file['uncompressed_size'];
-					$fileinfo['Compressed'] = $file['compressed_size'];
-					$fileinfo['Filemime'] = getMime($file['filename']);
-					$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
+					foreach($directory as $j => $file)
+					{
+						if($file['filename'] == $inside_path)
+						{
+							$fileinfo = array();
+							$fileinfo['Filepath'] = $last_path . str_replace('/', DIRECTORY_SEPARATOR, $file['filename']);
+							$fileinfo['id'] = bin2hex($fileinfo['Filepath']);
+							$fileinfo['Filename'] = basename($file['filename']);
+							if($file['filename'][strlen($file['filename'])-1] == '/')
+								$fileinfo['Filetype'] = 'FOLDER';
+							else
+								$fileinfo['Filetype'] = getExt($file['filename']);
+							if($fileinfo['Filetype'] === false)
+								$fileinfo['Filetype'] = 'FILE';
+							$fileinfo['Filesize'] = $file['filesize'];
+							$fileinfo['Filemime'] = getMime($file['filename']);
+							$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['recording_timestamp']);
+							$files[] = $fileinfo;
+						}
+					}
 				}
 			}
+			else{ $error = 'Cannot read this type of file!'; }
 		}
 		// look at archive properties for the entire archive
 		else
@@ -231,7 +241,7 @@ class fs_diskimage extends fs_file
 					}
 					$inside_path = substr($request['dir'], strlen($last_path));
 					$inside_path = str_replace(DIRECTORY_SEPARATOR, '\/', $inside_path);
-					if($inside_path[0] != '/') $inside_path = '/' . $inside_path;
+					if(strlen($inside_path) == 0 || $inside_path[0] != '/') $inside_path = '\/' . $inside_path;
 					if($last_path[strlen($last_path)-1] == DIRECTORY_SEPARATOR) $last_path = substr($last_path, 0, strlen($last_path)-1);
 					
 					// make sure the file they are trying is access is actually a file
@@ -240,19 +250,22 @@ class fs_diskimage extends fs_file
 						// analyze the file and output the files it contains
 						$info = $GLOBALS['getID3']->analyze($last_path);
 
-print_r($inside_path);
+//print_r($info);
 						$count = 0;
 						if(isset($info['iso']) && isset($info['iso']['directories']))
 						{
 							// loop through central directory and list files with information
+							$directories = array();
 							foreach($info['iso']['directories'] as $i => $directory)
 							{
 								foreach($directory as $j => $file)
 								{
-									if(preg_match('/^\/' . $inside_path . '[^\/]+\/?$/i', $file['filename']) !== 0)
+									if(preg_match('/^' . $inside_path . '[^\/]+\/?$/i', $file['filename']) !== 0)
 									{
-										if($count >= $request['start'] && $count < $request['start']+$request['limit'])
+										if($count >= $request['start'] && $count < $request['start']+$request['limit'] && !in_array($file['filename'], $directories))
 										{
+											// prevent repeat directory listings
+											$directories[] = $file['filename'];
 											$fileinfo = array();
 											$fileinfo['Filepath'] = $last_path . str_replace('/', DIRECTORY_SEPARATOR, $file['filename']);
 											$fileinfo['id'] = bin2hex($fileinfo['Filepath']);
@@ -263,10 +276,9 @@ print_r($inside_path);
 												$fileinfo['Filetype'] = getExt($file['filename']);
 											if($fileinfo['Filetype'] === false)
 												$fileinfo['Filetype'] = 'FILE';
-											//$fileinfo['Filesize'] = $file['uncompressed_size'];
-											//$fileinfo['Compressed'] = $file['compressed_size'];
+											$fileinfo['Filesize'] = $file['filesize'];
 											$fileinfo['Filemime'] = getMime($file['filename']);
-											//$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
+											$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['recording_timestamp']);
 											$files[] = $fileinfo;
 										}
 										$count++;
@@ -274,15 +286,9 @@ print_r($inside_path);
 								}
 							}
 						}
-						else
-						{
-							$error = 'Cannot read this type of file!';
-						}
+						else{ $error = 'Cannot read this type of file!'; }
 					}
-					else
-					{
-						$error = 'File does not exist!';
-					}
+					else{ $error = 'File does not exist!'; }
 				}
 				else{ $error = 'Directory does not exist!'; }
 			}

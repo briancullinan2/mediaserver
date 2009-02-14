@@ -89,24 +89,26 @@ class fs_archive extends fs_file
 		
 		if($inside_path != '')
 		{
-			
-			foreach($info['zip']['central_directory'] as $i => $file)
+			if(isset($info['zip']) && isset($info['zip']['central_directory']))
 			{
-				if($file['filename'] == $inside_path)
+				foreach($info['zip']['central_directory'] as $i => $file)
 				{
-					$fileinfo['Filepath'] = $filename;
-					$fileinfo['id'] = bin2hex($fileinfo['Filepath']);
-					$fileinfo['Filename'] = basename($file['filename']);
-					if($file['filename'][strlen($file['filename'])-1] == '/')
-						$fileinfo['Filetype'] = 'FOLDER';
-					else
-						$fileinfo['Filetype'] = getExt($file['filename']);
-					if($fileinfo['Filetype'] === false)
-						$fileinfo['Filetype'] = 'FILE';
-					$fileinfo['Filesize'] = $file['uncompressed_size'];
-					$fileinfo['Compressed'] = $file['compressed_size'];
-					$fileinfo['Filemime'] = getMime($file['filename']);
-					$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
+					if($file['filename'] == $inside_path)
+					{
+						$fileinfo['Filepath'] = $filename;
+						$fileinfo['id'] = bin2hex($fileinfo['Filepath']);
+						$fileinfo['Filename'] = basename($file['filename']);
+						if($file['filename'][strlen($file['filename'])-1] == '/')
+							$fileinfo['Filetype'] = 'FOLDER';
+						else
+							$fileinfo['Filetype'] = getExt($file['filename']);
+						if($fileinfo['Filetype'] === false)
+							$fileinfo['Filetype'] = 'FILE';
+						$fileinfo['Filesize'] = $file['uncompressed_size'];
+						$fileinfo['Compressed'] = $file['compressed_size'];
+						$fileinfo['Filemime'] = getMime($file['filename']);
+						$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
+					}
 				}
 			}
 		}
