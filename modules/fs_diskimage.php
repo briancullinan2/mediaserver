@@ -231,6 +231,7 @@ class fs_diskimage extends fs_file
 					}
 					$inside_path = substr($request['dir'], strlen($last_path));
 					$inside_path = str_replace(DIRECTORY_SEPARATOR, '\/', $inside_path);
+					if($inside_path[0] != '/') $inside_path = '/' . $inside_path;
 					if($last_path[strlen($last_path)-1] == DIRECTORY_SEPARATOR) $last_path = substr($last_path, 0, strlen($last_path)-1);
 					
 					// make sure the file they are trying is access is actually a file
@@ -239,7 +240,7 @@ class fs_diskimage extends fs_file
 						// analyze the file and output the files it contains
 						$info = $GLOBALS['getID3']->analyze($last_path);
 
-//print_r($info);
+print_r($inside_path);
 						$count = 0;
 						if(isset($info['iso']) && isset($info['iso']['directories']))
 						{
