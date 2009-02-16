@@ -56,8 +56,8 @@ class db_archive extends db_file
 		{
 			case 'zip':
 			case 'rar':
-			case 'gzip':
-			case 'szip':
+			case 'gz':
+			case '7z':
 			case 'tar':
 				return true;
 			default:

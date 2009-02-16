@@ -1,3 +1,7 @@
+2009-02-16
+Finish adding fs_ modules to db_modules, arists and albums should not be an fs_module, only db_
+Work on finishing EXT JS template, and add more templates from Ampache, Jinzora, and WinAmp Remote
+
 2009-02-13
 Implement %IF and %OF options for commands
 Test zip stuff more, works fairly well, make archive out forward to archive.php plugin

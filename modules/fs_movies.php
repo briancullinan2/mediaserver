@@ -12,13 +12,13 @@ require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY
 $GLOBALS['getID3'] = new getID3();
 
 // music handler
-class fs_diskimage extends fs_file
+class fs_movies extends fs_diskimage
 {
 	const NAME = 'Disk Images from Filesystem';
 
 	static function columns()
 	{
-		return array('id', 'Filename', 'Filemime', 'Filesize', 'Filedate', 'Filetype', 'Filepath');
+		return array('id', 'Filename', 'Filemime', 'Filesize', 'Filedate', 'Filetype', 'Director', 'ReleaseDate', 'Genre', 'Plot', 'Cast', 'Runtime', 'Language', 'AspectRatio', 'Filepath');
 	}
 
 	static function handles($file)
@@ -78,6 +78,7 @@ class fs_diskimage extends fs_file
 		}
 		$inside_path = substr($filename, strlen($last_path));
 		$inside_path = str_replace(DIRECTORY_SEPARATOR, '/', $inside_path);
+		if(strlen($inside_path) == 0 || $inside_path[0] != '/') $inside_path = '/' . $inside_path;
 		if($last_path[strlen($last_path)-1] == DIRECTORY_SEPARATOR) $last_path = substr($last_path, 0, strlen($last_path)-1);
 		
 		if(is_file($last_path))
@@ -86,7 +87,6 @@ class fs_diskimage extends fs_file
 			
 			if($inside_path != '')
 			{
-				if(strlen($inside_path) == 0 || $inside_path[0] != '/') $inside_path = '/' . $inside_path;
 				if(isset($info['iso']) && isset($info['iso']['directories']))
 				{
 					foreach($info['iso']['directories'] as $i => $directory)
@@ -118,7 +118,6 @@ class fs_diskimage extends fs_file
 			// look at archive properties for the entire archive
 			else
 			{
-				//print_r($info);
 			}
 		}
 		
@@ -141,6 +140,7 @@ class fs_diskimage extends fs_file
 		}
 		$inside_path = substr($file, strlen($last_path));
 		$inside_path = str_replace(DIRECTORY_SEPARATOR, '/', $inside_path);
+		if(strlen($inside_path) == 0 || $inside_path[0] != '/') $inside_path = '/' . $inside_path;
 		if($last_path[strlen($last_path)-1] == DIRECTORY_SEPARATOR) $last_path = substr($last_path, 0, strlen($last_path)-1);
 
 		if(is_file($last_path))
@@ -155,7 +155,6 @@ class fs_diskimage extends fs_file
 
 			if($inside_path != '')
 			{
-				if(strlen($inside_path) == 0 || $inside_path[0] != '/') $inside_path = '/' . $inside_path;
 				if(isset($info['iso']) && isset($info['iso']['directories']))
 				{
 					foreach($info['iso']['directories'] as $i => $directory)
