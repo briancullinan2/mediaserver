@@ -2,7 +2,7 @@
 	Get the list:
 	<br />
 	<form action="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}list.php" method="get">
-		Type <select name="type">
+		Type <select name="list">
 			{foreach from=$types item=type key=name}
 			<option value="{$name}">{$type.name}</option>
 			{/foreach}

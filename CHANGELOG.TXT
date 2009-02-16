@@ -1,6 +1,8 @@
 2009-02-16
 Worked on fs_imagedisk, outputting files works now
 Worked on some more organization
+Db_archive now fully functional, archives are searchable and in the database
+Made the pretty dirs for the plugins the same for every plugins, links must now be specified in the template as /<plugin>/<category>/<id>/<filename>
 
 2009-02-11
 Added fs_ modules for handling reading files off the filesystem, this should make the use of a database a lot more modular

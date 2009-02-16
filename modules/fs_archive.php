@@ -95,7 +95,7 @@ class fs_archive extends fs_file
 				{
 					if($file['filename'] == $inside_path)
 					{
-						$fileinfo['Filepath'] = $filename;
+						$fileinfo['Filepath'] = $last_path . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $file['filename']);
 						$fileinfo['id'] = bin2hex($fileinfo['Filepath']);
 						$fileinfo['Filename'] = basename($file['filename']);
 						if($file['filename'][strlen($file['filename'])-1] == '/')

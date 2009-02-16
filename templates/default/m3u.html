@@ -1,12 +1,18 @@
 {* LIST TEXT "M3U Playlist" *}
-{if !isset($smarty.request.m3u_type)}
-{section name=file loop=$files}
-{if !isset($ids)}
-{assign var=ids value=$files[file].id}
-{else}
-{assign var=ids value=$ids|cat:','|cat:$files[file].id}
-{/if}
-{/section}
+{if !isset($smarty.request.extra)}
+{php}
+global $files, $smarty;
+$ids = '';
+foreach($files as $i => $file)
+	$ids .= $file['id'] . ',';
+$ids = substr($ids, 0, strlen($ids)-1);
+    
+$smarty->assign('ids', $ids);
+if(!isset($_GET['item']) && !isset($_GET['id']))
+{
+	header('Location: /' . HTML_ROOT . HTML_PLUGINS . 'list/' . $_REQUEST['cat'] . '/' . $ids . '/m3u/list.php');
+}
+{/php}
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -16,9 +22,9 @@
 <body>
 Note: All non-media types will be filtered out using this list type.<br />
 Select your audio/video format:<br />
-<a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}list/{$ids}/MP4/Files.m3u">mp4</a>
-: <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}list/{$ids}/MPG/Files.m3u">mpg/mp3</a>
-: <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}list/{$ids}/WM/Files.m3u">wmv/wma</a>
+<a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}list/{$smarty.request.cat}/{$ids}/m3u/MP4/Files.m3u">mp4</a>
+: <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}list/{$smarty.request.cat}/{$ids}/m3u/MPG/Files.m3u">mpg/mp3</a>
+: <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}list/{$smarty.request.cat}/{$ids}/m3u/WM/Files.m3u">wmv/wma</a>
 <br />
 Some files that will be listed: <br />
 {php}
@@ -38,7 +44,7 @@ foreach($files as $i => $file)
 {/php}
 </body>
 </html>
-{elseif $smarty.request.m3u_type == 'MP4'}
+{elseif $smarty.request.extra == 'MP4'}
 {php}
 header('Content-Type: audio/x-mpegurl');
 header('Content-Disposition: attachment; filename="' . (isset($_REQUEST['filename'])?$_REQUEST['filename']:constant($_REQUEST['cat'] . '::NAME') . '.m3u"')); 
@@ -53,13 +59,13 @@ header('Content-Disposition: attachment; filename="' . (isset($_REQUEST['filenam
 {assign var=type value=$type_arr.0}
 {if $type=="video"}
 #EXTINF:{$length},{$title}
-{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode/{$files[file].id}/MP4/{$files[file].id}.mp4
+{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode/{$smarty.request.cat}/{$files[file].id}/MP4/{$files[file].id}.mp4
 {elseif $type=="audio"}
 #EXTINF:{$length},{$title}
-{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode/{$files[file].id}/MP4A/{$files[file].id}.mp4
+{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode/{$smarty.request.cat}/{$files[file].id}/MP4A/{$files[file].id}.mp4
 {/if}
 {/section}
-{elseif $smarty.request.m3u_type == 'WM'}
+{elseif $smarty.request.extra == 'WM'}
 {php}
 header('Content-Type: audio/x-mpegurl');
 header('Content-Disposition: attachment; filename="' . (isset($_REQUEST['filename'])?$_REQUEST['filename']:constant($_REQUEST['cat'] . '::NAME') . '.m3u"')); 
@@ -74,13 +80,13 @@ header('Content-Disposition: attachment; filename="' . (isset($_REQUEST['filenam
 {assign var=type value=$type_arr.0}
 {if $type=="video"}
 #EXTINF:{$length},{$title}
-{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode/{$files[file].id}/WMV/{$files[file].id}.wmv
+{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode/{$smarty.request.cat}/{$files[file].id}/WMV/{$files[file].id}.wmv
 {elseif $type=="audio"}
 #EXTINF:{$length},{$title}
-{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode/{$files[file].id}/WMA/{$files[file].id}.wma
+{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode/{$smarty.request.cat}/{$files[file].id}/WMA/{$files[file].id}.wma
 {/if}
 {/section}
-{elseif $smarty.request.m3u_type == 'MPG'}
+{elseif $smarty.request.extra == 'MPG'}
 {php}
 header('Content-Type: audio/x-mpegurl');
 header('Content-Disposition: attachment; filename="' . (isset($_REQUEST['filename'])?$_REQUEST['filename']:constant($_REQUEST['cat'] . '::NAME') . '.m3u"')); 
@@ -95,10 +101,10 @@ header('Content-Disposition: attachment; filename="' . (isset($_REQUEST['filenam
 {assign var=type value=$type_arr.0}
 {if $type=="video"}
 #EXTINF:{$length},{$title}
-{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode/{$files[file].id}/MPG/{$files[file].id}.mpg
+{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode/{$smarty.request.cat}/{$files[file].id}/MPG/{$files[file].id}.mpg
 {elseif $type=="audio"}
 #EXTINF:{$length},{$title}
-{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode/{$files[file].id}/MP3/{$files[file].id}.mp3
+{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode/{$smarty.request.cat}/{$files[file].id}/MP3/{$files[file].id}.mp3
 {/if}
 {/section}
 {/if}

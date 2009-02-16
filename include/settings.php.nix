@@ -9,7 +9,7 @@ define('ADMIN_PASS',			   'tmppass');
 
 
 // database connection constants
-define('USE_DATABASE', 	                 false); // set to false to make modules load information about every file on the fly
+define('USE_DATABASE', 	                  true); // set to false to make modules load information about every file on the fly
 define('DB_SERVER',                'localhost');
 define('DB_USER',                 'bjcullinan');
 define('DB_PASS',                   'Da1ddy23');

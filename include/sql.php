@@ -141,6 +141,19 @@ class sql_global
 				Thumbnail		BLOB NOT NULL
 			)') or print_r(mysql_error());
 		
+		$this->query('CREATE TABLE IF NOT EXISTS ' . $this->table_prefix . 'archive (
+				id 				INT NOT NULL AUTO_INCREMENT,
+								PRIMARY KEY(id),
+				Filename		TEXT NOT NULL,
+				Filepath		TEXT NOT NULL,
+				Compressed		BIGINT NOT NULL,
+				Filesize		BIGINT NOT NULL,
+				Filemime		TEXT NOT NULL,
+				Filedate		DATETIME,
+				Filetype		TEXT NOT NULL
+			)') or print_r(mysql_error());
+		
+		
 	}
 	
 	// get the list of watched folders, just the paths

@@ -3,14 +3,18 @@
 RewriteEngine on
 
 #RewriteBase /cross_platform/
-RewriteRule ^plugins/file/([^/]*)/([^/]*)/(.*)$ 						plugins/file.php?cat=$1&id=$2&filename=$3 [L]
-RewriteRule ^plugins/bt/(([^/,]*,?)*)/(.*)$ 							plugins/bt.php?item=$1&btorrent= [L]
-RewriteRule ^plugins/zip/(([^/,]*,?)*)/(.*)$ 							plugins/zip.php?item=$1&zip= [L]
-RewriteRule ^plugins/list/(([^/,]*,?)*)/(WM|MP4|MPG)/(.*)$ 				plugins/list.php?item=$1&m3u_type=$3&filename=$4&type=m3u&list= [L]
-RewriteRule ^plugins/list/(([^/,]*,?)*)/(.*)$							plugins/list.php?item=$1&filename=$3&list= [L]
-RewriteRule ^plugins/list/(.*)$ 										plugins/list.php?filename=$1&list= [L]
-RewriteRule ^plugins/encode/([^/]*)/(WMV|MPG|MP4|MP4A|MP3|WMA)/(.*)$ 	plugins/encode.php?id=$1&encode=$2 [L]
-RewriteRule ^plugins/convert/([^/]*)/(JPG|GIF|PNG)/(.*)$ 				plugins/convert.php?id=$1&convert=$2 [L]
-RewriteRule ^plugins/archive/([^/]*)/(ZIPIN|RARIN|OUT)/(.*)$ 			plugins/extract.php?id=$1&archive=$2 [L]
+#RewriteRule ^plugins/file/([^/]*)/([^/]*)/(.*)$ 						plugins/file.php?cat=$1&id=$2&filename=$3 [L]
+#RewriteRule ^plugins/bt/(([^/,]*,?)*)/(.*)$ 							plugins/bt.php?item=$1&btorrent= [L]
+#RewriteRule ^plugins/zip/(([^/,]*,?)*)/(.*)$ 							plugins/zip.php?item=$1&zip= [L]
+#RewriteRule ^plugins/list/(([^/,]*,?)*)/(WM|MP4|MPG)/(.*)$ 				plugins/list.php?item=$1&m3u_type=$3&filename=$4&type=m3u&list= [L]
+#RewriteRule ^plugins/list/(([^/,]*,?)*)/(.*)$							plugins/list.php?item=$1&filename=$3&list= [L]
+#RewriteRule ^plugins/list/(.*)$ 										plugins/list.php?filename=$1&list= [L]
+#RewriteRule ^plugins/encode/([^/]*)/(WMV|MPG|MP4|MP4A|MP3|WMA)/(.*)$ 	plugins/encode.php?id=$1&encode=$2 [L]
+#RewriteRule ^plugins/convert/([^/]*)/(JPG|GIF|PNG)/(.*)$ 				plugins/convert.php?id=$1&convert=$2 [L]
+#RewriteRule ^plugins/archive/([^/]*)/(ZIPIN|RARIN|OUT)/(.*)$ 			plugins/extract.php?id=$1&archive=$2 [L]
+RewriteRule ^plugins/([^/]*)/([^/]*)/([^/]*)/([^/]*)$ 					plugins/$1.php?cat=$2&id=$3&filename=$4 [L]
+RewriteRule ^plugins/([^/]*)/([^/]*)/([^/]*)/([^/]*)/([^/]*)$ 			plugins/$1.php?cat=$2&id=$3&$1=$4&filename=$5 [L]
+RewriteRule ^plugins/([^/]*)/([^/]*)/([^/]*)/([^/]*)/([^/]*)/([^/]*)$ 	plugins/$1.php?cat=$2&id=$3&$1=$4&extra=$5&filename=$6 [L]
+
 
 </IfModule>

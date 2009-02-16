@@ -164,6 +164,7 @@ function setup()
 
 function handles($file, $module)
 {
+	if(class_exists((USE_DATABASE?'db_':'fs_') . $module))
 	return call_user_func((USE_DATABASE?'db_':'fs_') . $module . '::handles', $file);
 }
 

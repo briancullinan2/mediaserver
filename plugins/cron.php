@@ -97,9 +97,11 @@ for($i; $i < count($watched); $i++)
 		
 		// serialize and save
 		print "State saved\n";
-		$fp = fopen(LOCAL_ROOT . "state_dirs.txt", "w");
-		fwrite($fp, serialize($state));
-		fclose($fp);
+		if($fp = fopen(LOCAL_ROOT . "state_dirs.txt", "w"))
+		{
+			fwrite($fp, serialize($state));
+			fclose($fp);
+		}
 		
 		// since it exited because of time we don't want to continue our for loop
 		//   exit out of the loop so it start off in the same place next time
@@ -176,21 +178,21 @@ do
  		$count = 0;
 		$error = '';
 		// get directory contents
-		$files = fs_file::get(NULL, array('dir' => $dir), $count, $error, true);
+		$files = fs_file::get(NULL, array('dir' => $dir, 'limit' => 32000), $count, $error, true);
 		
 		foreach($files as $i => $file)
 		{
 		
 			// if $file isn't this directory or its parent, 
-			if ($file != '.' && $file != '..' && !is_dir($dir . $file))
+			if ($file['Filename'] != '.' && $file['Filename'] != '..' && !is_dir($file['Filepath']))
 			{
-				getfile($dir . $file);
+				getfile($file['Filepath']);
 			}
 
 		}
 	
 		// delete the selected folder from the database
-		$mysql->set('watch_list', NULL, array('Filepath' => addslashes($dir)));
+		//$mysql->set('watch_list', NULL, array('Filepath' => addslashes($dir)));
 	}
 
 	// check if execution time is too long
