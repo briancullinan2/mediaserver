@@ -28,7 +28,7 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATO
 // Only update files that don't exist in database, have changed timestamps, have changed in size
 
 // start the page with a pre to output messages that can be viewed in a browser
-?><pre><?php
+?><pre><script language="javascript">function body_scroll(){document.body.scrollTop = document.body.scrollHeight;setTimeout('body_scroll()', 100)};setTimeout('body_scroll()', 100)</script><?php
 
 // the cron script is useless if it has nowhere to store the information it reads
 if(USE_DATABASE == false)
@@ -78,8 +78,7 @@ elseif(isset($state_current))
 {
 	// if it isn't set in the watched list at all 
 	//   something must be wrong with our state so reset it
-	if(file_exists(LOCAL_ROOT . "state_dirs.txt")) $fp = fopen(LOCAL_ROOT . "state_dirs.txt", "w");
-	if(isset($fp))
+	if($fp = fopen(LOCAL_ROOT . "state_dirs.txt", "w"))
 	{
 		print "State cleared\n";
 		fwrite($fp, '');
@@ -87,6 +86,9 @@ elseif(isset($state_current))
 	}
 	$state = array();
 }
+
+if(isset($_REQUEST['entry']) && is_numeric($_REQUEST['entry']) && $_REQUEST['entry'] < count($watched) && $_REQUEST['entry'] > 0)
+	$i = $_REQUEST['entry'];
 
 // loop through each watched folder and get a list of all the files
 for($i; $i < count($watched); $i++)
@@ -118,8 +120,7 @@ for($i; $i < count($watched); $i++)
 		// clear state information
 		if(file_exists(LOCAL_ROOT . "state_dirs.txt"))
 		{
-			if(file_exists(LOCAL_ROOT . "state_dirs.txt")) $fp = fopen(LOCAL_ROOT . "state_dirs.txt", "w");
-			if(isset($fp))
+			if($fp = fopen(LOCAL_ROOT . "state_dirs.txt", "w"))
 			{
 				print "State cleared\n";
 				fwrite($fp, '');
@@ -130,6 +131,9 @@ for($i; $i < count($watched); $i++)
 		// set the last updated time in the watched table
 		$mysql->set('watch', array('Lastwatch' => date("Y-m-d h:i:s")), array('Filepath' => addslashes($watch['Filepath'])));
 	}
+	
+	if(isset($_REQUEST['entry']) && is_numeric($_REQUEST['entry']) && $_REQUEST['entry'] < count($watched) && $_REQUEST['entry'] > 0)
+		break;
 }
 
 
@@ -177,6 +181,7 @@ do
 			continue;
 		
 		print 'Searching directory: ' . $dir . "\n";
+		flush();
 		
 		// search all the files in the directory
 		
@@ -197,7 +202,7 @@ do
 		}
 	
 		// delete the selected folder from the database
-		//$mysql->set('watch_list', NULL, array('Filepath' => addslashes($dir)));
+		$mysql->set('watch_list', NULL, array('Filepath' => addslashes($dir)));
 	}
 
 	// check if execution time is too long
@@ -209,6 +214,7 @@ do
 
 
 // now do some cleanup
+//exit;
 
 foreach($GLOBALS['modules'] as $i => $module)
 {
@@ -297,23 +303,20 @@ function getdir( $dir )
 		$mysql->set('watch_list', array('Filepath' => addslashes($dir)), NULL);
 		
 		print 'Queueing directory: ' . $dir . "\n";
-		
-		flush();
-
 	}
 	
 	
 	$count = 0;
 	$error = '';
 	// get directory contents
-	$files = fs_file::get(NULL, array('dir' => $dir), $count, $error, true);
+	$files = fs_file::get(NULL, array('dir' => $dir, 'limit' => 32000), $count, $error, true);
 	
 	$i = 0;
 	
 	if( isset($state) && is_array($state) ) $state_current = array_pop($state);
 	
 	// check state for starting index
-	if( isset($state_current) && isset($files[$state_current['index']]) && $files[$state_current['index']] == $state_current['file'] )
+	if( isset($state_current) && isset($files[$state_current['index']]) && $files[$state_current['index']]['Filepath'] == $state_current['file'] )
 	{
 		$i = $state_current['index'];
 	}
@@ -323,17 +326,21 @@ function getdir( $dir )
 		array_push($state, $state_current);
 	}
 	
+	print 'Looking for changes in: ' . $dir . "\n";
+	flush();
+	
 	$max = count($files);
 	// keep going until all files in directory have been read
 	for($i; $i < $max; $i++)
 	{
-		$file = $files[$i];
+		$file = $files[$i]['Filepath'];
 		
 		// check if execution time is too long
 		$secs_total = array_sum(explode(' ', microtime())) - $tm_start;
 		
 		if( $secs_total > DIRECTORY_SEEK_TIME )
 		{
+
 			// reset previous state when time runs out
 			$state = array();
 		
@@ -345,28 +352,22 @@ function getdir( $dir )
 		
 
 		// if $file isn't this directory or its parent, 
-		if ($file != '.' && $file != '..')
+		if (substr(basename($file), 0, 1) != '.')
 		{
-			
-			// don't resolve symbolic links here, the watch paths are already resolved, and we want to always add on to that path
-			$new_file = $dir . $file;
 
 			// get files recursively
-			if( is_dir($new_file) )
+			if( is_dir($file) )
 			{
-				// add a slash then add it to the filelist
-				$new_file .= DIRECTORY_SEPARATOR;
-				
 				// prevent recursion by making sure it isn't already in the list of directories
-				if( in_array($new_file, $dirs) == false && in_array(realpath($new_file), $dirs) == false )
+				if( in_array($file, $dirs) == false && in_array(realpath($file), $dirs) == false )
 				{
-					$dirs[] = $new_file;
+					$dirs[] = $file;
 					// add the real path incase they are different
-					if(realpath($new_file) != $new_file)
-						$dirs[] = realpath($new_file);
+					if(realpath($file) != $file)
+						$dirs[] = realpath($file);
 					
 					// always descend and search for more directories
-					$status = getdir( $new_file );
+					$status = getdir( $file );
 					
 					// if the status is false then save current directory and return
 					// do this here so we can reset the state when the time runs out

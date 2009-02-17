@@ -1,6 +1,31 @@
+2009-02-17 (Full)
+Make cleanup more efficient, only clean up files for changed folders
+Make the settings.php plugin load individual settings for each template, settings should be submitted by the template, and used by the template, templates handle their own validation of settings
+Find a solution for adding files that are being browsed immediately, do a check in handles maybe for db_ modules that adds it to the database immediately if it is trying to be accessed?
+Work on db_movies, use cUrl to download movie information from imdb, use the volume decriptor for lookup, this shouldn't change even if they edited an image
+Research the video_ts.ifo file, there must be a way of getting the full name from a DVD image, windows media center projects can do it, so can we
+Implement %IF and %OF options for commands
+Figure out how to download files out of a zip file, maybe use an external program and set up archive.php plugin
+FIX detail options in default template
+Add support for creating thumbnails in convert.php script
+File uploading and personal folders
+FIX bt.php plugin to work with command line torrent seeder on windows
+Work on finishing EXT JS template, and add more templates from Ampache, Jinzora, and WinAmp Remote
+------------- All JS template stuff -------------
+Fix arrow-key movement in extjs template, in thumbnails view of the FolderView.js
+Add desktop.ini/folder.ini files and fix up thumbnails in FolderView.js
+Fix initial load time in FolderView.js
+Work on category view/show in groups in FolderView.js, add items that take up whole line and have headers
+Fix tooltip popup in FolderView.js, in wrong panel maybe?
+Press letter on the keyboard to go to that folder in FolderView.js and select.php
+Change desktop style to be buttons like folders in Desktop.js but render buttons to index.html
+Get settings dialog working and set up user accounts to control it
+
 2009-02-17
 Find a solution for adding files that are being browsed immediately, do a check in handles maybe for db_ modules that adds it to the database immediately if it is trying to be accessed?
 Work on db_movies, use cUrl to download movie information from imdb, use the volume decriptor for lookup, this shouldn't change even if they edited an image
+Fix archive and diskimage modules to detect folders even if not individually defined, this can be done using preg_match and the $matches result, is there a solution for backwards reference in mysql?
+Research the video_ts.ifo file, there must be a way of getting the full name from a DVD image, windows media center projects can do it, so can we
 
 2009-02-16
 Finish adding fs_ modules to db_modules, arists and albums should not be an fs_module, only db_

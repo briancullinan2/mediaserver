@@ -14,11 +14,13 @@ $GLOBALS['getID3'] = new getID3();
 // music handler
 class db_movies extends db_diskimage
 {
-	const NAME = 'Disk Images from Filesystem';
+	const DATABASE = 'movies';
+	
+	const NAME = 'Movies from Database';
 
 	static function columns()
 	{
-		return array('id', 'Filename', 'Filemime', 'Filesize', 'Filedate', 'Filetype', 'Director', 'ReleaseDate', 'Genre', 'Plot', 'Cast', 'Runtime', 'Language', 'AspectRatio', 'Filepath');
+		return array('id', 'Director', 'ReleaseDate', 'Genre', 'Plot', 'Cast', 'Runtime', 'Language', 'AspectRatio', 'Filepath');
 	}
 
 	static function handles($file)

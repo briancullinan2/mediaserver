@@ -340,6 +340,13 @@ class db_file
 			
 			print 'Removing ' . $args['DB'] . ': ' . $row['Filepath'] . "\n";
 		}
+
+		$args['count']++;
+		if(round(($args['count']-1)/$args['total'], 2) != round($args['count']/$args['total'], 2))
+		{
+			print 'Checking paths ' . (round($args['count']/$args['total'], 2) * 100) . '% complete for ' . $args['DB'] . "\n";
+			flush();
+		}
 	}
 	
 	
@@ -403,6 +410,7 @@ class db_file
 		// remove last OR
 		$where_str = substr($where_str, 0, strlen($where_str)-2);
 		$where_str = ' !(' . $where_str . ')';
+		
 		// clean up items that are in the ignore list
 		foreach($ignored as $i => $ignore)
 		{
@@ -412,10 +420,15 @@ class db_file
 		// remove items
 		$mysql->set($db, NULL, $where_str);
 
+		// get count 
+		$result = $mysql->get($db, array('SELECT' => 'count(*)'));
+		$total = $result[0]['count(*)'];
+		$count = 0;
+
 		// since all the ones not apart of a watched directory is removed, now just check is every file still in the database exists on disk
 		$mysql->query('SELECT Filepath FROM ' . $mysql->table_prefix . $db);
 		
-		$mysql->result_callback('db_file::cleanup_remove', array('SQL' => new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME), 'DB' => $db));
+		$mysql->result_callback('db_file::cleanup_remove', array('SQL' => new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME), 'DB' => $db, 'count' => &$count, 'total' => &$total));
 				
 		// remove any duplicates
 		$files = $mysql->get($db,

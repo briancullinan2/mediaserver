@@ -14,7 +14,7 @@ $GLOBALS['getID3'] = new getID3();
 // music handler
 class fs_diskimage extends fs_file
 {
-	const NAME = 'Disk Images from Filesystem';
+	const NAME = 'Disk Images on Filesystem';
 
 	static function columns()
 	{
@@ -109,6 +109,7 @@ class fs_diskimage extends fs_file
 								$fileinfo['Filemime'] = getMime($file['filename']);
 								$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['recording_timestamp']);
 								$files[] = $fileinfo;
+								break;
 							}
 						}
 					}

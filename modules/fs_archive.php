@@ -17,7 +17,7 @@ $GLOBALS['getID3'] = new getID3();
 // music handler
 class fs_archive extends fs_file
 {
-	const NAME = 'Archives from Filesystem';
+	const NAME = 'Archives on Filesystem';
 
 	static function columns()
 	{
@@ -83,6 +83,7 @@ class fs_archive extends fs_file
 			}
 		}
 		$inside_path = substr($filename, strlen($last_path));
+		$inside_path = str_replace(DIRECTORY_SEPARATOR, '/', $inside_path);
 		if($last_path[strlen($last_path)-1] == DIRECTORY_SEPARATOR) $last_path = substr($last_path, 0, strlen($last_path)-1);
 		
 		$info = $GLOBALS['getID3']->analyze($last_path);
@@ -99,15 +100,22 @@ class fs_archive extends fs_file
 						$fileinfo['id'] = bin2hex($fileinfo['Filepath']);
 						$fileinfo['Filename'] = basename($file['filename']);
 						if($file['filename'][strlen($file['filename'])-1] == '/')
+						{
 							$fileinfo['Filetype'] = 'FOLDER';
+							$fileinfo['Filesize'] = 0;
+							$fileinfo['Compressed'] = 0;
+						}
 						else
+						{
 							$fileinfo['Filetype'] = getExt($file['filename']);
+							$fileinfo['Filesize'] = $file['uncompressed_size'];
+							$fileinfo['Compressed'] = $file['compressed_size'];
+						}
 						if($fileinfo['Filetype'] === false)
 							$fileinfo['Filetype'] = 'FILE';
-						$fileinfo['Filesize'] = $file['uncompressed_size'];
-						$fileinfo['Compressed'] = $file['compressed_size'];
 						$fileinfo['Filemime'] = getMime($file['filename']);
 						$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
+						break;
 					}
 				}
 			}
@@ -253,25 +261,34 @@ class fs_archive extends fs_file
 						$count = 0;
 						if(isset($info['zip']) && isset($info['zip']['central_directory']))
 						{
+							$directories = array();
 							// loop through central directory and list files with information
 							foreach($info['zip']['central_directory'] as $i => $file)
 							{
-								if(preg_match('/^' . $inside_path . '[^\/]+\/?$/i', $file['filename']) !== 0)
+								if(preg_match('/((^' . $inside_path . '[^\/]+\/?$)|(' . $inside_path . '[^\/]+\/).*$)/i', $file['filename'], $matches) !== 0)
 								{
-									if($count >= $request['start'] && $count < $request['start']+$request['limit'])
+									$file['filename'] = $matches[2] . (isset($matches[3])?$matches[3]:'');
+									if($count >= $request['start'] && $count < $request['start']+$request['limit'] && !in_array($file['filename'], $directories))
 									{
+										$directories[] = $file['filename'];
 										$fileinfo = array();
 										$fileinfo['Filepath'] = $last_path . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $file['filename']);
 										$fileinfo['id'] = bin2hex($fileinfo['Filepath']);
 										$fileinfo['Filename'] = basename($file['filename']);
 										if($file['filename'][strlen($file['filename'])-1] == '/')
+										{
 											$fileinfo['Filetype'] = 'FOLDER';
+											$fileinfo['Filesize'] = 0;
+											$fileinfo['Compressed'] = 0;
+										}
 										else
+										{
 											$fileinfo['Filetype'] = getExt($file['filename']);
+											$fileinfo['Filesize'] = $file['uncompressed_size'];
+											$fileinfo['Compressed'] = $file['compressed_size'];
+										}
 										if($fileinfo['Filetype'] === false)
 											$fileinfo['Filetype'] = 'FILE';
-										$fileinfo['Filesize'] = $file['uncompressed_size'];
-										$fileinfo['Compressed'] = $file['compressed_size'];
 										$fileinfo['Filemime'] = getMime($file['filename']);
 										$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
 										$files[] = $fileinfo;

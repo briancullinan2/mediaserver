@@ -16,7 +16,7 @@ class db_diskimage extends db_file
 {
 	const DATABASE = 'diskimage';
 	
-	const NAME = 'Disk Images from Filesystem';
+	const NAME = 'Disk Images from Database';
 
 	static function columns()
 	{
@@ -117,78 +117,6 @@ class db_diskimage extends db_file
 		
 	}
 	
-	static function getInfo($filename)
-	{
-		$fileinfo = array();
-		
-		$paths = split('\\' . DIRECTORY_SEPARATOR, $filename);
-		$last_path = '';
-		foreach($paths as $i => $tmp_file)
-		{
-			if(file_exists($last_path . $tmp_file) || $last_path == '')
-			{
-				$last_path = $last_path . $tmp_file . DIRECTORY_SEPARATOR;
-			} else {
-				if(file_exists($last_path))
-					break;
-			}
-		}
-		$inside_path = substr($filename, strlen($last_path));
-		$inside_path = str_replace(DIRECTORY_SEPARATOR, '/', $inside_path);
-		if($last_path[strlen($last_path)-1] == DIRECTORY_SEPARATOR) $last_path = substr($last_path, 0, strlen($last_path)-1);
-		
-		if(is_file($last_path))
-		{
-			$info = $GLOBALS['getID3']->analyze($last_path);
-			
-			if($inside_path != '')
-			{
-				if(strlen($inside_path) == 0 || $inside_path[0] != '/') $inside_path = '/' . $inside_path;
-				if(isset($info['iso']) && isset($info['iso']['directories']))
-				{
-					foreach($info['iso']['directories'] as $i => $directory)
-					{
-						foreach($directory as $j => $file)
-						{
-							if($file['filename'] == $inside_path)
-							{
-								$fileinfo = array();
-								$fileinfo['Filepath'] = $last_path . str_replace('/', DIRECTORY_SEPARATOR, $file['filename']);
-								$fileinfo['Filename'] = basename($file['filename']);
-								if($file['filename'][strlen($file['filename'])-1] == '/')
-									$fileinfo['Filetype'] = 'FOLDER';
-								else
-									$fileinfo['Filetype'] = getExt($file['filename']);
-								if($fileinfo['Filetype'] === false)
-									$fileinfo['Filetype'] = 'FILE';
-								$fileinfo['Filesize'] = $file['filesize'];
-								$fileinfo['Filemime'] = getMime($file['filename']);
-								$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['recording_timestamp']);
-								$files[] = $fileinfo;
-							}
-						}
-					}
-				}
-				else{ $error = 'Cannot read this type of file!'; }
-			}
-			// look at image properties for the entire image
-			else
-			{
-				$fileinfo = array();
-				$fileinfo['Filepath'] = $last_path;
-				$fileinfo['Filename'] = basename($last_path);
-				$fileinfo['Filetype'] = getExt($last_path);
-				if($fileinfo['Filetype'] === false)
-					$fileinfo['Filetype'] = 'FILE';
-				$fileinfo['Filesize'] = filesize($last_path);
-				$fileinfo['Filemime'] = getMime($last_path);
-				$fileinfo['Filedate'] = date("Y-m-d h:i:s", filemtime($last_path));
-			}
-		}
-		
-		return $fileinfo;
-	}
-	
 	static function add($mysql, $file, $image_id = NULL)
 	{
 		// do a little cleanup here
@@ -261,7 +189,7 @@ class db_diskimage extends db_file
 		// print status
 		if( $image_id != NULL )
 		{
-			print 'Modifying Image: ' . $file . "\n";
+			print 'Modifying Disk Image: ' . $fileinfo['Filepath'] . "\n";
 			
 			// update database
 			$id = $mysql->set('diskimage', $fileinfo, array('id' => $image_id));
@@ -270,7 +198,7 @@ class db_diskimage extends db_file
 		}
 		else
 		{
-			print 'Adding Image: ' . $file . "\n";
+			print 'Adding Disk Image: ' . $fileinfo['Filepath'] . "\n";
 			
 			// add to database
 			$id = $mysql->set('diskimage', $fileinfo);
