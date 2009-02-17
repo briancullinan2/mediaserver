@@ -78,7 +78,13 @@ elseif(isset($state_current))
 {
 	// if it isn't set in the watched list at all 
 	//   something must be wrong with our state so reset it
-	@unlink(LOCAL_ROOT . "state_dirs.txt");
+	if(file_exists(LOCAL_ROOT . "state_dirs.txt")) $fp = fopen(LOCAL_ROOT . "state_dirs.txt", "w");
+	if(isset($fp))
+	{
+		print "State cleared\n";
+		fwrite($fp, '');
+		fclose($fp);
+	}
 	$state = array();
 }
 
@@ -112,7 +118,6 @@ for($i; $i < count($watched); $i++)
 		// clear state information
 		if(file_exists(LOCAL_ROOT . "state_dirs.txt"))
 		{
-			@unlink(LOCAL_ROOT . "state_dirs.txt");
 			if(file_exists(LOCAL_ROOT . "state_dirs.txt")) $fp = fopen(LOCAL_ROOT . "state_dirs.txt", "w");
 			if(isset($fp))
 			{

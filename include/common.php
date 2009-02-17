@@ -165,7 +165,11 @@ function setup()
 function handles($file, $module)
 {
 	if(class_exists((USE_DATABASE?'db_':'fs_') . $module))
-	return call_user_func((USE_DATABASE?'db_':'fs_') . $module . '::handles', $file);
+	{
+		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+		return call_user_func((USE_DATABASE?'db_':'fs_') . $module . '::handles', $file);
+	}
+	return false;
 }
 
 function selfURL()

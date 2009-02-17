@@ -67,6 +67,12 @@ if(!isset($_REQUEST['order']))
 // make select call
 $files = call_user_func_array($_REQUEST['cat'] . '::get', array($mysql, $_REQUEST, &$count, &$error));
 
+if($files === false)
+{
+	$error = 'The database returned null!';
+	$files = array();
+}
+
 $order_keys_values = array();
 
 // get all the other information from other modules

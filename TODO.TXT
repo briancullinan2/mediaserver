@@ -1,6 +1,11 @@
+2009-02-17
+Find a solution for adding files that are being browsed immediately, do a check in handles maybe for db_ modules that adds it to the database immediately if it is trying to be accessed?
+Work on db_movies, use cUrl to download movie information from imdb, use the volume decriptor for lookup, this shouldn't change even if they edited an image
+
 2009-02-16
 Finish adding fs_ modules to db_modules, arists and albums should not be an fs_module, only db_
 Work on finishing EXT JS template, and add more templates from Ampache, Jinzora, and WinAmp Remote
+Finish adding db_diskimage, and work on db_movies which should only be available with USE_DATABASE
 
 2009-02-13
 Implement %IF and %OF options for commands

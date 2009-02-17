@@ -153,6 +153,16 @@ class sql_global
 				Filetype		TEXT NOT NULL
 			)') or print_r(mysql_error());
 		
+		$this->query('CREATE TABLE IF NOT EXISTS ' . $this->table_prefix . 'diskimage (
+				id 				INT NOT NULL AUTO_INCREMENT,
+								PRIMARY KEY(id),
+				Filename		TEXT NOT NULL,
+				Filepath		TEXT NOT NULL,
+				Filesize		BIGINT NOT NULL,
+				Filemime		TEXT NOT NULL,
+				Filedate		DATETIME,
+				Filetype		TEXT NOT NULL
+			)') or print_r(mysql_error());
 		
 	}
 	

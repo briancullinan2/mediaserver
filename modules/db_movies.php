@@ -3,7 +3,7 @@
 $no_setup = true;
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
-require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'fs_file.php';
+require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'db_diskimage.php';
 
 // include the id handler
 require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.php';
@@ -12,7 +12,7 @@ require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY
 $GLOBALS['getID3'] = new getID3();
 
 // music handler
-class fs_movies extends fs_diskimage
+class db_movies extends db_diskimage
 {
 	const NAME = 'Disk Images from Filesystem';
 

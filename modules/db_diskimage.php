@@ -12,15 +12,15 @@ require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY
 $GLOBALS['getID3'] = new getID3();
 
 // music handler
-class db_archive extends db_file
+class db_diskimage extends db_file
 {
-	const DATABASE = 'archive';
+	const DATABASE = 'diskimage';
 	
-	const NAME = 'Archives from Database';
+	const NAME = 'Disk Images from Filesystem';
 
 	static function columns()
 	{
-		return array('id', 'Filename', 'Filemime', 'Filesize', 'Compressed', 'Filedate', 'Filetype', 'Filepath');
+		return array('id', 'Filename', 'Filemime', 'Filesize', 'Filedate', 'Filetype', 'Filepath');
 	}
 
 	static function handles($file)
@@ -41,7 +41,6 @@ class db_archive extends db_file
 			}
 			else
 			{
-				// if the last path exists and the last $ext is an archive then we know the path is inside an archive
 				if(file_exists($last_path))
 				{
 					// we can break
@@ -49,14 +48,10 @@ class db_archive extends db_file
 				}
 			}
 		}
-		
+
 		switch($last_ext)
 		{
-			case 'zip':
-			case 'rar':
-			case 'gz':
-			case 'szip':
-			case 'tar':
+			case 'iso':
 				return true;
 			default:
 				return false;
@@ -65,7 +60,7 @@ class db_archive extends db_file
 		return false;
 
 	}
-
+	
 	static function handle($mysql, $file)
 	{
 		$paths = split('\\' . DIRECTORY_SEPARATOR, $file);
@@ -85,10 +80,10 @@ class db_archive extends db_file
 		
 		$file = $last_path;
 
-		if(db_archive::handles($file))
+		if(db_diskimage::handles($file))
 		{
 			// check to see if it is in the database
-			$db_archive = $mysql->get('archive',
+			$db_diskimage = $mysql->get('diskimage',
 				array(
 					'SELECT' => 'id',
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
@@ -96,9 +91,9 @@ class db_archive extends db_file
 			);
 			
 			// try to get music information
-			if( count($db_archive) == 0 )
+			if( count($db_diskimage) == 0 )
 			{
-				$fileid = db_archive::add($mysql, $file);
+				$fileid = db_diskimage::add($mysql, $file);
 			}
 			else
 			{
@@ -113,7 +108,7 @@ class db_archive extends db_file
 				// update audio if modified date has changed
 				if( date("Y-m-d h:i:s", filemtime($file)) != $db_file[0]['Filedate'] )
 				{
-					$id = db_archive::add($mysql, $file, $db_archive[0]['id']);
+					$id = db_diskimage::add($mysql, $file, $db_diskimage[0]['id']);
 				}
 				
 			}
@@ -122,9 +117,10 @@ class db_archive extends db_file
 		
 	}
 	
-	static function getInfo($file)
+	static function getInfo($filename)
 	{
 		$fileinfo = array();
+		
 		$paths = split('\\' . DIRECTORY_SEPARATOR, $filename);
 		$last_path = '';
 		foreach($paths as $i => $tmp_file)
@@ -138,61 +134,69 @@ class db_archive extends db_file
 			}
 		}
 		$inside_path = substr($filename, strlen($last_path));
+		$inside_path = str_replace(DIRECTORY_SEPARATOR, '/', $inside_path);
 		if($last_path[strlen($last_path)-1] == DIRECTORY_SEPARATOR) $last_path = substr($last_path, 0, strlen($last_path)-1);
 		
-		$info = $GLOBALS['getID3']->analyze($last_path);
-		
-		if($inside_path != '')
+		if(is_file($last_path))
 		{
-			if(isset($info['zip']) && isset($info['zip']['central_directory']))
+			$info = $GLOBALS['getID3']->analyze($last_path);
+			
+			if($inside_path != '')
 			{
-				foreach($info['zip']['central_directory'] as $i => $file)
+				if(strlen($inside_path) == 0 || $inside_path[0] != '/') $inside_path = '/' . $inside_path;
+				if(isset($info['iso']) && isset($info['iso']['directories']))
 				{
-					if($file['filename'] == $inside_path)
+					foreach($info['iso']['directories'] as $i => $directory)
 					{
-						$fileinfo['Filepath'] = $filename;
-						$fileinfo['Filename'] = basename($file['filename']);
-						if($file['filename'][strlen($file['filename'])-1] == '/')
-							$fileinfo['Filetype'] = 'FOLDER';
-						else
-							$fileinfo['Filetype'] = getExt($file['filename']);
-						if($fileinfo['Filetype'] === false)
-							$fileinfo['Filetype'] = 'FILE';
-						$fileinfo['Filesize'] = $file['uncompressed_size'];
-						$fileinfo['Compressed'] = $file['compressed_size'];
-						$fileinfo['Filemime'] = getMime($file['filename']);
-						$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
+						foreach($directory as $j => $file)
+						{
+							if($file['filename'] == $inside_path)
+							{
+								$fileinfo = array();
+								$fileinfo['Filepath'] = $last_path . str_replace('/', DIRECTORY_SEPARATOR, $file['filename']);
+								$fileinfo['Filename'] = basename($file['filename']);
+								if($file['filename'][strlen($file['filename'])-1] == '/')
+									$fileinfo['Filetype'] = 'FOLDER';
+								else
+									$fileinfo['Filetype'] = getExt($file['filename']);
+								if($fileinfo['Filetype'] === false)
+									$fileinfo['Filetype'] = 'FILE';
+								$fileinfo['Filesize'] = $file['filesize'];
+								$fileinfo['Filemime'] = getMime($file['filename']);
+								$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['recording_timestamp']);
+								$files[] = $fileinfo;
+							}
+						}
 					}
 				}
+				else{ $error = 'Cannot read this type of file!'; }
 			}
-		}
-		// look at archive properties for the entire archive
-		else
-		{
-			$fileinfo = array();
-			$fileinfo['Filepath'] = $last_path;
-			$fileinfo['Filename'] = basename($last_path);
-			$fileinfo['Compressed'] = $info['filesize'];
-			$fileinfo['Filetype'] = getFileType($last_path);
-			if(isset($info['zip']) && isset($info['zip']['uncompressed_size']))
-				$fileinfo['Filesize'] = $info['zip']['uncompressed_size'];
+			// look at image properties for the entire image
 			else
-				$fileinfo['Filesize'] = 0;
-			$fileinfo['Filemime'] = getMime($last_path);
-			$fileinfo['Filedate'] = date("Y-m-d h:i:s", filemtime($last_path));
+			{
+				$fileinfo = array();
+				$fileinfo['Filepath'] = $last_path;
+				$fileinfo['Filename'] = basename($last_path);
+				$fileinfo['Filetype'] = getExt($last_path);
+				if($fileinfo['Filetype'] === false)
+					$fileinfo['Filetype'] = 'FILE';
+				$fileinfo['Filesize'] = filesize($last_path);
+				$fileinfo['Filemime'] = getMime($last_path);
+				$fileinfo['Filedate'] = date("Y-m-d h:i:s", filemtime($last_path));
+			}
 		}
 		
 		return $fileinfo;
 	}
-
-	static function add($mysql, $file, $archive_id = NULL)
+	
+	static function add($mysql, $file, $image_id = NULL)
 	{
 		// do a little cleanup here
-		// if the archive changes remove all it's inside files from the database
-		if( $archive_id != NULL )
+		// if the image changes remove all it's inside files from the database
+		if( $image_id != NULL )
 		{
-			print 'Removing archive: ' . $file . "\n";
-			$mysql->set('archive', NULL, 'WHERE Filepath REGEXP "^' . addslashes(addslashes($file)) . '"');
+			print 'Removing image: ' . $file . "\n";
+			$mysql->set('diskimage', NULL, 'WHERE Filepath REGEXP "^' . addslashes(addslashes($file)) . '"');
 		}
 
 		// pull information from $info
@@ -213,58 +217,63 @@ class db_archive extends db_file
 		
 		$info = $GLOBALS['getID3']->analyze($last_path);
 		
-		if(isset($info['zip']) && isset($info['zip']['central_directory']))
+		if(isset($info['iso']) && isset($info['iso']['directories']))
 		{
-			foreach($info['zip']['central_directory'] as $i => $file)
+			$directories = array();
+			foreach($info['iso']['directories'] as $i => $directory)
 			{
-				$fileinfo = array();
-				$fileinfo['Filepath'] = $last_path . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $file['filename']);
-				$fileinfo['Filename'] = basename($file['filename']);
-				if($file['filename'][strlen($file['filename'])-1] == '/')
-					$fileinfo['Filetype'] = 'FOLDER';
-				else
-					$fileinfo['Filetype'] = getExt($file['filename']);
-				if($fileinfo['Filetype'] === false)
-					$fileinfo['Filetype'] = 'FILE';
-				$fileinfo['Filesize'] = $file['uncompressed_size'];
-				$fileinfo['Compressed'] = $file['compressed_size'];
-				$fileinfo['Filemime'] = getMime($file['filename']);
-				$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
-				
-				print 'Adding file in archive: ' . $fileinfo['Filepath'] . "\n";
-				$id = $mysql->set('archive', $fileinfo);
+				foreach($directory as $j => $file)
+				{
+					if(!in_array($file['filename'], $directories))
+					{
+						$directories[] = $file['filename'];
+						$fileinfo = array();
+						$fileinfo['Filepath'] = $last_path . str_replace('/', DIRECTORY_SEPARATOR, $file['filename']);
+						$fileinfo['Filename'] = basename($file['filename']);
+						if($file['filename'][strlen($file['filename'])-1] == '/')
+							$fileinfo['Filetype'] = 'FOLDER';
+						else
+							$fileinfo['Filetype'] = getExt($file['filename']);
+						if($fileinfo['Filetype'] === false)
+							$fileinfo['Filetype'] = 'FILE';
+						$fileinfo['Filesize'] = $file['filesize'];
+						$fileinfo['Filemime'] = getMime($file['filename']);
+						$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['recording_timestamp']);
+						
+						print 'Adding file in image: ' . $fileinfo['Filepath'] . "\n";
+						$id = $mysql->set('diskimage', $fileinfo);
+					}
+				}
 			}
 		}
 		
-		// get entire archive information
+		// get entire image information
 		$fileinfo = array();
 		$fileinfo['Filepath'] = $last_path;
 		$fileinfo['Filename'] = basename($last_path);
-		$fileinfo['Compressed'] = $info['filesize'];
-		$fileinfo['Filetype'] = getFileType($last_path);
-		if(isset($info['zip']) && isset($info['zip']['uncompressed_size']))
-			$fileinfo['Filesize'] = $info['zip']['uncompressed_size'];
-		else
-			$fileinfo['Filesize'] = 0;
+		$fileinfo['Filetype'] = getExt($last_path);
+		if($fileinfo['Filetype'] === false)
+			$fileinfo['Filetype'] = 'FILE';
+		$fileinfo['Filesize'] = filesize($last_path);
 		$fileinfo['Filemime'] = getMime($last_path);
 		$fileinfo['Filedate'] = date("Y-m-d h:i:s", filemtime($last_path));
 
 		// print status
-		if( $archive_id != NULL )
+		if( $image_id != NULL )
 		{
-			print 'Modifying archive: ' . $file . "\n";
+			print 'Modifying Image: ' . $file . "\n";
 			
 			// update database
-			$id = $mysql->set('archive', $fileinfo, array('id' => $archive_id));
+			$id = $mysql->set('diskimage', $fileinfo, array('id' => $image_id));
 		
 			return $audio_id;
 		}
 		else
 		{
-			print 'Adding archive: ' . $file . "\n";
+			print 'Adding Image: ' . $file . "\n";
 			
 			// add to database
-			$id = $mysql->set('archive', $fileinfo);
+			$id = $mysql->set('diskimage', $fileinfo);
 			
 			return $id;
 		}
@@ -288,6 +297,7 @@ class db_archive extends db_file
 			}
 		}
 		$inside_path = substr($file, strlen($last_path));
+		$inside_path = str_replace(DIRECTORY_SEPARATOR, '/', $inside_path);
 		if($last_path[strlen($last_path)-1] == DIRECTORY_SEPARATOR) $last_path = substr($last_path, 0, strlen($last_path)-1);
 
 		if(is_file($last_path))
@@ -295,31 +305,76 @@ class db_archive extends db_file
 			$files = $mysql->get(db_archive::DATABASE, array('WHERE' => 'Filepath = "' . addslashes($file) . '"'));
 			if(count($file) > 0)
 			{				
-				header('Content-Transfer-Encoding: binary');
-				header('Content-Type: ' .  getMime($last_path));
-				header('Content-Length: ' . filesize($last_path));
-				header('Content-Disposition: attachment; filename="' . basename($last_path) . '"');
+				
+				$info = $GLOBALS['getID3']->analyze($last_path);
 				
 				if(is_string($stream))
 					$op = fopen($stream, 'wb');
 				else
 					$op = $stream;
-				
-				if($op !== false)
+	
+				if($inside_path != '')
 				{
-					if($fp = fopen($last_path, 'rb'))
+					if(strlen($inside_path) == 0 || $inside_path[0] != '/') $inside_path = '/' . $inside_path;
+					if(isset($info['iso']) && isset($info['iso']['directories']))
 					{
-						while (!feof($fp)) {
-							fwrite($op, fread($fp, BUFFER_SIZE));
-						}				
-						fclose($fp);
-						fclose($op);
-						return true;
+						foreach($info['iso']['directories'] as $i => $directory)
+						{
+							foreach($directory as $j => $file)
+							{
+								if($file['filename'] == $inside_path)
+								{
+									header('Content-Transfer-Encoding: binary');
+									header('Content-Type: ' .  getMime($inside_path));
+									header('Content-Length: ' . $file['filesize']);
+									header('Content-Disposition: attachment; filename="' . basename($inside_path) . '"');
+									
+									if($op !== false)
+									{
+										if($fp = fopen($last_path, 'rb'))
+										{
+											fseek($fp, $file['offset_bytes']);
+											
+											$total = 0;
+											while($total < $file['filesize'])
+											{
+												$buffer = fread($fp, min(BUFFER_SIZE, $file['filesize'] - $total));
+												$total += strlen($buffer);
+												fwrite($op, $buffer);
+											}
+											fclose($fp);
+											fclose($op);
+											return true;
+										}
+									}
+								}
+							}
+						}
+					} else{ $error = 'Cannot read this type of file!'; }
+				}
+				else
+				{
+					// download entire image
+					header('Content-Transfer-Encoding: binary');
+					header('Content-Type: ' .  getMime($last_path));
+					header('Content-Length: ' . filesize($last_path));
+					header('Content-Disposition: attachment; filename="' . basename($last_path) . '"');
+					
+					if($op !== false)
+					{
+						if($fp = fopen($last_path, 'rb'))
+						{
+							while (!feof($fp)) {
+								fwrite($op, fread($fp, BUFFER_SIZE));
+							}				
+							fclose($fp);
+							fclose($op);
+							return true;
+						}
 					}
 				}
-			} else { $error = 'File not found!'; }
+			} else{ $error = 'File not found!'; }
 		}
-
 
 		return false;
 	}
@@ -335,7 +390,7 @@ class db_archive extends db_file
 				$request['start'] = 0;
 			if( !isset($request['limit']) || !is_numeric($request['limit']) || $request['limit'] < 0 )
 				$request['limit'] = 15;
-			if( !isset($request['order_by']) || !in_array($request['order_by'], db_archive::columns()) )
+			if( !isset($request['order_by']) || !in_array($request['order_by'], db_diskimage::columns()) )
 				$request['order_by'] = 'Title';
 			if( !isset($request['direction']) || ($request['direction'] != 'ASC' && $request['direction'] != 'DESC') )
 				$request['direction'] = 'ASC';
@@ -373,7 +428,7 @@ class db_archive extends db_file
 				if(USE_ALIAS == true) $request['includes'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['includes']);
 				$regexp = addslashes(addslashes($request['includes']));
 				
-				$columns = db_archive::columns();
+				$columns = db_diskimage::columns();
 				// add a regular expression matching for each column in the table being searched
 				$props['WHERE'] .= '(';
 				foreach($columns as $i => $column)
@@ -404,7 +459,7 @@ class db_archive extends db_file
 				if(strlen($inside_path) == 0 || $inside_path[0] != '/') $inside_path = DIRECTORY_SEPARATOR . $inside_path;
 				if($last_path[strlen($last_path)-1] == DIRECTORY_SEPARATOR) $last_path = substr($last_path, 0, strlen($last_path)-1);
 				$request['dir'] = $last_path . $inside_path;
-
+				
 				if(is_file($last_path))
 				{
 					$dirs = $mysql->get(db_file::DATABASE, array('WHERE' => 'Filepath = "' . addslashes($last_path) . '"'));
@@ -426,10 +481,10 @@ class db_archive extends db_file
 							else
 								$props['WHERE'] .= 'Filepath REGEXP "^' . addslashes(addslashes($request['dir'])) . '"';
 						}
-					} else { $error = 'Archive does not exist!'; }
-				} else { $error = 'Archive does not exist!'; }
+					} else { $error = 'Disk Image does not exist!'; }
+				} else { $error = 'Disk Image does not exist!'; }
 			}
-
+			
 			// add file filter to where
 			if(isset($request['file']))
 			{
@@ -445,16 +500,16 @@ class db_archive extends db_file
 		
 			if($error == '')
 			{
-				$props['SELECT'] = db_archive::columns();
+				$props['SELECT'] = db_diskimage::columns();
 	
 				// get directory from database
-				$files = $mysql->get(db_archive::DATABASE, $props);
+				$files = $mysql->get(db_diskimage::DATABASE, $props);
 				
 				// this is how we get the count of all the items
 				unset($props['OTHER']);
 				$props['SELECT'] = 'count(*)';
 				
-				$result = $mysql->get(db_archive::DATABASE, $props);
+				$result = $mysql->get(db_diskimage::DATABASE, $props);
 				
 
 				$count = intval($result[0]['count(*)']);
@@ -497,7 +552,7 @@ class db_archive extends db_file
 	// cleanup the non-existant files
 	static function cleanup($mysql, $watched, $ignored)
 	{
-		$db = db_archive::DATABASE;
+		$db = db_diskimage::DATABASE;
 	
 		// first clear all the items that are no longer in the watch list
 		// since the watch is resolved all the items in watch have to start with the watched path
@@ -559,7 +614,7 @@ class db_archive extends db_file
 		// since all the ones not apart of a watched directory is removed, now just check is every file still in the database exists on disk
 		$mysql->query('SELECT Filepath FROM ' . $mysql->table_prefix . $db);
 		
-		$mysql->result_callback('db_archive::cleanup_remove', array('SQL' => new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME), 'DB' => $db));
+		$mysql->result_callback('db_diskimage::cleanup_remove', array('SQL' => new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME), 'DB' => $db));
 				
 		// remove any duplicates
 		$files = $mysql->get($db,
@@ -577,7 +632,7 @@ class db_archive extends db_file
 			print 'Removing ' . $db . ': ' . $file['Filepath'] . "\n";
 		}
 		
-		print "Cleanup for archives complete.\n";
+		print "Cleanup for disk images complete.\n";
 		flush();
 		
 	}
