@@ -74,7 +74,6 @@ if($files === false)
 }
 
 $order_keys_values = array();
-
 // get all the other information from other modules
 foreach($files as $index => &$file)
 {

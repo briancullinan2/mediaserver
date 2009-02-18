@@ -1,3 +1,6 @@
+2009-02-18
+Abstract db_archive module just like diskimage
+
 2009-02-17 (Full)
 Improve abstraction in the modules, so much repeated code!
 Figure out what to do for albums, either a modifier to the $request and pass it to db_files module, or keep the get statement overriden

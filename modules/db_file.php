@@ -161,6 +161,8 @@ class db_file
 	
 	// the mysql can be left null to get the files from a directory, in which case a directory must be specified
 	// if the mysql is provided, then the file listings will be loaded from the database
+	// this is a very generalized module to provide a template for overriding, or for other modules to modify the $request and pass to this one
+	//  other modules are responsible for any validation of input that is not listed here, like making sure files exist on the filesystem
 	static function get($mysql, $request, &$count, &$error, $module = NULL)
 	{
 		if( $module == NULL )
@@ -247,12 +249,19 @@ class db_file
 				
 				// replace aliased path with actual path
 				if(USE_ALIAS == true) $request['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
-
-				// only search for file if is valid dir
-				if(realpath($request['dir']) !== false && is_dir(realpath($request['dir'])))
+				
+				// make sure file exists if we are using the file module
+				if($module != 'db_file' || is_dir(realpath($request['dir'])) !== false)
 				{
+	
 					// make sure directory is in the database
-					$dirs = $mysql->get(array('TABLE' => db_file::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
+					$dirs = $mysql->get(array('TABLE' => constant($module . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
+					
+					// check the file database, some modules use their own database to store special paths,
+					//  while other modules only store files and no directories, but these should still be searchable paths
+					//  in which case the module is responsible for validation of it's own paths
+					if(count($dirs) == 0)
+						$dirs = $mysql->get(array('TABLE' => db_file::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
 					
 					// top level directory / should always exist
 					if($request['dir'] == realpath('/') || count($dirs) > 0)
@@ -297,20 +306,20 @@ class db_file
 				// replace aliased path with actual path
 				if(USE_ALIAS == true) $request['file'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']);
 				
-				// only search for file if is a valid file
-				if(realpath($request['file']) !== false && is_file(realpath($request['file'])))
+				// make sure file exists if we are using the file module
+				if($module != 'db_file' || is_file(realpath($request['file'])) !== false)
 				{
+				
 					if(!isset($props['WHERE'])) $props['WHERE'] = '';
 					elseif($props['WHERE'] != '') $props['WHERE'] .= ' AND ';
-					
-					// add file to where
-					$props['WHERE'] .= ' Filepath = "' . addslashes($request['file']) . '"';
 				}
-				// file does no exist
 				else
 				{
 					$error = 'File does not exist!';
 				}
+				
+				// add file to where
+				$props['WHERE'] .= ' Filepath = "' . addslashes($request['file']) . '"';
 			}
 		
 			if($error == '')
@@ -435,7 +444,7 @@ class db_file
 		// since all the ones not apart of a watched directory is removed, now just check is every file still in the database exists on disk
 		$mysql->query('SELECT Filepath FROM ' . $mysql->table_prefix . constant($module . '::DATABASE'));
 		
-		$mysql->result_callback('db_file::cleanup_remove', array('SQL' => new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME), 'DB' => constant($module . '::DATABASE'), 'count' => &$count, 'total' => &$total));
+		$mysql->result_callback(function_exists($module . '::cleanup_remove')?$module . '::cleanup_remove':'db_file::cleanup_remove', array('SQL' => new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME), 'DB' => constant($module . '::DATABASE'), 'count' => &$count, 'total' => &$total));
 				
 		// remove any duplicates
 		$files = $mysql->get(array(
@@ -448,12 +457,12 @@ class db_file
 		// remove first item from all duplicates
 		foreach($files as $i => $file)
 		{
-			$mysql->set($db, NULL, array('id' => $file['id']));
+			$mysql->set(constant($module . '::DATABASE'), NULL, array('id' => $file['id']));
 			
-			print 'Removing ' . $db . ': ' . $file['Filepath'] . "\n";
+			print 'Removing ' . constant($module . '::NAME') . ': ' . $file['Filepath'] . "\n";
 		}
 		
-		print 'Cleanup for ' . (($database==NULL)?'files':$database) . " complete.\n";
+		print 'Cleanup for ' . constant($module . '::DATABASE') . " complete.\n";
 		flush();
 		
 	}

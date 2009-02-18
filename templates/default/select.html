@@ -19,12 +19,13 @@
 			{/if}
 			<input type="radio" name="item[{$files[file].id}]" value="on" {if $item_selected}checked="checked"{/if} />
 			<input type="radio" name="item[{$files[file].id}]" value="off" {if !$item_selected}checked="checked"{/if} />
-            {if $files[file].Filetype=="FOLDER" || (($files[file].Filepath|@handles:'archive' || $files[file].Filepath|@handles:'diskimage') && ($smarty.request.cat == 'fs_file' || $smarty.request.cat == 'db_file'))}<a href="?dir={$files[file].Filepath|urlencode|htmlspecialchars}{if $files[file].Filepath|@handles:'archive'}&cat={$prefix}archive{elseif $files[file].Filepath|@handles:'diskimage'}&cat={$prefix}diskimage{/if}">{$files[file].Filepath}</a>
-            {elseif $files[file].Filepath|@handles:'archive'}<a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}archive/{$smarty.request.cat}/{$files[file].id}/OUT/{$files[file].Filename}">{$files[file].Filepath}</a>
-            {elseif $files[file].Filepath|@handles:'diskimage'}<a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}file/{$prefix}diskimage/{$files[file].id}/{$files[file].Filename}">{$files[file].Filepath}</a>
-            {elseif $files[file].Filepath|@handles:'image_browser'}<a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}file/{$prefix}image_browser/{$files[file].id}/{$files[file].Filename}">{$files[file].Filepath}</a>
-            {else}<a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}file/{$smarty.request.cat}/{$files[file].id}/{$files[file].Filename}">{$files[file].Filepath}</a>{/if}
-            {if $smarty.request.detail == 2}
+            {if $smarty.request.detail < 2}
+                {if $files[file].Filetype=="FOLDER" || (($files[file].Filepath|@handles:'archive' || $files[file].Filepath|@handles:'diskimage') && ($smarty.request.cat == 'fs_file' || $smarty.request.cat == 'db_file'))}<a href="?dir={$files[file].Filepath|urlencode|htmlspecialchars}{if $files[file].Filepath|@handles:'archive'}&cat={$prefix}archive{elseif $files[file].Filepath|@handles:'diskimage'}&cat={$prefix}diskimage{/if}">{$files[file].Filepath}</a>
+                {elseif $files[file].Filepath|@handles:'archive'}<a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}archive/{$smarty.request.cat}/{$files[file].id}/OUT/{$files[file].Filename}">{$files[file].Filepath}</a>
+                {elseif $files[file].Filepath|@handles:'diskimage'}<a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}file/{$prefix}diskimage/{$files[file].id}/{$files[file].Filename}">{$files[file].Filepath}</a>
+                {elseif $files[file].Filepath|@handles:'image_browser'}<a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}file/{$prefix}image_browser/{$files[file].id}/{$files[file].Filename}">{$files[file].Filepath}</a>
+                {else}<a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}file/{$smarty.request.cat}/{$files[file].id}/{$files[file].Filename}">{$files[file].Filepath}</a>{/if}
+            {elseif $smarty.request.detail == 2}
 				{foreach from=$smarty.session.columns item=column_value}
 					{if isset($files[file].$column_value)}
 						- {$files[file].$column_value}
@@ -66,14 +67,17 @@
 		global $files, $smarty;
 		// get the longest column for each row
 		$column_lengths = array();
-		foreach($_SESSION['columns'] as $i => $name)
-		{
-			$column_lengths[$name] = strlen($name);
-			foreach($files as $i => $file)
-			{
-				if(strlen($file[$name]) > $column_lengths[$name]) $column_lengths[$name] = strlen($file[$name]);
-			}
-		}
+        if(isset($_SESSION['columns']))
+        {
+            foreach($_SESSION['columns'] as $i => $name)
+            {
+                $column_lengths[$name] = strlen($name);
+                foreach($files as $i => $file)
+                {
+                    if(strlen($file[$name]) > $column_lengths[$name]) $column_lengths[$name] = strlen($file[$name]);
+                }
+            }
+        }
 		$smarty->assign('column_lengths', $column_lengths);
 		{/php}
 		<span class="column">On/Off</span>

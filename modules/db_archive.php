@@ -525,16 +525,16 @@ class db_archive extends db_file
 		}
 		
 		// remove items
-		$mysql->set($db, NULL, $where_str);
+		$mysql->set(db_archive::DATABASE, NULL, $where_str);
 
 		// since all the ones not apart of a watched directory is removed, now just check is every file still in the database exists on disk
 		$mysql->query('SELECT Filepath FROM ' . $mysql->table_prefix . $db);
 		
-		$mysql->result_callback('db_archive::cleanup_remove', array('SQL' => new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME), 'DB' => $db));
+		$mysql->result_callback('db_archive::cleanup_remove', array('SQL' => new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME), 'DB' => db_diskimage::DATABASE));
 				
 		// remove any duplicates
-		$files = $mysql->get($db,
-			array(
+		$files = $mysql->get(array(
+				'TABLE' => db_archive::DATABASE,
 				'SELECT' => array('MIN(id) as id', 'Filepath', 'COUNT(*) as num'),
 				'OTHER' => 'GROUP BY Filepath HAVING num > 1'
 			)
@@ -543,12 +543,12 @@ class db_archive extends db_file
 		// remove first item from all duplicates
 		foreach($files as $i => $file)
 		{
-			$mysql->set($db, NULL, array('id' => $file['id']));
+			$mysql->set(db_archive::DATABASE, NULL, array('id' => $file['id']));
 			
-			print 'Removing ' . db_archive::DATABASE . ': ' . $file['Filepath'] . "\n";
+			print 'Removing ' . db_archive::NAME . ': ' . $file['Filepath'] . "\n";
 		}
 		
-		print "Cleanup for archives complete.\n";
+		print 'Cleanup for ' . db_archive::DATABASE . " complete.\n";
 		flush();
 		
 	}
