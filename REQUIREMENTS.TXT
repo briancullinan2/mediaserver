@@ -1,0 +1,7 @@
+If (Linux) or (Windows) is next to an item, either/or should work for your set up, see the settings.php for help on formatting the commands.
+PHP >= 5.2.6 (http://www.php.net/)
+ImageMagick >= 6.0.0 (http://www.imagemagick.org/script/index.php)
+VLC >= 9.3 (http://www.videolan.org/vlc/)
+Enhanced cTorrent (Linux) (http://www.rahul.net/dholmes/ctorrent/)
+List Windows Command line Torrent program here
+List Archive programs here
