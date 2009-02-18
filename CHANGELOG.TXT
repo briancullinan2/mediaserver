@@ -1,5 +1,10 @@
 2009-02-18
 Abstracted db_archive and db_diskimage module to using the db_file::get and db_file::cleanup functions
+Fixed some problems with archive and diskimage modules, handles wasn't working on Windows because apprently <file>.zip\ also exists instead of exiting the for loop
+Fixed counting in fs_archive and fs_diskimage, the matching and the !in_array was throwing off the count
+Blogged about site
+Migrated to new repository
+Removed some unnessicary files from EXT JS template
 
 2009-02-17
 Finished adding db_diskimage, time for some curl! for downloading movie information

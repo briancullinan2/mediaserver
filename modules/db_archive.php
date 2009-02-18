@@ -309,6 +309,8 @@ class db_archive extends db_file
 				if(file_exists($last_path . $tmp_file) || $last_path == '')
 				{
 					$last_path = $last_path . $tmp_file . DIRECTORY_SEPARATOR;
+					if(strlen($last_path) == 0 || $last_path[strlen($last_path)-1] != DIRECTORY_SEPARATOR)
+						$last_path .= DIRECTORY_SEPARATOR;
 				} else {
 					if(file_exists($last_path))
 						break;

@@ -373,6 +373,7 @@ function getExt($file)
 	}
 	else
 	{
+		$file = basename($file);
 		if(strrpos($file, '.') !== false)
 		{
 			$ext = strrchr($file, '.');

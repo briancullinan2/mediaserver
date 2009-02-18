@@ -288,6 +288,8 @@ class fs_diskimage extends fs_file
 						if(file_exists($last_path . $tmp_file) || $last_path == '')
 						{
 							$last_path = $last_path . $tmp_file . DIRECTORY_SEPARATOR;
+							if(strlen($last_path) == 0 || $last_path[strlen($last_path)-1] != DIRECTORY_SEPARATOR)
+								$last_path .= DIRECTORY_SEPARATOR;
 						} else {
 							if(file_exists($last_path))
 								break;
@@ -315,26 +317,29 @@ class fs_diskimage extends fs_file
 								{
 									if(preg_match('/^' . $inside_path . '[^\/]+\/?$/i', $file['filename']) !== 0)
 									{
-										if($count >= $request['start'] && $count < $request['start']+$request['limit'] && !in_array($file['filename'], $directories))
+										if(!in_array($file['filename'], $directories))
 										{
-											// prevent repeat directory listings
-											$directories[] = $file['filename'];
-											$fileinfo = array();
-											$fileinfo['Filepath'] = $last_path . str_replace('/', DIRECTORY_SEPARATOR, $file['filename']);
-											$fileinfo['id'] = bin2hex($fileinfo['Filepath']);
-											$fileinfo['Filename'] = basename($file['filename']);
-											if($file['filename'][strlen($file['filename'])-1] == '/')
-												$fileinfo['Filetype'] = 'FOLDER';
-											else
-												$fileinfo['Filetype'] = getExt($file['filename']);
-											if($fileinfo['Filetype'] === false)
-												$fileinfo['Filetype'] = 'FILE';
-											$fileinfo['Filesize'] = $file['filesize'];
-											$fileinfo['Filemime'] = getMime($file['filename']);
-											$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['recording_timestamp']);
-											$files[] = $fileinfo;
+											if($count >= $request['start'] && $count < $request['start']+$request['limit'])
+											{
+												// prevent repeat directory listings
+												$directories[] = $file['filename'];
+												$fileinfo = array();
+												$fileinfo['Filepath'] = $last_path . str_replace('/', DIRECTORY_SEPARATOR, $file['filename']);
+												$fileinfo['id'] = bin2hex($fileinfo['Filepath']);
+												$fileinfo['Filename'] = basename($file['filename']);
+												if($file['filename'][strlen($file['filename'])-1] == '/')
+													$fileinfo['Filetype'] = 'FOLDER';
+												else
+													$fileinfo['Filetype'] = getExt($file['filename']);
+												if($fileinfo['Filetype'] === false)
+													$fileinfo['Filetype'] = 'FILE';
+												$fileinfo['Filesize'] = $file['filesize'];
+												$fileinfo['Filemime'] = getMime($file['filename']);
+												$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['recording_timestamp']);
+												$files[] = $fileinfo;
+											}
+											$count++;
 										}
-										$count++;
 									}
 								}
 							}

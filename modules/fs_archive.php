@@ -234,6 +234,7 @@ class fs_archive extends fs_file
 				}
 				// maybe they are trying to access a zip file as if it were a folder
 				// this is perfectly acceptable so lets check to see if this module handles it
+					
 				if(fs_archive::handles($request['dir']))
 				{
 					$paths = split('\\' . DIRECTORY_SEPARATOR, $request['dir']);
@@ -242,7 +243,9 @@ class fs_archive extends fs_file
 					{
 						if(file_exists($last_path . $tmp_file) || $last_path == '')
 						{
-							$last_path = $last_path . $tmp_file . DIRECTORY_SEPARATOR;
+							$last_path = $last_path . $tmp_file;
+							if(strlen($last_path) == 0 || $last_path[strlen($last_path)-1] != DIRECTORY_SEPARATOR)
+								$last_path .= DIRECTORY_SEPARATOR;
 						} else {
 							if(file_exists($last_path))
 								break;
@@ -268,32 +271,35 @@ class fs_archive extends fs_file
 								if(preg_match('/((^' . $inside_path . '[^\/]+\/?$)|(' . $inside_path . '[^\/]+\/).*$)/i', $file['filename'], $matches) !== 0)
 								{
 									$file['filename'] = $matches[2] . (isset($matches[3])?$matches[3]:'');
-									if($count >= $request['start'] && $count < $request['start']+$request['limit'] && !in_array($file['filename'], $directories))
+									if(!in_array($file['filename'], $directories))
 									{
-										$directories[] = $file['filename'];
-										$fileinfo = array();
-										$fileinfo['Filepath'] = $last_path . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $file['filename']);
-										$fileinfo['id'] = bin2hex($fileinfo['Filepath']);
-										$fileinfo['Filename'] = basename($file['filename']);
-										if($file['filename'][strlen($file['filename'])-1] == '/')
+										if($count >= $request['start'] && $count < $request['start']+$request['limit'])
 										{
-											$fileinfo['Filetype'] = 'FOLDER';
-											$fileinfo['Filesize'] = 0;
-											$fileinfo['Compressed'] = 0;
+											$directories[] = $file['filename'];
+											$fileinfo = array();
+											$fileinfo['Filepath'] = $last_path . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $file['filename']);
+											$fileinfo['id'] = bin2hex($fileinfo['Filepath']);
+											$fileinfo['Filename'] = basename($file['filename']);
+											if($file['filename'][strlen($file['filename'])-1] == '/')
+											{
+												$fileinfo['Filetype'] = 'FOLDER';
+												$fileinfo['Filesize'] = 0;
+												$fileinfo['Compressed'] = 0;
+											}
+											else
+											{
+												$fileinfo['Filetype'] = getExt($file['filename']);
+												$fileinfo['Filesize'] = $file['uncompressed_size'];
+												$fileinfo['Compressed'] = $file['compressed_size'];
+											}
+											if($fileinfo['Filetype'] === false)
+												$fileinfo['Filetype'] = 'FILE';
+											$fileinfo['Filemime'] = getMime($file['filename']);
+											$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
+											$files[] = $fileinfo;
 										}
-										else
-										{
-											$fileinfo['Filetype'] = getExt($file['filename']);
-											$fileinfo['Filesize'] = $file['uncompressed_size'];
-											$fileinfo['Compressed'] = $file['compressed_size'];
-										}
-										if($fileinfo['Filetype'] === false)
-											$fileinfo['Filetype'] = 'FILE';
-										$fileinfo['Filemime'] = getMime($file['filename']);
-										$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
-										$files[] = $fileinfo;
+										$count++;
 									}
-									$count++;
 								}
 							}
 						}

@@ -1,4 +1,5 @@
 {* LIST XML "XML File List" *}
+{if $smarty.const.USE_DATABASE}{assign var=prefix value='db_'}{else}{assign var=prefix value='fs_'}{/if}
 {php}
 global $smarty;
 $ext_icons = array();
@@ -31,7 +32,9 @@ $smarty->assign('type_icons', $type_icons);
 		<path>{$files[file].Filepath|utf8_encode|htmlspecialchars}</path>
 		<link>{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}file/{$smarty.request.cat}/{$files[file].id}/{$files[file].Filename|utf8_encode|urlencode|htmlspecialchars}</link>
 		<short>{$files[file].Filename|truncate:13:"...":true|utf8_encode|htmlspecialchars}</short>
-{if 'fs_archive::handles'|@call_user_func:$files[file].Filepath}<cat>fs_archive</cat>{/if}
+{if $files[file].Filepath|@handles:'archive'}<cat>{$prefix}archive</cat>
+{elseif $files[file].Filepath|@handles:'diskimage'}<cat>{$prefix}diskimage</cat>
+{else}<cat>{$prefix}file</cat>{/if}
 {foreach from=$columns item=column_value}
 		<info-{$column_value}>{if isset($files[file].$column_value)}{$files[file].$column_value|utf8_encode|htmlspecialchars}{/if}</info-{$column_value}>
 {/foreach}
