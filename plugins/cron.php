@@ -166,8 +166,8 @@ do
 {
 
 	// get 1 folder from the database to search the files for
-	$db_dirs = $mysql->get('watch_list', 
-		array(
+	$db_dirs = $mysql->get(array(
+			'TABLE' => 'watch_list',
 			'SELECT' => 'Filepath',
 			'OTHER' => 'LIMIT 1'
 		)
@@ -283,8 +283,8 @@ function getdir( $dir )
 	global $dirs, $tm_start, $state, $mysql, $ignored;
 					
 	// check directory passed in, only add directory to watch list if it has changed
-	$db_file = $mysql->get('files', 
-		array(
+	$db_file = $mysql->get(array(
+			'TABLE' => 'files',
 			'SELECT' => array('id', 'Filedate'),
 			'WHERE' => 'Filepath = "' . addslashes($dir) . '"'
 		)

@@ -43,8 +43,8 @@ class db_file
 		{
 			
 			// check if it is in the database
-			$db_file = $mysql->get('files', 
-				array(
+			$db_file = $mysql->get(array(
+					'TABLE' => db_file::DATABASE,
 					'SELECT' => array('id', 'Filedate'),
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
 				)
@@ -127,7 +127,7 @@ class db_file
 		// check to make sure file is valid
 		if(is_file($file))
 		{
-			$files = $mysql->get(db_file::DATABASE, array('WHERE' => 'Filepath = "' . addslashes($file) . '"'));
+			$files = $mysql->get(array('TABLE' => db_file::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
 			if(count($file) > 0)
 			{				
 				$file = $files[0];
@@ -161,8 +161,13 @@ class db_file
 	
 	// the mysql can be left null to get the files from a directory, in which case a directory must be specified
 	// if the mysql is provided, then the file listings will be loaded from the database
-	static function get($mysql, $request, &$count, &$error)
+	static function get($mysql, $request, &$count, &$error, $module = NULL)
 	{
+		if( $module == NULL )
+		{
+			$module = get_class();
+		}
+		
 		$files = array();
 		
 		if(USE_DATABASE)
@@ -172,7 +177,7 @@ class db_file
 				$request['start'] = 0;
 			if( !isset($request['limit']) || !is_numeric($request['limit']) || $request['limit'] < 0 )
 				$request['limit'] = 15;
-			if( !isset($request['order_by']) || !in_array($request['order_by'], db_file::columns()) )
+			if( !isset($request['order_by']) || !in_array($request['order_by'], call_user_func($module . '::columns')) )
 				$request['order_by'] = 'Filepath';
 			if( !isset($request['direction']) || ($request['direction'] != 'ASC' && $request['direction'] != 'DESC') )
 				$request['direction'] = 'ASC';
@@ -181,8 +186,8 @@ class db_file
 			getIDsFromRequest($request, $request['selected']);
 
 			$props = array();
-			
-			$props['OTHER'] = ' ORDER BY ' . $request['order_by'] . ' ' . $request['direction'] . ' LIMIT ' . $request['start'] . ',' . $request['limit'];
+			$props['ORDER'] = $request['order_by'] . ' ' . $request['direction'];
+			$props['LIMIT'] = $request['start'] . ',' . $request['limit'];
 
 			// select an array of ids!
 			if(isset($request['selected']) && count($request['selected']) > 0 )
@@ -205,7 +210,7 @@ class db_file
 				$props['WHERE'] = substr($props['WHERE'], 0, strlen($props['WHERE'])-2);
 
 				// selected items have priority over all the other options!
-				unset($props['OTHER']);
+				unset($props['LIMIT']);
 				unset($request);
 			}
 
@@ -218,7 +223,7 @@ class db_file
 				if(USE_ALIAS == true) $request['includes'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['includes']);
 				$regexp = addslashes(addslashes($request['includes']));
 				
-				$columns = db_file::columns();
+				$columns = call_user_func($module . '::columns');
 				// add a regular expression matching for each column in the table being searched
 				$props['WHERE'] .= '(';
 				foreach($columns as $i => $column)
@@ -244,7 +249,7 @@ class db_file
 				if(realpath($request['dir']) !== false && is_dir(realpath($request['dir'])))
 				{
 					// make sure directory is in the database
-					$dirs = $mysql->get(db_file::DATABASE, array('WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
+					$dirs = $mysql->get(array('TABLE' => constant($module . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
 					
 					// top level directory / should always exist
 					if($request['dir'] == realpath('/') || count($dirs) > 0)
@@ -307,16 +312,18 @@ class db_file
 		
 			if($error == '')
 			{
-				$props['SELECT'] = db_file::columns();
+				$props['SELECT'] =  '*';
+				$props['TABLE'] = constant($module . '::DATABASE');
 	
 				// get directory from database
-				$files = $mysql->get(db_file::DATABASE, $props);
+				$files = $mysql->get($props);
 				
 				// this is how we get the count of all the items
-				unset($props['OTHER']);
+				unset($props['LIMIT']);
+				$props = array('FROM' => '(' . $mysql->statement_builder($props) . ') AS db_audio');
 				$props['SELECT'] = 'count(*)';
 				
-				$result = $mysql->get(db_file::DATABASE, $props);
+				$result = $mysql->get($props);
 				
 				$count = intval($result[0]['count(*)']);
 			}
@@ -351,15 +358,11 @@ class db_file
 	
 	
 	// cleanup the non-existant files
-	static function cleanup($mysql, $watched, $ignored, $database = NULL)
+	static function cleanup($mysql, $watched, $ignored, $module = NULL)
 	{
-		if( $database == NULL )
+		if( $module == NULL )
 		{
-			$db = constant(get_class() . '::DATABASE');
-		}
-		else
-		{
-			$db = $database;
+			$module = get_class();
 		}
 	
 		// first clear all the items that are no longer in the watch list
@@ -418,21 +421,21 @@ class db_file
 		}
 		
 		// remove items
-		$mysql->set($db, NULL, $where_str);
+		$mysql->set(constant($module . '::DATABASE'), NULL, $where_str);
 
 		// get count 
-		$result = $mysql->get($db, array('SELECT' => 'count(*)'));
+		$result = $mysql->get(array('TABLE' => constant($module . '::DATABASE'), 'SELECT' => 'count(*)'));
 		$total = $result[0]['count(*)'];
 		$count = 0;
 
 		// since all the ones not apart of a watched directory is removed, now just check is every file still in the database exists on disk
-		$mysql->query('SELECT Filepath FROM ' . $mysql->table_prefix . $db);
+		$mysql->query('SELECT Filepath FROM ' . $mysql->table_prefix . constant($module . '::DATABASE'));
 		
-		$mysql->result_callback('db_file::cleanup_remove', array('SQL' => new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME), 'DB' => $db, 'count' => &$count, 'total' => &$total));
+		$mysql->result_callback('db_file::cleanup_remove', array('SQL' => new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME), 'DB' => constant($module . '::DATABASE'), 'count' => &$count, 'total' => &$total));
 				
 		// remove any duplicates
-		$files = $mysql->get($db,
-			array(
+		$files = $mysql->get(array(
+				'TABLE' => constant($module . '::DATABASE'),
 				'SELECT' => array('MIN(id) as id', 'Filepath', 'COUNT(*) as num'),
 				'OTHER' => 'GROUP BY Filepath HAVING num > 1'
 			)

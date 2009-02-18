@@ -184,30 +184,35 @@ class sql_global
 		}
 		elseif(is_array($props))
 		{
+			if(!isset($props['SELECT'])) $select = 'SELECT ' . '*';
+			elseif(is_array($props['SELECT'])) $select = 'SELECT ' . join(',', $props['SELECT']);
+			elseif(is_string($props['SELECT'])) $select = 'SELECT ' . $props['SELECT'];
 			
+			if(!isset($props['FROM']) && !isset($props['TABLE'])) $from = 'FROM ' . $this->table_prefix . 'files';
+			elseif(isset($props['TABLE']) && is_string($props['TABLE'])) $from = 'FROM ' . $this->table_prefix . $props['TABLE'];
+			elseif(isset($props['FROM']) && is_string($props['FROM'])) $from = 'FROM ' . $props['FROM'];
+	
+			if(!isset($props['WHERE'])) $where = '';
+			elseif(is_array($props['WHERE'])) $where = 'WHERE ' . join(' AND ', $props['SELECT']);
+			elseif(is_string($props['WHERE'])) $where = 'WHERE ' . $props['WHERE'];
+			
+			if(!isset($props['GROUP'])) $group = '';
+			elseif(is_string($props['GROUP'])) $group = 'GROUP BY ' . $props['GROUP'];
+			
+			if(!isset($props['ORDER'])) $order = '';
+			elseif(is_string($props['ORDER'])) $order = 'ORDER BY ' . $props['ORDER'];
+			
+			if(!isset($props['LIMIT'])) $limit = '';
+			elseif(is_string($props['LIMIT'])) $limit = 'LIMIT ' . $props['LIMIT'];
+			
+			return $select . ' ' . $from . ' ' . $where . ' ' . $group . ' ' . $order . ' ' . $limit;
 		}
 	}
 	
 	// get function that gets the listed colums and returns the assiciated array
-	function get($table, $props)
+	function get($props)
 	{
-		$select = '';
-		
-		if(!isset($props['SELECT'])) $select = '*';
-		elseif(is_array($props['SELECT'])) $select = join(', ', $props['SELECT']);
-		elseif(is_string($props['SELECT'])) $select = $props['SELECT'];
-
-		if(!isset($props['WHERE'])) $where = '';
-		elseif(is_array($props['WHERE'])) $where = ' WHERE ' . join(' AND ', $props['SELECT']);
-		elseif(is_string($props['WHERE'])) $where = ' WHERE ' . $props['WHERE'];
-		
-		if(!isset($props['OTHER'])) $other = '';
-		elseif(is_string($props['OTHER'])) $other = $props['OTHER'];
-		
-		if(!isset($props['GROUP'])) $group = '';
-		elseif(is_string($props['GROUP'])) $group = 'GROUP BY ' . $props['GROUP'];
-		
-		$result = $this->query('SELECT ' . $select . ' FROM ' . $this->table_prefix . $table . ' ' . $where . ' ' . $group . ' ' . $other);
+		$result = $this->query($this->statement_builder($props));
 		
 		if($result === false) return false;
 		

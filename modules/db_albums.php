@@ -20,7 +20,7 @@ class db_albums extends db_audio
 
 	static function columns()
 	{
-		return array('id', 'Album', 'COUNT(*) AS SongCount', 'Filepath');
+		return array('id', 'SongCount', 'Album', 'Filepath');
 	}
 	
 
@@ -45,8 +45,8 @@ class db_albums extends db_audio
 		if(db_audio::handles($file))
 		{
 			// check to see if it is in the database
-			$db_audio = $mysql->get('audio',
-				array(
+			$db_audio = $mysql->get(array(
+					'TABLE' => 'audio',
 					'SELECT' => 'id',
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
 				)
@@ -60,8 +60,8 @@ class db_albums extends db_audio
 			else
 			{
 				// check to see if the file was changed
-				$db_file = $mysql->get('files', 
-					array(
+				$db_file = $mysql->get(array(
+						'TABLE' => 'files',
 						'SELECT' => 'Filedate',
 						'WHERE' => 'Filepath = "' . addslashes($file) . '"'
 					)
@@ -140,7 +140,7 @@ class db_albums extends db_audio
 			if( !isset($request['limit']) || !is_numeric($request['limit']) || $request['limit'] < 0 )
 				$request['limit'] = 15;
 			if( !isset($request['order_by']) || !in_array($request['order_by'], db_audio::columns()) )
-				$request['order_by'] = 'Title';
+				$request['order_by'] = 'Album';
 			if( !isset($request['direction']) || ($request['direction'] != 'ASC' && $request['direction'] != 'DESC') )
 				$request['direction'] = 'ASC';
 			if( isset($request['id']) )
@@ -148,8 +148,8 @@ class db_albums extends db_audio
 			getIDsFromRequest($request, $request['selected']);
 
 			$props = array();
-			
-			$props['OTHER'] = ' ORDER BY ' . $request['order_by'] . ' ' . $request['direction'] . ' LIMIT ' . $request['start'] . ',' . $request['limit'];
+			$props['ORDER'] = $request['order_by'] . ' ' . $request['direction'];
+			$props['LIMIT'] = $request['start'] . ',' . $request['limit'];
 			
 			// select an array of ids!
 			if(isset($request['selected']) && count($request['selected']) > 0 )
@@ -164,7 +164,7 @@ class db_albums extends db_audio
 					}
 				}
 				$props['WHERE'] = substr($props['WHERE'], 0, strlen($props['WHERE'])-2);
-				unset($props['OTHER']);
+				unset($props['LIMIT']);
 				unset($request);
 			}
 			
@@ -195,7 +195,7 @@ class db_albums extends db_audio
 				if(USE_ALIAS == true) $request['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
 				if(realpath($request['dir']) !== false && is_dir(realpath($request['dir'])))
 				{
-					$dirs = $mysql->get(db_file::DATABASE, array('WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
+					$dirs = $mysql->get(array('TABLE' => db_file::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
 					if($request['dir'] == realpath('/') || count($dirs) > 0)
 					{
 						if(!isset($props['WHERE'])) $props['WHERE'] = '';
@@ -233,19 +233,21 @@ class db_albums extends db_audio
 		
 			if($error == '')
 			{
-				$props['SELECT'] = db_albums::columns();
+				$props['SELECT'] = array('id', 'count(*) as SongCount', 'Album', 'Filepath');
 				$props['GROUP'] = 'Album';
+				$props['ORDER'] = 'Album';
+				$props['TABLE'] = db_audio::DATABASE;
 	
 				// get directory from database
-				$files = $mysql->get(db_audio::DATABASE, $props);
+				$files = $mysql->get($props);
 				
 				// this is how we get the count of all the items
-				unset($props['OTHER']);
+				unset($props['LIMIT']);
+				$props = array('FROM' => '(' . $mysql->statement_builder($props) . ') AS db_audio');
 				$props['SELECT'] = 'count(*)';
 				
-				$result = $mysql->get(db_audio::DATABASE, $props);
+				$result = $mysql->get($props);
 				
-
 				$count = intval($result[0]['count(*)']);
 			}
 			else
@@ -261,8 +263,6 @@ class db_albums extends db_audio
 
 	static function cleanup($mysql, $watched, $ignored)
 	{
-		// call default cleanup function
-		parent::cleanup($mysql, $watched, $ignored, constant(get_class() . '::DATABASE'));
 	}
 
 }

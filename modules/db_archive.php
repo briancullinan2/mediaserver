@@ -88,8 +88,8 @@ class db_archive extends db_file
 		if(db_archive::handles($file))
 		{
 			// check to see if it is in the database
-			$db_archive = $mysql->get('archive',
-				array(
+			$db_archive = $mysql->get(array(
+					'TABLE' => db_archive::DATABASE,
 					'SELECT' => 'id',
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
 				)
@@ -103,8 +103,8 @@ class db_archive extends db_file
 			else
 			{
 				// check to see if the file was changed
-				$db_file = $mysql->get('files', 
-					array(
+				$db_file = $mysql->get(array(
+						'TABLE' => db_file::DATABASE,
 						'SELECT' => 'Filedate',
 						'WHERE' => 'Filepath = "' . addslashes($file) . '"'
 					)
@@ -263,7 +263,7 @@ class db_archive extends db_file
 
 		if(is_file($last_path))
 		{
-			$files = $mysql->get(db_archive::DATABASE, array('WHERE' => 'Filepath = "' . addslashes($file) . '"'));
+			$files = $mysql->get(array('TABLE' => db_archive::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
 			if(count($file) > 0)
 			{				
 				header('Content-Transfer-Encoding: binary');
@@ -315,8 +315,8 @@ class db_archive extends db_file
 			getIDsFromRequest($request, $request['selected']);
 
 			$props = array();
-			
-			$props['OTHER'] = ' ORDER BY ' . $request['order_by'] . ' ' . $request['direction'] . ' LIMIT ' . $request['start'] . ',' . $request['limit'];
+			$props['ORDER'] = $request['order_by'] . ' ' . $request['direction'];
+			$props['LIMIT'] = $request['start'] . ',' . $request['limit'];
 			
 			// select an array of ids!
 			if(isset($request['selected']) && count($request['selected']) > 0 )
@@ -331,7 +331,7 @@ class db_archive extends db_file
 					}
 				}
 				$props['WHERE'] = substr($props['WHERE'], 0, strlen($props['WHERE'])-2);
-				unset($props['OTHER']);
+				unset($props['LIMIT']);
 				unset($request);
 			}
 			
@@ -378,7 +378,7 @@ class db_archive extends db_file
 
 				if(is_file($last_path))
 				{
-					$dirs = $mysql->get(db_file::DATABASE, array('WHERE' => 'Filepath = "' . addslashes($last_path) . '"'));
+					$dirs = $mysql->get(array('TABLE' => db_archive::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
 					if($request['dir'] == realpath('/') || count($dirs) > 0)
 					{
 						if(!isset($props['WHERE'])) $props['WHERE'] = '';
@@ -417,15 +417,17 @@ class db_archive extends db_file
 			if($error == '')
 			{
 				$props['SELECT'] = db_archive::columns();
+				$props['TABLE'] = db_archive::DATABASE;
 	
 				// get directory from database
-				$files = $mysql->get(db_archive::DATABASE, $props);
+				$files = $mysql->get($props);
 				
 				// this is how we get the count of all the items
-				unset($props['OTHER']);
+				unset($props['LIMIT']);
+				$props = array('FROM' => '(' . $mysql->statement_builder($props) . ') AS db_audio');
 				$props['SELECT'] = 'count(*)';
 				
-				$result = $mysql->get(db_archive::DATABASE, $props);
+				$result = $mysql->get($props);
 				
 
 				$count = intval($result[0]['count(*)']);
@@ -468,8 +470,6 @@ class db_archive extends db_file
 	// cleanup the non-existant files
 	static function cleanup($mysql, $watched, $ignored)
 	{
-		$db = db_archive::DATABASE;
-	
 		// first clear all the items that are no longer in the watch list
 		// since the watch is resolved all the items in watch have to start with the watched path
 		$where_str = '';
@@ -545,7 +545,7 @@ class db_archive extends db_file
 		{
 			$mysql->set($db, NULL, array('id' => $file['id']));
 			
-			print 'Removing ' . $db . ': ' . $file['Filepath'] . "\n";
+			print 'Removing ' . db_archive::DATABASE . ': ' . $file['Filepath'] . "\n";
 		}
 		
 		print "Cleanup for archives complete.\n";

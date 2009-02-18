@@ -154,7 +154,7 @@
 	<form name="select" action="" method="post">
 		<input type="submit" name="select" value="All" /><input type="submit" name="select" value="None" /><br />
 		<table class="select_list">
-			<thead>
+			<thead style="white-space:nowrap">
 {assign var=columns value=$smarty.session.columns}{assign var=column_count value=$columns|@count}
 {foreach name=columns from=$columns item=column_value}{assign var=items_after value=''}{assign var=items_before value=''}
 {section name=link_column loop=$columns}
@@ -172,7 +172,7 @@
 				<td>Download</td>
 			</thead>
 {section name=file loop=$files}
-			<tr>
+			<tr style="white-space:nowrap">
 {if isset($smarty.session.selected)}{assign var=item_selected value=$files[file].id|in_array:$smarty.session.selected}
 {else}{assign var=item_selected value=false}{/if}
 {foreach from=$smarty.session.columns item=column_value}

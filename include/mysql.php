@@ -38,8 +38,9 @@ class sql extends sql_global
 	
 	function query($query = "")
 	{
-			
-//print_r($query . "\n");
+/*if($query == 'audio')
+	print_r(debug_backtrace());*/
+//print_r($query . "<br />\n");
 		
 		// Remove any pre-existing queries
 		unset($this->query_result);

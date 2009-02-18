@@ -1,4 +1,6 @@
 2009-02-17 (Full)
+Improve abstraction in the modules, so much repeated code!
+Figure out what to do for albums, either a modifier to the $request and pass it to db_files module, or keep the get statement overriden
 Make cleanup more efficient, only clean up files for changed folders
 Make the settings.php plugin load individual settings for each template, settings should be submitted by the template, and used by the template, templates handle their own validation of settings
 Find a solution for adding files that are being browsed immediately, do a check in handles maybe for db_ modules that adds it to the database immediately if it is trying to be accessed?
