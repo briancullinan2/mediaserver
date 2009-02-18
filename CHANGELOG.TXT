@@ -1,3 +1,6 @@
+2009-02-18
+Abstracted db_archive and db_diskimage module to using the db_file::get and db_file::cleanup functions
+
 2009-02-17
 Finished adding db_diskimage, time for some curl! for downloading movie information
 Fixed db_archive and db_diskimage, there was a problem with showing the directory because it was acting like the fs_ version which is completely different
