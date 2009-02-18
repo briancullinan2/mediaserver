@@ -157,7 +157,7 @@ class db_diskimage extends db_file
 						$directories[] = $file['filename'];
 						$fileinfo = array();
 						$fileinfo['Filepath'] = $last_path . str_replace('/', DIRECTORY_SEPARATOR, $file['filename']);
-						$fileinfo['Filename'] = basename($file['filename']);
+						$fileinfo['Filename'] = basename($fileinfo['Filepath']);
 						if($file['filename'][strlen($file['filename'])-1] == '/')
 							$fileinfo['Filetype'] = 'FOLDER';
 						else
@@ -168,7 +168,7 @@ class db_diskimage extends db_file
 						$fileinfo['Filemime'] = getMime($file['filename']);
 						$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['recording_timestamp']);
 						
-						print 'Adding file in image: ' . $fileinfo['Filepath'] . "\n";
+						print 'Adding file in disk image: ' . $fileinfo['Filepath'] . "\n";
 						$id = $mysql->set('diskimage', $fileinfo);
 					}
 				}

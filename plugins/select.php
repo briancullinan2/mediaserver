@@ -47,7 +47,7 @@ if(isset($_REQUEST['select']))
 
 
 }
-
+print_r($_REQUEST);
 // add category
 if(!isset($_REQUEST['cat']) || !in_array($_REQUEST['cat'], $GLOBALS['modules']))
 	$_REQUEST['cat'] = USE_DATABASE?'db_file':'fs_file';

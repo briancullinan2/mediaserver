@@ -130,8 +130,6 @@ function setup()
 	$GLOBALS['modules'] = $new_modules;
 	
 	// merge some session variables with the request so modules only have to look in one place
-	if(isset($_SESSION['search']))
-		$_REQUEST = array_merge($_SESSION['search'], $_REQUEST);
 	if(isset($_SESSION['display']))
 		$_REQUEST = array_merge($_SESSION['display'], $_REQUEST);
 	

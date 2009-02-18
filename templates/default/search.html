@@ -2,7 +2,7 @@
 	<div id="builder">
 		Use this form to generate the list of files you would like to view:
 		<br />
-		<form name="search" action="{$smarty.server.PHP_SELF}" method="post">
+		<form name="search" action="{$smarty.server.PHP_SELF}" method="get">
 			<select name="cat">
 			{section name=module loop=$modules}
 				{assign var=module value=$modules[module]}
@@ -24,7 +24,7 @@
 	<div id="builder">
 		Use this form to generate the list of files you would like to view:
 		<br />
-		<form name="search" action="{$smarty.server.PHP_SELF}" method="post">
+		<form name="search" action="{$smarty.server.PHP_SELF}" method="get">
 			<select name="cat">
 			{section name=module loop=$modules}
 				{assign var=module value=$modules[module]}

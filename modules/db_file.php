@@ -253,7 +253,7 @@ class db_file
 				// make sure file exists if we are using the file module
 				if($module != 'db_file' || is_dir(realpath($request['dir'])) !== false)
 				{
-	
+				
 					// make sure directory is in the database
 					$dirs = $mysql->get(array('TABLE' => constant($module . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
 					
@@ -307,7 +307,7 @@ class db_file
 				if(USE_ALIAS == true) $request['file'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']);
 				
 				// make sure file exists if we are using the file module
-				if($module != 'db_file' || is_file(realpath($request['file'])) !== false)
+				if($module != 'db_file' || file_exists(realpath($request['file'])) !== false)
 				{
 				
 					if(!isset($props['WHERE'])) $props['WHERE'] = '';

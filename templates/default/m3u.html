@@ -59,10 +59,10 @@ header('Content-Disposition: attachment; filename="' . (isset($_REQUEST['filenam
 {assign var=type value=$type_arr.0}
 {if $type=="video"}
 #EXTINF:{$length},{$title}
-{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode/{$smarty.request.cat}/{$files[file].id}/MP4/{$files[file].id}.mp4
+{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode/{$smarty.request.cat}/{$files[file].id}/MP4/{$files[file].Filename}.mp4
 {elseif $type=="audio"}
 #EXTINF:{$length},{$title}
-{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode/{$smarty.request.cat}/{$files[file].id}/MP4A/{$files[file].id}.mp4
+{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode/{$smarty.request.cat}/{$files[file].id}/MP4A/{$files[file].Filename}.mp4
 {/if}
 {/section}
 {elseif $smarty.request.extra == 'WM'}
@@ -80,10 +80,10 @@ header('Content-Disposition: attachment; filename="' . (isset($_REQUEST['filenam
 {assign var=type value=$type_arr.0}
 {if $type=="video"}
 #EXTINF:{$length},{$title}
-{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode/{$smarty.request.cat}/{$files[file].id}/WMV/{$files[file].id}.wmv
+{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode/{$smarty.request.cat}/{$files[file].id}/WMV/{$files[file].Filename}.wmv
 {elseif $type=="audio"}
 #EXTINF:{$length},{$title}
-{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode/{$smarty.request.cat}/{$files[file].id}/WMA/{$files[file].id}.wma
+{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode/{$smarty.request.cat}/{$files[file].id}/WMA/{$files[file].Filename}.wma
 {/if}
 {/section}
 {elseif $smarty.request.extra == 'MPG'}
@@ -101,10 +101,10 @@ header('Content-Disposition: attachment; filename="' . (isset($_REQUEST['filenam
 {assign var=type value=$type_arr.0}
 {if $type=="video"}
 #EXTINF:{$length},{$title}
-{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode/{$smarty.request.cat}/{$files[file].id}/MPG/{$files[file].id}.mpg
+{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode/{$smarty.request.cat}/{$files[file].id}/MPG/{$files[file].Filename}.mpg
 {elseif $type=="audio"}
 #EXTINF:{$length},{$title}
-{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode/{$smarty.request.cat}/{$files[file].id}/MP3/{$files[file].id}.mp3
+{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode/{$smarty.request.cat}/{$files[file].id}/MP3/{$files[file].Filename}.mp3
 {/if}
 {/section}
 {/if}

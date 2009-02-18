@@ -28,7 +28,7 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATO
 // Only update files that don't exist in database, have changed timestamps, have changed in size
 
 // start the page with a pre to output messages that can be viewed in a browser
-?><pre><script language="javascript">function body_scroll(){document.body.scrollTop = document.body.scrollHeight;setTimeout('body_scroll()', 100)};setTimeout('body_scroll()', 100)</script><?php
+?><script language="javascript">var timer=null;var same_count=0;var last_height=0;function body_scroll() {document.body.scrollTop = document.body.scrollHeight;timer=setTimeout('body_scroll()', 100);if(document.body.scrollHeight!=last_height) {last_height=document.body.scrollHeight;same_count=0;} else {same_count++;}if(same_count == 100) {clearTimeout(timer);}}timer=setTimeout('body_scroll()', 100)</script><pre><?php
 
 // the cron script is useless if it has nowhere to store the information it reads
 if(USE_DATABASE == false)
@@ -388,3 +388,4 @@ function getdir( $dir )
 }
 
 ?>
+</pre>
