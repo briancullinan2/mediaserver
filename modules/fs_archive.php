@@ -187,7 +187,7 @@ class fs_archive extends fs_file
 			if( !isset($request['limit']) || !is_numeric($request['limit']) || $request['limit'] < 0 )
 				$request['limit'] = 15;
 			if( !isset($request['order_by']) || !in_array($request['order_by'], fs_archive::columns()) )
-				$request['order_by'] = 'Title';
+				$request['order_by'] = 'Filepath';
 			if( !isset($request['direction']) || ($request['direction'] != 'ASC' && $request['direction'] != 'DESC') )
 				$request['direction'] = 'ASC';
 			if( isset($request['id']) )

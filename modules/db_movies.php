@@ -20,7 +20,7 @@ class db_movies extends db_diskimage
 
 	static function columns()
 	{
-		return array('id', 'Director', 'ReleaseDate', 'Genre', 'Plot', 'Cast', 'Runtime', 'Language', 'AspectRatio', 'Filepath');
+		return array('id', 'Title', 'Director', 'ReleaseDate', 'Genre', 'Plot', 'Cast', 'Runtime', 'Language', 'AspectRatio', 'Filepath');
 	}
 
 	static function handles($file)

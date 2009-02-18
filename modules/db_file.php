@@ -183,9 +183,12 @@ class db_file
 				$request['direction'] = 'ASC';
 			if( isset($request['id']) )
 				$request['item'] = $request['id'];
+			if( isset($request['group_by']) && !in_array($request['group_by'], call_user_func($module . '::columns')) )
+				unset($request['group_by']);
 			getIDsFromRequest($request, $request['selected']);
 
 			$props = array();
+			if(isset($request['group_by'])) $props['GROUP'] = $request['group_by'];
 			$props['ORDER'] = $request['order_by'] . ' ' . $request['direction'];
 			$props['LIMIT'] = $request['start'] . ',' . $request['limit'];
 
@@ -232,7 +235,7 @@ class db_file
 				}
 				$props['WHERE'] .= join(' OR ', $columns) . ')';
 			}
-			
+		
 			// add dir filter to where
 			if(isset($request['dir']))
 			{
@@ -249,7 +252,7 @@ class db_file
 				if(realpath($request['dir']) !== false && is_dir(realpath($request['dir'])))
 				{
 					// make sure directory is in the database
-					$dirs = $mysql->get(array('TABLE' => constant($module . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
+					$dirs = $mysql->get(array('TABLE' => db_file::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
 					
 					// top level directory / should always exist
 					if($request['dir'] == realpath('/') || count($dirs) > 0)
@@ -312,7 +315,8 @@ class db_file
 		
 			if($error == '')
 			{
-				$props['SELECT'] =  '*';
+				$props['SELECT'] =  call_user_func($module . '::columns');
+				if(isset($props['GROUP'])) $props['SELECT'][] = 'count(*)';
 				$props['TABLE'] = constant($module . '::DATABASE');
 	
 				// get directory from database
