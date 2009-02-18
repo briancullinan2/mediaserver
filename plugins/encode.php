@@ -23,9 +23,6 @@ switch($_REQUEST['encode'])
 	case 'WMA':
 		header('Content-Type: audio/x-ms-wma');
 		break;
-	case 'AAC':
-		header('Content-Type: audio/mp4');
-		break;
 }
 
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
@@ -122,22 +119,13 @@ switch($_REQUEST['encode'])
 		$_REQUEST['%CH'] = 2;
 		$_REQUEST['%MX'] = 'asf';
 		break;
-	case 'AAC':
-		$_REQUEST['%VC'] = 'dummy';
-		$_REQUEST['%AC'] = 'a52';
-		$_REQUEST['%VB'] = 0;
-		$_REQUEST['%AB'] = 160;
-		$_REQUEST['%SR'] = 44100;
-		$_REQUEST['%CH'] = 2;
-		$_REQUEST['%MX'] = 'dummy';
-		break;
 }
 
 // validate each individually, these also go to default if there is invalid input! (in this case it uses mpg1 settings)
 if(!in_array($_REQUEST['%VC'], array('mp4v', 'mp1v', 'WMV2', 'dummy')))
 	$_REQUEST['%VC'] = 'mp1v';
 	
-if(!in_array($_REQUEST['%AC'], array('a52', 'mp4a', 'mpga', 'mp3', 'wma2', 'dummy')))
+if(!in_array($_REQUEST['%AC'], array('mp4a', 'mpga', 'mp3', 'wma2', 'dummy')))
 	$_REQUEST['%AC'] = 'mpga';
 
 if(!is_numeric($_REQUEST['%VB']))

@@ -12,9 +12,9 @@ if(!isset($no_setup) || !$no_setup == true)
 
 // require the settings
 if(realpath('/') == '/')
-	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.php.nix';
+	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.nix.php';
 else
-	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.php.win';
+	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.win.php';
 
 // classes that this function uses to set up stuff should use the $no_setup = true option
 if(!isset($no_setup) || !$no_setup == true)

@@ -204,7 +204,10 @@ class sql_global
 		if(!isset($props['OTHER'])) $other = '';
 		elseif(is_string($props['OTHER'])) $other = $props['OTHER'];
 		
-		$result = $this->query('SELECT ' . $select . ' FROM ' . $this->table_prefix . $table . ' ' . $where . ' ' . $other);
+		if(!isset($props['GROUP'])) $group = '';
+		elseif(is_string($props['GROUP'])) $group = 'GROUP BY ' . $props['GROUP'];
+		
+		$result = $this->query('SELECT ' . $select . ' FROM ' . $this->table_prefix . $table . ' ' . $where . ' ' . $group . ' ' . $other);
 		
 		if($result === false) return false;
 		
