@@ -27,3 +27,4 @@ $mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 $mysql->install();
 
 ?>
+Install script has completed, if there were errors you would see them above!

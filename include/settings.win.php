@@ -4,17 +4,17 @@
 // all other settings are stored in the appropriate classes that handle each section
 
 // global admin username and pass
-define('ADMIN_USER',			'bjcullinan');
+define('ADMIN_USER',			   'tmpuser');
 define('ADMIN_PASS',			   'tmppass');
 
 
 // database connection constants
 define('USE_DATABASE', 	                   false); // set to false to make modules load information about every file on the fly
 //define('DB_SERVER',                'localhost');
-//define('DB_USER',                 'bjcullinan');
-//define('DB_PASS',                   'Da1ddy23');
+//define('DB_USER',                    'tmpuser');
+//define('DB_PASS',                    'tmppass');
 //define('DB_NAME',                'mediaserver');
-//define('DB_TYPE',				       'mysql');
+//define('DB_TYPE',				         'mysql');
 
 // this prefix can be used to include completely different sets of files in the same database
 // don't be decieved though, some files use the db_<file type> where <file type> refers to a module!

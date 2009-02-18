@@ -4,15 +4,15 @@
 // all other settings are stored in the appropriate classes that handle each section
 
 // global admin username and pass
-define('ADMIN_USER',			'bjcullinan');
+define('ADMIN_USER',			   'tmpuser');
 define('ADMIN_PASS',			   'tmppass');
 
 
 // database connection constants
 define('USE_DATABASE', 	                  true); // set to false to make modules load information about every file on the fly
 define('DB_SERVER',                'localhost');
-define('DB_USER',                 'bjcullinan');
-define('DB_PASS',                   'Da1ddy23');
+define('DB_USER',                    'tmpuser');
+define('DB_PASS',           '2Yq1MBsyqk0Q0jVx');
 define('DB_NAME',                'mediaserver');
 define('DB_TYPE',				       'mysql');
 
@@ -21,7 +21,7 @@ define('DB_TYPE',				       'mysql');
 define('DB_PREFIX',				         'db_');
 
 // site constants these are used throughout the entire system
-define('LOCAL_ROOT',                '/var/www/mediaserver/cross_platform/');
+define('LOCAL_ROOT',                '/var/www/mediaserver/');
 
 // this is the path used by html pages to refer back to the website domain, HTML_ROOT is usually appended to this
 define('HTML_DOMAIN',            			    'http://dev.bjcullinan.com/');
@@ -29,7 +29,7 @@ define('HTML_DOMAIN',            			    'http://dev.bjcullinan.com/');
 // this is the root directory of the site, this is needed if the site is not running on it's own domain
 // this is so HTML pages can refer to the root of the site, without making the brower validate the entire domain, this saves time loading pages
 // a slash / is always preppended to this when the HTML_DOMAIN is not preceeding this
-define('HTML_ROOT',                                        'cross_platform/');
+define('HTML_ROOT',                                        '');
 
 // this is the local filesystem path to the default template, this path should not be used in web pages, instead use HTML_TEMPLATE
 define('LOCAL_DEFAULT',            				        'templates/default/');

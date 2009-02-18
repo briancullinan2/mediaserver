@@ -328,8 +328,6 @@ class db_archive extends db_file
 		
 		$files = db_file::get($mysql, $request, &$count, &$error, 'db_archive');
 		
-		print_r($request);
-		
 		return $files;
 	}
 

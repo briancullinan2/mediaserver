@@ -24,8 +24,6 @@ $smarty->force_compile = true;
 $columns = getAllColumns();
 $smarty->assign('columns', $columns);
 
-//print_r($_SESSION['selected']);
-
 // check if trying to change selected items
 if(isset($_REQUEST['select']))
 {
@@ -47,7 +45,7 @@ if(isset($_REQUEST['select']))
 
 
 }
-print_r($_REQUEST);
+
 // add category
 if(!isset($_REQUEST['cat']) || !in_array($_REQUEST['cat'], $GLOBALS['modules']))
 	$_REQUEST['cat'] = USE_DATABASE?'db_file':'fs_file';

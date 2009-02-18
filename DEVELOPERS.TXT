@@ -2,3 +2,7 @@ Modules:
 Everything that uses a different file structure to display information should have a different module.  
 For exmaple, the db_audio module accepts parameters for searching artists and albums, these modifiers change which results are displayed.
 On the other hand, the db_album and db_artists displayes a completely different structure.
+
+Needs:
+A svn module for connecting to remove or local SVN databases
+Better support on windows for running commands
