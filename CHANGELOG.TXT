@@ -2,6 +2,9 @@
 Finished adding db_diskimage, time for some curl! for downloading movie information
 Fixed db_archive and db_diskimage, there was a problem with showing the directory because it was acting like the fs_ version which is completely different
 Archives not list out all directories properly even if the central directory doesn't specify one
+Fixed db_archive module when adding zip files to database
+Adding a nice percent complete print out in db_files module
+Fixed cron.php plugin, it wasn't loading the state properly
 
 2009-02-16
 Worked on fs_imagedisk, outputting files works now

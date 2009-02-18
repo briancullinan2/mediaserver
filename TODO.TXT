@@ -3,7 +3,7 @@ Make cleanup more efficient, only clean up files for changed folders
 Make the settings.php plugin load individual settings for each template, settings should be submitted by the template, and used by the template, templates handle their own validation of settings
 Find a solution for adding files that are being browsed immediately, do a check in handles maybe for db_ modules that adds it to the database immediately if it is trying to be accessed?
 Work on db_movies, use cUrl to download movie information from imdb, use the volume decriptor for lookup, this shouldn't change even if they edited an image
-Research the video_ts.ifo file, there must be a way of getting the full name from a DVD image, windows media center projects can do it, so can we
+	Research the video_ts.ifo file, there must be a way of getting the full name from a DVD image, windows media center projects can do it, so can we
 Implement %IF and %OF options for commands
 Figure out how to download files out of a zip file, maybe use an external program and set up archive.php plugin
 FIX detail options in default template
