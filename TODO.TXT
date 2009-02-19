@@ -1,5 +1,6 @@
 2009-02-18
 Abstract db_archive module just like diskimage
+Add podcast list template
 
 2009-02-17 (Full)
 Improve abstraction in the modules, so much repeated code!
@@ -25,6 +26,8 @@ Fix tooltip popup in FolderView.js, in wrong panel maybe?
 Press letter on the keyboard to go to that folder in FolderView.js and select.php
 Change desktop style to be buttons like folders in Desktop.js but render buttons to index.html
 Get settings dialog working and set up user accounts to control it
+Finished the player app that displays pictures
+Make players resize to Player window
 
 2009-02-17
 Find a solution for adding files that are being browsed immediately, do a check in handles maybe for db_ modules that adds it to the database immediately if it is trying to be accessed?
