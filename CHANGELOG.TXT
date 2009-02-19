@@ -5,6 +5,7 @@ Fixed counting in fs_archive and fs_diskimage, the matching and the !in_array wa
 Blogged about site
 Migrated to new repository
 Removed some unnessicary files from EXT JS template
+Removed excess .htaccess files from all the subdirectories and put it in a location match
 
 2009-02-17
 Finished adding db_diskimage, time for some curl! for downloading movie information
