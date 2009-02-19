@@ -1,6 +1,7 @@
 2009-02-18
 Abstract db_archive module just like diskimage
 Add podcast list template
+Fix pretty dir paths to not be used when mod_rewrite is not used
 
 2009-02-17 (Full)
 Improve abstraction in the modules, so much repeated code!
