@@ -405,15 +405,19 @@ class db_file
 					// if using aliases then only add the revert from the watch directory to the alias
 					// ex. Watch = /home/share/Pictures/, Alias = /home/share/ => /Shared/
 					//     only /home/share/ is added here
-					if((!USE_ALIAS || in_array($curr_dir, $GLOBALS['paths']) !== false) && !in_array($curr_dir, $directories))
+					if((!USE_ALIAS || in_array($curr_dir, $GLOBALS['paths']) !== false))
 					{
-						$directories[] = $curr_dir;
 						// this allows for us to make sure that at least the beginning 
 						//   of the path is an aliased path
 						$between = true;
-						// if the USE_ALIAS is true this will only add the folder
-						//    if it is in the list of aliases
-						$where_str .= ' Filepath = "' . addslashes($curr_dir) . '" OR';
+						
+						if(!in_array($curr_dir, $directories))
+						{
+							$directories[] = $curr_dir;
+							// if the USE_ALIAS is true this will only add the folder
+							//    if it is in the list of aliases
+							$where_str .= ' Filepath = "' . addslashes($curr_dir) . '" OR';
+						}
 					}
 					// but make an exception for folders between an alias and the watch path
 					elseif(USE_ALIAS && $between && !in_array($curr_dir, $directories))
