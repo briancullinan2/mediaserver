@@ -282,7 +282,7 @@ class sql_global
 //print $query . '<br />';
 		$result = $this->db_query($query);
 		
-		if($result !== false && (isset($props['SELECT']) || isset($props['SHOW'])))
+		if($result !== false && is_array($props) && (isset($props['SELECT']) || isset($props['SHOW'])))
 		{
 			// this is used for queries too large for memory
 			if(isset($props['CALLBACK']))
@@ -294,7 +294,7 @@ class sql_global
 				return $this->result();
 			}
 		}
-		elseif($result !== false && (isset($props['INSERT']) || isset($props['UPDATE']) || isset($props['REPLACE']) || isset($props['DELETE'])))
+		elseif($result !== false && is_array($props) && (isset($props['INSERT']) || isset($props['UPDATE']) || isset($props['REPLACE']) || isset($props['DELETE'])))
 		{
 			return $this->affected();
 		}

@@ -1,4 +1,6 @@
 2009-02-19
+FIX state for cron script
+Make db_watch_list module check to make sure directory is actually in the watch and not ignored
 Limit access to watch and alias tables after implementing users and permissions
 Decide what to do about watch_list and watched directories, should there be a module for handling the watch database?
 Fix up $mysql->set() function an possible merge it with the statement builder function

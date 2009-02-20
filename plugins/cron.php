@@ -40,6 +40,8 @@ $mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 // get the watched directories
 $watched_list = db_watch::get($mysql, array(), $count, $error);
 
+print_r($watched_list);
+
 // sort out the files we don't want watched they begin ith the ! (NOT) sign
 $ignored = array();
 $watched = array(); // remove missing indeces
@@ -64,6 +66,8 @@ $state = array();
 // get previous state if it exists
 if( file_exists(LOCAL_ROOT . 'state_dirs.txt') )
 	$state = unserialize(implode("", @file(LOCAL_ROOT . "state_dirs.txt")));
+if(!is_array($state))
+	$state = array();
 
 $i = 0;
 
@@ -83,7 +87,7 @@ elseif(isset($state_current))
 	//   something must be wrong with our state so reset it
 	if($fp = fopen(LOCAL_ROOT . "state_dirs.txt", "w"))
 	{
-		print "State cleared\n";
+		print "State mismatch: State cleared\n";
 		fwrite($fp, '');
 		fclose($fp);
 	}
@@ -93,21 +97,23 @@ elseif(isset($state_current))
 if(isset($_REQUEST['entry']) && is_numeric($_REQUEST['entry']) && $_REQUEST['entry'] < count($watched) && $_REQUEST['entry'] > 0)
 	$i = $_REQUEST['entry'];
 
+print "Phase 1: Checkind for modified Directories; Recursively\n";
+
 // loop through each watched folder and get a list of all the files
 for($i; $i < count($watched); $i++)
 {
-	$watch = $watched[$i];
+	$watch = '^' . $watched[$i];
 
-	$status = getdir($watch);
-	
+	$status = db_watch::handle($mysql, $watch);
+
 	// if exited because of time, then save state
-	if( $status == false )
+	if( $status === false )
 	{
 		// record the current directory
-		array_push($state, array('index' => $i, 'file' => $watch));
+		array_push($state, array('index' => $i, 'file' => substr($watch, 1)));
 		
 		// serialize and save
-		print "State saved\n";
+		print "Ran out of Time: State saved\n";
 		if($fp = fopen(LOCAL_ROOT . "state_dirs.txt", "w"))
 		{
 			fwrite($fp, serialize($state));
@@ -125,7 +131,7 @@ for($i; $i < count($watched); $i++)
 		{
 			if($fp = fopen(LOCAL_ROOT . "state_dirs.txt", "w"))
 			{
-				print "State cleared\n";
+				print "Completed successfully: State cleared\n";
 				fwrite($fp, '');
 				fclose($fp);
 			}
@@ -138,7 +144,7 @@ for($i; $i < count($watched); $i++)
 	if(isset($_REQUEST['entry']) && is_numeric($_REQUEST['entry']) && $_REQUEST['entry'] < count($watched) && $_REQUEST['entry'] > 0)
 		break;
 }
-
+print "Phase 1: Complete!\n";
 
 // clean up the watch_list and remove stuff that doesn't exist in watch anymore
 db_watch_list::cleanup($mysql, $watched, $ignored);
@@ -146,42 +152,18 @@ db_watch_list::cleanup($mysql, $watched, $ignored);
 // now scan some files
 $tm_start = array_sum(explode(' ', microtime()));
 
+print "Phase 2: Checking modified directories for modified files\n";
+
 do
 {
 	// get 1 folder from the database to search the files for
-	$db_dirs = db_watch_list::get($mysql, array(), $count, $error);
+	$db_dirs = db_watch_list::get($mysql, array('limit' => 1), $count, $error);
 	
 	if(count($db_dirs) > 0)
 	{
 		$dir = $db_dirs[0]['Filepath'];
 		
-		if(in_array($dir, $ignored)) // just precautionary measure
-			continue;
-		
-		print 'Searching directory: ' . $dir . "\n";
-		flush();
-		
-		// search all the files in the directory
-		
- 		$count = 0;
-		$error = '';
-		
-		// get directory contents
-		$files = fs_file::get(NULL, array('dir' => $dir, 'limit' => 32000), $count, $error, true);
-		
-		foreach($files as $i => $file)
-		{
-		
-			// if $file isn't this directory or its parent, 
-			if ($file['Filename'] != '.' && $file['Filename'] != '..' && !is_dir($file['Filepath']))
-			{
-				getfile($file['Filepath']);
-			}
-
-		}
-	
-		// delete the selected folder from the database
-		$mysql->query(array('DELETE' => 'watch_list', 'WHERE' => 'Filepath = "' . addslashes($dir) . '"'));
+		$status = db_watch_list::handle($mysql, $dir);
 	}
 
 	// check if execution time is too long
@@ -191,9 +173,12 @@ do
 	
 } while( $secs_total < FILE_SEEK_TIME && count($db_dirs) > 0 );
 
+print "Phase 2: Complete!\n";
 
 // now do some cleanup
 //exit;
+
+print "Phase 3: Cleaning up\n";
 
 foreach($GLOBALS['modules'] as $i => $module)
 {
@@ -205,7 +190,7 @@ foreach($GLOBALS['modules'] as $i => $module)
 // these might be delete by cleanup, so check again because there are only a couple
 for($i = 0; $i < count($watched); $i++)
 {
-	$folders = split(addslashes(DIRECTORY_SEPARATOR), $watched[$i]['Filepath']);
+	$folders = split(addslashes(DIRECTORY_SEPARATOR), $watched[$i]);
 	$curr_dir = (realpath('/') == '/')?'/':'';
 	// don't add the watch directory here because it must be added to the watch list first!
 	$length = count($folders);
@@ -228,143 +213,18 @@ for($i = 0; $i < count($watched); $i++)
 				$between = true;
 				// if the USE_ALIAS is true this will only add the folder
 				//    if it is in the list of aliases
-				getfile($curr_dir);
+				db_watch_list::handle_file($mysql, $curr_dir);
 			}
 			// but make an exception for folders between an alias and the watch path
 			elseif(USE_ALIAS && $between)
 			{
-				getfile($curr_dir);
+				db_watch_list::handle_file($mysql, $curr_dir);
 			}
 		}
 	}
 }
 
-
-// check if file is already in database
-function getfile( $file )
-{
-	global $mysql;
-	
-	// pass the file to each module to test if it should handle it
-	foreach($GLOBALS['modules'] as $i => $module)
-	{
-		// never pass is to fs_file, it is only used to internals in this case
-		if($module != 'fs_file')
-			call_user_func_array($module . '::handle', array($mysql, $file));
-	}
-
-}
-
-
-// a function for iterating through each directory and returning the files
-function getdir( $dir )
-{
-	global $dirs, $tm_start, $state, $mysql, $ignored;
-					
-	// check directory passed in, only add directory to watch list if it has changed
-	$db_file = $mysql->query(array(
-			'SELECT' => 'files',
-			'COLUMNS' => array('id', 'Filedate'),
-			'WHERE' => 'Filepath = "' . addslashes($dir) . '"'
-		)
-	);
-	
-	// make sure directory is not in ignored list
-	if(in_array($dir, $ignored))
-		return true; // return true and just pretend directory is complete
-	
-	if( count($db_file) == 0 || date("Y-m-d h:i:s", filemtime($dir)) != $db_file[0]['Filedate'] )
-	{
-		// add directory then continue into directory
-		getfile( $dir );
-		
-		// add to watch list
-		$mysql->query(array('INSERT' => 'watch_list', 'VALUES' => array('Filepath' => addslashes($dir))));
-		
-		print 'Queueing directory: ' . $dir . "\n";
-	}
-	
-	
-	$count = 0;
-	$error = '';
-	// get directory contents
-	$files = fs_file::get(NULL, array('dir' => $dir, 'limit' => 32000), $count, $error, true);
-	
-	$i = 0;
-	
-	if( isset($state) && is_array($state) ) $state_current = array_pop($state);
-	
-	// check state for starting index
-	if( isset($state_current) && isset($files[$state_current['index']]) && $files[$state_current['index']]['Filepath'] == $state_current['file'] )
-	{
-		$i = $state_current['index'];
-	}
-	elseif(isset($state_current))
-	{
-		// put it back on because it doesn't match
-		array_push($state, $state_current);
-	}
-	
-	print 'Looking for changes in: ' . $dir . "\n";
-	flush();
-	
-	$max = count($files);
-	// keep going until all files in directory have been read
-	for($i; $i < $max; $i++)
-	{
-		$file = $files[$i]['Filepath'];
-		
-		// check if execution time is too long
-		$secs_total = array_sum(explode(' ', microtime())) - $tm_start;
-		
-		if( $secs_total > DIRECTORY_SEEK_TIME )
-		{
-
-			// reset previous state when time runs out
-			$state = array();
-		
-			// save some state information
-			array_push($state, array('index' => $i, 'file' => $file));
-			
-			return false;
-		}
-		
-
-		// if $file isn't this directory or its parent, 
-		if (substr(basename($file), 0, 1) != '.')
-		{
-
-			// get files recursively
-			if( is_dir($file) )
-			{
-				// prevent recursion by making sure it isn't already in the list of directories
-				if( in_array($file, $dirs) == false && in_array(realpath($file), $dirs) == false )
-				{
-					$dirs[] = $file;
-					// add the real path incase they are different
-					if(realpath($file) != $file)
-						$dirs[] = realpath($file);
-					
-					// always descend and search for more directories
-					$status = getdir( $file );
-					
-					// if the status is false then save current directory and return
-					// do this here so we can reset the state when the time runs out
-					if( $status == false )
-					{
-						array_push($state, array('index' => $i, 'file' => $file));
-						
-						return false;
-					}
-				}
-			}
-		}
-	}
-	
-	
-	return true;
-	
-}
+print "Phase 3: Complete!\n";
 
 ?>
 </pre>

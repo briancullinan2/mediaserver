@@ -19,6 +19,9 @@ class db_watch extends db_file
 	
 	static function handles($file)
 	{
+		// add ending backslash
+		if( substr($file, strlen($file)-1) != DIRECTORY_SEPARATOR ) $file .= DIRECTORY_SEPARATOR;
+			
 		if($file[0] == '!' || $file[0] == '^')
 		{
 			$file = substr($file, 1);
@@ -35,6 +38,9 @@ class db_watch extends db_file
 	{
 		if(db_watch::handles($file))
 		{
+			// add ending backslash
+			if( substr($file, strlen($file)-1) != DIRECTORY_SEPARATOR ) $file .= DIRECTORY_SEPARATOR;
+			
 			$db_watch = $mysql->query(array(
 					'SELECT' => db_watch::DATABASE,
 					'COLUMNS' => array('id'),
@@ -48,16 +54,8 @@ class db_watch extends db_file
 			}
 			else
 			{
-				// get a list of files to search recursively
-				$files = fs_file::get(NULL, array('dir' => $dir, 'limit' => 32000), $count, $error, true);
-				
-				foreach($files as $i => $file)
-				{
-					if( is_dir($file['Filepath']) )
-					{
-					}
-				}
-				
+				// just pass the first directories to watch_list module
+				return db_watch_list::handle($mysql, substr($file, 1));
 			}
 			
 		}
@@ -68,7 +66,7 @@ class db_watch extends db_file
 	{
 		// pull information from $info
 		$fileinfo = array();
-		$fileinfo['Filepath'] = $file;
+		$fileinfo['Filepath'] = addslashes($file);
 	
 		print 'Adding watch: ' . $file . "\n";
 		
@@ -88,11 +86,11 @@ class db_watch extends db_file
 	
 	static function cleanup($mysql, $watched, $ignored)
 	{
-		$watched = $mysql->query(array('SELECT' => db_watch::DATABASE, 'COLUMNS' => 'id,Filepath'));
+		$watched = $mysql->query(array('SELECT' => db_watch::DATABASE, 'COLUMNS' => 'id, Filepath'));
 		
 		foreach($watched as $i => $watch)
 		{
-			if(!is_dir($watch['Filepath']))
+			if(!is_dir(substr($watch['Filepath'], 1)))
 			{
 				$mysql->query(array('DELETE' => db_watch::DATABASE, 'WHERE' => 'id=' . $watch['id']));
 			}

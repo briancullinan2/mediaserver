@@ -21,7 +21,7 @@ $error = '';
 // get the current list of watches
 $mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 
-$watched = db_watch::get($mysql, array(), &$count, &$error);
+$watched = db_watch::get($mysql, array(), $count, $error);
 
 if( isset($_REQUEST['add']) )
 {
@@ -29,14 +29,13 @@ if( isset($_REQUEST['add']) )
 		$_REQUEST['addpath'] = '^' . $_REQUEST['addpath'];
 	if(db_watch::handles($_REQUEST['addpath']))
 	{
-			// add ending backslash
-			if( substr($_REQUEST['addpath'], strlen($_REQUEST['addpath'])-1) != DIRECTORY_SEPARATOR ) $_REQUEST['addpath'] .= DIRECTORY_SEPARATOR;
-			
 			// pass file to module
 			db_watch::handle($mysql, $_REQUEST['addpath']);
 			
 			// and reget the full list
-			$watched = db_watch::get($mysql, array(), &$count, &$error);
+			$watched = db_watch::get($mysql, array(), $count, $error);
+			
+			unset($_REQUEST['addpath']);
 	}
 	else
 	{
@@ -48,7 +47,7 @@ elseif( isset($_REQUEST['remove']) && is_numeric($_REQUEST['watch']) )
 	$mysql->query(array('DELETE' => 'watch', 'WHERE' => 'id=' . $_REQUEST['watch']));
 	
 	// and reget the full list
-	$watched = db_watch::get($mysql, array(), &$count, &$error);
+	$watched = db_watch::get($mysql, array(), $count, $error);
 
 	// clear post
 	unset($_REQUEST['addpath']);

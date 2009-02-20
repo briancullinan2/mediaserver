@@ -330,7 +330,7 @@ class db_file
 				
 				// this is how we get the count of all the items
 				unset($props['LIMIT']);
-				$props = array('SELECT' => '(' . $mysql->statement_builder($props) . ') AS db_audio');
+				$props = array('SELECT' => '(' . $mysql->statement_builder($props) . ') AS db_to_count');
 				$props['COLUMNS'] = 'count(*)';
 				
 				$result = $mysql->query($props);
@@ -382,13 +382,14 @@ class db_file
 		foreach($watched as $i => $watch)
 		{
 			// add the files that begin with a path from a watch directory
-			$where_str .= ' Filepath REGEXP "^' . addslashes(addslashes($watch['Filepath'])) . '" OR';
+			$where_str .= ' Filepath REGEXP "^' . addslashes(addslashes($watch)) . '" OR';
 		}
 		// but keep the ones leading up to watched directories
 		// ----------THIS IS THE SAME FUNCTIONALITY FROM THE CRON.PHP SCRIPT
+		$directories = array();
 		for($i = 0; $i < count($watched); $i++)
 		{
-			$folders = split(addslashes(DIRECTORY_SEPARATOR), $watched[$i]['Filepath']);
+			$folders = split(addslashes(DIRECTORY_SEPARATOR), $watched[$i]);
 			$curr_dir = (realpath('/') == '/')?'/':'';
 			// don't add the watch directory here because it is already added by the previous loop!
 			$length = count($folders);
@@ -396,7 +397,6 @@ class db_file
 			unset($folders[$length-2]); // remove the last folder which is the watch
 			$between = false; // directory must be between an aliased path and a watched path
 			// add the directories leading up to the watch
-			$directories = array();
 			for($j = 0; $j < count($folders); $j++)
 			{
 				if($folders[$j] != '')
@@ -469,7 +469,7 @@ class db_file
 			print 'Removing ' . constant($module . '::NAME') . ': ' . $file['Filepath'] . "\n";
 		}
 		
-		print 'Cleanup for ' . constant($module . '::DATABASE') . " complete.\n";
+		print 'Cleanup for ' . constant($module . '::NAME') . " complete.\n";
 		flush();
 		
 	}
