@@ -24,6 +24,10 @@ class db_albums extends db_audio
 		return array('id', 'SongCount', 'Album', 'Filepath');
 	}
 	
+	static function handles($file)
+	{
+		return false;
+	}
 
 	static function handle($mysql, $file)
 	{
@@ -37,7 +41,7 @@ class db_albums extends db_audio
 		$request['group_by'] = 'Album';
 		$files = db_file::get($mysql, $request, $count, $error, 'db_audio');
 		
-		// make some changed
+		// make some changes
 		foreach($files as $i => $file)
 		{
 			$files[$i]['Filetype'] = 'FOLDER';
