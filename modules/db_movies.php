@@ -349,6 +349,12 @@ class db_movies extends db_diskimage
 			
 		return $files;
 	}
+	
+	static function cleanup($mysql, $watched, $ignored)
+	{
+		// call default cleanup function
+		//db_file::cleanup($mysql, $watched, $ignored, get_class());
+	}
 
 }
 

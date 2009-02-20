@@ -33,7 +33,28 @@ class db_watch_list extends db_watch
 			
 			if( (count($db_files) == 0 || date("Y-m-d h:i:s", filemtime($dir)) != $db_files[0]['Filedate']) )
 			{
-				return true;
+				// make sure it is in the watch list and not the ignore list
+				$watched = db_watch::get($mysql, array(), $count, $error);
+				
+				$is_ignored = false;
+				$is_watched = false;
+				foreach($watched as $i => $watch)
+				{
+					if(substr($dir, 0, strlen($watch['Filepath'])-1) == substr($watch['Filepath'], 1))
+					{
+						if($watch['Filepath'][0] == '^')
+							$is_watched = true;
+						elseif($watch['Filepath'][0] == '!')
+							$is_ignored = true;
+					}
+				}
+				
+				// if the path is watched and ignored that means there is an ignore directory inside the watch directory
+				//   this is what we want, so always return false in this case
+				if($is_ignored) return false;
+				
+				// even if it isn't ignored we still have to check if it is even watched
+				if($is_watched) return true;
 			}
 		}
 		

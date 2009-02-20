@@ -1,3 +1,6 @@
+2009-02-20
+Fixed watch_list module ignored specific directories now, runs an extra query to compare current directory with all the paths in the watch list
+
 2009-02-19
 Added a few more status features to the cron.php plugin
 Fixed state for cron.php script using globals in the db_watch_list module
