@@ -1,3 +1,6 @@
+2009-02-19
+Changed the $mysql->get() and $mysql->set() functions to $mysql->query() and improved the API for accessing the database
+
 2009-02-18
 Abstracted db_archive and db_diskimage module to using the db_file::get and db_file::cleanup functions
 Fixed some problems with archive and diskimage modules, handles wasn't working on Windows because apprently <file>.zip\ also exists instead of exiting the for loop

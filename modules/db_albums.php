@@ -35,7 +35,7 @@ class db_albums extends db_audio
 		// modify some request stuff
 		$request['order_by'] = 'Album';
 		$request['group_by'] = 'Album';
-		$files = db_file::get($mysql, $request, &$count, &$error, 'db_audio');
+		$files = db_file::get($mysql, $request, $count, $error, 'db_audio');
 		
 		// make some changed
 		foreach($files as $i => $file)

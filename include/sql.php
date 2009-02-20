@@ -1,6 +1,6 @@
 <?php
 
-$no_setup = true;
+//$no_setup = true;
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'common.php';
 
 // control lower level handling of each database
@@ -59,6 +59,7 @@ class sql_global
 	var $rowset = array();
 	var $num_queries = 0;
 	var $table_prefix = DB_PREFIX;
+	var $databases = array();
 
 //=============================================
 //  sql_db($SQL_server, $SQL_Username, $SQL_password, $SQL_database)
@@ -69,9 +70,20 @@ class sql_global
 //    passed through
 //  Also switch to needed table if it is defined
 //=============================================
-	function sql_global($SQL_server, $SQL_username, $SQL_password, $SQL_db_name = "")
+	function sql_global()
 	{
-
+		$this->database = array();
+		// loop through each module and compile a list of databases
+		foreach($GLOBALS['modules'] as $i => $module)
+		{
+			if(defined($module . '::DATABASE'))
+				$this->databases[] = constant($module . '::DATABASE');
+		}
+		
+		// TODO: should this go here?
+		$this->databases[] = 'alias';
+		$this->databases[] = 'watch';
+		$this->databases[] = 'watch_list';
 	}
 	
 	// install function
@@ -166,15 +178,6 @@ class sql_global
 		
 	}
 	
-	// get the list of watched folders, just the paths
-	// returns an array of strings of the paths
-	function getWatched()
-	{
-		$this->query('SELECT Filepath FROM ' . $this->table_prefix . 'watch');
-		
-		return $this->result();
-	}
-	
 	// compile the statmeent based on an abstract representation
 	function statement_builder($props)
 	{
@@ -184,108 +187,121 @@ class sql_global
 		}
 		elseif(is_array($props))
 		{
-			if(!isset($props['SELECT'])) $select = 'SELECT ' . '*';
-			elseif(is_array($props['SELECT'])) $select = 'SELECT ' . join(',', $props['SELECT']);
-			elseif(is_string($props['SELECT'])) $select = 'SELECT ' . $props['SELECT'];
-			
-			if(!isset($props['FROM']) && !isset($props['TABLE'])) $from = 'FROM ' . $this->table_prefix . 'files';
-			elseif(isset($props['TABLE']) && is_string($props['TABLE'])) $from = 'FROM ' . $this->table_prefix . $props['TABLE'];
-			elseif(isset($props['FROM']) && is_string($props['FROM'])) $from = 'FROM ' . $props['FROM'];
-	
 			if(!isset($props['WHERE'])) $where = '';
-			elseif(is_array($props['WHERE'])) $where = 'WHERE ' . join(' AND ', $props['SELECT']);
+			elseif(is_array($props['WHERE'])) $where = 'WHERE ' . join(' AND ', $props['WHERE']);
 			elseif(is_string($props['WHERE'])) $where = 'WHERE ' . $props['WHERE'];
-			
+				
 			if(!isset($props['GROUP'])) $group = '';
 			elseif(is_string($props['GROUP'])) $group = 'GROUP BY ' . $props['GROUP'];
+				
+			if(!isset($props['HAVING'])) $having = '';
+			elseif(is_array($props['HAVING'])) $having = 'HAVING ' . join(' AND ', $props['HAVING']);
+			elseif(is_string($props['HAVING'])) $having = 'HAVING ' . $props['HAVING'];
 			
 			if(!isset($props['ORDER'])) $order = '';
 			elseif(is_string($props['ORDER'])) $order = 'ORDER BY ' . $props['ORDER'];
 			
 			if(!isset($props['LIMIT'])) $limit = '';
 			elseif(is_string($props['LIMIT'])) $limit = 'LIMIT ' . $props['LIMIT'];
-			
-			return $select . ' ' . $from . ' ' . $where . ' ' . $group . ' ' . $order . ' ' . $limit;
-		}
-	}
-	
-	// get function that gets the listed colums and returns the assiciated array
-	function get($props)
-	{
-		$result = $this->query($this->statement_builder($props));
-		
-		if($result === false) return false;
-		
-		return $this->result();
-		
-	}
-	
-	// set function for settings values in the table
-	function set($table, $values, $where = NULL)
-	{
-		// if the where is null then we are doing and insert
-		if( $where == NULL )
-		{
-		
-			// create strings to insert
-			$fields = '';
-			$value_str = '';
-			
-			foreach($values as $key => $value)
+				
+			if(isset($props['SELECT']))
 			{
-				$fields .= $key . ',';
-				$value_str .= '"' . $value . '",';
+				if(!isset($props['COLUMNS'])) $columns = '*';
+				elseif(is_array($props['COLUMNS'])) $columns = join(', ', $props['COLUMNS']);
+				elseif(is_string($props['COLUMNS'])) $columns = $props['COLUMNS'];
+				
+				$select = 'SELECT ' . $columns . ' FROM ' . (in_array($props['SELECT'], $this->databases)?($this->table_prefix . $props['SELECT']):$props['SELECT']);
+				
+				$statement = $select . ' ' . $where . ' ' . $group . ' ' . $having . ' ' . $order . ' ' . $limit;
 			}
-			// remove last comma
-			$fields = substr($fields, 0, strlen($fields)-1);
-			$value_str = substr($value_str, 0, strlen($value_str)-1);
-			
-			// insert into table
-			$this->query('INSERT INTO ' . $this->table_prefix . $table . ' (' . $fields . ') VALUES(' . $value_str . ')');
-			
-			// return id of last inserted item
-			return $this->getid();
-			
-		}
-		else
-		{
-			$where_str = '';
-			if( is_array($where) )
+			elseif(isset($props['UPDATE']))
 			{
-				foreach($where as $key => $value)
+				$update = 'UPDATE ' . $this->table_prefix . $props['UPDATE'] . ' SET';
+				
+				if(!isset($props['COLUMNS']) && isset($props['VALUES']) && is_array($props['VALUES']))
 				{
-					$where_str .= ' ' . $key . ' = "' . $value . '" AND';
+					$props['COLUMNS'] = array_keys($props['VALUES']);
+					$props['VALUES'] = array_values($props['VALUES']);
 				}
-				// remove last comma
-				$where_str = substr($where_str, 0, strlen($where_str)-3);
+				
+				if(!isset($props['COLUMNS'])) return false;
+				elseif(is_array($props['COLUMNS'])) $columns = $props['COLUMNS'];
+				elseif(is_string($props['COLUMNS'])) $columns = split(',', $props['COLUMNS']);
+	
+				if(!isset($props['VALUES'])) return false;
+				elseif(is_array($props['VALUES'])) $values = $props['VALUES'];
+				elseif(is_string($props['VALUES'])) $values = split(',', $props['VALUES']);
+				
+				$set = array();
+				foreach($columns as $i => $key)
+				{
+					$set[] = $key . ' = "' . $values[$i] . '"';
+				}
+	
+				$statement = $update . ' ' . join(', ', $set) . ' ' . $where . ' ' . $order . ' ' . $limit;
 			}
-			elseif( is_string($where) )
+			elseif(isset($props['INSERT']))
 			{
-				$where_str = $where;
+				$insert = 'INSERT INTO ' . $this->table_prefix . $props['INSERT'];
+				
+				if(!isset($props['COLUMNS']) && isset($props['VALUES']) && is_array($props['VALUES']))
+				{
+					$props['COLUMNS'] = array_keys($props['VALUES']);
+					$props['VALUES'] = array_values($props['VALUES']);
+				}
+				
+				if(!isset($props['COLUMNS'])) return false;
+				elseif(is_array($props['COLUMNS'])) $columns = '(' . join(', ', $props['COLUMNS']) . ')';
+				elseif(is_string($props['COLUMNS'])) $columns = '(' . $props['COLUMNS'] . ')';
+				
+				if(!isset($props['VALUES'])) return false;
+				elseif(is_array($props['VALUES'])) $values = 'VALUES ("' . join('", "', $props['VALUES']) . '")';
+				elseif(is_string($props['VALUES'])) $values = 'VALUES (' . $props['VALUES'] . ')';
+	
+				$statement = $insert . ' ' . $columns . ' ' . $values;
 			}
-			
-			// if the values is null then we are removing
-			if( $values == NULL )
+			elseif(isset($props['DELETE']))
 			{
-				// remove from table
-				$this->query('DELETE FROM ' . $this->table_prefix . $table . ' WHERE ' . $where_str);
+				$delete = 'DELETE FROM ' . $this->table_prefix . $props['DELETE'];
+	
+				$statement = $delete . ' ' . $where . ' ' . $order . ' ' . $limit;
 			}
 			else
 			{
-				// we are updating existing entries
-				$set_str = '';
-				foreach($values as $key => $value)
-				{
-					$set_str .= ' ' . $key . ' = "' . $value . '",';
-				}
-				// remove last comma
-				$set_str = substr($set_str, 0, strlen($set_str)-1);
-				
-				// set in table
-				$this->query('UPDATE ' . $this->table_prefix . $table . ' SET ' . $set_str . ' WHERE ' . $where_str);
+				return $props;
+			}
+			
+			return $statement;
+		}
+	}
+	
+	// function for making calls on the database, this is what is called by the rest of the site
+	function query($props)
+	{
+		$query = $this->statement_builder($props);
+//print $query . '<br />';
+		$result = $this->db_query($query);
+		
+		if($result !== false && (isset($props['SELECT']) || isset($props['SHOW'])))
+		{
+			// this is used for queries too large for memory
+			if(isset($props['CALLBACK']))
+			{
+				$this->result_callback($props['CALLBACK']['FUNCTION'], $props['CALLBACK']['ARGUMENTS']);
+			}
+			else
+			{
+				return $this->result();
 			}
 		}
-		
+		elseif($result !== false && (isset($props['INSERT']) || isset($props['UPDATE']) || isset($props['REPLACE']) || isset($props['DELETE'])))
+		{
+			return $this->affected();
+		}
+		else
+		{
+			return $result;
+		}
 	}
 	
 	
@@ -308,13 +324,33 @@ class sql_global
 	{
 
 	}
+	
+//=============================================
+//  count()
+//=============================================
+//  returns the number of rows selected from the database
+//=============================================
+	function numrows()
+	{
+
+	}
+	
+//=============================================
+//  numrows()
+//=============================================
+//  returns the number of affected rows from the database
+//=============================================
+	function affected()
+	{
+
+	}
 
 //=============================================
 //  query($query = "")
 //=============================================
-//  Just a handler for SQL queries specific to the objects connect id
+//  Just a handler for database queries specific to the objects connect id
 //=============================================
-	function query($query = "")
+	function db_query($query = "")
 	{
 		
 	}

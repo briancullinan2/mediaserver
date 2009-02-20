@@ -45,9 +45,9 @@ class db_audio extends db_file
 		if(db_audio::handles($file))
 		{
 			// check to see if it is in the database
-			$db_audio = $mysql->get(array(
-					'TABLE' => db_audio::DATABASE,
-					'SELECT' => 'id',
+			$db_audio = $mysql->query(array(
+					'SELECT' => db_audio::DATABASE,
+					'COLUMNS' => 'id',
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
 				)
 			);
@@ -60,9 +60,9 @@ class db_audio extends db_file
 			else
 			{
 				// check to see if the file was changed
-				$db_file = $mysql->get(array(
-						'TABLE' => db_file::DATABASE,
-						'SELECT' => 'Filedate',
+				$db_file = $mysql->query(array(
+						'SELECT' => db_file::DATABASE,
+						'COLUMNS' => 'Filedate',
 						'WHERE' => 'Filepath = "' . addslashes($file) . '"'
 					)
 				);
@@ -109,7 +109,7 @@ class db_audio extends db_file
 			print 'Modifying audio: ' . $file . "\n";
 			
 			// update database
-			$id = $mysql->set('audio', $fileinfo, array('id' => $audio_id));
+			$id = $mysql->query(array('UPDATE' => 'audio', 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $audio_id));
 		
 			return $audio_id;
 		}
@@ -118,7 +118,7 @@ class db_audio extends db_file
 			print 'Adding audio: ' . $file . "\n";
 			
 			// add to database
-			$id = $mysql->set('audio', $fileinfo);
+			$id = $mysql->query(array('INSERT' => 'audio', 'VALUES' => $fileinfo));
 			
 			return $id;
 		}
@@ -130,7 +130,7 @@ class db_audio extends db_file
 	
 	static function get($mysql, $request, &$count, &$error)
 	{
-		return parent::get($mysql, $request, &$count, &$error, get_class());
+		return parent::get($mysql, $request, $count, $error, get_class());
 	}
 
 

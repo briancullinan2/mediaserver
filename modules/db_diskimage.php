@@ -83,9 +83,9 @@ class db_diskimage extends db_file
 		if(db_diskimage::handles($file))
 		{
 			// check to see if it is in the database
-			$db_diskimage = $mysql->get(array(
-					'TABLE' => db_diskimage::DATABASE,
-					'SELECT' => 'id',
+			$db_diskimage = $mysql->query(array(
+					'SELECT' => db_diskimage::DATABASE,
+					'COLUMNS' => 'id',
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
 				)
 			);
@@ -98,9 +98,9 @@ class db_diskimage extends db_file
 			else
 			{
 				// check to see if the file was changed
-				$db_file = $mysql->get(array(
-						'TABLE' => db_file::DATABASE,
-						'SELECT' => 'Filedate',
+				$db_file = $mysql->query(array(
+						'SELECT' => db_file::DATABASE,
+						'COLUMNS' => 'Filedate',
 						'WHERE' => 'Filepath = "' . addslashes($file) . '"'
 					)
 				);
@@ -123,8 +123,8 @@ class db_diskimage extends db_file
 		// if the image changes remove all it's inside files from the database
 		if( $image_id != NULL )
 		{
-			print 'Removing image: ' . $file . "\n";
-			$mysql->set('diskimage', NULL, 'WHERE Filepath REGEXP "^' . addslashes(addslashes($file)) . '"');
+			print 'Removing disk image: ' . $file . "\n";
+			$mysql->query(array('DELETE' => 'diskimage', 'WHERE' => 'Filepath REGEXP "^' . addslashes(addslashes($file)) . '\\\/"'));
 		}
 
 		// pull information from $info
@@ -169,7 +169,7 @@ class db_diskimage extends db_file
 						$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['recording_timestamp']);
 						
 						print 'Adding file in disk image: ' . $fileinfo['Filepath'] . "\n";
-						$id = $mysql->set('diskimage', $fileinfo);
+						$id = $mysql->query(array('INSERT' => 'diskimage', 'VALUES' => $fileinfo));
 					}
 				}
 			}
@@ -192,7 +192,7 @@ class db_diskimage extends db_file
 			print 'Modifying Disk Image: ' . $fileinfo['Filepath'] . "\n";
 			
 			// update database
-			$id = $mysql->set('diskimage', $fileinfo, array('id' => $image_id));
+			$id = $mysql->query(array('UPDATE' => 'diskimage', 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $archive_id));
 		
 			return $audio_id;
 		}
@@ -201,7 +201,7 @@ class db_diskimage extends db_file
 			print 'Adding Disk Image: ' . $fileinfo['Filepath'] . "\n";
 			
 			// add to database
-			$id = $mysql->set('diskimage', $fileinfo);
+			$id = $mysql->query(array('INSERT' => 'diskimage', 'VALUES' => $fileinfo));
 			
 			return $id;
 		}
@@ -230,7 +230,7 @@ class db_diskimage extends db_file
 
 		if(is_file($last_path))
 		{
-			$files = $mysql->get(array('TABLE' => db_archive::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
+			$files = $mysql->query(array('SELECT' => db_archive::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
 			if(count($file) > 0)
 			{				
 				
@@ -339,7 +339,7 @@ class db_diskimage extends db_file
 			}
 		}
 		
-		$files = db_file::get($mysql, $request, &$count, &$error, 'db_diskimage');
+		$files = db_file::get($mysql, $request, $count, $error, 'db_diskimage');
 		
 		return $files;
 	}
@@ -353,20 +353,27 @@ class db_diskimage extends db_file
 			if(file_exists($last_path . $tmp_file) || $last_path == '')
 			{
 				$last_path = $last_path . $tmp_file . DIRECTORY_SEPARATOR;
+				if(strlen($last_path) == 0 || $last_path[strlen($last_path)-1] != DIRECTORY_SEPARATOR)
+					$last_path .= DIRECTORY_SEPARATOR;
 			} else {
 				if(file_exists($last_path))
 					break;
 			}
 		}
-		$inside_path = substr($row['Filepath'], strlen($last_path));
 		if($last_path[strlen($last_path)-1] == DIRECTORY_SEPARATOR) $last_path = substr($last_path, 0, strlen($last_path)-1);
 
 		if( !file_exists($last_path) )
 		{
-			$args['SQL']->set($args['DB'], NULL, array('Filepath' => addslashes($row['Filepath'])));
+			$args['CONNECTION']->query(array('DELETE' => constant($args['MODULE'] . '::DATABASE'), 'WHERE' => 'Filepath REGEXP "' . addslashes(addslashes($row['Filepath'])) . '\\\/" OR Filepath = "' . addslashes($row['Filepath']) . '"'));
 			
-			print 'Removing ' . $args['DB'] . ': ' . $row['Filepath'] . "\n";
+			print 'Removing ' . constant($args['MODULE'] . '::NAME') . ': ' . $row['Filepath'] . "\n";
 		}
+	}
+
+	static function cleanup($mysql, $watched, $ignored)
+	{
+		// call default cleanup function
+		parent::cleanup($mysql, $watched, $ignored, get_class());
 	}
 }
 

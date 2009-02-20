@@ -43,9 +43,9 @@ class db_file
 		{
 			
 			// check if it is in the database
-			$db_file = $mysql->get(array(
-					'TABLE' => db_file::DATABASE,
-					'SELECT' => array('id', 'Filedate'),
+			$db_file = $mysql->query(array(
+					'SELECT' => db_file::DATABASE,
+					'COLUMNS' => array('id', 'Filedate'),
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
 				)
 			);
@@ -57,10 +57,8 @@ class db_file
 			}
 			else
 			{
-				$filename = $file;
-
 				// update file if modified date has changed
-				if( date("Y-m-d h:i:s", filemtime($filename)) != $db_file[0]['Filedate'] )
+				if( date("Y-m-d h:i:s", filemtime($file)) != $db_file[0]['Filedate'] )
 				{
 					$id = db_file::add($mysql, $file, $db_file[0]['id']);
 				}
@@ -102,7 +100,7 @@ class db_file
 			print 'Modifying file: ' . $file . "\n";
 			
 			// update database
-			$fileid = $mysql->set('files', $fileinfo, array('id' => $id));
+			$id = $mysql->query(array('UPDATE' => 'files', 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $id));
 		
 			return $id;
 		}
@@ -111,9 +109,9 @@ class db_file
 			print 'Adding file: ' . $file . "\n";
 			
 			// add to database
-			$fileid = $mysql->set('files', $fileinfo);
+			$id = $mysql->query(array('INSERT' => 'files', 'VALUES' => $fileinfo));
 		
-			return $fileid;
+			return $id;
 		}
 		
 		
@@ -127,7 +125,7 @@ class db_file
 		// check to make sure file is valid
 		if(is_file($file))
 		{
-			$files = $mysql->get(array('TABLE' => db_file::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
+			$files = $mysql->query(array('SELECT' => db_file::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
 			if(count($file) > 0)
 			{				
 				$file = $files[0];
@@ -255,13 +253,13 @@ class db_file
 				{
 				
 					// make sure directory is in the database
-					$dirs = $mysql->get(array('TABLE' => constant($module . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
+					$dirs = $mysql->query(array('SELECT' => constant($module . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
 					
 					// check the file database, some modules use their own database to store special paths,
 					//  while other modules only store files and no directories, but these should still be searchable paths
 					//  in which case the module is responsible for validation of it's own paths
 					if(count($dirs) == 0)
-						$dirs = $mysql->get(array('TABLE' => db_file::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
+						$dirs = $mysql->query(array('SELECT' => db_file::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
 					
 					// top level directory / should always exist
 					if($request['dir'] == realpath('/') || count($dirs) > 0)
@@ -324,19 +322,18 @@ class db_file
 		
 			if($error == '')
 			{
-				$props['SELECT'] =  call_user_func($module . '::columns');
-				if(isset($props['GROUP'])) $props['SELECT'][] = 'count(*)';
-				$props['TABLE'] = constant($module . '::DATABASE');
+				$props['SELECT'] = constant($module . '::DATABASE');
+				if(isset($props['GROUP'])) $props['COLUMNS'][] = 'count(*)';
 	
 				// get directory from database
-				$files = $mysql->get($props);
+				$files = $mysql->query($props);
 				
 				// this is how we get the count of all the items
 				unset($props['LIMIT']);
-				$props = array('FROM' => '(' . $mysql->statement_builder($props) . ') AS db_audio');
-				$props['SELECT'] = 'count(*)';
+				$props = array('SELECT' => '(' . $mysql->statement_builder($props) . ') AS db_audio');
+				$props['COLUMNS'] = 'count(*)';
 				
-				$result = $mysql->get($props);
+				$result = $mysql->query($props);
 				
 				$count = intval($result[0]['count(*)']);
 			}
@@ -356,15 +353,16 @@ class db_file
 		if( !file_exists($row['Filepath']) )
 		{
 			// remove row from database
-			$args['SQL']->set($args['DB'], NULL, array('Filepath' => addslashes($row['Filepath'])));
+			$args['CONNECTION']->query(array('DELETE' => constant($args['MODULE'] . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($row['Filepath']) . '"'));
 			
-			print 'Removing ' . $args['DB'] . ': ' . $row['Filepath'] . "\n";
+			print 'Removing ' . constant($args['MODULE'] . '::NAME') . ': ' . $row['Filepath'] . "\n";
 		}
-
+		
+		// print progress
 		$args['count']++;
 		if(round(($args['count']-1)/$args['total'], 2) != round($args['count']/$args['total'], 2))
 		{
-			print 'Checking paths ' . (round($args['count']/$args['total'], 2) * 100) . '% complete for ' . $args['DB'] . "\n";
+			print 'Checking paths ' . (round($args['count']/$args['total'], 2) * 100) . '% complete for ' . constant($args['MODULE'] . '::NAME') . "\n";
 			flush();
 		}
 	}
@@ -398,6 +396,7 @@ class db_file
 			unset($folders[$length-2]); // remove the last folder which is the watch
 			$between = false; // directory must be between an aliased path and a watched path
 			// add the directories leading up to the watch
+			$directories = array();
 			for($j = 0; $j < count($folders); $j++)
 			{
 				if($folders[$j] != '')
@@ -406,8 +405,9 @@ class db_file
 					// if using aliases then only add the revert from the watch directory to the alias
 					// ex. Watch = /home/share/Pictures/, Alias = /home/share/ => /Shared/
 					//     only /home/share/ is added here
-					if(!USE_ALIAS || in_array($curr_dir, $GLOBALS['paths']) !== false)
+					if((!USE_ALIAS || in_array($curr_dir, $GLOBALS['paths']) !== false) && !in_array($curr_dir, $directories))
 					{
+						$directories[] = $curr_dir;
 						// this allows for us to make sure that at least the beginning 
 						//   of the path is an aliased path
 						$between = true;
@@ -416,8 +416,10 @@ class db_file
 						$where_str .= ' Filepath = "' . addslashes($curr_dir) . '" OR';
 					}
 					// but make an exception for folders between an alias and the watch path
-					elseif(USE_ALIAS && $between)
+					elseif(USE_ALIAS && $between && !in_array($curr_dir, $directories))
 					{
+						$directories[] = $curr_dir;
+						
 						$where_str .= ' Filepath = "' . addslashes($curr_dir) . '" OR';
 					}
 				}
@@ -434,30 +436,35 @@ class db_file
 		}
 		
 		// remove items
-		$mysql->set(constant($module . '::DATABASE'), NULL, $where_str);
+		$mysql->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => $where_str));
 
 		// get count 
-		$result = $mysql->get(array('TABLE' => constant($module . '::DATABASE'), 'SELECT' => 'count(*)'));
+		$result = $mysql->query(array('SELECT' => constant($module . '::DATABASE'), 'COLUMNS' => 'count(*)'));
 		$total = $result[0]['count(*)'];
 		$count = 0;
 
 		// since all the ones not apart of a watched directory is removed, now just check is every file still in the database exists on disk
-		$mysql->query('SELECT Filepath FROM ' . $mysql->table_prefix . constant($module . '::DATABASE'));
-		
-		$mysql->result_callback(function_exists($module . '::cleanup_remove')?$module . '::cleanup_remove':'db_file::cleanup_remove', array('SQL' => new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME), 'DB' => constant($module . '::DATABASE'), 'count' => &$count, 'total' => &$total));
+		$mysql->query(array(
+			'SELECT' => constant($module . '::DATABASE'), 
+			'CALLBACK' => array(
+				'FUNCTION' => function_exists($module . '::cleanup_remove')?$module . '::cleanup_remove':'db_file::cleanup_remove',
+				'ARGUMENTS' => array('CONNECTION' => new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME), 'MODULE' => $module, 'count' => &$count, 'total' => &$total)
+			)
+		));
 				
 		// remove any duplicates
-		$files = $mysql->get(array(
-				'TABLE' => constant($module . '::DATABASE'),
-				'SELECT' => array('MIN(id) as id', 'Filepath', 'COUNT(*) as num'),
-				'OTHER' => 'GROUP BY Filepath HAVING num > 1'
+		$files = $mysql->query(array(
+				'SELECT' => constant($module . '::DATABASE'),
+				'COLUMNS' => array('MIN(id) as id', 'Filepath', 'COUNT(*) as num'),
+				'GROUP' => 'Filepath',
+				'HAVING' => 'num > 1'
 			)
 		);
 		
 		// remove first item from all duplicates
 		foreach($files as $i => $file)
 		{
-			$mysql->set(constant($module . '::DATABASE'), NULL, array('id' => $file['id']));
+			$mysql->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => 'id=' . $file['id']));
 			
 			print 'Removing ' . constant($module . '::NAME') . ': ' . $file['Filepath'] . "\n";
 		}

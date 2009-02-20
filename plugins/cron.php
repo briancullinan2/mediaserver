@@ -38,19 +38,22 @@ if(USE_DATABASE == false)
 $mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 
 // get the watched directories
-$watched = $mysql->getWatched();
+$watched_list = db_watch::get($mysql, array(), $count, $error);
 
 // sort out the files we don't want watched they begin ith the ! (NOT) sign
 $ignored = array();
-foreach($watched as $index => $watch)
+$watched = array(); // remove missing indeces
+foreach($watched_list as $index => $watch)
 {
 	if($watch['Filepath'][0] == '!')
 	{
 		$ignored[] = substr($watch['Filepath'], 1);
-		unset($watched[$index]);
+	}
+	else
+	{
+		$watched[] = substr($watch['Filepath'], 1);
 	}
 }
-$watched = array_values($watched); // remove missing indeces
 
 // directories that have already been scanned used to prevent recursion
 $dirs = array();
@@ -70,7 +73,7 @@ print_r($state);
 if( isset($state) && is_array($state) ) $state_current = array_pop($state);
 
 // get starting index
-if( isset($state_current) && isset($watched[$state_current['index']]) && $watched[$state_current['index']]['Filepath'] == $state_current['file'] )
+if( isset($state_current) && isset($watched[$state_current['index']]) && $watched[$state_current['index']] == $state_current['file'] )
 {
 	$i = $state_current['index'];
 }
@@ -95,13 +98,13 @@ for($i; $i < count($watched); $i++)
 {
 	$watch = $watched[$i];
 
-	$status = getdir($watch['Filepath']);
+	$status = getdir($watch);
 	
 	// if exited because of time, then save state
 	if( $status == false )
 	{
 		// record the current directory
-		array_push($state, array('index' => $i, 'file' => $watch['Filepath']));
+		array_push($state, array('index' => $i, 'file' => $watch));
 		
 		// serialize and save
 		print "State saved\n";
@@ -129,7 +132,7 @@ for($i; $i < count($watched); $i++)
 		}
 		
 		// set the last updated time in the watched table
-		$mysql->set('watch', array('Lastwatch' => date("Y-m-d h:i:s")), array('Filepath' => addslashes($watch['Filepath'])));
+		$mysql->query(array('UPDATE' => 'watch', 'VALUES' => array('Lastwatch' => date("Y-m-d h:i:s")), 'WHERE' => 'Filepath = "' . $watch . '"'));
 	}
 	
 	if(isset($_REQUEST['entry']) && is_numeric($_REQUEST['entry']) && $_REQUEST['entry'] < count($watched) && $_REQUEST['entry'] > 0)
@@ -138,40 +141,15 @@ for($i; $i < count($watched); $i++)
 
 
 // clean up the watch_list and remove stuff that doesn't exist in watch anymore
-$where_str = '';
-foreach($watched as $i => $watch)
-{
-	$where_str .= ' Filepath REGEXP "^' . addslashes(addslashes($watch['Filepath'])) . '" OR';
-}
-// remove last OR
-$where_str = substr($where_str, 0, strlen($where_str)-2);
-$where_str = ' !(' . $where_str . ')';
-// clean up items that are in the ignore list
-foreach($ignored as $i => $ignore)
-{
-	$where_str = 'Filepath REGEXP "^' . addslashes(addslashes($ignore)) . '" OR ' . $where_str;
-}
-
-// remove items
-$mysql->set('watch_list', NULL, $where_str);
-
-print 'Cleaned watch_list.' . "\n";
-flush();
-
+db_watch_list::cleanup($mysql, $watched, $ignored);
 
 // now scan some files
 $tm_start = array_sum(explode(' ', microtime()));
 
 do
 {
-
 	// get 1 folder from the database to search the files for
-	$db_dirs = $mysql->get(array(
-			'TABLE' => 'watch_list',
-			'SELECT' => 'Filepath',
-			'OTHER' => 'LIMIT 1'
-		)
-	);
+	$db_dirs = db_watch_list::get($mysql, array(), $count, $error);
 	
 	if(count($db_dirs) > 0)
 	{
@@ -187,6 +165,7 @@ do
 		
  		$count = 0;
 		$error = '';
+		
 		// get directory contents
 		$files = fs_file::get(NULL, array('dir' => $dir, 'limit' => 32000), $count, $error, true);
 		
@@ -202,7 +181,7 @@ do
 		}
 	
 		// delete the selected folder from the database
-		$mysql->set('watch_list', NULL, array('Filepath' => addslashes($dir)));
+		$mysql->query(array('DELETE' => 'watch_list', 'WHERE' => 'Filepath = "' . addslashes($dir) . '"'));
 	}
 
 	// check if execution time is too long
@@ -264,10 +243,10 @@ for($i = 0; $i < count($watched); $i++)
 // check if file is already in database
 function getfile( $file )
 {
-	global $mysql, $modules;
+	global $mysql;
 	
 	// pass the file to each module to test if it should handle it
-	foreach($modules as $i => $module)
+	foreach($GLOBALS['modules'] as $i => $module)
 	{
 		// never pass is to fs_file, it is only used to internals in this case
 		if($module != 'fs_file')
@@ -283,9 +262,9 @@ function getdir( $dir )
 	global $dirs, $tm_start, $state, $mysql, $ignored;
 					
 	// check directory passed in, only add directory to watch list if it has changed
-	$db_file = $mysql->get(array(
-			'TABLE' => 'files',
-			'SELECT' => array('id', 'Filedate'),
+	$db_file = $mysql->query(array(
+			'SELECT' => 'files',
+			'COLUMNS' => array('id', 'Filedate'),
 			'WHERE' => 'Filepath = "' . addslashes($dir) . '"'
 		)
 	);
@@ -300,7 +279,7 @@ function getdir( $dir )
 		getfile( $dir );
 		
 		// add to watch list
-		$mysql->set('watch_list', array('Filepath' => addslashes($dir)), NULL);
+		$mysql->query(array('INSERT' => 'watch_list', 'VALUES' => array('Filepath' => addslashes($dir))));
 		
 		print 'Queueing directory: ' . $dir . "\n";
 	}

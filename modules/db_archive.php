@@ -88,9 +88,9 @@ class db_archive extends db_file
 		if(db_archive::handles($file))
 		{
 			// check to see if it is in the database
-			$db_archive = $mysql->get(array(
-					'TABLE' => db_archive::DATABASE,
-					'SELECT' => 'id',
+			$db_archive = $mysql->query(array(
+					'SELECT' => db_archive::DATABASE,
+					'COLUMNS' => 'id',
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
 				)
 			);
@@ -103,9 +103,9 @@ class db_archive extends db_file
 			else
 			{
 				// check to see if the file was changed
-				$db_file = $mysql->get(array(
-						'TABLE' => db_file::DATABASE,
-						'SELECT' => 'Filedate',
+				$db_file = $mysql->query(array(
+						'SELECT' => db_file::DATABASE,
+						'COLUMNS' => 'Filedate',
 						'WHERE' => 'Filepath = "' . addslashes($file) . '"'
 					)
 				);
@@ -129,7 +129,7 @@ class db_archive extends db_file
 		if( $archive_id != NULL )
 		{
 			print 'Removing archive: ' . $file . "\n";
-			$mysql->set('archive', NULL, 'WHERE Filepath REGEXP "^' . addslashes(addslashes($file)) . '\\\/"');
+			$mysql->query(array('DELETE' => 'archive', 'WHERE' => 'Filepath REGEXP "^' . addslashes(addslashes($file)) . '\\\/"'));
 		}
 
 		// pull information from $info
@@ -179,7 +179,7 @@ class db_archive extends db_file
 					$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
 					
 					print 'Adding file in archive: ' . $fileinfo['Filepath'] . "\n";
-					$id = $mysql->set('archive', $fileinfo);
+					$id = $mysql->query(array('INSERT' => 'archive', 'VALUES' => $fileinfo));
 				}
 				
 				// get folders leading up to files
@@ -202,7 +202,7 @@ class db_archive extends db_file
 						$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
 						
 						print 'Adding directory in archive: ' . $fileinfo['Filepath'] . "\n";
-						$id = $mysql->set('archive', $fileinfo);
+						$id = $mysql->query(array('INSERT' => 'archive', 'VALUES' => $fileinfo));
 					}
 				}
 			}
@@ -227,7 +227,7 @@ class db_archive extends db_file
 			print 'Modifying archive: ' . $fileinfo['Filepath'] . "\n";
 			
 			// update database
-			$id = $mysql->set('archive', $fileinfo, array('id' => $archive_id));
+			$id = $mysql->query(array('UPDATE' => 'archive', 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $archive_id));
 		
 			return $audio_id;
 		}
@@ -236,7 +236,7 @@ class db_archive extends db_file
 			print 'Adding archive: ' . $fileinfo['Filepath'] . "\n";
 			
 			// add to database
-			$id = $mysql->set('archive', $fileinfo);
+			$id = $mysql->query(array('INSERT' => 'archive', 'VALUES' => $fileinfo));
 			
 			return $id;
 		}
@@ -264,7 +264,7 @@ class db_archive extends db_file
 
 		if(is_file($last_path))
 		{
-			$files = $mysql->get(array('TABLE' => db_archive::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
+			$files = $mysql->query(array('SELECT' => db_archive::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
 			if(count($file) > 0)
 			{				
 				header('Content-Transfer-Encoding: binary');
@@ -328,7 +328,7 @@ class db_archive extends db_file
 			}
 		}
 		
-		$files = db_file::get($mysql, $request, &$count, &$error, 'db_archive');
+		$files = db_file::get($mysql, $request, $count, $error, 'db_archive');
 		
 		return $files;
 	}
@@ -342,20 +342,28 @@ class db_archive extends db_file
 			if(file_exists($last_path . $tmp_file) || $last_path == '')
 			{
 				$last_path = $last_path . $tmp_file . DIRECTORY_SEPARATOR;
+				if(strlen($last_path) == 0 || $last_path[strlen($last_path)-1] != DIRECTORY_SEPARATOR)
+					$last_path .= DIRECTORY_SEPARATOR;
 			} else {
 				if(file_exists($last_path))
 					break;
 			}
 		}
-		$inside_path = substr($row['Filepath'], strlen($last_path));
 		if($last_path[strlen($last_path)-1] == DIRECTORY_SEPARATOR) $last_path = substr($last_path, 0, strlen($last_path)-1);
 
 		if( !file_exists($last_path) )
 		{
-			$args['SQL']->set($args['DB'], NULL, 'WHERE Filepath REGEXP "' . addslashes(addslashes($row['Filepath'])) . '\\\/" OR Filepath = "' . addslashes($row['Filepath']) . '"');
+			$args['CONNECTION']->query(array('DELETE' => constant($args['MODULE'] . '::DATABASE'), 'WHERE' => 'Filepath REGEXP "' . addslashes(addslashes($row['Filepath'])) . '\\\/" OR Filepath = "' . addslashes($row['Filepath']) . '"'));
 			
-			print 'Removing ' . $args['DB'] . ': ' . $row['Filepath'] . "\n";
+			print 'Removing ' . constant($args['MODULE'] . '::NAME') . ': ' . $row['Filepath'] . "\n";
 		}
 	}
+
+	static function cleanup($mysql, $watched, $ignored)
+	{
+		// call default cleanup function
+		parent::cleanup($mysql, $watched, $ignored, get_class());
+	}
 }
+
 ?>

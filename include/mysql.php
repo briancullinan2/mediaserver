@@ -5,6 +5,8 @@ class sql extends sql_global
 
 	function sql($SQL_server, $SQL_username, $SQL_password, $SQL_db_name = "")
 	{
+		$this->sql_global();
+		
 		$this->db_connect_id = mysql_connect($SQL_server, $SQL_username, $SQL_password) or print_r(mysql_error());
 		if ($SQL_db_name != "")
 		{
@@ -17,7 +19,17 @@ class sql extends sql_global
 		// use result id to get the row just inserted and assume there is an id to return
 		return mysql_insert_id();
 	}
+	
+	function numrows()
+	{
+		return mysql_num_rows($this->query_result);
+	}
 
+	function affected()
+	{
+		return mysql_affected_rows($this->db_connect_id);
+	}
+	
 	function result()
 	{
 		$result = array();
@@ -36,12 +48,8 @@ class sql extends sql_global
 		}
 	}
 	
-	function query($query = "")
+	function db_query($query = "")
 	{
-/*if($query == 'audio')
-	print_r(debug_backtrace());*/
-//print_r($query . "<br />\n");
-		
 		// Remove any pre-existing queries
 		unset($this->query_result);
 		if($query != "")

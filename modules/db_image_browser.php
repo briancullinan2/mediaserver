@@ -44,7 +44,7 @@ class db_image_browser extends db_image
 		// check to make sure file is valid
 		if(is_file($file))
 		{
-			$files = $mysql->get(array('TABLE' => db_file::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
+			$files = $mysql->query(array('SELECT' => db_file::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
 			if(count($file) > 0)
 			{				
 				$file = $files[0];

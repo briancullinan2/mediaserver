@@ -1,3 +1,10 @@
+2009-02-19
+Limit access to watch and alias tables after implementing users and permissions
+Decide what to do about watch_list and watched directories, should there be a module for handling the watch database?
+Fix up $mysql->set() function an possible merge it with the statement builder function
+Make a class for handling CSV as the database type, make sure all the queries can refer to the statement builder
+Make state_dirs save in tmp if missing write permissioons, add write permission information to install process
+
 2009-02-18
 Abstract db_archive module just like diskimage
 Add podcast list template

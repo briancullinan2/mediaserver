@@ -60,9 +60,9 @@ class db_image extends db_file
 		if(db_image::handles($file))
 		{
 			// check to see if it is in the database
-			$db_image = $mysql->get(array(
-					'TABLE' => db_image::DATABASE,
-					'SELECT' => 'id',
+			$db_image = $mysql->query(array(
+					'SELECT' => db_image::DATABASE,
+					'COLUMNS' => 'id',
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
 				)
 			);
@@ -75,9 +75,9 @@ class db_image extends db_file
 			else
 			{
 				// check to see if the file was changed
-				$db_file = $mysql->get(array(
-						'TABLE' => db_file::DATABASE,
-						'SELECT' => 'Filedate',
+				$db_file = $mysql->query(array(
+						'SELECT' => db_file::DATABASE,
+						'COLUMNS' => 'Filedate',
 						'WHERE' => 'Filepath = "' . addslashes($file) . '"'
 					)
 				);
@@ -137,7 +137,7 @@ class db_image extends db_file
 			print 'Modifying image: ' . $file . "\n";
 			
 			// update database
-			$id = $mysql->set('image', $fileinfo, array('id' => $image_id));
+			$id = $mysql->query(array('UPDATE' => 'image', 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $image_id));
 		
 			return $audio_id;
 		}
@@ -146,7 +146,7 @@ class db_image extends db_file
 			print 'Adding image: ' . $file . "\n";
 			
 			// add to database
-			$id = $mysql->set('image', $fileinfo);
+			$id = $mysql->query(array('INSERT' => 'image', 'VALUES' => $fileinfo));
 			
 			return $id;
 		}
@@ -189,7 +189,7 @@ class db_image extends db_file
 	
 	static function get($mysql, $request, &$count, &$error)
 	{
-		return parent::get($mysql, $request, &$count, &$error, get_class());
+		return parent::get($mysql, $request, $count, $error, get_class());
 	}
 
 	

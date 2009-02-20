@@ -35,11 +35,14 @@ else
 &nbsp;&nbsp;&nbsp;&nbsp;* <b>LOCAL_</b> controls paths to the local system<br />
 &nbsp;&nbsp;&nbsp;&nbsp;* <b>HTML_</b> controls how users access the site<br />
 &nbsp;&nbsp;&nbsp;&nbsp;* &lt;COMMAND&gt;_ controlls some programs for the default plugins<br />
-2. Install the database:<br />
+2. Give files permission<br />
+&nbsp;&nbsp;&nbsp;&nbsp;* &lt;site path&gt;/templates_c/ needs write access in order to compiler templates and cache them<br />
+&nbsp;&nbsp;&nbsp;&nbsp;* &lt;site path&gt;/state_dirs.txt needs write access in order to save the state of the cron script<br />
+3. Install the database:<br />
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="install.php">Install</a><br />
-3. Add directories to watch for changes:<br />
+4. Add directories to watch for changes:<br />
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="watch.php">Watch</a><br />
-4. Add a cron job:<br />
+5. Add a cron job:<br />
 &nbsp;&nbsp;&nbsp;&nbsp;Run the <b>&lt;site path&gt;/plugins/cron.php</b> script (optionally run manually) to look for changed directories<br /><code>
 &nbsp;&nbsp;&nbsp;&nbsp;0 * * * * /usr/bin/php /&lt;site path&gt;/plugins/cron.php &gt;/dev/null 2&gt;&amp;1<br />
 &nbsp;&nbsp;&nbsp;&nbsp;30 * * * * /usr/bin/php /&lt;site path&gt;/plugins/cron.php &gt;/dev/null 2&gt;&amp;1<br /></code>

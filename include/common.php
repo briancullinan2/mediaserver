@@ -145,7 +145,7 @@ function setup()
 	if(USE_ALIAS == true && USE_DATABASE == true)
 	{
 		$mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
-		$aliases = $mysql->get(array('TABLE' => 'alias', 'SELECT' => '*'));
+		$aliases = $mysql->query(array('SELECT' => 'alias'));
 		
 		if($aliases !== false)
 		{

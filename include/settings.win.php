@@ -9,12 +9,12 @@ define('ADMIN_PASS',			   'tmppass');
 
 
 // database connection constants
-define('USE_DATABASE', 	                   false); // set to false to make modules load information about every file on the fly
-//define('DB_SERVER',                'localhost');
-//define('DB_USER',                    'tmpuser');
-//define('DB_PASS',                    'tmppass');
-//define('DB_NAME',                'mediaserver');
-//define('DB_TYPE',				         'mysql');
+define('USE_DATABASE', 	                  true); // set to false to make modules load information about every file on the fly
+define('DB_SERVER',                'localhost');
+define('DB_USER',                    'tmpuser');
+define('DB_PASS',                    'tmppass');
+define('DB_NAME',                'mediaserver');
+define('DB_TYPE',				       'mysql');
 
 // this prefix can be used to include completely different sets of files in the same database
 // don't be decieved though, some files use the db_<file type> where <file type> refers to a module!

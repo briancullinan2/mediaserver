@@ -21,63 +21,34 @@ $error = '';
 // get the current list of watches
 $mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 
-$watched = $mysql->get(array('TABLE' => 'watch', 'SELECT' => array('id','Filepath')));
+$watched = db_watch::get($mysql, array(), &$count, &$error);
 
 if( isset($_REQUEST['add']) )
 {
-	$addpath = $_REQUEST['addpath'];
-	$exclude = false;
-	if($addpath[0] == '!')
+	if($_REQUEST['addpath'][0] != '!' && $_REQUEST['addpath'][0] != '^')
+		$_REQUEST['addpath'] = '^' . $_REQUEST['addpath'];
+	if(db_watch::handles($_REQUEST['addpath']))
 	{
-		$addpath = substr($addpath, 1);
-		$exclude = true;
-	}
-	// make sure addpath doesn't already exist in the list and is not a symbolic link
-	if( file_exists($addpath) )
-	{
-		if( is_dir($addpath) )
-		{
-			$addpath = realpath($addpath);
 			// add ending backslash
-			if( substr($addpath, strlen($addpath)-1) != DIRECTORY_SEPARATOR ) $addpath .= DIRECTORY_SEPARATOR;
-			$dont_add = false;
-			foreach($watched as $i => $watch)
-			{
-				if( $watch['Filepath'] == $addpath )
-				{
-					$error = 'Path already exists in list.';
-					$dont_add = true;
-					break;
-				}
-			}
-			if($dont_add == false)
-			{
-				// finally add the path to the database
-				$mysql->set('watch', array('Filepath' => ($exclude?'!':'') . addslashes($addpath)));
-				
-				// and reget the full list
-				$watched = $mysql->get(array('TABLE' => 'watch', 'SELECT' => array('id','Filepath')));
-				
-				// clear post
-				unset($_REQUEST['addpath']);
-			}
-		}
-		else
-		{
-			$error = 'Path must be to a directory.';
-		}
+			if( substr($_REQUEST['addpath'], strlen($_REQUEST['addpath'])-1) != DIRECTORY_SEPARATOR ) $_REQUEST['addpath'] .= DIRECTORY_SEPARATOR;
+			
+			// pass file to module
+			db_watch::handle($mysql, $_REQUEST['addpath']);
+			
+			// and reget the full list
+			$watched = db_watch::get($mysql, array(), &$count, &$error);
 	}
 	else
 	{
-		$error = 'Path doesn\'t exist on server.';
+		$error = 'Invalid path.';
 	}
 }
-elseif( isset($_REQUEST['remove']) )
+elseif( isset($_REQUEST['remove']) && is_numeric($_REQUEST['watch']) )
 {
-	$mysql->set('watch', NULL, array('id' => $_REQUEST['watch']));
+	$mysql->query(array('DELETE' => 'watch', 'WHERE' => 'id=' . $_REQUEST['watch']));
 	
 	// and reget the full list
-	$watched = $mysql->get(array('TABLE' => 'watch', 'SELECT' => array('id','Filepath')));
+	$watched = db_watch::get($mysql, array(), &$count, &$error);
 
 	// clear post
 	unset($_REQUEST['addpath']);
