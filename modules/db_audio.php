@@ -109,7 +109,7 @@ class db_audio extends db_file
 			print 'Modifying audio: ' . $file . "\n";
 			
 			// update database
-			$id = $mysql->query(array('UPDATE' => 'audio', 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $audio_id));
+			$id = $mysql->query(array('UPDATE' => db_audio::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $audio_id));
 		
 			return $audio_id;
 		}
@@ -118,7 +118,7 @@ class db_audio extends db_file
 			print 'Adding audio: ' . $file . "\n";
 			
 			// add to database
-			$id = $mysql->query(array('INSERT' => 'audio', 'VALUES' => $fileinfo));
+			$id = $mysql->query(array('INSERT' => db_audio::DATABASE, 'VALUES' => $fileinfo));
 			
 			return $id;
 		}

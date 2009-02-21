@@ -42,8 +42,12 @@ if(isset($_REQUEST['select']))
 		header('Location: ' . $_SERVER['REQUEST_URI']);
 		exit();
 	}
-
-
+	
+	// unset the request stuff because we don't want it to affect what items are retrieved just save it
+	//  to select specific items, the select var should be left off in the query
+	unset($_REQUEST['on']);
+	unset($_REQUEST['off']);
+	unset($_REQUEST['item']);
 }
 
 // add category

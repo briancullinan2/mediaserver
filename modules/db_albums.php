@@ -23,11 +23,6 @@ class db_albums extends db_audio
 	{
 		return array('id', 'SongCount', 'Album', 'Filepath');
 	}
-	
-	static function handles($file)
-	{
-		return false;
-	}
 
 	static function handle($mysql, $file)
 	{

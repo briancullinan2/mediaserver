@@ -1,0 +1,80 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>{$smarty.const.HTML_NAME|@htmlspecialchars}</title>
+{literal}
+<style>
+html, body {
+	margin:0;
+}
+a.big {
+	font-size:16px;
+	display:block;
+	background:#FFF;
+	border-bottom:1px solid #666;
+	font-weight:bold;
+	text-decoration:none;
+	padding:2px;
+	color:#000;
+	font-family:Arial, Helvetica, sans-serif;
+	clear:both;
+}
+a.big.selected {
+	background:#006;
+	color:#FFF;
+}
+</style>
+<script language="javascript">
+function select(id)
+{
+	items[id] = !items[id];
+	if(items[id] == true)
+		document.getElementById('item_'+id).className = "big selected";
+	else
+		document.getElementById('item_'+id).className = "big";
+}
+function go_link()
+{
+	var my_link = '{/literal}/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}query.php?cat={$smarty.request.cat}&select=&on={literal}';
+	for(id in items)
+	{
+		if(items[id] == true)
+			my_link = my_link + id + ',';
+	}
+	window.location = my_link;
+}
+var items = []; // {/literal}
+{section name=file loop=$files}
+{if isset($smarty.session.selected)}
+	{assign var=item_selected value=$files[file].id|in_array:$smarty.session.selected}
+{else}
+	{assign var=item_selected value=false}
+{/if}
+items[{$files[file].id}] = {if $item_selected}true{else}false{/if};
+{/section}
+</script>
+</head>
+<body>
+{if isset($smarty.get.cat)}
+<a href="javascript:go_link();" id="save_link" style="float:left; display:inline; clear:none;" class="big">Save</a><a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}query.php?item=" style="float:left; display:inline; clear:none;" class="big">Clear</a>
+{section name=file loop=$files}
+	{assign var=type_arr value='/'|@split:$files[file].Filemime}
+	{assign var=type value=$type_arr.0}
+	{if isset($smarty.session.selected)}
+		{assign var=item_selected value=$files[file].id|in_array:$smarty.session.selected}
+	{else}
+		{assign var=item_selected value=false}
+	{/if}
+	<a href="javascript:select({$files[file].id});" id="item_{$files[file].id}" class="big{if $item_selected} selected{/if}">{$files[file].Filename} &gt;</a>
+{/section}
+<a href="javascript:go_link();" id="save_link" style="float:left; display:inline; clear:none;" class="big">Save</a><a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}query.php?item=" style="float:left; display:inline; clear:none;" class="big">Clear</a>
+{else}
+{section name=module loop=$modules}
+	{assign var=module_name value=$modules[module]|cat:'::NAME'|@constant}
+	{assign var=cut_off value=$module_name|@strpos:' from'}
+    {if $cut_off != 0} <a href="?cat={$modules[module]}" class="big">{$module_name|@substr:0:$cut_off} &gt;</a> {/if}
+{/section}
+{/if}
+</body>
+</html>

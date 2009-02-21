@@ -124,7 +124,7 @@ class db_diskimage extends db_file
 		if( $image_id != NULL )
 		{
 			print 'Removing disk image: ' . $file . "\n";
-			$mysql->query(array('DELETE' => 'diskimage', 'WHERE' => 'Filepath REGEXP "^' . addslashes(addslashes($file)) . '\\\/"'));
+			$mysql->query(array('DELETE' => db_diskimage::DATABASE, 'WHERE' => 'Filepath REGEXP "^' . addslashes(addslashes($file)) . '\\\/"'));
 		}
 
 		// pull information from $info
@@ -169,7 +169,7 @@ class db_diskimage extends db_file
 						$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['recording_timestamp']);
 						
 						print 'Adding file in disk image: ' . $fileinfo['Filepath'] . "\n";
-						$id = $mysql->query(array('INSERT' => 'diskimage', 'VALUES' => $fileinfo));
+						$id = $mysql->query(array('INSERT' => db_diskimage::DATABASE, 'VALUES' => $fileinfo));
 					}
 				}
 			}
@@ -192,7 +192,7 @@ class db_diskimage extends db_file
 			print 'Modifying Disk Image: ' . $fileinfo['Filepath'] . "\n";
 			
 			// update database
-			$id = $mysql->query(array('UPDATE' => 'diskimage', 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $archive_id));
+			$id = $mysql->query(array('UPDATE' => db_diskimage::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $archive_id));
 		
 			return $audio_id;
 		}
@@ -201,7 +201,7 @@ class db_diskimage extends db_file
 			print 'Adding Disk Image: ' . $fileinfo['Filepath'] . "\n";
 			
 			// add to database
-			$id = $mysql->query(array('INSERT' => 'diskimage', 'VALUES' => $fileinfo));
+			$id = $mysql->query(array('INSERT' => db_diskimage::DATABASE, 'VALUES' => $fileinfo));
 			
 			return $id;
 		}

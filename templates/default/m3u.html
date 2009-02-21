@@ -1,13 +1,13 @@
 {* LIST TEXT "M3U Playlist" *}
 {if !isset($smarty.request.extra)}
 {php}
-global $files, $smarty;
+$files = $this->get_template_vars('files');
 $ids = '';
 foreach($files as $i => $file)
 	$ids .= $file['id'] . ',';
 $ids = substr($ids, 0, strlen($ids)-1);
     
-$smarty->assign('ids', $ids);
+$this->assign('ids', $ids);
 if(!isset($_GET['item']) && !isset($_GET['id']))
 {
 	header('Location: /' . HTML_ROOT . HTML_PLUGINS . 'list/' . $_REQUEST['cat'] . '/' . $ids . '/m3u/list.php');
@@ -28,7 +28,7 @@ Select your audio/video format:<br />
 <br />
 Some files that will be listed: <br />
 {php}
-global $files;
+$files = $this->get_template_vars('files');
 $count = 0;
 foreach($files as $i => $file)
 {

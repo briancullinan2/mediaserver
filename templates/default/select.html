@@ -64,7 +64,7 @@
 		<input type="submit" name="select" value="All" /><input type="submit" name="select" value="None" /><br />
 		<p style="white-space:nowrap">
 		{php}
-		global $files, $smarty;
+        $files = $this->get_template_vars('files');
 		// get the longest column for each row
 		$column_lengths = array();
         if(isset($_SESSION['columns']))
@@ -78,7 +78,7 @@
                 }
             }
         }
-		$smarty->assign('column_lengths', $column_lengths);
+		$this->assign('column_lengths', $column_lengths);
 		{/php}
 		<span class="column">On/Off</span>
 		{foreach from=$smarty.session.columns item=column_value key=column_key}

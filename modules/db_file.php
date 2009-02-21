@@ -100,7 +100,7 @@ class db_file
 			print 'Modifying file: ' . $file . "\n";
 			
 			// update database
-			$id = $mysql->query(array('UPDATE' => 'files', 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $id));
+			$id = $mysql->query(array('UPDATE' => db_file::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $id));
 		
 			return $id;
 		}
@@ -109,7 +109,7 @@ class db_file
 			print 'Adding file: ' . $file . "\n";
 			
 			// add to database
-			$id = $mysql->query(array('INSERT' => 'files', 'VALUES' => $fileinfo));
+			$id = $mysql->query(array('INSERT' => db_file::DATABASE, 'VALUES' => $fileinfo));
 		
 			return $id;
 		}

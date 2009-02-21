@@ -55,7 +55,7 @@ function setup()
 			define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR);
 			if(preg_match('/.*mobile.*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
 			{
-				$_SESSION['template'] = 'default' . DIRECTORY_SEPARATOR;
+				$_SESSION['template'] = 'mobile' . DIRECTORY_SEPARATOR;
 			}
 			// don't set a template, allow them to choose
 		}

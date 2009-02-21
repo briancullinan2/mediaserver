@@ -82,8 +82,6 @@ class sql_global
 		
 		// TODO: should this go here?
 		$this->databases[] = 'alias';
-		$this->databases[] = 'watch';
-		$this->databases[] = 'watch_list';
 	}
 	
 	// install function

@@ -44,7 +44,7 @@ if( isset($_REQUEST['add']) )
 }
 elseif( isset($_REQUEST['remove']) && is_numeric($_REQUEST['watch']) )
 {
-	$mysql->query(array('DELETE' => 'watch', 'WHERE' => 'id=' . $_REQUEST['watch']));
+	$mysql->query(array('DELETE' => db_watch::DATABASE, 'WHERE' => 'id=' . $_REQUEST['watch']));
 	
 	// and reget the full list
 	$watched = db_watch::get($mysql, array(), $count, $error);

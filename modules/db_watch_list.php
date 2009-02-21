@@ -25,7 +25,7 @@ class db_watch_list extends db_watch
 		{
 			// changed directories or directories that don't exist in the database
 			$db_files = $mysql->query(array(
-					'SELECT' => 'files',
+					'SELECT' => db_file::DATABASE,
 					'COLUMNS' => array('id', 'Filedate'),
 					'WHERE' => 'Filepath = "' . addslashes($dir) . '"'
 				)
@@ -97,7 +97,7 @@ class db_watch_list extends db_watch
 				db_watch_list::handle_file($mysql, $dir);
 				
 				// delete the selected folder from the database
-				$mysql->query(array('DELETE' => 'watch_list', 'WHERE' => 'Filepath = "' . addslashes($dir) . '"'));
+				$mysql->query(array('DELETE' => db_watch_list::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($dir) . '"'));
 			}
 		}
 		// check directories recursively
@@ -193,7 +193,7 @@ class db_watch_list extends db_watch
 		flush();
 		
 		// add to database
-		$id = $mysql->query(array('INSERT' => 'watch_list', 'VALUES' => $fileinfo));
+		$id = $mysql->query(array('INSERT' => db_watch_list::DATABASE, 'VALUES' => $fileinfo));
 		
 		return $id;
 		

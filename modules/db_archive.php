@@ -129,7 +129,7 @@ class db_archive extends db_file
 		if( $archive_id != NULL )
 		{
 			print 'Removing archive: ' . $file . "\n";
-			$mysql->query(array('DELETE' => 'archive', 'WHERE' => 'Filepath REGEXP "^' . addslashes(addslashes($file)) . '\\\/"'));
+			$mysql->query(array('DELETE' => db_archive::DATABASE, 'WHERE' => 'Filepath REGEXP "^' . addslashes(addslashes($file)) . '\\\/"'));
 		}
 
 		// pull information from $info
@@ -179,7 +179,7 @@ class db_archive extends db_file
 					$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
 					
 					print 'Adding file in archive: ' . $fileinfo['Filepath'] . "\n";
-					$id = $mysql->query(array('INSERT' => 'archive', 'VALUES' => $fileinfo));
+					$id = $mysql->query(array('INSERT' => db_archive::DATABASE, 'VALUES' => $fileinfo));
 				}
 				
 				// get folders leading up to files
@@ -202,7 +202,7 @@ class db_archive extends db_file
 						$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
 						
 						print 'Adding directory in archive: ' . $fileinfo['Filepath'] . "\n";
-						$id = $mysql->query(array('INSERT' => 'archive', 'VALUES' => $fileinfo));
+						$id = $mysql->query(array('INSERT' => db_archive::DATABASE, 'VALUES' => $fileinfo));
 					}
 				}
 			}
@@ -227,7 +227,7 @@ class db_archive extends db_file
 			print 'Modifying archive: ' . $fileinfo['Filepath'] . "\n";
 			
 			// update database
-			$id = $mysql->query(array('UPDATE' => 'archive', 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $archive_id));
+			$id = $mysql->query(array('UPDATE' => db_archive::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $archive_id));
 		
 			return $audio_id;
 		}
@@ -236,7 +236,7 @@ class db_archive extends db_file
 			print 'Adding archive: ' . $fileinfo['Filepath'] . "\n";
 			
 			// add to database
-			$id = $mysql->query(array('INSERT' => 'archive', 'VALUES' => $fileinfo));
+			$id = $mysql->query(array('INSERT' => db_archive::DATABASE, 'VALUES' => $fileinfo));
 			
 			return $id;
 		}

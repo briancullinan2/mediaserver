@@ -137,7 +137,7 @@ class db_image extends db_file
 			print 'Modifying image: ' . $file . "\n";
 			
 			// update database
-			$id = $mysql->query(array('UPDATE' => 'image', 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $image_id));
+			$id = $mysql->query(array('UPDATE' => db_image::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $image_id));
 		
 			return $audio_id;
 		}
@@ -146,7 +146,7 @@ class db_image extends db_file
 			print 'Adding image: ' . $file . "\n";
 			
 			// add to database
-			$id = $mysql->query(array('INSERT' => 'image', 'VALUES' => $fileinfo));
+			$id = $mysql->query(array('INSERT' => db_image::DATABASE, 'VALUES' => $fileinfo));
 			
 			return $id;
 		}

@@ -71,7 +71,7 @@ class db_watch extends db_file
 		print 'Adding watch: ' . $file . "\n";
 		
 		// add to database
-		$id = $mysql->query(array('INSERT' => 'watch', 'VALUES' => $fileinfo));
+		$id = $mysql->query(array('INSERT' => db_watch::DATABASE, 'VALUES' => $fileinfo));
 		
 		return $id;
 		

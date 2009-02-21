@@ -66,6 +66,8 @@ $state = array();
 // get previous state if it exists
 if( file_exists(LOCAL_ROOT . 'state_dirs.txt') )
 	$state = unserialize(implode("", @file(LOCAL_ROOT . "state_dirs.txt")));
+elseif( file_exists(TMP_DIR . 'state_dirs.txt') )
+	$state = unserialize(implode("", @file(TMP_DIR . "state_dirs.txt")));
 if(!is_array($state))
 	$state = array();
 
@@ -85,7 +87,10 @@ elseif(isset($state_current))
 {
 	// if it isn't set in the watched list at all 
 	//   something must be wrong with our state so reset it
-	if($fp = fopen(LOCAL_ROOT . "state_dirs.txt", "w"))
+	$fp = fopen(LOCAL_ROOT . "state_dirs.txt", "w")
+	if($fp === false) // try tmp dir
+		$fp = fopen(TMP_DIR . "state_dirs.txt", "w")
+	if($fp !== false)
 	{
 		print "State mismatch: State cleared\n";
 		fwrite($fp, '');
@@ -129,7 +134,10 @@ for($i; $i < count($watched); $i++)
 		// clear state information
 		if(file_exists(LOCAL_ROOT . "state_dirs.txt"))
 		{
-			if($fp = fopen(LOCAL_ROOT . "state_dirs.txt", "w"))
+			$fp = fopen(LOCAL_ROOT . "state_dirs.txt", "w")
+			if($fp === false) // try tmp dir
+				$fp = fopen(TMP_DIR . "state_dirs.txt", "w")
+			if($fp !== false)
 			{
 				print "Completed successfully: State cleared\n";
 				fwrite($fp, '');
@@ -138,7 +146,7 @@ for($i; $i < count($watched); $i++)
 		}
 		
 		// set the last updated time in the watched table
-		$mysql->query(array('UPDATE' => 'watch', 'VALUES' => array('Lastwatch' => date("Y-m-d h:i:s")), 'WHERE' => 'Filepath = "' . $watch . '"'));
+		$mysql->query(array('UPDATE' => db_watch::DATABASE, 'VALUES' => array('Lastwatch' => date("Y-m-d h:i:s")), 'WHERE' => 'Filepath = "' . $watch . '"'));
 	}
 	
 	if(isset($_REQUEST['entry']) && is_numeric($_REQUEST['entry']) && $_REQUEST['entry'] < count($watched) && $_REQUEST['entry'] > 0)

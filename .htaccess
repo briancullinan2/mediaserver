@@ -7,6 +7,7 @@
 
 RewriteEngine on
 
+RewriteRule ^plugins/([^/]*)/([^/]*)/([^/]*)$ 							plugins/$1.php?cat=$2&id=$3 [L]
 RewriteRule ^plugins/([^/]*)/([^/]*)/([^/]*)/([^/]*)$ 					plugins/$1.php?cat=$2&id=$3&filename=$4 [L]
 RewriteRule ^plugins/([^/]*)/([^/]*)/([^/]*)/([^/]*)/([^/]*)$ 			plugins/$1.php?cat=$2&id=$3&$1=$4&filename=$5 [L]
 RewriteRule ^plugins/([^/]*)/([^/]*)/([^/]*)/([^/]*)/([^/]*)/([^/]*)$ 	plugins/$1.php?cat=$2&id=$3&$1=$4&extra=$5&filename=$6 [L]
