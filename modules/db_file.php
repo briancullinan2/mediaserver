@@ -323,7 +323,7 @@ class db_file
 			if($error == '')
 			{
 				$props['SELECT'] = constant($module . '::DATABASE');
-				if(isset($props['GROUP'])) $props['COLUMNS'][] = 'count(*)';
+				if(isset($props['GROUP'])) $props['COLUMNS'] = '*,count(*)';
 	
 				// get directory from database
 				$files = $mysql->query($props);

@@ -1,3 +1,6 @@
+2009-02-21
+Find a way to pull out the common file path of all the artists and albums in the db_albums and db_artists module
+
 2009-02-20 (Full)
 Make cleanup faster by having the other modules check if their paths are still in the files database instead?  it is still a lot of queries but would it be faster then checking the file system?
 	maybe instead of string compares, the IDs can be used, this would take some refactoring of each module

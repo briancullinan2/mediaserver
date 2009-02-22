@@ -36,13 +36,17 @@ function select(id)
 }
 function go_link()
 {
-	var my_link = '{/literal}/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}query.php?cat={$smarty.request.cat}&select=&on={literal}';
+	var on = '';
+	var off = '';
+	var my_link = '{/literal}/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}query.php?cat={$smarty.request.cat}&select={literal}';
 	for(id in items)
 	{
 		if(items[id] == true)
-			my_link = my_link + id + ',';
+			on = on + id + ',';
+		else
+			off = off + id + ',';
 	}
-	window.location = my_link;
+	window.location = my_link + '&on=' + on + '&off=' + off;
 }
 var items = []; // {/literal}
 {section name=file loop=$files}
@@ -57,7 +61,8 @@ items[{$files[file].id}] = {if $item_selected}true{else}false{/if};
 </head>
 <body>
 {if isset($smarty.get.cat)}
-<a href="javascript:go_link();" id="save_link" style="float:left; display:inline; clear:none;" class="big">Save</a><a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}query.php?item=" style="float:left; display:inline; clear:none;" class="big">Clear</a>
+{include file=$templates.TEMPLATE_PAGES}
+<a href="javascript:go_link();" id="save_link" class="big">Save to playlist</a>
 {section name=file loop=$files}
 	{assign var=type_arr value='/'|@split:$files[file].Filemime}
 	{assign var=type value=$type_arr.0}
@@ -66,9 +71,10 @@ items[{$files[file].id}] = {if $item_selected}true{else}false{/if};
 	{else}
 		{assign var=item_selected value=false}
 	{/if}
-	<a href="javascript:select({$files[file].id});" id="item_{$files[file].id}" class="big{if $item_selected} selected{/if}">{$files[file].Filename} &gt;</a>
+	<a href="javascript:select({$files[file].id});" id="item_{$files[file].id}" class="big{if $item_selected} selected{/if}">{$files[file].Filename}</a>
 {/section}
-<a href="javascript:go_link();" id="save_link" style="float:left; display:inline; clear:none;" class="big">Save</a><a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}query.php?item=" style="float:left; display:inline; clear:none;" class="big">Clear</a>
+<a href="javascript:go_link();" id="save_link" class="big">Save to playlist</a>
+{include file=$templates.TEMPLATE_PAGES}
 {else}
 {section name=module loop=$modules}
 	{assign var=module_name value=$modules[module]|cat:'::NAME'|@constant}
