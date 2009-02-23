@@ -23,7 +23,9 @@ if(!isset($_SESSION['template']))
 	if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
 		$smarty->display($GLOBALS['templates']['TEMPLATE_INDEX']);
 }
-elseif($_SESSION['template'] == 'default' . DIRECTORY_SEPARATOR)
+// this means they haven't overrides the index template
+// so instead just load query and show that template
+elseif($GLOBALS['templates']['TEMPLATE_INDEX'] == LOCAL_ROOT . LOCAL_DEFAULT . 'index.html')
 {
 	include_once LOCAL_ROOT . 'plugins' . DIRECTORY_SEPARATOR . 'query.php';
 	if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)

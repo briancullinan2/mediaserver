@@ -1,21 +1,28 @@
+2009-02-23
+Finish mobile template.
+Put validation in the statement_builder function, modules just interface with the database, since the database can change why should they have to validate the query?
+
 2009-02-21
 Find a way to pull out the common file path of all the artists and albums in the db_albums and db_artists module
 
 2009-02-20 (Full)
+------------- GENERAL TODO -------------
+Make a class for handling CSV as the database type, make sure all the queries can refer to the statement builder
+File uploading and personal folders
+	Limit access to watch and alias tables after implementing users and permissions
+------------- Plugin TODO -------------
+Implement %IF and %OF options for commands
+Figure out how to download files out of a zip file, maybe use an external program and set up archive.php plugin
+Add support for creating thumbnails in convert.php script
+FIX bt.php plugin to work with command line torrent seeder on windows
+------------- Module TODO -------------
 Make cleanup faster by having the other modules check if their paths are still in the files database instead?  it is still a lot of queries but would it be faster then checking the file system?
 	maybe instead of string compares, the IDs can be used, this would take some refactoring of each module
 Find a solution for adding files that are being browsed immediately, do a check in handles maybe for db_ modules that adds it to the database immediately if it is trying to be accessed?
-Make a class for handling CSV as the database type, make sure all the queries can refer to the statement builder
 Work on db_movies, use cUrl to download movie information from imdb, use the volume decriptor for lookup, this shouldn't change even if they edited an image
 	Research the video_ts.ifo file, there must be a way of getting the full name from a DVD image, windows media center projects can do it, so can we
-Implement %IF and %OF options for commands
-Figure out how to download files out of a zip file, maybe use an external program and set up archive.php plugin
+------------- All Template TODO -------------
 FIX detail options in default template
-Add support for creating thumbnails in convert.php script
-File uploading and personal folders
-	Limit access to watch and alias tables after implementing users and permissions
-FIX bt.php plugin to work with command line torrent seeder on windows
-------------- All Template stuff -------------
 Fix pretty dir paths to not be used when mod_rewrite is not used
 Add podcast list template
 Work on finishing EXT JS template, and add more templates from Ampache, Jinzora, and WinAmp Remote
