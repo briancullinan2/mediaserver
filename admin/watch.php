@@ -19,9 +19,9 @@ else
 $error = '';
 
 // get the current list of watches
-$mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+$database = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 
-$watched = db_watch::get($mysql, array(), $count, $error);
+$watched = db_watch::get($database, array(), $count, $error);
 
 if( isset($_REQUEST['add']) )
 {
@@ -30,10 +30,10 @@ if( isset($_REQUEST['add']) )
 	if(db_watch::handles($_REQUEST['addpath']))
 	{
 			// pass file to module
-			db_watch::handle($mysql, $_REQUEST['addpath']);
+			db_watch::handle($database, $_REQUEST['addpath']);
 			
 			// and reget the full list
-			$watched = db_watch::get($mysql, array(), $count, $error);
+			$watched = db_watch::get($database, array(), $count, $error);
 			
 			unset($_REQUEST['addpath']);
 	}
@@ -44,10 +44,10 @@ if( isset($_REQUEST['add']) )
 }
 elseif( isset($_REQUEST['remove']) && is_numeric($_REQUEST['watch']) )
 {
-	$mysql->query(array('DELETE' => db_watch::DATABASE, 'WHERE' => 'id=' . $_REQUEST['watch']));
+	$database->query(array('DELETE' => db_watch::DATABASE, 'WHERE' => 'id=' . $_REQUEST['watch']));
 	
 	// and reget the full list
-	$watched = db_watch::get($mysql, array(), $count, $error);
+	$watched = db_watch::get($database, array(), $count, $error);
 
 	// clear post
 	unset($_REQUEST['addpath']);

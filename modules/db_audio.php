@@ -40,12 +40,12 @@ class db_audio extends db_file
 
 	}
 
-	static function handle($mysql, $file)
+	static function handle($database, $file)
 	{
 		if(db_audio::handles($file))
 		{
 			// check to see if it is in the database
-			$db_audio = $mysql->query(array(
+			$db_audio = $database->query(array(
 					'SELECT' => db_audio::DATABASE,
 					'COLUMNS' => 'id',
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
@@ -55,12 +55,12 @@ class db_audio extends db_file
 			// try to get music information
 			if( count($db_audio) == 0 )
 			{
-				$fileid = db_audio::add($mysql, $file);
+				$fileid = db_audio::add($database, $file);
 			}
 			else
 			{
 				// check to see if the file was changed
-				$db_file = $mysql->query(array(
+				$db_file = $database->query(array(
 						'SELECT' => db_file::DATABASE,
 						'COLUMNS' => 'Filedate',
 						'WHERE' => 'Filepath = "' . addslashes($file) . '"'
@@ -70,7 +70,7 @@ class db_audio extends db_file
 				// update audio if modified date has changed
 				if( date("Y-m-d h:i:s", filemtime($file)) != $db_file[0]['Filedate'] )
 				{
-					$id = db_audio::add($mysql, $file, $db_audio[0]['id']);
+					$id = db_audio::add($database, $file, $db_audio[0]['id']);
 				}
 				
 			}
@@ -99,7 +99,7 @@ class db_audio extends db_file
 		return $fileinfo;
 	}
 
-	static function add($mysql, $file, $audio_id = NULL)
+	static function add($database, $file, $audio_id = NULL)
 	{
 		// pull information from $info
 		$fileinfo = db_audio::getInfo($file);
@@ -109,7 +109,7 @@ class db_audio extends db_file
 			print 'Modifying audio: ' . $file . "\n";
 			
 			// update database
-			$id = $mysql->query(array('UPDATE' => db_audio::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $audio_id));
+			$id = $database->query(array('UPDATE' => db_audio::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $audio_id));
 		
 			return $audio_id;
 		}
@@ -118,7 +118,7 @@ class db_audio extends db_file
 			print 'Adding audio: ' . $file . "\n";
 			
 			// add to database
-			$id = $mysql->query(array('INSERT' => db_audio::DATABASE, 'VALUES' => $fileinfo));
+			$id = $database->query(array('INSERT' => db_audio::DATABASE, 'VALUES' => $fileinfo));
 			
 			return $id;
 		}
@@ -128,16 +128,16 @@ class db_audio extends db_file
 	}
 	
 	
-	static function get($mysql, $request, &$count, &$error)
+	static function get($database, $request, &$count, &$error)
 	{
-		return parent::get($mysql, $request, $count, $error, get_class());
+		return parent::get($database, $request, $count, $error, get_class());
 	}
 
 
-	static function cleanup($mysql, $watched, $ignored)
+	static function cleanup($database, $watched, $ignored)
 	{
 		// call default cleanup function
-		parent::cleanup($mysql, $watched, $ignored, get_class());
+		parent::cleanup($database, $watched, $ignored, get_class());
 	}
 
 }

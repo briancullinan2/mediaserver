@@ -13,8 +13,7 @@ define('FILE_SEEK_TIME', 		   30);
 define('CLEAN_UP_BUFFER_TIME',				45);
 
 // add 30 seconds becase the cleanup shouldn't take any longer then that
-set_time_limit( DIRECTORY_SEEK_TIME + FILE_SEEK_TIME + CLEAN_UP_BUFFER_TIME);
-
+set_time_limit(DIRECTORY_SEEK_TIME + FILE_SEEK_TIME + CLEAN_UP_BUFFER_TIME);
 
 $tm_start = array_sum(explode(' ', microtime()));
 
@@ -35,10 +34,10 @@ if(USE_DATABASE == false)
 	exit;
 
 // get the directories to watch from the watch database
-$mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+$database = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 
 // get the watched directories
-$watched_list = db_watch::get($mysql, array(), $count, $error);
+$watched_list = db_watch::get($database, array(), $count, $error);
 
 print_r($watched_list);
 
@@ -87,9 +86,9 @@ elseif(isset($state_current))
 {
 	// if it isn't set in the watched list at all 
 	//   something must be wrong with our state so reset it
-	$fp = fopen(LOCAL_ROOT . "state_dirs.txt", "w")
+	$fp = fopen(LOCAL_ROOT . "state_dirs.txt", "w");
 	if($fp === false) // try tmp dir
-		$fp = fopen(TMP_DIR . "state_dirs.txt", "w")
+		$fp = fopen(TMP_DIR . "state_dirs.txt", "w");
 	if($fp !== false)
 	{
 		print "State mismatch: State cleared\n";
@@ -109,7 +108,7 @@ for($i; $i < count($watched); $i++)
 {
 	$watch = '^' . $watched[$i];
 
-	$status = db_watch::handle($mysql, $watch);
+	$status = db_watch::handle($database, $watch);
 
 	// if exited because of time, then save state
 	if( $status === false )
@@ -134,9 +133,9 @@ for($i; $i < count($watched); $i++)
 		// clear state information
 		if(file_exists(LOCAL_ROOT . "state_dirs.txt"))
 		{
-			$fp = fopen(LOCAL_ROOT . "state_dirs.txt", "w")
+			$fp = fopen(LOCAL_ROOT . "state_dirs.txt", "w");
 			if($fp === false) // try tmp dir
-				$fp = fopen(TMP_DIR . "state_dirs.txt", "w")
+				$fp = fopen(TMP_DIR . "state_dirs.txt", "w");
 			if($fp !== false)
 			{
 				print "Completed successfully: State cleared\n";
@@ -146,7 +145,7 @@ for($i; $i < count($watched); $i++)
 		}
 		
 		// set the last updated time in the watched table
-		$mysql->query(array('UPDATE' => db_watch::DATABASE, 'VALUES' => array('Lastwatch' => date("Y-m-d h:i:s")), 'WHERE' => 'Filepath = "' . $watch . '"'));
+		$database->query(array('UPDATE' => db_watch::DATABASE, 'VALUES' => array('Lastwatch' => date("Y-m-d h:i:s")), 'WHERE' => 'Filepath = "' . $watch . '"'));
 	}
 	
 	if(isset($_REQUEST['entry']) && is_numeric($_REQUEST['entry']) && $_REQUEST['entry'] < count($watched) && $_REQUEST['entry'] > 0)
@@ -155,7 +154,7 @@ for($i; $i < count($watched); $i++)
 print "Phase 1: Complete!\n";
 
 // clean up the watch_list and remove stuff that doesn't exist in watch anymore
-db_watch_list::cleanup($mysql, $watched, $ignored);
+db_watch_list::cleanup($database, $watched, $ignored);
 
 // now scan some files
 $tm_start = array_sum(explode(' ', microtime()));
@@ -165,17 +164,20 @@ print "Phase 2: Checking modified directories for modified files\n";
 do
 {
 	// get 1 folder from the database to search the files for
-	$db_dirs = db_watch_list::get($mysql, array('limit' => 1), $count, $error);
+	$db_dirs = db_watch_list::get($database, array('limit' => 1), $count, $error);
 	
 	if(count($db_dirs) > 0)
 	{
 		$dir = $db_dirs[0]['Filepath'];
 		
-		$status = db_watch_list::handle($mysql, $dir);
+		$status = db_watch_list::handle($database, $dir);
 	}
 
 	// check if execution time is too long
 	$secs_total = array_sum(explode(' ', microtime())) - $tm_start;
+	
+	if($secs_total > FILE_SEEK_TIME)
+		print "Ran out of Time: Changed directories still in database\n";
 	
 	flush();
 	
@@ -191,7 +193,7 @@ print "Phase 3: Cleaning up\n";
 foreach($GLOBALS['modules'] as $i => $module)
 {
 	if($module != 'fs_file')
-		call_user_func_array($module . '::cleanup', array($mysql, $watched, $ignored));
+		call_user_func_array($module . '::cleanup', array($database, $watched, $ignored));
 }
 
 // read all the folders that lead up to the watched folder
@@ -221,12 +223,12 @@ for($i = 0; $i < count($watched); $i++)
 				$between = true;
 				// if the USE_ALIAS is true this will only add the folder
 				//    if it is in the list of aliases
-				db_watch_list::handle_file($mysql, $curr_dir);
+				db_watch_list::handle_file($database, $curr_dir);
 			}
 			// but make an exception for folders between an alias and the watch path
 			elseif(USE_ALIAS && $between)
 			{
-				db_watch_list::handle_file($mysql, $curr_dir);
+				db_watch_list::handle_file($database, $curr_dir);
 			}
 		}
 	}

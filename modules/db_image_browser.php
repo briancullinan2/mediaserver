@@ -39,12 +39,12 @@ class db_image_browser extends db_image
 	}
 	
 	// output provided file to given stream
-	static function out($mysql, $file, $stream)
+	static function out($database, $file, $stream)
 	{
 		// check to make sure file is valid
 		if(is_file($file))
 		{
-			$files = $mysql->query(array('SELECT' => db_file::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
+			$files = $database->query(array('SELECT' => db_file::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
 			if(count($file) > 0)
 			{				
 				$file = $files[0];
@@ -73,12 +73,12 @@ class db_image_browser extends db_image
 		return false;
 	}
 	
-	static function handle($mysql, $file)
+	static function handle($database, $file)
 	{
 	}
 	
 
-	static function cleanup($mysql, $watched)
+	static function cleanup($database, $watched)
 	{
 	}
 }

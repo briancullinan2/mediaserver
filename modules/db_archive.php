@@ -66,7 +66,7 @@ class db_archive extends db_file
 
 	}
 
-	static function handle($mysql, $file)
+	static function handle($database, $file)
 	{
 		$paths = split('\\' . DIRECTORY_SEPARATOR, $file);
 		$last_path = '';
@@ -88,7 +88,7 @@ class db_archive extends db_file
 		if(db_archive::handles($file))
 		{
 			// check to see if it is in the database
-			$db_archive = $mysql->query(array(
+			$db_archive = $database->query(array(
 					'SELECT' => db_archive::DATABASE,
 					'COLUMNS' => 'id',
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
@@ -98,12 +98,12 @@ class db_archive extends db_file
 			// try to get music information
 			if( count($db_archive) == 0 )
 			{
-				$fileid = db_archive::add($mysql, $file);
+				$fileid = db_archive::add($database, $file);
 			}
 			else
 			{
 				// check to see if the file was changed
-				$db_file = $mysql->query(array(
+				$db_file = $database->query(array(
 						'SELECT' => db_file::DATABASE,
 						'COLUMNS' => 'Filedate',
 						'WHERE' => 'Filepath = "' . addslashes($file) . '"'
@@ -113,7 +113,7 @@ class db_archive extends db_file
 				// update audio if modified date has changed
 				if( date("Y-m-d h:i:s", filemtime($file)) != $db_file[0]['Filedate'] )
 				{
-					$id = db_archive::add($mysql, $file, $db_archive[0]['id']);
+					$id = db_archive::add($database, $file, $db_archive[0]['id']);
 				}
 				
 			}
@@ -122,14 +122,14 @@ class db_archive extends db_file
 		
 	}
 
-	static function add($mysql, $file, $archive_id = NULL)
+	static function add($database, $file, $archive_id = NULL)
 	{
 		// do a little cleanup here
 		// if the archive changes remove all it's inside files from the database
 		if( $archive_id != NULL )
 		{
 			print 'Removing archive: ' . $file . "\n";
-			$mysql->query(array('DELETE' => db_archive::DATABASE, 'WHERE' => 'Filepath REGEXP "^' . addslashes(addslashes($file)) . '\\\/"'));
+			$database->query(array('DELETE' => db_archive::DATABASE, 'WHERE' => 'Filepath REGEXP "^' . addslashes(preg_quote($file)) . '\\\/"'));
 		}
 
 		// pull information from $info
@@ -179,7 +179,7 @@ class db_archive extends db_file
 					$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
 					
 					print 'Adding file in archive: ' . $fileinfo['Filepath'] . "\n";
-					$id = $mysql->query(array('INSERT' => db_archive::DATABASE, 'VALUES' => $fileinfo));
+					$id = $database->query(array('INSERT' => db_archive::DATABASE, 'VALUES' => $fileinfo));
 				}
 				
 				// get folders leading up to files
@@ -202,7 +202,7 @@ class db_archive extends db_file
 						$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
 						
 						print 'Adding directory in archive: ' . $fileinfo['Filepath'] . "\n";
-						$id = $mysql->query(array('INSERT' => db_archive::DATABASE, 'VALUES' => $fileinfo));
+						$id = $database->query(array('INSERT' => db_archive::DATABASE, 'VALUES' => $fileinfo));
 					}
 				}
 			}
@@ -212,7 +212,7 @@ class db_archive extends db_file
 		$fileinfo = array();
 		$fileinfo['Filepath'] = $last_path;
 		$fileinfo['Filename'] = basename($last_path);
-		$fileinfo['Compressed'] = $info['filesize'];
+		$fileinfo['Compressed'] = filesize($last_path);
 		$fileinfo['Filetype'] = getFileType($last_path);
 		if(isset($info['zip']) && isset($info['zip']['uncompressed_size']))
 			$fileinfo['Filesize'] = $info['zip']['uncompressed_size'];
@@ -227,7 +227,7 @@ class db_archive extends db_file
 			print 'Modifying archive: ' . $fileinfo['Filepath'] . "\n";
 			
 			// update database
-			$id = $mysql->query(array('UPDATE' => db_archive::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $archive_id));
+			$id = $database->query(array('UPDATE' => db_archive::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $archive_id));
 		
 			return $audio_id;
 		}
@@ -236,7 +236,7 @@ class db_archive extends db_file
 			print 'Adding archive: ' . $fileinfo['Filepath'] . "\n";
 			
 			// add to database
-			$id = $mysql->query(array('INSERT' => db_archive::DATABASE, 'VALUES' => $fileinfo));
+			$id = $database->query(array('INSERT' => db_archive::DATABASE, 'VALUES' => $fileinfo));
 			
 			return $id;
 		}
@@ -245,7 +245,7 @@ class db_archive extends db_file
 		
 	}
 
-	static function out($mysql, $file, $stream)
+	static function out($database, $file, $stream)
 	{
 		$paths = split('\\' . DIRECTORY_SEPARATOR, $file);
 		$last_path = '';
@@ -264,7 +264,7 @@ class db_archive extends db_file
 
 		if(is_file($last_path))
 		{
-			$files = $mysql->query(array('SELECT' => db_archive::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
+			$files = $database->query(array('SELECT' => db_archive::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
 			if(count($file) > 0)
 			{				
 				header('Content-Transfer-Encoding: binary');
@@ -296,7 +296,7 @@ class db_archive extends db_file
 		return false;
 	}
 	
-	static function get($mysql, $request, &$count, &$error)
+	static function get($database, $request, &$count, &$error)
 	{
 		if(isset($request['dir']))
 		{
@@ -328,7 +328,7 @@ class db_archive extends db_file
 			}
 		}
 		
-		$files = db_file::get($mysql, $request, $count, $error, 'db_archive');
+		$files = db_file::get($database, $request, $count, $error, 'db_archive');
 		
 		return $files;
 	}
@@ -353,16 +353,16 @@ class db_archive extends db_file
 
 		if( !file_exists($last_path) )
 		{
-			$args['CONNECTION']->query(array('DELETE' => constant($args['MODULE'] . '::DATABASE'), 'WHERE' => 'Filepath REGEXP "' . addslashes(addslashes($row['Filepath'])) . '\\\/" OR Filepath = "' . addslashes($row['Filepath']) . '"'));
+			$args['CONNECTION']->query(array('DELETE' => constant($args['MODULE'] . '::DATABASE'), 'WHERE' => 'Filepath REGEXP "' . addslashes(preg_quote($row['Filepath'])) . '\\\/" OR Filepath = "' . addslashes(preg_quote($row['Filepath'])) . '"'));
 			
 			print 'Removing ' . constant($args['MODULE'] . '::NAME') . ': ' . $row['Filepath'] . "\n";
 		}
 	}
 
-	static function cleanup($mysql, $watched, $ignored)
+	static function cleanup($database, $watched, $ignored)
 	{
 		// call default cleanup function
-		parent::cleanup($mysql, $watched, $ignored, get_class());
+		parent::cleanup($database, $watched, $ignored, get_class());
 	}
 }
 

@@ -35,7 +35,7 @@ class db_file
 	}
 	
 	// this function determines if the file qualifies for this type and handles it according
-	static function handle($mysql, $file)
+	static function handle($database, $file)
 	{
 		// files always qualify, we are going to log every single one!
 		
@@ -43,7 +43,7 @@ class db_file
 		{
 			
 			// check if it is in the database
-			$db_file = $mysql->query(array(
+			$db_file = $database->query(array(
 					'SELECT' => db_file::DATABASE,
 					'COLUMNS' => array('id', 'Filedate'),
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
@@ -53,14 +53,14 @@ class db_file
 			if( count($db_file) == 0 )
 			{
 				// always add to file database
-				$id = db_file::add($mysql, $file);
+				$id = db_file::add($database, $file);
 			}
 			else
 			{
 				// update file if modified date has changed
 				if( date("Y-m-d h:i:s", filemtime($file)) != $db_file[0]['Filedate'] )
 				{
-					$id = db_file::add($mysql, $file, $db_file[0]['id']);
+					$id = db_file::add($database, $file, $db_file[0]['id']);
 				}
 				else
 				{
@@ -89,7 +89,7 @@ class db_file
 	// add a given file to the given database
 	// returns the id of the entry
 	// if the id is given then it updates the entry
-	static function add($mysql, $file, $id = NULL)
+	static function add($database, $file, $id = NULL)
 	{
 		// get file information
 		$fileinfo = db_file::getInfo($file);
@@ -100,7 +100,7 @@ class db_file
 			print 'Modifying file: ' . $file . "\n";
 			
 			// update database
-			$id = $mysql->query(array('UPDATE' => db_file::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $id));
+			$id = $database->query(array('UPDATE' => db_file::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $id));
 		
 			return $id;
 		}
@@ -109,7 +109,7 @@ class db_file
 			print 'Adding file: ' . $file . "\n";
 			
 			// add to database
-			$id = $mysql->query(array('INSERT' => db_file::DATABASE, 'VALUES' => $fileinfo));
+			$id = $database->query(array('INSERT' => db_file::DATABASE, 'VALUES' => $fileinfo));
 		
 			return $id;
 		}
@@ -120,12 +120,12 @@ class db_file
 	}
 	
 	// output provided file to given stream
-	static function out($mysql, $file, $stream)
+	static function out($database, $file, $stream)
 	{
 		// check to make sure file is valid
 		if(is_file($file))
 		{
-			$files = $mysql->query(array('SELECT' => db_file::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
+			$files = $database->query(array('SELECT' => db_file::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
 			if(count($file) > 0)
 			{				
 				$file = $files[0];
@@ -161,7 +161,7 @@ class db_file
 	// if the mysql is provided, then the file listings will be loaded from the database
 	// this is a very generalized module to provide a template for overriding, or for other modules to modify the $request and pass to this one
 	//  other modules are responsible for any validation of input that is not listed here, like making sure files exist on the filesystem
-	static function get($mysql, $request, &$count, &$error, $module = NULL)
+	static function get($database, $request, &$count, &$error, $module = NULL)
 	{
 		if( $module == NULL )
 		{
@@ -173,24 +173,7 @@ class db_file
 		if(USE_DATABASE)
 		{
 			// do validation! for the fields we use
-			if( !isset($request['start']) || !is_numeric($request['start']) || $request['start'] < 0 )
-				$request['start'] = 0;
-			if( !isset($request['limit']) || !is_numeric($request['limit']) || $request['limit'] < 0 )
-				$request['limit'] = 15;
-			if( !isset($request['order_by']) || !in_array($request['order_by'], call_user_func($module . '::columns')) )
-				$request['order_by'] = 'Filepath';
-			if( !isset($request['direction']) || ($request['direction'] != 'ASC' && $request['direction'] != 'DESC') )
-				$request['direction'] = 'ASC';
-			if( isset($request['id']) )
-				$request['item'] = $request['id'];
-			if( isset($request['group_by']) && !in_array($request['group_by'], call_user_func($module . '::columns')) )
-				unset($request['group_by']);
-			getIDsFromRequest($request, $request['selected']);
-
-			$props = array();
-			if(isset($request['group_by'])) $props['GROUP'] = $request['group_by'];
-			$props['ORDER'] = $request['order_by'] . ' ' . $request['direction'];
-			$props['LIMIT'] = $request['start'] . ',' . $request['limit'];
+			$database->validate($request, $props, $module);
 
 			// select an array of ids!
 			if(isset($request['selected']) && count($request['selected']) > 0 )
@@ -224,7 +207,7 @@ class db_file
 				
 				// incase an aliased path is being searched for replace it here too!
 				if(USE_ALIAS == true) $request['includes'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['includes']);
-				$regexp = addslashes(addslashes($request['includes']));
+				$regexp = addslashes($request['includes']);
 				
 				$columns = call_user_func($module . '::columns');
 				// add a regular expression matching for each column in the table being searched
@@ -253,13 +236,13 @@ class db_file
 				{
 				
 					// make sure directory is in the database
-					$dirs = $mysql->query(array('SELECT' => constant($module . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
+					$dirs = $database->query(array('SELECT' => constant($module . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
 					
 					// check the file database, some modules use their own database to store special paths,
 					//  while other modules only store files and no directories, but these should still be searchable paths
 					//  in which case the module is responsible for validation of it's own paths
 					if(count($dirs) == 0)
-						$dirs = $mysql->query(array('SELECT' => db_file::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
+						$dirs = $database->query(array('SELECT' => db_file::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
 					
 					// top level directory / should always exist
 					if($request['dir'] == realpath('/') || count($dirs) > 0)
@@ -271,17 +254,17 @@ class db_file
 						if(!isset($request['includes']))
 						{
 							if(isset($request['dirs_only']))
-								$props['WHERE'] .= 'Filepath REGEXP "^' . addslashes(addslashes($request['dir'])) . '[^' . addslashes(addslashes(DIRECTORY_SEPARATOR)) . ']+' . addslashes(addslashes(DIRECTORY_SEPARATOR)) . '$"';
+								$props['WHERE'] .= 'Filepath REGEXP "^' . addslashes(preg_quote($request['dir'])) . '[^' . addslashes(preg_quote(DIRECTORY_SEPARATOR)) . ']+' . addslashes(preg_quote(DIRECTORY_SEPARATOR)) . '$"';
 							else
-								$props['WHERE'] .= 'Filepath REGEXP "^' . addslashes(addslashes($request['dir'])) . '[^' . addslashes(addslashes(DIRECTORY_SEPARATOR)) . ']+' . addslashes(addslashes(DIRECTORY_SEPARATOR)) . '?$"';
+								$props['WHERE'] .= 'Filepath REGEXP "^' . addslashes(preg_quote($request['dir'])) . '[^' . addslashes(preg_quote(DIRECTORY_SEPARATOR)) . ']+' . addslashes(preg_quote(DIRECTORY_SEPARATOR)) . '?$"';
 						}
 						// show all results underneath directory
 						else
 						{
 							if(isset($request['dirs_only']))
-								$props['WHERE'] .= 'Filepath REGEXP "^' . addslashes(addslashes($request['dir'])) . '([^' . addslashes(addslashes(DIRECTORY_SEPARATOR)) . ']+' . addslashes(addslashes(DIRECTORY_SEPARATOR)) . ')*$"';
+								$props['WHERE'] .= 'Filepath REGEXP "^' . addslashes(preg_quote($request['dir'])) . '([^' . addslashes(preg_quote(DIRECTORY_SEPARATOR)) . ']+' . addslashes(preg_quote(DIRECTORY_SEPARATOR)) . ')*$"';
 							else
-								$props['WHERE'] .= 'Filepath REGEXP "^' . addslashes(addslashes($request['dir'])) . '"';
+								$props['WHERE'] .= 'Filepath REGEXP "^' . addslashes(preg_quote($request['dir'])) . '"';
 						}
 					}
 					else
@@ -326,14 +309,14 @@ class db_file
 				if(isset($props['GROUP'])) $props['COLUMNS'] = '*,count(*)';
 	
 				// get directory from database
-				$files = $mysql->query($props);
+				$files = $database->query($props);
 				
 				// this is how we get the count of all the items
 				unset($props['LIMIT']);
-				$props = array('SELECT' => '(' . $mysql->statement_builder($props) . ') AS db_to_count');
+				$props = array('SELECT' => '(' . SQL::statement_builder($props) . ') AS db_to_count');
 				$props['COLUMNS'] = 'count(*)';
 				
-				$result = $mysql->query($props);
+				$result = $database->query($props);
 				
 				$count = intval($result[0]['count(*)']);
 			}
@@ -369,7 +352,7 @@ class db_file
 	
 	
 	// cleanup the non-existant files
-	static function cleanup($mysql, $watched, $ignored, $module = NULL)
+	static function cleanup($database, $watched, $ignored, $module = NULL)
 	{
 		if( $module == NULL )
 		{
@@ -382,7 +365,7 @@ class db_file
 		foreach($watched as $i => $watch)
 		{
 			// add the files that begin with a path from a watch directory
-			$where_str .= ' Filepath REGEXP "^' . addslashes(addslashes($watch)) . '" OR';
+			$where_str .= ' Filepath REGEXP "^' . addslashes(preg_quote($watch)) . '" OR';
 		}
 		// but keep the ones leading up to watched directories
 		// ----------THIS IS THE SAME FUNCTIONALITY FROM THE CRON.PHP SCRIPT
@@ -436,19 +419,19 @@ class db_file
 		// clean up items that are in the ignore list
 		foreach($ignored as $i => $ignore)
 		{
-			$where_str = 'Filepath REGEXP "^' . addslashes(addslashes($ignore)) . '" OR ' . $where_str;
+			$where_str = 'Filepath REGEXP "^' . addslashes(preg_quote($ignore)) . '" OR ' . $where_str;
 		}
 		
 		// remove items
-		$mysql->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => $where_str));
+		$database->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => $where_str));
 
 		// get count 
-		$result = $mysql->query(array('SELECT' => constant($module . '::DATABASE'), 'COLUMNS' => 'count(*)'));
+		$result = $database->query(array('SELECT' => constant($module . '::DATABASE'), 'COLUMNS' => 'count(*)'));
 		$total = $result[0]['count(*)'];
 		$count = 0;
 
 		// since all the ones not apart of a watched directory is removed, now just check is every file still in the database exists on disk
-		$mysql->query(array(
+		$database->query(array(
 			'SELECT' => constant($module . '::DATABASE'), 
 			'CALLBACK' => array(
 				'FUNCTION' => function_exists($module . '::cleanup_remove')?$module . '::cleanup_remove':'db_file::cleanup_remove',
@@ -457,7 +440,7 @@ class db_file
 		));
 				
 		// remove any duplicates
-		$files = $mysql->query(array(
+		$files = $database->query(array(
 				'SELECT' => constant($module . '::DATABASE'),
 				'COLUMNS' => array('MIN(id) as id', 'Filepath', 'COUNT(*) as num'),
 				'GROUP' => 'Filepath',
@@ -468,7 +451,7 @@ class db_file
 		// remove first item from all duplicates
 		foreach($files as $i => $file)
 		{
-			$mysql->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => 'id=' . $file['id']));
+			$database->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => 'id=' . $file['id']));
 			
 			print 'Removing ' . constant($module . '::NAME') . ': ' . $file['Filepath'] . "\n";
 		}

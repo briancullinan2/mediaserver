@@ -34,14 +34,14 @@ class db_watch extends db_file
 		return false;
 	}
 
-	static function handle($mysql, $file)
+	static function handle($database, $file)
 	{
 		if(db_watch::handles($file))
 		{
 			// add ending backslash
 			if( substr($file, strlen($file)-1) != DIRECTORY_SEPARATOR ) $file .= DIRECTORY_SEPARATOR;
 			
-			$db_watch = $mysql->query(array(
+			$db_watch = $database->query(array(
 					'SELECT' => db_watch::DATABASE,
 					'COLUMNS' => array('id'),
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
@@ -50,19 +50,19 @@ class db_watch extends db_file
 			
 			if( count($db_watch) == 0 )
 			{
-				$id = db_watch::add($mysql, $file);
+				$id = db_watch::add($database, $file);
 			}
 			else
 			{
 				// just pass the first directories to watch_list module
-				return db_watch_list::handle($mysql, substr($file, 1));
+				return db_watch_list::handle($database, substr($file, 1));
 			}
 			
 		}
 		
 	}
 	
-	static function add($mysql, $file)
+	static function add($database, $file)
 	{
 		// pull information from $info
 		$fileinfo = array();
@@ -71,7 +71,7 @@ class db_watch extends db_file
 		print 'Adding watch: ' . $file . "\n";
 		
 		// add to database
-		$id = $mysql->query(array('INSERT' => db_watch::DATABASE, 'VALUES' => $fileinfo));
+		$id = $database->query(array('INSERT' => db_watch::DATABASE, 'VALUES' => $fileinfo));
 		
 		return $id;
 		
@@ -79,20 +79,20 @@ class db_watch extends db_file
 		
 	}
 	
-	static function get($mysql, $request, &$count, &$error)
+	static function get($database, $request, &$count, &$error)
 	{
-		return parent::get($mysql, $request, $count, $error, get_class());
+		return parent::get($database, $request, $count, $error, get_class());
 	}
 	
-	static function cleanup($mysql, $watched, $ignored)
+	static function cleanup($database, $watched, $ignored)
 	{
-		$watched = $mysql->query(array('SELECT' => db_watch::DATABASE, 'COLUMNS' => 'id, Filepath'));
+		$watched = $database->query(array('SELECT' => db_watch::DATABASE, 'COLUMNS' => 'id, Filepath'));
 		
 		foreach($watched as $i => $watch)
 		{
 			if(!is_dir(substr($watch['Filepath'], 1)))
 			{
-				$mysql->query(array('DELETE' => db_watch::DATABASE, 'WHERE' => 'id=' . $watch['id']));
+				$database->query(array('DELETE' => db_watch::DATABASE, 'WHERE' => 'id=' . $watch['id']));
 			}
 		}
 	}

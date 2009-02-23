@@ -31,17 +31,17 @@ class fs_playlist extends fs_file
 
 	}
 
-	static function handle($mysql, $file)
+	static function handle($database, $file)
 	{
 	}
 	
-	static function get($mysql, $props)
+	static function get($database, $props)
 	{
 		return array();
 	}
 
 
-	static function cleanup($mysql, $watched)
+	static function cleanup($database, $watched)
 	{
 	}
 }

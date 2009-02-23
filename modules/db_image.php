@@ -54,13 +54,13 @@ class db_image extends db_file
 
 	}
 
-	static function handle($mysql, $file)
+	static function handle($database, $file)
 	{
 
 		if(db_image::handles($file))
 		{
 			// check to see if it is in the database
-			$db_image = $mysql->query(array(
+			$db_image = $database->query(array(
 					'SELECT' => db_image::DATABASE,
 					'COLUMNS' => 'id',
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
@@ -70,12 +70,12 @@ class db_image extends db_file
 			// try to get music information
 			if( count($db_image) == 0 )
 			{
-				$fileid = db_image::add($mysql, $file);
+				$fileid = db_image::add($database, $file);
 			}
 			else
 			{
 				// check to see if the file was changed
-				$db_file = $mysql->query(array(
+				$db_file = $database->query(array(
 						'SELECT' => db_file::DATABASE,
 						'COLUMNS' => 'Filedate',
 						'WHERE' => 'Filepath = "' . addslashes($file) . '"'
@@ -85,7 +85,7 @@ class db_image extends db_file
 				// update audio if modified date has changed
 				if( date("Y-m-d h:i:s", filemtime($file)) != $db_file[0]['Filedate'] )
 				{
-					$id = db_image::add($mysql, $file, $db_image[0]['id']);
+					$id = db_image::add($database, $file, $db_image[0]['id']);
 				}
 				
 			}
@@ -128,7 +128,7 @@ class db_image extends db_file
 		return $fileinfo;
 	}
 
-	static function add($mysql, $file, $image_id = NULL)
+	static function add($database, $file, $image_id = NULL)
 	{
 		$fileinfo = db_image::getInfo($file);
 	
@@ -137,7 +137,7 @@ class db_image extends db_file
 			print 'Modifying image: ' . $file . "\n";
 			
 			// update database
-			$id = $mysql->query(array('UPDATE' => db_image::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $image_id));
+			$id = $database->query(array('UPDATE' => db_image::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $image_id));
 		
 			return $audio_id;
 		}
@@ -146,7 +146,7 @@ class db_image extends db_file
 			print 'Adding image: ' . $file . "\n";
 			
 			// add to database
-			$id = $mysql->query(array('INSERT' => db_image::DATABASE, 'VALUES' => $fileinfo));
+			$id = $database->query(array('INSERT' => db_image::DATABASE, 'VALUES' => $fileinfo));
 			
 			return $id;
 		}
@@ -187,16 +187,16 @@ class db_image extends db_file
 	}
 	
 	
-	static function get($mysql, $request, &$count, &$error)
+	static function get($database, $request, &$count, &$error)
 	{
-		return parent::get($mysql, $request, $count, $error, get_class());
+		return parent::get($database, $request, $count, $error, get_class());
 	}
 
 	
-	static function cleanup($mysql, $watched, $ignored)
+	static function cleanup($database, $watched, $ignored)
 	{
 		// call default cleanup function
-		parent::cleanup($mysql, $watched, $ignored, get_class());
+		parent::cleanup($database, $watched, $ignored, get_class());
 	}
 
 }

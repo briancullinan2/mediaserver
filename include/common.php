@@ -129,6 +129,15 @@ function setup()
 	}
 	$GLOBALS['modules'] = $new_modules;
 	
+	// loop through each module and compile a list of databases
+	$GLOBALS['databases'] = array();
+	foreach($GLOBALS['modules'] as $i => $module)
+	{
+		if(defined($module . '::DATABASE'))
+			$GLOBALS['databases'][] = constant($module . '::DATABASE');
+	}
+	$GLOBALS['databases'][] = 'alias';
+	
 	// merge some session variables with the request so modules only have to look in one place
 	if(isset($_SESSION['display']))
 		$_REQUEST = array_merge($_SESSION['display'], $_REQUEST);
@@ -144,8 +153,8 @@ function setup()
 	$GLOBALS['alias'] = array();
 	if(USE_ALIAS == true && USE_DATABASE == true)
 	{
-		$mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
-		$aliases = $mysql->query(array('SELECT' => 'alias'));
+		$database = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+		$aliases = $database->query(array('SELECT' => 'alias'));
 		
 		if($aliases !== false)
 		{
@@ -173,13 +182,9 @@ function handles($file, $module)
 function selfURL()
 {
 	$s = empty($_SERVER["HTTPS"]) ? '' : ($_SERVER["HTTPS"] == "on") ? "s" : "";
-	$protocol = strleft(strtolower($_SERVER["SERVER_PROTOCOL"]), "/").$s;
+	$protocol = substr(strtolower($_SERVER["SERVER_PROTOCOL"]), 0, strpos(strtolower($_SERVER["SERVER_PROTOCOL"]), "/")).$s;
 	$port = ($_SERVER["SERVER_PORT"] == "80") ? "" : (":".$_SERVER["SERVER_PORT"]);
 	return $protocol."://".$_SERVER['SERVER_NAME'].$port.$_SERVER['REQUEST_URI'];
-}
-function strleft($s1, $s2)
-{
-	return substr($s1, 0, strpos($s1, $s2));
 }
 
 // get all columns from every modules
@@ -195,7 +200,6 @@ function getAllColumns()
 
 	return $columns;
 }
-
 
 function getRequestString($request)
 {
@@ -404,20 +408,6 @@ function getMime($ext)
 	}
 }
 
-
-function getAllExts($type)
-{
-
-	if(isset($GLOBALS['type_to_ext'][$type]))
-	{
-		return $GLOBALS['type_to_ext'][$type];
-	}
-	else
-	{
-		return false;
-	}
-	
-}
 
 function getExtType($ext)
 {

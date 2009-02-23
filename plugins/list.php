@@ -7,8 +7,8 @@
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
 // load mysql to query the database
-if(USE_DATABASE) $mysql = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
-else $mysql = NULL;
+if(USE_DATABASE) $database = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+else $database = NULL;
 
 // load template to create output
 if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
@@ -37,7 +37,7 @@ if(!isset($_REQUEST['list']) || !isset($types[$_REQUEST['list']]))
 	$_REQUEST['list'] = 'rss';
 
 // make select call
-$files = call_user_func_array($_REQUEST['cat'] . '::get', array($mysql, $_REQUEST, &$count, &$error));
+$files = call_user_func_array($_REQUEST['cat'] . '::get', array($database, $_REQUEST, &$count, &$error));
 
 // get all the other information from other modules
 foreach($files as $index => $file)
@@ -47,7 +47,7 @@ foreach($files as $index => $file)
 	{
 		if($module != $_REQUEST['cat'] && call_user_func_array($module . '::handles', array($file['Filepath'])))
 		{
-			$return = call_user_func_array($module . '::get', array($mysql, array('file' => $file['Filepath']), &$tmp_count, &$tmp_error));
+			$return = call_user_func_array($module . '::get', array($database, array('file' => $file['Filepath']), &$tmp_count, &$tmp_error));
 			if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
 		}
 	}

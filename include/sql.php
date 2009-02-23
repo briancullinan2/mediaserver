@@ -58,8 +58,6 @@ class sql_global
 	var $db_connect_id;
 	var $rowset = array();
 	var $num_queries = 0;
-	var $table_prefix = DB_PREFIX;
-	var $databases = array();
 
 //=============================================
 //  sql_db($SQL_server, $SQL_Username, $SQL_password, $SQL_database)
@@ -72,35 +70,25 @@ class sql_global
 //=============================================
 	function sql_global()
 	{
-		$this->database = array();
-		// loop through each module and compile a list of databases
-		foreach($GLOBALS['modules'] as $i => $module)
-		{
-			if(defined($module . '::DATABASE'))
-				$this->databases[] = constant($module . '::DATABASE');
-		}
-		
-		// TODO: should this go here?
-		$this->databases[] = 'alias';
 	}
 	
 	// install function
 	function install()
 	{
-		$this->query('CREATE TABLE IF NOT EXISTS ' . $this->table_prefix . 'watch (
+		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'watch (
 				id 				INT NOT NULL AUTO_INCREMENT,
 								PRIMARY KEY(id),
 				Filepath		TEXT NOT NULL,
 				Lastwatch		DATETIME
 			)') or print_r(mysql_error());
 			
-		$this->query('CREATE TABLE IF NOT EXISTS ' . $this->table_prefix . 'watch_list (
+		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'watch_list (
 				id 				INT NOT NULL AUTO_INCREMENT,
 								PRIMARY KEY(id),
 				Filepath		TEXT NOT NULL
 			)') or print_r(mysql_error());
 		
-		$this->query('CREATE TABLE IF NOT EXISTS ' . $this->table_prefix . 'alias (
+		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'alias (
 				id 				INT NOT NULL AUTO_INCREMENT,
 								PRIMARY KEY(id),
 				Paths			TEXT NOT NULL,
@@ -109,7 +97,7 @@ class sql_global
 				Alias_regexp	TEXT NOT NULL
 			)') or print_r(mysql_error());
 		
-		$this->query('CREATE TABLE IF NOT EXISTS ' . $this->table_prefix . 'files (
+		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'files (
 				id 				INT NOT NULL AUTO_INCREMENT,
 								PRIMARY KEY(id),
 				Filename		TEXT NOT NULL,
@@ -120,7 +108,7 @@ class sql_global
 				Filetype		TEXT NOT NULL
 			)') or print_r(mysql_error());
 		
-		$this->query('CREATE TABLE IF NOT EXISTS ' . $this->table_prefix . 'audio (
+		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'audio (
 				id 				INT NOT NULL AUTO_INCREMENT,
 								PRIMARY KEY(id),
 				Filepath		TEXT NOT NULL,
@@ -135,7 +123,7 @@ class sql_global
 				Bitrate			DOUBLE NOT NULL
 			)') or print_r(mysql_error());
 
-		$this->query('CREATE TABLE IF NOT EXISTS ' . $this->table_prefix . 'image (
+		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'image (
 				id 				INT NOT NULL AUTO_INCREMENT,
 								PRIMARY KEY(id),
 				Filepath		TEXT NOT NULL,
@@ -151,7 +139,7 @@ class sql_global
 				Thumbnail		BLOB NOT NULL
 			)') or print_r(mysql_error());
 		
-		$this->query('CREATE TABLE IF NOT EXISTS ' . $this->table_prefix . 'archive (
+		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'archive (
 				id 				INT NOT NULL AUTO_INCREMENT,
 								PRIMARY KEY(id),
 				Filename		TEXT NOT NULL,
@@ -163,7 +151,7 @@ class sql_global
 				Filetype		TEXT NOT NULL
 			)') or print_r(mysql_error());
 		
-		$this->query('CREATE TABLE IF NOT EXISTS ' . $this->table_prefix . 'diskimage (
+		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'diskimage (
 				id 				INT NOT NULL AUTO_INCREMENT,
 								PRIMARY KEY(id),
 				Filename		TEXT NOT NULL,
@@ -176,8 +164,35 @@ class sql_global
 		
 	}
 	
+	// variables that can be defined in the request are validated here
+	//   these are general SQL variables, ones specific to the module should be validated there
+	//   after validation they will be set in the passed in props which can be sent to the query function
+	static function validate(&$request, &$props, $module)
+	{
+		if(!is_array($props)) $props = array();
+		
+		if( !isset($request['start']) || !is_numeric($request['start']) || $request['start'] < 0 )
+			$request['start'] = 0;
+		if( !isset($request['limit']) || !is_numeric($request['limit']) || $request['limit'] < 0 )
+			$request['limit'] = 15;
+		if( !isset($request['order_by']) || !in_array($request['order_by'], call_user_func($module . '::columns')) )
+			$request['order_by'] = 'Filepath';
+		if( !isset($request['direction']) || ($request['direction'] != 'ASC' && $request['direction'] != 'DESC') )
+			$request['direction'] = 'ASC';
+		if( isset($request['group_by']) && !in_array($request['group_by'], call_user_func($module . '::columns')) )
+			unset($request['group_by']);
+		if( isset($request['id']) )
+			$request['item'] = $request['id'];
+			
+		getIDsFromRequest($request, $request['selected']);
+		if(isset($request['group_by'])) $props['GROUP'] = $request['group_by'];
+		$props['ORDER'] = $request['order_by'] . ' ' . $request['direction'];
+		$props['LIMIT'] = $request['start'] . ',' . $request['limit'];
+	}
+	
+	
 	// compile the statmeent based on an abstract representation
-	function statement_builder($props)
+	static function statement_builder($props)
 	{
 		if(is_string($props))
 		{
@@ -208,13 +223,13 @@ class sql_global
 				elseif(is_array($props['COLUMNS'])) $columns = join(', ', $props['COLUMNS']);
 				elseif(is_string($props['COLUMNS'])) $columns = $props['COLUMNS'];
 				
-				$select = 'SELECT ' . $columns . ' FROM ' . (in_array($props['SELECT'], $this->databases)?($this->table_prefix . $props['SELECT']):$props['SELECT']);
+				$select = 'SELECT ' . $columns . ' FROM ' . (in_array($props['SELECT'], $GLOBALS['databases'])?(DB_PREFIX . $props['SELECT']):$props['SELECT']);
 				
 				$statement = $select . ' ' . $where . ' ' . $group . ' ' . $having . ' ' . $order . ' ' . $limit;
 			}
 			elseif(isset($props['UPDATE']))
 			{
-				$update = 'UPDATE ' . $this->table_prefix . $props['UPDATE'] . ' SET';
+				$update = 'UPDATE ' . DB_PREFIX . $props['UPDATE'] . ' SET';
 				
 				if(!isset($props['COLUMNS']) && isset($props['VALUES']) && is_array($props['VALUES']))
 				{
@@ -240,7 +255,7 @@ class sql_global
 			}
 			elseif(isset($props['INSERT']))
 			{
-				$insert = 'INSERT INTO ' . $this->table_prefix . $props['INSERT'];
+				$insert = 'INSERT INTO ' . DB_PREFIX . $props['INSERT'];
 				
 				if(!isset($props['COLUMNS']) && isset($props['VALUES']) && is_array($props['VALUES']))
 				{
@@ -260,7 +275,7 @@ class sql_global
 			}
 			elseif(isset($props['DELETE']))
 			{
-				$delete = 'DELETE FROM ' . $this->table_prefix . $props['DELETE'];
+				$delete = 'DELETE FROM ' . DB_PREFIX . $props['DELETE'];
 	
 				$statement = $delete . ' ' . $where . ' ' . $order . ' ' . $limit;
 			}
@@ -276,7 +291,7 @@ class sql_global
 	// function for making calls on the database, this is what is called by the rest of the site
 	function query($props)
 	{
-		$query = $this->statement_builder($props);
+		$query = SQL::statement_builder($props);
 //print $query . '<br />';
 		$result = $this->db_query($query);
 		

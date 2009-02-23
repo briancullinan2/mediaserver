@@ -1,4 +1,5 @@
 2009-02-23
+Interface with mediatomb and support UPnP protocol
 Finish mobile template.
 Put validation in the statement_builder function, modules just interface with the database, since the database can change why should they have to validate the query?
 
@@ -43,7 +44,7 @@ FIX state for cron script
 Make db_watch_list module check to make sure directory is actually in the watch and not ignored
 Limit access to watch and alias tables after implementing users and permissions
 Decide what to do about watch_list and watched directories, should there be a module for handling the watch database?
-Fix up $mysql->set() function an possible merge it with the statement builder function
+Fix up $database->set() function an possible merge it with the statement builder function
 Make a class for handling CSV as the database type, make sure all the queries can refer to the statement builder
 Make state_dirs save in tmp if missing write permissioons, add write permission information to install process
 

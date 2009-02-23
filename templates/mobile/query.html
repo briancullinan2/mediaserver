@@ -80,8 +80,8 @@ items[{$files[file].id}] = {if $item_selected}true{else}false{/if};
 </head>
 <body>
 {if isset($smarty.get.cat)}
-<form action="{$smarty.server.PHP_SELF}" method="post">
-<input type="text" value="{$smarty.request.includes}" style="font-size:16px; font-family:Arial, Helvetica, sans-serif; font-weight:bold;" /><input type="submit" value="Search" style="font-weight:bold; font-size:16px; font-family:Arial, Helvetica, sans-serif;" />
+<form action="{$smarty.server.PHP_SELF}" method="get">
+<input type="text" value="{$smarty.request.includes}" name="includes" style="font-size:16px; font-family:Arial, Helvetica, sans-serif; font-weight:bold;" /><input type="submit" value="Search" style="font-weight:bold; font-size:16px; font-family:Arial, Helvetica, sans-serif;" />
 </form>
 <a href="javascript:go_link();" class="big" style="float:left; clear:none; display:inline;">Save</a>
 <a href="javascript:all_on();" class="big" style="float:left; clear:none; display:inline;">All</a>

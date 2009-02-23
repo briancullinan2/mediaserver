@@ -37,7 +37,7 @@ class fs_image_browser extends fs_image
 	}
 	
 	// output provided file to given stream
-	static function out($mysql, $file, $stream)
+	static function out($database, $file, $stream)
 	{
 		// check to make sure file is valid
 		if(is_file($file))

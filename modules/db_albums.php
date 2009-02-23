@@ -24,17 +24,17 @@ class db_albums extends db_audio
 		return array('id', 'SongCount', 'Album', 'Filepath');
 	}
 
-	static function handle($mysql, $file)
+	static function handle($database, $file)
 	{
 	}
 	
 	
-	static function get($mysql, $request, &$count, &$error)
+	static function get($database, $request, &$count, &$error)
 	{
 		// modify some request stuff
 		$request['order_by'] = 'Album';
 		$request['group_by'] = 'Album';
-		$files = db_file::get($mysql, $request, $count, $error, 'db_audio');
+		$files = db_file::get($database, $request, $count, $error, 'db_audio');
 		
 		// make some changes
 		foreach($files as $i => $file)
@@ -50,7 +50,7 @@ class db_albums extends db_audio
 	}
 
 
-	static function cleanup($mysql, $watched, $ignored)
+	static function cleanup($database, $watched, $ignored)
 	{
 	}
 

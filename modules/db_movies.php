@@ -126,7 +126,7 @@ class db_movies extends db_diskimage
 		return $fileinfo;
 	}
 
-	static function out($mysql, $file, $stream)
+	static function out($database, $file, $stream)
 	{
 		$paths = split('\\' . DIRECTORY_SEPARATOR, $file);
 		$last_path = '';
@@ -220,24 +220,14 @@ class db_movies extends db_diskimage
 		return false;
 	}
 	
-	static function get($mysql, $request, &$count, &$error)
+	static function get($database, $request, &$count, &$error)
 	{
 		$files = array();
 		
 		if(!USE_DATABASE)
 		{
 			// do validation! for the fields we use
-			if( !isset($request['start']) || !is_numeric($request['start']) || $request['start'] < 0 )
-				$request['start'] = 0;
-			if( !isset($request['limit']) || !is_numeric($request['limit']) || $request['limit'] < 0 )
-				$request['limit'] = 15;
-			if( !isset($request['order_by']) || !in_array($request['order_by'], fs_diskimage::columns()) )
-				$request['order_by'] = 'Title';
-			if( !isset($request['direction']) || ($request['direction'] != 'ASC' && $request['direction'] != 'DESC') )
-				$request['direction'] = 'ASC';
-			if( isset($request['id']) )
-				$request['item'] = $request['id'];
-			getIDsFromRequest($request, $request['selected']);
+			$database->validate($request, $props, $module);
 			
 			if(isset($request['selected']) && count($request['selected']) > 0 )
 			{
@@ -350,10 +340,10 @@ class db_movies extends db_diskimage
 		return $files;
 	}
 	
-	static function cleanup($mysql, $watched, $ignored)
+	static function cleanup($database, $watched, $ignored)
 	{
 		// call default cleanup function
-		//db_file::cleanup($mysql, $watched, $ignored, get_class());
+		//db_file::cleanup($database, $watched, $ignored, get_class());
 	}
 
 }

@@ -58,24 +58,14 @@ class fs_audio extends fs_file
 		return $fileinfo;
 	}
 	
-	static function get($mysql, $request, &$count, &$error)
+	static function get($database, $request, &$count, &$error)
 	{
 		$files = array();
 		
 		if(!USE_DATABASE)
 		{
 			// do validation! for the fields we use
-			if( !isset($request['start']) || !is_numeric($request['start']) || $request['start'] < 0 )
-				$request['start'] = 0;
-			if( !isset($request['limit']) || !is_numeric($request['limit']) || $request['limit'] < 0 )
-				$request['limit'] = 15;
-			if( !isset($request['order_by']) || !in_array($request['order_by'], fs_audio::columns()) )
-				$request['order_by'] = 'Album';
-			if( !isset($request['direction']) || ($request['direction'] != 'ASC' && $request['direction'] != 'DESC') )
-				$request['direction'] = 'ASC';
-			if( isset($request['id']) )
-				$request['item'] = $request['id'];
-			getIDsFromRequest($request, $request['selected']);
+			$database->validate($request, $props, $module);
 
 			if(isset($request['selected']) && count($request['selected']) > 0 )
 			{

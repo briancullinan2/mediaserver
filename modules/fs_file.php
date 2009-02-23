@@ -46,7 +46,7 @@ class fs_file
 	}
 	
 	// output provided file to given stream
-	static function out($mysql, $file, $stream)
+	static function out($database, $file, $stream)
 	{
 		// check to make sure file is valid
 		if(is_file($file))
@@ -81,7 +81,7 @@ class fs_file
 	// the mysql can be left null to get the files from a directory, in which case a directory must be specified
 	// if the mysql is provided, then the file listings will be loaded from the database
 	// don't use $internals = true
-	static function get($mysql, $request, &$count, &$error, $internals = false)
+	static function get($database, $request, &$count, &$error, $internals = false)
 	{
 		$files = array();
 		
@@ -90,17 +90,7 @@ class fs_file
 		if(!USE_DATABASE || $internals)
 		{
 			// do validation! for the fields we use
-			if( !isset($request['start']) || !is_numeric($request['start']) || $request['start'] < 0 )
-				$request['start'] = 0;
-			if( !isset($request['limit']) || !is_numeric($request['limit']) || $request['limit'] < 0 )
-				$request['limit'] = 15;
-			if( !isset($request['order_by']) || !in_array($request['order_by'], fs_file::columns()) )
-				$request['order_by'] = 'Filepath';
-			if( !isset($request['direction']) || ($request['direction'] != 'ASC' && $request['direction'] != 'DESC') )
-				$request['direction'] = 'ASC';
-			if( isset($request['id']) )
-				$request['item'] = $request['id'];
-			getIDsFromRequest($request, $request['selected']);
+			SQL::validate($request, $props, get_class());
 
 			if(isset($request['selected']) && count($request['selected']) > 0 )
 			{

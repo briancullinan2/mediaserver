@@ -19,12 +19,12 @@ class db_watch_list extends db_watch
 	
 	static function handles($dir)
 	{
-		global $mysql;
+		global $database;
 		
 		if(is_dir($dir))
 		{
 			// changed directories or directories that don't exist in the database
-			$db_files = $mysql->query(array(
+			$db_files = $database->query(array(
 					'SELECT' => db_file::DATABASE,
 					'COLUMNS' => array('id', 'Filedate'),
 					'WHERE' => 'Filepath = "' . addslashes($dir) . '"'
@@ -34,7 +34,7 @@ class db_watch_list extends db_watch
 			if( (count($db_files) == 0 || date("Y-m-d h:i:s", filemtime($dir)) != $db_files[0]['Filedate']) )
 			{
 				// make sure it is in the watch list and not the ignore list
-				$watched = db_watch::get($mysql, array(), $count, $error);
+				$watched = db_watch::get($database, array(), $count, $error);
 				
 				$is_ignored = false;
 				$is_watched = false;
@@ -61,11 +61,11 @@ class db_watch_list extends db_watch
 		return false;
 	}
 
-	static function handle($mysql, $dir)
+	static function handle($database, $dir)
 	{		
 		if(db_watch_list::handles($dir))
 		{
-			$db_watch_list = $mysql->query(array(
+			$db_watch_list = $database->query(array(
 					'SELECT' => db_watch_list::DATABASE,
 					'COLUMNS' => array('id'),
 					'WHERE' => 'Filepath = "' . addslashes($dir) . '"'
@@ -74,9 +74,9 @@ class db_watch_list extends db_watch
 			
 			if( count($db_watch_list) == 0 )
 			{
-				$id = db_watch_list::add($mysql, $dir);
+				$id = db_watch_list::add($database, $dir);
 				
-				return db_watch_list::handle_dir($mysql, $dir);
+				return db_watch_list::handle_dir($database, $dir);
 			}
 			else
 			{
@@ -90,26 +90,26 @@ class db_watch_list extends db_watch
 				{
 					if(is_file($file['Filepath']))
 					{
-						db_watch_list::handle_file($mysql, $file['Filepath']);
+						db_watch_list::handle_file($database, $file['Filepath']);
 					}
 				}
 				
-				db_watch_list::handle_file($mysql, $dir);
+				db_watch_list::handle_file($database, $dir);
 				
 				// delete the selected folder from the database
-				$mysql->query(array('DELETE' => db_watch_list::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($dir) . '"'));
+				$database->query(array('DELETE' => db_watch_list::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($dir) . '"'));
 			}
 		}
 		// check directories recursively
 		else
 		{
-			return db_watch_list::handle_dir($mysql, $dir);
+			return db_watch_list::handle_dir($database, $dir);
 		}
 		
 		return true;
 	}
 	
-	static function handle_dir($mysql, $dir)
+	static function handle_dir($database, $dir)
 	{
 		global $tm_start, $secs_total, $state;
 		
@@ -158,7 +158,7 @@ class db_watch_list extends db_watch
 					}
 				
 					// keep processing files
-					$status = db_watch_list::handle($mysql, $file['Filepath']);
+					$status = db_watch_list::handle($database, $file['Filepath']);
 					
 					if( $status === false )
 					{
@@ -173,17 +173,17 @@ class db_watch_list extends db_watch
 		return true;
 	}
 	
-	static function handle_file($mysql, $file)
+	static function handle_file($database, $file)
 	{
 		foreach($GLOBALS['modules'] as $i => $module)
 		{
 			// never pass is to fs_file, it is only used to internals in this case
 			if($module != 'fs_file' && $module != 'db_watch' && $module != 'db_watch_list')
-				call_user_func_array($module . '::handle', array($mysql, $file));
+				call_user_func_array($module . '::handle', array($database, $file));
 		}
 	}
 	
-	static function add($mysql, $file)
+	static function add($database, $file)
 	{
 		// pull information from $info
 		$fileinfo = array();
@@ -193,21 +193,21 @@ class db_watch_list extends db_watch
 		flush();
 		
 		// add to database
-		$id = $mysql->query(array('INSERT' => db_watch_list::DATABASE, 'VALUES' => $fileinfo));
+		$id = $database->query(array('INSERT' => db_watch_list::DATABASE, 'VALUES' => $fileinfo));
 		
 		return $id;
 		
 	}
 	
-	static function get($mysql, $request, &$count, &$error)
+	static function get($database, $request, &$count, &$error)
 	{
-		return db_file::get($mysql, $request, $count, $error, get_class());
+		return db_file::get($database, $request, $count, $error, get_class());
 	}
 	
-	static function cleanup($mysql, $watched, $ignored)
+	static function cleanup($database, $watched, $ignored)
 	{
 		// call default cleanup function
-		db_file::cleanup($mysql, $watched, $ignored, get_class());
+		db_file::cleanup($database, $watched, $ignored, get_class());
 	}
 }
 
