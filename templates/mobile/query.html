@@ -13,6 +13,7 @@ a.big {
 	display:block;
 	background:#FFF;
 	border-bottom:1px solid #666;
+	border-right:1px solid #666;
 	font-weight:bold;
 	text-decoration:none;
 	padding:2px;
@@ -26,6 +27,7 @@ a.big.selected {
 }
 </style>
 <script language="javascript">
+var my_link = '{/literal}/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}query.php?cat={$smarty.request.cat}&select={literal}';
 function select(id)
 {
 	items[id] = !items[id];
@@ -38,7 +40,6 @@ function go_link()
 {
 	var on = '';
 	var off = '';
-	var my_link = '{/literal}/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}query.php?cat={$smarty.request.cat}&select={literal}';
 	for(id in items)
 	{
 		if(items[id] == true)
@@ -47,6 +48,24 @@ function go_link()
 			off = off + id + ',';
 	}
 	window.location = my_link + '&on=' + on + '&off=' + off;
+}
+function all_on()
+{
+	var on = '';
+	for(id in items)
+	{
+		on = on + id + ',';
+	}
+	window.location = my_link + '&on=' + on;
+}
+function none_on()
+{
+	var off = '';
+	for(id in items)
+	{
+		off = off + id + ',';
+	}
+	window.location = my_link + '&off=' + off;
 }
 var items = []; // {/literal}
 {section name=file loop=$files}
@@ -61,8 +80,13 @@ items[{$files[file].id}] = {if $item_selected}true{else}false{/if};
 </head>
 <body>
 {if isset($smarty.get.cat)}
+<form action="{$smarty.server.PHP_SELF}" method="post">
+<input type="text" value="{$smarty.request.includes}" style="font-size:16px; font-family:Arial, Helvetica, sans-serif; font-weight:bold;" /><input type="submit" value="Search" style="font-weight:bold; font-size:16px; font-family:Arial, Helvetica, sans-serif;" />
+</form>
+<a href="javascript:go_link();" class="big" style="float:left; clear:none; display:inline;">Save</a>
+<a href="javascript:all_on();" class="big" style="float:left; clear:none; display:inline;">All</a>
+<a href="javascript:none_on();" class="big" style="float:left; clear:none; display:inline;">None</a>
 {include file=$templates.TEMPLATE_PAGES}
-<a href="javascript:go_link();" id="save_link" class="big">Save to playlist</a>
 {section name=file loop=$files}
 	{assign var=type_arr value='/'|@split:$files[file].Filemime}
 	{assign var=type value=$type_arr.0}
@@ -73,7 +97,9 @@ items[{$files[file].id}] = {if $item_selected}true{else}false{/if};
 	{/if}
 	<a href="javascript:select({$files[file].id});" id="item_{$files[file].id}" class="big{if $item_selected} selected{/if}">{$files[file].Filename}</a>
 {/section}
-<a href="javascript:go_link();" id="save_link" class="big">Save to playlist</a>
+<a href="javascript:go_link();" class="big" style="float:left; clear:none; display:inline;">Save</a>
+<a href="javascript:all_on();" class="big" style="float:left; clear:none; display:inline;">All</a>
+<a href="javascript:none_on();" class="big" style="float:left; clear:none; display:inline;">None</a>
 {include file=$templates.TEMPLATE_PAGES}
 {else}
 {section name=module loop=$modules}
