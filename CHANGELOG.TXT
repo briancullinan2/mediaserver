@@ -1,3 +1,8 @@
+2009-02-24
+Finished implementing ranges into db_file module, multiple streams can now be started
+Used session_write_close() when outputing files in order to allow browsing of other pages while files are downloading
+Moved request validation to SQL class, this is so it can be overridden by other database types
+
 2009-02-23
 Put validation in the SQL class
 Renamed all the $mysql variables to $database which is more appropriate

@@ -21,6 +21,8 @@ $tm_start = array_sum(explode(' ', microtime()));
 // use some extra code so cron can be run from any directory
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
+session_write_close();
+
 // some things to take into consideration:
 // Access the database in intervals of files, not every individual file
 // Sleep so output can be recorded to disk or downloaded in a browser

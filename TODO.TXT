@@ -1,4 +1,12 @@
+2009-02-24
+Get ranges working in encode plugin
+only allow the option if the argument can read from stdin and read the input from the module and write it to the input stream
+Figure out a way of doing this with files even if stdin is not being used in the command, if fopen is writing to a file, does it file feof when reading from the same file simulaneously?
+Finish db_video module, should be easy with all the abstraction
+Make convert module recognize video thumbnails and use vlc to extract them
+
 2009-02-23
+Fix Accept-Ranges section in the db_file module out() method
 Interface with mediatomb and support UPnP protocol
 Finish mobile template.
 Put validation in the statement_builder function, modules just interface with the database, since the database can change why should they have to validate the query?
