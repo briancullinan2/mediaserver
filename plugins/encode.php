@@ -18,7 +18,7 @@ switch($_REQUEST['encode'])
 		header('Content-Type: audio/mp4');
 		break;
 	case 'MP3':
-		//header('Content-Type: audio/mpeg');
+		header('Content-Type: audio/mpeg');
 		break;
 	case 'WMA':
 		header('Content-Type: audio/x-ms-wma');
@@ -170,24 +170,40 @@ $fp = fopen($_REQUEST['%IF'], 'rb');
 // output file
 if(is_resource($process))
 {
-	while(!feof($pipes[1]) || !feof($fp))
+	while(!feof($pipes[1]))
 	{
 		if(connection_status()!=0)
 		{
 			proc_terminate($process);
 			break;
 		}
+		
 		$read = array($pipes[1]);
-		$write = array($pipes[0]);
+		if(!feof($fp))
+		{
+			$write = array($pipes[0]);
+		}
+		else
+		{
+			$write = NULL;
+			fclose($fp);
+			fclose($pipes[0]);
+		}
 		$except = NULL;
+		
 		stream_select($read, $write, $except, 0);
-		if(isset($read[0]))
+		
+		if(is_array($read) && in_array($pipes[1], $read))
+		{
 			print fread($pipes[1], BUFFER_SIZE);
-		if(isset($write[0]))
+			flush();
+		}
+		
+		if(is_array($write) && in_array($pipes[0], $write))
+		{
 			fwrite($pipes[0], fread($fp, BUFFER_SIZE));
-		flush();
+		}
 	}
-	//fclose($pipes[0]);
 	fclose($pipes[1]);
 	
 	$status = proc_get_status($process);

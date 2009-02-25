@@ -2,6 +2,8 @@
 Now that streams are working, create a system for using both the module->out() methods and an intermediate program
 	this will enable streaming out of a diskimage for example
 Set the content length to $bitrate * $song_length, this will give us a fairly accurent content-length
+Make sure the watched directory is mounted, if it is still in the database but doesn't exist on disk, prompt for input in the admin section and don't remove non existing files on cleanup
+Do memory checks and don't run cron if it's above a certain threshhold, maybe run some stuff with niceness
 
 2009-02-24
 Get ranges working in encode plugin, then move the input to the appropriate module out() function
