@@ -80,11 +80,11 @@ class db_diskimage extends db_file
 		
 		$file = $last_path;
 
-		if(db_diskimage::handles($file))
+		if(self::handles($file))
 		{
 			// check to see if it is in the database
 			$db_diskimage = $database->query(array(
-					'SELECT' => db_diskimage::DATABASE,
+					'SELECT' => self::DATABASE,
 					'COLUMNS' => 'id',
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
 				)
@@ -93,7 +93,7 @@ class db_diskimage extends db_file
 			// try to get music information
 			if( count($db_diskimage) == 0 )
 			{
-				$fileid = db_diskimage::add($database, $file);
+				$fileid = self::add($database, $file);
 			}
 			else
 			{
@@ -108,7 +108,7 @@ class db_diskimage extends db_file
 				// update audio if modified date has changed
 				if( date("Y-m-d h:i:s", filemtime($file)) != $db_file[0]['Filedate'] )
 				{
-					$id = db_diskimage::add($database, $file, $db_diskimage[0]['id']);
+					$id = self::add($database, $file, $db_diskimage[0]['id']);
 				}
 				
 			}
@@ -124,7 +124,7 @@ class db_diskimage extends db_file
 		if( $image_id != NULL )
 		{
 			print 'Removing disk image: ' . $file . "\n";
-			$database->query(array('DELETE' => db_diskimage::DATABASE, 'WHERE' => 'Filepath REGEXP "^' . addslashes(preg_quote($file)) . '\\\/"'));
+			$database->query(array('DELETE' => self::DATABASE, 'WHERE' => 'Filepath REGEXP "^' . addslashes(preg_quote($file)) . '\\\/"'));
 		}
 
 		// pull information from $info
@@ -169,7 +169,7 @@ class db_diskimage extends db_file
 						$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['recording_timestamp']);
 						
 						print 'Adding file in disk image: ' . $fileinfo['Filepath'] . "\n";
-						$id = $database->query(array('INSERT' => db_diskimage::DATABASE, 'VALUES' => $fileinfo));
+						$id = $database->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 					}
 				}
 			}
@@ -192,7 +192,7 @@ class db_diskimage extends db_file
 			print 'Modifying Disk Image: ' . $fileinfo['Filepath'] . "\n";
 			
 			// update database
-			$id = $database->query(array('UPDATE' => db_diskimage::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $archive_id));
+			$id = $database->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $archive_id));
 		
 			return $audio_id;
 		}
@@ -201,7 +201,7 @@ class db_diskimage extends db_file
 			print 'Adding Disk Image: ' . $fileinfo['Filepath'] . "\n";
 			
 			// add to database
-			$id = $database->query(array('INSERT' => db_diskimage::DATABASE, 'VALUES' => $fileinfo));
+			$id = $database->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 			
 			return $id;
 		}
@@ -230,7 +230,7 @@ class db_diskimage extends db_file
 
 		if(is_file($last_path))
 		{
-			$files = $database->query(array('SELECT' => db_archive::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
+			$files = $database->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
 			if(count($file) > 0)
 			{				
 				

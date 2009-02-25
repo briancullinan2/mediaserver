@@ -1,4 +1,8 @@
 2009-02-24
+Fixed some cleanup inefficiencies, now using NOT REGEXP in the expression
+Thought about what to do for the similar_text() problem with the db_album and db_artist modules
+Added Accept-Ranges handing to fs_file module, also abstracted some of the code just like db_file
+Finished db_video and fs_video module, and made some corrections in the fs_modules
 Finished implementing ranges into db_file module, multiple streams can now be started
 Used session_write_close() when outputing files in order to allow browsing of other pages while files are downloading
 Moved request validation to SQL class, this is so it can be overridden by other database types
@@ -106,13 +110,11 @@ Add levels to templating system (a function that searches for levels and selects
 Add a function for settings and array of values in the template
 Added a function for settings request variables in template so form could recall the values it submits
 
-
 2008-05-13
 Add a button to clear search query
 Make a page that holds the search form and the list selector
 Move the button for creating a list (add it to builder)
 Fixed image magick thumbnail creator in db_image.php module to only create 1 image on gifs and icons that contain multiple images
-
 
 2008-05-12
 Dividing up search form into a seperate processing page

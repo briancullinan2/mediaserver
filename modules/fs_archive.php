@@ -182,7 +182,10 @@ class fs_archive extends fs_file
 		if(!USE_DATABASE)
 		{
 			// do validation! for the fields we use
-			$database->validate($request, $props, $module);
+			if( !isset($request['start']) || !is_numeric($request['start']) || $request['start'] < 0 )
+				$request['start'] = 0;
+			if( !isset($request['limit']) || !is_numeric($request['limit']) || $request['limit'] < 0 )
+				$request['limit'] = 15;
 			
 			if(isset($request['selected']) && count($request['selected']) > 0 )
 			{

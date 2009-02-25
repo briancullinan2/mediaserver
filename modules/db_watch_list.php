@@ -63,10 +63,10 @@ class db_watch_list extends db_watch
 
 	static function handle($database, $dir)
 	{		
-		if(db_watch_list::handles($dir))
+		if(self::handles($dir))
 		{
 			$db_watch_list = $database->query(array(
-					'SELECT' => db_watch_list::DATABASE,
+					'SELECT' => self::DATABASE,
 					'COLUMNS' => array('id'),
 					'WHERE' => 'Filepath = "' . addslashes($dir) . '"'
 				)
@@ -74,9 +74,9 @@ class db_watch_list extends db_watch
 			
 			if( count($db_watch_list) == 0 )
 			{
-				$id = db_watch_list::add($database, $dir);
+				$id = self::add($database, $dir);
 				
-				return db_watch_list::handle_dir($database, $dir);
+				return self::handle_dir($database, $dir);
 			}
 			else
 			{
@@ -90,20 +90,20 @@ class db_watch_list extends db_watch
 				{
 					if(is_file($file['Filepath']))
 					{
-						db_watch_list::handle_file($database, $file['Filepath']);
+						self::handle_file($database, $file['Filepath']);
 					}
 				}
 				
-				db_watch_list::handle_file($database, $dir);
+				self::handle_file($database, $dir);
 				
 				// delete the selected folder from the database
-				$database->query(array('DELETE' => db_watch_list::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($dir) . '"'));
+				$database->query(array('DELETE' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($dir) . '"'));
 			}
 		}
 		// check directories recursively
 		else
 		{
-			return db_watch_list::handle_dir($database, $dir);
+			return self::handle_dir($database, $dir);
 		}
 		
 		return true;
@@ -158,7 +158,7 @@ class db_watch_list extends db_watch
 					}
 				
 					// keep processing files
-					$status = db_watch_list::handle($database, $file['Filepath']);
+					$status = self::handle($database, $file['Filepath']);
 					
 					if( $status === false )
 					{
@@ -193,7 +193,7 @@ class db_watch_list extends db_watch
 		flush();
 		
 		// add to database
-		$id = $database->query(array('INSERT' => db_watch_list::DATABASE, 'VALUES' => $fileinfo));
+		$id = $database->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 		
 		return $id;
 		

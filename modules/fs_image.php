@@ -88,66 +88,7 @@ class fs_image extends fs_file
 
 	static function get($database, $request, &$count, &$error)
 	{
-		$files = array();
-		
-		if(!USE_DATABASE)
-		{
-			// do validation! for the fields we use
-			$database->validate($request, $props, $module);
-
-			if(isset($request['selected']) && count($request['selected']) > 0 )
-			{
-				foreach($request['selected'] as $i => $id)
-				{
-					$file = pack('H*', $id);
-					if(is_file($file))
-					{
-						if(fs_image::handles($file))
-						{
-							$info = fs_image::getInfo($file);
-							// make some modifications
-							$files[] = $info;
-						}
-					}
-				}
-			}
-			
-			if(isset($request['file']))
-			{
-				if(is_file($request['file']))
-				{
-					if(fs_image::handles($request['file']))
-					{
-						return array(0 => fs_image::getInfo($request['file']));
-					}
-					else{ $error = 'Invalid ' . fs_image::NAME . ' file!'; }
-				}
-				else{ $error = 'File does not exist!'; }
-			}
-			else
-			{
-				if(!isset($request['dir']))
-					$request['dir'] = realpath('/');
-				if (is_dir($request['dir']))
-				{
-					$tmp_files = scandir($request['dir']);
-					$count = count($tmp_files);
-					for($j = 0; $j < $count; $j++)
-						if(!fs_image::handles($request['dir'] . $tmp_files[$j])) unset($tmp_files[$j]);
-					$tmp_files = array_values($tmp_files);
-					$count = count($tmp_files);
-					for($i = $request['start']; $i < min($request['start']+$request['limit'], $count); $i++)
-					{
-						$info = fs_image::getInfo($request['dir'] . $tmp_files[$i]);
-						$files[] = $info;
-					}
-					return $files;
-				}
-				else{ $error = 'Directory does not exist!'; }
-			}
-		}
-			
-		return $files;
+		return parent::get(NULL, $request, $count, $error, get_class());
 	}
 
 }

@@ -42,11 +42,11 @@ class db_audio extends db_file
 
 	static function handle($database, $file)
 	{
-		if(db_audio::handles($file))
+		if(self::handles($file))
 		{
 			// check to see if it is in the database
 			$db_audio = $database->query(array(
-					'SELECT' => db_audio::DATABASE,
+					'SELECT' => self::DATABASE,
 					'COLUMNS' => 'id',
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
 				)
@@ -55,7 +55,7 @@ class db_audio extends db_file
 			// try to get music information
 			if( count($db_audio) == 0 )
 			{
-				$fileid = db_audio::add($database, $file);
+				$fileid = self::add($database, $file);
 			}
 			else
 			{
@@ -70,7 +70,7 @@ class db_audio extends db_file
 				// update audio if modified date has changed
 				if( date("Y-m-d h:i:s", filemtime($file)) != $db_file[0]['Filedate'] )
 				{
-					$id = db_audio::add($database, $file, $db_audio[0]['id']);
+					$id = self::add($database, $file, $db_audio[0]['id']);
 				}
 				
 			}
@@ -102,14 +102,14 @@ class db_audio extends db_file
 	static function add($database, $file, $audio_id = NULL)
 	{
 		// pull information from $info
-		$fileinfo = db_audio::getInfo($file);
+		$fileinfo = self::getInfo($file);
 	
 		if( $audio_id != NULL )
 		{
 			print 'Modifying audio: ' . $file . "\n";
 			
 			// update database
-			$id = $database->query(array('UPDATE' => db_audio::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $audio_id));
+			$id = $database->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $audio_id));
 		
 			return $audio_id;
 		}
@@ -118,7 +118,7 @@ class db_audio extends db_file
 			print 'Adding audio: ' . $file . "\n";
 			
 			// add to database
-			$id = $database->query(array('INSERT' => db_audio::DATABASE, 'VALUES' => $fileinfo));
+			$id = $database->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 			
 			return $id;
 		}

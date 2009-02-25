@@ -32,5 +32,9 @@ if(isset($_REQUEST['id']))
 		print $error;
 	}
 }
+else
+{
+	print 'No Id';
+}
 
 ?>

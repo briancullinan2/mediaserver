@@ -36,13 +36,13 @@ class db_watch extends db_file
 
 	static function handle($database, $file)
 	{
-		if(db_watch::handles($file))
+		if(self::handles($file))
 		{
 			// add ending backslash
 			if( substr($file, strlen($file)-1) != DIRECTORY_SEPARATOR ) $file .= DIRECTORY_SEPARATOR;
 			
 			$db_watch = $database->query(array(
-					'SELECT' => db_watch::DATABASE,
+					'SELECT' => self::DATABASE,
 					'COLUMNS' => array('id'),
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
 				)
@@ -50,7 +50,7 @@ class db_watch extends db_file
 			
 			if( count($db_watch) == 0 )
 			{
-				$id = db_watch::add($database, $file);
+				$id = self::add($database, $file);
 			}
 			else
 			{
@@ -71,7 +71,7 @@ class db_watch extends db_file
 		print 'Adding watch: ' . $file . "\n";
 		
 		// add to database
-		$id = $database->query(array('INSERT' => db_watch::DATABASE, 'VALUES' => $fileinfo));
+		$id = $database->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 		
 		return $id;
 		
@@ -86,13 +86,13 @@ class db_watch extends db_file
 	
 	static function cleanup($database, $watched, $ignored)
 	{
-		$watched = $database->query(array('SELECT' => db_watch::DATABASE, 'COLUMNS' => 'id, Filepath'));
+		$watched = $database->query(array('SELECT' => self::DATABASE, 'COLUMNS' => 'id, Filepath'));
 		
 		foreach($watched as $i => $watch)
 		{
 			if(!is_dir(substr($watch['Filepath'], 1)))
 			{
-				$database->query(array('DELETE' => db_watch::DATABASE, 'WHERE' => 'id=' . $watch['id']));
+				$database->query(array('DELETE' => self::DATABASE, 'WHERE' => 'id=' . $watch['id']));
 			}
 		}
 	}

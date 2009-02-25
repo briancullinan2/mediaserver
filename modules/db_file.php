@@ -3,7 +3,7 @@
 // the basic file type
 
 class db_file
-{
+{	
 	// most of these methods should just be static, no need to intantiate the class
 	// just good for organization purposes
 	const DATABASE = 'files';
@@ -15,7 +15,6 @@ class db_file
 	{
 		return array('id', 'Filename', 'Filemime', 'Filesize', 'Filedate', 'Filetype', 'Filepath');
 	}
-
 	
 	// return whether or not this module handles trhe specified type of file
 	static function handles($file)
@@ -39,12 +38,12 @@ class db_file
 	{
 		// files always qualify, we are going to log every single one!
 		
-		if(db_file::handles($file))
+		if(self::handles($file))
 		{
 			
 			// check if it is in the database
 			$db_file = $database->query(array(
-					'SELECT' => db_file::DATABASE,
+					'SELECT' => self::DATABASE,
 					'COLUMNS' => array('id', 'Filedate'),
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
 				)
@@ -53,14 +52,14 @@ class db_file
 			if( count($db_file) == 0 )
 			{
 				// always add to file database
-				$id = db_file::add($database, $file);
+				$id = self::add($database, $file);
 			}
 			else
 			{
 				// update file if modified date has changed
 				if( date("Y-m-d h:i:s", filemtime($file)) != $db_file[0]['Filedate'] )
 				{
-					$id = db_file::add($database, $file, $db_file[0]['id']);
+					$id = self::add($database, $file, $db_file[0]['id']);
 				}
 				else
 				{
@@ -92,7 +91,7 @@ class db_file
 	static function add($database, $file, $id = NULL)
 	{
 		// get file information
-		$fileinfo = db_file::getInfo($file);
+		$fileinfo = self::getInfo($file);
 			
 		// if the id is set then we are updating and entry
 		if( $id != NULL )
@@ -100,7 +99,7 @@ class db_file
 			print 'Modifying file: ' . $file . "\n";
 			
 			// update database
-			$id = $database->query(array('UPDATE' => db_file::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $id));
+			$id = $database->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $id));
 		
 			return $id;
 		}
@@ -109,7 +108,7 @@ class db_file
 			print 'Adding file: ' . $file . "\n";
 			
 			// add to database
-			$id = $database->query(array('INSERT' => db_file::DATABASE, 'VALUES' => $fileinfo));
+			$id = $database->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 		
 			return $id;
 		}
@@ -125,7 +124,7 @@ class db_file
 		// check to make sure file is valid
 		if(is_file($file))
 		{
-			$files = $database->query(array('SELECT' => db_file::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
+			$files = $database->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
 			if(count($file) > 0)
 			{				
 				$file = $files[0];
@@ -309,7 +308,7 @@ class db_file
 					//  while other modules only store files and no directories, but these should still be searchable paths
 					//  in which case the module is responsible for validation of it's own paths
 					if(count($dirs) == 0)
-						$dirs = $database->query(array('SELECT' => db_file::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
+						$dirs = $database->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
 					
 					// top level directory / should always exist
 					if($request['dir'] == realpath('/') || count($dirs) > 0)
@@ -428,14 +427,18 @@ class db_file
 	
 		// first clear all the items that are no longer in the watch list
 		// since the watch is resolved all the items in watch have to start with the watched path
-		$where_str = '';
+		$watched_where = '';
 		foreach($watched as $i => $watch)
 		{
 			// add the files that begin with a path from a watch directory
-			$where_str .= ' Filepath REGEXP "^' . addslashes(preg_quote($watch)) . '" OR';
+			$watched_where .= ' Filepath NOT REGEXP "^' . addslashes(preg_quote($watch)) . '" AND';
 		}
+		// remove last AND
+		$watched_where = substr($watched_where, 0, strlen($watched_where)-3);
+		
 		// but keep the ones leading up to watched directories
 		// ----------THIS IS THE SAME FUNCTIONALITY FROM THE CRON.PHP SCRIPT
+		$watched_to_where = '';
 		$directories = array();
 		for($i = 0; $i < count($watched); $i++)
 		{
@@ -466,7 +469,7 @@ class db_file
 							$directories[] = $curr_dir;
 							// if the USE_ALIAS is true this will only add the folder
 							//    if it is in the list of aliases
-							$where_str .= ' Filepath = "' . addslashes($curr_dir) . '" OR';
+							$watched_to_where .= ' Filepath != "' . addslashes($curr_dir) . '" AND';
 						}
 					}
 					// but make an exception for folders between an alias and the watch path
@@ -474,20 +477,24 @@ class db_file
 					{
 						$directories[] = $curr_dir;
 						
-						$where_str .= ' Filepath = "' . addslashes($curr_dir) . '" OR';
+						$watched_to_where .= ' Filepath != "' . addslashes($curr_dir) . '" AND';
 					}
 				}
 			}
 		}
-		// remove last OR
-		$where_str = substr($where_str, 0, strlen($where_str)-2);
-		$where_str = ' !(' . $where_str . ')';
+		// remove last AND
+		$watched_to_where = substr($watched_to_where, 0, strlen($watched_to_where)-3);
 		
+		$ignored_where = '';
 		// clean up items that are in the ignore list
 		foreach($ignored as $i => $ignore)
 		{
-			$where_str = 'Filepath REGEXP "^' . addslashes(preg_quote($ignore)) . '" OR ' . $where_str;
+			$ignored_where .= ' Filepath REGEXP "^' . addslashes(preg_quote($ignore)) . '" OR';
 		}
+		// remove last OR
+		$ignored_where = substr($ignored_where, 0, strlen($ignored_where)-2);
+		
+		$where_str = '(' . $ignored_where . ') OR (' . $watched_to_where . ' AND ' . $watched_where . ')';
 		
 		// remove items
 		$database->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => $where_str));
@@ -501,7 +508,7 @@ class db_file
 		$database->query(array(
 			'SELECT' => constant($module . '::DATABASE'), 
 			'CALLBACK' => array(
-				'FUNCTION' => function_exists($module . '::cleanup_remove')?$module . '::cleanup_remove':'db_file::cleanup_remove',
+				'FUNCTION' => $module . '::cleanup_remove',
 				'ARGUMENTS' => array('CONNECTION' => new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME), 'MODULE' => $module, 'count' => &$count, 'total' => &$total)
 			)
 		));

@@ -85,11 +85,11 @@ class db_archive extends db_file
 		
 		$file = $last_path;
 
-		if(db_archive::handles($file))
+		if(self::handles($file))
 		{
 			// check to see if it is in the database
 			$db_archive = $database->query(array(
-					'SELECT' => db_archive::DATABASE,
+					'SELECT' => self::DATABASE,
 					'COLUMNS' => 'id',
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
 				)
@@ -98,13 +98,13 @@ class db_archive extends db_file
 			// try to get music information
 			if( count($db_archive) == 0 )
 			{
-				$fileid = db_archive::add($database, $file);
+				$fileid = self::add($database, $file);
 			}
 			else
 			{
 				// check to see if the file was changed
 				$db_file = $database->query(array(
-						'SELECT' => db_file::DATABASE,
+						'SELECT' => self::DATABASE,
 						'COLUMNS' => 'Filedate',
 						'WHERE' => 'Filepath = "' . addslashes($file) . '"'
 					)
@@ -113,7 +113,7 @@ class db_archive extends db_file
 				// update audio if modified date has changed
 				if( date("Y-m-d h:i:s", filemtime($file)) != $db_file[0]['Filedate'] )
 				{
-					$id = db_archive::add($database, $file, $db_archive[0]['id']);
+					$id = self::add($database, $file, $db_archive[0]['id']);
 				}
 				
 			}
@@ -129,7 +129,7 @@ class db_archive extends db_file
 		if( $archive_id != NULL )
 		{
 			print 'Removing archive: ' . $file . "\n";
-			$database->query(array('DELETE' => db_archive::DATABASE, 'WHERE' => 'Filepath REGEXP "^' . addslashes(preg_quote($file)) . '\\\/"'));
+			$database->query(array('DELETE' => self::DATABASE, 'WHERE' => 'Filepath REGEXP "^' . addslashes(preg_quote($file)) . '\\\/"'));
 		}
 
 		// pull information from $info
@@ -179,7 +179,7 @@ class db_archive extends db_file
 					$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
 					
 					print 'Adding file in archive: ' . $fileinfo['Filepath'] . "\n";
-					$id = $database->query(array('INSERT' => db_archive::DATABASE, 'VALUES' => $fileinfo));
+					$id = $database->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 				}
 				
 				// get folders leading up to files
@@ -202,7 +202,7 @@ class db_archive extends db_file
 						$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
 						
 						print 'Adding directory in archive: ' . $fileinfo['Filepath'] . "\n";
-						$id = $database->query(array('INSERT' => db_archive::DATABASE, 'VALUES' => $fileinfo));
+						$id = $database->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 					}
 				}
 			}
@@ -227,7 +227,7 @@ class db_archive extends db_file
 			print 'Modifying archive: ' . $fileinfo['Filepath'] . "\n";
 			
 			// update database
-			$id = $database->query(array('UPDATE' => db_archive::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $archive_id));
+			$id = $database->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $archive_id));
 		
 			return $audio_id;
 		}
@@ -236,7 +236,7 @@ class db_archive extends db_file
 			print 'Adding archive: ' . $fileinfo['Filepath'] . "\n";
 			
 			// add to database
-			$id = $database->query(array('INSERT' => db_archive::DATABASE, 'VALUES' => $fileinfo));
+			$id = $database->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 			
 			return $id;
 		}
@@ -264,7 +264,7 @@ class db_archive extends db_file
 
 		if(is_file($last_path))
 		{
-			$files = $database->query(array('SELECT' => db_archive::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
+			$files = $database->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
 			if(count($file) > 0)
 			{				
 				header('Content-Transfer-Encoding: binary');

@@ -122,6 +122,21 @@ class sql_global
 				Comments		TEXT NOT NULL,
 				Bitrate			DOUBLE NOT NULL
 			)') or print_r(mysql_error());
+		
+		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'video (
+				id 				INT NOT NULL AUTO_INCREMENT,
+								PRIMARY KEY(id),
+				Filepath		TEXT NOT NULL,
+				Title			TEXT NOT NULL,
+				Length			DOUBLE NOT NULL,
+				Comments		TEXT NOT NULL,
+				Bitrate			DOUBLE NOT NULL,
+				VideoBitrate	DOUBLE NOT NULL,
+				AudioBitrate	DOUBLE NOT NULL,
+				Channels		INT NOT NULL,
+				FrameRate		INT NOT NULL,
+				Resolution		TEXT NOT NULL
+			)') or print_r(mysql_error());
 
 		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'image (
 				id 				INT NOT NULL AUTO_INCREMENT,
@@ -176,11 +191,35 @@ class sql_global
 		if( !isset($request['limit']) || !is_numeric($request['limit']) || $request['limit'] < 0 )
 			$request['limit'] = 15;
 		if( !isset($request['order_by']) || !in_array($request['order_by'], call_user_func($module . '::columns')) )
-			$request['order_by'] = 'Filepath';
+		{
+			// make sure if it is a list that it is all valid columns
+			$columns = split(',', (isset($request['order_by'])?$request['order_by']:''));
+			foreach($columns as $i => $column)
+			{
+				if(!in_array($column, call_user_func($module . '::columns')))
+					unset($columns[$i]);
+			}
+			if(count($columns) == 0)
+				$request['order_by'] = 'Filepath';
+			else
+				$request['order_by'] = join(',', $columns);
+		}
 		if( !isset($request['direction']) || ($request['direction'] != 'ASC' && $request['direction'] != 'DESC') )
 			$request['direction'] = 'ASC';
 		if( isset($request['group_by']) && !in_array($request['group_by'], call_user_func($module . '::columns')) )
-			unset($request['group_by']);
+		{
+			// make sure if it is a list that it is all valid columns
+			$columns = split(',', $request['group_by']);
+			foreach($columns as $i => $column)
+			{
+				if(!in_array($column, call_user_func($module . '::columns')))
+					unset($columns[$i]);
+			}
+			if(count($columns) == 0)
+				unset($request['group_by']);
+			else
+				$request['group_by'] = join(',', $columns);
+		}
 		if( isset($request['id']) )
 			$request['item'] = $request['id'];
 			

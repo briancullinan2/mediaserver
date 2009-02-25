@@ -66,6 +66,10 @@ class fs_image_browser extends fs_image
 		return false;
 	}
 	
+	static function get($database, $request, &$count, &$error)
+	{
+		return parent::get(NULL, $request, $count, $error, get_class());
+	}
 }
 
 ?>

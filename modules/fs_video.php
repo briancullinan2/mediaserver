@@ -1,5 +1,10 @@
 <?php
 
+//$cmd = 'ffmpeg -i /home/share/Videos/john.adams.part2.hdtv-lol.avi -an -ss 00:00:03 -t 15 -an -r 1 -vframes 15 -y /home/share/Videos/%d.jpg';
+//$cmd = 'ffmpeg -i /home/share/Videos/john.adams.part2.hdtv-lol.avi -f mpeg -t 15 -ss 00:00:03 -sameq -y /home/share/Videos/out.mpeg';
+//exec($cmd, $out, $ret);
+//exit();
+
 $no_setup = true;
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
@@ -12,13 +17,13 @@ require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY
 $GLOBALS['getID3'] = new getID3();
 
 // music handler
-class fs_audio extends fs_file
+class fs_video extends fs_file
 {
-	const NAME = 'Audio on Filesystem';
+	const NAME = 'Video from Database';
 
 	static function columns()
 	{
-		return array('id', 'Track', 'Title', 'Artist', 'Album', 'Genre', 'Year', 'Length', 'Bitrate', 'Comments', 'Filepath');
+		return array('id', 'Length', 'Bitrate', 'VideoBitrate', 'AudioBitrate', 'Title', 'Comments', 'Channels', 'Resolution', 'FrameRate', 'Filepath');
 	}
 	
 	static function handles($file)
@@ -28,7 +33,7 @@ class fs_audio extends fs_file
 		$ext = getExt(basename($file));
 		$type = getExtType($ext);
 		
-		if( $type == 'audio' )
+		if( $type == 'video' )
 		{
 			return true;
 		}
@@ -41,19 +46,18 @@ class fs_audio extends fs_file
 	{
 		$info = $GLOBALS['getID3']->analyze($file);
 		getid3_lib::CopyTagsToComments($info);
-
+		
 		$fileinfo = array();
-		$fileinfo['id'] = bin2hex($file);
-		$fileinfo['Filepath'] = $file;
+		$fileinfo['Filepath'] = addslashes($file);
 		$fileinfo['Title'] = @$info['comments_html']['title'][0];
-		$fileinfo['Artist'] = @$info['comments_html']['artist'][0];
-		$fileinfo['Album'] = @$info['comments_html']['album'][0];
-		$fileinfo['Track'] = @$info['comments_html']['track'][0];
-		$fileinfo['Year'] = @$info['comments_html']['year'][0];
-		$fileinfo['Genre'] = @$info['comments_html']['genre'][0];
-		$fileinfo['Length'] = @$info['playtime_seconds'];
 		$fileinfo['Comments'] = @$info['comments_html']['comments'][0];
 		$fileinfo['Bitrate'] = @$info['bitrate'];
+		$fileinfo['Length'] = @$info['playtime_seconds'];
+		$fileinfo['Channels'] = @$info['audio']['channels'];
+		$fileinfo['AudioBitrate'] = @$info['audio']['bitrate'];
+		$fileinfo['VideoBitrate'] = @$info['video']['bitrate'];
+		$fileinfo['Resolution'] = @$info['video']['resolution_x'] . 'x' . @$info['video']['resolution_y'];
+		$fileinfo['FrameRate'] = @$info['video']['frame_rate'];
 		
 		return $fileinfo;
 	}

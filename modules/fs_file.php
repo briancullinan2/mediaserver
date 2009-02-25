@@ -51,10 +51,6 @@ class fs_file
 		// check to make sure file is valid
 		if(is_file($file))
 		{
-			header('Content-Transfer-Encoding: binary');
-			header('Content-Type: ' .  getMime($file));
-			header('Content-Length: ' . filesize($file));
-			header('Content-Disposition: attachment; filename="' . basename($file) . '"');
 			
 			if(is_string($stream))
 				$op = fopen($stream, 'wb');
@@ -65,6 +61,64 @@ class fs_file
 			{
 				if($fp = fopen($file, 'rb'))
 				{
+					if(isset($_SESSION)) session_write_close();
+						
+					// set up some general headers
+					header('Content-Transfer-Encoding: binary');
+					header('Content-Type: ' .  getMime($file));
+					header('Content-Disposition: attachment; filename="' . basename($file) . '"');
+					
+					// check for range request
+					if(isset($_SERVER['HTTP_RANGE']))
+					{
+						list($size_unit, $range_orig) = explode('=', $_SERVER['HTTP_RANGE'], 2);
+				
+						if ($size_unit == 'bytes')
+						{
+							// multiple ranges could be specified at the same time, but for simplicity only serve the first range
+							// http://tools.ietf.org/id/draft-ietf-http-range-retrieval-00.txt
+							if(strpos($range_orig, ',') !== false)
+								list($range, $extra_ranges) = explode(',', $range_orig, 2);
+							else
+								$range = $range_orig;
+						}
+						else
+						{
+							$range = '-';
+						}
+					}
+					else
+					{
+						$range = '-';
+					}
+					
+					// figure out download piece from range (if set)
+					list($seek_start, $seek_end) = explode('-', $range, 2);
+				
+					// set start and end based on range (if set), else set defaults
+					// also check for invalid ranges.
+					$seek_end = (empty($seek_end)) ? (filesize($file) - 1) : min(abs(intval($seek_end)),(filesize($file) - 1));
+					//$seek_end = $file['Filesize'] - 1;
+					$seek_start = (empty($seek_start) || $seek_end < abs(intval($seek_start))) ? 0 : max(abs(intval($seek_start)),0);
+					
+					// Only send partial content header if downloading a piece of the file (IE workaround)
+					if ($seek_start > 0 || $seek_end < (filesize($file) - 1))
+					{
+						header('HTTP/1.1 206 Partial Content');
+					}
+			
+					header('Accept-Ranges: bytes');
+					header('Content-Range: bytes ' . $seek_start . '-' . $seek_end . '/' . filesize($file));
+				
+					//headers for IE Bugs (is this necessary?)
+					//header("Cache-Control: cache, must-revalidate");  
+					//header("Pragma: public");
+				
+					header('Content-Length: ' . ($seek_end - $seek_start + 1));
+					
+					// seek to start of missing part
+					fseek($fp, $seek_start);
+					
 					while (!feof($fp)) {
 						fwrite($op, fread($fp, BUFFER_SIZE));
 					}				
@@ -85,12 +139,29 @@ class fs_file
 	{
 		$files = array();
 		
+		if(!is_bool($internals))
+		{
+			$module = $internals;
+			$internals = false;
+		}
+		else
+		{
+			$module = get_class();
+		}
+		
 		// only allow this section to run if the database is not being used
 		//  otherwise it could be vulnerable to people accessing any file even on a system restricted to database access
 		if(!USE_DATABASE || $internals)
 		{
 			// do validation! for the fields we use
-			SQL::validate($request, $props, get_class());
+			if( !isset($request['start']) || !is_numeric($request['start']) || $request['start'] < 0 )
+				$request['start'] = 0;
+			if( !isset($request['limit']) || !is_numeric($request['limit']) || $request['limit'] < 0 )
+				$request['limit'] = 15;
+			if( isset($request['id']) )
+				$request['item'] = $request['id'];
+				
+			getIDsFromRequest($request, $request['selected']);
 
 			if(isset($request['selected']) && count($request['selected']) > 0 )
 			{
@@ -99,9 +170,9 @@ class fs_file
 					$file = pack('H*', $id);
 					if(is_file($file))
 					{
-						if(fs_file::handles($file))
+						if(call_user_func($module . '::handles', $file))
 						{
-							$info = fs_file::getInfo($file);
+							$info = call_user_func($module . '::getInfo', $file);
 							// make some modifications
 							if($info['Filetype'] == 'FOLDER') $info['Filepath'] .= DIRECTORY_SEPARATOR;
 							$files[] = $info;
@@ -114,9 +185,9 @@ class fs_file
 			{
 				if(is_file($request['file']))
 				{
-					if(fs_file::handles($request['file']))
+					if(call_user_func($module . '::handles', $request['file']))
 					{
-						return array(0 => fs_file::getInfo($request['file']));
+						return array(0 => call_user_func($module . '::getInfo', $request['file']));
 					}
 					else{ $error = 'Invalid file!'; }
 				}
@@ -135,7 +206,7 @@ class fs_file
 					$count = count($tmp_files);
 					// parse out all the files that this module doesn't handle, just like a filter
 					for($j = 0; $j < $count; $j++)
-						if(!fs_file::handles($request['dir'] . $tmp_files[$j])) unset($tmp_files[$j]);
+						if(!call_user_func($module . '::handles', $request['dir'] . $tmp_files[$j])) unset($tmp_files[$j]);
 					// get the values again, this will reset all the indices
 					$tmp_files = array_values($tmp_files);
 					// set the count to the total length of the file list
@@ -144,7 +215,7 @@ class fs_file
 					for($i = $request['start']; $i < min($request['start']+$request['limit'], $count); $i++)
 					{
 						// get the information from the module for 1 file
-						$info = fs_file::getInfo($request['dir'] . $tmp_files[$i]);
+						$info = call_user_func($module . '::getInfo', $request['dir'] . $tmp_files[$i]);
 						// make some modifications
 						if($info['Filetype'] == 'FOLDER') $info['Filepath'] .= DIRECTORY_SEPARATOR;
 						// set the informations in the total list of files

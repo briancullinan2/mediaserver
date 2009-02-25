@@ -77,6 +77,7 @@ $cmd = basename(CONVERT) . ' ' . str_replace(array_keys($_REQUEST), array_values
 
 // run process and output binary from pipe
 $descriptorspec = array(
+   0 => array("pipe", "r"),  // stdin is a pipe that the child will read from
    1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
 );
 
