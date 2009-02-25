@@ -4,13 +4,13 @@
 // add calls to that function in the getfile procedure
 
 // how long to search for directories that have changed
-define('DIRECTORY_SEEK_TIME',		30);
+define('DIRECTORY_SEEK_TIME',		60);
 
 // how long to search for changed files or add new files
-define('FILE_SEEK_TIME', 		   30);
+define('FILE_SEEK_TIME', 		   60);
 
 // how long to clean up files
-define('CLEAN_UP_BUFFER_TIME',				45);
+define('CLEAN_UP_BUFFER_TIME',				60);
 
 // add 30 seconds becase the cleanup shouldn't take any longer then that
 set_time_limit(DIRECTORY_SEEK_TIME + FILE_SEEK_TIME + CLEAN_UP_BUFFER_TIME);

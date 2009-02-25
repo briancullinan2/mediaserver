@@ -1,4 +1,6 @@
 2009-02-24
+Implemented stream_select() in encode, this is the KEY! to making multiple streams work on a single threaded system
+Made a correction to db_artists that was causing the search to completely fail!
 Fixed some cleanup inefficiencies, now using NOT REGEXP in the expression
 Thought about what to do for the similar_text() problem with the db_album and db_artist modules
 Added Accept-Ranges handing to fs_file module, also abstracted some of the code just like db_file

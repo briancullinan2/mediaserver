@@ -31,7 +31,7 @@ class db_watch_list extends db_watch
 				)
 			);
 			
-			if( (count($db_files) == 0 || date("Y-m-d h:i:s", filemtime($dir)) != $db_files[0]['Filedate']) )
+			if( count($db_files) == 0 || date("Y-m-d h:i:s", filemtime($dir)) != $db_files[0]['Filedate'] )
 			{
 				// make sure it is in the watch list and not the ignore list
 				$watched = db_watch::get($database, array(), $count, $error);

@@ -18,7 +18,7 @@ switch($_REQUEST['encode'])
 		header('Content-Type: audio/mp4');
 		break;
 	case 'MP3':
-		header('Content-Type: audio/mpeg');
+		//header('Content-Type: audio/mpeg');
 		break;
 	case 'WMA':
 		header('Content-Type: audio/x-ms-wma');
@@ -164,20 +164,30 @@ $descriptorspec = array(
 // start process
 $process = proc_open($cmd, $descriptorspec, $pipes, dirname(ENCODE), NULL); //array('binary_pipes' => true, 'bypass_shell' => true));
 
+$fp = fopen($_REQUEST['%IF'], 'rb');
+
 // if %IF is not in the arguments, it is reading from stdin so use pipe
 // output file
 if(is_resource($process))
 {
-	while(!feof($pipes[1]))
+	while(!feof($pipes[1]) || !feof($fp))
 	{
 		if(connection_status()!=0)
 		{
 			proc_terminate($process);
 			break;
 		}
-		print fread($pipes[1], BUFFER_SIZE);
+		$read = array($pipes[1]);
+		$write = array($pipes[0]);
+		$except = NULL;
+		stream_select($read, $write, $except, 0);
+		if(isset($read[0]))
+			print fread($pipes[1], BUFFER_SIZE);
+		if(isset($write[0]))
+			fwrite($pipes[0], fread($fp, BUFFER_SIZE));
 		flush();
 	}
+	//fclose($pipes[0]);
 	fclose($pipes[1]);
 	
 	$status = proc_get_status($process);

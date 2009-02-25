@@ -34,7 +34,7 @@ class db_artists extends db_audio
 		// modify some request stuff
 		$request['order_by'] = 'Artist';
 		$request['group_by'] = 'Artist';
-		$files = self::get($database, $request, $count, $error, 'db_audio');
+		$files = parent::get($database, $request, $count, $error, 'db_audio');
 		
 		// make some changes
 		foreach($files as $i => $file)

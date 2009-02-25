@@ -1,3 +1,8 @@
+2009-02-25
+Now that streams are working, create a system for using both the module->out() methods and an intermediate program
+	this will enable streaming out of a diskimage for example
+Set the content length to $bitrate * $song_length, this will give us a fairly accurent content-length
+
 2009-02-24
 Get ranges working in encode plugin, then move the input to the appropriate module out() function
 	only allow the option if the argument can read from stdin and read the input from the module and write it to the input stream
