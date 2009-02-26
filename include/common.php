@@ -22,6 +22,43 @@ if(!isset($no_setup) || !$no_setup == true)
 
 function setup()
 {
+	// first fix the REQUEST_URI and pull out what is meant to be pretty dirs
+	if(isset($_SERVER['PATH_INFO']))
+	{
+		$dirs = split('/', $_SERVER['PATH_INFO']);
+		switch(count($dirs))
+		{
+			case 2:
+				$_REQUEST['includes'] = $dirs[1];
+				break;
+			case 3:
+				$_REQUEST['cat'] = $dirs[1];
+				$_REQUEST['id'] = $dirs[2];
+				break;
+			case 4:
+				$_REQUEST['cat'] = $dirs[1];
+				$_REQUEST['id'] = $dirs[2];
+				$_REQUEST['filename'] = $dirs[3];
+				break;
+			case 5:
+				$_REQUEST['cat'] = $dirs[1];
+				$_REQUEST['id'] = $dirs[2];
+				$script = basename($_SERVER['SCRIPT_NAME']);
+				$script = substr($script, 0, strpos($script, '.'));
+				$_REQUEST[$script] = $dirs[3];
+				$_REQUEST['filename'] = $dirs[4];
+				break;
+			case 6:
+				$_REQUEST['cat'] = $dirs[1];
+				$_REQUEST['id'] = $dirs[2];
+				$script = basename($_SERVER['SCRIPT_NAME']);
+				$script = substr($script, 0, strpos($script, '.'));
+				$_REQUEST[$script] = $dirs[3];
+				$_REQUEST['extra'] = $dirs[4];
+				$_REQUEST['filename'] = $dirs[5];
+				break;
+		}
+	}
 	
 	// get the list of templates
 	$GLOBALS['templates'] = array();
