@@ -220,6 +220,9 @@ class sql_global
 			else
 				$request['group_by'] = join(',', $columns);
 		}
+		// a special variable to search for the literal string
+		if( isset($request['includes']) )
+			$request['search'] = preg_quote($request['includes']);
 		if( isset($request['id']) )
 			$request['item'] = $request['id'];
 			

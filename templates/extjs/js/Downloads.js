@@ -73,14 +73,14 @@ Ext.app.DownloadsWindow = Ext.extend(Ext.app.Module, {
 						iconCls: 'ux-zipfile',
 						text: 'Zip File',
 						handler: function(item) {
-							var path = plugins_path + 'zip/' + this.parentMenu.record.data.id + '/' + this.parentMenu.record.data.id + '.zip';
+							var path = plugins_path + 'zip.php/' + this.parentMenu.record.data.id + '/' + this.parentMenu.record.data.id + '.zip';
 							window.location = path;
 						}
 					},{
 						iconCls: 'ux-torrentfile',
 						text: 'Torrent File',
 						handler: function(item) {
-							var path = plugins_path + 'bt/' + this.parentMenu.record.data.id + '/' + this.parentMenu.record.data.id + '.torrent';
+							var path = plugins_path + 'bt.php/' + this.parentMenu.record.data.id + '/' + this.parentMenu.record.data.id + '.torrent';
 							window.location = path;
 						}
 					}]
@@ -211,7 +211,7 @@ Ext.app.DownloadsWindow = Ext.extend(Ext.app.Module, {
 						{
 							selectedIds += selections[i].data.id + ((i!=selections.length-1)?',':'');
 						}
-						var path = plugins_path + 'zip/' + selectedIds + '/files.zip';
+						var path = plugins_path + 'zip.php/' + selectedIds + '/files.zip';
 						window.location = path;
 					},
 					scope: grid
@@ -225,7 +225,7 @@ Ext.app.DownloadsWindow = Ext.extend(Ext.app.Module, {
 						{
 							selectedIds += selections[i].data.id + ((i!=selections.length-1)?',':'');
 						}
-						var path = plugins_path + 'bt/' + selectedIds + '/files.torrent';
+						var path = plugins_path + 'bt.php/' + selectedIds + '/files.torrent';
 						window.location = path;
 					},
 					scope: grid

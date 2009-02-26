@@ -119,7 +119,8 @@ class db_file
 	}
 	
 	// output provided file to given stream
-	static function out($database, $file)
+	//  no headers is used to prevent changing the headers, if it is called by a plugin it may just need the stream and no header changes
+	static function out($database, $file, $no_headers = false)
 	{
 		// check to make sure file is valid
 		if(is_file($file))
@@ -129,11 +130,14 @@ class db_file
 			{				
 				if($fp = fopen($files[0]['Filepath'], 'rb'))
 				{
-					// set up some general headers
-					header('Content-Transfer-Encoding: binary');
-					header('Content-Type: ' . $files[0]['Filemime']);
-					header('Content-Disposition: attachment; filename="' . $files[0]['Filename'] . '"');
-					header('Content-Length: ' . $files[0]['Filesize']);
+					if($no_headers == false)
+					{
+						// set up some general headers
+						header('Content-Transfer-Encoding: binary');
+						header('Content-Type: ' . $files[0]['Filemime']);
+						header('Content-Disposition: attachment; filename="' . $files[0]['Filename'] . '"');
+						header('Content-Length: ' . $files[0]['Filesize']);
+					}
 					
 					return $fp;
 				}
@@ -175,7 +179,7 @@ class db_file
 					else
 					{
 						// unpack encoded path and add it to where
-						$props['WHERE'] .= ' Filepath="' . addslashes(pack('H*', $id)) . '" OR';
+						$props['WHERE'] .= ' Filepath="' . addslashes(@pack('H*', $id)) . '" OR';
 					}
 				}
 				// remove last or
@@ -187,13 +191,13 @@ class db_file
 			}
 
 			// add where includes
-			if(isset($request['includes']) && $request['includes'] != '')
+			if(isset($request['search']) && $request['search'] != '')
 			{
 				$props['WHERE'] = '';
 				
 				// incase an aliased path is being searched for replace it here too!
-				if(USE_ALIAS == true) $request['includes'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['includes']);
-				$regexp = addslashes($request['includes']);
+				if(USE_ALIAS == true) $request['search'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['search']);
+				$regexp = addslashes($request['search']);
 				
 				$columns = call_user_func($module . '::columns');
 				// add a regular expression matching for each column in the table being searched
@@ -237,7 +241,7 @@ class db_file
 						elseif($props['WHERE'] != '') $props['WHERE'] .= ' AND ';
 						
 						// if the includes is blank then only show files from current directory
-						if(!isset($request['includes']))
+						if(!isset($request['search']))
 						{
 							if(isset($request['dirs_only']))
 								$props['WHERE'] .= 'Filepath REGEXP "^' . addslashes(preg_quote($request['dir'])) . '[^' . addslashes(preg_quote(DIRECTORY_SEPARATOR)) . ']+' . addslashes(preg_quote(DIRECTORY_SEPARATOR)) . '$"';

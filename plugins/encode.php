@@ -2,7 +2,22 @@
 set_time_limit(0);
 ignore_user_abort(1);
 
-// set the header first thing so browser doesn't stall or get tired of waiting for the process to start
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
+
+// check for file extension if this encode variable is not set
+if(!isset($_REQUEST['encode']))
+{
+	if(isset($_REQUEST['filename']))
+		$_REQUEST['encode'] = strtoupper(getExt($_REQUEST['filename']));
+	if(isset($_REQUEST['search']))
+	{
+		$_REQUEST['encode'] = strtoupper(getExt($_REQUEST['search']));
+		// parse off extension for include search
+		$_REQUEST['search'] = substr($_REQUEST['search'], 0, strlen($_REQUEST['search']) - strlen($_REQUEST['encode']) - 1);
+	}
+}
+
+// set the headers
 switch($_REQUEST['encode'])
 {
 	case 'MP4':
@@ -18,14 +33,14 @@ switch($_REQUEST['encode'])
 		header('Content-Type: audio/mp4');
 		break;
 	case 'MP3':
-		//header('Content-Type: audio/mpeg');
+		header('Content-Type: audio/mpeg');
 		break;
 	case 'WMA':
 		header('Content-Type: audio/x-ms-wma');
 		break;
+	default:
+		$_REQUEST['encode'] = 'MP3';
 }
-
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
 // load mysql to query the database
 if(USE_DATABASE) $database = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
@@ -39,24 +54,38 @@ if(!isset($_REQUEST['%IF']) && isset($_REQUEST['id']))
 	$_REQUEST['%IF'] = $_REQUEST['id'];
 
 // check the id and stuff
-if(isset($_REQUEST['%IF']))
+if(isset($_REQUEST))
 {
 	// get the file path from the database
-	$files = call_user_func_array($_REQUEST['cat'] . '::get', array($database, array('id' => $_REQUEST['id']), &$count, &$error));
+	$files = call_user_func_array($_REQUEST['cat'] . '::get', array($database, $_REQUEST, &$count, &$error));
 	
 	if(count($files) > 0)
 	{
+		// get all the information incase we need to use it
+		foreach($GLOBALS['modules'] as $i => $module)
+		{
+			if($module != $_REQUEST['cat'] && call_user_func_array($module . '::handles', array($files[0]['Filepath'])))
+			{
+				$return = call_user_func_array($module . '::get', array($database, array('file' => $files[0]['Filepath']), &$tmp_count, &$tmp_error));
+				if(isset($return[0])) $files[0] = array_merge($return[0], $files[0]);
+			}
+		}
+		
 		// set the file variable
 		$_REQUEST['%IF'] = $files[0]['Filepath'];
 	}
 	else
 	{
+		header('Content-Type: text/html');
+		print 'File does not exist!';
 		exit;
 	}
 	
 }
 else
 {
+	header('Content-Type: text/html');
+	print 'Must specify a file!';
 	exit;
 }
 
@@ -64,7 +93,7 @@ else
 // first filter out all the unwanted request vars
 foreach($_REQUEST as $key => $value)
 {
-	if(!in_array($key, array('encode', '%IF', '%VC', '%AC', '%VB', '%AB', '%SR', '%CH', '%MX', '%TO')))
+	if(!in_array($key, array('encode', 'cat', '%IF', '%VC', '%AC', '%VB', '%AB', '%SR', '%CH', '%MX', '%TO')))
 		unset($_REQUEST[$key]);
 }
 
@@ -167,15 +196,28 @@ $process = proc_open($cmd, $descriptorspec, $pipes, dirname(ENCODE), NULL); //ar
 stream_set_blocking($pipes[0], 0);
 stream_set_blocking($pipes[1], 0);
 
+// close session so the client can continue browsing the site
 if(isset($_SESSION)) session_write_close();
-$fp = fopen($_REQUEST['%IF'], 'rb');
+
+// make up some header to takes the length of the media into consideration
+if(isset($files[0]['Length']))
+{
+	//$length = ($files[0]['Length'] * ($_REQUEST['%VB'] * 1024 + $_REQUEST['%AB'] * 1024)) + 4 * 1024;
+	//header('Content-Length: ' . $length);
+}
+
+$fp = call_user_func_array($_REQUEST['cat'] . '::out', array($database, $_REQUEST['%IF'], true));
+//$fp = fopen($_REQUEST['%IF'], 'rb');
 $php_out = fopen('php://output', 'wb');
 
 // if %IF is not in the arguments, it is reading from stdin so use pipe
 // output file
-if(is_resource($process))
+if(is_resource($process) && is_resource($fp))
 {
-	$file_closed = false;
+	// don't use the file at all if the %IF field exists in the ARGS sections
+	//   the reason for this is because it won't be reading from STDIN
+	$file_closed = (strpos(ENCODE_ARGS, '%IF') !== false);
+	$total_written = 0;
 	while(true)
 	{
 		// if the connection was interrupted then stop looping
@@ -200,6 +242,12 @@ if(is_resource($process))
 		// if the pipe is eof then we are finished
 		if(feof($pipes[1]))
 		{
+			// write out what is left
+			if(isset($length))
+			{
+				if($total_written < $length)
+					fwrite($php_out, sprintf('[%0' . ($length - $total_written) . 's]', 0));
+			}
 			fclose($pipes[1]);
 			fclose($php_out);
 			break;
@@ -216,7 +264,9 @@ if(is_resource($process))
 		// if we can read then read more and send it out to php
 		if(in_array($pipes[1], $read))
 		{
-			fwrite($php_out, fread($pipes[1], BUFFER_SIZE));
+			$buffer = fread($pipes[1], BUFFER_SIZE);
+			fwrite($php_out, $buffer);
+			$total_written += strlen($buffer);
 		}
 		
 		// if we can write then write more from the input stream

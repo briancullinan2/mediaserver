@@ -20,12 +20,12 @@ if(isset($_REQUEST['search']))
 {
 
 	if(isset($_POST['clear']) || isset($_GET['clear']))
-		unset($_REQUEST['includes']);
+		unset($_REQUEST['search']);
 
 	// store this query in the session
 	$_SESSION['search'] = array();
 	$_SESSION['search']['cat'] = @$_REQUEST['cat'];
-	$_SESSION['search']['includes'] = @$_REQUEST['includes'];
+	$_SESSION['search']['search'] = @$_REQUEST['search'];
 	$_SESSION['search']['lim'] = @$_REQUEST['lim'];
 	$_SESSION['search']['dir'] = @$_REQUEST['dir'];
 	$_SESSION['search']['order_by'] = @$_REQUEST['order_by'];

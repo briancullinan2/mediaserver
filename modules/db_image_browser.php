@@ -39,13 +39,14 @@ class db_image_browser extends db_image
 	}
 	
 	// output provided file to given stream
-	static function out($database, $file)
+	static function out($database, $file, $no_headers = false)
 	{
 		// check to make sure file is valid
 		if(is_file($file))
 		{
 			$fp = db_file::out($database, $file);
-			header('Content-Disposition: ');
+			if($no_headers == false)
+				header('Content-Disposition: ');
 			return $fp;
 		}
 		return false;

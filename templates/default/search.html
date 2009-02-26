@@ -13,11 +13,11 @@
 			{/section}
 			</select>
 			<br />
-			Contains <input name="includes" type="text" value="{if isset($search.includes)}{$search.includes}{/if}" /> (Enter keywords)
+			Contains <input name="search" type="text" value="{if isset($search.search)}{$search.search}{/if}" /> (Enter keywords)
 			<br />
 			Submit to apply filter.
 			<br />
-			<input name="search" type="submit" value="Search" />
+			<input type="submit" value="Search" />
 		</form>
 	</div>
 {elseif $smarty.request.detail >= 4}
@@ -35,7 +35,7 @@
 			{/section}
 			</select>
 			<br />
-			Contains <input name="includes" type="text" value="{if isset($search.includes)}{$search.includes}{/if}" /> (Enter keywords)
+			Contains <input name="search" type="text" value="{if isset($search.search)}{$search.search}{/if}" /> (Enter keywords)
 			<br />
 			Directory <input name="dir" type="text" value="{if isset($search.dir)}{$search.dir}{/if}" /> (Directory filter)
 			<br />
@@ -47,7 +47,7 @@
 			<br />
 			Submit to apply filter.
 			<br />
-			<input name="search" type="submit" value="Search" />
+			<input type="submit" value="Search" />
 		</form>
 	</div>
 {/if}

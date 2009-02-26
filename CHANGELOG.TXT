@@ -2,6 +2,12 @@
 Moved Accept-Ranges back to the file.php plugin!  Modules should not be in control of output, only getting information from database
 The Module->out() method now returns a SEEKABLE file resource, some can be custom like db_diskimage which can read a file out of a disk image and stop reading in the appropriate places
 Added some filesize checking to the file.php plugin, it now checks everywhere that it can to try and get the Filesize value for using HTTP-RANGE, including the header (incase it was set by a module already)
+Added extension from filename feature to encode, the desired output type can now be determined from the expension that is used on the filename field
+Added a feature to making searches easier, the last filename in pretty dirs can now be a search term
+Made encode.php plugin detect whether or not the %IF input field is used in the ENCODE_ARGS definition
+Modified the modules to ignore errors from the pack() function, using encoding path IDs are easily corruptible
+Made pretty dirs optional, they are still pretty and php parses off the directory part and puts it into the request
+Fixed some stuff with the search, the search variable is not search instead of includes, and the includes variable is used for searching a literal string
 
 2009-02-24
 Implemented stream_select() in encode, this is the KEY! to making multiple streams work on a single threaded system

@@ -46,86 +46,23 @@ class fs_file
 	}
 	
 	// output provided file to given stream
-	static function out($database, $file, $stream)
+	static function out($database, $file, $no_headers = false)
 	{
 		// check to make sure file is valid
 		if(is_file($file))
 		{
-			
-			if(is_string($stream))
-				$op = fopen($stream, 'wb');
-			else
-				$op = $stream;
-			
-			if($op !== false)
+			if($fp = fopen($file, 'rb'))
 			{
-				if($fp = fopen($file, 'rb'))
+				if($no_headers == false)
 				{
-					if(isset($_SESSION)) session_write_close();
-						
 					// set up some general headers
 					header('Content-Transfer-Encoding: binary');
-					header('Content-Type: ' .  getMime($file));
+					header('Content-Type: ' . getMime($file));
 					header('Content-Disposition: attachment; filename="' . basename($file) . '"');
-					
-					// check for range request
-					if(isset($_SERVER['HTTP_RANGE']))
-					{
-						list($size_unit, $range_orig) = explode('=', $_SERVER['HTTP_RANGE'], 2);
-				
-						if ($size_unit == 'bytes')
-						{
-							// multiple ranges could be specified at the same time, but for simplicity only serve the first range
-							// http://tools.ietf.org/id/draft-ietf-http-range-retrieval-00.txt
-							if(strpos($range_orig, ',') !== false)
-								list($range, $extra_ranges) = explode(',', $range_orig, 2);
-							else
-								$range = $range_orig;
-						}
-						else
-						{
-							$range = '-';
-						}
-					}
-					else
-					{
-						$range = '-';
-					}
-					
-					// figure out download piece from range (if set)
-					list($seek_start, $seek_end) = explode('-', $range, 2);
-				
-					// set start and end based on range (if set), else set defaults
-					// also check for invalid ranges.
-					$seek_end = (empty($seek_end)) ? (filesize($file) - 1) : min(abs(intval($seek_end)),(filesize($file) - 1));
-					//$seek_end = $file['Filesize'] - 1;
-					$seek_start = (empty($seek_start) || $seek_end < abs(intval($seek_start))) ? 0 : max(abs(intval($seek_start)),0);
-					
-					// Only send partial content header if downloading a piece of the file (IE workaround)
-					if ($seek_start > 0 || $seek_end < (filesize($file) - 1))
-					{
-						header('HTTP/1.1 206 Partial Content');
-					}
-			
-					header('Accept-Ranges: bytes');
-					header('Content-Range: bytes ' . $seek_start . '-' . $seek_end . '/' . filesize($file));
-				
-					//headers for IE Bugs (is this necessary?)
-					//header("Cache-Control: cache, must-revalidate");  
-					//header("Pragma: public");
-				
-					header('Content-Length: ' . ($seek_end - $seek_start + 1));
-					
-					// seek to start of missing part
-					fseek($fp, $seek_start);
-					
-					while (!feof($fp)) {
-						fwrite($op, fread($fp, BUFFER_SIZE));
-					}				
-					fclose($fp);
-					fclose($op);
-					return true;
+					header('Content-Length: ' . filesize($file));
 				}
+				
+				return $fp;
 			}
 		}
 		return false;
@@ -167,7 +104,7 @@ class fs_file
 			{
 				foreach($request['selected'] as $i => $id)
 				{
-					$file = pack('H*', $id);
+					$file = @pack('H*', $id);
 					if(is_file($file))
 					{
 						if(call_user_func($module . '::handles', $file))

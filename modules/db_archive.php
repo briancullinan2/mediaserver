@@ -245,7 +245,7 @@ class db_archive extends db_file
 		
 	}
 
-	static function out($database, $file)
+	static function out($database, $file, $no_headers = false)
 	{
 		$paths = split('\\' . DIRECTORY_SEPARATOR, $file);
 		$last_path = '';
@@ -264,7 +264,7 @@ class db_archive extends db_file
 
 		if(is_file($last_path))
 		{
-			return db_file::out($database, $last_path);
+			return db_file::out($database, $last_path, $no_headers);
 		}
 
 		return false;

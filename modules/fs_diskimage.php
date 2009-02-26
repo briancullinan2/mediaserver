@@ -236,7 +236,7 @@ class fs_diskimage extends fs_file
 			{
 				foreach($request['selected'] as $i => $id)
 				{
-					$file = pack('H*', $id);
+					$file = @pack('H*', $id);
 					if(fs_diskimage::handles($file))
 					{
 						$files[] = fs_diskimage::getInfo($file);

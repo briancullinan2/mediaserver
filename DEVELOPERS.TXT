@@ -1,3 +1,6 @@
+Templates:
+If the template honors the ability to use mod_rewrite, every path has to add .php to the plugins path.
+
 Modules:
 Everything that uses a different file structure to display information should have a different module.  
 For exmaple, the db_audio module accepts parameters for searching artists and albums, these modifiers change which results are displayed.

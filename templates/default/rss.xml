@@ -8,7 +8,7 @@
 		{section name=file loop=$files}
 			<item>
 				<title>{$files[file].Filename|utf8_encode|htmlspecialchars}</title>
-				<link>{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}file/{$smarty.request.cat}/{$files[file].id}/{$files[file].Filename|utf8_encode|urlencode|htmlspecialchars}</link>
+				<link>{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}file.php/{$smarty.request.cat}/{$files[file].id}/{$files[file].Filename|utf8_encode|urlencode|htmlspecialchars}</link>
 				<description></description>
 			</item>
 		{/section}

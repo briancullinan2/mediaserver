@@ -42,26 +42,10 @@ class fs_image_browser extends fs_image
 		// check to make sure file is valid
 		if(is_file($file))
 		{
-			header('Content-Type: ' . getMime($file));
-			header('Content-Length: ' . filesize($file));
-			
-			if(is_string($stream))
-				$op = fopen($stream, 'wb');
-			else
-				$op = $stream;
-			
-			if($op !== false)
-			{
-				if($fp = fopen($file, 'rb'))
-				{
-					while (!feof($fp)) {
-						fwrite($op, fread($fp, BUFFER_SIZE));
-					}				
-					fclose($fp);
-					fclose($op);
-					return true;
-				}
-			}
+			$fp = fs_file::out($database, $file);
+			if($no_headers == false)
+				header('Content-Disposition: ');
+			return $fp;
 		}
 		return false;
 	}
