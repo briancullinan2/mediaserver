@@ -132,22 +132,10 @@ class db_video extends db_file
 	}
 	
 	// output provided file to given stream
-	static function out($database, $file)
-	{
-		// check to make sure file is valid
-		if(is_file($file))
-		{
-			$files = $database->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
-			if(count($files) > 0)
-			{				
-				$file = $files[0];
-				
-				if($fp = fopen($file['Filepath'], 'rb'))
-					return $fp;
-			}
-		}
-		return false;
-	}
+	// handled by db_file
+	//static function out($database, $file)
+	//{
+	//}
 	
 	static function get($database, $request, &$count, &$error)
 	{

@@ -39,36 +39,14 @@ class db_image_browser extends db_image
 	}
 	
 	// output provided file to given stream
-	static function out($database, $file, $stream)
+	static function out($database, $file)
 	{
 		// check to make sure file is valid
 		if(is_file($file))
 		{
-			$files = $database->query(array('SELECT' => parent::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
-			if(count($file) > 0)
-			{				
-				$file = $files[0];
-				header('Content-Type: ' . $file['Filemime']);
-				header('Content-Length: ' . $file['Filesize']);
-				
-				if(is_string($stream))
-					$op = fopen($stream, 'wb');
-				else
-					$op = $stream;
-				
-				if($op !== false)
-				{
-					if($fp = fopen($files[0]['Filepath'], 'rb'))
-					{
-						while (!feof($fp)) {
-							fwrite($op, fread($fp, BUFFER_SIZE));
-						}				
-						fclose($fp);
-						fclose($op);
-						return true;
-					}
-				}
-			}
+			$fp = db_file::out($database, $file);
+			header('Content-Disposition: ');
+			return $fp;
 		}
 		return false;
 	}

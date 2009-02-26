@@ -1,3 +1,8 @@
+2009-02-26
+Moved Accept-Ranges back to the file.php plugin!  Modules should not be in control of output, only getting information from database
+The Module->out() method now returns a SEEKABLE file resource, some can be custom like db_diskimage which can read a file out of a disk image and stop reading in the appropriate places
+Added some filesize checking to the file.php plugin, it now checks everywhere that it can to try and get the Filesize value for using HTTP-RANGE, including the header (incase it was set by a module already)
+
 2009-02-24
 Implemented stream_select() in encode, this is the KEY! to making multiple streams work on a single threaded system
 Made a correction to db_artists that was causing the search to completely fail!

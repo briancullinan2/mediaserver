@@ -245,7 +245,7 @@ class db_archive extends db_file
 		
 	}
 
-	static function out($database, $file, $stream)
+	static function out($database, $file)
 	{
 		$paths = split('\\' . DIRECTORY_SEPARATOR, $file);
 		$last_path = '';
@@ -264,34 +264,8 @@ class db_archive extends db_file
 
 		if(is_file($last_path))
 		{
-			$files = $database->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
-			if(count($file) > 0)
-			{				
-				header('Content-Transfer-Encoding: binary');
-				header('Content-Type: ' .  getMime($last_path));
-				header('Content-Length: ' . filesize($last_path));
-				header('Content-Disposition: attachment; filename="' . basename($last_path) . '"');
-				
-				if(is_string($stream))
-					$op = fopen($stream, 'wb');
-				else
-					$op = $stream;
-				
-				if($op !== false)
-				{
-					if($fp = fopen($last_path, 'rb'))
-					{
-						while (!feof($fp)) {
-							fwrite($op, fread($fp, BUFFER_SIZE));
-						}				
-						fclose($fp);
-						fclose($op);
-						return true;
-					}
-				}
-			} else { $error = 'File not found!'; }
+			return db_file::out($database, $last_path);
 		}
-
 
 		return false;
 	}

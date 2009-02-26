@@ -17,10 +17,104 @@ class db_diskimage extends db_file
 	const DATABASE = 'diskimage';
 	
 	const NAME = 'Disk Images from Database';
+	
+	// this is for stream stuff when controlling output of the file
+    const PROTOCOL = 'diskimage'; /* Underscore not allowed */
+       
+    protected $internal_fp  = NULL;
+    protected $internal_length  = NULL;
+    protected $internal_pos  = NULL;
+	
+    function stream_open($path, $mode, $options, &$opened_path)
+    {
+		if(substr($path, 0, 12) == 'diskimage://')
+			$path = substr($path, 12);
+			
+		$paths = split('\\' . DIRECTORY_SEPARATOR, $path);
+		$last_path = '';
+		foreach($paths as $i => $tmp_file)
+		{
+			if(file_exists($last_path . $tmp_file) || $last_path == '')
+			{
+				$last_path = $last_path . $tmp_file . DIRECTORY_SEPARATOR;
+			} else {
+				if(file_exists($last_path))
+					break;
+			}
+		}
+		$inside_path = substr($path, strlen($last_path));
+		$inside_path = str_replace(DIRECTORY_SEPARATOR, '/', $inside_path);
+		if($last_path[strlen($last_path)-1] == DIRECTORY_SEPARATOR) $last_path = substr($last_path, 0, strlen($last_path)-1);
+
+		if(is_file($last_path))
+		{
+	
+			$info = $GLOBALS['getID3']->analyze($last_path);
+			
+			if($inside_path != '')
+			{
+				if(strlen($inside_path) == 0 || $inside_path[0] != '/') $inside_path = '/' . $inside_path;
+				if(isset($info['iso']) && isset($info['iso']['directories']))
+				{
+					foreach($info['iso']['directories'] as $i => $directory)
+					{
+						foreach($directory as $j => $file)
+						{
+							if($file['filename'] == $inside_path)
+							{
+								if($fp = fopen($last_path, 'rb'))
+								{
+									fseek($fp, $file['offset_bytes']);
+									$this->internal_fp = $fp;
+									$this->internal_length = $file['filesize'];
+									$this->internal_pos = 0;
+									
+									return true;
+								}
+							}
+						}
+					}
+				}
+			}
+			// download entire image
+			else
+			{
+				if($fp = fopen($last_path, 'rb'))
+				{
+					$this->internal_fp = $fp;
+					$this->internal_length = filesize($last_path);
+					$this->internal_pos = 0;
+					return true;
+				}
+			}
+		}
+		return false;
+    }
+    function stream_read($count){
+		if($this->internal_pos + $count > $this->internal_length)
+			$count = $this->internal_length - $this->internal_pos;
+		$this->internal_pos += $count;
+        return fread($this->internal_fp, $count);
+    }
+    function stream_eof(){
+        return $this->internal_pos >= $this->internal_length;
+    }
+    function stream_tell(){
+        return $this->internal_pos;
+    }
+    function stream_seek($position){
+		if($position > $this->internal_length)
+		{
+			$this->internal_pos = $this->internal_length;
+			return 0;
+		}
+		$this->internal_pos = $position;
+        return 0;
+    }
 
 	static function columns()
 	{
-		return array('id', 'Filename', 'Filemime', 'Filesize', 'Filedate', 'Filetype', 'Filepath');
+		return array('id', 'Offset', 'Filename', 'Filemime', 'Filesize', 'Filedate', 'Filetype', 'Filepath');
 	}
 
 	static function handles($file)
@@ -210,98 +304,17 @@ class db_diskimage extends db_file
 		
 	}
 
-	static function out($database, $file, $stream)
+	static function out($database, $file)
 	{
-		$paths = split('\\' . DIRECTORY_SEPARATOR, $file);
-		$last_path = '';
-		foreach($paths as $i => $tmp_file)
-		{
-			if(file_exists($last_path . $tmp_file) || $last_path == '')
-			{
-				$last_path = $last_path . $tmp_file . DIRECTORY_SEPARATOR;
-			} else {
-				if(file_exists($last_path))
-					break;
-			}
-		}
-		$inside_path = substr($file, strlen($last_path));
-		$inside_path = str_replace(DIRECTORY_SEPARATOR, '/', $inside_path);
-		if($last_path[strlen($last_path)-1] == DIRECTORY_SEPARATOR) $last_path = substr($last_path, 0, strlen($last_path)-1);
-
-		if(is_file($last_path))
-		{
-			$files = $database->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
-			if(count($file) > 0)
-			{				
-				
-				$info = $GLOBALS['getID3']->analyze($last_path);
-				
-				if(is_string($stream))
-					$op = fopen($stream, 'wb');
-				else
-					$op = $stream;
-	
-				if($inside_path != '')
-				{
-					if(strlen($inside_path) == 0 || $inside_path[0] != '/') $inside_path = '/' . $inside_path;
-					if(isset($info['iso']) && isset($info['iso']['directories']))
-					{
-						foreach($info['iso']['directories'] as $i => $directory)
-						{
-							foreach($directory as $j => $file)
-							{
-								if($file['filename'] == $inside_path)
-								{
-									header('Content-Transfer-Encoding: binary');
-									header('Content-Type: ' .  getMime($inside_path));
-									header('Content-Length: ' . $file['filesize']);
-									header('Content-Disposition: attachment; filename="' . basename($inside_path) . '"');
-									
-									if($op !== false)
-									{
-										if($fp = fopen($last_path, 'rb'))
-										{
-											fseek($fp, $file['offset_bytes']);
-											
-											$total = 0;
-											while($total < $file['filesize'])
-											{
-												$buffer = fread($fp, min(BUFFER_SIZE, $file['filesize'] - $total));
-												$total += strlen($buffer);
-												fwrite($op, $buffer);
-											}
-											fclose($fp);
-											fclose($op);
-											return true;
-										}
-									}
-								}
-							}
-						}
-					} else{ $error = 'Cannot read this type of file!'; }
-				}
-				else
-				{
-					// download entire image
-					header('Content-Transfer-Encoding: binary');
-					header('Content-Type: ' .  getMime($last_path));
-					header('Content-Length: ' . filesize($last_path));
-					header('Content-Disposition: attachment; filename="' . basename($last_path) . '"');
-					
-					if($op !== false)
-					{
-						if($fp = fopen($last_path, 'rb'))
-						{
-							while (!feof($fp)) {
-								fwrite($op, fread($fp, BUFFER_SIZE));
-							}				
-							fclose($fp);
-							fclose($op);
-							return true;
-						}
-					}
-				}
-			} else{ $error = 'File not found!'; }
+		$files = $database->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
+		if(count($files) > 0)
+		{				
+			header('Content-Transfer-Encoding: binary');
+			header('Content-Type: ' .  $files[0]['Filemime']);
+			header('Content-Length: ' . $files[0]['Filesize']);
+			header('Content-Disposition: attachment; filename="' . $files[0]['Filename'] . '"');
+			
+			return fopen(self::PROTOCOL . '://' . $file, 'rb');
 		}
 
 		return false;
@@ -339,7 +352,7 @@ class db_diskimage extends db_file
 			}
 		}
 		
-		$files = db_file::get($database, $request, $count, $error, 'db_diskimage');
+		$files = db_file::get($database, $request, $count, $error, get_class());
 		
 		return $files;
 	}
@@ -376,5 +389,10 @@ class db_diskimage extends db_file
 		parent::cleanup($database, $watched, $ignored, get_class());
 	}
 }
+
+stream_wrapper_register(
+    db_diskimage::PROTOCOL,
+   'db_diskimage'
+);
 
 ?>

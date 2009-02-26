@@ -1,3 +1,6 @@
+2009-02-26
+Get streams working in convert.php plugin and set up conditions for when the streams are used based on if %OF and %IF are used in the command arguments
+
 2009-02-25
 Now that streams are working, create a system for using both the module->out() methods and an intermediate program
 	this will enable streaming out of a diskimage for example

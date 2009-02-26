@@ -119,103 +119,23 @@ class db_file
 	}
 	
 	// output provided file to given stream
-	static function out($database, $file, $stream)
+	static function out($database, $file)
 	{
 		// check to make sure file is valid
 		if(is_file($file))
 		{
 			$files = $database->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
-			if(count($file) > 0)
+			if(count($files) > 0)
 			{				
-				$file = $files[0];
-				
-				if(is_string($stream))
-					$op = fopen($stream, 'wb');
-				else
-					$op = $stream;
-				
-				if($op !== false)
+				if($fp = fopen($files[0]['Filepath'], 'rb'))
 				{
-					if($fp = fopen($files[0]['Filepath'], 'rb'))
-					{
-						ob_start();
-						
-						if(isset($_SESSION)) session_write_close();
-						
-						// set up some general headers
-						header('Content-Transfer-Encoding: binary');
-						header('Content-Type: ' . $file['Filemime']);
-						header('Content-Disposition: attachment; filename="' . $file['Filename'] . '"');
-						
-						// check for range request
-						if(isset($_SERVER['HTTP_RANGE']))
-						{
-							list($size_unit, $range_orig) = explode('=', $_SERVER['HTTP_RANGE'], 2);
+					// set up some general headers
+					header('Content-Transfer-Encoding: binary');
+					header('Content-Type: ' . $files[0]['Filemime']);
+					header('Content-Disposition: attachment; filename="' . $files[0]['Filename'] . '"');
+					header('Content-Length: ' . $files[0]['Filesize']);
 					
-							if ($size_unit == 'bytes')
-							{
-								// multiple ranges could be specified at the same time, but for simplicity only serve the first range
-								// http://tools.ietf.org/id/draft-ietf-http-range-retrieval-00.txt
-								if(strpos($range_orig, ',') !== false)
-									list($range, $extra_ranges) = explode(',', $range_orig, 2);
-								else
-									$range = $range_orig;
-							}
-							else
-							{
-								$range = '-';
-							}
-						}
-						else
-						{
-							$range = '-';
-						}
-						
-						// figure out download piece from range (if set)
-						list($seek_start, $seek_end) = explode('-', $range, 2);
-					
-						// set start and end based on range (if set), else set defaults
-						// also check for invalid ranges.
-						$seek_end = (empty($seek_end)) ? ($file['Filesize'] - 1) : min(abs(intval($seek_end)),($file['Filesize'] - 1));
-						//$seek_end = $file['Filesize'] - 1;
-						$seek_start = (empty($seek_start) || $seek_end < abs(intval($seek_start))) ? 0 : max(abs(intval($seek_start)),0);
-						
-						// Only send partial content header if downloading a piece of the file (IE workaround)
-						if ($seek_start > 0 || $seek_end < ($file['Filesize'] - 1))
-						{
-							header('HTTP/1.1 206 Partial Content');
-						}
-				
-						header('Accept-Ranges: bytes');
-						header('Content-Range: bytes ' . $seek_start . '-' . $seek_end . '/' . $file['Filesize']);
-					
-						//headers for IE Bugs (is this necessary?)
-						//header("Cache-Control: cache, must-revalidate");  
-						//header("Pragma: public");
-					
-						header('Content-Length: ' . ($seek_end - $seek_start + 1));
-						
-						// seek to start of missing part
-						fseek($fp, $seek_start);
-						
-						$buffer = ob_get_contents();
-						ob_end_clean();
-						
-						$tp = fopen('/tmp/test.txt', 'a');
-						fwrite($tp, $seek_start . ' - ' . $seek_end . (isset($_SERVER['HTTP_RANGE'])?(' - ' . $_SERVER['HTTP_RANGE']):'') . "\n");
-						fwrite($tp, $buffer);
-						fclose($tp);
-
-						// output file
-						while (!feof($fp)) {
-							fwrite($op, fread($fp, BUFFER_SIZE));
-						}
-						
-						// close file handles and return succeeded
-						fclose($fp);
-						fclose($op);
-						return true;
-					}
+					return $fp;
 				}
 			}
 		}
