@@ -90,7 +90,7 @@ define('ARCHIVE_RAR',                                'C:\Program Files\WinRAR\Ra
 define('ARCHIVE_ARGS_RAR',                           ' p %IF'); // a program that can convert video and audio streams
 
 // finally some general options, just used to avoid hardcoding stuff
-define('BUFFER_SIZE', 	                         2048); // max amount to output when accessing a file
+define('BUFFER_SIZE', 	                         1024); // max amount to output when accessing a file
 define('TMP_DIR', 	                             '/tmp/'); // a temporary directory to use for creating thumbnails
 // USE_DATABASE must be enabled in order for this to be used!
 define('USE_ALIAS', 							 true); // set to true in order to use aliased paths for output of Filepath

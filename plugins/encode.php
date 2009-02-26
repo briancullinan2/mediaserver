@@ -18,7 +18,7 @@ switch($_REQUEST['encode'])
 		header('Content-Type: audio/mp4');
 		break;
 	case 'MP3':
-		header('Content-Type: audio/mpeg');
+		//header('Content-Type: audio/mpeg');
 		break;
 	case 'WMA':
 		header('Content-Type: audio/x-ms-wma');
@@ -164,47 +164,67 @@ $descriptorspec = array(
 // start process
 $process = proc_open($cmd, $descriptorspec, $pipes, dirname(ENCODE), NULL); //array('binary_pipes' => true, 'bypass_shell' => true));
 
+stream_set_blocking($pipes[0], 0);
+stream_set_blocking($pipes[1], 0);
+
+if(isset($_SESSION)) session_write_close();
 $fp = fopen($_REQUEST['%IF'], 'rb');
+$php_out = fopen('php://output', 'wb');
 
 // if %IF is not in the arguments, it is reading from stdin so use pipe
 // output file
 if(is_resource($process))
 {
-	while(!feof($pipes[1]))
+	$file_closed = false;
+	while(true)
 	{
+		// if the connection was interrupted then stop looping
 		if(connection_status()!=0)
 		{
+			fclose($fp);
+			fclose($pipes[0]);
+			fclose($pipes[1]);
+			fclose($php_out);
 			proc_terminate($process);
 			break;
 		}
 		
-		$read = array($pipes[1]);
-		if(!feof($fp))
+		// if the file is not already closed, then close the file when it hits eof
+		if(!$file_closed && feof($fp))
 		{
-			$write = array($pipes[0]);
-		}
-		else
-		{
-			$write = NULL;
+			$file_closed = true;
 			fclose($fp);
 			fclose($pipes[0]);
 		}
-		$except = NULL;
 		
-		stream_select($read, $write, $except, 0);
-		
-		if(is_array($read) && in_array($pipes[1], $read))
+		// if the pipe is eof then we are finished
+		if(feof($pipes[1]))
 		{
-			print fread($pipes[1], BUFFER_SIZE);
-			flush();
+			fclose($pipes[1]);
+			fclose($php_out);
+			break;
 		}
 		
-		if(is_array($write) && in_array($pipes[0], $write))
+		// set up the pipes to be checked
+		$read = array($pipes[1]);
+		$write = (!$file_closed)?array($pipes[0]):array();
+		$except = NULL;
+
+		// select the pipes that are available for reading and writing
+		stream_select($read, $write, $except, NULL);
+		
+		// if we can read then read more and send it out to php
+		if(in_array($pipes[1], $read))
+		{
+			fwrite($php_out, fread($pipes[1], BUFFER_SIZE));
+		}
+		
+		// if we can write then write more from the input stream
+		if(!$file_closed && in_array($pipes[0], $write))
 		{
 			fwrite($pipes[0], fread($fp, BUFFER_SIZE));
 		}
 	}
-	fclose($pipes[1]);
 	
 	$status = proc_get_status($process);
 	kill9('vlc', $status['pid']);
