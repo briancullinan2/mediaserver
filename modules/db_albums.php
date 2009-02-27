@@ -6,12 +6,6 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATO
 
 require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'db_audio.php';
 
-// include the id handler
-require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.php';
-
-// set up id3 reader incase any files need it
-$GLOBALS['getID3'] = new getID3();
-
 // music handler
 class db_albums extends db_audio
 {
@@ -28,22 +22,41 @@ class db_albums extends db_audio
 	{
 	}
 	
-	
 	static function get($database, $request, &$count, &$error)
 	{
+		$database->validate($request, $props, get_class());
+			
 		// modify some request stuff
-		$request['order_by'] = 'Album';
-		$request['group_by'] = 'Album';
-		$files = parent::get($database, $request, $count, $error, 'db_audio');
-		
-		// make some changes
-		foreach($files as $i => $file)
+		if(isset($request['dir']))
 		{
-			$files[$i]['Filetype'] = 'FOLDER';
-			$files[$i]['Filesize'] = '0';
-			$files[$i]['Filepath'] = dirname($files[$i]['Filepath']) . DIRECTORY_SEPARATOR;
-			$files[$i]['Filename'] = $files[$i]['Album'];
-			$files[$i]['SongCount'] = $files[$i]['count(*)'];
+			if($request['dir'][0] == DIRECTORY_SEPARATOR) $request['dir'] = substr($request['dir'], 1);
+			if($request['dir'][strlen($request['dir'])-1] == DIRECTORY_SEPARATOR) $request['dir'] = substr($request['dir'], 0, strlen($request['dir'])-1);
+			if($request['dir'] == '$Unknown$')
+				$request['dir'] = '';
+			$request['search'] = '^' . preg_quote($request['dir']) . '$';
+			$request['columns'] = 'Album';
+			unset($request['dir']);
+			
+			$files = parent::get($database, $request, $count, $error, 'db_audio');
+		}
+		else
+		{
+			$request['order_by'] = 'Album';
+			$request['group_by'] = 'Album';
+			
+			$files = parent::get($database, $request, $count, $error, 'db_audio');
+			
+			// make some changes
+			foreach($files as $i => $file)
+			{
+				if($files[$i]['Album'] == '')
+					$files[$i]['Album'] = '$Unknown$';
+				$files[$i]['Filetype'] = 'FOLDER';
+				$files[$i]['Filesize'] = '0';
+				$files[$i]['Filepath'] = DIRECTORY_SEPARATOR . $files[$i]['Album'] . DIRECTORY_SEPARATOR;
+				$files[$i]['Filename'] = $files[$i]['Album'];
+				$files[$i]['SongCount'] = $files[$i]['count(*)'];
+			}
 		}
 		
 		return $files;

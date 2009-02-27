@@ -1,6 +1,5 @@
 2009-02-26 (Full)
 ------------- GENERAL TODO -------------
-Work on windows compatibility, streams are really working on windows, maybe the file solution will fix that
 Make backup ways of accessing files, store old IDs for removed files in a backup database
 	If a filename is supplied to the file.php plugin, do a search for that file if the ID doesn't exist
 Do memory checks and don't run cron if it's above a certain threshhold, maybe run some stuff with niceness
@@ -20,11 +19,11 @@ Add support for creating thumbnails in convert.php script
 FIX bt.php plugin to work with command line torrent seeder on windows
 Make convert.php plugin recognize video thumbnails and use vlc to extract them
 ------------- Module TODO -------------
+Add a wrapper module that db_artists refers to call artistalbum which displays all the albumbs by that artist
 Improve how the modules handle the headers, should the out() method only return the stream or should it change headers too?
 Make cleanup faster by having the other modules check if their paths are still in the files database instead?  it is still a lot of queries but would it be faster then checking the file system?
 	maybe instead of string compares, the IDs can be used, this would take some refactoring of each module
 Find a solution for adding files that are being browsed immediately, do a check in handles maybe for db_ modules that adds it to the database immediately if it is trying to be accessed?
-Find a way to pull out the common file path of all the artists and albums in the db_albums and db_artists module
 Work on db_movies, use cUrl to download movie information from imdb, use the volume decriptor for lookup, this shouldn't change even if they edited an image
 	Research the video_ts.ifo file, there must be a way of getting the full name from a DVD image, windows media center projects can do it, so can we
 ------------- All Template TODO -------------

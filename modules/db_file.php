@@ -199,7 +199,15 @@ class db_file
 				if(USE_ALIAS == true) $request['search'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['search']);
 				$regexp = addslashes($request['search']);
 				
-				$columns = call_user_func($module . '::columns');
+				if(isset($request['columns']))
+				{
+					$columns = split(',', $request['columns']);
+				}
+				else
+				{
+					$columns = call_user_func($module . '::columns');
+				}
+				
 				// add a regular expression matching for each column in the table being searched
 				$props['WHERE'] .= '(';
 				foreach($columns as $i => $column)

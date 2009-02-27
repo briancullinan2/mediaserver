@@ -220,15 +220,42 @@ class sql_global
 			else
 				$request['group_by'] = join(',', $columns);
 		}
+		
 		// a special variable to search for the literal string
 		if( isset($request['includes']) )
 			$request['search'] = preg_quote($request['includes']);
+			
+		if( isset($request['dir']) )
+			$request['dir'] = stripslashes($request['dir']);
+			
+		// which columns to search
+		if( isset($request['columns']) && !in_array($request['columns'], call_user_func($module . '::columns')) )
+		{
+			// make sure if it is a list that it is all valid columns
+			$columns = split(',', $request['columns']);
+			foreach($columns as $i => $column)
+			{
+				if(!in_array($column, call_user_func($module . '::columns')))
+					unset($columns[$i]);
+			}
+			if(count($columns) == 0)
+				unset($request['columns']);
+			else
+				$request['columns'] = join(',', $columns);
+		}
 		if( isset($request['id']) )
 			$request['item'] = $request['id'];
 			
 		getIDsFromRequest($request, $request['selected']);
 		if(isset($request['group_by'])) $props['GROUP'] = $request['group_by'];
-		$props['ORDER'] = $request['order_by'] . ' ' . $request['direction'];
+		if(isset($request['order_trimmed']) && $request['order_trimmed'] == true)
+		{
+			$props['ORDER'] = 'TRIM( LEADING "a " FROM TRIM( LEADING "an " FROM TRIM( LEADING "the " FROM LOWER( ' . $request['order_by'] . ' ) ) ) )' . ' ' . $request['direction'];
+		}
+		else
+		{
+			$props['ORDER'] = $request['order_by'] . ' ' . $request['direction'];
+		}
 		$props['LIMIT'] = $request['start'] . ',' . $request['limit'];
 	}
 	

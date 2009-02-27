@@ -7,24 +7,26 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATO
 require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'db_audio.php';
 
 // music handler
-class db_artists extends db_audio
+class db_genres extends db_audio
 {
 	const DATABASE = 'audio';
 	
-	const NAME = 'Artists from Database';
+	const NAME = 'Genres from Database';
 
 	static function columns()
 	{
-		return array('id', 'SongCount', 'Artist', 'Filepath');
+		return array('id', 'SongCount', 'Genre', 'Filepath');
 	}
 
 	static function handle($database, $file)
 	{
 	}
 	
-	
 	static function get($database, $request, &$count, &$error)
 	{
+		$database->validate($request, $props, get_class());
+			
+		// modify some request stuff
 		if(isset($request['dir']))
 		{
 			if($request['dir'][0] == DIRECTORY_SEPARATOR) $request['dir'] = substr($request['dir'], 1);
@@ -32,29 +34,27 @@ class db_artists extends db_audio
 			if($request['dir'] == '$Unknown$')
 				$request['dir'] = '';
 			$request['search'] = '^' . preg_quote($request['dir']) . '$';
-			$request['columns'] = 'Artist';
+			$request['columns'] = 'Genre';
 			unset($request['dir']);
 			
 			$files = parent::get($database, $request, $count, $error, 'db_audio');
 		}
 		else
 		{
-			// modify some request stuff
-			$request['order_by'] = 'Artist';
-			$request['order_trimmed'] = true;
-			$request['group_by'] = 'Artist';
+			$request['order_by'] = 'Genre';
+			$request['group_by'] = 'Genre';
 			
 			$files = parent::get($database, $request, $count, $error, 'db_audio');
 			
 			// make some changes
 			foreach($files as $i => $file)
 			{
-				if($files[$i]['Artist'] == '')
-					$files[$i]['Artist'] = '$Unknown$';
+				if($files[$i]['Genre'] == '')
+					$files[$i]['Genre'] = '$Unknown$';
 				$files[$i]['Filetype'] = 'FOLDER';
 				$files[$i]['Filesize'] = '0';
-				$files[$i]['Filepath'] = DIRECTORY_SEPARATOR . $files[$i]['Artist'] . DIRECTORY_SEPARATOR;
-				$files[$i]['Filename'] = $files[$i]['Artist'];
+				$files[$i]['Filepath'] = DIRECTORY_SEPARATOR . $files[$i]['Genre'] . DIRECTORY_SEPARATOR;
+				$files[$i]['Filename'] = $files[$i]['Genre'];
 				$files[$i]['SongCount'] = $files[$i]['count(*)'];
 			}
 		}

@@ -8,6 +8,8 @@ Made encode.php plugin detect whether or not the %IF input field is used in the 
 Modified the modules to ignore errors from the pack() function, using encoding path IDs are easily corruptible
 Made pretty dirs optional, they are still pretty and php parses off the directory part and puts it into the request
 Fixed some stuff with the search, the search variable is not search instead of includes, and the includes variable is used for searching a literal string
+Added a TRIM feature to order by queries that allows for sorting without preceeding words like A, AN and THE
+Fixed db_artists and db_albums module, they now handle their own filepaths, and added more wrapper modules for Genre, and Year
 
 2009-02-24
 Implemented stream_select() in encode, this is the KEY! to making multiple streams work on a single threaded system

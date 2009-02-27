@@ -42,7 +42,7 @@ if(isset($_REQUEST['search']))
 // set the search vars in the template
 if(isset($_SESSION['search']))
 	$smarty->assign('search', $_SESSION['search']);
-
+	
 $smarty->assign('modules', $GLOBALS['modules']);
 
 $smarty->assign('templates', $GLOBALS['templates']);

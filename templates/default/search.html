@@ -1,16 +1,23 @@
+{php}
+$modules = $this->get_template_vars('modules');
+$modules_named = array();
+foreach($modules as $i => $module)
+{
+	$modules_named[] = constant($module . '::NAME');
+}
+array_multisort($modules_named, SORT_STRING, $modules);
+$this->assign('modules', $modules);
+$this->assign('modules_named', $modules_named);
+{/php}
 {if $smarty.request.detail < 4}
 	<div id="builder">
 		Use this form to generate the list of files you would like to view:
 		<br />
 		<form name="search" action="{$smarty.server.PHP_SELF}" method="get">
 			<select name="cat">
-			{section name=module loop=$modules}
-				{assign var=module value=$modules[module]}
-				<option value="{$modules[module]}" {if isset($search.cat) && $search.cat eq $modules[module]}selected{/if}>{php}
-					$module = $this->get_template_vars('module');
-					echo constant($module . '::NAME');
-				{/php}</option>
-			{/section}
+			{foreach item=module key=i from=$modules}
+				<option value="{$module}" {if isset($search.cat) && $search.cat eq $module}selected{/if}>{$modules_named.$i}</option>
+			{/foreach}
 			</select>
 			<br />
 			Contains <input name="search" type="text" value="{if isset($search.search)}{$search.search}{/if}" /> (Enter keywords)
