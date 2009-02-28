@@ -29,7 +29,7 @@ function setup()
 		switch(count($dirs))
 		{
 			case 2:
-				$_REQUEST['includes'] = $dirs[1];
+				$_REQUEST['search'] = '"' . $dirs[1] . '"';
 				break;
 			case 3:
 				$_REQUEST['cat'] = $dirs[1];

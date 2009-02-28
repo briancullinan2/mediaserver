@@ -18,6 +18,12 @@ class db_years extends db_audio
 		return array('id', 'SongCount', 'Year', 'Filepath');
 	}
 
+	static function handles($file)
+	{
+		// we don't want this module to handle any files, it is just a wrapper
+		return false;
+	}
+
 	static function handle($database, $file)
 	{
 	}
@@ -33,7 +39,7 @@ class db_years extends db_audio
 			if($request['dir'][strlen($request['dir'])-1] == DIRECTORY_SEPARATOR) $request['dir'] = substr($request['dir'], 0, strlen($request['dir'])-1);
 			if($request['dir'] == '$Unknown$')
 				$request['dir'] = '';
-			$request['search'] = '^' . preg_quote($request['dir']) . '$';
+			$request['search'] = '=' . $request['dir'] . '=';
 			$request['columns'] = 'Year';
 			unset($request['dir']);
 			

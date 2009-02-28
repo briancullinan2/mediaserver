@@ -184,13 +184,15 @@ class sql_global
 	//   after validation they will be set in the passed in props which can be sent to the query function
 	static function validate(&$request, &$props, $module)
 	{
+		$columns = call_user_func($module . '::columns');
+		
 		if(!is_array($props)) $props = array();
 		
 		if( !isset($request['start']) || !is_numeric($request['start']) || $request['start'] < 0 )
 			$request['start'] = 0;
 		if( !isset($request['limit']) || !is_numeric($request['limit']) || $request['limit'] < 0 )
 			$request['limit'] = 15;
-		if( !isset($request['order_by']) || !in_array($request['order_by'], call_user_func($module . '::columns')) )
+		if( !isset($request['order_by']) || !in_array($request['order_by'], $columns) )
 		{
 			// make sure if it is a list that it is all valid columns
 			$columns = split(',', (isset($request['order_by'])?$request['order_by']:''));
@@ -206,7 +208,7 @@ class sql_global
 		}
 		if( !isset($request['direction']) || ($request['direction'] != 'ASC' && $request['direction'] != 'DESC') )
 			$request['direction'] = 'ASC';
-		if( isset($request['group_by']) && !in_array($request['group_by'], call_user_func($module . '::columns')) )
+		if( isset($request['group_by']) && !in_array($request['group_by'], $columns) )
 		{
 			// make sure if it is a list that it is all valid columns
 			$columns = split(',', $request['group_by']);
@@ -222,14 +224,22 @@ class sql_global
 		}
 		
 		// a special variable to search for the literal string
-		if( isset($request['includes']) )
-			$request['search'] = preg_quote($request['includes']);
+		if( isset($request['search']) && strlen($request['search']) > 1 && $request['search'][0] == '"' && $request['search'][strlen($request['search'])-1] == '"')
+			$request['search'] = preg_quote(substr($request['search'], 1, strlen($request['search'])-2));
+			
+		// search multiple columns for multiple strings
+		foreach($columns as $i => $column)
+		{
+			$var = 'search_' . $column;
+			if( isset($request[$var]) && strlen($request[$var]) > 1 && $request[$var][0] == '"' && $request[$var][strlen($request[$var])-1] == '"')
+				$request[$var] = preg_quote(substr($request[$var], 1, strlen($request[$var])-2));
+		}
 			
 		if( isset($request['dir']) )
 			$request['dir'] = stripslashes($request['dir']);
 			
 		// which columns to search
-		if( isset($request['columns']) && !in_array($request['columns'], call_user_func($module . '::columns')) )
+		if( isset($request['columns']) && !in_array($request['columns'], $columns) )
 		{
 			// make sure if it is a list that it is all valid columns
 			$columns = split(',', $request['columns']);
@@ -250,7 +260,9 @@ class sql_global
 		if(isset($request['group_by'])) $props['GROUP'] = $request['group_by'];
 		if(isset($request['order_trimmed']) && $request['order_trimmed'] == true)
 		{
-			$props['ORDER'] = 'TRIM( LEADING "a " FROM TRIM( LEADING "an " FROM TRIM( LEADING "the " FROM LOWER( ' . $request['order_by'] . ' ) ) ) )' . ' ' . $request['direction'];
+			$props['ORDER'] = 'TRIM(LEADING "a " FROM TRIM(LEADING "an " FROM TRIM(LEADING "the " FROM LOWER( ' . 
+								join(' )))), TRIM(LEADING "a " FROM TRIM(LEADING "an " FROM TRIM(LEADING "the " FROM LOWER( ', split(',', $request['order_by'])) . 
+								' ))))' . ' ' . $request['direction'];
 		}
 		else
 		{
@@ -361,7 +373,7 @@ class sql_global
 	function query($props)
 	{
 		$query = SQL::statement_builder($props);
-//print $query . '<br />';
+print $query . '<br />';
 		$result = $this->db_query($query);
 		
 		if($result !== false && is_array($props) && (isset($props['SELECT']) || isset($props['SHOW'])))

@@ -16,11 +16,11 @@ $this->assign('modules_named', $modules_named);
 		<form name="search" action="{$smarty.server.PHP_SELF}" method="get">
 			<select name="cat">
 			{foreach item=module key=i from=$modules}
-				<option value="{$module}" {if isset($search.cat) && $search.cat eq $module}selected{/if}>{$modules_named.$i}</option>
+				<option value="{$module}" {if isset($smarty.request.cat) && $smarty.request.cat eq $module}selected{/if}>{$modules_named.$i}</option>
 			{/foreach}
 			</select>
 			<br />
-			Contains <input name="search" type="text" value="{if isset($search.search)}{$search.search}{/if}" /> (Enter keywords)
+			Contains <input name="search" type="text" value="{if isset($smarty.request.search)}{$smarty.request.search}{/if}" /> (Enter keywords)
 			<br />
 			Submit to apply filter.
 			<br />

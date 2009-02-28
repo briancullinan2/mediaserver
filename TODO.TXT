@@ -1,3 +1,7 @@
+2009-02-26
+Make the db_watch_list load when it is browsed to
+More compatibility testing with clients
+
 2009-02-26 (Full)
 ------------- GENERAL TODO -------------
 Make backup ways of accessing files, store old IDs for removed files in a backup database
@@ -19,7 +23,6 @@ Add support for creating thumbnails in convert.php script
 FIX bt.php plugin to work with command line torrent seeder on windows
 Make convert.php plugin recognize video thumbnails and use vlc to extract them
 ------------- Module TODO -------------
-Add a wrapper module that db_artists refers to call artistalbum which displays all the albumbs by that artist
 Improve how the modules handle the headers, should the out() method only return the stream or should it change headers too?
 Make cleanup faster by having the other modules check if their paths are still in the files database instead?  it is still a lot of queries but would it be faster then checking the file system?
 	maybe instead of string compares, the IDs can be used, this would take some refactoring of each module

@@ -194,15 +194,28 @@ class db_file
 			if(isset($request['search']) && $request['search'] != '')
 			{
 				$props['WHERE'] = '';
+
+				// check if they are searching for columns equal input
+				$is_equal = false;
+				if(strlen($request['search']) > 1 && $request['search'][0] == '=' && $request['search'][strlen($request['search'])-1] == '=')
+				{
+					$request['search'] = preg_quote(substr($request['search'], 1, strlen($request['search'])-2));
+					$is_equal = true;
+				}
 				
 				// incase an aliased path is being searched for replace it here too!
-				if(USE_ALIAS == true) $request['search'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['search']);
+				if(USE_ALIAS == true)
+					$request['search'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['search']);
+					
+				// escape quote marks to help prevent sql injection
 				$regexp = addslashes($request['search']);
 				
+				// they can specify multiple columns to search for the same string
 				if(isset($request['columns']))
 				{
 					$columns = split(',', $request['columns']);
 				}
+				// search every column for the same string
 				else
 				{
 					$columns = call_user_func($module . '::columns');
@@ -212,9 +225,46 @@ class db_file
 				$props['WHERE'] .= '(';
 				foreach($columns as $i => $column)
 				{
-					$columns[$i] .= ' REGEXP "' . $regexp . '"';
+					if($is_equal)
+						$columns[$i] .= ' = "' . $regexp . '"';
+					else
+						$columns[$i] .= ' REGEXP "' . $regexp . '"';
 				}
 				$props['WHERE'] .= join(' OR ', $columns) . ')';
+			}
+			
+			// search for individual column queries
+			//   search multiple columns for different string
+			$columns = call_user_func($module . '::columns');
+			foreach($columns as $i => $column)
+			{
+				$var = 'search_' . $column;
+				if(isset($request[$var]) && $request[$var] != '')
+				{
+					if(!isset($props['WHERE'])) $props['WHERE'] = '';
+					elseif($props['WHERE'] != '') $props['WHERE'] .= ' AND ';
+					
+					// check if they are searching for a cell equal to the input
+					$is_equal = false;
+					if(strlen($request[$var]) > 1 && $request[$var][0] == '=' && $request[$var][strlen($request[$var])-1] == '=')
+					{
+						$request[$var] = preg_quote(substr($request[$var], 1, strlen($request[$var])-2));
+						$is_equal = true;
+					}
+					
+					// incase an aliased path is being searched for replace it here too!
+					if(USE_ALIAS == true)
+						$request[$var] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request[$var]);
+						
+					// escape quote marks to help prevent sql injection
+					$regexp = addslashes($request[$var]);
+					
+					// add a regular expression matching for each column in the table being searched
+					if($is_equal)
+						$props['WHERE'] .= $column . ' = "' . $regexp . '"';
+					else
+						$props['WHERE'] .= $column . ' REGEXP "' . $regexp . '"';
+				}
 			}
 		
 			// add dir filter to where
@@ -300,7 +350,7 @@ class db_file
 				// add file to where
 				$props['WHERE'] .= ' Filepath = "' . addslashes($request['file']) . '"';
 			}
-		
+			
 			if($error == '')
 			{
 				$props['SELECT'] = constant($module . '::DATABASE');
@@ -309,14 +359,25 @@ class db_file
 				// get directory from database
 				$files = $database->query($props);
 				
-				// this is how we get the count of all the items
-				unset($props['LIMIT']);
-				$props = array('SELECT' => '(' . SQL::statement_builder($props) . ') AS db_to_count');
-				$props['COLUMNS'] = 'count(*)';
-				
-				$result = $database->query($props);
-				
-				$count = intval($result[0]['count(*)']);
+				// only get count if filepath is not set, otherwise we know it is only one
+				if(!isset($request['file']))
+				{
+					// this is how we get the count of all the items
+					//  unset the limit to count it
+					unset($props['LIMIT']);
+					
+					// count the last query
+					$props = array('SELECT' => '(' . SQL::statement_builder($props) . ') AS db_to_count');
+					$props['COLUMNS'] = 'count(*)';
+					
+					$result = $database->query($props);
+					
+					$count = intval($result[0]['count(*)']);
+				}
+				else
+				{
+					$count = 1;
+				}
 			}
 			else
 			{

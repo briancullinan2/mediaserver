@@ -17,17 +17,24 @@ class fs_file
 	// return whether or not this module handles trhe specified type of file
 	static function handles($file)
 	{
-		if(is_dir($file) || is_file($file))
+		if(USE_DATABASE)
 		{
-			$filename = basename($file);
-
-			// make sure it isn't a hidden file
-			if($filename[0] != '.')
-				return true;
-			else
-				return false;
-		} else {
 			return false;
+		}
+		else
+		{
+			if(is_dir($file) || is_file($file))
+			{
+				$filename = basename($file);
+	
+				// make sure it isn't a hidden file
+				if($filename[0] != '.')
+					return true;
+				else
+					return false;
+			} else {
+				return false;
+			}
 		}
 	}
 		

@@ -88,6 +88,7 @@ foreach($files as $index => &$file)
 		{
 			if($module != $_REQUEST['cat'] && call_user_func_array($module . '::handles', array($file['Filepath'])))
 			{
+				print $module;
 				$return = call_user_func_array($module . '::get', array($database, array('file' => $file['Filepath']), &$tmp_count, &$tmp_error));
 				if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
 			}

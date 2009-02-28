@@ -1,3 +1,6 @@
+2009-02-27
+db_artists module now shows albums from an artist also has $all$ option that shows all the songs by that artist
+
 2009-02-26
 Moved Accept-Ranges back to the file.php plugin!  Modules should not be in control of output, only getting information from database
 The Module->out() method now returns a SEEKABLE file resource, some can be custom like db_diskimage which can read a file out of a disk image and stop reading in the appropriate places
