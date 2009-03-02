@@ -69,7 +69,7 @@ if(count($state) > 0)
 
 print_r($state);
 
-if($clean_count >= CLEAN_UP_THREASHOLD)
+if($clean_count > CLEAN_UP_THREASHOLD)
 {
 	log_error("Clean Count: " . $clean_count . ', clean up will happen this time!');
 	

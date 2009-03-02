@@ -168,7 +168,14 @@ class db_watch_list extends db_watch
 		// check directories recursively
 		else
 		{
-			return self::handle_dir($database, $dir);
+			// search recursively
+			$status = self::handle_dir($database, $dir);
+			
+			// remove any occurance of this directory from the database
+			//  it only gets here if it isn't handled, so it shouldn't be in the database
+			$database->query(array('DELETE' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($dir) . '"'));
+			
+			return $status;
 		}
 		
 		return true;
@@ -176,7 +183,10 @@ class db_watch_list extends db_watch
 	
 	static function handle_dir($database, $dir)
 	{
-		global $tm_start, $secs_total, $state;
+		global $tm_start, $secs_total, $state, $dirs;
+		
+		if(!isset($dirs))
+			$dirs = array();
 		
 		if(is_dir($dir))
 		{
@@ -204,8 +214,9 @@ class db_watch_list extends db_watch
 			{				
 				$file = $files[$i];
 				
-				if(is_dir($file['Filepath']))
+				if(is_dir($file['Filepath']) && !in_array(realpath($file['Filepath']), $dirs))
 				{
+					$dirs[] = realpath($file['Filepath']);
 					
 					// check if execution time is too long
 					$secs_total = array_sum(explode(' ', microtime())) - $tm_start;
