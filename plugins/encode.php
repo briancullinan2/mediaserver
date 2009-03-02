@@ -12,6 +12,7 @@ if(!isset($_REQUEST['encode']))
 	if(isset($_REQUEST['search']))
 	{
 		$_REQUEST['encode'] = strtoupper(getExt($_REQUEST['search']));
+		
 		// parse off extension for include search
 		$_REQUEST['search'] = substr($_REQUEST['search'], 0, strlen($_REQUEST['search']) - strlen($_REQUEST['encode']) - 1);
 	}
@@ -116,7 +117,7 @@ switch($_REQUEST['encode'])
 		$_REQUEST['%AB'] = 64;
 		$_REQUEST['%SR'] = 44100;
 		$_REQUEST['%CH'] = 2;
-		$_REQUEST['%MX'] = 'mpeg1';
+		$_REQUEST['%MX'] = 'ts';
 		break;
 	case 'WMV':
 		$_REQUEST['%VC'] = 'WMV2';
@@ -217,7 +218,10 @@ if(is_resource($process) && is_resource($fp))
 	// don't use the file at all if the %IF field exists in the ARGS sections
 	//   the reason for this is because it won't be reading from STDIN
 	$file_closed = (strpos(ENCODE_ARGS, '%IF') !== false);
-	$total_written = 0;
+	$read_count = 0;
+	$write_count = 0;
+	$in_buffer = '';
+	$out_buffer = '';
 	while(true)
 	{
 		// if the connection was interrupted then stop looping
@@ -234,6 +238,9 @@ if(is_resource($process) && is_resource($fp))
 		// if the file is not already closed, then close the file when it hits eof
 		if(!$file_closed && feof($fp))
 		{
+			$fh = fopen('/tmp/test.txt', 'a');
+			fwrite($fh, 'VLC closed' . "\n");
+			fclose($fh);
 			$file_closed = true;
 			fclose($fp);
 			fclose($pipes[0]);
@@ -242,11 +249,14 @@ if(is_resource($process) && is_resource($fp))
 		// if the pipe is eof then we are finished
 		if(feof($pipes[1]))
 		{
+			$fh = fopen('/tmp/test.txt', 'a');
+			fwrite($fh, 'File closed' . "\n");
+			fclose($fh);
 			// write out what is left
 			if(isset($length))
 			{
-				if($total_written < $length)
-					fwrite($php_out, sprintf('[%0' . ($length - $total_written) . 's]', 0));
+				if($read_count < $length)
+					fwrite($php_out, sprintf('[%0' . ($length - $read_count) . 's]', 0));
 			}
 			fclose($pipes[1]);
 			fclose($php_out);
@@ -264,15 +274,20 @@ if(is_resource($process) && is_resource($fp))
 		// if we can read then read more and send it out to php
 		if(in_array($pipes[1], $read))
 		{
-			$buffer = fread($pipes[1], BUFFER_SIZE);
-			fwrite($php_out, $buffer);
-			$total_written += strlen($buffer);
+			$count = fwrite($php_out, fread($pipes[1], BUFFER_SIZE));
+			$read_count += $count;
 		}
 		
 		// if we can write then write more from the input stream
 		if(!$file_closed && in_array($pipes[0], $write))
 		{
-			fwrite($pipes[0], fread($fp, BUFFER_SIZE));
+			if(strlen($in_buffer) == 0)
+			{
+				$in_buffer = fread($fp, BUFFER_SIZE);
+			}
+			$count = fwrite($pipes[0], $in_buffer);
+			$in_buffer = substr($in_buffer, $count);
+			$write_count += $count;
 		}
 	}
 	

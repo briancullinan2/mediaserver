@@ -134,24 +134,22 @@ class db_image extends db_file
 	
 		if( $image_id != NULL )
 		{
-			print 'Modifying image: ' . $file . "\n";
+			log_error('Modifying image: ' . $file);
 			
 			// update database
 			$id = $database->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $image_id));
 		
-			return $audio_id;
+			return $image_id;
 		}
 		else
 		{
-			print 'Adding image: ' . $file . "\n";
+			log_error('Adding image: ' . $file);
 			
 			// add to database
 			$id = $database->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 			
 			return $id;
 		}
-
-		flush();
 			
 	}
 	
@@ -181,7 +179,7 @@ class db_image extends db_file
 		// delete tmp file
 		unlink($tmp_name);
 		
-		print 'Created thumbs: ' . $file . "\n";
+		log_error('Created thumbs: ' . $file);
 
 		return $output;
 	}

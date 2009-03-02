@@ -128,7 +128,7 @@ class db_archive extends db_file
 		// if the archive changes remove all it's inside files from the database
 		if( $archive_id != NULL )
 		{
-			print 'Removing archive: ' . $file . "\n";
+			log_error('Removing archive: ' . $file);
 			$database->query(array('DELETE' => self::DATABASE, 'WHERE' => 'Filepath REGEXP "^' . addslashes(preg_quote($file)) . '\\\/"'));
 		}
 
@@ -178,7 +178,7 @@ class db_archive extends db_file
 					$fileinfo['Filemime'] = getMime($file['filename']);
 					$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
 					
-					print 'Adding file in archive: ' . $fileinfo['Filepath'] . "\n";
+					log_error('Adding file in archive: ' . $fileinfo['Filepath']);
 					$id = $database->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 				}
 				
@@ -201,7 +201,7 @@ class db_archive extends db_file
 						$fileinfo['Filemime'] = getMime($file['filename']);
 						$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
 						
-						print 'Adding directory in archive: ' . $fileinfo['Filepath'] . "\n";
+						log_error('Adding directory in archive: ' . $fileinfo['Filepath']);
 						$id = $database->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 					}
 				}
@@ -224,7 +224,7 @@ class db_archive extends db_file
 		// print status
 		if( $archive_id != NULL )
 		{
-			print 'Modifying archive: ' . $fileinfo['Filepath'] . "\n";
+			log_error('Modifying archive: ' . $fileinfo['Filepath']);
 			
 			// update database
 			$id = $database->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $archive_id));
@@ -233,15 +233,13 @@ class db_archive extends db_file
 		}
 		else
 		{
-			print 'Adding archive: ' . $fileinfo['Filepath'] . "\n";
+			log_error('Adding archive: ' . $fileinfo['Filepath']);
 			
 			// add to database
 			$id = $database->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 			
 			return $id;
 		}
-		
-		flush();
 		
 	}
 
@@ -329,7 +327,7 @@ class db_archive extends db_file
 		{
 			$args['CONNECTION']->query(array('DELETE' => constant($args['MODULE'] . '::DATABASE'), 'WHERE' => 'Filepath REGEXP "' . addslashes(preg_quote($row['Filepath'])) . '\\\/" OR Filepath = "' . addslashes(preg_quote($row['Filepath'])) . '"'));
 			
-			print 'Removing ' . constant($args['MODULE'] . '::NAME') . ': ' . $row['Filepath'] . "\n";
+			log_error('Removing ' . constant($args['MODULE'] . '::NAME') . ': ' . $row['Filepath']);
 		}
 	}
 

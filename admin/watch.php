@@ -21,8 +21,6 @@ $error = '';
 // get the current list of watches
 $database = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 
-$watched = db_watch::get($database, array(), $count, $error);
-
 if( isset($_REQUEST['add']) )
 {
 	if($_REQUEST['addpath'][0] != '!' && $_REQUEST['addpath'][0] != '^')
@@ -31,9 +29,6 @@ if( isset($_REQUEST['add']) )
 	{
 			// pass file to module
 			db_watch::handle($database, $_REQUEST['addpath']);
-			
-			// and reget the full list
-			$watched = db_watch::get($database, array(), $count, $error);
 			
 			unset($_REQUEST['addpath']);
 	}
@@ -45,13 +40,13 @@ if( isset($_REQUEST['add']) )
 elseif( isset($_REQUEST['remove']) && is_numeric($_REQUEST['watch']) )
 {
 	$database->query(array('DELETE' => db_watch::DATABASE, 'WHERE' => 'id=' . $_REQUEST['watch']));
-	
-	// and reget the full list
-	$watched = db_watch::get($database, array(), $count, $error);
 
 	// clear post
 	unset($_REQUEST['addpath']);
 }
+
+$ignored = db_watch::get($database, array('search_Filepath' => '^!'), $count, $error);
+$watched = db_watch::get($database, array('search_Filepath' => '^\^'), $count, $error);
 
 ?>
 <html>
@@ -76,10 +71,16 @@ if( $error != '' )
 		<select name="watch" size="10">
 		
 		<?php
+			foreach($ignored as $i => $watch)
+			{
+			?>
+				<option value="<?php echo $watch['id']; ?>">ignore: <?php echo $watch['Filepath']; ?></option>
+			<?php
+			}
 			foreach($watched as $i => $watch)
 			{
 			?>
-				<option value="<?php echo $watch['id']; ?>"><?php echo $watch['Filepath']; ?></option>
+				<option value="<?php echo $watch['id']; ?>">watch: <?php echo $watch['Filepath']; ?></option>
 			<?php
 			}
 		?>

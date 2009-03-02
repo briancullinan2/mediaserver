@@ -57,11 +57,13 @@ define('HTML_NAME',			                                   'Brian\'s Media Website
 /*
 %IF - Input file, the filename that will be inserted for transcoding
 %FM - Format to output
+%TH - Thumbnail height
+%TW - Thumbnail width
 %OF - Output file if necissary
 */
 // More options can be added but you will have to do some scripting in the convert.php plugin
 define('CONVERT', 				   '/usr/bin/convert'); // image magick's convert program
-define('CONVERT_ARGS', 			   '"%IF" %FM:-'); // image magick's convert program
+define('CONVERT_ARGS', 			   '"%IF" -resize "%TWx%TH" %FM:-'); // image magick's convert program
 
 // the arguments to use with encode are as follows
 /*
@@ -90,10 +92,29 @@ define('ARCHIVE_RAR',                                'C:\Program Files\WinRAR\Ra
 define('ARCHIVE_ARGS_RAR',                           ' p %IF'); // a program that can convert video and audio streams
 
 // finally some general options, just used to avoid hardcoding stuff
-define('BUFFER_SIZE', 	                         1024); // max amount to output when accessing a file
-define('TMP_DIR', 	                             '/tmp/'); // a temporary directory to use for creating thumbnails
+
+// max amount to output when accessing a file
+define('BUFFER_SIZE', 	                         4*1024);
+
+// a temporary directory to use for creating thumbnails
+define('TMP_DIR', 	                             '/tmp/');
+
+// set to true in order to use aliased paths for output of Filepath
 // USE_DATABASE must be enabled in order for this to be used!
-define('USE_ALIAS', 							 true); // set to true in order to use aliased paths for output of Filepath
+define('USE_ALIAS', 							 true);
+
+// how long to search for directories that have changed
+define('DIRECTORY_SEEK_TIME',		60);
+
+// how long to search for changed files or add new files
+define('FILE_SEEK_TIME', 		   60);
+
+// how long to clean up files
+define('CLEAN_UP_BUFFER_TIME',				60);
+
+// how many times should we be able to run the cron script before a cleanup is needed?
+//  cleanup will also be fired when a directory change is detected, this may not always be accurate
+define('CLEAN_UP_THREASHOLD', 				5);
 
 // comment-out-able
 ini_set('error_reporting', E_ALL);

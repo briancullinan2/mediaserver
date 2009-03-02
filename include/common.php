@@ -595,6 +595,15 @@ function kill9($command, $startpid, $limit = 2)
 	}
 }
 
+function log_error($message)
+{
+	if($_SERVER['SCRIPT_NAME'] == '/plugins/cron.php' || (isset($_REQUEST['debug']) && $_REQUEST['debug'] == true && loggedIn()))
+	{
+		print $message . "<br />";
+		flush();
+	}
+}
+
 function loadMime()
 {
 	// this will load the mime-types from a linux dist mime.types file stored in includes

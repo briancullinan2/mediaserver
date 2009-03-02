@@ -37,6 +37,22 @@ if(isset($_REQUEST['%IF']))
 	
 	if(count($files) > 0)
 	{
+		// get all the information incase we need to use it
+		foreach($GLOBALS['modules'] as $i => $module)
+		{
+			if($module != $_REQUEST['cat'] && call_user_func_array($module . '::handles', array($files[0]['Filepath'])))
+			{
+				$return = call_user_func_array($module . '::get', array($database, array('file' => $files[0]['Filepath']), &$tmp_count, &$tmp_error));
+				if(isset($return[0])) $files[0] = array_merge($return[0], $files[0]);
+			}
+		}
+		
+		if(!isset($_REQUEST['%TH']) && isset($files[0]['Height']))
+			$_REQUEST['%TH'] = $files[0]['Height'];
+		
+		if(!isset($_REQUEST['%TW']) && isset($files[0]['Width']))
+			$_REQUEST['%TW'] = $files[0]['Width']
+		
 		$_REQUEST['%IF'] = $files[0]['Filepath'];
 	}
 }
@@ -70,6 +86,13 @@ switch($_REQUEST['convert'])
 // validate each individually, these also go to default if there is invalid input! (in this case it uses jpeg settings)
 if(!in_array($_REQUEST['%FM'], array('jpeg', 'gif', 'png')))
 	$_REQUEST['%FM'] = 'jpeg';
+	
+if(!isset($_REQUEST['%TH']) || !is_numeric($_REQUEST['%TH']))
+	$_REQUEST['%TH'] = 512;
+	
+if(!isset($_REQUEST['%TW']) || !is_numeric($_REQUEST['%TW']))
+	$_REQUEST['%TW'] = 512;
+	
 
 // replace the argument string with the contents of $_REQUEST
 //  without validation this is VERY DANGEROUS!

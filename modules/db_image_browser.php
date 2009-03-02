@@ -56,6 +56,10 @@ class db_image_browser extends db_image
 	{
 	}
 	
+	static function get($database, $request, &$count, &$error)
+	{
+		return array();
+	}
 
 	static function cleanup($database, $watched)
 	{

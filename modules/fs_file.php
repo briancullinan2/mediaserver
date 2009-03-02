@@ -15,9 +15,9 @@ class fs_file
 	}
 
 	// return whether or not this module handles trhe specified type of file
-	static function handles($file)
+	static function handles($file, $internals = false)
 	{
-		if(USE_DATABASE)
+		if(USE_DATABASE && $internals == false)
 		{
 			return false;
 		}
@@ -139,29 +139,38 @@ class fs_file
 			}
 			else
 			{
+		
 				// set a directory if one isn't set already
 				if(!isset($request['dir']))
 					$request['dir'] = realpath('/');
+					
 				// check to make sure is it a valid directory before continuing
 				if (is_dir($request['dir']))
 				{
 					// scandir - read in a list of the directory content
 					$tmp_files = scandir($request['dir']);
 					$count = count($tmp_files);
+					
 					// parse out all the files that this module doesn't handle, just like a filter
+					//  but only if we are not called by internals
 					for($j = 0; $j < $count; $j++)
-						if(!call_user_func($module . '::handles', $request['dir'] . $tmp_files[$j])) unset($tmp_files[$j]);
+						if(!call_user_func($module . '::handles', $request['dir'] . $tmp_files[$j], $internals)) unset($tmp_files[$j]);
+						
 					// get the values again, this will reset all the indices
 					$tmp_files = array_values($tmp_files);
+					
 					// set the count to the total length of the file list
 					$count = count($tmp_files);
+					
 					// start the information getting and combining of file info
 					for($i = $request['start']; $i < min($request['start']+$request['limit'], $count); $i++)
 					{
 						// get the information from the module for 1 file
 						$info = call_user_func($module . '::getInfo', $request['dir'] . $tmp_files[$i]);
+						
 						// make some modifications
 						if($info['Filetype'] == 'FOLDER') $info['Filepath'] .= DIRECTORY_SEPARATOR;
+						
 						// set the informations in the total list of files
 						$files[] = $info;
 					}

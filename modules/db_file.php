@@ -63,7 +63,7 @@ class db_file
 				}
 				else
 				{
-					print 'Skipping file: ' . $file . "\n";
+					log_error('Skipping file: ' . $file);
 				}
 				
 			}
@@ -96,7 +96,7 @@ class db_file
 		// if the id is set then we are updating and entry
 		if( $id != NULL )
 		{
-			print 'Modifying file: ' . $file . "\n";
+			log_error('Modifying file: ' . $file);
 			
 			// update database
 			$id = $database->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $id));
@@ -105,16 +105,13 @@ class db_file
 		}
 		else
 		{
-			print 'Adding file: ' . $file . "\n";
+			log_error('Adding file: ' . $file);
 			
 			// add to database
 			$id = $database->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 		
 			return $id;
 		}
-		
-		
-		flush();
 		
 	}
 	
@@ -397,15 +394,14 @@ class db_file
 			// remove row from database
 			$args['CONNECTION']->query(array('DELETE' => constant($args['MODULE'] . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($row['Filepath']) . '"'));
 			
-			print 'Removing ' . constant($args['MODULE'] . '::NAME') . ': ' . $row['Filepath'] . "\n";
+			log_error('Removing ' . constant($args['MODULE'] . '::NAME') . ': ' . $row['Filepath']);
 		}
 		
 		// print progress
 		$args['count']++;
 		if(round(($args['count']-1)/$args['total'], 2) != round($args['count']/$args['total'], 2))
 		{
-			print 'Checking paths ' . (round($args['count']/$args['total'], 2) * 100) . '% complete for ' . constant($args['MODULE'] . '::NAME') . "\n";
-			flush();
+			log_error('Checking paths ' . (round($args['count']/$args['total'], 2) * 100) . '% complete for ' . constant($args['MODULE'] . '::NAME'));
 		}
 	}
 	
@@ -424,7 +420,7 @@ class db_file
 		foreach($watched as $i => $watch)
 		{
 			// add the files that begin with a path from a watch directory
-			$watched_where .= ' Filepath NOT REGEXP "^' . addslashes(preg_quote($watch)) . '" AND';
+			$watched_where .= ' Filepath NOT REGEXP "^' . addslashes(preg_quote($watch['Filepath'])) . '" AND';
 		}
 		// remove last AND
 		$watched_where = substr($watched_where, 0, strlen($watched_where)-3);
@@ -435,7 +431,7 @@ class db_file
 		$directories = array();
 		for($i = 0; $i < count($watched); $i++)
 		{
-			$folders = split(addslashes(DIRECTORY_SEPARATOR), $watched[$i]);
+			$folders = split(addslashes(DIRECTORY_SEPARATOR), $watched[$i]['Filepath']);
 			$curr_dir = (realpath('/') == '/')?'/':'';
 			// don't add the watch directory here because it is already added by the previous loop!
 			$length = count($folders);
@@ -482,7 +478,7 @@ class db_file
 		// clean up items that are in the ignore list
 		foreach($ignored as $i => $ignore)
 		{
-			$ignored_where .= ' Filepath REGEXP "^' . addslashes(preg_quote($ignore)) . '" OR';
+			$ignored_where .= ' Filepath REGEXP "^' . addslashes(preg_quote($ignore['Filepath'])) . '" OR';
 		}
 		// remove last OR
 		$ignored_where = substr($ignored_where, 0, strlen($ignored_where)-2);
@@ -520,11 +516,10 @@ class db_file
 		{
 			$database->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => 'id=' . $file['id']));
 			
-			print 'Removing ' . constant($module . '::NAME') . ': ' . $file['Filepath'] . "\n";
+			log_error('Removing ' . constant($module . '::NAME') . ': ' . $file['Filepath']);
 		}
 		
-		print 'Cleanup for ' . constant($module . '::NAME') . " complete.\n";
-		flush();
+		log_error('Cleanup for ' . constant($module . '::NAME') . " complete.\n");
 		
 	}
 	

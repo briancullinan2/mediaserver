@@ -119,17 +119,22 @@ if(isset($_REQUEST['id']))
 			
 			//-------------------- END RANAGES STUFF --------------------
 			
-			// seek to start of missing part
-			if(isset($seek_start))
-				fseek($fp, $seek_start);
-			
-			// output file
-			while (!feof($fp)) {
-				fwrite($op, fread($fp, BUFFER_SIZE));
+			if(is_resource($fp) && is_resource($op))
+			{
+				// seek to start of missing part
+				if(isset($seek_start))
+					fseek($fp, $seek_start);
+				
+				// output file
+				while (!feof($fp)) {
+					fwrite($op, fread($fp, BUFFER_SIZE));
+				}
+				
+				// close file handles and return succeeded
+				fclose($fp);
 			}
-			
-			// close file handles and return succeeded
-			fclose($fp);
+			else
+			{ print 'Cannot open file!'; }
 		}
 		else
 		{ print 'File not found!'; }

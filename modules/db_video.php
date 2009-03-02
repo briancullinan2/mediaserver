@@ -110,7 +110,7 @@ class db_video extends db_file
 	
 		if( $video_id != NULL )
 		{
-			print 'Modifying video: ' . $file . "\n";
+			log_error('Modifying video: ' . $file);
 			
 			// update database
 			$id = $database->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $video_id));
@@ -119,15 +119,13 @@ class db_video extends db_file
 		}
 		else
 		{
-			print 'Adding video: ' . $file . "\n";
+			log_error('Adding video: ' . $file);
 			
 			// add to database
 			$id = $database->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 			
 			return $id;
 		}
-		
-		flush();
 		
 	}
 	

@@ -68,20 +68,31 @@ class db_watch extends db_file
 		$fileinfo = array();
 		$fileinfo['Filepath'] = addslashes($file);
 	
-		print 'Adding watch: ' . $file . "\n";
+		log_error('Adding watch: ' . $file);
 		
 		// add to database
 		$id = $database->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 		
-		return $id;
+		// add to watch_list and to files database
+		db_watch_list::handle(substr($file, 1));
 		
-		flush();
+		db_watch_list::handle_file(substr($file, 1));
+		
+		return $id;
 		
 	}
 	
 	static function get($database, $request, &$count, &$error)
 	{
-		return parent::get($database, $request, $count, $error, get_class());
+		$files = parent::get($database, $request, $count, $error, get_class());
+		
+		// make some changes
+		foreach($files as $i => $file)
+		{
+			$files[$i]['Filepath'] = substr($file['Filepath'], 1);
+		}
+		
+		return $files;
 	}
 	
 	static function cleanup($database, $watched, $ignored)

@@ -10,59 +10,125 @@ class db_watch_list extends db_watch
 {
 	const DATABASE = 'watch_list';
 	
-	const NAME = 'Changed Directories from Database';
+	const NAME = 'New and Changed Directories from Database';
 
 	static function columns()
 	{
 		return array('id', 'Filepath');
 	}
 	
-	static function handles($dir)
+	static function handles($dir, $file = NULL)
 	{
-		global $database;
+		global $database, $watched, $ignored, $should_clean;
+		
+		if(!isset($database)) $database = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 		
 		if(is_dir($dir))
 		{
-			// changed directories or directories that don't exist in the database
-			$db_files = $database->query(array(
-					'SELECT' => db_file::DATABASE,
-					'COLUMNS' => array('id', 'Filedate'),
-					'WHERE' => 'Filepath = "' . addslashes($dir) . '"'
-				)
-			);
-			
-			if( count($db_files) == 0 || date("Y-m-d h:i:s", filemtime($dir)) != $db_files[0]['Filedate'] )
+			if($file == NULL)
 			{
-				// make sure it is in the watch list and not the ignore list
-				$watched = db_watch::get($database, array(), $count, $error);
-				
-				$is_ignored = false;
-				$is_watched = false;
-				foreach($watched as $i => $watch)
+				// changed directories or directories that don't exist in the database
+				$db_files = $database->query(array(
+						'SELECT' => db_file::DATABASE,
+						'COLUMNS' => array('id', 'Filedate'),
+						'WHERE' => 'Filepath = "' . addslashes($dir) . '"'
+					)
+				);
+				if(count($db_files) > 0)
 				{
-					if(substr($dir, 0, strlen($watch['Filepath'])-1) == substr($watch['Filepath'], 1))
+					$file = $db_files[0];
+				}
+			}
+			
+			// make sure it is in the watch list and not the ignore list
+			if(!isset($ignored)) $ignored = db_watch::get($database, array('search_Filepath' => '^!'), $count, $error);
+			if(!isset($watched)) $watched = db_watch::get($database, array('search_Filepath' => '^\^'), $count, $error);
+			
+			
+			if( !isset($file) || date("Y-m-d h:i:s", filemtime($dir)) != $file['Filedate'] )
+			{
+				// only change should clean if it was because of time difference
+				if(isset($file))
+					$should_clean = true;
+				return self::is_watched($dir, $watched, $ignored);
+			}
+			else
+			{
+				$db_files = $database->query(array(
+						'SELECT' => db_file::DATABASE,
+						'COLUMNS' => array('count(*)'),
+						'WHERE' => 'Filepath REGEXP "^' . addslashes(preg_quote($dir)) . '[^' . addslashes(preg_quote(DIRECTORY_SEPARATOR)) . ']+' . addslashes(preg_quote(DIRECTORY_SEPARATOR)) . '?$"'
+					)
+				);
+				
+				// check for file count inconsistency but don't process anything
+				$count = 0;
+				if ($dh = opendir($dir))
+				{
+					// count files
+					while (($file = readdir($dh)) !== false)
 					{
-						if($watch['Filepath'][0] == '^')
-							$is_watched = true;
-						elseif($watch['Filepath'][0] == '!')
-							$is_ignored = true;
+						if(fs_file::handles($dir . $file, true))
+						{
+							$count++;
+						}
+						
+						// return if count is different from database
+						if($count > $db_files[0]['count(*)'])
+						{
+							$result = self::is_watched($dir, $watched, $ignored);
+							if($result == true)
+								log_error('Directory count inconsitency: too few files in database!');
+							return $result;
+						}
 					}
 				}
 				
-				// if the path is watched and ignored that means there is an ignore directory inside the watch directory
-				//   this is what we want, so always return false in this case
-				if($is_ignored) return false;
-				
-				// even if it isn't ignored we still have to check if it is even watched
-				if($is_watched) return true;
+				// if count if less then number of directories in database
+				if($count < $db_files[0]['count(*)'])
+				{
+					$result = self::is_watched($dir, $watched, $ignored);
+					if($result == true)
+						log_error('Directory count inconsitency: too many files in database!');
+					return $result;
+				}
 			}
 		}
 		
 		return false;
 	}
 
+	static function is_watched($dir, $watched, $ignored)
+	{
+		$is_ignored = false;
+		$is_watched = false;
+		foreach($watched as $i => $watch)
+		{
+			if(substr($dir, 0, strlen($watch['Filepath'])) == $watch['Filepath'])
+			{
+				$is_watched = true;
+			}
+		}
+		foreach($ignored as $i => $ignore)
+		{
+			if(substr($dir, 0, strlen($ignore['Filepath'])) == $ignore['Filepath'])
+			{
+				$is_ignored = true;
+			}
+		}
+		
+		// if the path is watched and ignored that means there is an ignore directory inside the watch directory
+		//   this is what we want, so always return false in this case
+		if($is_ignored) return false;
+		
+		// even if it isn't ignored we still have to check if it is even watched
+		if($is_watched) return true;
+		
+		return false;
+	}
+
 	static function handle($database, $dir)
-	{		
+	{
 		if(self::handles($dir))
 		{
 			$db_watch_list = $database->query(array(
@@ -80,8 +146,7 @@ class db_watch_list extends db_watch
 			}
 			else
 			{
-				print 'Searching directory: ' . $dir . "\n";
-				flush();
+				log_error('Searching directory: ' . $dir);
 				
 				// search all the files in the directory
 				$files = fs_file::get(NULL, array('dir' => $dir, 'limit' => 32000), $count, $error, true);
@@ -115,8 +180,7 @@ class db_watch_list extends db_watch
 		
 		if(is_dir($dir))
 		{
-			print 'Looking for changes in: ' . $dir . "\n";
-			flush();
+			log_error('Looking for changes in: ' . $dir);
 		
 			$files = fs_file::get(NULL, array('dir' => $dir, 'limit' => 32000), $count, $error, true);
 					
@@ -139,7 +203,7 @@ class db_watch_list extends db_watch
 			for($i; $i < $max; $i++)
 			{				
 				$file = $files[$i];
-					
+				
 				if(is_dir($file['Filepath']))
 				{
 					
@@ -189,18 +253,34 @@ class db_watch_list extends db_watch
 		$fileinfo = array();
 		$fileinfo['Filepath'] = addslashes($file);
 	
-		print 'Queueing directory: ' . $file . "\n";
-		flush();
+		log_error('Queueing directory: ' . $file);
 		
 		// add to database
 		$id = $database->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 		
 		return $id;
-		
 	}
 	
 	static function get($database, $request, &$count, &$error)
 	{
+		// if this module handles this type of file and the get is being called
+		//   then we must add new files to database! so handle() it
+		if(isset($request['file']))
+		{
+			// search all the files in the directory
+			$files = fs_file::get(NULL, array('dir' => $request['file'], 'limit' => 32000), $count, $error, true);
+			
+			foreach($files as $i => $file)
+			{
+				self::handle_file($database, $file['Filepath']);
+			}
+			
+			self::handle_file($database, $request['file']);
+			
+			// delete the selected folder from the database
+			$database->query(array('DELETE' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['file']) . '"'));
+		}
+		
 		return db_file::get($database, $request, $count, $error, get_class());
 	}
 	

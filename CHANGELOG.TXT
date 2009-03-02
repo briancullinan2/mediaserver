@@ -1,5 +1,12 @@
+2009-03-02
+Made cleanup more efficient by creating a THREASHOLD constant for how many times the cron should run before cleaning up
+Also cleanup will fire when physical directories are changed and it is detected by the db_watch_list module, so they will no longer clean up when just adding new files to database
+Found that vlc has even more transcoding errors when the bitrate is being downscaled, this may screw up the client player responsiveness
+
 2009-02-27
 db_artists module now shows albums from an artist also has $all$ option that shows all the songs by that artist
+Added log_error() function that prints out the cron messages but only to cron
+Got files to be added when they are browsed, it is an imperfect system due to the way the default template works, folders need to be immediately browsable
 
 2009-02-26
 Moved Accept-Ranges back to the file.php plugin!  Modules should not be in control of output, only getting information from database

@@ -89,10 +89,25 @@ define('ARCHIVE_RAR',                                'C:\Program Files\WinRAR\Ra
 define('ARCHIVE_ARGS_RAR',                           ' p %IF'); // a program that can convert video and audio streams
 
 // finally some general options, just used to avoid hardcoding stuff
-define('BUFFER_SIZE', 	                                                        2048); // max amount to output when accessing a file
-define('TMP_DIR', 	                                                            'C:\wamp\tmp\\'); // a temporary directory to use for creating thumbnails
+
+// max amount to output when accessing a file
+define('BUFFER_SIZE', 	                                                        2048);
+
+// a temporary directory to use for creating thumbnails
+define('TMP_DIR', 	                                                            'C:\wamp\tmp\\');
+
+// set to true in order to use aliased paths for output of Filepath
 // USE_DATABASE must be enabled in order for this to be used!
-define('USE_ALIAS', 	                                                        false); // set to true in order to use aliased paths for output of Filepath
+define('USE_ALIAS', 	                                                        false);
+
+// how long to search for directories that have changed
+define('DIRECTORY_SEEK_TIME',		60);
+
+// how long to search for changed files or add new files
+define('FILE_SEEK_TIME', 		   60);
+
+// how long to clean up files
+define('CLEAN_UP_BUFFER_TIME',				60);
 
 // comment-out-able
 ini_set('error_reporting', E_ALL);

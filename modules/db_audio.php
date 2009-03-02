@@ -106,7 +106,7 @@ class db_audio extends db_file
 	
 		if( $audio_id != NULL )
 		{
-			print 'Modifying audio: ' . $file . "\n";
+			log_error('Modifying audio: ' . $file);
 			
 			// update database
 			$id = $database->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $audio_id));
@@ -115,15 +115,13 @@ class db_audio extends db_file
 		}
 		else
 		{
-			print 'Adding audio: ' . $file . "\n";
+			log_error('Adding audio: ' . $file);
 			
 			// add to database
 			$id = $database->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 			
 			return $id;
 		}
-		
-		flush();
 		
 	}
 	
