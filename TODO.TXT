@@ -1,6 +1,7 @@
 2009-03-03
 Make hard links and soft links, hard links are replaced when they are put in to the database, soft links are replaced when they are read from the database, this will allow us to do more network stuff
 Work on playlist module, use hard links to help find files
+Add a check for file_exists() in cron for each watched directory, if it doesn't post error and continue
 
 2009-02-26
 Make the db_watch_list load when it is browsed to
@@ -17,8 +18,8 @@ File uploading and personal folders
 	Limit access to watch and alias tables after implementing users and permissions
 Interface with mediatomb and support UPnP protocol
 ------------- Plugin TODO -------------
-Get streams working in convert.php plugin and
 Set up conditions for when the streams are used based on if %OF and %IF are used in the command arguments
+Get streams working in convert.php plugin and
 Get ranges working in encode plugin
 	only allow the option if the argument can read from stdin and read the input from the module and write it to the input stream
 Figure out a way of doing this with files even if stdin is not being used in the command, if fopen is writing to a file, does it file feof when reading from the same file simulaneously?
@@ -48,7 +49,7 @@ Fix tooltip popup in FolderView.js, in wrong panel maybe?
 Press letter on the keyboard to go to that folder in FolderView.js and select.php
 Change desktop style to be buttons like folders in Desktop.js but render buttons to index.html
 Get settings dialog working and set up user accounts to control it
-Finished the player app that displays pictures
+Finish the player app that displays pictures
 Make players resize to Player window
 
 2009-02-26
