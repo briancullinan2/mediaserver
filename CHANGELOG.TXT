@@ -3,6 +3,9 @@ Made cleanup more efficient by creating a THREASHOLD constant for how many times
 Also cleanup will fire when physical directories are changed and it is detected by the db_watch_list module, so they will no longer clean up when just adding new files to database
 Found that vlc has even more transcoding errors when the bitrate is being downscaled, this may screw up the client player responsiveness
 Fixed a problem with the db_watch_list module, if a directory in the db_watch list was searched but was never removed, it would recurse that directory infinitely
+Set the site up so it can be run minimalistically across a network share
+Fixed some issues with cron.php and common.php
+Replaced most REGEXP queries with a series of LEFT and LOCATE modifiers to select files from paths, much faster!
 
 2009-02-27
 db_artists module now shows albums from an artist also has $all$ option that shows all the songs by that artist

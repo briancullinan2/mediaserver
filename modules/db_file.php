@@ -299,17 +299,17 @@ class db_file
 						if(!isset($request['search']))
 						{
 							if(isset($request['dirs_only']))
-								$props['WHERE'] .= 'Filepath REGEXP "^' . addslashes(preg_quote($request['dir'])) . '[^' . addslashes(preg_quote(DIRECTORY_SEPARATOR)) . ']+' . addslashes(preg_quote(DIRECTORY_SEPARATOR)) . '$"';
+								$props['WHERE'] .= 'LEFT(Filepath, ' . strlen($request['dir']) . ') = "' . addslashes($request['dir']) . '" AND LOCATE("' . addslashes(DIRECTORY_SEPARATOR) . '", Filepath, ' . (strlen($request['dir'])+1) . ') = LENGTH(Filepath)';
 							else
-								$props['WHERE'] .= 'Filepath REGEXP "^' . addslashes(preg_quote($request['dir'])) . '[^' . addslashes(preg_quote(DIRECTORY_SEPARATOR)) . ']+' . addslashes(preg_quote(DIRECTORY_SEPARATOR)) . '?$"';
+								$props['WHERE'] .= 'LEFT(Filepath, ' . strlen($request['dir']) . ') = "' . addslashes($request['dir']) . '" AND (LOCATE("' . addslashes(DIRECTORY_SEPARATOR) . '", Filepath, ' . (strlen($request['dir'])+1) . ') = 0 OR LOCATE("' . addslashes(DIRECTORY_SEPARATOR) . '", Filepath, ' . (strlen($request['dir'])+1) . ') = LENGTH(Filepath)) AND Filepath != "' . addslashes($request['dir']) . '"';
 						}
 						// show all results underneath directory
 						else
 						{
 							if(isset($request['dirs_only']))
-								$props['WHERE'] .= 'Filepath REGEXP "^' . addslashes(preg_quote($request['dir'])) . '([^' . addslashes(preg_quote(DIRECTORY_SEPARATOR)) . ']+' . addslashes(preg_quote(DIRECTORY_SEPARATOR)) . ')*$"';
+								$props['WHERE'] .= 'LEFT(Filepath, ' . strlen($request['dir']) . ') = "' . addslashes($request['dir']) . '" AND RIGHT(Filepath, 1) = "' . addslashes(DIRECTORY_SEPARATOR) . '" AND Filepath != "' . addslashes($request['dir']) . '"';
 							else
-								$props['WHERE'] .= 'Filepath REGEXP "^' . addslashes(preg_quote($request['dir'])) . '"';
+								$props['WHERE'] .= 'LEFT(Filepath, ' . strlen($request['dir']) . ') = "' . addslashes($request['dir']) . '" AND Filepath != "' . addslashes($request['dir']) . '"';
 						}
 					}
 					else
@@ -519,7 +519,7 @@ class db_file
 			log_error('Removing ' . constant($module . '::NAME') . ': ' . $file['Filepath']);
 		}
 		
-		log_error('Cleanup for ' . constant($module . '::NAME') . " complete.\n");
+		log_error('Cleanup for ' . constant($module . '::NAME') . ' complete.');
 		
 	}
 	

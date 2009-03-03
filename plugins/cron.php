@@ -110,10 +110,10 @@ elseif(isset($state_current))
 	$state = array();
 }
 
-if(isset($_REQUEST['entry']) && is_numeric($_REQUEST['entry']) && $_REQUEST['entry'] < count($watched) && $_REQUEST['entry'] > 0)
+if(isset($_REQUEST['entry']) && is_numeric($_REQUEST['entry']) && $_REQUEST['entry'] < count($watched) && $_REQUEST['entry'] >= 0)
 	$i = $_REQUEST['entry'];
 
-log_error("Phase 1: Checkind for modified Directories; Recursively");
+log_error("Phase 1: Checking for modified Directories; Recursively");
 
 // loop through each watched folder and get a list of all the files
 for($i; $i < count($watched); $i++)

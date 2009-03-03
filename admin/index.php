@@ -29,6 +29,14 @@
 &nbsp;&nbsp;&nbsp;&nbsp;0 * * * * /usr/bin/php /&lt;site path&gt;/plugins/cron.php &gt;/dev/null 2&gt;&amp;1<br />
 &nbsp;&nbsp;&nbsp;&nbsp;30 * * * * /usr/bin/php /&lt;site path&gt;/plugins/cron.php &gt;/dev/null 2&gt;&amp;1<br /></code>
 &nbsp;&nbsp;&nbsp;&nbsp;This would run a job every half hour<br />
-&nbsp;&nbsp;&nbsp;&nbsp;You can also use Scheduled Tasks on Windows to run the cron.php script with PHP-CLI
+&nbsp;&nbsp;&nbsp;&nbsp;You can also use Scheduled Tasks on Windows to run the cron.php script with PHP-CLI<br /><br />
+<b>Note:</b><br />
+The site can be run on a remote system with a shared directory in between however the mount points must be in the same place.<br />
+For example if your files are on a file server with the location /home/username/shared_files/, you must have the network share mounted on your webserver under /home/username/shared_files/ also.<br />
+In order to run the site remotely and minimalistically the following sections are required:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;/&lt;site path&gt;/include/<br />
+&nbsp;&nbsp;&nbsp;&nbsp;/&lt;site path&gt;/plugin/cron.php<br />
+&nbsp;&nbsp;&nbsp;&nbsp;/&lt;site path&gt;/modules/<br />
+After this is set up, cron can be run locally on the files.<br />
 </body>
 </html>

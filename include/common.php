@@ -62,13 +62,16 @@ function setup()
 	
 	// get the list of templates
 	$GLOBALS['templates'] = array();
-	if ($dh = opendir(LOCAL_ROOT . 'templates'))
+	if(file_exists(LOCAL_ROOT . 'templates') && is_dir(LOCAL_ROOT . 'templates'))
 	{
-		while (($file = readdir($dh)) !== false)
+		if ($dh = opendir(LOCAL_ROOT . 'templates'))
 		{
-			if ($file != '.' && $file != '..' && is_dir(LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR . $file))
+			while (($file = readdir($dh)) !== false)
 			{
-				$GLOBALS['templates'][] = $file;
+				if ($file != '.' && $file != '..' && is_dir(LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR . $file))
+				{
+					$GLOBALS['templates'][] = $file;
+				}
 			}
 		}
 	}
@@ -106,9 +109,10 @@ function setup()
 	define('HTML_TEMPLATE', str_replace(DIRECTORY_SEPARATOR, '/', LOCAL_TEMPLATE));
 	
 	// include template constants
-	require_once LOCAL_ROOT . LOCAL_DEFAULT . 'config.php';
+	if(defined('LOCAL_DEFAULT'))
+		require_once LOCAL_ROOT . LOCAL_DEFAULT . 'config.php';
 	
-	if(file_exists(LOCAL_ROOT . LOCAL_TEMPLATE . 'config.php'))
+	if(defined('LOCAL_TEMPLATE') && file_exists(LOCAL_ROOT . LOCAL_TEMPLATE . 'config.php'))
 		require_once LOCAL_ROOT . LOCAL_TEMPLATE . 'config.php';
 	
 	if( USE_DATABASE ) require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'sql.php';
@@ -120,7 +124,8 @@ function setup()
 	}
 	
 	// load templating system
-	require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'Smarty' . DIRECTORY_SEPARATOR . 'Smarty.class.php';
+	if(file_exists(LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'Smarty'))
+		require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'Smarty' . DIRECTORY_SEPARATOR . 'Smarty.class.php';
 	
 	// some modules depend on the mime-types in order to determine if it can handle that type of file
 	loadMime();
@@ -597,9 +602,9 @@ function kill9($command, $startpid, $limit = 2)
 
 function log_error($message)
 {
-	if($_SERVER['SCRIPT_NAME'] == '/plugins/cron.php' || (isset($_REQUEST['debug']) && $_REQUEST['debug'] == true && loggedIn()))
+	if($_SERVER['SCRIPT_FILENAME'] == LOCAL_ROOT . 'plugins/cron.php' || (isset($_REQUEST['debug']) && $_REQUEST['debug'] == true && loggedIn()))
 	{
-		print $message . "<br />";
+		print $message . "\n";
 		flush();
 	}
 }

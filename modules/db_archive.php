@@ -104,7 +104,7 @@ class db_archive extends db_file
 			{
 				// check to see if the file was changed
 				$db_file = $database->query(array(
-						'SELECT' => self::DATABASE,
+						'SELECT' => db_file::DATABASE,
 						'COLUMNS' => 'Filedate',
 						'WHERE' => 'Filepath = "' . addslashes($file) . '"'
 					)
@@ -129,7 +129,7 @@ class db_archive extends db_file
 		if( $archive_id != NULL )
 		{
 			log_error('Removing archive: ' . $file);
-			$database->query(array('DELETE' => self::DATABASE, 'WHERE' => 'Filepath REGEXP "^' . addslashes(preg_quote($file)) . '\\\/"'));
+			$database->query(array('DELETE' => self::DATABASE, 'WHERE' => 'LEFT(Filepath, ' . (strlen($file)+1) . ') = "' . addslashes($file) . addslashes(DIRECTORY_SEPARATOR) . '" AND (LOCATE("' . addslashes(DIRECTORY_SEPARATOR) . '", Filepath, ' . (strlen($file)+2) . ') = 0 OR LOCATE("' . addslashes(DIRECTORY_SEPARATOR) . '", Filepath, ' . (strlen($file)+2) . ') = LENGTH(Filepath))'));
 		}
 
 		// pull information from $info
@@ -325,7 +325,7 @@ class db_archive extends db_file
 
 		if( !file_exists($last_path) )
 		{
-			$args['CONNECTION']->query(array('DELETE' => constant($args['MODULE'] . '::DATABASE'), 'WHERE' => 'Filepath REGEXP "' . addslashes(preg_quote($row['Filepath'])) . '\\\/" OR Filepath = "' . addslashes(preg_quote($row['Filepath'])) . '"'));
+			$args['CONNECTION']->query(array('DELETE' => constant($args['MODULE'] . '::DATABASE'), 'WHERE' => 'LEFT(Filepath, ' . strlen($dir) . ') = "' . addslashes($dir) . '" AND (LOCATE("' . addslashes(DIRECTORY_SEPARATOR) . '", Filepath, ' . (strlen($dir)+1) . ') = 0 OR LOCATE("' . addslashes(DIRECTORY_SEPARATOR) . '", Filepath, ' . (strlen($dir)+1) . ') = LENGTH(Filepath))'));
 			
 			log_error('Removing ' . constant($args['MODULE'] . '::NAME') . ': ' . $row['Filepath']);
 		}

@@ -3,7 +3,7 @@
 $no_setup = true;
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
-require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'db_file.php';
+require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'db_watch.php';
 
 // music handler
 class db_watch_list extends db_watch
@@ -21,76 +21,75 @@ class db_watch_list extends db_watch
 	{
 		global $database, $watched, $ignored, $should_clean;
 		
-		if(!isset($database)) $database = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
-		
 		if(is_dir($dir))
 		{
-			if($file == NULL)
-			{
-				// changed directories or directories that don't exist in the database
-				$db_files = $database->query(array(
-						'SELECT' => db_file::DATABASE,
-						'COLUMNS' => array('id', 'Filedate'),
-						'WHERE' => 'Filepath = "' . addslashes($dir) . '"'
-					)
-				);
-				if(count($db_files) > 0)
-				{
-					$file = $db_files[0];
-				}
-			}
-			
+			if(!isset($database)) $database = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+		
 			// make sure it is in the watch list and not the ignore list
 			if(!isset($ignored)) $ignored = db_watch::get($database, array('search_Filepath' => '^!'), $count, $error);
 			if(!isset($watched)) $watched = db_watch::get($database, array('search_Filepath' => '^\^'), $count, $error);
 			
-			
-			if( !isset($file) || date("Y-m-d h:i:s", filemtime($dir)) != $file['Filedate'] )
+			if(self::is_watched($dir, $watched, $ignored))
 			{
-				// only change should clean if it was because of time difference
-				if(isset($file))
-					$should_clean = true;
-				return self::is_watched($dir, $watched, $ignored);
-			}
-			else
-			{
-				$db_files = $database->query(array(
-						'SELECT' => db_file::DATABASE,
-						'COLUMNS' => array('count(*)'),
-						'WHERE' => 'Filepath REGEXP "^' . addslashes(preg_quote($dir)) . '[^' . addslashes(preg_quote(DIRECTORY_SEPARATOR)) . ']+' . addslashes(preg_quote(DIRECTORY_SEPARATOR)) . '?$"'
-					)
-				);
-				
-				// check for file count inconsistency but don't process anything
-				$count = 0;
-				if ($dh = opendir($dir))
+				if($file == NULL)
 				{
-					// count files
-					while (($file = readdir($dh)) !== false)
+					// changed directories or directories that don't exist in the database
+					$db_files = $database->query(array(
+							'SELECT' => db_file::DATABASE,
+							'COLUMNS' => array('id', 'Filedate'),
+							'WHERE' => 'Filepath = "' . addslashes($dir) . '"'
+						)
+					);
+					if(count($db_files) > 0)
 					{
-						if(fs_file::handles($dir . $file, true))
-						{
-							$count++;
-						}
-						
-						// return if count is different from database
-						if($count > $db_files[0]['count(*)'])
-						{
-							$result = self::is_watched($dir, $watched, $ignored);
-							if($result == true)
-								log_error('Directory count inconsitency: too few files in database!');
-							return $result;
-						}
+						$file = $db_files[0];
 					}
 				}
 				
-				// if count if less then number of directories in database
-				if($count < $db_files[0]['count(*)'])
+				
+				if( !isset($file) || date("Y-m-d h:i:s", filemtime($dir)) != $file['Filedate'] )
 				{
-					$result = self::is_watched($dir, $watched, $ignored);
-					if($result == true)
+					// only change should clean if it was because of time difference
+					if(isset($file))
+						$should_clean = true;
+					return true;
+				}
+				else
+				{
+					$db_files = $database->query(array(
+							'SELECT' => db_file::DATABASE,
+							'COLUMNS' => array('count(*)'),
+							'WHERE' => 'LEFT(Filepath, ' . strlen($dir) . ') = "' . addslashes($dir) . '" AND (LOCATE("' . addslashes(DIRECTORY_SEPARATOR) . '", Filepath, ' . (strlen($dir)+1) . ') = 0 OR LOCATE("' . addslashes(DIRECTORY_SEPARATOR) . '", Filepath, ' . (strlen($dir)+1) . ') = LENGTH(Filepath))'
+						)
+					);
+					
+					// check for file count inconsistency but don't process anything
+					$count = 1;
+					if ($dh = opendir($dir))
+					{
+						// count files
+						while (($file = readdir($dh)) !== false)
+						{
+							if(fs_file::handles($dir . $file, true))
+							{
+								$count++;
+							}
+							
+							// return if count is different from database
+							if($count > $db_files[0]['count(*)'])
+							{
+								log_error('Directory count inconsitency: too few files in database!');
+								return true;
+							}
+						}
+					}
+					
+					// if count if less then number of directories in database
+					if($count < $db_files[0]['count(*)'])
+					{
 						log_error('Directory count inconsitency: too many files in database!');
-					return $result;
+						return true;
+					}
 				}
 			}
 		}
@@ -168,14 +167,21 @@ class db_watch_list extends db_watch
 		// check directories recursively
 		else
 		{
-			// search recursively
-			$status = self::handle_dir($database, $dir);
+			// yes we are checking it twice but it is better to be safe then sorry
+			if(!isset($ignored)) $ignored = db_watch::get($database, array('search_Filepath' => '^!'), $count, $error);
+			if(!isset($watched)) $watched = db_watch::get($database, array('search_Filepath' => '^\^'), $count, $error);
 			
-			// remove any occurance of this directory from the database
-			//  it only gets here if it isn't handled, so it shouldn't be in the database
-			$database->query(array('DELETE' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($dir) . '"'));
-			
-			return $status;
+			if(self::is_watched($dir, $watched, $ignored))
+			{
+				// search recursively
+				$status = self::handle_dir($database, $dir);
+				
+				// remove any occurance of this directory from the database
+				//  it only gets here if it isn't handled, so it shouldn't be in the database
+				$database->query(array('DELETE' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($dir) . '"'));
+				
+				return $status;
+			}
 		}
 		
 		return true;

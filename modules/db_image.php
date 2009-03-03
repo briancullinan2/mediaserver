@@ -67,7 +67,7 @@ class db_image extends db_file
 				)
 			);
 			
-			// try to get music information
+			// try to get image information
 			if( count($db_image) == 0 )
 			{
 				$fileid = self::add($database, $file);
@@ -76,7 +76,7 @@ class db_image extends db_file
 			{
 				// check to see if the file was changed
 				$db_file = $database->query(array(
-						'SELECT' => self::DATABASE,
+						'SELECT' => db_file::DATABASE,
 						'COLUMNS' => 'Filedate',
 						'WHERE' => 'Filepath = "' . addslashes($file) . '"'
 					)
