@@ -24,15 +24,18 @@
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="install.php">Install</a><br />
 4. Add directories to watch for changes:<br />
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="watch.php">Watch</a><br />
-5. Add a cron job:<br />
+5. Set up aliases:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;<b>Warning</b>, this is for advanced users only, changing this section could alter the functionality of the site<br />
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="alias.php">Alias</a><br />
+6. Add a cron job:<br />
 &nbsp;&nbsp;&nbsp;&nbsp;Run the <b>&lt;site path&gt;/plugins/cron.php</b> script (optionally run manually) to look for changed directories<br /><code>
 &nbsp;&nbsp;&nbsp;&nbsp;0 * * * * /usr/bin/php /&lt;site path&gt;/plugins/cron.php &gt;/dev/null 2&gt;&amp;1<br />
 &nbsp;&nbsp;&nbsp;&nbsp;30 * * * * /usr/bin/php /&lt;site path&gt;/plugins/cron.php &gt;/dev/null 2&gt;&amp;1<br /></code>
 &nbsp;&nbsp;&nbsp;&nbsp;This would run a job every half hour<br />
 &nbsp;&nbsp;&nbsp;&nbsp;You can also use Scheduled Tasks on Windows to run the cron.php script with PHP-CLI<br /><br />
 <b>Note:</b><br />
-The site can be run on a remote system with a shared directory in between however the mount points must be in the same place.<br />
-For example if your files are on a file server with the location /home/username/shared_files/, you must have the network share mounted on your webserver under /home/username/shared_files/ also.<br />
+The site can be run on a remote system with a shared directory in between however the mount points must be in the same place or aliasing must be set up.<br />
+See the alias editor for more information.<br />
 In order to run the site remotely and minimalistically the following sections are required:<br />
 &nbsp;&nbsp;&nbsp;&nbsp;/&lt;site path&gt;/include/<br />
 &nbsp;&nbsp;&nbsp;&nbsp;/&lt;site path&gt;/plugin/cron.php<br />

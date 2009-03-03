@@ -207,7 +207,7 @@ if(isset($files[0]['Length']))
 	//header('Content-Length: ' . $length);
 }
 
-$fp = call_user_func_array($_REQUEST['cat'] . '::out', array($database, $_REQUEST['%IF'], true));
+$fp = call_user_func_array($_REQUEST['cat'] . '::out', array($database, $_REQUEST['%IF']));
 //$fp = fopen($_REQUEST['%IF'], 'rb');
 $php_out = fopen('php://output', 'wb');
 

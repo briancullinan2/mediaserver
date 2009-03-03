@@ -49,7 +49,7 @@ for($index = 0; $index < $files_length; $index++)
 	
 	// do alias replacement on every file path
 	$files[$index]['Filepath_alias'] = $files[$index]['Filepath'];
-	if(USE_ALIAS == true) $files[$index]['Filepath_alias'] = preg_replace($GLOBALS['paths_regexp'], $GLOBALS['alias'], $files[$index]['Filepath']);
+	if(USE_ALIAS == true) $files[$index]['Filepath_alias'] = preg_replace($GLOBALS['SOFT']['paths_regexp'], $GLOBALS['SOFT']['alias'], $files[$index]['Filepath']);
 	
 	// replace the root directory with a forward slash to remove C:\ on windows systems
 	if(substr($files[$index]['Filepath_alias'], 0, strlen(realpath('/'))) == realpath('/'))

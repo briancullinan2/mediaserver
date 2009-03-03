@@ -42,6 +42,8 @@ class db_audio extends db_file
 
 	static function handle($database, $file)
 	{
+		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['HARD']['alias_regexp'], $GLOBALS['HARD']['paths'], $file);
+		
 		if(self::handles($file))
 		{
 			// check to see if it is in the database

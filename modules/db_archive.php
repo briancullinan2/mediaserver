@@ -25,6 +25,7 @@ class db_archive extends db_file
 
 	static function handles($file)
 	{
+		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['ALL']['alias_regexp'], $GLOBALS['ALL']['paths'], $file);
 		
 		// parse through the file path and try to find a zip
 		$paths = split('\\' . DIRECTORY_SEPARATOR, $file);
@@ -68,6 +69,8 @@ class db_archive extends db_file
 
 	static function handle($database, $file)
 	{
+		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['HARD']['alias_regexp'], $GLOBALS['HARD']['paths'], $file);
+			
 		$paths = split('\\' . DIRECTORY_SEPARATOR, $file);
 		$last_path = '';
 		foreach($paths as $i => $tmp_file)
@@ -243,8 +246,11 @@ class db_archive extends db_file
 		
 	}
 
-	static function out($database, $file, $no_headers = false)
+	static function out($database, $file)
 	{
+		if(USE_ALIAS == true)
+			$file = preg_replace($GLOBALS['SOFT']['alias_regexp'], $GLOBALS['SOFT']['paths'], $file);
+			
 		$paths = split('\\' . DIRECTORY_SEPARATOR, $file);
 		$last_path = '';
 		foreach($paths as $i => $tmp_file)
@@ -262,7 +268,7 @@ class db_archive extends db_file
 
 		if(is_file($last_path))
 		{
-			return db_file::out($database, $last_path, $no_headers);
+			return db_file::out($database, $last_path);
 		}
 
 		return false;
@@ -272,7 +278,7 @@ class db_archive extends db_file
 	{
 		if(isset($request['dir']))
 		{
-			if(USE_ALIAS == true) $request['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
+			if(USE_ALIAS == true) $request['dir'] = preg_replace($GLOBALS['SOFT']['alias_regexp'], $GLOBALS['SOFT']['paths'], $request['dir']);
 
 			$paths = split('\\' . DIRECTORY_SEPARATOR, $request['dir']);
 			$last_path = '';

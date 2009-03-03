@@ -21,6 +21,8 @@ class db_watch_list extends db_watch
 	{
 		global $database, $watched, $ignored, $should_clean;
 		
+		if(USE_ALIAS == true) $dir = preg_replace($GLOBALS['ALL']['alias_regexp'], $GLOBALS['ALL']['paths'], $dir);
+		
 		if(is_dir($dir))
 		{
 			if(!isset($database)) $database = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
@@ -70,7 +72,7 @@ class db_watch_list extends db_watch
 						// count files
 						while (($file = readdir($dh)) !== false)
 						{
-							if(fs_file::handles($dir . $file, true))
+							if(db_file::handles($dir . $file))
 							{
 								$count++;
 							}
@@ -128,6 +130,8 @@ class db_watch_list extends db_watch
 
 	static function handle($database, $dir)
 	{
+		if(USE_ALIAS == true) $dir = preg_replace($GLOBALS['HARD']['alias_regexp'], $GLOBALS['HARD']['paths'], $dir);
+		
 		if(self::handles($dir))
 		{
 			$db_watch_list = $database->query(array(
@@ -284,18 +288,27 @@ class db_watch_list extends db_watch
 		//   then we must add new files to database! so handle() it
 		if(isset($request['file']))
 		{
-			// search all the files in the directory
-			$files = fs_file::get(NULL, array('dir' => $request['file'], 'limit' => 32000), $count, $error, true);
+			if(USE_ALIAS == true) $request['file'] = preg_replace($GLOBALS['SOFT']['alias_regexp'], $GLOBALS['SOFT']['paths'], $request['file']);
 			
-			foreach($files as $i => $file)
+			if(self::handles($request['file']))
 			{
-				self::handle_file($database, $file['Filepath']);
+				// search all the files in the directory
+				$files = fs_file::get(NULL, array('dir' => $request['file'], 'limit' => 32000), $count, $error, true);
+				
+				foreach($files as $i => $file)
+				{
+					self::handle_file($database, $file['Filepath']);
+				}
+				
+				self::handle_file($database, $request['file']);
+				
+				// delete the selected folder from the database
+				$database->query(array('DELETE' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['file']) . '"'));
 			}
-			
-			self::handle_file($database, $request['file']);
-			
-			// delete the selected folder from the database
-			$database->query(array('DELETE' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['file']) . '"'));
+			else
+			{
+				return array();
+			}
 		}
 		
 		return db_file::get($database, $request, $count, $error, get_class());

@@ -12,7 +12,7 @@ require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY
 $GLOBALS['getID3'] = new getID3();
 
 // music handler
-class db_movies extends db_diskimage
+class db_movies_tmp extends db_diskimage
 {
 	const DATABASE = 'movies';
 	
@@ -25,6 +25,7 @@ class db_movies extends db_diskimage
 
 	static function handles($file)
 	{
+		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['ALL']['alias_regexp'], $GLOBALS['ALL']['paths'], $file);
 		
 		// parse through the file path and try to find a zip
 		$paths = split('\\' . DIRECTORY_SEPARATOR, $file);

@@ -5,6 +5,8 @@ Modules:
 Everything that uses a different file structure to display information should have a different module.  
 For exmaple, the db_audio module accepts parameters for searching artists and albums, these modifiers change which results are displayed.
 On the other hand, the db_album and db_artists displayes a completely different structure.
+Modules are responsible for replacing Filepaths with the alias, module::get() and module::out() calls parse the input request with soft aliases, and output the soft alias
+	module::handles() calls parse with both hard and soft aliases, and module::handle() calls parse just the hard aliases
 
 Needs:
 A svn module for connecting to remove or local SVN databases

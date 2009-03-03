@@ -94,20 +94,6 @@ foreach($files as $index => &$file)
 		}
 	}
 	
-	// do alias replacement on every file path
-	if(USE_ALIAS == true)
-	{
-		$files[$index]['Filepath'] = preg_replace($GLOBALS['paths_regexp'], $GLOBALS['alias'], $file['Filepath']);
-		$alias_flipped = array_flip($GLOBALS['alias']);
-		// check if the replaced path was the entire alias path
-		// in this case we want to replace the filename with the alias name
-		if(isset($alias_flipped[$file['Filepath']]))
-		{
-			$index = $alias_flipped[$file['Filepath']];
-			$files[$index]['Filename'] = substr($GLOBALS['alias'][$index], 1, strlen($GLOBALS['alias'][$index]) - 2);
-		}
-	}
-	
 	// pick out the value for the field to sort by
 	if(isset($files[$index][$_REQUEST['order']]))
 	{

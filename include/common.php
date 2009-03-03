@@ -60,61 +60,6 @@ function setup()
 		}
 	}
 	
-	// get the list of templates
-	$GLOBALS['templates'] = array();
-	if(file_exists(LOCAL_ROOT . 'templates') && is_dir(LOCAL_ROOT . 'templates'))
-	{
-		if ($dh = opendir(LOCAL_ROOT . 'templates'))
-		{
-			while (($file = readdir($dh)) !== false)
-			{
-				if ($file != '.' && $file != '..' && is_dir(LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR . $file))
-				{
-					$GLOBALS['templates'][] = $file;
-				}
-			}
-		}
-	}
-	
-	// set the template if a permenent one isn't already set in the settings file
-	if(!defined('LOCAL_TEMPLATE'))
-	{
-		if(isset($_REQUEST['template']) && in_array($_REQUEST['template'], $GLOBALS['templates']))
-		{
-			if(substr($_REQUEST['template'], strlen($_REQUEST['template']) - 1, 1) != DIRECTORY_SEPARATOR)
-				$_REQUEST['template'] .= DIRECTORY_SEPARATOR;
-			define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . $_REQUEST['template']);
-			$_SESSION['template'] = $_REQUEST['template'];
-		}
-		elseif(isset($_SESSION['template']))
-		{
-			define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . $_SESSION['template']);
-		}
-		else
-		{
-			define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR);
-			if(preg_match('/.*mobile.*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
-			{
-				$_SESSION['template'] = 'mobile' . DIRECTORY_SEPARATOR;
-			}
-			// don't set a template, allow them to choose
-		}
-	}
-	else
-	{
-		$_SESSION['template'] = basename(LOCAL_TEMPLATE) . DIRECTORY_SEPARATOR;
-	}
-	
-	// set the HTML_TEMPLATE for templates to refer to their own directory to provide resources
-	define('HTML_TEMPLATE', str_replace(DIRECTORY_SEPARATOR, '/', LOCAL_TEMPLATE));
-	
-	// include template constants
-	if(defined('LOCAL_DEFAULT'))
-		require_once LOCAL_ROOT . LOCAL_DEFAULT . 'config.php';
-	
-	if(defined('LOCAL_TEMPLATE') && file_exists(LOCAL_ROOT . LOCAL_TEMPLATE . 'config.php'))
-		require_once LOCAL_ROOT . LOCAL_TEMPLATE . 'config.php';
-	
 	if( USE_DATABASE ) require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'sql.php';
 	
 	// include the sql class so it can be used by any page
@@ -178,7 +123,6 @@ function setup()
 		if(defined($module . '::DATABASE'))
 			$GLOBALS['databases'][] = constant($module . '::DATABASE');
 	}
-	$GLOBALS['databases'][] = 'alias';
 	
 	// merge some session variables with the request so modules only have to look in one place
 	if(isset($_SESSION['display']))
@@ -189,33 +133,110 @@ function setup()
 		$_REQUEST['detail'] = 0;
 		
 	// get the aliases to use to replace parts of the filepath
-	$GLOBALS['paths_regexp'] = array();
-	$GLOBALS['alias_regexp'] = array();
-	$GLOBALS['paths'] = array();
-	$GLOBALS['alias'] = array();
+	$GLOBALS['SOFT']['paths_regexp'] = array();
+	$GLOBALS['SOFT']['alias_regexp'] = array();
+	$GLOBALS['SOFT']['paths'] = array();
+	$GLOBALS['SOFT']['alias'] = array();
+	$GLOBALS['HARD']['paths_regexp'] = array();
+	$GLOBALS['HARD']['alias_regexp'] = array();
+	$GLOBALS['HARD']['paths'] = array();
+	$GLOBALS['HARD']['alias'] = array();
+	$GLOBALS['ALL']['paths_regexp'] = array();
+	$GLOBALS['ALL']['alias_regexp'] = array();
+	$GLOBALS['ALL']['paths'] = array();
+	$GLOBALS['ALL']['alias'] = array();
 	if(USE_ALIAS == true && USE_DATABASE == true)
 	{
 		$database = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
-		$aliases = $database->query(array('SELECT' => 'alias'));
+		$aliases = db_alias::get($database, array('limit' => 32000), $count, $error);
 		
 		if($aliases !== false)
 		{
 			foreach($aliases as $key => $alias_props)
 			{
-				$GLOBALS['paths_regexp'][] = $alias_props['Paths_regexp'];
-				$GLOBALS['alias_regexp'][] = $alias_props['Alias_regexp'];
-				$GLOBALS['paths'][] = $alias_props['Paths'];
-				$GLOBALS['alias'][] = $alias_props['Alias'];
+				$GLOBALS['ALL']['paths_regexp'][] = $alias_props['Paths_regexp'];
+				$GLOBALS['ALL']['alias_regexp'][] = $alias_props['Alias_regexp'];
+				$GLOBALS['ALL']['paths'][] = $alias_props['Paths'];
+				$GLOBALS['ALL']['alias'][] = $alias_props['Alias'];
+				if($alias_props['Hard'] == 0)
+				{
+					$GLOBALS['SOFT']['paths_regexp'][] = $alias_props['Paths_regexp'];
+					$GLOBALS['SOFT']['alias_regexp'][] = $alias_props['Alias_regexp'];
+					$GLOBALS['SOFT']['paths'][] = $alias_props['Paths'];
+					$GLOBALS['SOFT']['alias'][] = $alias_props['Alias'];
+				}
+				else
+				{
+					$GLOBALS['HARD']['paths_regexp'][] = $alias_props['Paths_regexp'];
+					$GLOBALS['HARD']['alias_regexp'][] = $alias_props['Alias_regexp'];
+					$GLOBALS['HARD']['paths'][] = $alias_props['Paths'];
+					$GLOBALS['HARD']['alias'][] = $alias_props['Alias'];
+				}
 			}
 		}
 	}
+	
+	// get the list of templates
+	$GLOBALS['templates'] = array();
+	if(file_exists(LOCAL_ROOT . 'templates') && is_dir(LOCAL_ROOT . 'templates'))
+	{
+		if ($dh = opendir(LOCAL_ROOT . 'templates'))
+		{
+			while (($file = readdir($dh)) !== false)
+			{
+				if ($file != '.' && $file != '..' && is_dir(LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR . $file))
+				{
+					$GLOBALS['templates'][] = $file;
+				}
+			}
+		}
+	}
+	
+	// set the template if a permenent one isn't already set in the settings file
+	if(!defined('LOCAL_TEMPLATE'))
+	{
+		if(isset($_REQUEST['template']) && in_array($_REQUEST['template'], $GLOBALS['templates']))
+		{
+			if(substr($_REQUEST['template'], strlen($_REQUEST['template']) - 1, 1) != DIRECTORY_SEPARATOR)
+				$_REQUEST['template'] .= DIRECTORY_SEPARATOR;
+			define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . $_REQUEST['template']);
+			$_SESSION['template'] = $_REQUEST['template'];
+		}
+		elseif(isset($_SESSION['template']))
+		{
+			define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . $_SESSION['template']);
+		}
+		else
+		{
+			define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR);
+			if(preg_match('/.*mobile.*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
+			{
+				$_SESSION['template'] = 'mobile' . DIRECTORY_SEPARATOR;
+			}
+			// don't set a template, allow them to choose
+		}
+	}
+	else
+	{
+		$_SESSION['template'] = basename(LOCAL_TEMPLATE) . DIRECTORY_SEPARATOR;
+	}
+	
+	// set the HTML_TEMPLATE for templates to refer to their own directory to provide resources
+	define('HTML_TEMPLATE', str_replace(DIRECTORY_SEPARATOR, '/', LOCAL_TEMPLATE));
+	
+	// include template constants
+	if(defined('LOCAL_DEFAULT'))
+		require_once LOCAL_ROOT . LOCAL_DEFAULT . 'config.php';
+	
+	if(defined('LOCAL_TEMPLATE') && file_exists(LOCAL_ROOT . LOCAL_TEMPLATE . 'config.php'))
+		require_once LOCAL_ROOT . LOCAL_TEMPLATE . 'config.php';
 }
 
 function handles($file, $module)
 {
 	if(class_exists((USE_DATABASE?'db_':'fs_') . $module))
 	{
-		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['SOFT']['alias_regexp'], $GLOBALS['SOFT']['paths'], $file);
 		return call_user_func((USE_DATABASE?'db_':'fs_') . $module . '::handles', $file);
 	}
 	return false;

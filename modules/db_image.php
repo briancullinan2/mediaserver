@@ -56,6 +56,7 @@ class db_image extends db_file
 
 	static function handle($database, $file)
 	{
+		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['HARD']['alias_regexp'], $GLOBALS['HARD']['paths'], $file);
 
 		if(self::handles($file))
 		{
@@ -152,38 +153,6 @@ class db_image extends db_file
 		}
 			
 	}
-	
-	
-	// generate three different size thumbnails
-	// returns an array of thumbnails
-	static function makeThumbs($file)
-	{
-		$tmp_name = TMP_DIR . md5($file) . '.jpg';
-		if(file_exists($tmp_name)) $tmp_name = $tmp_name = TMP_DIR . md5($file . microtime()) . '.jpg';
-		
-		// first make highest size thumb
-		$cmd = CONVERT . ' "' . $file . '[0]" -resize "512x512" -format jpeg:-';
-		exec($cmd, $out, $ret);
-		
-		if($ret != 0)
-		{
-			print 'Error: Cannot create thumbnail (' . $file . ' -> ' . $tmp_name . ').';
-			return '';
-		}
-		
-		// read in image into array
-		$fp = fopen($tmp_name, 'r');
-		$output = fread($fp, filesize($tmp_name));
-		fclose($fp);
-
-		// delete tmp file
-		unlink($tmp_name);
-		
-		log_error('Created thumbs: ' . $file);
-
-		return $output;
-	}
-	
 	
 	static function get($database, $request, &$count, &$error)
 	{

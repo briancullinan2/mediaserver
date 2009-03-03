@@ -147,11 +147,6 @@ class fs_archive extends fs_file
 
 		if(is_file($last_path))
 		{
-			header('Content-Transfer-Encoding: binary');
-			header('Content-Type: ' .  getMime($last_path));
-			header('Content-Length: ' . filesize($last_path));
-			header('Content-Disposition: attachment; filename="' . basename($last_path) . '"');
-			
 			if(is_string($stream))
 				$op = fopen($stream, 'wb');
 			else
@@ -170,7 +165,6 @@ class fs_archive extends fs_file
 				}
 			}
 		}
-
 
 		return false;
 	}

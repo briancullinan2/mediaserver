@@ -31,22 +31,6 @@ if(isset($_REQUEST['id']))
 
 			//-------------------- THIS IS ALL RANAGES STUFF --------------------
 			
-			// maybe they already defined the size in the header using the module, so check it
-			if(!isset($files[0]['Filesize']))
-			{
-				$headers = headers_list();
-				foreach($headers as $i => $header)
-				{
-					if(substr($header, 0, 15) == 'Content-Length:')
-					{
-						$files[0]['Filesize'] = substr($header, 16);
-						if(!is_numeric($files[0]['Filesize']) || $files[0]['Filesize'] == 0) // problem getting the value?
-							unset($files[0]['Filesize']);
-						break;
-					}
-				}
-			}
-			
 			// range can only be used when the filesize is known
 			if(!isset($files[0]['Filesize']))
 			{
@@ -114,6 +98,9 @@ if(isset($_REQUEST['id']))
 				//header("Cache-Control: cache, must-revalidate");  
 				//header("Pragma: public");
 			
+				header('Content-Transfer-Encoding: binary');
+				header('Content-Type: ' . $files[0]['Filemime']);
+				header('Content-Disposition: attachment; filename="' . $files[0]['Filename'] . '"');
 				header('Content-Length: ' . ($seek_end - $seek_start + 1));
 			}
 			

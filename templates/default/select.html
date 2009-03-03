@@ -36,17 +36,17 @@
             	<a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}zip.php/{$smarty.request.cat}/{$files[file].Filename}/Files.zip">zip</a> :
                 <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}bt.php/{$smarty.request.cat}/{$files[file].Filename}/Files.torrent">torrent</a>
                 {if $files[file].Filepath|@handles:'video'}
-                : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode.php/{$smarty.request.cat}/{$files[file].id}/MP4/File{$files[file].Filename}.mp4">mp4</a>
-                : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode.php/{$smarty.request.cat}/{$files[file].id}/MPG/File{$files[file].Filename}.mpeg">mpg</a>
-                : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode.php/{$smarty.request.cat}/{$files[file].id}/WMV/File{$files[file].Filename}.wmv">wmv</a>
+                : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode.php/{$smarty.request.cat}/{$files[file].id}/MP4/{$files[file].Filename}.mp4">mp4</a>
+                : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode.php/{$smarty.request.cat}/{$files[file].id}/MPG/{$files[file].Filename}.mpeg">mpg</a>
+                : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode.php/{$smarty.request.cat}/{$files[file].id}/WMV/{$files[file].Filename}.wmv">wmv</a>
                 {elseif $files[file].Filepath|@handles:'audio'}
-                : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode.php/{$smarty.request.cat}/{$files[file].id}/MP4A/File{$files[file].Filename}.mp4">mp4</a>
-                : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode.php/{$smarty.request.cat}/{$files[file].id}/MP3/File{$files[file].Filename}.mp3">mp3</a>
-                : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode.php/{$smarty.request.cat}/{$files[file].id}/WMA/File{$files[file].Filename}.wma">wma</a>
+                : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode.php/{$smarty.request.cat}/{$files[file].id}/MP4A/{$files[file].Filename}.mp4">mp4</a>
+                : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode.php/{$smarty.request.cat}/{$files[file].id}/MP3/{$files[file].Filename}.mp3">mp3</a>
+                : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode.php/{$smarty.request.cat}/{$files[file].id}/WMA/{$files[file].Filename}.wma">wma</a>
                 {elseif $files[file].Filepath|@handles:'image'}
-                : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}convert.php/{$smarty.request.cat}/{$files[file].id}/JPG/File{$files[file].Filename}.jpg">jpg</a>
-                : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}convert.php/{$smarty.request.cat}/{$files[file].id}/GIF/File{$files[file].Filename}.gif">gif</a>
-                : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}convert.php/{$smarty.request.cat}/{$files[file].id}/PNG/File{$files[file].Filename}.png">png</a>
+                : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}convert.php/{$smarty.request.cat}/{$files[file].id}/JPG/{$files[file].Filename}.jpg">jpg</a>
+                : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}convert.php/{$smarty.request.cat}/{$files[file].id}/GIF/{$files[file].Filename}.gif">gif</a>
+                : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}convert.php/{$smarty.request.cat}/{$files[file].id}/PNG/{$files[file].Filename}.png">png</a>
                 {/if}
 			<br />
 		{/section}

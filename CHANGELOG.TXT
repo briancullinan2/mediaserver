@@ -1,3 +1,8 @@
+2009-03-03
+Files can now be added from across the network, using Hard aliases that replace remote file system paths with locally mounted paths
+Added db_alias module to handle the aliases, although it is semi-incomplete
+module::out() methods can only remove header declarations, they cannot set them, that is controlled by the plugin that calls it
+
 2009-03-02
 Made cleanup more efficient by creating a THREASHOLD constant for how many times the cron should run before cleaning up
 Also cleanup will fire when physical directories are changed and it is detected by the db_watch_list module, so they will no longer clean up when just adding new files to database

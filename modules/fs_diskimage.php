@@ -165,11 +165,6 @@ class fs_diskimage extends fs_file
 						{
 							if($file['filename'] == $inside_path)
 							{
-								header('Content-Transfer-Encoding: binary');
-								header('Content-Type: ' .  getMime($inside_path));
-								header('Content-Length: ' . $file['filesize']);
-								header('Content-Disposition: attachment; filename="' . basename($inside_path) . '"');
-								
 								if($op !== false)
 								{
 									if($fp = fopen($last_path, 'rb'))
