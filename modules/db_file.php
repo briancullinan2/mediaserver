@@ -155,7 +155,7 @@ class db_file
 			$files = $database->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
 			if(count($files) > 0)
 			{				
-				if($fp = fopen($files[0]['Filepath'], 'rb'))
+				if($fp = fopen($file, 'rb'))
 				{
 					return $fp;
 				}

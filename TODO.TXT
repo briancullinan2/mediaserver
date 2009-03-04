@@ -1,3 +1,6 @@
+2009-03-04
+Fix zip.php and bt.php plugins, the changed with the Filepath always being aliased has borked them
+
 2009-03-03
 Update fs_diskimage and fs_archive to the new module::out() method standard
 Make all paths in database use same type of directory separator
