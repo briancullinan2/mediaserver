@@ -118,7 +118,7 @@ log_error("Phase 1: Checking for modified Directories; Recursively");
 // loop through each watched folder and get a list of all the files
 for($i; $i < count($watched); $i++)
 {
-	if(!file_exists($watched[$i]['Filepath']))
+	if(!file_exists(str_replace('/', DIRECTORY_SEPARATOR, $watched[$i]['Filepath'])))
 	{
 		log_error("Error: Directory does not exist! " . $watched[$i]['Filepath'] . " is missing!");
 		$should_clean = 0;
@@ -195,7 +195,7 @@ do
 	{
 		$dir = $db_dirs[0]['Filepath'];
 		if(USE_ALIAS == true)
-			$dir = preg_replace($GLOBALS['ALL']['alias_regexp'], $GLOBALS['ALL']['paths'], $dir);
+			$dir = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $dir);
 		$status = db_watch_list::handle($database, $dir);
 	}
 
@@ -237,7 +237,7 @@ foreach($GLOBALS['modules'] as $i => $module)
 // these might be delete by cleanup, so check again because there are only a couple
 for($i = 0; $i < count($watched); $i++)
 {
-	$folders = split(addslashes(DIRECTORY_SEPARATOR), $watched[$i]['Filepath']);
+	$folders = split('/', $watched[$i]['Filepath']);
 	$curr_dir = (realpath('/') == '/')?'/':'';
 	
 	// don't add the watch directory here because it must be added to the watch list first!
@@ -254,7 +254,7 @@ for($i = 0; $i < count($watched); $i++)
 			// if using aliases then only add the revert from the watch directory to the alias
 			// ex. Watch = /home/share/Pictures/, Alias = /home/share/ => /Shared/
 			//     only /home/share/ is added here
-			if(!USE_ALIAS || in_array($curr_dir, $GLOBALS['SOFT']['paths']) !== false)
+			if(!USE_ALIAS || in_array($curr_dir, $GLOBALS['paths']) !== false)
 			{
 				// this allows for us to make sure that at least the beginning 
 				//   of the path is an aliased path

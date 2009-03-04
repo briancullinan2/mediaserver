@@ -46,7 +46,7 @@ class db_video extends db_file
 
 	static function handle($database, $file)
 	{
-		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['HARD']['alias_regexp'], $GLOBALS['HARD']['paths'], $file);
+		$file = str_replace('\\', '/', $file);
 		
 		if(self::handles($file))
 		{
@@ -87,11 +87,14 @@ class db_video extends db_file
 	
 	static function getInfo($file)
 	{
+		$file = str_replace('/', DIRECTORY_SEPARATOR, $file);
+		
 		$info = $GLOBALS['getID3']->analyze($file);
 		getid3_lib::CopyTagsToComments($info);
 		
 		$fileinfo = array();
-		$fileinfo['Filepath'] = addslashes($file);
+		$fileinfo['Filepath'] = addslashes(str_replace('\\', '/', $file));
+		
 		$fileinfo['Title'] = @$info['comments_html']['title'][0];
 		$fileinfo['Comments'] = @$info['comments_html']['comments'][0];
 		$fileinfo['Bitrate'] = @$info['bitrate'];
@@ -130,12 +133,6 @@ class db_video extends db_file
 		}
 		
 	}
-	
-	// output provided file to given stream
-	// handled by db_file
-	//static function out($database, $file)
-	//{
-	//}
 	
 	static function get($database, $request, &$count, &$error)
 	{

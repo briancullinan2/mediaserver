@@ -2,6 +2,7 @@
 Added db_alias module to handle the aliases, although it is semi-incomplete
 module::out() methods can only remove header declarations, they cannot set them, that is controlled by the plugin that calls it
 Cron now doesn't clean when a directory is unmounted or missing
+Site now completely directory separator independant, it stores all files with / in between directories and all system calls replace the / with DIRECTORY_SEPARATOR
 
 2009-03-02
 Made cleanup more efficient by creating a THREASHOLD constant for how many times the cron should run before cleaning up

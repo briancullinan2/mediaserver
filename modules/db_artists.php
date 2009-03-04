@@ -33,11 +33,12 @@ class db_artists extends db_audio
 	{
 		if(isset($request['dir']))
 		{
-			if($request['dir'][0] == DIRECTORY_SEPARATOR) $request['dir'] = substr($request['dir'], 1);
-			if($request['dir'][strlen($request['dir'])-1] == DIRECTORY_SEPARATOR) $request['dir'] = substr($request['dir'], 0, strlen($request['dir'])-1);
-			if(strpos($request['dir'], DIRECTORY_SEPARATOR) !== false)
+			$request['dir'] = str_replace('\\', '/', $request['dir']);
+			if($request['dir'][0] == '/') $request['dir'] = substr($request['dir'], 1);
+			if($request['dir'][strlen($request['dir'])-1] == '/') $request['dir'] = substr($request['dir'], 0, strlen($request['dir'])-1);
+			if(strpos($request['dir'], '/') !== false)
 			{
-				$dirs = split(DIRECTORY_SEPARATOR, $request['dir']);
+				$dirs = split('/', $request['dir']);
 				if($dirs[0] == '$Unknown$')
 					$dirs[0] = '';
 				if($dirs[1] == '$Unknown$')
@@ -72,7 +73,7 @@ class db_artists extends db_audio
 						$files[$i]['Album'] = '$Unknown$';
 					$files[$i]['Filetype'] = 'FOLDER';
 					$files[$i]['Filesize'] = '0';
-					$files[$i]['Filepath'] = DIRECTORY_SEPARATOR . $files[$i]['Artist'] . DIRECTORY_SEPARATOR . $files[$i]['Album'] . DIRECTORY_SEPARATOR;
+					$files[$i]['Filepath'] = '/' . $files[$i]['Artist'] . '/' . $files[$i]['Album'] . '/';
 					$files[$i]['Filename'] = $files[$i]['Album'];
 					$files[$i]['SongCount'] = $files[$i]['count(*)'];
 				}
@@ -94,7 +95,7 @@ class db_artists extends db_audio
 					$files[$i]['Artist'] = '$Unknown$';
 				$files[$i]['Filetype'] = 'FOLDER';
 				$files[$i]['Filesize'] = '0';
-				$files[$i]['Filepath'] = DIRECTORY_SEPARATOR . $files[$i]['Artist'] . DIRECTORY_SEPARATOR;
+				$files[$i]['Filepath'] = '/' . $files[$i]['Artist'] . '/';
 				$files[$i]['Filename'] = $files[$i]['Artist'];
 				$files[$i]['SongCount'] = $files[$i]['count(*)'];
 			}

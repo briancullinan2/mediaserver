@@ -14,16 +14,37 @@ class fs_file
 		return array('id', 'Filename', 'Filemime', 'Filesize', 'Filedate', 'Filetype', 'Filepath');
 	}
 
+	static function parseInner($file, &$last_path, &$inside_path)
+	{
+		$paths = split('/', $file);
+		$last_path = '';
+		foreach($paths as $i => $tmp_file)
+		{
+			if(file_exists(str_replace('/', DIRECTORY_SEPARATOR, $last_path . $tmp_file)) || $last_path == '')
+			{
+				$last_path = $last_path . $tmp_file . '/';
+			} else {
+				if(file_exists(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
+					break;
+			}
+		}
+		
+		$inside_path = substr($file, strlen($last_path));
+		if($last_path[strlen($last_path)-1] == '/') $last_path = substr($last_path, 0, strlen($last_path)-1);
+	}
+
 	// return whether or not this module handles trhe specified type of file
 	static function handles($file, $internals = false)
 	{
+		$file = str_replace('\\', '/', $file);
+		
 		if(USE_DATABASE && $internals == false)
 		{
 			return false;
 		}
 		else
 		{
-			if(is_dir($file) || is_file($file))
+			if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $file)) || is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)))
 			{
 				$filename = basename($file);
 	
@@ -40,9 +61,11 @@ class fs_file
 		
 	static function getInfo($file)
 	{
+		$file = str_replace('/', DIRECTORY_SEPARATOR, $file);
+		
 		$fileinfo = array();
 		$fileinfo['id'] = bin2hex($file);
-		$fileinfo['Filepath'] = $file;
+		$fileinfo['Filepath'] = str_replace('\\', '/', $file);
 		$fileinfo['Filename'] = basename($file);
 		$fileinfo['Filesize'] = filesize($file);
 		$fileinfo['Filemime'] = getMime($file);
@@ -55,8 +78,10 @@ class fs_file
 	// output provided file to given stream
 	static function out($database, $file)
 	{
+		$file = str_replace('\\', '/', $file);
+		
 		// check to make sure file is valid
-		if(is_file($file))
+		if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)))
 		{
 			if($fp = fopen($file, 'rb'))
 			{
@@ -102,14 +127,15 @@ class fs_file
 			{
 				foreach($request['selected'] as $i => $id)
 				{
-					$file = @pack('H*', $id);
-					if(is_file($file))
+					$file = str_replace('\\', '/', @pack('H*', $id));
+					if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)))
 					{
 						if(call_user_func($module . '::handles', $file))
 						{
 							$info = call_user_func($module . '::getInfo', $file);
+							
 							// make some modifications
-							if($info['Filetype'] == 'FOLDER') $info['Filepath'] .= DIRECTORY_SEPARATOR;
+							if($info['Filetype'] == 'FOLDER') $info['Filepath'] .= '/';
 							$files[] = $info;
 						}
 					}
@@ -118,7 +144,8 @@ class fs_file
 			
 			if(isset($request['file']))
 			{
-				if(is_file($request['file']))
+				$request['file'] = str_replace('\\', '/', $request['file']);
+				if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $request['file'])))
 				{
 					if(call_user_func($module . '::handles', $request['file']))
 					{
@@ -134,12 +161,13 @@ class fs_file
 				// set a directory if one isn't set already
 				if(!isset($request['dir']))
 					$request['dir'] = realpath('/');
+				$request['dir'] = str_replace('\\', '/', $request['dir']);
 					
 				// check to make sure is it a valid directory before continuing
-				if (is_dir($request['dir']))
+				if (is_dir(str_replace('/', DIRECTORY_SEPARATOR, $request['dir'])))
 				{
 					// scandir - read in a list of the directory content
-					$tmp_files = scandir($request['dir']);
+					$tmp_files = scandir(str_replace('/', DIRECTORY_SEPARATOR, $request['dir']));
 					$count = count($tmp_files);
 					
 					// parse out all the files that this module doesn't handle, just like a filter
@@ -160,7 +188,7 @@ class fs_file
 						$info = call_user_func($module . '::getInfo', $request['dir'] . $tmp_files[$i]);
 						
 						// make some modifications
-						if($info['Filetype'] == 'FOLDER') $info['Filepath'] .= DIRECTORY_SEPARATOR;
+						if($info['Filetype'] == 'FOLDER') $info['Filepath'] .= '/';
 						
 						// set the informations in the total list of files
 						$files[] = $info;

@@ -35,8 +35,9 @@ class db_years extends db_audio
 		// modify some request stuff
 		if(isset($request['dir']))
 		{
-			if($request['dir'][0] == DIRECTORY_SEPARATOR) $request['dir'] = substr($request['dir'], 1);
-			if($request['dir'][strlen($request['dir'])-1] == DIRECTORY_SEPARATOR) $request['dir'] = substr($request['dir'], 0, strlen($request['dir'])-1);
+			$request['dir'] = str_replace('\\', '/', $request['dir']);
+			if($request['dir'][0] == '/') $request['dir'] = substr($request['dir'], 1);
+			if($request['dir'][strlen($request['dir'])-1] == '/') $request['dir'] = substr($request['dir'], 0, strlen($request['dir'])-1);
 			if($request['dir'] == '$Unknown$')
 				$request['dir'] = '';
 			$request['search'] = '=' . $request['dir'] . '=';
@@ -59,7 +60,7 @@ class db_years extends db_audio
 					$files[$i]['Year'] = '$Unknown$';
 				$files[$i]['Filetype'] = 'FOLDER';
 				$files[$i]['Filesize'] = '0';
-				$files[$i]['Filepath'] = DIRECTORY_SEPARATOR . $files[$i]['Year'] . DIRECTORY_SEPARATOR;
+				$files[$i]['Filepath'] = '/' . $files[$i]['Year'] . '/';
 				$files[$i]['Filename'] = $files[$i]['Year'];
 				$files[$i]['SongCount'] = $files[$i]['count(*)'];
 			}

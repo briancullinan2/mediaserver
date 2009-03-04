@@ -39,12 +39,14 @@ class fs_audio extends fs_file
 	
 	static function getInfo($file)
 	{
+		$file = str_replace('/', DIRECTORY_SEPARATOR, $file);
+		
 		$info = $GLOBALS['getID3']->analyze($file);
 		getid3_lib::CopyTagsToComments($info);
 
 		$fileinfo = array();
 		$fileinfo['id'] = bin2hex($file);
-		$fileinfo['Filepath'] = $file;
+		$fileinfo['Filepath'] = str_replace('\\', '/', $file);
 		$fileinfo['Title'] = @$info['comments_html']['title'][0];
 		$fileinfo['Artist'] = @$info['comments_html']['artist'][0];
 		$fileinfo['Album'] = @$info['comments_html']['album'][0];

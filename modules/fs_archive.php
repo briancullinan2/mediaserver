@@ -26,24 +26,27 @@ class fs_archive extends fs_file
 
 	static function handles($file)
 	{
+		$file = str_replace('\\', '/', $file);
+		
+		$paths = split('/', $file);
 		
 		// parse through the file path and try to find a zip
-		$paths = split('\\' . DIRECTORY_SEPARATOR, $file);
 		$last_path = '';
 		$last_ext = '';
+		
 		foreach($paths as $i => $tmp_file)
 		{
 			// this will continue until either the end of the requested file (a .zip extension for example)
 			// or if the entire path exists then it must be an actual folder on disk with a .zip in the name
-			if(file_exists($last_path . $tmp_file) || $last_path == '')
+			if(file_exists(str_replace('/', DIRECTORY_SEPARATOR, $last_path . $tmp_file)) || $last_path == '')
 			{
 				$last_ext = getExt($last_path . $tmp_file);
-				$last_path = $last_path . $tmp_file . DIRECTORY_SEPARATOR;
+				$last_path = $last_path . $tmp_file . '/';
 			}
 			else
 			{
 				// if the last path exists and the last $ext is an archive then we know the path is inside an archive
-				if(file_exists($last_path))
+				if(file_exists(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
 				{
 					// we can break
 					break;
@@ -69,60 +72,64 @@ class fs_archive extends fs_file
 	
 	static function getInfo($filename)
 	{
-		$fileinfo = array();
-		$paths = split('\\' . DIRECTORY_SEPARATOR, $filename);
-		$last_path = '';
-		foreach($paths as $i => $tmp_file)
-		{
-			if(file_exists($last_path . $tmp_file) || $last_path == '')
-			{
-				$last_path = $last_path . $tmp_file . DIRECTORY_SEPARATOR;
-			} else {
-				if(file_exists($last_path))
-					break;
-			}
-		}
-		$inside_path = substr($filename, strlen($last_path));
-		$inside_path = str_replace(DIRECTORY_SEPARATOR, '/', $inside_path);
-		if($last_path[strlen($last_path)-1] == DIRECTORY_SEPARATOR) $last_path = substr($last_path, 0, strlen($last_path)-1);
+		$filename = str_replace('\\', '/', $filename);
+		fs_file::parseInner($filename, $last_path, $inside_path);
 		
-		$info = $GLOBALS['getID3']->analyze($last_path);
-		
-		if($inside_path != '')
+		if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
 		{
-			if(isset($info['zip']) && isset($info['zip']['central_directory']))
+			$fileinfo = array();
+			
+			$info = $GLOBALS['getID3']->analyze($last_path);
+			
+			if($inside_path != '')
 			{
-				foreach($info['zip']['central_directory'] as $i => $file)
+				if(isset($info['zip']) && isset($info['zip']['central_directory']))
 				{
-					if($file['filename'] == $inside_path)
+					foreach($info['zip']['central_directory'] as $i => $file)
 					{
-						$fileinfo['Filepath'] = $last_path . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $file['filename']);
-						$fileinfo['id'] = bin2hex($fileinfo['Filepath']);
-						$fileinfo['Filename'] = basename($file['filename']);
-						if($file['filename'][strlen($file['filename'])-1] == '/')
+						if($file['filename'] == $inside_path)
 						{
-							$fileinfo['Filetype'] = 'FOLDER';
-							$fileinfo['Filesize'] = 0;
-							$fileinfo['Compressed'] = 0;
+							$fileinfo['Filepath'] = $last_path . '/' . $file['filename'];
+							$fileinfo['id'] = bin2hex($fileinfo['Filepath']);
+							$fileinfo['Filename'] = basename($file['filename']);
+							if($file['filename'][strlen($file['filename'])-1] == '/')
+							{
+								$fileinfo['Filetype'] = 'FOLDER';
+								$fileinfo['Filesize'] = 0;
+								$fileinfo['Compressed'] = 0;
+							}
+							else
+							{
+								$fileinfo['Filetype'] = getExt($file['filename']);
+								$fileinfo['Filesize'] = $file['uncompressed_size'];
+								$fileinfo['Compressed'] = $file['compressed_size'];
+							}
+							if($fileinfo['Filetype'] === false)
+								$fileinfo['Filetype'] = 'FILE';
+							$fileinfo['Filemime'] = getMime($file['filename']);
+							$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
+							break;
 						}
-						else
-						{
-							$fileinfo['Filetype'] = getExt($file['filename']);
-							$fileinfo['Filesize'] = $file['uncompressed_size'];
-							$fileinfo['Compressed'] = $file['compressed_size'];
-						}
-						if($fileinfo['Filetype'] === false)
-							$fileinfo['Filetype'] = 'FILE';
-						$fileinfo['Filemime'] = getMime($file['filename']);
-						$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
-						break;
 					}
 				}
 			}
-		}
-		// look at archive properties for the entire archive
-		else
-		{
+			// look at archive properties for the entire archive
+			else
+			{
+				$last_path = str_replace('/', DIRECTORY_SEPARATOR, $last_path);
+				
+				$fileinfo = array();
+				$fileinfo['Filepath'] = str_replace('\\', '/', $last_path);
+				$fileinfo['Filename'] = basename($last_path);
+				$fileinfo['Compressed'] = filesize($last_path);
+				$fileinfo['Filetype'] = getFileType($last_path);
+				if(isset($info['zip']) && isset($info['zip']['uncompressed_size']))
+					$fileinfo['Filesize'] = $info['zip']['uncompressed_size'];
+				else
+					$fileinfo['Filesize'] = 0;
+				$fileinfo['Filemime'] = getMime($last_path);
+				$fileinfo['Filedate'] = date("Y-m-d h:i:s", filemtime($last_path));
+			}
 		}
 		
 		return $fileinfo;
@@ -130,22 +137,10 @@ class fs_archive extends fs_file
 
 	static function out($database, $file, $stream)
 	{
-		$paths = split('\\' . DIRECTORY_SEPARATOR, $file);
-		$last_path = '';
-		foreach($paths as $i => $tmp_file)
-		{
-			if(file_exists($last_path . $tmp_file) || $last_path == '')
-			{
-				$last_path = $last_path . $tmp_file . DIRECTORY_SEPARATOR;
-			} else {
-				if(file_exists($last_path))
-					break;
-			}
-		}
-		$inside_path = substr($file, strlen($last_path));
-		if($last_path[strlen($last_path)-1] == DIRECTORY_SEPARATOR) $last_path = substr($last_path, 0, strlen($last_path)-1);
+		$file = str_replace('\\', '/', $file);
+		fs_file::parseInner($file, $last_path, $last_ext);
 
-		if(is_file($last_path))
+		if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
 		{
 			if(is_string($stream))
 				$op = fopen($stream, 'wb');
@@ -195,6 +190,7 @@ class fs_archive extends fs_file
 			
 			if(isset($request['file']))
 			{
+				$request['file'] = str_replace('\\', '/', $request['file']);
 				if(fs_archive::handles($request['file']))
 				{
 					return array(0 => fs_archive::getInfo($request['file']));
@@ -205,7 +201,8 @@ class fs_archive extends fs_file
 			{
 				if(!isset($request['dir']))
 					$request['dir'] = realpath('/');
-				if (is_dir($request['dir']))
+				$request['dir'] = str_replace('\\', '/', $request['dir']);
+				if (is_dir(str_replace('/', DIRECTORY_SEPARATOR, $request['dir'])))
 				{
 					$tmp_files = scandir($request['dir']);
 					$count = count($tmp_files);
@@ -224,26 +221,10 @@ class fs_archive extends fs_file
 					
 				if(fs_archive::handles($request['dir']))
 				{
-					$paths = split('\\' . DIRECTORY_SEPARATOR, $request['dir']);
-					$last_path = '';
-					foreach($paths as $i => $tmp_file)
-					{
-						if(file_exists($last_path . $tmp_file) || $last_path == '')
-						{
-							$last_path = $last_path . $tmp_file;
-							if(strlen($last_path) == 0 || $last_path[strlen($last_path)-1] != DIRECTORY_SEPARATOR)
-								$last_path .= DIRECTORY_SEPARATOR;
-						} else {
-							if(file_exists($last_path))
-								break;
-						}
-					}
-					$inside_path = substr($request['dir'], strlen($last_path));
-					$inside_path = str_replace(DIRECTORY_SEPARATOR, '\/', $inside_path);
-					if($last_path[strlen($last_path)-1] == DIRECTORY_SEPARATOR) $last_path = substr($last_path, 0, strlen($last_path)-1);
+					fs_file::parseInner($request['dir'], $last_path, $last_ext);
 					
 					// make sure the file they are trying is access is actually a file
-					if(is_file($last_path))
+					if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
 					{
 						// analyze the file and output the files it contains
 						$info = $GLOBALS['getID3']->analyze($last_path);
@@ -264,7 +245,7 @@ class fs_archive extends fs_file
 										{
 											$directories[] = $file['filename'];
 											$fileinfo = array();
-											$fileinfo['Filepath'] = $last_path . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $file['filename']);
+											$fileinfo['Filepath'] = $last_path . '/' . $file['filename'];
 											$fileinfo['id'] = bin2hex($fileinfo['Filepath']);
 											$fileinfo['Filename'] = basename($file['filename']);
 											if($file['filename'][strlen($file['filename'])-1] == '/')

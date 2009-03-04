@@ -42,7 +42,7 @@ class db_image_browser extends db_image
 	static function out($database, $file)
 	{
 		// check to make sure file is valid
-		if(is_file($file))
+		if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)))
 		{
 			header('Content-Disposition: ');
 			return db_file::out($database, $file);

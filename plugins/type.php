@@ -23,7 +23,7 @@ $type_files = array();
 $files = fs_file::get(NULL, array('dir' => LOCAL_ROOT . LOCAL_DEFAULT, 'limit' => 32000), $count, $error, true);
 foreach($files as $i => $type_file)
 {
-	if (!is_dir($files[$i]['Filepath']))
+	if (!is_dir(str_replace('/', DIRECTORY_SEPARATOR, $files[$i]['Filepath'])))
 		$type_files[] = $files[$i]['Filepath'];
 }
 
@@ -32,7 +32,7 @@ if(LOCAL_TEMPLATE != LOCAL_DEFAULT)
 	$files = fs_file::get(NULL, array('dir' => LOCAL_ROOT . LOCAL_TEMPLATE, 'limit' => 32000), $count, $error, true);
 	foreach($files as $i => $type_file)
 	{
-		if (!is_dir($files[$i]['Filepath']))
+		if (!is_dir(str_replace('/', DIRECTORY_SEPARATOR, $files[$i]['Filepath'])))
 			$type_files[] = $files[$i]['Filepath'];
 	}
 }

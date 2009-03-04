@@ -19,7 +19,10 @@ class db_file
 	// return whether or not this module handles trhe specified type of file
 	static function handles($file)
 	{
-		if(is_dir($file) || is_file($file))
+		$file = str_replace('\\', '/', $file);
+		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+		
+		if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $file)) || is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)))
 		{
 			$filename = basename($file);
 
@@ -32,12 +35,32 @@ class db_file
 			return false;
 		}
 	}
+
+	static function parseInner($file, &$last_path, &$inside_path)
+	{
+		$paths = split('/', $file);
+		$last_path = '';
+		foreach($paths as $i => $tmp_file)
+		{
+			if(file_exists(str_replace('/', DIRECTORY_SEPARATOR, $last_path . $tmp_file)) || $last_path == '')
+			{
+				$last_path = $last_path . $tmp_file . '/';
+			} else {
+				if(file_exists(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
+					break;
+			}
+		}
+		
+		$inside_path = substr($file, strlen($last_path));
+		if($last_path[strlen($last_path)-1] == '/') $last_path = substr($last_path, 0, strlen($last_path)-1);
+	}
 	
 	// this function determines if the file qualifies for this type and handles it according
 	static function handle($database, $file)
 	{
-		// files always qualify, we are going to log every single one!
+		$file = str_replace('\\', '/', $file);
 		
+		// files always qualify, we are going to log every single one!
 		if(self::handles($file))
 		{
 			
@@ -74,8 +97,10 @@ class db_file
 	
 	static function getInfo($file)
 	{
+		$file = str_replace('/', DIRECTORY_SEPARATOR, $file);
+		
 		$fileinfo = array();
-		$fileinfo['Filepath'] = addslashes($file);
+		$fileinfo['Filepath'] = addslashes(str_replace('\\', '/', $file));
 		$fileinfo['Filename'] = basename($file);
 		$fileinfo['Filesize'] = filesize($file);
 		$fileinfo['Filemime'] = getMime($file);
@@ -119,8 +144,13 @@ class db_file
 	//  no headers is used to prevent changing the headers, if it is called by a plugin it may just need the stream and no header changes
 	static function out($database, $file)
 	{
+		$file = str_replace('\\', '/', $file);
+		
+		if(USE_ALIAS == true)
+			$file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+		
 		// check to make sure file is valid
-		if(is_file($file))
+		if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)))
 		{
 			$files = $database->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
 			if(count($files) > 0)
@@ -167,7 +197,7 @@ class db_file
 					else
 					{
 						// unpack encoded path and add it to where
-						$props['WHERE'] .= ' Filepath="' . addslashes(@pack('H*', $id)) . '" OR';
+						$props['WHERE'] .= ' Filepath="' . addslashes(str_replace('\\', '/', @pack('H*', $id))) . '" OR';
 					}
 				}
 				// remove last or
@@ -258,14 +288,18 @@ class db_file
 			// add dir filter to where
 			if(isset($request['dir']))
 			{
+				// replace separator
+				$request['dir'] = str_replace('\\', '/', $request['dir']);
+				
 				if($request['dir'] == '') $request['dir'] = DIRECTORY_SEPARATOR;
 				// this is necissary for dealing with windows and cross platform queries coming from templates
 				//  yes: the template should probably handle this by itself, but this is convenient and easy
 				//   it is purely for making all the paths look prettier
-				if($request['dir'][0] == '/' || $request['dir'][0] == '\\') $request['dir'] = realpath('/') . substr($request['dir'], 1);
+				if($request['dir'][0] == DIRECTORY_SEPARATOR) $request['dir'] = realpath('/') . substr($request['dir'], 1);
 				
 				// replace aliased path with actual path
-				if(USE_ALIAS == true) $request['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
+				if(USE_ALIAS == true)
+					$request['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
 				
 				// make sure file exists if we are using the file module
 				if($module != 'db_file' || is_dir(realpath($request['dir'])) !== false)
@@ -290,15 +324,15 @@ class db_file
 						if(!isset($request['search']))
 						{
 							if(isset($request['dirs_only']))
-								$props['WHERE'] .= 'LEFT(Filepath, ' . strlen($request['dir']) . ') = "' . addslashes($request['dir']) . '" AND LOCATE("' . addslashes(DIRECTORY_SEPARATOR) . '", Filepath, ' . (strlen($request['dir'])+1) . ') = LENGTH(Filepath)';
+								$props['WHERE'] .= 'LEFT(Filepath, ' . strlen($request['dir']) . ') = "' . addslashes($request['dir']) . '" AND LOCATE("/", Filepath, ' . (strlen($request['dir'])+1) . ') = LENGTH(Filepath)';
 							else
-								$props['WHERE'] .= 'LEFT(Filepath, ' . strlen($request['dir']) . ') = "' . addslashes($request['dir']) . '" AND (LOCATE("' . addslashes(DIRECTORY_SEPARATOR) . '", Filepath, ' . (strlen($request['dir'])+1) . ') = 0 OR LOCATE("' . addslashes(DIRECTORY_SEPARATOR) . '", Filepath, ' . (strlen($request['dir'])+1) . ') = LENGTH(Filepath)) AND Filepath != "' . addslashes($request['dir']) . '"';
+								$props['WHERE'] .= 'LEFT(Filepath, ' . strlen($request['dir']) . ') = "' . addslashes($request['dir']) . '" AND (LOCATE("/", Filepath, ' . (strlen($request['dir'])+1) . ') = 0 OR LOCATE("/", Filepath, ' . (strlen($request['dir'])+1) . ') = LENGTH(Filepath)) AND Filepath != "' . addslashes($request['dir']) . '"';
 						}
 						// show all results underneath directory
 						else
 						{
 							if(isset($request['dirs_only']))
-								$props['WHERE'] .= 'LEFT(Filepath, ' . strlen($request['dir']) . ') = "' . addslashes($request['dir']) . '" AND RIGHT(Filepath, 1) = "' . addslashes(DIRECTORY_SEPARATOR) . '" AND Filepath != "' . addslashes($request['dir']) . '"';
+								$props['WHERE'] .= 'LEFT(Filepath, ' . strlen($request['dir']) . ') = "' . addslashes($request['dir']) . '" AND RIGHT(Filepath, 1) = "/" AND Filepath != "' . addslashes($request['dir']) . '"';
 							else
 								$props['WHERE'] .= 'LEFT(Filepath, ' . strlen($request['dir']) . ') = "' . addslashes($request['dir']) . '" AND Filepath != "' . addslashes($request['dir']) . '"';
 						}
@@ -317,11 +351,15 @@ class db_file
 			// add file filter to where - this is mostly for internal use
 			if(isset($request['file']))
 			{
+				// replace separator
+				$request['file'] = str_replace('\\', '/', $request['file']);
+				
 				// this is necissary for dealing with windows and cross platform queries coming from templates
-				if($request['file'][0] == '/' || $request['file'][0] == '\\') $request['file'] = realpath('/') . substr($request['file'], 1);
+				if($request['file'][0] == DIRECTORY_SEPARATOR) $request['file'] = realpath('/') . substr($request['file'], 1);
 				
 				// replace aliased path with actual path
-				if(USE_ALIAS == true) $request['file'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']);
+				if(USE_ALIAS == true)
+					$request['file'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']);
 				
 				// make sure file exists if we are using the file module
 				if($module != 'db_file' || file_exists(realpath($request['file'])) !== false)
@@ -406,7 +444,9 @@ class db_file
 	// callback for the sql file list query
 	static function cleanup_remove($row, $args)
 	{
-		if( !file_exists($row['Filepath']) )
+		$row['Filepath'] = str_replace('\\', '/', $row['Filepath']);
+		
+		if( !file_exists(str_replace('/', DIRECTORY_SEPARATOR, $row['Filepath'])) )
 		{
 			// remove row from database
 			$args['CONNECTION']->query(array('DELETE' => constant($args['MODULE'] . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($row['Filepath']) . '"'));
@@ -437,7 +477,7 @@ class db_file
 		foreach($watched as $i => $watch)
 		{
 			// add the files that begin with a path from a watch directory
-			$watched_where .= ' Filepath NOT REGEXP "^' . addslashes(preg_quote($watch['Filepath'])) . '" AND';
+			$watched_where .= ' Filepath NOT REGEXP "^' . addslashes(preg_quote(str_replace('\\', '/', $watch['Filepath']))) . '" AND';
 		}
 		// remove last AND
 		$watched_where = substr($watched_where, 0, strlen($watched_where)-3);
@@ -448,7 +488,7 @@ class db_file
 		$directories = array();
 		for($i = 0; $i < count($watched); $i++)
 		{
-			$folders = split(addslashes(DIRECTORY_SEPARATOR), $watched[$i]['Filepath']);
+			$folders = split('/', $watched[$i]['Filepath']);
 			$curr_dir = (realpath('/') == '/')?'/':'';
 			// don't add the watch directory here because it is already added by the previous loop!
 			$length = count($folders);
@@ -460,7 +500,7 @@ class db_file
 			{
 				if($folders[$j] != '')
 				{
-					$curr_dir .= $folders[$j] . DIRECTORY_SEPARATOR;
+					$curr_dir .= $folders[$j] . '/';
 					// if using aliases then only add the revert from the watch directory to the alias
 					// ex. Watch = /home/share/Pictures/, Alias = /home/share/ => /Shared/
 					//     only /home/share/ is added here
@@ -495,7 +535,7 @@ class db_file
 		// clean up items that are in the ignore list
 		foreach($ignored as $i => $ignore)
 		{
-			$ignored_where .= ' Filepath REGEXP "^' . addslashes(preg_quote($ignore['Filepath'])) . '" OR';
+			$ignored_where .= ' Filepath REGEXP "^' . addslashes(preg_quote(str_replace('\\', '/', $ignore['Filepath']))) . '" OR';
 		}
 		// remove last OR
 		$ignored_where = substr($ignored_where, 0, strlen($ignored_where)-2);

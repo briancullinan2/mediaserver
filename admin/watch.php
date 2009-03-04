@@ -21,7 +21,7 @@ $error = '';
 // get the current list of watches
 $database = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 
-if( isset($_REQUEST['add']) )
+if( isset($_REQUEST['add']) && isset($_REQUEST['addpath']) && $_REQUEST['addpath'] != '' )
 {
 	if($_REQUEST['addpath'][0] != '!' && $_REQUEST['addpath'][0] != '^')
 		$_REQUEST['addpath'] = '^' . $_REQUEST['addpath'];

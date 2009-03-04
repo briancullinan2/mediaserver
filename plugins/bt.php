@@ -53,7 +53,7 @@ for($index = 0; $index < $files_length; $index++)
 	
 	// get the real path so we can open the files
 	$files[$index]['Filepath_alias'] = $files[$index]['Filepath'];
-	if(USE_ALIAS == true) $files[$index]['Filepath_alias'] = preg_replace($GLOBALS['SOFT']['paths_regexp'], $GLOBALS['SOFT']['alias'], $files[$index]['Filepath']);
+	if(USE_ALIAS == true) $files[$index]['Filepath_alias'] = preg_replace($GLOBALS['paths_regexp'], $GLOBALS['alias'], $files[$index]['Filepath']);
 }
 
 // remove folders so we don't have to worry about them in the series of loops below

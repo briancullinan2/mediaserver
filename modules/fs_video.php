@@ -44,11 +44,13 @@ class fs_video extends fs_file
 	
 	static function getInfo($file)
 	{
+		$file = str_replace('/', DIRECTORY_SEPARATOR, $file);
+		
 		$info = $GLOBALS['getID3']->analyze($file);
 		getid3_lib::CopyTagsToComments($info);
 		
 		$fileinfo = array();
-		$fileinfo['Filepath'] = addslashes($file);
+		$fileinfo['Filepath'] = str_replace('\\', '/', $file);
 		$fileinfo['Title'] = @$info['comments_html']['title'][0];
 		$fileinfo['Comments'] = @$info['comments_html']['comments'][0];
 		$fileinfo['Bitrate'] = @$info['bitrate'];

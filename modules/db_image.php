@@ -56,8 +56,8 @@ class db_image extends db_file
 
 	static function handle($database, $file)
 	{
-		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['HARD']['alias_regexp'], $GLOBALS['HARD']['paths'], $file);
-
+		$file = str_replace('\\', '/', $file);
+		
 		if(self::handles($file))
 		{
 			// check to see if it is in the database
@@ -97,12 +97,14 @@ class db_image extends db_file
 	
 	static function getInfo($file)
 	{
+		$file = str_replace('/', DIRECTORY_SEPARATOR, $file);
+		
 		$priority = array_reverse(self::PRIORITY());
 		$info = $GLOBALS['getID3']->analyze($file);
 		
 		// pull information from $info
 		$fileinfo = array();
-		$fileinfo['Filepath'] = addslashes($file);
+		$fileinfo['Filepath'] = addslashes(str_replace('\\', '/', $file));
 		
 		// get information from sections
 		if(isset($info['fileformat']) && isset($info[$info['fileformat']]['exif']))

@@ -26,7 +26,6 @@ class db_audio extends db_file
 
 	static function handles($file)
 	{
-				
 		// get file extension
 		$ext = getExt(basename($file));
 		$type = getExtType($ext);
@@ -42,7 +41,7 @@ class db_audio extends db_file
 
 	static function handle($database, $file)
 	{
-		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['HARD']['alias_regexp'], $GLOBALS['HARD']['paths'], $file);
+		$file = str_replace('\\', '/', $file);
 		
 		if(self::handles($file))
 		{
@@ -83,11 +82,13 @@ class db_audio extends db_file
 	
 	static function getInfo($file)
 	{
+		$file = str_replace('/', DIRECTORY_SEPARATOR, $file);
+		
 		$info = $GLOBALS['getID3']->analyze($file);
 		getid3_lib::CopyTagsToComments($info);
 
 		$fileinfo = array();
-		$fileinfo['Filepath'] = addslashes($file);
+		$fileinfo['Filepath'] = addslashes(str_replace('\\', '/', $file));
 		$fileinfo['Title'] = @$info['comments_html']['title'][0];
 		$fileinfo['Artist'] = @$info['comments_html']['artist'][0];
 		$fileinfo['Album'] = @$info['comments_html']['album'][0];

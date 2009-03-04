@@ -21,7 +21,9 @@ class db_watch_list extends db_watch
 	{
 		global $database, $watched, $ignored, $should_clean;
 		
-		if(is_dir($dir))
+		$dir = str_replace('\\', '/', $dir);
+		
+		if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $dir)))
 		{
 			if(!isset($database)) $database = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 		
@@ -59,20 +61,20 @@ class db_watch_list extends db_watch
 					$db_files = $database->query(array(
 							'SELECT' => db_file::DATABASE,
 							'COLUMNS' => array('count(*)'),
-							'WHERE' => 'LEFT(Filepath, ' . strlen($dir) . ') = "' . addslashes($dir) . '" AND (LOCATE("' . addslashes(DIRECTORY_SEPARATOR) . '", Filepath, ' . (strlen($dir)+1) . ') = 0 OR LOCATE("' . addslashes(DIRECTORY_SEPARATOR) . '", Filepath, ' . (strlen($dir)+1) . ') = LENGTH(Filepath))'
+							'WHERE' => 'LEFT(Filepath, ' . strlen($dir) . ') = "' . addslashes($dir) . '" AND (LOCATE("/", Filepath, ' . (strlen($dir)+1) . ') = 0 OR LOCATE("/", Filepath, ' . (strlen($dir)+1) . ') = LENGTH(Filepath))'
 						)
 					);
 					
 					// check for file count inconsistency but don't process anything
 					$count = 1;
-					if ($dh = opendir($dir))
+					if ($dh = opendir(str_replace('/', DIRECTORY_SEPARATOR, $dir)))
 					{
 						// count files
 						while (($file = readdir($dh)) !== false)
 						{
 							if(db_file::handles($dir . $file))
 							{
-								if(is_dir($dir . $file))
+								if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $dir . $file)))
 								{
 									if(self::is_watched($dir . $file, $watched, $ignored))
 										$count++;
@@ -136,6 +138,8 @@ class db_watch_list extends db_watch
 
 	static function handle($database, $dir)
 	{
+		$dir = str_replace('\\', '/', $dir);
+		
 		if(self::handles($dir))
 		{
 			$db_watch_list = $database->query(array(
@@ -160,7 +164,7 @@ class db_watch_list extends db_watch
 				
 				foreach($files as $i => $file)
 				{
-					if(is_file($file['Filepath']))
+					if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $file['Filepath'])))
 					{
 						self::handle_file($database, $file['Filepath']);
 					}
@@ -202,7 +206,7 @@ class db_watch_list extends db_watch
 		if(!isset($dirs))
 			$dirs = array();
 		
-		if(is_dir($dir))
+		if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $dir)))
 		{
 			log_error('Looking for changes in: ' . $dir);
 		
@@ -228,7 +232,7 @@ class db_watch_list extends db_watch
 			{				
 				$file = $files[$i];
 				
-				if(is_dir($file['Filepath']) && !in_array(realpath($file['Filepath']), $dirs))
+				if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $file['Filepath'])) && !in_array(realpath($file['Filepath']), $dirs))
 				{
 					$dirs[] = realpath($file['Filepath']);
 					
@@ -292,6 +296,8 @@ class db_watch_list extends db_watch
 		//   then we must add new files to database! so handle() it
 		if(isset($request['file']))
 		{
+			$request['file'] = str_replace('\\', '/', $request['file']);
+			if(USE_ALIAS == true) $request['file'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']);
 			if(self::handles($request['file']))
 			{
 				// search all the files in the directory

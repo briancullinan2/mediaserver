@@ -19,13 +19,12 @@ class db_watch extends db_file
 	
 	static function handles($file)
 	{
-		// add ending backslash
-		if( substr($file, strlen($file)-1) != DIRECTORY_SEPARATOR ) $file .= DIRECTORY_SEPARATOR;
-			
+		$dir = str_replace('\\', '/', $file);
+		
 		if($file[0] == '!' || $file[0] == '^')
 		{
 			$file = substr($file, 1);
-			if(is_dir($file))
+			if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $file)))
 			{
 				return true;
 			}
@@ -36,10 +35,13 @@ class db_watch extends db_file
 
 	static function handle($database, $file)
 	{
+		$file = str_replace('\\', '/', $file);
+			
 		if(self::handles($file))
 		{
+			
 			// add ending backslash
-			if( substr($file, strlen($file)-1) != DIRECTORY_SEPARATOR ) $file .= DIRECTORY_SEPARATOR;
+			if( substr($file, strlen($file)-1) != '/' ) $file .= '/';
 			
 			$db_watch = $database->query(array(
 					'SELECT' => self::DATABASE,
@@ -74,9 +76,9 @@ class db_watch extends db_file
 		$id = $database->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 		
 		// add to watch_list and to files database
-		db_watch_list::handle(substr($file, 1));
+		db_watch_list::handle($database, substr($file, 1));
 		
-		db_watch_list::handle_file(substr($file, 1));
+		db_watch_list::handle_file($database, substr($file, 1));
 		
 		return $id;
 		
@@ -101,7 +103,7 @@ class db_watch extends db_file
 		
 		foreach($watched as $i => $watch)
 		{
-			if(!is_dir(substr($watch['Filepath'], 1)))
+			if(!is_dir(str_replace('/', DIRECTORY_SEPARATOR, substr($watch['Filepath'], 1))))
 			{
 				$database->query(array('DELETE' => self::DATABASE, 'WHERE' => 'id=' . $watch['id']));
 			}

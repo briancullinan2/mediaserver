@@ -25,25 +25,27 @@ class db_archive extends db_file
 
 	static function handles($file)
 	{
-		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['ALL']['alias_regexp'], $GLOBALS['ALL']['paths'], $file);
+		$file = str_replace('\\', '/', $file);
+		
+		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 		
 		// parse through the file path and try to find a zip
-		$paths = split('\\' . DIRECTORY_SEPARATOR, $file);
+		$paths = split('/', $file);
 		$last_path = '';
 		$last_ext = '';
 		foreach($paths as $i => $tmp_file)
 		{
 			// this will continue until either the end of the requested file (a .zip extension for example)
 			// or if the entire path exists then it must be an actual folder on disk with a .zip in the name
-			if(file_exists($last_path . $tmp_file) || $last_path == '')
+			if(file_exists(str_replace('/', DIRECTORY_SEPARATOR, $last_path . $tmp_file)) || $last_path == '')
 			{
 				$last_ext = getExt($last_path . $tmp_file);
-				$last_path = $last_path . $tmp_file . DIRECTORY_SEPARATOR;
+				$last_path = $last_path . $tmp_file . '/';
 			}
 			else
 			{
 				// if the last path exists and the last $ext is an archive then we know the path is inside an archive
-				if(file_exists($last_path))
+				if(file_exists(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
 				{
 					// we can break
 					break;
@@ -69,22 +71,9 @@ class db_archive extends db_file
 
 	static function handle($database, $file)
 	{
-		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['HARD']['alias_regexp'], $GLOBALS['HARD']['paths'], $file);
-			
-		$paths = split('\\' . DIRECTORY_SEPARATOR, $file);
-		$last_path = '';
-		foreach($paths as $i => $tmp_file)
-		{
-			if(file_exists($last_path . $tmp_file) || $last_path == '')
-			{
-				$last_path = $last_path . $tmp_file . DIRECTORY_SEPARATOR;
-			} else {
-				if(file_exists($last_path))
-					break;
-			}
-		}
-		$inside_path = substr($file, strlen($last_path));
-		if($last_path[strlen($last_path)-1] == DIRECTORY_SEPARATOR) $last_path = substr($last_path, 0, strlen($last_path)-1);
+		$file = str_replace('\\', '/', $file);
+		
+		db_file::parseInner($file, $last_path, $inside_path);
 		
 		$file = $last_path;
 
@@ -132,24 +121,11 @@ class db_archive extends db_file
 		if( $archive_id != NULL )
 		{
 			log_error('Removing archive: ' . $file);
-			$database->query(array('DELETE' => self::DATABASE, 'WHERE' => 'LEFT(Filepath, ' . (strlen($file)+1) . ') = "' . addslashes($file) . addslashes(DIRECTORY_SEPARATOR) . '" AND (LOCATE("' . addslashes(DIRECTORY_SEPARATOR) . '", Filepath, ' . (strlen($file)+2) . ') = 0 OR LOCATE("' . addslashes(DIRECTORY_SEPARATOR) . '", Filepath, ' . (strlen($file)+2) . ') = LENGTH(Filepath))'));
+			$database->query(array('DELETE' => self::DATABASE, 'WHERE' => 'LEFT(Filepath, ' . (strlen($file)+1) . ') = "' . addslashes($file) . '/" AND (LOCATE("/", Filepath, ' . (strlen($file)+2) . ') = 0 OR LOCATE("/", Filepath, ' . (strlen($file)+2) . ') = LENGTH(Filepath))'));
 		}
 
 		// pull information from $info
-		$paths = split('\\' . DIRECTORY_SEPARATOR, $file);
-		$last_path = '';
-		foreach($paths as $i => $tmp_file)
-		{
-			if(file_exists($last_path . $tmp_file) || $last_path == '')
-			{
-				$last_path = $last_path . $tmp_file . DIRECTORY_SEPARATOR;
-			} else {
-				if(file_exists($last_path))
-					break;
-			}
-		}
-		$inside_path = substr($file, strlen($last_path));
-		if($last_path[strlen($last_path)-1] == DIRECTORY_SEPARATOR) $last_path = substr($last_path, 0, strlen($last_path)-1);
+		db_file::parseInner($file, $last_path, $inside_path);
 		
 		$info = $GLOBALS['getID3']->analyze($last_path);
 		
@@ -160,9 +136,10 @@ class db_archive extends db_file
 			{
 				if(!in_array($file['filename'], $directories))
 				{
+					$file['filename'] = str_replace('\\', '/', $file['filename']);
 					$directories[] = $file['filename'];
 					$fileinfo = array();
-					$fileinfo['Filepath'] = $last_path . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $file['filename']);
+					$fileinfo['Filepath'] = addslashes($last_path . '/' . $file['filename']);
 					$fileinfo['Filename'] = basename($file['filename']);
 					if($file['filename'][strlen($file['filename'])-1] == '/')
 					{
@@ -191,12 +168,12 @@ class db_archive extends db_file
 				$current = '';
 				foreach($paths as $i => $path)
 				{
-					$current .= $path . DIRECTORY_SEPARATOR;
+					$current .= $path . '/';
 					if(!in_array(substr($current, 1), $directories))
 					{
 						$directories[] = substr($current, 1);
 						$fileinfo = array();
-						$fileinfo['Filepath'] = $last_path . $current;
+						$fileinfo['Filepath'] = addslashes($last_path . $current);
 						$fileinfo['Filename'] = basename($fileinfo['Filepath']);
 						$fileinfo['Filetype'] = 'FOLDER';
 						$fileinfo['Filesize'] = 0;
@@ -211,9 +188,10 @@ class db_archive extends db_file
 			}
 		}
 		
+		$last_path = str_replace('/', DIRECTORY_SEPARATOR, $last_path);
 		// get entire archive information
 		$fileinfo = array();
-		$fileinfo['Filepath'] = $last_path;
+		$fileinfo['Filepath'] = addslashes(str_replace('\\', '/', $last_path));
 		$fileinfo['Filename'] = basename($last_path);
 		$fileinfo['Compressed'] = filesize($last_path);
 		$fileinfo['Filetype'] = getFileType($last_path);
@@ -248,25 +226,14 @@ class db_archive extends db_file
 
 	static function out($database, $file)
 	{
+		$file = str_replace('\\', '/', $file);
+		
 		if(USE_ALIAS == true)
-			$file = preg_replace($GLOBALS['SOFT']['alias_regexp'], $GLOBALS['SOFT']['paths'], $file);
+			$file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 			
-		$paths = split('\\' . DIRECTORY_SEPARATOR, $file);
-		$last_path = '';
-		foreach($paths as $i => $tmp_file)
-		{
-			if(file_exists($last_path . $tmp_file) || $last_path == '')
-			{
-				$last_path = $last_path . $tmp_file . DIRECTORY_SEPARATOR;
-			} else {
-				if(file_exists($last_path))
-					break;
-			}
-		}
-		$inside_path = substr($file, strlen($last_path));
-		if($last_path[strlen($last_path)-1] == DIRECTORY_SEPARATOR) $last_path = substr($last_path, 0, strlen($last_path)-1);
+		db_file::parseInner($file, $last_path, $inside_path);
 
-		if(is_file($last_path))
+		if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
 		{
 			return db_file::out($database, $last_path);
 		}
@@ -278,28 +245,14 @@ class db_archive extends db_file
 	{
 		if(isset($request['dir']))
 		{
-			if(USE_ALIAS == true) $request['dir'] = preg_replace($GLOBALS['SOFT']['alias_regexp'], $GLOBALS['SOFT']['paths'], $request['dir']);
+			$request['dir'] = str_replace('\\', '/', $request['dir']);
+			if(USE_ALIAS == true) $request['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
 
-			$paths = split('\\' . DIRECTORY_SEPARATOR, $request['dir']);
-			$last_path = '';
-			foreach($paths as $i => $tmp_file)
-			{
-				if(file_exists($last_path . $tmp_file) || $last_path == '')
-				{
-					$last_path = $last_path . $tmp_file . DIRECTORY_SEPARATOR;
-					if(strlen($last_path) == 0 || $last_path[strlen($last_path)-1] != DIRECTORY_SEPARATOR)
-						$last_path .= DIRECTORY_SEPARATOR;
-				} else {
-					if(file_exists($last_path))
-						break;
-				}
-			}
-			$inside_path = substr($request['dir'], strlen($last_path));
-			if(strlen($inside_path) == 0 || $inside_path[0] != '/') $inside_path = DIRECTORY_SEPARATOR . $inside_path;
-			if($last_path[strlen($last_path)-1] == DIRECTORY_SEPARATOR) $last_path = substr($last_path, 0, strlen($last_path)-1);
+			db_file::parseInner($request['dir'], $last_path, $inside_path);
+			if(strlen($inside_path) == 0 || $inside_path[0] != '/') $inside_path = '/' . $inside_path;
 			$request['dir'] = $last_path . $inside_path;
 			
-			if(!is_file($last_path))
+			if(!is_file(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
 			{
 				unset($_REQUEST['dir']);
 				$error = 'Directory does not exist!';
@@ -313,25 +266,13 @@ class db_archive extends db_file
 
 	static function cleanup_remove($row, $args)
 	{
-		$paths = split('\\' . DIRECTORY_SEPARATOR, $row['Filepath']);
-		$last_path = '';
-		foreach($paths as $i => $tmp_file)
-		{
-			if(file_exists($last_path . $tmp_file) || $last_path == '')
-			{
-				$last_path = $last_path . $tmp_file . DIRECTORY_SEPARATOR;
-				if(strlen($last_path) == 0 || $last_path[strlen($last_path)-1] != DIRECTORY_SEPARATOR)
-					$last_path .= DIRECTORY_SEPARATOR;
-			} else {
-				if(file_exists($last_path))
-					break;
-			}
-		}
-		if($last_path[strlen($last_path)-1] == DIRECTORY_SEPARATOR) $last_path = substr($last_path, 0, strlen($last_path)-1);
+		$row['Filepath'] = str_replace('\\', '/', $row['Filepath']);
+		
+		db_file::parseInner($row['Filepath'], $last_path, $inside_path);
 
-		if( !file_exists($last_path) )
+		if( !file_exists(str_replace('/', DIRECTORY_SEPARATOR, $last_path)) )
 		{
-			$args['CONNECTION']->query(array('DELETE' => constant($args['MODULE'] . '::DATABASE'), 'WHERE' => 'LEFT(Filepath, ' . strlen($dir) . ') = "' . addslashes($dir) . '" AND (LOCATE("' . addslashes(DIRECTORY_SEPARATOR) . '", Filepath, ' . (strlen($dir)+1) . ') = 0 OR LOCATE("' . addslashes(DIRECTORY_SEPARATOR) . '", Filepath, ' . (strlen($dir)+1) . ') = LENGTH(Filepath))'));
+			$args['CONNECTION']->query(array('DELETE' => constant($args['MODULE'] . '::DATABASE'), 'WHERE' => 'LEFT(Filepath, ' . strlen($dir) . ') = "' . addslashes($dir) . '" AND (LOCATE("/", Filepath, ' . (strlen($dir)+1) . ') = 0 OR LOCATE("/", Filepath, ' . (strlen($dir)+1) . ') = LENGTH(Filepath))'));
 			
 			log_error('Removing ' . constant($args['MODULE'] . '::NAME') . ': ' . $row['Filepath']);
 		}

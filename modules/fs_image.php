@@ -53,13 +53,15 @@ class fs_image extends fs_file
 
 	static function getInfo($file)
 	{
+		$file = str_replace('/', DIRECTORY_SEPARATOR, $file);
+		
 		$priority = array_reverse(fs_image::PRIORITY());
 		$info = $GLOBALS['getID3']->analyze($file);
 		
 		// pull information from $info
 		$fileinfo = array();
 		$fileinfo['id'] = bin2hex($file);
-		$fileinfo['Filepath'] = $file;
+		$fileinfo['Filepath'] = str_replace('\\', '/', $file);
 		
 		// get information from sections
 		if(isset($info['fileformat']) && isset($info[$info['fileformat']]['exif']))

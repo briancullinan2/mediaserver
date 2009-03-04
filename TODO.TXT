@@ -1,4 +1,7 @@
 2009-03-03
+Update fs_diskimage and fs_archive to the new module::out() method standard
+Make all paths in database use same type of directory separator
+Make getting files independed of directory seperator
 Make hard links and soft links, hard links are replaced when they are put in to the database, soft links are replaced when they are read from the database, this will allow us to do more network stuff
 Work on playlist module, use hard links to help find files
 Add a check for file_exists() in cron for each watched directory, if it doesn't post error and continue
