@@ -53,22 +53,13 @@ class fs_file
 	}
 	
 	// output provided file to given stream
-	static function out($database, $file, $no_headers = false)
+	static function out($database, $file)
 	{
 		// check to make sure file is valid
 		if(is_file($file))
 		{
 			if($fp = fopen($file, 'rb'))
 			{
-				if($no_headers == false)
-				{
-					// set up some general headers
-					header('Content-Transfer-Encoding: binary');
-					header('Content-Type: ' . getMime($file));
-					header('Content-Disposition: attachment; filename="' . basename($file) . '"');
-					header('Content-Length: ' . filesize($file));
-				}
-				
 				return $fp;
 			}
 		}

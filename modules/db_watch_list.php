@@ -21,8 +21,6 @@ class db_watch_list extends db_watch
 	{
 		global $database, $watched, $ignored, $should_clean;
 		
-		if(USE_ALIAS == true) $dir = preg_replace($GLOBALS['ALL']['alias_regexp'], $GLOBALS['ALL']['paths'], $dir);
-		
 		if(is_dir($dir))
 		{
 			if(!isset($database)) $database = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
@@ -138,8 +136,6 @@ class db_watch_list extends db_watch
 
 	static function handle($database, $dir)
 	{
-		if(USE_ALIAS == true) $dir = preg_replace($GLOBALS['HARD']['alias_regexp'], $GLOBALS['HARD']['paths'], $dir);
-		
 		if(self::handles($dir))
 		{
 			$db_watch_list = $database->query(array(
@@ -296,8 +292,6 @@ class db_watch_list extends db_watch
 		//   then we must add new files to database! so handle() it
 		if(isset($request['file']))
 		{
-			if(USE_ALIAS == true) $request['file'] = preg_replace($GLOBALS['SOFT']['alias_regexp'], $GLOBALS['SOFT']['paths'], $request['file']);
-			
 			if(self::handles($request['file']))
 			{
 				// search all the files in the directory

@@ -19,12 +19,6 @@ class db_file
 	// return whether or not this module handles trhe specified type of file
 	static function handles($file)
 	{
-		// since this function is called from plugins and used internally path replacements must be done for Hard aliases and Soft aliases
-		//  this is only needed if the file is required to physically exist on disk, basically if is_dir(), is_file(), or file_exists() is used in this function
-		if(USE_ALIAS == true)
-			$file = preg_replace($GLOBALS['ALL']['alias_regexp'], $GLOBALS['ALL']['paths'], $file);
-		
-		// check it exists
 		if(is_dir($file) || is_file($file))
 		{
 			$filename = basename($file);
@@ -42,11 +36,8 @@ class db_file
 	// this function determines if the file qualifies for this type and handles it according
 	static function handle($database, $file)
 	{
-		// replace aliased path incase the handling is coming from across the network
-		if(USE_ALIAS == true)
-			$file = preg_replace($GLOBALS['HARD']['alias_regexp'], $GLOBALS['HARD']['paths'], $file);
-		
 		// files always qualify, we are going to log every single one!
+		
 		if(self::handles($file))
 		{
 			
@@ -128,10 +119,6 @@ class db_file
 	//  no headers is used to prevent changing the headers, if it is called by a plugin it may just need the stream and no header changes
 	static function out($database, $file)
 	{
-		// aliases have to be replaced here so that plugins using the Filepath from a previous get() call can still work
-		if(USE_ALIAS == true)
-			$file = preg_replace($GLOBALS['SOFT']['alias_regexp'], $GLOBALS['SOFT']['paths'], $file);
-			
 		// check to make sure file is valid
 		if(is_file($file))
 		{
@@ -206,7 +193,7 @@ class db_file
 				
 				// incase an aliased path is being searched for replace it here too!
 				if(USE_ALIAS == true)
-					$request['search'] = preg_replace($GLOBALS['SOFT']['alias_regexp'], $GLOBALS['SOFT']['paths'], $request['search']);
+					$request['search'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['search']);
 					
 				// escape quote marks to help prevent sql injection
 				$regexp = addslashes($request['search']);
@@ -255,7 +242,7 @@ class db_file
 					
 					// incase an aliased path is being searched for replace it here too!
 					if(USE_ALIAS == true)
-						$request[$var] = preg_replace($GLOBALS['SOFT']['alias_regexp'], $GLOBALS['SOFT']['paths'], $request[$var]);
+						$request[$var] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request[$var]);
 						
 					// escape quote marks to help prevent sql injection
 					$regexp = addslashes($request[$var]);
@@ -278,8 +265,7 @@ class db_file
 				if($request['dir'][0] == '/' || $request['dir'][0] == '\\') $request['dir'] = realpath('/') . substr($request['dir'], 1);
 				
 				// replace aliased path with actual path
-				if(USE_ALIAS == true)
-					$request['dir'] = preg_replace($GLOBALS['SOFT']['alias_regexp'], $GLOBALS['SOFT']['paths'], $request['dir']);
+				if(USE_ALIAS == true) $request['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
 				
 				// make sure file exists if we are using the file module
 				if($module != 'db_file' || is_dir(realpath($request['dir'])) !== false)
@@ -335,8 +321,7 @@ class db_file
 				if($request['file'][0] == '/' || $request['file'][0] == '\\') $request['file'] = realpath('/') . substr($request['file'], 1);
 				
 				// replace aliased path with actual path
-				if(USE_ALIAS == true)
-					$request['file'] = preg_replace($GLOBALS['SOFT']['alias_regexp'], $GLOBALS['SOFT']['paths'], $request['file']);
+				if(USE_ALIAS == true) $request['file'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']);
 				
 				// make sure file exists if we are using the file module
 				if($module != 'db_file' || file_exists(realpath($request['file'])) !== false)
@@ -364,20 +349,20 @@ class db_file
 				
 				if($files !== false)
 				{
-					// make some changes
+					// now make some changes
 					foreach($files as $index => $file)
 					{
-						// do alias replacement on every file path for security reasons do it here
-						if(USE_ALIAS == true && isset($file['Filepath']))
+						// do alias replacement on every file path
+						if(USE_ALIAS == true)
 						{
-							$files[$index]['Filepath'] = preg_replace($GLOBALS['SOFT']['paths_regexp'], $GLOBALS['SOFT']['alias'], $file['Filepath']);
-							$alias_flipped = array_flip($GLOBALS['SOFT']['alias']);
+							$files[$index]['Filepath'] = preg_replace($GLOBALS['paths_regexp'], $GLOBALS['alias'], $file['Filepath']);
+							$alias_flipped = array_flip($GLOBALS['alias']);
 							// check if the replaced path was the entire alias path
 							// in this case we want to replace the filename with the alias name
 							if(isset($alias_flipped[$file['Filepath']]))
 							{
 								$index = $alias_flipped[$file['Filepath']];
-								$files[$index]['Filename'] = substr($GLOBALS['SOFT']['alias'][$index], 1, strlen($GLOBALS['SOFT']['alias'][$index]) - 2);
+								$files[$index]['Filename'] = substr($GLOBALS['alias'][$index], 1, strlen($GLOBALS['alias'][$index]) - 2);
 							}
 						}
 					}
@@ -479,7 +464,7 @@ class db_file
 					// if using aliases then only add the revert from the watch directory to the alias
 					// ex. Watch = /home/share/Pictures/, Alias = /home/share/ => /Shared/
 					//     only /home/share/ is added here
-					if((!USE_ALIAS || in_array($curr_dir, $GLOBALS['SOFT']['paths']) !== false))
+					if((!USE_ALIAS || in_array($curr_dir, $GLOBALS['paths']) !== false))
 					{
 						// this allows for us to make sure that at least the beginning 
 						//   of the path is an aliased path
