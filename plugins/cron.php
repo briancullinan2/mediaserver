@@ -118,6 +118,12 @@ log_error("Phase 1: Checking for modified Directories; Recursively");
 // loop through each watched folder and get a list of all the files
 for($i; $i < count($watched); $i++)
 {
+	if(!file_exists($watched[$i]['Filepath']))
+	{
+		log_error("Error: Directory does not exist! " . $watched[$i]['Filepath'] . " is missing!");
+		$should_clean = 0;
+		continue;
+	}
 	$watch = '^' . $watched[$i]['Filepath'];
 
 	$status = db_watch::handle($database, $watch);
@@ -188,7 +194,8 @@ do
 	if(count($db_dirs) > 0)
 	{
 		$dir = $db_dirs[0]['Filepath'];
-		
+		if(USE_ALIAS == true)
+			$dir = preg_replace($GLOBALS['ALL']['alias_regexp'], $GLOBALS['ALL']['paths'], $dir);
 		$status = db_watch_list::handle($database, $dir);
 	}
 
@@ -206,9 +213,14 @@ log_error("Phase 2: Complete!");
 
 // now do some cleanup
 //  but only if we need it!
-if(!$should_clean)
+if(!$should_clean === true)
 {
 	log_error("Phase 3: Skipping cleaning, count is " . $clean_count);
+	exit;
+}
+else
+{
+	log_error("Phase 3: Skipping cleaning because of error!");
 	exit;
 }
 //exit;

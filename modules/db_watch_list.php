@@ -52,7 +52,7 @@ class db_watch_list extends db_watch
 				if( !isset($file) || date("Y-m-d h:i:s", filemtime($dir)) != $file['Filedate'] )
 				{
 					// only change should clean if it was because of time difference
-					if(isset($file))
+					if(isset($file) && $should_clean === false)
 						$should_clean = true;
 					return true;
 				}
@@ -74,7 +74,15 @@ class db_watch_list extends db_watch
 						{
 							if(db_file::handles($dir . $file))
 							{
-								$count++;
+								if(is_dir($dir . $file))
+								{
+									if(self::is_watched($dir . $file, $watched, $ignored))
+										$count++;
+								}
+								else
+								{
+									$count++;
+								}
 							}
 							
 							// return if count is different from database
