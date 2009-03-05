@@ -306,6 +306,7 @@ class sql_global
 			elseif(is_string($props['ORDER'])) $order = 'ORDER BY ' . $props['ORDER'];
 			
 			if(!isset($props['LIMIT'])) $limit = '';
+			elseif(is_numeric($props['LIMIT'])) $limit = 'LIMIT ' . $props['LIMIT'];
 			elseif(is_string($props['LIMIT'])) $limit = 'LIMIT ' . $props['LIMIT'];
 				
 			if(isset($props['SELECT']))

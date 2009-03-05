@@ -1,8 +1,8 @@
 {assign var=page_count value=$smarty.request.limit}
 {assign var=page_str value=''}
 {foreach from=$smarty.get key=k item=v}
-{if $page_str != ''}{assign var=page_str value=$page_str|cat:'&amp;'}{/if}
 {if $k != "start"}
+{if $page_str != ''}{assign var=page_str value=$page_str|cat:'&amp;'}{/if}
 {assign var=page_str value=$page_str|cat:$k|cat:'='|cat:$v}
 {/if}
 {/foreach}
