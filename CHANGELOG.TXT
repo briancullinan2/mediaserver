@@ -1,3 +1,6 @@
+2009-03-04
+Worked on db_playlist module, mostly working just needs some tweaks
+
 2009-03-03
 Added db_alias module to handle the aliases, although it is semi-incomplete
 module::out() methods can only remove header declarations, they cannot set them, that is controlled by the plugin that calls it

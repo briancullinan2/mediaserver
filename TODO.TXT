@@ -1,5 +1,15 @@
 2009-03-04
 Fix zip.php and bt.php plugins, the changed with the Filepath always being aliased has borked them
+Make the searching functionality in db_playlist module more abstract and useful to other modules
+	Move the searching capabilities from db_playlist over to a db_search module, don't handle anything, don't clean up anything, just handle all the search request vars
+	Remove search handling from db_files, fields get ignored all the time in other wrapper modules
+Add functionality to search capabilities, return results in order of relevance by iterating through all the combinations of the search terms and single search terms
+	Don't sort results! they will be sorted by relevance automatically, using LIMIT is very important here, default to 1 result
+	Call db_search as a category from the search.php plugin and make the module to search some other variable understood by the search module
+	Assume the db_file module is used just like everything else
+Change some of the other plugins like file.php and encode.php to search when a required field is missing like $request[id]
+	if search terms are used while accessing another module, consider making a generate function in the db_search module that returns a set of $props[] to be appended to the current ones
+	This will make searching a special use case available to other modules
 
 2009-03-03
 Update fs_diskimage and fs_archive to the new module::out() method standard

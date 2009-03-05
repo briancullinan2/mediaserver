@@ -200,6 +200,9 @@ class db_playlist extends db_file
 						// if there are no valid parts then discard
 						if(count($valid_pieces) == 0)
 							unset($tmp_files[$i]);
+							
+							print_r($valid_pieces);
+							print '<br />';
 						
 						// check 5 parts of the filename
 						$min = '';
