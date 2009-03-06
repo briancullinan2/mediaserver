@@ -31,7 +31,7 @@ class db_albums extends db_audio
 	static function get($database, $request, &$count, &$error)
 	{
 		$database->validate($request, $props, get_class());
-			
+		
 		// modify some request stuff
 		if(isset($request['dir']))
 		{
@@ -43,14 +43,19 @@ class db_albums extends db_audio
 			$request['search_Album'] = '=' . $request['dir'] . '=';
 			unset($request['dir']);
 			
-			$files = parent::get($database, $request, $count, $error, 'db_audio');
+			$files = parent::get($database, $request, $count, $error, get_class());
 		}
 		else
 		{
 			$request['order_by'] = 'Album';
 			$request['group_by'] = 'Album';
+			if(isset($request['search']))
+			{
+				$request['search_Album'] = $request['search'];
+				unset($request['search']);
+			}
 			
-			$files = parent::get($database, $request, $count, $error, 'db_audio');
+			$files = parent::get($database, $request, $count, $error, get_class());
 			
 			// make some changes
 			foreach($files as $i => $file)

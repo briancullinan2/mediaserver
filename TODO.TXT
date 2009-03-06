@@ -1,6 +1,7 @@
 2009-03-05
 Make a sync plugin in admin section for syncing between two databases and pulling out differences
 Make the audio module match amazon albums
+Improve search api in db_file, every request var must be handled and moving the search functionally to a different module would prevent that
 
 2009-03-04
 Fix zip.php and bt.php plugins, the changed with the Filepath always being aliased has borked them
