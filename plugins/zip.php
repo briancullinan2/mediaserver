@@ -1,4 +1,6 @@
 <?php
+set_time_limit(0);
+ignore_user_abort(1);
 
 // create zip of selected files in list
 
@@ -16,10 +18,11 @@ $files = array();
 
 $count = 0;
 $error = '';
+
 // make select call
 $files = call_user_func_array($_REQUEST['cat'] . '::get', array($database, $_REQUEST, &$count, &$error));
-
 $files_length = count($files);
+
 // get all the other information from other modules
 for($index = 0; $index < $files_length; $index++)
 {
@@ -30,8 +33,8 @@ for($index = 0; $index < $files_length; $index++)
 	{
 		if($module != $_REQUEST['cat'] && call_user_func_array($module . '::handles', array($file['Filepath'])))
 		{
-			$return = call_user_func_array($_REQUEST['cat'] . '::get', array($database, $_REQUEST, &$tmp_count, &$tmp_error));
-			if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
+			$return = call_user_func_array($module . '::get', array($database, array('file' => $file['Filepath']), &$tmp_count, &$tmp_error));
+			if(isset($return[0])) $files[0] = array_merge($return[0], $files[0]);
 		}
 	}
 	
@@ -46,18 +49,6 @@ for($index = 0; $index < $files_length; $index++)
 		$files = array_merge($files, $sub_files);
 		$files_length = count($files);
 	}
-	
-	// do alias replacement on every file path
-	$files[$index]['Filepath_alias'] = $files[$index]['Filepath'];
-	if(USE_ALIAS == true) $files[$index]['Filepath_alias'] = preg_replace($GLOBALS['paths_regexp'], $GLOBALS['alias'], $files[$index]['Filepath']);
-	
-	// replace the root directory with a forward slash to remove C:\ on windows systems
-	if(substr($files[$index]['Filepath_alias'], 0, strlen(realpath('/'))) == realpath('/'))
-		$files[$index]['Filepath_alias'] = '/' . substr($files[$index]['Filepath_alias'], strlen(realpath('/')));
-		
-	// remove root because it cannot contribute to the path
-	if($files[$index]['Filepath_alias'][0] == '/') $files[$index]['Filepath_alias'] = substr($files[$index]['Filepath_alias'], 1);
-	$files[$index]['Filepath_alias'] = str_replace(DIRECTORY_SEPARATOR, '/', $files[$index]['Filepath_alias']);
 }
 
 // remove folders so we don't have to worry about them in the series of loops below
@@ -71,12 +62,13 @@ if(count($files) > 0)
 	header('Content-Transfer-Encoding: binary');
 	header('Content-Type: application/zip');
 	header('Content-Disposition: filename="' . HTML_NAME . '-' . time() . '.zip"'); 
+	
 	// loop through files and generate and expected file length
 	$length = 22;
 	foreach($files as $index => $file) {
-        $name     = $file['Filepath_alias'];
+        $name    = substr($file['Filepath'], strpos($file['Filepath'], '/') + 1);
 		$length += 30 + strlen($name);
-		$length += filesize($file['Filepath']) + 12;
+		$length += $file['Filesize'] + 12;
 		$length += 46 + strlen($name);
 	}
 	header('Content-Length: ' . $length);
@@ -88,7 +80,7 @@ if(count($files) > 0)
 	foreach($files as $index => $file)
 	{
 		$fr_offset = 0;
-        $name     = $file['Filepath_alias'];
+        $name     = substr($file['Filepath'], strpos($file['Filepath'], '/') + 1);
 
         $dtime    = dechex(unix2DosTime(0));
         $hexdtime = '\x' . $dtime[6] . $dtime[7]
@@ -108,9 +100,9 @@ if(count($files) > 0)
         $fr   .= $hexdtime;             // last mod time and date
 
         // "local file header" segment
-        $unc_len = filesize($file['Filepath']);
+        $unc_len = $file['Filesize'];
         //$crc     = 0; //crc32_file($file['Filepath']); generated below!!!!!!
-        $c_len   = filesize($file['Filepath']);
+        $c_len   = $file['Filesize'];
 		
         $fr      .= pack('V', 0);             // crc32
         $fr      .= pack('V', 0);           // compressed filesize
@@ -124,10 +116,14 @@ if(count($files) > 0)
 		
 		// generate crc32 from stream
         // "file data" segment
-		$fp = fopen($file['Filepath'], 'rb');
+		$fp = call_user_func_array($_REQUEST['cat'] . '::out', array($database, $file['Filepath']));
 		$old_crc=false;
 		$buffer = '';
 		while (!feof($fp)) {
+			if(connection_status()!=0)
+			{
+				break;
+			}
 			$buffer=fread($fp, BUFFER_SIZE);
             $len=strlen($buffer);      
             $t=crc32($buffer);   
@@ -143,7 +139,11 @@ if(count($files) > 0)
 			flush();
 		}				
 		fclose($fp);
-		$fr_offset += filesize($file['Filepath']);
+		$fr_offset += $file['Filesize'];
+		if(connection_status()!=0)
+		{
+			break;
+		}
 		
 
         // "data descriptor" segment (optional but necessary if archive is not

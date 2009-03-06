@@ -49,11 +49,6 @@ class db_albums extends db_audio
 		{
 			$request['order_by'] = 'Album';
 			$request['group_by'] = 'Album';
-			if(isset($request['search']))
-			{
-				$request['search_Album'] = $request['search'];
-				unset($request['search']);
-			}
 			
 			$files = parent::get($database, $request, $count, $error, get_class());
 			

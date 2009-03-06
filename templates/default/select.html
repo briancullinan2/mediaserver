@@ -37,8 +37,8 @@
 				{/foreach}
 			{/if}
             - Download:
-            	<a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}zip.php/{$smarty.request.cat}/{$files[file].Filename}/Files.zip">zip</a> :
-                <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}bt.php/{$smarty.request.cat}/{$files[file].Filename}/Files.torrent">torrent</a>
+            	<a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}zip.php/{$smarty.request.cat}/{$files[file].id}/Files.zip">zip</a> :
+                <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}bt.php/{$smarty.request.cat}/{$files[file].id}/Files.torrent">torrent</a>
                 {if $files[file].Filepath|@handles:'video'}
                 : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode.php/{$smarty.request.cat}/{$files[file].id}/MP4/{$files[file].Filename}.mp4">mp4</a>
                 : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode.php/{$smarty.request.cat}/{$files[file].id}/MPG/{$files[file].Filename}.mpeg">mpg</a>

@@ -32,9 +32,9 @@ for($index = 0; $index < $files_length; $index++)
 	// merge all the other information to each file
 	foreach($GLOBALS['modules'] as $i => $module)
 	{
-		if($module != $_REQUEST['cat'] && call_user_func_array($module . '::handles'), array($file['Filepath'])))
+		if($module != $_REQUEST['cat'] && call_user_func_array($module . '::handles', array($file['Filepath'])))
 		{
-			$return = call_user_func_array($_REQUEST['cat'] . '::get', array($database, $_REQUEST, &$tmp_count, &$tmp_error));
+			$return = call_user_func_array($_REQUEST['cat'] . '::get', array($database, array('file' => $file['Filepath']), &$tmp_count, &$tmp_error));
 			if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
 		}
 	}
@@ -50,10 +50,6 @@ for($index = 0; $index < $files_length; $index++)
 		$files = array_merge($files, $sub_files);
 		$files_length = count($files);
 	}
-	
-	// get the real path so we can open the files
-	$files[$index]['Filepath_alias'] = $files[$index]['Filepath'];
-	if(USE_ALIAS == true) $files[$index]['Filepath_alias'] = preg_replace($GLOBALS['paths_regexp'], $GLOBALS['alias'], $files[$index]['Filepath']);
 }
 
 // remove folders so we don't have to worry about them in the series of loops below
@@ -75,8 +71,8 @@ if(count($files) > 0)
 	{
 		$file_info = array();
 		$file_info['length'] = intval($file['Filesize']);
-		$file_info['path'] = split(DIRECTORY_SEPARATOR, substr($file['Filepath_alias'], 1));
-		$file_into['md5sum'] = md5_file($file['Filepath_alias']);
+		$file_info['path'] = split('/', substr($file['Filepath'], strpos($file['Filepath'], '/') + 1));
+		$file_into['md5sum'] = md5_file($file['Filepath']);
 		$torrent['info']['files'][] = $file_info;
 		$total_size += $file['Filesize'];
 	}
@@ -89,7 +85,7 @@ if(count($files) > 0)
 	$current_file = 0;
 	$contents = '';
 	$read_amount = 0;
-	$fp = fopen($files[$current_file]['Filepath'], 'r');
+	$fp = call_user_func_array($_REQUEST['cat'] . '::out', array($database, $files[$current_file]['Filepath']));
 	while($current_file <= count($files))
 	{
 		$read_amount = $torrent['info']['piece length'] - strlen($contents);
@@ -105,7 +101,7 @@ if(count($files) > 0)
 		if(feof($fp) && $current_file < count($files))
 		{
 			//print $files[$current_file]['Filepath'] . '<br />';
-			$fp = fopen($files[$current_file]['Filepath'], 'r');
+			$fp = call_user_func_array($_REQUEST['cat'] . '::out', array($database, $files[$current_file]['Filepath']));
 		}
 		
 		// should keep reading files if middle file is shorter then piece length also

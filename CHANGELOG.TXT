@@ -1,10 +1,13 @@
+2009-03-06
+Fixed zip template, crc() can work with a file pointer, still working on bt.php plugin which uses md5
+
 2009-03-04
 Worked on db_playlist module, mostly working just needs some tweaks
 
 2009-03-03
 Added db_alias module to handle the aliases, although it is semi-incomplete
 module::out() methods can only remove header declarations, they cannot set them, that is controlled by the plugin that calls it
-Cron now doesn't clean when a directory is unmounted or missing
+Cron now doesn't clean or scan when a directory is unmounted or missing
 Site now completely directory separator independant, it stores all files with / in between directories and all system calls replace the / with DIRECTORY_SEPARATOR
 
 2009-03-02

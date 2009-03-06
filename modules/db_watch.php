@@ -99,15 +99,8 @@ class db_watch extends db_file
 	
 	static function cleanup($database, $watched, $ignored)
 	{
-		$watched = $database->query(array('SELECT' => self::DATABASE, 'COLUMNS' => 'id, Filepath'));
-		
-		foreach($watched as $i => $watch)
-		{
-			if(!is_dir(str_replace('/', DIRECTORY_SEPARATOR, substr($watch['Filepath'], 1))))
-			{
-				$database->query(array('DELETE' => self::DATABASE, 'WHERE' => 'id=' . $watch['id']));
-			}
-		}
+		// do not do anything, watch directories are completely managed
+		return false;
 	}
 
 }
