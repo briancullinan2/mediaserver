@@ -11,3 +11,13 @@ For Developers see DEVELOPERS.TXT
 For changes see CHANGELOG.TXT
 For todo list and upcoming developments see TODO.TXT
 For a list of required software see REQUIREMENTS.TXT
+
+The site is named with adjectives that describe something very large, because it understands a large amount of files, and has a large ever-expanding range of functionality
+colossal
+gargantuan
+titan
+leviathan
+exorbitant
+goliath
+behemoth
+monolithic

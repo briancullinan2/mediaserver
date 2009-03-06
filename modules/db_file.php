@@ -212,21 +212,34 @@ class db_file
 			if(isset($request['search']) && $request['search'] != '')
 			{
 				$props['WHERE'] = '';
-
-				// check if they are searching for columns equal input
+				
+				$request['search'] = stripslashes($request['search']);
+				
+				// check if they are searching for a literal string
+				$is_literal = false;
 				$is_equal = false;
-				if(strlen($request['search']) > 1 && $request['search'][0] == '=' && $request['search'][strlen($request['search'])-1] == '=')
+				$is_regular = false;
+				if(strlen($request['search']) > 1 && $request['search'][0] == '"' && $request['search'][strlen($request['search'])-1] == '"')
+				{
+					$request['search'] = preg_quote(substr($request['search'], 1, strlen($request['search'])-2));
+					$is_literal = true;
+				}
+				// check if they are searching for columns equal input
+				elseif(strlen($request['search']) > 1 && $request['search'][0] == '=' && $request['search'][strlen($request['search'])-1] == '=')
 				{
 					$request['search'] = preg_quote(substr($request['search'], 1, strlen($request['search'])-2));
 					$is_equal = true;
+				}
+				// check if they are performing a regular expression search
+				elseif(strlen($request['search']) > 1 && $request['search'][0] == '/' && $request['search'][strlen($request['search'])-1] == '/')
+				{
+					$request['search'] = substr($request['search'], 1, strlen($request['search'])-2);
+					$is_regular = true;
 				}
 				
 				// incase an aliased path is being searched for replace it here too!
 				if(USE_ALIAS == true)
 					$request['search'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['search']);
-					
-				// escape quote marks to help prevent sql injection
-				$regexp = addslashes($request['search']);
 				
 				// they can specify multiple columns to search for the same string
 				if(isset($request['columns']))
@@ -241,14 +254,92 @@ class db_file
 				
 				// add a regular expression matching for each column in the table being searched
 				$props['WHERE'] .= '(';
-				foreach($columns as $i => $column)
+				$parts = array();
+				if(!$is_equal && !$is_regular && !$is_literal)
 				{
-					if($is_equal)
-						$columns[$i] .= ' = "' . $regexp . '"';
-					else
-						$columns[$i] .= ' REGEXP "' . $regexp . '"';
+					// loop through search terms and construct query
+					$pieces = split(' ', $request['search']);
+					$pieces = array_unique($pieces);
+					$empty = array_search('', $pieces, true);
+					if($empty !== false) unset($pieces[$empty]);
+					$pieces = array_values($pieces);
+					
+					// sort items by inclusive, exclusive, and string size
+					// rearrange pieces, but keep track of index so we can sort them correctly
+					uasort($pieces, create_function('$a, $b', '
+						if(($a[0] == \'+\' && $a[0] == $b[0]) || ($a[0] == \'-\' && $a[0] == $b[0]) || ($a[0] != \'+\' && $a[0] != \'-\' && $b[0] != \'+\' && $b[0] != \'-\'))
+							if(strlen($a) > strlen($b))
+								return 1;
+							elseif(strlen($a) < strlen($b))
+								return -1;
+							else
+								return 0;
+						if($a[0] == \'+\' && $b[0] == \'-\')
+							return -1;
+						elseif($a[0] == \'-\' && $b[0] == \'+\')
+							return 1;'));
+					
+					print_r($pieces);
+					
+					//foreach($columns as $i => $column)
+					//{
+						$column = 'Filepath';
+						$first_or = false;
+						$count = 0;
+						$part = '';
+						foreach($pieces as $j => $piece)
+						{
+							if($piece[0] == '+')
+							{
+								if($part != '') $part .= ' AND';
+								$piece = substr($piece, 1);
+								$part .= ' LOCATE("' . addslashes($piece) . '", ' . $column . ') > 0';
+								$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',(LOCATE("' . addslashes($piece) . '", ' . $column . ') > 0) AS result' . $j;
+							}
+							elseif($piece[0] == '-')
+							{
+								if($part != '') $part .= ' AND';
+								$piece = substr($piece, 1);
+								$part .= ' LOCATE("' . addslashes($piece) . '", ' . $column . ') = 0';
+								$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',(LOCATE("' . addslashes($piece) . '", ' . $column . ') = 0) AS result' . $j;
+							}
+							else
+							{
+								if($first_or == false)
+								{
+									$part .= ' AND (';
+									$first_or = true;
+								}
+								elseif($part != '') $part .= ' OR';
+								$part .= ' LOCATE("' . addslashes($piece) . '", ' . $column . ') > 0';
+								$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',(LOCATE("' . addslashes($piece) . '", ' . $column . ') > 0) AS result' . $j;
+								if($count == count($pieces)-1) $part .= ')';
+							}
+							$props['ORDER'] = 'result' . (count($pieces) - $j - 1) . ' DESC,' . (isset($props['ORDER'])?$props['ORDER']:'');
+							$count++;
+						}
+						$parts[] = $part;
+					//}
 				}
-				$props['WHERE'] .= join(' OR ', $columns) . ')';
+				else
+				{
+					foreach($columns as $i => $column)
+					{
+						if($is_equal)
+						{
+							$parts[] = $column . ' = "' . addslashes($request['search']) . '"';
+						}
+						elseif($is_regular)
+						{
+							$parts[] = $column . ' REGEXP "' . addslashes($request['search']) . '"';
+						}
+						elseif($is_literal)
+						{
+							$parts[] = ' LOCATE("' . addslashes($request['search']) . '", ' . $column . ')';
+						}
+					}
+				}
+				$props['WHERE'] .= join(' OR ', $parts) . ')';
 			}
 			
 			// search for individual column queries
@@ -262,6 +353,12 @@ class db_file
 					if(!isset($props['WHERE'])) $props['WHERE'] = '';
 					elseif($props['WHERE'] != '') $props['WHERE'] .= ' AND ';
 					
+					$request[$var] = stripslashes($request[$var]);
+				
+					// check if they are searching a literal string
+					if(strlen($request[$var]) > 1 && $request[$var][0] == '"' && $request[$var][strlen($request[$var])-1] == '"')
+						$request[$var] = preg_quote(substr($request[$var], 1, strlen($request[$var])-2));
+						
 					// check if they are searching for a cell equal to the input
 					$is_equal = false;
 					if(strlen($request[$var]) > 1 && $request[$var][0] == '=' && $request[$var][strlen($request[$var])-1] == '=')
@@ -380,6 +477,7 @@ class db_file
 			if($error == '')
 			{
 				$props['SELECT'] = constant($module . '::DATABASE');
+				$props['COLUMNS'] = '*' . (isset($props['COLUMNS'])?$props['COLUMNS']:'');
 				if(isset($props['GROUP'])) $props['COLUMNS'] = '*,count(*)';
 	
 				// get directory from database
@@ -411,6 +509,8 @@ class db_file
 						// this is how we get the count of all the items
 						//  unset the limit to count it
 						unset($props['LIMIT']);
+						unset($props['ORDER']);
+						$props['COLUMNS'] = '*';
 						
 						// count the last query
 						$props = array('SELECT' => '(' . SQL::statement_builder($props) . ') AS db_to_count');

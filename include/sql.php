@@ -222,28 +222,6 @@ class sql_global
 			else
 				$request['group_by'] = join(',', $columns);
 		}
-		
-		// a special variable to search for the literal string
-		if( isset($request['search']))
-		{
-			$request['search'] = stripslashes($request['search']);
-			
-			if(strlen($request['search']) > 1 && $request['search'][0] == '"' && $request['search'][strlen($request['search'])-1] == '"')
-				$request['search'] = preg_quote(substr($request['search'], 1, strlen($request['search'])-2));
-		}
-			
-		// search multiple columns for multiple strings
-		foreach($columns as $i => $column)
-		{
-			$var = 'search_' . $column;
-			if( isset($request[$var]))
-			{
-				$request[$var] = stripslashes($request[$var]);
-			
-				if(strlen($request[$var]) > 1 && $request[$var][0] == '"' && $request[$var][strlen($request[$var])-1] == '"')
-					$request[$var] = preg_quote(substr($request[$var], 1, strlen($request[$var])-2));
-			}
-		}
 			
 		if( isset($request['dir']) )
 			$request['dir'] = stripslashes($request['dir']);

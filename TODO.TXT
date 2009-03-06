@@ -1,3 +1,7 @@
+2009-03-06
+Make a template module that compiles and cache the smarty templates, then accessing a page can be done by accessing the template module
+Make a reports.php plugin for admin that shows different information about loaded files, and how to manipulate them
+
 2009-03-05
 Make a sync plugin in admin section for syncing between two databases and pulling out differences
 Make the audio module match amazon albums
