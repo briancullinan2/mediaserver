@@ -279,8 +279,6 @@ class db_file
 						elseif($a[0] == \'-\' && $b[0] == \'+\')
 							return 1;'));
 					
-					print_r($pieces);
-					
 					//foreach($columns as $i => $column)
 					//{
 						$column = 'Filepath';
@@ -307,7 +305,7 @@ class db_file
 							{
 								if($first_or == false)
 								{
-									$part .= ' AND (';
+									$part .= (($count != 0)?' AND':'') . ' (';
 									$first_or = true;
 								}
 								elseif($part != '') $part .= ' OR';
@@ -355,16 +353,25 @@ class db_file
 					
 					$request[$var] = stripslashes($request[$var]);
 				
+					$is_literal = false;
+					$is_equal = false;
+					$is_regular = false;
 					// check if they are searching a literal string
 					if(strlen($request[$var]) > 1 && $request[$var][0] == '"' && $request[$var][strlen($request[$var])-1] == '"')
+					{
 						$request[$var] = preg_quote(substr($request[$var], 1, strlen($request[$var])-2));
-						
+						$is_literal = true;
+					}
 					// check if they are searching for a cell equal to the input
-					$is_equal = false;
-					if(strlen($request[$var]) > 1 && $request[$var][0] == '=' && $request[$var][strlen($request[$var])-1] == '=')
+					elseif(strlen($request[$var]) > 1 && $request[$var][0] == '=' && $request[$var][strlen($request[$var])-1] == '=')
 					{
 						$request[$var] = preg_quote(substr($request[$var], 1, strlen($request[$var])-2));
 						$is_equal = true;
+					}
+					elseif(strlen($request[$var]) > 1 && $request[$var][0] == '/' && $request[$var][strlen($request[$var])-1] == '/')
+					{
+						$request[$var] = substr($request[$var], 1, strlen($request[$var])-2);
+						$is_regular = true;
 					}
 					
 					// incase an aliased path is being searched for replace it here too!
