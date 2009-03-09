@@ -1,6 +1,7 @@
 2009-03-06
 Fixed zip template, crc() can work with a file pointer, still working on bt.php plugin which uses md5
 Improved searching capabilities in db_file
+Worked on db_file module and fixed some search functionality
 
 2009-03-04
 Worked on db_playlist module, mostly working just needs some tweaks

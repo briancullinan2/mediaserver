@@ -45,8 +45,8 @@ elseif( isset($_REQUEST['remove']) && is_numeric($_REQUEST['watch']) )
 	unset($_REQUEST['addpath']);
 }
 
-$ignored = db_watch::get($database, array('search_Filepath' => '^!'), $count, $error);
-$watched = db_watch::get($database, array('search_Filepath' => '^\^'), $count, $error);
+$ignored = db_watch::get($database, array('search_Filepath' => '/^!/'), $count, $error);
+$watched = db_watch::get($database, array('search_Filepath' => '/^\\^/'), $count, $error);
 
 ?>
 <html>

@@ -351,7 +351,7 @@ class db_file
 					if(!isset($props['WHERE'])) $props['WHERE'] = '';
 					elseif($props['WHERE'] != '') $props['WHERE'] .= ' AND ';
 					
-					$request[$var] = stripslashes($request[$var]);
+					//$request[$var] = stripslashes($request[$var]);
 				
 					$is_literal = false;
 					$is_equal = false;
@@ -383,9 +383,17 @@ class db_file
 					
 					// add a regular expression matching for each column in the table being searched
 					if($is_equal)
-						$props['WHERE'] .= $column . ' = "' . $regexp . '"';
-					else
-						$props['WHERE'] .= $column . ' REGEXP "' . $regexp . '"';
+					{
+						$props['WHERE'] .= $column . ' = "' . addslashes($request[$var]) . '"';
+					}
+					elseif($is_regular)
+					{
+						$props['WHERE'] .= $column . ' REGEXP "' . addslashes($request[$var]) . '"';
+					}
+					elseif($is_literal)
+					{
+						$props['WHERE'] .= 'LOCATE("' . addslashes($request[$var]) . '", ' . $column . ')';
+					}
 				}
 			}
 		
@@ -484,8 +492,8 @@ class db_file
 			if($error == '')
 			{
 				$props['SELECT'] = constant($module . '::DATABASE');
+				if(isset($props['GROUP'])) $props['COLUMNS'] = ',count(*)' . (isset($props['COLUMNS'])?$props['COLUMNS']:'');
 				$props['COLUMNS'] = '*' . (isset($props['COLUMNS'])?$props['COLUMNS']:'');
-				if(isset($props['GROUP'])) $props['COLUMNS'] = '*,count(*)';
 	
 				// get directory from database
 				$files = $database->query($props);
