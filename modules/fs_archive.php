@@ -135,30 +135,14 @@ class fs_archive extends fs_file
 		return $fileinfo;
 	}
 
-	static function out($database, $file, $stream)
+	static function out($database, $file)
 	{
 		$file = str_replace('\\', '/', $file);
 		fs_file::parseInner($file, $last_path, $last_ext);
 
 		if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
 		{
-			if(is_string($stream))
-				$op = fopen($stream, 'wb');
-			else
-				$op = $stream;
-			
-			if($op !== false)
-			{
-				if($fp = fopen($last_path, 'rb'))
-				{
-					while (!feof($fp)) {
-						fwrite($op, fread($fp, BUFFER_SIZE));
-					}				
-					fclose($fp);
-					fclose($op);
-					return true;
-				}
-			}
+			return db_file::out($database, $last_path);
 		}
 
 		return false;

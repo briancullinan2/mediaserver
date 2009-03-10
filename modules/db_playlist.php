@@ -105,6 +105,18 @@ class db_playlist extends db_file
 					$files = array();
 					
 					$common_pieces = array();
+					if(isset($tmp_files[0])) $common_pieces = array_unique(split('[^a-zA-Z0-9]', $tmp_files[0]));
+					// remove some common parts
+					for($i = 0; $i < min(6, count($tmp_files)); $i++)
+					{
+						$common_pieces = array_intersect($common_pieces, array_unique(split('[^a-zA-Z0-9]', $tmp_files[$i])));
+						if(count($common_pieces) / count(array_unique(split('[^a-zA-Z0-9]', $tmp_files[$i]))) > .40)
+						{
+							// remove some
+							unset($common_pieces[count($common_pieces)-1]);
+						}
+					}
+					
 					// go through each file and do multiple steps from most presice to most general and try to find the file
 					foreach($tmp_files as $i => $file)
 					{
@@ -117,31 +129,22 @@ class db_playlist extends db_file
 						$dir1 = substr($file, strrpos($file, '/'));
 						$dir1 = substr($file, strrpos(substr($file, 0, strlen($file) - strlen($dir1)), '/'));
 						$dir2 = substr($file, strrpos(substr($file, 0, strlen($file) - strlen($dir1)), '/'));
+						
 						// TODO put alias stuff here
 						$result = array();
 						
 						// check minimized filename and directories
 						$valid_pieces = array();
 						$pieces = split('[^a-zA-Z0-9]', $file);
-						$pieces = array_unique($pieces);
 						$empty = array_search('', $pieces, true);
 						if($empty !== false) unset($pieces[$empty]);
 						$pieces = array_values($pieces);
-						$before_pieces = array();
-						$after_pieces = array_values($pieces);
-						for($i = count($pieces)-1; $i >= 0; $i--)
+						for($i = 0; $i < count($pieces); $i++)
 						{
-							$before_str = join('', $before_pieces);
-							array_pop($after_pieces);
-							$after_str = join('', $after_pieces);
-							if(strpos(strtolower($before_str), strtolower($pieces[$i])) === false && strpos(strtolower($after_str), strtolower($pieces[$i])) === false)
+							// remove single characters and common words
+							if(strlen($pieces[$i]) > 1 && !in_array(strtolower($pieces[$i]), array('and', 'the', 'of', 'an', 'lp')))
 							{
-								// remove single characters and common words
-								if(strlen($pieces[$i]) > 1 && !in_array(strtolower($pieces[$i]), array('and', 'the', 'in', 'of', 'an', 'lp')))
-								{
-									$valid_pieces[] = $pieces[$i];
-									array_unshift($before_pieces, $pieces[$i]);
-								}
+								$valid_pieces[] = $pieces[$i];
 							}
 						}
 						// remove things seperately so we can prioritize
@@ -150,7 +153,7 @@ class db_playlist extends db_file
 						{
 							foreach($valid_pieces as $i => $piece)
 							{
-								if(in_array(strtolower($valid_pieces[$i]), array('version', 'unknown', 'compilation', 'compilations', 'remastered', 'itunes')))
+								if(in_array(strtolower($valid_pieces[$i]), array('version', 'unknown', 'compilation', 'compilations', 'remastered', 'itunes', 'music')))
 								{
 									unset($valid_pieces[$i]);
 								}
@@ -174,147 +177,43 @@ class db_playlist extends db_file
 						{
 							foreach($valid_pieces as $i => $piece)
 							{
-								if(strtoupper($valid_pieces[$i]) == $valid_pieces[$i])
+								if(strtoupper($valid_pieces[$i]) == $valid_pieces[$i] || in_array($valid_pieces[$i], $common_pieces))
 								{
 									unset($valid_pieces[$i]);
 								}
 							}
-							if(count($common_pieces) == 0)
-							{
-								$common_pieces = array_values($valid_pieces);
-							}
-							else
-							{
-								$common_pieces = array_intersect($valid_pieces, $common_pieces);
-								foreach($valid_pieces as $i => $piece)
-								{
-									if(in_array($valid_pieces[$i], $common_pieces))
-									{
-										unset($valid_pieces[$i]);
-									}
-								}
-							}
-							$valid_pieces = array_values($valid_pieces);
 						}
 						
 						// if there are no valid parts then discard
 						if(count($valid_pieces) == 0)
 							unset($tmp_files[$i]);
 							
-							print_r($valid_pieces);
-							print '<br />';
-						
-						// check 5 parts of the filename
-						$min = '';
-						for($i = 0; $i < min(count($valid_pieces), 5); $i++)
+						// search for file using terms
+						$result = db_audio::get($database, array('search' => join(' ', $valid_pieces), 'limit' => 1), $tmp_count, $tmp_error);
+						if($tmp_count > 0)
 						{
-							$min .= 'LOCATE("' . $valid_pieces[$i] . '", Filepath) > 0';
-							if($i != 0)
-								$min .= ' AND LOCATE("' . $valid_pieces[$i] . '", Filepath) < LOCATE("' . $valid_pieces[$i-1] . '", Filepath)';
-							$min .= ' AND ';
+							$files[] = $result[0];
+							continue;
 						}
-						// remove last and
-						$min = substr($min, 0, strlen($min)-5);
-						if($min != '')
-							$result = $database->query(array('SELECT' => self::DATABASE, 'WHERE' => '(LEFT(Filemime, 5) = "audio" OR LEFT(Filemime, 5) = "video") AND ' . $min, 'LIMIT' => 1));
-						if(count($result) > 0)
+
+						// search for file using terms
+						$result = db_video::get($database, array('search' => join(' ', $valid_pieces), 'limit' => 1), $tmp_count, $tmp_error);
+						if($tmp_count > 0)
 						{
 							$files[] = $result[0];
 							continue;
 						}
 						
-						// check 3 parts of the filename
-						$min = '';
-						for($i = 0; $i < min(count($valid_pieces), 3); $i++)
-						{
-							$min .= 'LOCATE("' . $valid_pieces[$i] . '", Filepath) > 0';
-							if($i != 0)
-								$min .= ' AND LOCATE("' . $valid_pieces[$i] . '", Filepath) < LOCATE("' . $valid_pieces[$i-1] . '", Filepath)';
-							$min .= ' AND ';
-						}
-						// remove last and
-						$min = substr($min, 0, strlen($min)-5);
-						if($min != '')
-							$result = $database->query(array('SELECT' => self::DATABASE, 'WHERE' => '(LEFT(Filemime, 5) = "audio" OR LEFT(Filemime, 5) = "video") AND ' . $min, 'LIMIT' => 1));
-						if(count($result) > 0)
+						// search for file using terms
+						$result = db_file::get($database, array('search' => join(' ', $valid_pieces), 'limit' => 1), $tmp_count, $tmp_error);
+						if($tmp_count > 0)
 						{
 							$files[] = $result[0];
 							continue;
 						}
-						
-						// check 5 parts of the filename none concurrent
-						$min = '';
-						$tmp_count = 0;
-						for($i = 0; $i < min(count($valid_pieces), 5); $i++)
-						{
-							$min .= 'LOCATE("' . $valid_pieces[$i] . '", Filepath) > 0 AND ';
-							if($tmp_count == 4)
-								break;
-							else
-								$tmp_count++;
-						}
-						// remove last and
-						$min = substr($min, 0, strlen($min)-5);
-						if($min != '')
-							$result = $database->query(array('SELECT' => self::DATABASE, 'WHERE' => '(LEFT(Filemime, 5) = "audio" OR LEFT(Filemime, 5) = "video") AND ' . $min, 'LIMIT' => 1));
-						if(count($result) > 0)
-						{
-							$files[] = $result[0];
-							continue;
-						}
-						
-						// check 3 parts of the filename none concurrent
-						$min = '';
-						$tmp_count = 0;
-						for($i = 0; $i < count($valid_pieces); $i++)
-						{
-							// for this case, skip numbers
-							if(!is_numeric($valid_pieces[$i]))
-							{
-								$min .= 'LOCATE("' . $valid_pieces[$i] . '", Filepath) > 0 AND ';
-								if($tmp_count == 2)
-									break;
-								else
-									$tmp_count++;
-							}
-						}
-						// remove last and
-						$min = substr($min, 0, strlen($min)-5);
-						if($min != '')
-							$result = $database->query(array('SELECT' => self::DATABASE, 'WHERE' => '(LEFT(Filemime, 5) = "audio" OR LEFT(Filemime, 5) = "video") AND ' . $min, 'LIMIT' => 1));
-						if(count($result) > 0)
-						{
-							$files[] = $result[0];
-							continue;
-						}						
-						
-						// check 3 from a different position
-						$min = '';
-						$tmp_count = 0;
-						for($i = 2; $i < count($valid_pieces); $i++)
-						{
-							// for this case, skip numbers
-							if(!is_numeric($valid_pieces[$i]))
-							{
-								$min .= 'LOCATE("' . $valid_pieces[$i] . '", Filepath) > 0 AND ';
-								if($tmp_count == 2)
-									break;
-								else
-									$tmp_count++;
-							}
-						}
-						// remove last and
-						$min = substr($min, 0, strlen($min)-5);
-						if($min != '')
-							$result = $database->query(array('SELECT' => self::DATABASE, 'WHERE' => '(LEFT(Filemime, 5) = "audio" OR LEFT(Filemime, 5) = "video") AND ' . $min, 'LIMIT' => 1));
-						if(count($result) > 0)
-						{
-							$files[] = $result[0];
-							continue;
-						}
-						
+
 						// file can't be found
-						log_error('Can\'t fine file from playlist: ' . $file);
+						log_error('Can\'t find file from playlist: ' . $file);
 					}
 					
 					$count = count($tmp_files);

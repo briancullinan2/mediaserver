@@ -205,6 +205,7 @@ class db_file
 
 				// selected items have priority over all the other options!
 				unset($props['LIMIT']);
+				unset($props['ORDER']);
 				unset($request);
 			}
 
@@ -266,18 +267,7 @@ class db_file
 					
 					// sort items by inclusive, exclusive, and string size
 					// rearrange pieces, but keep track of index so we can sort them correctly
-					uasort($pieces, create_function('$a, $b', '
-						if(($a[0] == \'+\' && $a[0] == $b[0]) || ($a[0] == \'-\' && $a[0] == $b[0]) || ($a[0] != \'+\' && $a[0] != \'-\' && $b[0] != \'+\' && $b[0] != \'-\'))
-							if(strlen($a) > strlen($b))
-								return 1;
-							elseif(strlen($a) < strlen($b))
-								return -1;
-							else
-								return 0;
-						if($a[0] == \'+\' && $b[0] == \'-\')
-							return -1;
-						elseif($a[0] == \'-\' && $b[0] == \'+\')
-							return 1;'));
+					uasort($pieces, 'termSort');
 					
 					foreach($columns as $i => $column)
 					{
@@ -392,18 +382,7 @@ class db_file
 						
 						// sort items by inclusive, exclusive, and string size
 						// rearrange pieces, but keep track of index so we can sort them correctly
-						uasort($pieces, create_function('$a, $b', '
-							if(($a[0] == \'+\' && $a[0] == $b[0]) || ($a[0] == \'-\' && $a[0] == $b[0]) || ($a[0] != \'+\' && $a[0] != \'-\' && $b[0] != \'+\' && $b[0] != \'-\'))
-								if(strlen($a) > strlen($b))
-									return 1;
-								elseif(strlen($a) < strlen($b))
-									return -1;
-								else
-									return 0;
-							if($a[0] == \'+\' && $b[0] == \'-\')
-								return -1;
-							elseif($a[0] == \'-\' && $b[0] == \'+\')
-								return 1;'));
+						uasort($pieces, 'termSort');
 					
 						$column = 'Filepath';
 						$first_or = false;
@@ -412,14 +391,14 @@ class db_file
 						{
 							if($piece[0] == '+')
 							{
-								if($part != '') $part .= ' AND';
+								if($props['WHERE'] != '') $props['WHERE'] .= ' AND';
 								$piece = substr($piece, 1);
 								$props['WHERE'] .= ' LOCATE("' . addslashes($piece) . '", ' . $column . ') > 0';
 								$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',(LOCATE("' . addslashes($piece) . '", ' . $column . ') > 0) AS result' . $i . $j;
 							}
 							elseif($piece[0] == '-')
 							{
-								if($part != '') $part .= ' AND';
+								if($props['WHERE'] != '') $props['WHERE'] .= ' AND';
 								$piece = substr($piece, 1);
 								$props['WHERE'] .= ' LOCATE("' . addslashes($piece) . '", ' . $column . ') = 0';
 								$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',(LOCATE("' . addslashes($piece) . '", ' . $column . ') = 0) AS result' . $i . $j;
@@ -555,7 +534,7 @@ class db_file
 				$props['SELECT'] = constant($module . '::DATABASE');
 				if(isset($props['GROUP'])) $props['COLUMNS'] = ',count(*)' . (isset($props['COLUMNS'])?$props['COLUMNS']:'');
 				$props['COLUMNS'] = '*' . (isset($props['COLUMNS'])?$props['COLUMNS']:'');
-	
+				
 				// get directory from database
 				$files = $database->query($props);
 				

@@ -23,6 +23,11 @@ if(isset($_REQUEST['id']))
 	{
 		if(count($files) > 0)
 		{
+			// set some general headers
+			header('Content-Transfer-Encoding: binary');
+			header('Content-Type: ' . $files[0]['Filemime']);
+			header('Content-Disposition: attachment; filename="' . $files[0]['Filename'] . '"');
+			
 			// set up the output stream
 			$op = fopen('php://output', 'wb');
 			
@@ -98,9 +103,6 @@ if(isset($_REQUEST['id']))
 				//header("Cache-Control: cache, must-revalidate");  
 				//header("Pragma: public");
 			
-				header('Content-Transfer-Encoding: binary');
-				header('Content-Type: ' . $files[0]['Filemime']);
-				header('Content-Disposition: attachment; filename="' . $files[0]['Filename'] . '"');
 				header('Content-Length: ' . ($seek_end - $seek_start + 1));
 			}
 			

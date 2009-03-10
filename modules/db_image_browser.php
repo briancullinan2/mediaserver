@@ -42,12 +42,8 @@ class db_image_browser extends db_image
 	static function out($database, $file)
 	{
 		// check to make sure file is valid
-		if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)))
-		{
-			header('Content-Disposition: ');
-			return db_file::out($database, $file);
-		}
-		return false;
+		header('Content-Disposition: ');
+		return db_file::out($database, $file);
 	}
 	
 	static function handle($database, $file)
@@ -56,7 +52,12 @@ class db_image_browser extends db_image
 	
 	static function get($database, $request, &$count, &$error)
 	{
-		return array();
+		$files = parent::get($database, $request, $count, $error);
+		if(count($files) == 0)
+		{
+			$files = db_file::get($database, $request, $count, $error);
+		}
+		return $files;
 	}
 
 	static function cleanup($database, $watched)

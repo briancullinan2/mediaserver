@@ -1,3 +1,9 @@
+2009-03-10
+Fixed some searching and sorting problems in the db_files module
+Fixed the fs_module::out() methods to work with new convention
+Made db_playlist use standard db_file search functionality
+Fixed some problems with accessing the ignored and watched files since db_file module regexp changes
+
 2009-03-09
 Made searched terms highlight on select page
 Worked on db_file module and fixed some search functionality

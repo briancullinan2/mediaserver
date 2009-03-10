@@ -15,6 +15,87 @@ $GLOBALS['getID3'] = new getID3();
 class fs_diskimage extends fs_file
 {
 	const NAME = 'Disk Images on Filesystem';
+	
+    const PROTOCOL = 'diskimage'; /* Underscore not allowed */
+       
+    protected $internal_fp  = NULL;
+    protected $internal_length  = NULL;
+    protected $internal_pos  = NULL;
+	
+    function stream_open($path, $mode, $options, &$opened_path)
+    {
+		if(substr($path, 0, 12) == 'diskimage://')
+			$path = substr($path, 12);
+			
+		$path = str_replace('\\', '/', $path);
+			
+		fs_file::parseInner($path, $last_path, $inside_path);
+
+		if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
+		{
+	
+			$info = $GLOBALS['getID3']->analyze($last_path);
+			
+			if($inside_path != '')
+			{
+				if(strlen($inside_path) == 0 || $inside_path[0] != '/') $inside_path = '/' . $inside_path;
+				if(isset($info['iso']) && isset($info['iso']['directories']))
+				{
+					foreach($info['iso']['directories'] as $i => $directory)
+					{
+						foreach($directory as $j => $file)
+						{
+							if($file['filename'] == $inside_path)
+							{
+								if($fp = fopen($last_path, 'rb'))
+								{
+									fseek($fp, $file['offset_bytes']);
+									$this->internal_fp = $fp;
+									$this->internal_length = $file['filesize'];
+									$this->internal_pos = 0;
+									
+									return true;
+								}
+							}
+						}
+					}
+				}
+			}
+			// download entire image
+			else
+			{
+				if($fp = fopen($last_path, 'rb'))
+				{
+					$this->internal_fp = $fp;
+					$this->internal_length = filesize($last_path);
+					$this->internal_pos = 0;
+					return true;
+				}
+			}
+		}
+		return false;
+    }
+    function stream_read($count){
+		if($this->internal_pos + $count > $this->internal_length)
+			$count = $this->internal_length - $this->internal_pos;
+		$this->internal_pos += $count;
+        return fread($this->internal_fp, $count);
+    }
+    function stream_eof(){
+        return $this->internal_pos >= $this->internal_length;
+    }
+    function stream_tell(){
+        return $this->internal_pos;
+    }
+    function stream_seek($position){
+		if($position > $this->internal_length)
+		{
+			$this->internal_pos = $this->internal_length;
+			return 0;
+		}
+		$this->internal_pos = $position;
+        return 0;
+    }
 
 	static function columns()
 	{
@@ -122,77 +203,15 @@ class fs_diskimage extends fs_file
 		return $fileinfo;
 	}
 
-	static function out($database, $file, $stream)
+	static function out($database, $file)
 	{
 		$file = str_replace('\\', '/', $file);
-		fs_file::parseInner($file, $last_path, $inside_path);
+		
+		fs_file::parseInner($file, $last_path, $last_ext);
 
 		if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
 		{
-			
-			$info = $GLOBALS['getID3']->analyze($last_path);
-			
-			if(is_string($stream))
-				$op = fopen($stream, 'wb');
-			else
-				$op = $stream;
-
-			if($inside_path != '')
-			{
-				if(strlen($inside_path) == 0 || $inside_path[0] != '/') $inside_path = '/' . $inside_path;
-				if(isset($info['iso']) && isset($info['iso']['directories']))
-				{
-					foreach($info['iso']['directories'] as $i => $directory)
-					{
-						foreach($directory as $j => $file)
-						{
-							if($file['filename'] == $inside_path)
-							{
-								if($op !== false)
-								{
-									if($fp = fopen($last_path, 'rb'))
-									{
-										fseek($fp, $file['offset_bytes']);
-										
-										$total = 0;
-										while($total < $file['filesize'])
-										{
-											$buffer = fread($fp, min(BUFFER_SIZE, $file['filesize'] - $total));
-											$total += strlen($buffer);
-											fwrite($op, $buffer);
-										}
-										fclose($fp);
-										fclose($op);
-										return true;
-									}
-								}
-							}
-						}
-					}
-				}
-				else{ $error = 'Cannot read this type of file!'; }
-			}
-			else
-			{
-				// download entire image
-				header('Content-Transfer-Encoding: binary');
-				header('Content-Type: ' .  getMime($last_path));
-				header('Content-Length: ' . filesize($last_path));
-				header('Content-Disposition: attachment; filename="' . basename($last_path) . '"');
-				
-				if($op !== false)
-				{
-					if($fp = fopen($last_path, 'rb'))
-					{
-						while (!feof($fp)) {
-							fwrite($op, fread($fp, BUFFER_SIZE));
-						}				
-						fclose($fp);
-						fclose($op);
-						return true;
-					}
-				}
-			}
+			return fopen(self::PROTOCOL . '://' . $file, 'rb');
 		}
 
 		return false;

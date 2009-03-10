@@ -51,9 +51,9 @@ if(isset($_REQUEST['%IF']))
 			$_REQUEST['%TH'] = $files[0]['Height'];
 		
 		if(!isset($_REQUEST['%TW']) && isset($files[0]['Width']))
-			$_REQUEST['%TW'] = $files[0]['Width']
+			$_REQUEST['%TW'] = $files[0]['Width'];
 		
-		$_REQUEST['%IF'] = $files[0]['Filepath'];
+		$_REQUEST['%IF'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $files[0]['Filepath']);
 	}
 }
 else

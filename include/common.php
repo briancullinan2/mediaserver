@@ -227,6 +227,27 @@ function selfURL()
 	return $protocol."://".$_SERVER['SERVER_NAME'].$port.$_SERVER['REQUEST_URI'];
 }
 
+function termSort($a, $b)
+{
+	if(($a[0] == '+' && $a[0] == $b[0]) || ($a[0] == '-' && $a[0] == $b[0]) || ($a[0] != '+' && $a[0] != '-' && $b[0] != '+' && $b[0] != '-'))
+	{
+		if(strlen($a) > strlen($b))
+			return -1;
+		elseif(strlen($a) < strlen($b))
+			return 1;
+		else
+			return 0;
+	} elseif($a[0] == '+') {
+		return -1;
+	} elseif($b[0] == '+') {
+		return 1;
+	} elseif($a[0] == '-') {
+		return -1;
+	} else {
+		return 1;
+	}
+}
+
 // get all columns from every modules
 function getAllColumns()
 {

@@ -1,10 +1,27 @@
 {if $smarty.const.USE_DATABASE}{assign var=prefix value='db_'}{else}{assign var=prefix value='fs_'}{/if}
 {php}
 $parts = array();
-if(isset($_REQUEST['search'])) $parts = split(' ', stripslashes($_REQUEST['search']));
-foreach($parts as $i => $part)
+$search = stripslashes($_REQUEST['search']);
+if($search[0] != '"' && $search[strlen($search)-1] != '"' && $search[0] != '/' && $search[strlen($search)-1] != '/' && $search[0] != '=' && $search[strlen($search)-1] != '=')
 {
-$parts[$i] = '/' . preg_quote($part) . '/i';
+	if(isset($_REQUEST['search'])) $parts = split(' ', stripslashes($_REQUEST['search']));
+	foreach($parts as $i => $part)
+	{
+		if($part[0] == '+') $part = substr($part, 1);
+		$parts[$i] = '/' . preg_quote($part) . '/i';
+	}
+}
+elseif($search[0] == '"' && $search[strlen($search)-1] == '"')
+{
+	$parts = array(0 => '/' . preg_quote(substr($search, 1, strlen($search)-2)) . '/i');
+}
+elseif($search[0] == '/' && $search[strlen($search)-1] == '/')
+{
+	$parts = array(0 => $search . 'i');
+}
+elseif($search[0] == '=' && $search[strlen($search)-1] == '=')
+{
+	$parts = array(0 => '/^' . preg_quote(substr($search, 1, strlen($search)-2)) . '$/i');
 }
 $this->assign('parts', $parts);
 {/php}

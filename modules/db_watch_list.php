@@ -28,8 +28,8 @@ class db_watch_list extends db_watch
 			if(!isset($database)) $database = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 		
 			// make sure it is in the watch list and not the ignore list
-			if(!isset($ignored)) $ignored = db_watch::get($database, array('search_Filepath' => '^!'), $count, $error);
-			if(!isset($watched)) $watched = db_watch::get($database, array('search_Filepath' => '^\^'), $count, $error);
+			if(!isset($ignored)) $ignored = db_watch::get($database, array('search_Filepath' => '/^!/'), $count, $error);
+			if(!isset($watched)) $watched = db_watch::get($database, array('search_Filepath' => '/^\\^/'), $count, $error);
 			
 			if(self::is_watched($dir, $watched, $ignored))
 			{
@@ -180,8 +180,8 @@ class db_watch_list extends db_watch
 		else
 		{
 			// yes we are checking it twice but it is better to be safe then sorry
-			if(!isset($ignored)) $ignored = db_watch::get($database, array('search_Filepath' => '^!'), $count, $error);
-			if(!isset($watched)) $watched = db_watch::get($database, array('search_Filepath' => '^\^'), $count, $error);
+			if(!isset($ignored)) $ignored = db_watch::get($database, array('search_Filepath' => '/^!/'), $count, $error);
+			if(!isset($watched)) $watched = db_watch::get($database, array('search_Filepath' => '/^\\^/'), $count, $error);
 			
 			if(self::is_watched($dir, $watched, $ignored))
 			{

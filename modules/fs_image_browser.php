@@ -37,17 +37,10 @@ class fs_image_browser extends fs_image
 	}
 	
 	// output provided file to given stream
-	static function out($database, $file, $stream)
+	static function out($database, $file)
 	{
-		$file = str_replace('\\', '/', $file);
-		
-		// check to make sure file is valid
-		if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)))
-		{
-			header('Content-Disposition: ');
-			return fs_file::out($database, $file);
-		}
-		return false;
+		header('Content-Disposition: ');
+		return fs_file::out($database, $file);
 	}
 	
 	static function get($database, $request, &$count, &$error)

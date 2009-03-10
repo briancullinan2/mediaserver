@@ -31,8 +31,8 @@ if(USE_DATABASE == false)
 $database = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 
 // get the watched directories
-$ignored = db_watch::get($database, array('search_Filepath' => '^!'), $count, $error);
-$watched = db_watch::get($database, array('search_Filepath' => '^\^'), $count, $error);
+$ignored = db_watch::get($database, array('search_Filepath' => '/^!/'), $count, $error);
+$watched = db_watch::get($database, array('search_Filepath' => '/^\\^/'), $count, $error);
 
 print_r($ignored);
 print_r($watched);
