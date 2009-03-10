@@ -1,4 +1,13 @@
 {if $smarty.const.USE_DATABASE}{assign var=prefix value='db_'}{else}{assign var=prefix value='fs_'}{/if}
+{php}
+$parts = array();
+if(isset($_REQUEST['search'])) $parts = split(' ', stripslashes($_REQUEST['search']));
+foreach($parts as $i => $part)
+{
+$parts[$i] = '/' . preg_quote($part) . '/i';
+}
+$this->assign('parts', $parts);
+{/php}
 {if $smarty.request.detail == 0 || $smarty.request.detail == 1 || $smarty.request.detail == 2}
 	There are {$total_count} result(s).<br />
 	{assign var=page value=$smarty.request.start|intval}
@@ -24,11 +33,11 @@
                 	($files[file].Filepath|@handles:'archive' && $smarty.request.cat != $prefix|cat:'archive') || 
                     ($files[file].Filepath|@handles:'playlist' && $smarty.request.cat != $prefix|cat:'playlist') || 
                     ($files[file].Filepath|@handles:'diskimage' && $smarty.request.cat != $prefix|cat:'diskimage')
-                }<a href="?dir={$files[file].Filepath|urlencode|htmlspecialchars}{if $files[file].Filepath|@handles:'archive'}&cat={$prefix}archive{elseif $files[file].Filepath|@handles:'diskimage'}&cat={$prefix}diskimage{elseif $files[file].Filepath|@handles:'playlist'}&cat={$prefix}playlist{else}&cat={$smarty.request.cat}{/if}">{$files[file].Filepath}</a>
-                {elseif $files[file].Filepath|@handles:'archive'}<a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}archive.php/{$smarty.request.cat}/{$files[file].id}/OUT/{$files[file].Filename}">{$files[file].Filepath}</a>
-                {elseif $files[file].Filepath|@handles:'diskimage'}<a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}file.php/{$prefix}diskimage/{$files[file].id}/{$files[file].Filename}">{$files[file].Filepath}</a>
-                {elseif $files[file].Filepath|@handles:'image_browser'}<a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}file.php/{$prefix}image_browser/{$files[file].id}/{$files[file].Filename}">{$files[file].Filepath}</a>
-                {else}<a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}file.php/{$smarty.request.cat}/{$files[file].id}/{$files[file].Filename}">{$files[file].Filepath}</a>{/if}
+                }<a href="?dir={$files[file].Filepath|urlencode|htmlspecialchars}{if $files[file].Filepath|@handles:'archive'}&cat={$prefix}archive{elseif $files[file].Filepath|@handles:'diskimage'}&cat={$prefix}diskimage{elseif $files[file].Filepath|@handles:'playlist'}&cat={$prefix}playlist{else}&cat={$smarty.request.cat}{/if}">{$parts|@preg_replace:'<b>$0</b>':$files[file].Filepath}</a>
+                {elseif $files[file].Filepath|@handles:'archive'}<a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}archive.php/{$smarty.request.cat}/{$files[file].id}/OUT/{$files[file].Filename}">{$parts|@preg_replace:'<b>$0</b>':$files[file].Filepath}</a>
+                {elseif $files[file].Filepath|@handles:'diskimage'}<a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}file.php/{$prefix}diskimage/{$files[file].id}/{$files[file].Filename}">{$parts|@preg_replace:'<b>$0</b>':$files[file].Filepath}</a>
+                {elseif $files[file].Filepath|@handles:'image_browser'}<a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}file.php/{$prefix}image_browser/{$files[file].id}/{$files[file].Filename}">{$parts|@preg_replace:'<b>$0</b>':$files[file].Filepath}</a>
+                {else}<a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}file.php/{$smarty.request.cat}/{$files[file].id}/{$files[file].Filename}">{$parts|@preg_replace:'<b>$0</b>':$files[file].Filepath}</a>{/if}
             {elseif $smarty.request.detail == 2}
 				{foreach from=$smarty.session.columns item=column_value}
 					{if isset($files[file].$column_value)}

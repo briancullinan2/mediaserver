@@ -279,45 +279,47 @@ class db_file
 						elseif($a[0] == \'-\' && $b[0] == \'+\')
 							return 1;'));
 					
-					//foreach($columns as $i => $column)
-					//{
-						$column = 'Filepath';
-						$first_or = false;
-						$count = 0;
-						$part = '';
-						foreach($pieces as $j => $piece)
+					foreach($columns as $i => $column)
+					{
+						if($column != 'id')
 						{
-							if($piece[0] == '+')
+							$first_or = false;
+							$count = 0;
+							$part = '';
+							foreach($pieces as $j => $piece)
 							{
-								if($part != '') $part .= ' AND';
-								$piece = substr($piece, 1);
-								$part .= ' LOCATE("' . addslashes($piece) . '", ' . $column . ') > 0';
-								$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',(LOCATE("' . addslashes($piece) . '", ' . $column . ') > 0) AS result' . $j;
-							}
-							elseif($piece[0] == '-')
-							{
-								if($part != '') $part .= ' AND';
-								$piece = substr($piece, 1);
-								$part .= ' LOCATE("' . addslashes($piece) . '", ' . $column . ') = 0';
-								$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',(LOCATE("' . addslashes($piece) . '", ' . $column . ') = 0) AS result' . $j;
-							}
-							else
-							{
-								if($first_or == false)
+								if($piece[0] == '+')
 								{
-									$part .= (($count != 0)?' AND':'') . ' (';
-									$first_or = true;
+									if($part != '') $part .= ' AND';
+									$piece = substr($piece, 1);
+									$part .= ' LOCATE("' . addslashes($piece) . '", ' . $column . ') > 0';
+									$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',(LOCATE("' . addslashes($piece) . '", ' . $column . ') > 0) AS result' . $i . $j;
 								}
-								elseif($part != '') $part .= ' OR';
-								$part .= ' LOCATE("' . addslashes($piece) . '", ' . $column . ') > 0';
-								$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',(LOCATE("' . addslashes($piece) . '", ' . $column . ') > 0) AS result' . $j;
-								if($count == count($pieces)-1) $part .= ')';
+								elseif($piece[0] == '-')
+								{
+									if($part != '') $part .= ' AND';
+									$piece = substr($piece, 1);
+									$part .= ' LOCATE("' . addslashes($piece) . '", ' . $column . ') = 0';
+									$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',(LOCATE("' . addslashes($piece) . '", ' . $column . ') = 0) AS result' . $i . $j;
+								}
+								else
+								{
+									if($first_or == false)
+									{
+										$part .= (($count != 0)?' AND':'') . ' (';
+										$first_or = true;
+									}
+									elseif($part != '') $part .= ' OR';
+									$part .= ' LOCATE("' . addslashes($piece) . '", ' . $column . ') > 0';
+									$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',(LOCATE("' . addslashes($piece) . '", ' . $column . ') > 0) AS result' . $i . $j;
+									if($count == count($pieces)-1) $part .= ')';
+								}
+								$props['ORDER'] = 'result' . $i . (count($pieces) - $j - 1) . ' DESC,' . (isset($props['ORDER'])?$props['ORDER']:'');
+								$count++;
 							}
-							$props['ORDER'] = 'result' . (count($pieces) - $j - 1) . ' DESC,' . (isset($props['ORDER'])?$props['ORDER']:'');
-							$count++;
+							$parts[] = $part;
 						}
-						$parts[] = $part;
-					//}
+					}
 				}
 				else
 				{
@@ -377,22 +379,81 @@ class db_file
 					// incase an aliased path is being searched for replace it here too!
 					if(USE_ALIAS == true)
 						$request[$var] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request[$var]);
-						
-					// escape quote marks to help prevent sql injection
-					$regexp = addslashes($request[$var]);
 					
 					// add a regular expression matching for each column in the table being searched
-					if($is_equal)
+					if(!$is_equal && !$is_regular && !$is_literal)
 					{
-						$props['WHERE'] .= $column . ' = "' . addslashes($request[$var]) . '"';
+						// loop through search terms and construct query
+						$pieces = split(' ', $request[$var]);
+						$pieces = array_unique($pieces);
+						$empty = array_search('', $pieces, true);
+						if($empty !== false) unset($pieces[$empty]);
+						$pieces = array_values($pieces);
+						
+						// sort items by inclusive, exclusive, and string size
+						// rearrange pieces, but keep track of index so we can sort them correctly
+						uasort($pieces, create_function('$a, $b', '
+							if(($a[0] == \'+\' && $a[0] == $b[0]) || ($a[0] == \'-\' && $a[0] == $b[0]) || ($a[0] != \'+\' && $a[0] != \'-\' && $b[0] != \'+\' && $b[0] != \'-\'))
+								if(strlen($a) > strlen($b))
+									return 1;
+								elseif(strlen($a) < strlen($b))
+									return -1;
+								else
+									return 0;
+							if($a[0] == \'+\' && $b[0] == \'-\')
+								return -1;
+							elseif($a[0] == \'-\' && $b[0] == \'+\')
+								return 1;'));
+					
+						$column = 'Filepath';
+						$first_or = false;
+						$count = 0;
+						foreach($pieces as $j => $piece)
+						{
+							if($piece[0] == '+')
+							{
+								if($part != '') $part .= ' AND';
+								$piece = substr($piece, 1);
+								$props['WHERE'] .= ' LOCATE("' . addslashes($piece) . '", ' . $column . ') > 0';
+								$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',(LOCATE("' . addslashes($piece) . '", ' . $column . ') > 0) AS result' . $i . $j;
+							}
+							elseif($piece[0] == '-')
+							{
+								if($part != '') $part .= ' AND';
+								$piece = substr($piece, 1);
+								$props['WHERE'] .= ' LOCATE("' . addslashes($piece) . '", ' . $column . ') = 0';
+								$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',(LOCATE("' . addslashes($piece) . '", ' . $column . ') = 0) AS result' . $i . $j;
+							}
+							else
+							{
+								if($first_or == false)
+								{
+									$props['WHERE'] .= (($count != 0)?' AND':'') . ' (';
+									$first_or = true;
+								}
+								elseif($props['WHERE'] != '') $props['WHERE'] .= ' OR';
+								$props['WHERE'] .= ' LOCATE("' . addslashes($piece) . '", ' . $column . ') > 0';
+								$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',(LOCATE("' . addslashes($piece) . '", ' . $column . ') > 0) AS result' . $i . $j;
+								if($count == count($pieces)-1) $props['WHERE'] .= ')';
+							}
+							$props['ORDER'] = 'result' . $i . (count($pieces) - $j - 1) . ' DESC,' . (isset($props['ORDER'])?$props['ORDER']:'');
+							$count++;
+						}
 					}
-					elseif($is_regular)
+					else
 					{
-						$props['WHERE'] .= $column . ' REGEXP "' . addslashes($request[$var]) . '"';
-					}
-					elseif($is_literal)
-					{
-						$props['WHERE'] .= 'LOCATE("' . addslashes($request[$var]) . '", ' . $column . ')';
+						if($is_equal)
+						{
+							$props['WHERE'] .= $column . ' = "' . addslashes($request[$var]) . '"';
+						}
+						elseif($is_regular)
+						{
+							$props['WHERE'] .= $column . ' REGEXP "' . addslashes($request[$var]) . '"';
+						}
+						elseif($is_literal)
+						{
+							$props['WHERE'] .= 'LOCATE("' . addslashes($request[$var]) . '", ' . $column . ')';
+						}
 					}
 				}
 			}
