@@ -213,12 +213,12 @@ log_error("Phase 2: Complete!");
 
 // now do some cleanup
 //  but only if we need it!
-if(!$should_clean === true)
+if($should_clean === false)
 {
 	log_error("Phase 3: Skipping cleaning, count is " . $clean_count);
 	exit;
 }
-else
+elseif($should_clean === 0)
 {
 	log_error("Phase 3: Skipping cleaning because of error!");
 	exit;
