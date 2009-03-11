@@ -631,8 +631,9 @@ class db_file
 		$watched_where = '';
 		foreach($watched as $i => $watch)
 		{
+			$tmp_watch = str_replace('\\', '/', $watch['Filepath']);
 			// add the files that begin with a path from a watch directory
-			$watched_where .= ' Filepath NOT REGEXP "^' . addslashes(preg_quote(str_replace('\\', '/', $watch['Filepath']))) . '" AND';
+			$watched_where .= ' LEFT(Filepath, ' . strlen($tmp_watch) . ') != "' .  addslashes($tmp_watch) . '" AND';
 		}
 		// remove last AND
 		$watched_where = substr($watched_where, 0, strlen($watched_where)-3);
@@ -690,7 +691,8 @@ class db_file
 		// clean up items that are in the ignore list
 		foreach($ignored as $i => $ignore)
 		{
-			$ignored_where .= ' Filepath REGEXP "^' . addslashes(preg_quote(str_replace('\\', '/', $ignore['Filepath']))) . '" OR';
+			$tmp_ignore = str_replace('\\', '/', $ignore['Filepath']);
+			$ignored_where .= ' LEFT(Filepath, ' . strlen($tmp_ignore) . ') = "' . addslashes($tmp_ignore) . '" OR';
 		}
 		// remove last OR
 		$ignored_where = substr($ignored_where, 0, strlen($ignored_where)-2);
