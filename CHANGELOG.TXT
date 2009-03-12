@@ -1,6 +1,8 @@
 2009-03-11
 Changed db_file::cleanup() to use LEFT and LOCATE instead of REGEXP
 Made masive progress on reports.php admin script
+Fixed unicode problem by changing the TEXT columns in the database to BLOB, now binary text is preserved
+
 
 2009-03-10
 Fixed some searching and sorting problems in the db_files module

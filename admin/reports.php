@@ -8,6 +8,29 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATO
 // how many files added in the last 24 hours
 // load multiple log files
 // graph the log files
+/*
+The report is structured as follows
+$reports[section][order][type-title] = message
+order 0 and type 0 is the title of the section and the short description
+A decimal number can be used in the ordering when the message is directely related to the integer message
+A section less then 0 is always displayed at the top of the page, this can be used for error reporting
+Use the bit mask to describe the type of entry and how to display it
+*/
+// use to indicate the section is the header
+define('TYPE_HEADING', 		128);
+
+// applies the appearance to the entire entry (0 is just the title)
+define('TYPE_ENTIRE', 		16);
+
+// puts bold around the entry
+define('TYPE_BOLD', 		8);
+
+// makes the entry red, usually used to indicate an error, can be combined with TYPE_G to inidicate a warning
+define('TYPE_R', 		4);
+// makes the entry green, used to indicate a success
+define('TYPE_G', 		2);
+// makes the entry blue, used to indicate some notice
+define('TYPE_B', 		1);
 
 // make sure user in logged in
 if( loggedIn() )
@@ -21,7 +44,9 @@ else
 	exit();
 }
 
-$report = array();
+$reports = array();
+
+$reports[0][0][(TYPE_HEADING).'-Log Parser'] = 'Parse log files and view useful information.';
 
 // parse log files
 if(isset($_REQUEST['logs']))
@@ -46,14 +71,15 @@ if(isset($_REQUEST['logs']))
 		}
 	}
 	
-	$report['0:0:Log Parser'] = 'This section parses log files';
 	// open each file and look for log information
 	// start the parsing when "Cron Script" is found
 	$last_time = 0;
 	$last_version = '0.0.0';
 	$in_most_recent = false;
 	$avg_add = 0;
+	$avg_add_count = 0;
 	$avg_look = 0;
+	$avg_look_count = 0;
 	$line_count = 0;
 	foreach($files as $i => $file)
 	{
@@ -80,7 +106,7 @@ if(isset($_REQUEST['logs']))
 					{
 						// show the most recent time the script has run
 						if($time > $last_time)
-							$report['1:1:Last Run Time'] = date('m/d/Y:H:i:s O', $time);
+							$reports[0][1][(TYPE_BOLD).'-Last Run Time'] = date('m/d/Y:H:i:s O', $time);
 							
 						// do version compare and make suggestion
 						$version = split('_', $matches[4]);
@@ -88,7 +114,7 @@ if(isset($_REQUEST['logs']))
 						{
 							$in_most_recent = true;
 							$last_version = $version[0];
-							$report['2:1:Last Version'] = $last_version . ' (' . $version[1] . ')';
+							$reports[0][2][(TYPE_BOLD).'-Last Version'] = $last_version . ' (' . $version[1] . ')';
 						}
 						else
 						{
@@ -97,30 +123,31 @@ if(isset($_REQUEST['logs']))
 						
 						if(version_compare($last_version, VERSION) == -1)
 						{
-							$report['2.1:2:Upgrade'] = 'The last version of the logs are before your current running version.<br />Possible causes of this include:<br />You are running a remove script that needs to be upgraded!';
+							$reports[0][2.1][(TYPE_BOLD|TYPE_R).'-Upgrade'] = 'The last version of the logs are before your current running version.<br />Possible causes of this include:<br />You are running a remove script that needs to be upgraded!';
 						}
 						
 						// do some other stuff for each run
 						if(isset($look_count))
 						{
-							$avg_look = ($avg_look !== 0)?(($avg_look + $look_count) / 2):$look_count;
+							$avg_look += $look_count;
+							$avg_look_count++;
 						}
 					}
 					elseif($matches[3] == 'Ignored')
 					{
 						if($in_most_recent)
 						{
-							$report['3:1:Ignore List'] = 'Here is the ignore list for the most recent cron run:<br />';
+							$reports[0][3][(TYPE_BOLD).'-Ignore List'] = 'Here is the ignore list for the most recent cron run:';
 							$ignored = @unserialize($matches[4]);
 							if($ignored === false || !is_array($ignored))
 							{
-								$report['3.1:1:Ignore List'] = 'Error loading list!';
+								$reports[0][3.1][(TYPE_BOLD|TYPE_R).'-Ignore List'] = 'Error loading list!';
 							}
 							else
 							{
 								foreach($ignored as $i => $ignore)
 								{
-									$report['3:1:Ignore List'] .= htmlspecialchars($ignore['Filepath']) . (($i != count($ignored)-1)?'<br />':''); 
+									$reports[0][3][(TYPE_BOLD).'-Ignore List'] .= '<br />' . htmlspecialchars($ignore['Filepath']); 
 								}
 							}
 						}
@@ -129,17 +156,17 @@ if(isset($_REQUEST['logs']))
 					{
 						if($in_most_recent)
 						{
-							$report['4:1:Watch List'] = 'Here is the watch list for the most recent cron run:<br />';
+							$reports[0][4][(TYPE_BOLD).'-Watch List'] = 'Here is the watch list for the most recent cron run:';
 							$watched = @unserialize($matches[4]);
 							if($watched === false || !is_array($watched))
 							{
-								$report['4.1:1:Watch List'] = 'Error loading list!';
+								$reports[0][4.1][(TYPE_BOLD|TYPE_R).'-Watch List'] = 'Error loading list!';
 							}
 							else
 							{
 								foreach($watched as $i => $watch)
 								{
-									$report['4:1:Watch List'] .= htmlspecialchars($watch['Filepath']) . (($i != count($watched)-1)?'<br />':''); 
+									$reports[0][4][(TYPE_BOLD).'-Watch List'] .= '<br />' . htmlspecialchars($watch['Filepath']); 
 								}
 							}
 						}
@@ -148,17 +175,17 @@ if(isset($_REQUEST['logs']))
 					{
 						if($in_most_recent)
 						{
-							$report['5:1:State List'] = 'Here is the most recent state:<br />';
+							$reports[0][5][(TYPE_BOLD).'-State List'] = 'Here is the most recent state:';
 							$state = @unserialize($matches[4]);
 							if($state === false || !is_array($state))
 							{
-								$report['5.1:1:State List'] = 'Error loading state!';
+								$reports[0][5.1][(TYPE_BOLD|TYPE_R).'-State List'] = 'Error loading state!';
 							}
 							else
 							{
 								foreach($state as $i => $value)
 								{
-									$report['5:1:State List'] .= htmlspecialchars(@$value['file']) . (($i != count($state)-1)?'<br />':''); 
+									$reports[0][5][(TYPE_BOLD).'-State List'] .= '<br />' . htmlspecialchars(@$value['file']); 
 								}
 							}
 						}
@@ -167,7 +194,7 @@ if(isset($_REQUEST['logs']))
 					{
 						if($in_most_recent)
 						{
-							$report['6:1:Cleanup Count'] = 'The most recent cleanup count is ' . $matches[4];
+							$reports[0][6][(TYPE_BOLD).'-Cleanup Count'] = 'The most recent cleanup count is ' . $matches[4];
 						}
 					}
 					elseif(substr($matches[3], 0, 3) == 'Add')
@@ -178,7 +205,8 @@ if(isset($_REQUEST['logs']))
 						elseif($file_count > 0)
 						{
 							$tmp_time = $time;
-							$avg_add = ($avg_add !== 0)?(($avg_add + $file_count) / 2):$file_count;
+							$avg_add += $file_count;
+							$avg_add_count++;
 							$file_count = 1;
 						}
 					}
@@ -192,11 +220,11 @@ if(isset($_REQUEST['logs']))
 				{
 					if(strpos($line, 'Fatal') !== false)
 					{
-						$report['-1000:2:Fatal Error'] = 'A fatal error was detected in the logs! Line ' . $line_count . ' in file ' . $file . '<br />Reinstalling the script is recommended';
+						$reports[0][-1000][(TYPE_BOLD|TYPE_R).'-Fatal Error'] = 'A fatal error was detected in the logs! Line ' . $line_count . ' in file ' . $file . '<br />Reinstalling the script is recommended';
 					}
 					elseif(strpos($line, 'Warning') !== false)
 					{
-						$report['-1000:2:Detected'] = 'A warning was detected in the logs! Line ' . $line_count . ' in file ' . $file . '<br />Possible causes include:<br />Files are inaccessible by the script<br />Permission problems<br />Configuration problems';
+						$reports[0][-1000][(TYPE_BOLD|TYPE_R).'-Warning Detected'] = 'A warning was detected in the logs! Line ' . $line_count . ' in file ' . $file . '<br />Possible causes include:<br />Files are inaccessible by the script<br />Permission problems<br />Configuration problems';
 					}
 				}
 			}
@@ -204,46 +232,97 @@ if(isset($_REQUEST['logs']))
 		}
 	}
 	
-	$report['7:1:Average Add Speed'] = round($avg_add, 2) . ' Files per Second';
+	$reports[0][7][(TYPE_BOLD).'-Average Add Speed'] = round(($avg_add / $avg_add_count), 2) . ' Files per Second';
 	
 	if(isset($look_count))
 	{
-		$avg_look = ($avg_look !== 0)?(($avg_look + $look_count) / 2):$look_count;
+		$avg_look += $look_count;
+		$avg_look_count++;
 	}
 	
-	$report['8:1:Average Looks'] = round($avg_look, 2) . ' Directories were searched for changed per run';
+	$reports[0][8][(TYPE_BOLD).'-Average Looks'] = round(($avg_look / $avg_look_count), 2) . ' Directories were searched for changes per run';
 }
 elseif(file_exists(TMP_DIR . 'mediaserver.log'))
 {
 	$_REQUEST['logs'] = TMP_DIR . 'mediaserver.log';
 }
+// the log field
+$reports[0][0.1][(TYPE_BOLD).'-Logs'] = '	<form action="" method="post">
+		Enter directories or files that contain logs, put each entry on a new line or seperate with a semi-colon.<br />
+		<textarea name="logs" rows="6" cols="40">' . (isset($_REQUEST['logs'])?$_REQUEST['logs']:'') . '</textarea>
+		<br />
+		<input type="submit" value="Submit" />
+	</form>
+';
 
 // more information
-$report['100:0:Site Information'] = 'Here is some general information about the site';
+$reports[1][0][(TYPE_HEADING).'-Site Information'] = 'General information about the site.';
 
 $database = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 
 // show some information about current setup
-$report['-101:1:Current Version'] = VERSION . ' (' . VERSION_NAME . ')';
+$reports[-1][1][(TYPE_BOLD).'-Current Version'] = VERSION . ' (' . VERSION_NAME . ')';
 
 // get database counts
-$report['101:1:Database Counts'] = 'Here is a list of counts for the databases:<br />';
+$reports[1][1][(TYPE_BOLD).'-Database Counts'] = 'Here is a list of counts for the databases:<br />';
 foreach($GLOBALS['databases'] as $i => $db)
 {
 	$result = $database->query(array('SELECT' => $db, 'COLUMNS' => 'count(*)'));
 	if(count($result) > 0)
 	{
-		$report['101:1:Database Counts'] .= $db . ' database has ' . $result[0]['count(*)'] . ' entries' . (($i != count($GLOBALS['databases'])-1)?'<br />':'');
+		$reports[1][1][(TYPE_BOLD).'-Database Counts'] .= $db . ' database has ' . $result[0]['count(*)'] . ' entries' . (($i != count($GLOBALS['databases'])-1)?'<br />':'');
 		if($db == db_watch_list::DATABASE)
 		{
-			$report['102:1:Watch List'] = 'The watch list contains directories that have to be searched for files<br />There are ' . $result[0]['count(*)'] . ' directories in the watch list database';
+			$reports[1][2][(TYPE_BOLD).'-Watch List'] = 'The watch list contains directories that have to be searched for files<br />There are ' . $result[0]['count(*)'] . ' directories in the watch list database';
 			if($result[0]['count(*)'] == 0)
-				$report['102.1:5:Note'] = 'All files are added and up to date!';
+				$reports[1][2.1][(TYPE_BOLD|TYPE_ENTIRE|TYPE_G).'-Note'] = 'All files are added and up to date!';
 		}
 	}
 }
 
-ksort($report, SORT_NUMERIC);
+// renaming file section
+$reports[2][0][(TYPE_HEADING).'-Funny File Names'] = 'List of files that have strange names';
+
+if(isset($_REQUEST['show2']) && $_REQUEST['show2'] == true)
+{
+	// get some non-standard filenames, ones that contain non ascii characters
+	$results = $database->query(array('SELECT' => db_file::DATABASE, 'WHERE' => 'Filepath REGEXP(CONCAT(\'[^\',CHAR(32),\'-\',CHAR(126),\']\'))', 'LIMIT' => '0,15', 'ORDER' => 'Filepath'));
+	
+	if(count($results) > 0)
+	{
+		$reports[2][1][(TYPE_BOLD).'-Non-Ascii Files'] = 'Consider revising the names of these files, here are just a few highlighted in red:';
+		
+		foreach($results as $i => $file)
+		{
+			$reports[2][1][(TYPE_BOLD).'-Non-Ascii Files'] .= '<br />' . preg_replace('/([^\\x20-\\x7E])/i', '<span style="color:rgb(255,0,0);font-weight:bold;">$1</span>', htmlspecialchars($file['Filepath']));
+			
+			// get total
+			$count = $database->query(array('SELECT' => db_file::DATABASE, 'COLUMNS' => 'count(*)', 'WHERE' => 'Filepath REGEXP(CONCAT(\'[^\',CHAR(32),\'-\',CHAR(126),\']\'))'));
+			
+			if(count($count) > 0)
+			{
+				$reports[2][1.1][(TYPE_BOLD|TYPE_R).'-Non-Ascii Files Count'] = '<br />There is a total of ' . $count[0]['count(*)'] . ' file(s) with non-ascii characters';
+			}
+			else
+			{
+				$reports[2][1.1][(TYPE_BOLD|TYPE_ENTIRE|TYPE_R).'-Non-Ascii Files Count'] = '<br />There was an error getting the total count.';
+			}
+		}
+	}
+	else
+	{
+		$reports[2][1][(TYPE_BOLD|TYPE_ENTIRE|TYPE_G).'-Non-Ascii Files'] = 'There are no non-standard character file names';
+	}
+	
+	// downloaded files commonly have _ underscores as spaces, find excessive underscores and recommend change
+	
+}
+
+ksort($reports, SORT_NUMERIC);
+foreach($reports as $section => $report)
+{
+	ksort($reports[$section], SORT_NUMERIC);
+}
 
 ?>
 <html>
@@ -254,34 +333,29 @@ ksort($report, SORT_NUMERIC);
 	<title><?php echo HTML_NAME?>: Reports</title>
 </head>
 <body>
-	<form action="" method="post">
-		This page can help parse the log files from scripts like cron.php, <br />enter directories or files that contain logs, put each entry on a new line or seperate with a semi-colon.<br />
-		<textarea name="logs" rows="6" cols="40"><?php echo isset($_REQUEST['logs'])?$_REQUEST['logs']:''; ?></textarea>
-		<br />
-		<input type="submit" value="Submit" />
-	</form>
-	Here is the report information for the listed files:<br />
+	View different types of reports by selecting the link and following the instructions.<br />
 	<?php
-	foreach($report as $key => $line)
+	foreach($reports as $section => $report)
 	{
-		$key = split(':', $key);
-		$section = floor($key[0] / 100);
-		switch(intval($key[1]))
+		foreach($report as $order => $lines)
 		{
-			case 0:
-				print '<br /><b>' . $key[2] . '</b>: ' . $line . "<br /><br />\n";
-				break;
-			case 1:
-				print '<b>' . $key[2] . '</b>: ' . $line . "<br />\n";
-				break;
-			case 2:
-				print '<span style="color:red"><b>Warning: ' . $key[2] . ': </b></span>' . $line . "<br />\n";
-				break;
-			case 5:
-				print '<span style="color:green"><b>' . $key[2] . ': ' . $line . "</b></span><br />\n";
-				break;
-			default:
-				print $key[2] . ': ' . $line . "<br />\n";
+			foreach($lines as $key => $line)
+			{
+				$type = intval(substr($key, 0, strpos($key, '-')));
+				$title = substr($key, strpos($key, '-')+1);
+				if(!isset($previous_section)) $previous_section = $section;
+				if((isset($_REQUEST['show'.$section]) && $_REQUEST['show'.$section] == true) || ($type & TYPE_HEADING) > 0 || $section < 0)
+				{
+					if(($type & TYPE_HEADING) > 0)
+					{
+						print '<br /><span style="font-weight:bold;' . 'color:rgb(' . ((($type&TYPE_R)>0)?'255,':'0,') . ((($type&TYPE_G)>0)?'255,':'0,') . ((($type&TYPE_B)>0)?'255':'0') . ');"><a href="?show' . $section . '=' . (isset($_REQUEST['show'.$section])?!$_REQUEST['show'.$section]:true) . '">' . $title . '</a>: ' . ((($type&TYPE_ENTIRE)==0)?'</span>':'') . $line . ((($type&TYPE_ENTIRE)>0)?'</span>':'') . "<br />\n";
+					}
+					else
+					{
+						print '<span style="' . ((($type&TYPE_BOLD)>0)?'font-weight:bold;':'') . 'color:rgb(' . ((($type&TYPE_R)>0)?'255,':'0,') . ((($type&TYPE_G)>0)?'255,':'0,') . ((($type&TYPE_B)>0)?'255':'0') . ');">' . $title . ': ' . ((($type&TYPE_ENTIRE)==0)?'</span>':'') . $line . ((($type&TYPE_ENTIRE)>0)?'</span>':'') . "<br />\n";
+					}
+				}
+			}
 		}
 	}
 	?>

@@ -114,7 +114,7 @@ define('CLEAN_UP_BUFFER_TIME',				60);
 
 // how many times should we be able to run the cron script before a cleanup is needed?
 //  cleanup will also be fired when a directory change is detected, this may not always be accurate
-define('CLEAN_UP_THREASHOLD', 				10);
+define('CLEAN_UP_THREASHOLD', 				1);
 
 // comment-out-able
 ini_set('error_reporting', E_ALL);

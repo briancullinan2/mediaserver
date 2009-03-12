@@ -78,14 +78,14 @@ class sql_global
 		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'watch (
 				id 				INT NOT NULL AUTO_INCREMENT,
 								PRIMARY KEY(id),
-				Filepath		TEXT NOT NULL,
+				Filepath		BLOB NOT NULL,
 				Lastwatch		DATETIME
 			)') or print_r(mysql_error());
 			
 		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'watch_list (
 				id 				INT NOT NULL AUTO_INCREMENT,
 								PRIMARY KEY(id),
-				Filepath		TEXT NOT NULL
+				Filepath		BLOB NOT NULL
 			)') or print_r(mysql_error());
 		
 		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'alias (
@@ -100,8 +100,8 @@ class sql_global
 		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'files (
 				id 				INT NOT NULL AUTO_INCREMENT,
 								PRIMARY KEY(id),
-				Filename		TEXT NOT NULL,
-				Filepath		TEXT NOT NULL,
+				Filename		BLOB NOT NULL,
+				Filepath		BLOB NOT NULL,
 				Filesize		BIGINT NOT NULL,
 				Filemime		TEXT NOT NULL,
 				Filedate		DATETIME,
@@ -111,25 +111,25 @@ class sql_global
 		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'audio (
 				id 				INT NOT NULL AUTO_INCREMENT,
 								PRIMARY KEY(id),
-				Filepath		TEXT NOT NULL,
-				Title			TEXT NOT NULL,
-				Artist			TEXT NOT NULL,
-				Album			TEXT NOT NULL,
+				Filepath		BLOB NOT NULL,
+				Title			BLOB NOT NULL,
+				Artist			BLOB NOT NULL,
+				Album			BLOB NOT NULL,
 				Track			INT NOT NULL,
 				Year			INT NOT NULL,
-				Genre			TEXT NOT NULL,
+				Genre			BLOB NOT NULL,
 				Length			DOUBLE NOT NULL,
-				Comments		TEXT NOT NULL,
+				Comments		BLOB NOT NULL,
 				Bitrate			DOUBLE NOT NULL
 			)') or print_r(mysql_error());
 		
 		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'video (
 				id 				INT NOT NULL AUTO_INCREMENT,
 								PRIMARY KEY(id),
-				Filepath		TEXT NOT NULL,
-				Title			TEXT NOT NULL,
+				Filepath		BLOB NOT NULL,
+				Title			BLOB NOT NULL,
 				Length			DOUBLE NOT NULL,
-				Comments		TEXT NOT NULL,
+				Comments		BLOB NOT NULL,
 				Bitrate			DOUBLE NOT NULL,
 				VideoBitrate	DOUBLE NOT NULL,
 				AudioBitrate	DOUBLE NOT NULL,
@@ -141,24 +141,23 @@ class sql_global
 		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'image (
 				id 				INT NOT NULL AUTO_INCREMENT,
 								PRIMARY KEY(id),
-				Filepath		TEXT NOT NULL,
+				Filepath		BLOB NOT NULL,
 				Height			INT NOT NULL,
 				Width			INT NOT NULL,
-				Make			TEXT NOT NULL,
-				Model			TEXT NOT NULL,
-				Comments		TEXT NOT NULL,
-				Keywords		TEXT NOT NULL,
-				Title			TEXT NOT NULL,
-				Author			TEXT NOT NULL,
-				ExposureTime	TEXT NOT NULL,
-				Thumbnail		BLOB NOT NULL
+				Make			BLOB NOT NULL,
+				Model			BLOB NOT NULL,
+				Comments		BLOB NOT NULL,
+				Keywords		BLOB NOT NULL,
+				Title			BLOB NOT NULL,
+				Author			BLOB NOT NULL,
+				ExposureTime	TEXT NOT NULL
 			)') or print_r(mysql_error());
 		
 		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'archive (
 				id 				INT NOT NULL AUTO_INCREMENT,
 								PRIMARY KEY(id),
-				Filename		TEXT NOT NULL,
-				Filepath		TEXT NOT NULL,
+				Filename		BLOB NOT NULL,
+				Filepath		BLOB NOT NULL,
 				Compressed		BIGINT NOT NULL,
 				Filesize		BIGINT NOT NULL,
 				Filemime		TEXT NOT NULL,
@@ -169,8 +168,8 @@ class sql_global
 		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'diskimage (
 				id 				INT NOT NULL AUTO_INCREMENT,
 								PRIMARY KEY(id),
-				Filename		TEXT NOT NULL,
-				Filepath		TEXT NOT NULL,
+				Filename		BLOB NOT NULL,
+				Filepath		BLOB NOT NULL,
 				Filesize		BIGINT NOT NULL,
 				Filemime		TEXT NOT NULL,
 				Filedate		DATETIME,
