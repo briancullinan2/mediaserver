@@ -54,7 +54,7 @@ $watched = db_watch::get($database, array('search_Filepath' => '/^\\^/'), $count
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
 	<meta http-equiv="Pragma" content="no-cache">
 	<meta http-equiv="Expires" content="-1">
-	<title><?php echo HTML_NAME?></title>
+	<title><?php echo HTML_NAME?>: Watch Editor</title>
 </head>
 <body>
 

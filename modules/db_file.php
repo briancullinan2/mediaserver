@@ -155,7 +155,7 @@ class db_file
 			$files = $database->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
 			if(count($files) > 0)
 			{				
-				if($fp = fopen($file, 'rb'))
+				if($fp = @fopen($file, 'rb'))
 				{
 					return $fp;
 				}
@@ -613,7 +613,7 @@ class db_file
 		$args['count']++;
 		if(round(($args['count']-1)/$args['total'], 2) != round($args['count']/$args['total'], 2))
 		{
-			log_error('Checking paths ' . (round($args['count']/$args['total'], 2) * 100) . '% complete for ' . constant($args['MODULE'] . '::NAME'));
+			log_error('Checking Paths: ' . (round($args['count']/$args['total'], 2) * 100) . '% complete for ' . constant($args['MODULE'] . '::NAME'));
 		}
 	}
 	
@@ -733,7 +733,7 @@ class db_file
 			log_error('Removing ' . constant($module . '::NAME') . ': ' . $file['Filepath']);
 		}
 		
-		log_error('Cleanup for ' . constant($module . '::NAME') . ' complete.');
+		log_error('Cleanup: for ' . constant($module . '::NAME') . ' complete.');
 		
 	}
 	

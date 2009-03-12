@@ -238,9 +238,6 @@ if(is_resource($process) && is_resource($fp))
 		// if the file is not already closed, then close the file when it hits eof
 		if(!$file_closed && feof($fp))
 		{
-			$fh = fopen('/tmp/test.txt', 'a');
-			fwrite($fh, 'VLC closed' . "\n");
-			fclose($fh);
 			$file_closed = true;
 			fclose($fp);
 			fclose($pipes[0]);
@@ -249,9 +246,6 @@ if(is_resource($process) && is_resource($fp))
 		// if the pipe is eof then we are finished
 		if(feof($pipes[1]))
 		{
-			$fh = fopen('/tmp/test.txt', 'a');
-			fwrite($fh, 'File closed' . "\n");
-			fclose($fh);
 			// write out what is left
 			if(isset($length))
 			{

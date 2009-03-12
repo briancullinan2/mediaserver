@@ -17,11 +17,19 @@ session_write_close();
 
 // add 30 seconds becase the cleanup shouldn't take any longer then that
 set_time_limit(DIRECTORY_SEEK_TIME + FILE_SEEK_TIME + CLEAN_UP_BUFFER_TIME);
+ignore_user_abort(1);
+
+// start output buffer so we can save in tmp file
+$log_fp = @fopen(TMP_DIR . 'mediaserver.log', 'wb');
+ob_start(create_function('$buffer', 'global $log_fp; @fwrite($log_fp, $buffer); return $buffer;'));
 
 $tm_start = array_sum(explode(' ', microtime()));
 
+log_error('Cron Script: ' . VERSION . '_' . VERSION_NAME);
+
 // start the page with a pre to output messages that can be viewed in a browser
-?><script language="javascript">var timer=null;var same_count=0;var last_height=0;function body_scroll() {document.body.scrollTop = document.body.scrollHeight;timer=setTimeout('body_scroll()', 100);if(document.body.scrollHeight!=last_height) {last_height=document.body.scrollHeight;same_count=0;} else {same_count++;}if(same_count == 100) {clearTimeout(timer);}}timer=setTimeout('body_scroll()', 100)</script><pre><?php
+?><script language="javascript">var timer=null;var same_count=0;var last_height=0;function body_scroll() {document.body.scrollTop = document.body.scrollHeight;timer=setTimeout('body_scroll()', 100);if(document.body.scrollHeight!=last_height) {last_height=document.body.scrollHeight;same_count=0;} else {same_count++;}if(same_count == 100) {clearTimeout(timer);}}timer=setTimeout('body_scroll()', 100)</script><code>
+<?php
 
 // the cron script is useless if it has nowhere to store the information it reads
 if(USE_DATABASE == false)
@@ -34,8 +42,8 @@ $database = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 $ignored = db_watch::get($database, array('search_Filepath' => '/^!/'), $count, $error);
 $watched = db_watch::get($database, array('search_Filepath' => '/^\\^/'), $count, $error);
 
-print_r($ignored);
-print_r($watched);
+log_error('Ignored: ' . serialize($ignored));
+log_error('Watched: ' . serialize($watched));
 
 // directories that have already been scanned used to prevent recursion
 $dirs = array();
@@ -67,7 +75,7 @@ if(count($state) > 0)
 	}
 }
 
-print_r($state);
+log_error('State: ' . serialize($state));
 
 if($clean_count > CLEAN_UP_THREASHOLD)
 {
@@ -94,9 +102,9 @@ elseif(isset($state_current))
 {
 	// if it isn't set in the watched list at all 
 	//   something must be wrong with our state so reset it
-	$fp = fopen(LOCAL_ROOT . "state_dirs.txt", "w");
+	$fp = @fopen(LOCAL_ROOT . "state_dirs.txt", "w");
 	if($fp === false) // try tmp dir
-		$fp = fopen(TMP_DIR . "state_dirs.txt", "w");
+		$fp = @fopen(TMP_DIR . "state_dirs.txt", "w");
 	if($fp !== false)
 	{
 		log_error("State mismatch: State cleared");
@@ -137,7 +145,10 @@ for($i; $i < count($watched); $i++)
 		
 		// serialize and save
 		log_error("Ran out of Time: State saved");
-		if($fp = fopen(LOCAL_ROOT . "state_dirs.txt", "w"))
+		$fp = @fopen(LOCAL_ROOT . "state_dirs.txt", "w");
+		if($fp === false) // try tmp dir
+			$fp = @fopen(TMP_DIR . "state_dirs.txt", "w");
+		if($fp !== false)
 		{
 			fwrite($fp, serialize($state));
 			fclose($fp);
@@ -154,9 +165,9 @@ for($i; $i < count($watched); $i++)
 		// clear state information
 		if(file_exists(LOCAL_ROOT . "state_dirs.txt"))
 		{
-			$fp = fopen(LOCAL_ROOT . "state_dirs.txt", "w");
+			$fp = @fopen(LOCAL_ROOT . "state_dirs.txt", "w");
 			if($fp === false) // try tmp dir
-				$fp = fopen(TMP_DIR . "state_dirs.txt", "w");
+				$fp = @fopen(TMP_DIR . "state_dirs.txt", "w");
 			if($fp !== false)
 			{
 				log_error("Completed successfully: State cleared");
@@ -216,11 +227,13 @@ log_error("Phase 2: Complete!");
 if($should_clean === false)
 {
 	log_error("Phase 3: Skipping cleaning, count is " . $clean_count);
+	@fclose($log_fp);
 	exit;
 }
 elseif($should_clean === 0)
 {
 	log_error("Phase 3: Skipping cleaning because of error!");
+	@fclose($log_fp);
 	exit;
 }
 //exit;
@@ -275,5 +288,7 @@ for($i = 0; $i < count($watched); $i++)
 
 log_error("Phase 3: Complete!");
 
+@fclose($log_fp);
+
 ?>
-</pre>
+</code>

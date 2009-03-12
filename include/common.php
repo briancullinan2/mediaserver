@@ -10,6 +10,10 @@
 if(!isset($no_setup) || !$no_setup == true)
 	session_start();
 
+// set version for stuff to reference
+define('VERSION', 			     '0.40.0');
+define('VERSION_NAME', 			'Goliath');
+
 // require the settings
 if(realpath('/') == '/')
 	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.nix.php';
@@ -73,7 +77,7 @@ function setup()
 	
 	// include the modules
 	$tmp_modules = array();
-	if ($dh = opendir(LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR))
+	if ($dh = @opendir(LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR))
 	{
 		while (($file = readdir($dh)) !== false)
 		{
@@ -119,7 +123,7 @@ function setup()
 		if(defined($module . '::DATABASE'))
 			$GLOBALS['databases'][] = constant($module . '::DATABASE');
 	}
-	$GLOBALS['databases'][] = 'alias';
+	$GLOBALS['databases'] = array_values(array_unique($GLOBALS['databases']));
 	
 	// merge some session variables with the request so modules only have to look in one place
 	if(isset($_SESSION['display']))
@@ -158,7 +162,7 @@ function setup()
 	
 		// get the list of templates
 		$GLOBALS['templates'] = array();
-		if ($dh = opendir(LOCAL_ROOT . 'templates'))
+		if ($dh = @opendir(LOCAL_ROOT . 'templates'))
 		{
 			while (($file = readdir($dh)) !== false)
 			{
@@ -489,7 +493,7 @@ function getExtType($ext)
 
 function crc32_file($filename)
 {
-    $fp=fopen($filename, "rb");
+    $fp = @fopen($filename, "rb");
     $old_crc=false;
 
     if ($fp != false) {
@@ -623,8 +627,9 @@ function log_error($message)
 {
 	if(realpath($_SERVER['SCRIPT_FILENAME']) == realpath(LOCAL_ROOT . 'plugins/cron.php') || (isset($_REQUEST['debug']) && $_REQUEST['debug'] == true && loggedIn()))
 	{
-		print $message . "<br />";
+		print date('[m/d/Y:H:i:s O] ') . $message . "<br />\n";
 		flush();
+		@ob_flush();
 	}
 }
 

@@ -47,7 +47,7 @@ class fs_diskimage extends fs_file
 						{
 							if($file['filename'] == $inside_path)
 							{
-								if($fp = fopen($last_path, 'rb'))
+								if($fp = @fopen($last_path, 'rb'))
 								{
 									fseek($fp, $file['offset_bytes']);
 									$this->internal_fp = $fp;
@@ -64,7 +64,7 @@ class fs_diskimage extends fs_file
 			// download entire image
 			else
 			{
-				if($fp = fopen($last_path, 'rb'))
+				if($fp = @fopen($last_path, 'rb'))
 				{
 					$this->internal_fp = $fp;
 					$this->internal_length = filesize($last_path);
@@ -211,7 +211,7 @@ class fs_diskimage extends fs_file
 
 		if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
 		{
-			return fopen(self::PROTOCOL . '://' . $file, 'rb');
+			return @fopen(self::PROTOCOL . '://' . $file, 'rb');
 		}
 
 		return false;

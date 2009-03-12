@@ -158,7 +158,7 @@ if(count($files) > 0)
 	// restart ctorrent
 	$filename = 'temp-' . time();
 	
-	if($fp = fopen(TMP_DIR . $filename . '.torrent', 'w'))
+	if($fp = @fopen(TMP_DIR . $filename . '.torrent', 'w'))
 	{
 		fwrite($fp, BEncode($torrent));
 		fclose($fp);

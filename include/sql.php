@@ -363,7 +363,7 @@ class sql_global
 	{
 		$query = SQL::statement_builder($props);
 if(isset($_REQUEST['log_sql']) && $_REQUEST['log_sql'] == true)
-	log_error($query);
+	log_error('DATABASE: ' . $query);
 		$result = $this->db_query($query);
 		
 		if($result !== false && is_array($props) && (isset($props['SELECT']) || isset($props['SHOW'])))

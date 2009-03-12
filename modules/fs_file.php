@@ -83,7 +83,7 @@ class fs_file
 		// check to make sure file is valid
 		if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)))
 		{
-			if($fp = fopen($file, 'rb'))
+			if($fp = @fopen($file, 'rb'))
 			{
 				return $fp;
 			}

@@ -50,7 +50,7 @@ class db_diskimage extends db_file
 						{
 							if($file['filename'] == $inside_path)
 							{
-								if($fp = fopen($last_path, 'rb'))
+								if($fp = @fopen($last_path, 'rb'))
 								{
 									fseek($fp, $file['offset_bytes']);
 									$this->internal_fp = $fp;
@@ -67,7 +67,7 @@ class db_diskimage extends db_file
 			// download entire image
 			else
 			{
-				if($fp = fopen($last_path, 'rb'))
+				if($fp = @fopen($last_path, 'rb'))
 				{
 					$this->internal_fp = $fp;
 					$this->internal_length = filesize($last_path);
@@ -279,7 +279,7 @@ class db_diskimage extends db_file
 		$files = $database->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
 		if(count($files) > 0)
 		{				
-			return fopen(self::PROTOCOL . '://' . $file, 'rb');
+			return @fopen(self::PROTOCOL . '://' . $file, 'rb');
 		}
 
 		return false;

@@ -59,7 +59,7 @@ class db_playlist extends db_file
 				$database->validate($request, $props, get_class());
 			
 				// open playlist and parse out paths
-				if($fp = fopen($request['file'], 'rb'))
+				if($fp = @fopen($request['file'], 'rb'))
 				{
 					$tmp_files = array();
 					switch($files[0]['Filetype'])
@@ -213,7 +213,7 @@ class db_playlist extends db_file
 						}
 
 						// file can't be found
-						log_error('Can\'t find file from playlist: ' . $file);
+						log_error('Error: Can\'t find file from playlist ' . $file);
 					}
 					
 					$count = count($tmp_files);
