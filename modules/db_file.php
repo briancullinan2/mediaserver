@@ -602,11 +602,11 @@ class db_file
 		$row['Filepath'] = str_replace('\\', '/', $row['Filepath']);
 		
 		if( !file_exists(str_replace('/', DIRECTORY_SEPARATOR, $row['Filepath'])) )
-		{
+		{			
+			log_error('Removing Non-Existing ' . constant($args['MODULE'] . '::NAME') . ': ' . $row['Filepath']);
+			
 			// remove row from database
 			$args['CONNECTION']->query(array('DELETE' => constant($args['MODULE'] . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($row['Filepath']) . '"'));
-			
-			log_error('Removing ' . constant($args['MODULE'] . '::NAME') . ': ' . $row['Filepath']);
 		}
 		
 		// print progress
@@ -730,7 +730,7 @@ class db_file
 		{
 			$database->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => 'id=' . $file['id']));
 			
-			log_error('Removing ' . constant($module . '::NAME') . ': ' . $file['Filepath']);
+			log_error('Removing Duplicate ' . constant($module . '::NAME') . ': ' . $file['Filepath']);
 		}
 		
 		log_error('Cleanup: for ' . constant($module . '::NAME') . ' complete.');

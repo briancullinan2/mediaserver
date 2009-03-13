@@ -1,3 +1,58 @@
+2009-02-12 (Full)
+More compatibility testing with clients
+------------- GENERAL TODO -------------
+Make hard links and soft links, hard links are replaced when they are put in to the database, soft links are replaced when they are read from the database, this will allow us to do more network stuff
+Make backup ways of accessing files, store old IDs for removed files in a backup database
+	If a filename is supplied to the file.php plugin, do a search for that file if the ID doesn't exist
+Do memory checks and don't run cron if it's above a certain threshhold, maybe run some stuff with niceness
+Make a class for handling CSV as the database type, make sure all the queries can refer to the statement builder
+File uploading and personal folders
+	Limit access to watch and alias tables after implementing users and permissions
+Interface with mediatomb and support UPnP protocol
+------------- Plugin TODO -------------
+Change some of the other plugins like file.php and encode.php to search when a required field is missing like $request[id]
+Work on playlist module, use hard links to help find files
+Work on reports.php plugin for admin
+	Use logs also to scan for non-ascii characters in path names in reports.php
+Make a sync plugin in admin section for syncing between two databases and pulling out differences
+Fix bt.php plugin, using the stream methods won't work with md5
+	maybe it should only handle files on disk because the ctorrent seeder won't be able to read files out of a zip anyways
+Set up conditions for when the streams are used based on if %OF and %IF are used in the command arguments
+Get ranges working in encode plugin
+	only allow the option if the argument can read from stdin and read the input from the module and write it to the input stream
+Figure out a way of doing this with files even if stdin is not being used in the command, if fopen is writing to a file, does it file feof when reading from the same file simulaneously?
+Figure out how to download files out of a zip file, maybe use an external program and set up archive.php plugin
+FIX bt.php plugin to work with command line torrent seeder on windows
+Make convert.php plugin recognize video thumbnails and use vlc to extract them
+------------- Module TODO -------------
+Make the audio module match amazon albums
+Make a code module that handles code and uses that pretty hilighing from the codepaster.com website
+Make a template module that compiles and cache the smarty templates, then accessing a page can be done by accessing the template module
+Work on db_movies, use cUrl to download movie information from imdb, use the volume decriptor for lookup, this shouldn't change even if they edited an image
+	Research the video_ts.ifo file, there must be a way of getting the full name from a DVD image, windows media center projects can do it, so can we
+------------- All Template TODO -------------
+Finish mobile template.
+FIX detail options in default template
+Add podcast list template
+Add Ampache XML API template
+Work on finishing EXT JS template, and add more templates from Ampache, Jinzora, and WinAmp Remote
+------------- EXT JS -------------
+Fix arrow-key movement in extjs template, in thumbnails view of the FolderView.js
+Add desktop.ini/folder.ini files and fix up thumbnails in FolderView.js
+Fix initial load time in FolderView.js
+Work on category view/show in groups in FolderView.js, add items that take up whole line and have headers
+Fix tooltip popup in FolderView.js, in wrong panel maybe?
+Press letter on the keyboard to go to that folder in FolderView.js and select.php
+Change desktop style to be buttons like folders in Desktop.js but render buttons to index.html
+Get settings dialog working and set up user accounts to control it
+Finish the player app that displays pictures
+Make players resize to Player window
+
+
+2009-03-12
+Change database back to Text because it didn't help the filepath checking
+Use logs also to scan for non-ascii characters in path names
+
 2009-03-06
 Make a template module that compiles and cache the smarty templates, then accessing a page can be done by accessing the template module
 Make a reports.php plugin for admin that shows different information about loaded files, and how to manipulate them

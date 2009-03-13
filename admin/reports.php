@@ -67,6 +67,7 @@ if(isset($_REQUEST['logs']))
 						$files[] = $file . $subfile;
 					}
 				}
+				closedir($dh);
 			}
 		}
 	}

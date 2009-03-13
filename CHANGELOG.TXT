@@ -1,3 +1,6 @@
+2009-03-12
+Found out changing the Filepath and TEXT fields to BLOB didn't help the filepath checking of ascii names
+
 2009-03-11
 Changed db_file::cleanup() to use LEFT and LOCATE instead of REGEXP
 Made masive progress on reports.php admin script

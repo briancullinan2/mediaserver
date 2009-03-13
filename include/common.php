@@ -171,6 +171,7 @@ function setup()
 					$GLOBALS['templates'][] = $file;
 				}
 			}
+			closedir($dh);
 		}
 		
 		// set the template if a permenent one isn't already set in the settings file
