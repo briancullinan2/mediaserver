@@ -69,7 +69,7 @@ class db_albums extends db_audio
 	}
 
 
-	static function cleanup($database, $watched, $ignored)
+	static function cleanup($database)
 	{
 	}
 

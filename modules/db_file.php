@@ -601,7 +601,7 @@ class db_file
 	{
 		$row['Filepath'] = str_replace('\\', '/', $row['Filepath']);
 		
-		if( !file_exists(str_replace('/', DIRECTORY_SEPARATOR, $row['Filepath'])) )
+		if( file_exists(str_replace('/', DIRECTORY_SEPARATOR, $row['Filepath'])) === false )
 		{			
 			log_error('Removing Non-Existing ' . constant($args['MODULE'] . '::NAME') . ': ' . $row['Filepath']);
 			
@@ -619,7 +619,7 @@ class db_file
 	
 	
 	// cleanup the non-existant files
-	static function cleanup($database, $watched, $ignored, $module = NULL)
+	static function cleanup($database, $module = NULL)
 	{
 		if( $module == NULL )
 		{
@@ -629,7 +629,7 @@ class db_file
 		// first clear all the items that are no longer in the watch list
 		// since the watch is resolved all the items in watch have to start with the watched path
 		$watched_where = '';
-		foreach($watched as $i => $watch)
+		foreach($GLOBALS['watched'] as $i => $watch)
 		{
 			$tmp_watch = str_replace('\\', '/', $watch['Filepath']);
 			// add the files that begin with a path from a watch directory
@@ -642,9 +642,9 @@ class db_file
 		// ----------THIS IS THE SAME FUNCTIONALITY FROM THE CRON.PHP SCRIPT
 		$watched_to_where = '';
 		$directories = array();
-		for($i = 0; $i < count($watched); $i++)
+		for($i = 0; $i < count($GLOBALS['watched']); $i++)
 		{
-			$folders = split('/', $watched[$i]['Filepath']);
+			$folders = split('/', $GLOBALS['watched'][$i]['Filepath']);
 			$curr_dir = (realpath('/') == '/')?'/':'';
 			// don't add the watch directory here because it is already added by the previous loop!
 			$length = count($folders);
@@ -689,7 +689,7 @@ class db_file
 		
 		$ignored_where = '';
 		// clean up items that are in the ignore list
-		foreach($ignored as $i => $ignore)
+		foreach($GLOBALS['ignored'] as $i => $ignore)
 		{
 			$tmp_ignore = str_replace('\\', '/', $ignore['Filepath']);
 			$ignored_where .= ' LEFT(Filepath, ' . strlen($tmp_ignore) . ') = "' . addslashes($tmp_ignore) . '" OR';
@@ -700,22 +700,23 @@ class db_file
 		$where_str = '(' . $ignored_where . ') OR (' . $watched_to_where . ' AND ' . $watched_where . ')';
 		
 		// remove items
-		$database->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => $where_str));
+		$database->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => $ignored_where));
 
 		// get count 
 		$result = $database->query(array('SELECT' => constant($module . '::DATABASE'), 'COLUMNS' => 'count(*)'));
 		$total = $result[0]['count(*)'];
 		$count = 0;
-
+		
 		// since all the ones not apart of a watched directory is removed, now just check is every file still in the database exists on disk
-		$database->query(array(
-			'SELECT' => constant($module . '::DATABASE'), 
+		$files = $database->query(array(
+			'SELECT' => constant($module . '::DATABASE'),
+			'ORDER' => 'id DESC',
 			'CALLBACK' => array(
 				'FUNCTION' => $module . '::cleanup_remove',
-				'ARGUMENTS' => array('CONNECTION' => new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME), 'MODULE' => $module, 'count' => &$count, 'total' => &$total)
+				'ARGUMENTS' => array('CONNECTION' => $database, 'MODULE' => $module, 'count' => &$count, 'total' => &$total)
 			)
 		));
-				
+		
 		// remove any duplicates
 		$files = $database->query(array(
 				'SELECT' => constant($module . '::DATABASE'),

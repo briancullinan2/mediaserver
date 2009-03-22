@@ -97,7 +97,7 @@ class db_watch extends db_file
 		return $files;
 	}
 	
-	static function cleanup($database, $watched, $ignored)
+	static function cleanup($database)
 	{
 		// do not do anything, watch directories are completely managed
 		return false;

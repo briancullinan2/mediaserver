@@ -39,7 +39,7 @@ class db_alias extends db_file
 		return $files;
 	}
 	
-	static function cleanup($database, $watched, $ignored)
+	static function cleanup($database)
 	{
 	}
 

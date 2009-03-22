@@ -60,7 +60,7 @@ class db_image_browser extends db_image
 		return $files;
 	}
 
-	static function cleanup($database, $watched)
+	static function cleanup($database)
 	{
 	}
 }

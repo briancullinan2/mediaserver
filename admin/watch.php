@@ -45,8 +45,9 @@ elseif( isset($_REQUEST['remove']) && is_numeric($_REQUEST['watch']) )
 	unset($_REQUEST['addpath']);
 }
 
-$ignored = db_watch::get($database, array('search_Filepath' => '/^!/'), $count, $error);
-$watched = db_watch::get($database, array('search_Filepath' => '/^\\^/'), $count, $error);
+// reget the watched and ignored because they may have changed
+$GLOBALS['ignored'] = db_watch::get($database, array('search_Filepath' => '/^!/'), $count, $error);
+$GLOBALS['watched'] = db_watch::get($database, array('search_Filepath' => '/^\\^/'), $count, $error);
 
 ?>
 <html>
@@ -71,13 +72,13 @@ if( $error != '' )
 		<select name="watch" size="10">
 		
 		<?php
-			foreach($ignored as $i => $watch)
+			foreach($GLOBALS['ignored'] as $i => $watch)
 			{
 			?>
 				<option value="<?php echo $watch['id']; ?>">ignore: <?php echo $watch['Filepath']; ?></option>
 			<?php
 			}
-			foreach($watched as $i => $watch)
+			foreach($GLOBALS['watched'] as $i => $watch)
 			{
 			?>
 				<option value="<?php echo $watch['id']; ?>">watch: <?php echo $watch['Filepath']; ?></option>

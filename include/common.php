@@ -155,6 +155,10 @@ function setup()
 		}
 	}
 	
+	// get watched and ignored directories because they are used a lot
+	$GLOBALS['ignored'] = db_watch::get($database, array('search_Filepath' => '/^!/'), $count, $error);
+	$GLOBALS['watched'] = db_watch::get($database, array('search_Filepath' => '/^\\^/'), $count, $error);
+	
 	// load templating system but only if we are using templates
 	if(defined('LOCAL_DEFAULT'))
 	{

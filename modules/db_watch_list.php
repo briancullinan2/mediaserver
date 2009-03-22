@@ -19,7 +19,7 @@ class db_watch_list extends db_watch
 	
 	static function handles($dir, $file = NULL)
 	{
-		global $database, $watched, $ignored, $should_clean;
+		global $database, $should_clean;
 		
 		$dir = str_replace('\\', '/', $dir);
 		
@@ -27,11 +27,7 @@ class db_watch_list extends db_watch
 		{
 			if(!isset($database)) $database = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 		
-			// make sure it is in the watch list and not the ignore list
-			if(!isset($ignored)) $ignored = db_watch::get($database, array('search_Filepath' => '/^!/'), $count, $error);
-			if(!isset($watched)) $watched = db_watch::get($database, array('search_Filepath' => '/^\\^/'), $count, $error);
-			
-			if(self::is_watched($dir, $watched, $ignored))
+			if(self::is_watched($dir))
 			{
 				if($file == NULL)
 				{
@@ -76,7 +72,7 @@ class db_watch_list extends db_watch
 							{
 								if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $dir . $file)))
 								{
-									if(self::is_watched($dir . $file, $watched, $ignored))
+									if(self::is_watched($dir . $file))
 										$count++;
 								}
 								else
@@ -108,18 +104,18 @@ class db_watch_list extends db_watch
 		return false;
 	}
 
-	static function is_watched($dir, $watched, $ignored)
+	static function is_watched($dir)
 	{
 		$is_ignored = false;
 		$is_watched = false;
-		foreach($watched as $i => $watch)
+		foreach($GLOBALS['watched'] as $i => $watch)
 		{
 			if(substr($dir, 0, strlen($watch['Filepath'])) == $watch['Filepath'])
 			{
 				$is_watched = true;
 			}
 		}
-		foreach($ignored as $i => $ignore)
+		foreach($GLOBALS['ignored'] as $i => $ignore)
 		{
 			if(substr($dir, 0, strlen($ignore['Filepath'])) == $ignore['Filepath'])
 			{
@@ -158,14 +154,14 @@ class db_watch_list extends db_watch
 			}
 			else
 			{
-				log_error('Searching directory: ' . $dir);
+				log_error('Scanning directory: ' . $dir);
 				
 				// search all the files in the directory
 				$files = fs_file::get(NULL, array('dir' => $dir, 'limit' => 32000), $count, $error, true);
 				
 				foreach($files as $i => $file)
 				{
-					if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $file['Filepath'])))
+					if(is_file($file['Filepath']))
 					{
 						self::handle_file($database, $file['Filepath']);
 					}
@@ -181,10 +177,7 @@ class db_watch_list extends db_watch
 		else
 		{
 			// yes we are checking it twice but it is better to be safe then sorry
-			if(!isset($ignored)) $ignored = db_watch::get($database, array('search_Filepath' => '/^!/'), $count, $error);
-			if(!isset($watched)) $watched = db_watch::get($database, array('search_Filepath' => '/^\\^/'), $count, $error);
-			
-			if(self::is_watched($dir, $watched, $ignored))
+			if(self::is_watched($dir))
 			{
 				// search recursively
 				$status = self::handle_dir($database, $dir);
@@ -323,10 +316,10 @@ class db_watch_list extends db_watch
 		return db_file::get($database, $request, $count, $error, get_class());
 	}
 	
-	static function cleanup($database, $watched, $ignored)
+	static function cleanup($database)
 	{
 		// call default cleanup function
-		db_file::cleanup($database, $watched, $ignored, get_class());
+		db_file::cleanup($database, get_class());
 	}
 }
 

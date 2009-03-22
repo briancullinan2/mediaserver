@@ -2,21 +2,23 @@
 
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
-$dh = opendir('/home/share/Music/38 Special/Live at Sturgis/');
+$dh = opendir('/home/share/Music/Bad Religion/New Maps of Hell/');
 
 while (($file = readdir($dh)) !== false)
 {
-	if(strlen($file) > 1 && substr($file, 0, 2) == '09')
+	if(strlen($file) > 1 && substr($file, 0, 2) == '17')
 	{
 		for($i = 0; $i < strlen($file); $i++)
 		{
 			print $file[$i] . ', ' . ord($file[$i]) . '<br />';
 		}
+		var_dump('/home/share/Music/Bad Religion/New Maps of Hell/' . $file);
+		var_dump(file_exists('/home/share/Music/Bad Religion/New Maps of Hell/' . $file));
 	}
 }
 
 closedir($dh);
-
+/*
 $database = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 
 $files = $database->query(array('SELECT' => 'files', 'WHERE' => 'Filepath REGEXP "^/home/share/Music/38 Special/Live at Sturgis/09"'));
@@ -35,5 +37,5 @@ $_REQUEST['debug'] = true;
 $_REQUEST['log_sql'] = true;
 
 db_file::cleanup_remove($files[0]);
-
+*/
 ?>

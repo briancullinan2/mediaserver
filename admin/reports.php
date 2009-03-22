@@ -233,7 +233,8 @@ if(isset($_REQUEST['logs']))
 		}
 	}
 	
-	$reports[0][7][(TYPE_BOLD).'-Average Add Speed'] = round(($avg_add / $avg_add_count), 2) . ' Files per Second';
+	if($avg_add_count > 0)
+		$reports[0][7][(TYPE_BOLD).'-Average Add Speed'] = round(($avg_add / $avg_add_count), 2) . ' Files per Second';
 	
 	if(isset($look_count))
 	{
@@ -241,7 +242,8 @@ if(isset($_REQUEST['logs']))
 		$avg_look_count++;
 	}
 	
-	$reports[0][8][(TYPE_BOLD).'-Average Looks'] = round(($avg_look / $avg_look_count), 2) . ' Directories were searched for changes per run';
+	if($avg_look_count > 0)
+		$reports[0][8][(TYPE_BOLD).'-Average Looks'] = round(($avg_look / $avg_look_count), 2) . ' Directories were searched for changes per run';
 }
 elseif(file_exists(TMP_DIR . 'mediaserver.log'))
 {

@@ -76,20 +76,20 @@ class sql_global
 	function install()
 	{
 		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'watch (
-				id 				INT NOT NULL AUTO_INCREMENT,
+				id 				BIGINT NOT NULL AUTO_INCREMENT,
 								PRIMARY KEY(id),
-				Filepath		BLOB NOT NULL,
+				Filepath		TEXT NOT NULL,
 				Lastwatch		DATETIME
 			)') or print_r(mysql_error());
 			
 		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'watch_list (
-				id 				INT NOT NULL AUTO_INCREMENT,
+				id 				BIGINT NOT NULL AUTO_INCREMENT,
 								PRIMARY KEY(id),
-				Filepath		BLOB NOT NULL
+				Filepath		TEXT NOT NULL
 			)') or print_r(mysql_error());
 		
 		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'alias (
-				id 				INT NOT NULL AUTO_INCREMENT,
+				id 				BIGINT NOT NULL AUTO_INCREMENT,
 								PRIMARY KEY(id),
 				Paths			TEXT NOT NULL,
 				Alias			TEXT NOT NULL,
@@ -98,10 +98,10 @@ class sql_global
 			)') or print_r(mysql_error());
 		
 		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'files (
-				id 				INT NOT NULL AUTO_INCREMENT,
+				id 				BIGINT NOT NULL AUTO_INCREMENT,
 								PRIMARY KEY(id),
-				Filename		BLOB NOT NULL,
-				Filepath		BLOB NOT NULL,
+				Filename		TEXT NOT NULL,
+				Filepath		TEXT NOT NULL,
 				Filesize		BIGINT NOT NULL,
 				Filemime		TEXT NOT NULL,
 				Filedate		DATETIME,
@@ -109,27 +109,27 @@ class sql_global
 			)') or print_r(mysql_error());
 		
 		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'audio (
-				id 				INT NOT NULL AUTO_INCREMENT,
+				id 				BIGINT NOT NULL AUTO_INCREMENT,
 								PRIMARY KEY(id),
-				Filepath		BLOB NOT NULL,
-				Title			BLOB NOT NULL,
-				Artist			BLOB NOT NULL,
-				Album			BLOB NOT NULL,
+				Filepath		TEXT NOT NULL,
+				Title			TEXT NOT NULL,
+				Artist			TEXT NOT NULL,
+				Album			TEXT NOT NULL,
 				Track			INT NOT NULL,
 				Year			INT NOT NULL,
-				Genre			BLOB NOT NULL,
+				Genre			TEXT NOT NULL,
 				Length			DOUBLE NOT NULL,
-				Comments		BLOB NOT NULL,
+				Comments		TEXT NOT NULL,
 				Bitrate			DOUBLE NOT NULL
 			)') or print_r(mysql_error());
 		
 		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'video (
-				id 				INT NOT NULL AUTO_INCREMENT,
+				id 				BIGINT NOT NULL AUTO_INCREMENT,
 								PRIMARY KEY(id),
-				Filepath		BLOB NOT NULL,
-				Title			BLOB NOT NULL,
+				Filepath		TEXT NOT NULL,
+				Title			TEXT NOT NULL,
 				Length			DOUBLE NOT NULL,
-				Comments		BLOB NOT NULL,
+				Comments		TEXT NOT NULL,
 				Bitrate			DOUBLE NOT NULL,
 				VideoBitrate	DOUBLE NOT NULL,
 				AudioBitrate	DOUBLE NOT NULL,
@@ -139,25 +139,25 @@ class sql_global
 			)') or print_r(mysql_error());
 
 		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'image (
-				id 				INT NOT NULL AUTO_INCREMENT,
+				id 				BIGINT NOT NULL AUTO_INCREMENT,
 								PRIMARY KEY(id),
-				Filepath		BLOB NOT NULL,
+				Filepath		TEXT NOT NULL,
 				Height			INT NOT NULL,
 				Width			INT NOT NULL,
-				Make			BLOB NOT NULL,
-				Model			BLOB NOT NULL,
-				Comments		BLOB NOT NULL,
-				Keywords		BLOB NOT NULL,
-				Title			BLOB NOT NULL,
-				Author			BLOB NOT NULL,
+				Make			TEXT NOT NULL,
+				Model			TEXT NOT NULL,
+				Comments		TEXT NOT NULL,
+				Keywords		TEXT NOT NULL,
+				Title			TEXT NOT NULL,
+				Author			TEXT NOT NULL,
 				ExposureTime	TEXT NOT NULL
 			)') or print_r(mysql_error());
 		
 		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'archive (
-				id 				INT NOT NULL AUTO_INCREMENT,
+				id 				BIGINT NOT NULL AUTO_INCREMENT,
 								PRIMARY KEY(id),
-				Filename		BLOB NOT NULL,
-				Filepath		BLOB NOT NULL,
+				Filename		TEXT NOT NULL,
+				Filepath		TEXT NOT NULL,
 				Compressed		BIGINT NOT NULL,
 				Filesize		BIGINT NOT NULL,
 				Filemime		TEXT NOT NULL,
@@ -166,10 +166,10 @@ class sql_global
 			)') or print_r(mysql_error());
 		
 		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'diskimage (
-				id 				INT NOT NULL AUTO_INCREMENT,
+				id 				BIGINT NOT NULL AUTO_INCREMENT,
 								PRIMARY KEY(id),
-				Filename		BLOB NOT NULL,
-				Filepath		BLOB NOT NULL,
+				Filename		TEXT NOT NULL,
+				Filepath		TEXT NOT NULL,
 				Filesize		BIGINT NOT NULL,
 				Filemime		TEXT NOT NULL,
 				Filedate		DATETIME,
@@ -298,7 +298,7 @@ class sql_global
 			}
 			elseif(isset($props['UPDATE']))
 			{
-				$update = 'UPDATE ' . DB_PREFIX . $props['UPDATE'] . ' SET';
+				$update = 'UPDATE ' . (in_array($props['UPDATE'], $GLOBALS['databases'])?(DB_PREFIX . $props['UPDATE']):$props['UPDATE']) . ' SET';
 				
 				if(!isset($props['COLUMNS']) && isset($props['VALUES']) && is_array($props['VALUES']))
 				{
@@ -324,7 +324,7 @@ class sql_global
 			}
 			elseif(isset($props['INSERT']))
 			{
-				$insert = 'INSERT INTO ' . DB_PREFIX . $props['INSERT'];
+				$insert = 'INSERT INTO ' . (in_array($props['INSERT'], $GLOBALS['databases'])?(DB_PREFIX . $props['INSERT']):$props['INSERT']);
 				
 				if(!isset($props['COLUMNS']) && isset($props['VALUES']) && is_array($props['VALUES']))
 				{
@@ -344,7 +344,7 @@ class sql_global
 			}
 			elseif(isset($props['DELETE']))
 			{
-				$delete = 'DELETE FROM ' . DB_PREFIX . $props['DELETE'];
+				$delete = 'DELETE FROM ' . (in_array($props['DELETE'], $GLOBALS['databases'])?(DB_PREFIX . $props['DELETE']):$props['DELETE']);
 	
 				$statement = $delete . ' ' . $where . ' ' . $order . ' ' . $limit;
 			}
@@ -361,9 +361,18 @@ class sql_global
 	function query($props)
 	{
 		$query = SQL::statement_builder($props);
-if(isset($_REQUEST['log_sql']) && $_REQUEST['log_sql'] == true)
-	log_error('DATABASE: ' . $query);
-		$result = $this->db_query($query);
+		
+		if(isset($_REQUEST['log_sql']) && $_REQUEST['log_sql'] == true)
+			log_error('DATABASE: ' . $query);
+			
+		if(isset($props['CALLBACK']))
+		{
+			$result = $this->db_query_callback($query);
+		}
+		else
+		{
+			$result = $this->db_query($query);
+		}
 		
 		if($result !== false && is_array($props) && (isset($props['SELECT']) || isset($props['SHOW'])))
 		{
@@ -434,6 +443,10 @@ if(isset($_REQUEST['log_sql']) && $_REQUEST['log_sql'] == true)
 //  Just a handler for database queries specific to the objects connect id
 //=============================================
 	function db_query($query = "")
+	{
+		
+	}
+	function db_query_callback($query = "")
 	{
 		
 	}

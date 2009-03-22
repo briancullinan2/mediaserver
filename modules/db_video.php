@@ -140,10 +140,10 @@ class db_video extends db_file
 	}
 
 
-	static function cleanup($database, $watched, $ignored)
+	static function cleanup($database)
 	{
 		// call default cleanup function
-		parent::cleanup($database, $watched, $ignored, get_class());
+		parent::cleanup($database, get_class());
 	}
 
 }

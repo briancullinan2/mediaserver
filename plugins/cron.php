@@ -10,6 +10,8 @@
 
 // this is an iterator to update the server database and all the media listings
 
+header('Content-type: text/html; charset=UTF-8');
+
 // use some extra code so cron can be run from any directory
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
@@ -17,7 +19,6 @@ session_write_close();
 
 // add 30 seconds becase the cleanup shouldn't take any longer then that
 set_time_limit(DIRECTORY_SEEK_TIME + FILE_SEEK_TIME + CLEAN_UP_BUFFER_TIME);
-ignore_user_abort(1);
 
 // start output buffer so we can save in tmp file
 $log_fp = @fopen(TMP_DIR . 'mediaserver.log', 'wb');
@@ -28,7 +29,7 @@ $tm_start = array_sum(explode(' ', microtime()));
 log_error('Cron Script: ' . VERSION . '_' . VERSION_NAME);
 
 // start the page with a pre to output messages that can be viewed in a browser
-?><script language="javascript">var timer=null;var same_count=0;var last_height=0;function body_scroll() {document.body.scrollTop = document.body.scrollHeight;timer=setTimeout('body_scroll()', 100);if(document.body.scrollHeight!=last_height) {last_height=document.body.scrollHeight;same_count=0;} else {same_count++;}if(same_count == 100) {clearTimeout(timer);}}timer=setTimeout('body_scroll()', 100)</script><code>
+?><script language="javascript">var timer=null;var last_height=0;var same_count=0;function body_scroll() {timer=setTimeout('body_scroll()', 100);if(document.body.scrollHeight!=last_height) {same_count=0;last_height=document.body.scrollHeight;document.body.scrollTop = document.body.scrollHeight;} else {same_count++;}if(same_count == 1000) {clearTimeout(timer);}}timer=setTimeout('body_scroll()', 100)</script><code>
 <?php
 
 // the cron script is useless if it has nowhere to store the information it reads
@@ -39,11 +40,8 @@ if(USE_DATABASE == false)
 $database = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 
 // get the watched directories
-$ignored = db_watch::get($database, array('search_Filepath' => '/^!/'), $count, $error);
-$watched = db_watch::get($database, array('search_Filepath' => '/^\\^/'), $count, $error);
-
-log_error('Ignored: ' . serialize($ignored));
-log_error('Watched: ' . serialize($watched));
+log_error('Ignored: ' . serialize($GLOBALS['ignored']));
+log_error('Watched: ' . serialize($GLOBALS['watched']));
 
 // directories that have already been scanned used to prevent recursion
 $dirs = array();
@@ -94,7 +92,7 @@ if( isset($state) && is_array($state) ) $state_current = array_pop($state);
 
 $i = 0;
 // get starting index
-if( isset($state_current) && isset($watched[$state_current['index']]) && $watched[$state_current['index']]['Filepath'] == $state_current['file'] )
+if( isset($state_current) && isset($GLOBALS['watched'][$state_current['index']]) && $GLOBALS['watched'][$state_current['index']]['Filepath'] == $state_current['file'] )
 {
 	$i = $state_current['index'];
 }
@@ -118,21 +116,21 @@ elseif(isset($state_current))
 	$state = array();
 }
 
-if(isset($_REQUEST['entry']) && is_numeric($_REQUEST['entry']) && $_REQUEST['entry'] < count($watched) && $_REQUEST['entry'] >= 0)
+if(isset($_REQUEST['entry']) && is_numeric($_REQUEST['entry']) && $_REQUEST['entry'] < count($GLOBALS['watched']) && $_REQUEST['entry'] >= 0)
 	$i = $_REQUEST['entry'];
 
 log_error("Phase 1: Checking for modified Directories; Recursively");
 
 // loop through each watched folder and get a list of all the files
-for($i; $i < count($watched); $i++)
+for($i; $i < count($GLOBALS['watched']); $i++)
 {
-	if(!file_exists(str_replace('/', DIRECTORY_SEPARATOR, $watched[$i]['Filepath'])))
+	if(!file_exists(str_replace('/', DIRECTORY_SEPARATOR, $GLOBALS['watched'][$i]['Filepath'])))
 	{
-		log_error("Error: Directory does not exist! " . $watched[$i]['Filepath'] . " is missing!");
+		log_error("Error: Directory does not exist! " . $GLOBALS['watched'][$i]['Filepath'] . " is missing!");
 		$should_clean = 0;
 		continue;
 	}
-	$watch = '^' . $watched[$i]['Filepath'];
+	$watch = '^' . $GLOBALS['watched'][$i]['Filepath'];
 
 	$status = db_watch::handle($database, $watch);
 
@@ -184,13 +182,13 @@ for($i; $i < count($watched); $i++)
 		$database->query(array('UPDATE' => db_watch::DATABASE, 'VALUES' => array('Lastwatch' => date("Y-m-d h:i:s")), 'WHERE' => 'Filepath = "' . $watch . '"'));
 	}
 	
-	if(isset($_REQUEST['entry']) && is_numeric($_REQUEST['entry']) && $_REQUEST['entry'] < count($watched) && $_REQUEST['entry'] >= 0)
+	if(isset($_REQUEST['entry']) && is_numeric($_REQUEST['entry']) && $_REQUEST['entry'] < count($GLOBALS['watched']) && $_REQUEST['entry'] >= 0)
 		break;
 }
 log_error("Phase 1: Complete!");
 
 // clean up the watch_list and remove stuff that doesn't exist in watch anymore
-db_watch_list::cleanup($database, $watched, $ignored);
+db_watch_list::cleanup($database);
 
 // now scan some files
 $tm_start = array_sum(explode(' ', microtime()));
@@ -215,8 +213,6 @@ do
 	
 	if($secs_total > FILE_SEEK_TIME)
 		log_error("Ran out of Time: Changed directories still in database");
-	
-	flush();
 	
 } while( $secs_total < FILE_SEEK_TIME && count($db_dirs) > 0 );
 
@@ -243,14 +239,14 @@ log_error("Phase 3: Cleaning up");
 foreach($GLOBALS['modules'] as $i => $module)
 {
 	if($module != 'fs_file')
-		call_user_func_array($module . '::cleanup', array($database, $watched, $ignored));
+		call_user_func_array($module . '::cleanup', array($database));
 }
 
 // read all the folders that lead up to the watched folder
 // these might be delete by cleanup, so check again because there are only a couple
-for($i = 0; $i < count($watched); $i++)
+for($i = 0; $i < count($GLOBALS['watched']); $i++)
 {
-	$folders = split('/', $watched[$i]['Filepath']);
+	$folders = split('/', $GLOBALS['watched'][$i]['Filepath']);
 	$curr_dir = (realpath('/') == '/')?'/':'';
 	
 	// don't add the watch directory here because it must be added to the watch list first!

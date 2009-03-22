@@ -1,4 +1,9 @@
-2009-02-12 (Full)
+2009-03-20
+Put removing files functionality into watch_list.php module handle functions, where the message "Scanning" is printed
+	Make the handles function return special informations based on where it fails or succeeds so we don't have to loop extra times elsewhere
+	eg (Failed returns FALSE, succeeded from changing returns TRUE, succeeded from less or more files in database returns -1 or 1)
+
+2009-03-12 (Full)
 More compatibility testing with clients
 ------------- GENERAL TODO -------------
 Make hard links and soft links, hard links are replaced when they are put in to the database, soft links are replaced when they are read from the database, this will allow us to do more network stuff
@@ -47,7 +52,6 @@ Change desktop style to be buttons like folders in Desktop.js but render buttons
 Get settings dialog working and set up user accounts to control it
 Finish the player app that displays pictures
 Make players resize to Player window
-
 
 2009-03-12
 Change database back to Text because it didn't help the filepath checking

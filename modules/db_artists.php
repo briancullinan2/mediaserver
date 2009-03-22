@@ -105,7 +105,7 @@ class db_artists extends db_audio
 	}
 
 
-	static function cleanup($database, $watched, $ignored)
+	static function cleanup($database)
 	{
 	}
 

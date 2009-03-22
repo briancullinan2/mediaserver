@@ -80,10 +80,10 @@ class db_movies_tmp extends db_diskimage
 		return $files;
 	}
 	
-	static function cleanup($database, $watched, $ignored)
+	static function cleanup($database)
 	{
 		// call default cleanup function
-		//db_file::cleanup($database, $watched, $ignored, get_class());
+		//db_file::cleanup($database, get_class());
 	}
 
 }

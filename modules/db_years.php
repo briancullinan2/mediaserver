@@ -70,7 +70,7 @@ class db_years extends db_audio
 	}
 
 
-	static function cleanup($database, $watched, $ignored)
+	static function cleanup($database)
 	{
 	}
 

@@ -2,12 +2,14 @@
 
 class sql extends sql_global
 {
+	var $query_result;
+	var $callback_result;
 
-	function sql($SQL_server, $SQL_username, $SQL_password, $SQL_db_name = "")
+	function sql($SQL_server, $SQL_username, $SQL_password, $SQL_db_name = "", $new = false)
 	{
 		$this->sql_global();
 		
-		$this->db_connect_id = mysql_connect($SQL_server, $SQL_username, $SQL_password) or print_r(mysql_error());
+		$this->db_connect_id = mysql_connect($SQL_server, $SQL_username, $SQL_password, $new) or print_r(mysql_error());
 		if ($SQL_db_name != "")
 		{
 			mysql_select_db($SQL_db_name, $this->db_connect_id)or print_r("Function Error: " . mysql_error());
@@ -33,19 +35,27 @@ class sql extends sql_global
 	function result()
 	{
 		$result = array();
-		while($row = mysql_fetch_assoc($this->query_result))
+		if(mysql_num_rows($this->query_result) > 0)
 		{
-			$result[] = $row;
+			while($row = mysql_fetch_assoc($this->query_result))
+			{
+				$result[] = $row;
+			}
 		}
+		@mysql_free_result($this->query_result);
 		return $result;
 	}
 	
 	function result_callback($function, $arguments)
 	{
-		while($row = mysql_fetch_assoc($this->query_result))
+		if(mysql_num_rows($this->callback_result) > 0)
 		{
-			call_user_func_array($function, array(&$row, &$arguments));
+			while($row = mysql_fetch_assoc($this->callback_result))
+			{
+				call_user_func_array($function, array($row, &$arguments));
+			}
 		}
+		@mysql_free_result($this->callback_result);
 	}
 	
 	function db_query($query = "")
@@ -67,6 +77,12 @@ class sql extends sql_global
 		{
 			return false;
 		}
+	}
+	
+	function db_query_callback($query = "")
+	{
+		$result = $this->db_query($query);
+		$this->callback_result = $result;
 	}
 	
 	function error()

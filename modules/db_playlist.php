@@ -243,7 +243,7 @@ class db_playlist extends db_file
 	}
 
 
-	static function cleanup($database, $watched)
+	static function cleanup($database)
 	{
 	}
 }

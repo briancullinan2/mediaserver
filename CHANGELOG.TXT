@@ -1,3 +1,6 @@
+2009-03-20
+Made a $GLOBALS['watched'] and $GLOBALS['ignored'] to minimize the amount of watch queries, this is not used everywhere
+
 2009-03-12
 Found out changing the Filepath and TEXT fields to BLOB didn't help the filepath checking of ascii names
 
