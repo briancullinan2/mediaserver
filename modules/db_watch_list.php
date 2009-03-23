@@ -159,14 +159,41 @@ class db_watch_list extends db_watch
 				// search all the files in the directory
 				$files = fs_file::get(NULL, array('dir' => $dir, 'limit' => 32000), $count, $error, true);
 				
+				// send new/changed files to other modules
+				$paths = array();
+				$paths[] = $dir;
 				foreach($files as $i => $file)
 				{
 					if(is_file($file['Filepath']))
 					{
 						self::handle_file($database, $file['Filepath']);
 					}
+					$paths[] = $file['Filepath'];
 				}
 				
+				// search for removed files
+				$db_files = $database->query(array(
+						'SELECT' => db_file::DATABASE,
+						'COLUMNS' => array('Filepath'),
+						'WHERE' => 'LEFT(Filepath, ' . strlen($dir) . ') = "' . addslashes($dir) . '" AND (LOCATE("/", Filepath, ' . (strlen($dir)+1) . ') = 0 OR LOCATE("/", Filepath, ' . (strlen($dir)+1) . ') = LENGTH(Filepath))'
+					)
+				);
+				foreach($db_files as $j => $file)
+				{
+					if(!in_array($file['Filepath'], $paths))
+					{
+						log_error('Removing: ' . $file['Filepath']);
+						
+						// remove file from each module
+						foreach($GLOBALS['modules'] as $i => $module)
+						{
+							if($module != 'fs_file' && $module != 'db_watch' && $module != 'db_watch_list')
+								call_user_func_array($module . '::remove', array($database, $file['Filepath'], $module));
+						}
+					}
+				}
+				
+				// add current directory to database
 				self::handle_file($database, $dir);
 				
 				// delete the selected folder from the database

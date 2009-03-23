@@ -264,20 +264,6 @@ class db_archive extends db_file
 		return $files;
 	}
 
-	static function cleanup_remove($row, $args)
-	{
-		$row['Filepath'] = str_replace('\\', '/', $row['Filepath']);
-		
-		db_file::parseInner($row['Filepath'], $last_path, $inside_path);
-
-		if( !file_exists(str_replace('/', DIRECTORY_SEPARATOR, $last_path)) )
-		{
-			$args['CONNECTION']->query(array('DELETE' => constant($args['MODULE'] . '::DATABASE'), 'WHERE' => 'LEFT(Filepath, ' . strlen($dir) . ') = "' . addslashes($dir) . '" AND (LOCATE("/", Filepath, ' . (strlen($dir)+1) . ') = 0 OR LOCATE("/", Filepath, ' . (strlen($dir)+1) . ') = LENGTH(Filepath))'));
-			
-			log_error('Removing ' . constant($args['MODULE'] . '::NAME') . ': ' . $row['Filepath']);
-		}
-	}
-
 	static function cleanup($database)
 	{
 		// call default cleanup function

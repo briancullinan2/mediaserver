@@ -1,3 +1,9 @@
+2009-03-23
+Made cleanup faster by only checking for removed/non-existent files when the directory changes in the db_watch_list module
+	Non-standard modules are still responsible for doing cleanup
+Removed the cleanup_remove function since it is no longer needed
+	Standard removing will remove files INSIDE of directories, to minize broken paths, this will remove files inside files like the db_archive and db_disk image by default as well
+
 2009-03-20
 Made a $GLOBALS['watched'] and $GLOBALS['ignored'] to minimize the amount of watch queries, this is not used everywhere
 

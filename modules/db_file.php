@@ -597,24 +597,21 @@ class db_file
 	}
 	
 	// callback for the sql file list query
-	static function cleanup_remove($row, $args)
+	static function remove($database, $file, $module = NULL)
 	{
-		$row['Filepath'] = str_replace('\\', '/', $row['Filepath']);
-		
-		if( file_exists(str_replace('/', DIRECTORY_SEPARATOR, $row['Filepath'])) === false )
-		{			
-			log_error('Removing Non-Existing ' . constant($args['MODULE'] . '::NAME') . ': ' . $row['Filepath']);
-			
-			// remove row from database
-			$args['CONNECTION']->query(array('DELETE' => constant($args['MODULE'] . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($row['Filepath']) . '"'));
-		}
-		
-		// print progress
-		$args['count']++;
-		if(round(($args['count']-1)/$args['total'], 2) != round($args['count']/$args['total'], 2))
+		if( $module == NULL )
 		{
-			log_error('Checking Paths: ' . (round($args['count']/$args['total'], 2) * 100) . '% complete for ' . constant($args['MODULE'] . '::NAME'));
+			$module = get_class();
 		}
+		
+		$file = str_replace('\\', '/', $file);
+		
+		// remove files with inside paths like directories
+		if($file[strlen($file)-1] != '/') $file_dir = $file . '/';
+		else $file_dir = $file;
+	
+		// remove file(s) from database
+		$database->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($file) . '" OR LEFT(Filepath, ' . strlen($file_dir) . ') = "' . addslashes($file_dir) . '"'));	
 	}
 	
 	
@@ -699,23 +696,8 @@ class db_file
 		
 		$where_str = '(' . $ignored_where . ') OR (' . $watched_to_where . ' AND ' . $watched_where . ')';
 		
-		// remove items
+		// remove items that aren't in where directories
 		$database->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => $ignored_where));
-
-		// get count 
-		$result = $database->query(array('SELECT' => constant($module . '::DATABASE'), 'COLUMNS' => 'count(*)'));
-		$total = $result[0]['count(*)'];
-		$count = 0;
-		
-		// since all the ones not apart of a watched directory is removed, now just check is every file still in the database exists on disk
-		$files = $database->query(array(
-			'SELECT' => constant($module . '::DATABASE'),
-			'ORDER' => 'id DESC',
-			'CALLBACK' => array(
-				'FUNCTION' => $module . '::cleanup_remove',
-				'ARGUMENTS' => array('CONNECTION' => $database, 'MODULE' => $module, 'count' => &$count, 'total' => &$total)
-			)
-		));
 		
 		// remove any duplicates
 		$files = $database->query(array(

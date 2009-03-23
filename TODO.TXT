@@ -1,3 +1,6 @@
+2009-03-23
+Work on discography.php plugin
+
 2009-03-20
 Put removing files functionality into watch_list.php module handle functions, where the message "Scanning" is printed
 	Make the handles function return special informations based on where it fails or succeeds so we don't have to loop extra times elsewhere
