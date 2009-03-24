@@ -1,5 +1,10 @@
 <?php
 
+// search IMDb for movie
+// cache useful information
+// search for the title of single video files, if it exists in a directory call movies
+//  use parseFilename to search with
+
 $no_setup = true;
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 

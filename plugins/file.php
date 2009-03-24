@@ -52,11 +52,7 @@ if(isset($_REQUEST['id']))
 			
 			// if the filesize is still not known, just output the stream without any fancy stuff
 			if(isset($files[0]['Filesize']))
-			{
-				
-				// close session now so they can keep using the website
-				if(isset($_SESSION)) session_write_close();
-				
+			{				
 				// check for range request
 				if(isset($_SERVER['HTTP_RANGE']))
 				{
@@ -107,6 +103,9 @@ if(isset($_REQUEST['id']))
 			}
 			
 			//-------------------- END RANAGES STUFF --------------------
+			
+			// close session now so they can keep using the website
+			if(isset($_SESSION)) session_write_close();
 			
 			if(is_resource($fp) && is_resource($op))
 			{

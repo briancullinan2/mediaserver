@@ -4,7 +4,6 @@ ignore_user_abort(1);
 
 // create zip of selected files in list
 
-
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
 // load mysql to query the database
@@ -56,6 +55,9 @@ foreach($files as $i => $file)
 	if(isset($file['Filetype']) && $file['Filetype'] == 'FOLDER')
 		unset($files[$i]);
 $files = array_values($files);
+
+// close session so the client can continue browsing the site
+if(isset($_SESSION)) session_write_close();
 
 if(count($files) > 0)
 {

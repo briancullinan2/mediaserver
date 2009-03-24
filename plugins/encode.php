@@ -197,9 +197,6 @@ $process = proc_open($cmd, $descriptorspec, $pipes, dirname(ENCODE), NULL); //ar
 stream_set_blocking($pipes[0], 0);
 stream_set_blocking($pipes[1], 0);
 
-// close session so the client can continue browsing the site
-if(isset($_SESSION)) session_write_close();
-
 // make up some header to takes the length of the media into consideration
 if(isset($files[0]['Length']))
 {
@@ -210,6 +207,9 @@ if(isset($files[0]['Length']))
 $fp = call_user_func_array($_REQUEST['cat'] . '::out', array($database, $_REQUEST['%IF']));
 //$fp = fopen($_REQUEST['%IF'], 'rb');
 $php_out = fopen('php://output', 'wb');
+
+// close session so the client can continue browsing the site
+if(isset($_SESSION)) session_write_close();
 
 // if %IF is not in the arguments, it is reading from stdin so use pipe
 // output file
