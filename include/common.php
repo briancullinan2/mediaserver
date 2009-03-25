@@ -241,6 +241,57 @@ function selfURL()
 	return $protocol."://".$_SERVER['SERVER_NAME'].$port.$_SERVER['REQUEST_URI'];
 }
 
+// tokenize a string, assumed to be a filepath, in various different ways
+function tokenize($string)
+{
+	$return = array();
+	
+	$string = strtolower($string);
+	$valid_pieces = array();
+	$pieces = split('[^a-zA-Z0-9]', $string);
+	$empty = array_search('', $pieces, true);
+	if($empty !== false) unset($pieces[$empty]);
+	$pieces = array_values($pieces);
+	$return['All'] = $pieces;
+	$return['Unique'] = array_unique($pieces);
+	for($i = 0; $i < count($pieces); $i++)
+	{
+		// remove single characters and common words
+		if(strlen($pieces[$i]) > 1 && !in_array(strtolower($pieces[$i]), array('and', 'the', 'of', 'an', 'lp')))
+		{
+			$valid_pieces[] = $pieces[$i];
+		}
+	}
+	
+	$return['Most'] = $valid_pieces;
+	
+	// remove common edition words
+	foreach($valid_pieces as $i => $piece)
+	{
+		if(in_array(strtolower($valid_pieces[$i]), array('version', 'unknown', 'compilation', 'compilations', 'remastered', 'itunes', 'music')))
+		{
+			unset($valid_pieces[$i]);
+		}
+	}
+	$valid_pieces = array_values($valid_pieces);
+	
+	$return['Some'] = $valid_pieces;
+	
+	// remove common other common words
+	foreach($valid_pieces as $i => $piece)
+	{
+		if(in_array(strtolower($valid_pieces[$i]), array('album', 'artist', 'single', 'clean', 'box', 'boxed', 'set', 'live', 'band', 'hits', 'other', 'disk', 'disc', 'volume', 'retail', 'edition')))
+		{
+			unset($valid_pieces[$i]);
+		}
+	}
+	$valid_pieces = array_values($valid_pieces);
+	
+	$return['Few'] = $valid_pieces;
+	
+	return $return;
+}
+
 function termSort($a, $b)
 {
 	if(($a[0] == '+' && $a[0] == $b[0]) || ($a[0] == '-' && $a[0] == $b[0]) || ($a[0] != '+' && $a[0] != '-' && $b[0] != '+' && $b[0] != '-'))

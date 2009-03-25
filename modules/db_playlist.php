@@ -165,7 +165,7 @@ class db_playlist extends db_file
 						{
 							foreach($valid_pieces as $i => $piece)
 							{
-								if(in_array(strtolower($valid_pieces[$i]), array('album', 'artist', 'single', 'clean', 'box', 'boxed', 'set', 'live', 'band', 'hits', 'other')))
+								if(in_array(strtolower($valid_pieces[$i]), array('album', 'artist', 'single', 'clean', 'box', 'boxed', 'set', 'live', 'band', 'hits', 'other', 'disk', 'disc', 'volume')))
 								{
 									unset($valid_pieces[$i]);
 								}

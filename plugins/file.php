@@ -19,6 +19,16 @@ if(isset($_REQUEST['id']))
 	{
 		if(count($files) > 0)
 		{
+			// get info from other handlers
+			foreach($GLOBALS['modules'] as $i => $module)
+			{
+				if($module != $_REQUEST['cat'] && call_user_func_array($module . '::handles', array($files[0]['Filepath'])))
+				{
+					$return = call_user_func_array($module . '::get', array(array('file' => $files[0]['Filepath']), &$tmp_count, &$tmp_error));
+					if(isset($return[0])) $files[0] = array_merge($return[0], $files[0]);
+				}
+			}
+			
 			// set some general headers
 			header('Content-Transfer-Encoding: binary');
 			header('Content-Type: ' . $files[0]['Filemime']);
@@ -29,22 +39,10 @@ if(isset($_REQUEST['id']))
 			
 			// get the input stream
 			$fp = call_user_func_array($_REQUEST['cat'] . '::out', array($files[0]['Filepath']));
-
+			
 			//-------------------- THIS IS ALL RANAGES STUFF --------------------
 			
 			// range can only be used when the filesize is known
-			if(!isset($files[0]['Filesize']))
-			{
-				// try and get filesize from other handlers
-				foreach($GLOBALS['modules'] as $i => $module)
-				{
-					if($module != $_REQUEST['cat'] && call_user_func_array($module . '::handles', array($files[0]['Filepath'])))
-					{
-						$return = call_user_func_array($module . '::get', array(array('file' => $files[0]['Filepath']), &$tmp_count, &$tmp_error));
-						if(isset($return[0])) $files[0] = array_merge($return[0], $files[0]);
-					}
-				}
-			}
 			
 			// if the filesize is still not known, just output the stream without any fancy stuff
 			if(isset($files[0]['Filesize']))

@@ -222,13 +222,13 @@ class db_file
 				$is_regular = false;
 				if(strlen($request['search']) > 1 && $request['search'][0] == '"' && $request['search'][strlen($request['search'])-1] == '"')
 				{
-					$request['search'] = preg_quote(substr($request['search'], 1, strlen($request['search'])-2));
+					$request['search'] = substr($request['search'], 1, strlen($request['search'])-2);
 					$is_literal = true;
 				}
 				// check if they are searching for columns equal input
 				elseif(strlen($request['search']) > 1 && $request['search'][0] == '=' && $request['search'][strlen($request['search'])-1] == '=')
 				{
-					$request['search'] = preg_quote(substr($request['search'], 1, strlen($request['search'])-2));
+					$request['search'] = substr($request['search'], 1, strlen($request['search'])-2);
 					$is_equal = true;
 				}
 				// check if they are performing a regular expression search
@@ -351,13 +351,13 @@ class db_file
 					// check if they are searching a literal string
 					if(strlen($request[$var]) > 1 && $request[$var][0] == '"' && $request[$var][strlen($request[$var])-1] == '"')
 					{
-						$request[$var] = preg_quote(substr($request[$var], 1, strlen($request[$var])-2));
+						$request[$var] = substr($request[$var], 1, strlen($request[$var])-2);
 						$is_literal = true;
 					}
 					// check if they are searching for a cell equal to the input
 					elseif(strlen($request[$var]) > 1 && $request[$var][0] == '=' && $request[$var][strlen($request[$var])-1] == '=')
 					{
-						$request[$var] = preg_quote(substr($request[$var], 1, strlen($request[$var])-2));
+						$request[$var] = substr($request[$var], 1, strlen($request[$var])-2);
 						$is_equal = true;
 					}
 					elseif(strlen($request[$var]) > 1 && $request[$var][0] == '/' && $request[$var][strlen($request[$var])-1] == '/')
@@ -546,11 +546,12 @@ class db_file
 						// do alias replacement on every file path
 						if(USE_ALIAS == true)
 						{
-							$files[$index]['Filepath'] = preg_replace($GLOBALS['paths_regexp'], $GLOBALS['alias'], $file['Filepath']);
+							if(isset($file['Filepath']))
+								$files[$index]['Filepath'] = preg_replace($GLOBALS['paths_regexp'], $GLOBALS['alias'], $file['Filepath']);
 							$alias_flipped = array_flip($GLOBALS['alias']);
 							// check if the replaced path was the entire alias path
 							// in this case we want to replace the filename with the alias name
-							if(isset($alias_flipped[$file['Filepath']]))
+							if(isset($file['Filepath']) && isset($alias_flipped[$file['Filepath']]))
 							{
 								$index = $alias_flipped[$file['Filepath']];
 								$files[$index]['Filename'] = substr($GLOBALS['alias'][$index], 1, strlen($GLOBALS['alias'][$index]) - 2);
