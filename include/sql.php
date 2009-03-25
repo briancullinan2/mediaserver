@@ -75,6 +75,20 @@ class sql_global
 	// install function
 	function install()
 	{
+		$ids_query = 'CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'ids (
+			id 				BIGINT NOT NULL AUTO_INCREMENT,
+							PRIMARY KEY(id),
+			Filepath		TEXT NOT NULL,
+			Hex				TEXT NOT NULL,';
+		foreach($GLOBALS['databases'] as $i => $db)
+		{
+			$ids_query .= $db . '_id BIGINT NOT NULL,';
+		}
+		// replace last comma with close paren
+		$ids_query[strlen($ids_query)-1] = ')';
+
+		$this->query($ids_query) or print_r(mysql_error());
+		
 		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'watch (
 				id 				BIGINT NOT NULL AUTO_INCREMENT,
 								PRIMARY KEY(id),

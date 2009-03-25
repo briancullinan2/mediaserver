@@ -4,18 +4,87 @@ ignore_user_abort(1);
 
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
+// if none of the following is defined, tokenize and search
+if(!isset($_REQUEST['id']) && !isset($_REQUEST['item']) && !isset($_REQUEST['on']) && !isset($_REQUEST['file']) && !isset($_REQUEST['search']))
+{
+	$request_tokens = tokenize(join('&', $_REQUEST));
+	$_REQUEST['search'] = join(' ', $request_tokens['All']);
+}
+
 // check for file extension if this encode variable is not set
 if(!isset($_REQUEST['encode']))
 {
-	if(isset($_REQUEST['filename']))
-		$_REQUEST['encode'] = strtoupper(getExt($_REQUEST['filename']));
-	if(isset($_REQUEST['search']))
+	// use client type prediction
+	if(preg_match('/.*(windows-media-player|NSplayer).*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
 	{
-		$_REQUEST['encode'] = strtoupper(getExt($_REQUEST['search']));
-		
-		// parse off extension for include search
-		$_REQUEST['search'] = substr($_REQUEST['search'], 0, strlen($_REQUEST['search']) - strlen($_REQUEST['encode']) - 1);
+		$_REQUEST['encode'] = 'WMV';
 	}
+	elseif(preg_match('/.*(iTunes).*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
+	{
+		$_REQUEST['encode'] = 'MPG';
+	}
+	elseif(preg_match('/.*(mobile).*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
+	{
+		$_REQUEST['encode'] = 'MPG';
+	}
+	elseif(preg_match('/.*(vlc).*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
+	{
+		$_REQUEST['encode'] = 'MP4';
+	}
+	elseif(isset($_REQUEST['filename']))
+	{
+		$_REQUEST['encode'] = strtoupper(getExt($_REQUEST['filename']));
+	}
+}
+
+// check the id and stuff
+if(isset($_REQUEST))
+{
+	// get the file path from the database
+	$files = call_user_func_array($_REQUEST['cat'] . '::get', array($_REQUEST, &$count, &$error));
+	
+	if(count($files) > 0)
+	{
+		// get all the information incase we need to use it
+		foreach($GLOBALS['modules'] as $i => $module)
+		{
+			if($module != $_REQUEST['cat'] && call_user_func_array($module . '::handles', array($files[0]['Filepath'])))
+			{
+				$return = call_user_func_array($module . '::get', array(array('file' => $files[0]['Filepath']), &$tmp_count, &$tmp_error));
+				if(isset($return[0])) $files[0] = array_merge($return[0], $files[0]);
+			}
+		}
+		
+		// fix the encode type
+		if(db_audio::handles($files[0]['Filepath']))
+		{
+			if($_REQUEST['encode'] == 'MP4') $_REQUEST['encode'] = 'MP4A';
+			elseif($_REQUEST['encode'] == 'MPG') $_REQUEST['encode'] = 'MP3';
+			elseif($_REQUEST['encode'] == 'WMV') $_REQUEST['encode'] = 'WMA';
+		}
+		elseif(db_video::handles($files[0]['Filepath']))
+		{
+			if($_REQUEST['encode'] == 'MP4A') $_REQUEST['encode'] = 'MP4';
+			elseif($_REQUEST['encode'] == 'MP3') $_REQUEST['encode'] = 'MPG';
+			elseif($_REQUEST['encode'] == 'WMA') $_REQUEST['encode'] = 'WMV';
+		}
+		
+		// set the file variable
+		$_REQUEST['%IF'] = $files[0]['Filepath'];
+	}
+	else
+	{
+		header('Content-Type: text/html');
+		print 'File does not exist!';
+		exit;
+	}
+	
+}
+else
+{
+	header('Content-Type: text/html');
+	print 'Must specify a file!';
+	exit;
 }
 
 // set the headers
@@ -49,42 +118,6 @@ if(!isset($_REQUEST['cat']) || !in_array($_REQUEST['cat'], $GLOBALS['modules']))
 
 if(!isset($_REQUEST['%IF']) && isset($_REQUEST['id']))
 	$_REQUEST['%IF'] = $_REQUEST['id'];
-
-// check the id and stuff
-if(isset($_REQUEST))
-{
-	// get the file path from the database
-	$files = call_user_func_array($_REQUEST['cat'] . '::get', array($_REQUEST, &$count, &$error));
-	
-	if(count($files) > 0)
-	{
-		// get all the information incase we need to use it
-		foreach($GLOBALS['modules'] as $i => $module)
-		{
-			if($module != $_REQUEST['cat'] && call_user_func_array($module . '::handles', array($files[0]['Filepath'])))
-			{
-				$return = call_user_func_array($module . '::get', array(array('file' => $files[0]['Filepath']), &$tmp_count, &$tmp_error));
-				if(isset($return[0])) $files[0] = array_merge($return[0], $files[0]);
-			}
-		}
-		
-		// set the file variable
-		$_REQUEST['%IF'] = $files[0]['Filepath'];
-	}
-	else
-	{
-		header('Content-Type: text/html');
-		print 'File does not exist!';
-		exit;
-	}
-	
-}
-else
-{
-	header('Content-Type: text/html');
-	print 'Must specify a file!';
-	exit;
-}
 
 // do the validation for all the input options!
 // first filter out all the unwanted request vars

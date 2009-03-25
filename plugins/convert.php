@@ -2,6 +2,13 @@
 set_time_limit(0);
 ignore_user_abort(1);
 
+// if none of the following is defined, tokenize and search
+if(!isset($_REQUEST['id']) && !isset($_REQUEST['item']) && !isset($_REQUEST['on']) && !isset($_REQUEST['file']) && !isset($_REQUEST['search']))
+{
+	$request_tokens = tokenize(join('&', $_REQUEST));
+	$_REQUEST['search'] = join(' ', $request_tokens['All']);
+}
+
 // set the header first thing so browser doesn't stall or get tired of waiting for the process to start
 switch($_REQUEST['convert'])
 {

@@ -529,6 +529,7 @@ class db_file
 				$props['WHERE'] .= ' Filepath = "' . addslashes($request['file']) . '"';
 			}
 			
+			// finally check for error and start processing query
 			if($error == '')
 			{
 				$props['SELECT'] = constant($module . '::DATABASE');
@@ -576,17 +577,20 @@ class db_file
 						
 						$count = intval($result[0]['count(*)']);
 					}
+					// set the count to whatever the number of files is
 					else
 					{
 						$count = count($files);
 					}
 				}
+				// there was an error from the query
 				else
 				{
 					$count = 0;
 					$files = array();
 				}
 			}
+			// there was and error in the request
 			else
 			{
 				$count = 0;
@@ -597,7 +601,7 @@ class db_file
 		return $files;
 	}
 	
-	// callback for the sql file list query
+	// remove function to delete from from a database
 	static function remove($file, $module = NULL)
 	{
 		if( $module == NULL )

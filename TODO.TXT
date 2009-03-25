@@ -1,3 +1,6 @@
+2009-03-25
+Create a centralized ID system
+
 2009-03-24 (Full)
 More compatibility testing with clients
 ------------- GENERAL TODO -------------

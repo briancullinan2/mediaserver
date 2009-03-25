@@ -24,6 +24,13 @@ if(!isset($_REQUEST['id']) && isset($_SESSION['selected']))
 	$_REQUEST['item'] = join(',', $_SESSION['selected']);
 }
 
+// if none of the following is defined, tokenize and search
+if(!isset($_REQUEST['id']) && !isset($_REQUEST['item']) && !isset($_REQUEST['on']) && !isset($_REQUEST['file']) && !isset($_REQUEST['search']))
+{
+	$request_tokens = tokenize(join('&', $_REQUEST));
+	$_REQUEST['search'] = join(' ', $request_tokens['All']);
+}
+
 // add category
 if(!isset($_REQUEST['cat']) || !in_array($_REQUEST['cat'], $GLOBALS['modules']))
 	$_REQUEST['cat'] = USE_DATABASE?'db_file':'fs_file';

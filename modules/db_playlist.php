@@ -134,44 +134,9 @@ class db_playlist extends db_file
 						$result = array();
 						
 						// check minimized filename and directories
-						$valid_pieces = array();
-						$pieces = split('[^a-zA-Z0-9]', $file);
-						$empty = array_search('', $pieces, true);
-						if($empty !== false) unset($pieces[$empty]);
-						$pieces = array_values($pieces);
-						for($i = 0; $i < count($pieces); $i++)
-						{
-							// remove single characters and common words
-							if(strlen($pieces[$i]) > 1 && !in_array(strtolower($pieces[$i]), array('and', 'the', 'of', 'an', 'lp')))
-							{
-								$valid_pieces[] = $pieces[$i];
-							}
-						}
-						// remove things seperately so we can prioritize
-						// remove common edition words
-						if(count($valid_pieces) > 5)
-						{
-							foreach($valid_pieces as $i => $piece)
-							{
-								if(in_array(strtolower($valid_pieces[$i]), array('version', 'unknown', 'compilation', 'compilations', 'remastered', 'itunes', 'music')))
-								{
-									unset($valid_pieces[$i]);
-								}
-							}
-							$valid_pieces = array_values($valid_pieces);
-						}
-						// remove common other common words
-						if(count($valid_pieces) > 5)
-						{
-							foreach($valid_pieces as $i => $piece)
-							{
-								if(in_array(strtolower($valid_pieces[$i]), array('album', 'artist', 'single', 'clean', 'box', 'boxed', 'set', 'live', 'band', 'hits', 'other', 'disk', 'disc', 'volume')))
-								{
-									unset($valid_pieces[$i]);
-								}
-							}
-							$valid_pieces = array_values($valid_pieces);
-						}
+						$tokens = tokenize($file);
+						$valid_pieces = $tokens['Some'];
+						
 						// remove other wierdness
 						if(count($valid_pieces) > 5)
 						{

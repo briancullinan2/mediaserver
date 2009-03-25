@@ -104,13 +104,13 @@ define('TMP_DIR', 	                             '/tmp/');
 define('USE_ALIAS', 							 true);
 
 // how long to search for directories that have changed
-define('DIRECTORY_SEEK_TIME',		5);
+define('DIRECTORY_SEEK_TIME',		6000);
 
 // how long to search for changed files or add new files
-define('FILE_SEEK_TIME', 		   60);
+define('FILE_SEEK_TIME', 		   6000);
 
 // how long to clean up files
-define('CLEAN_UP_BUFFER_TIME',				60);
+define('CLEAN_UP_BUFFER_TIME',				600);
 
 // how many times should we be able to run the cron script before a cleanup is needed?
 //  cleanup will also be fired when a directory change is detected, this may not always be accurate

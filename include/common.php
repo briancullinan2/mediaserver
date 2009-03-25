@@ -11,7 +11,7 @@ if(!isset($no_setup) || !$no_setup == true)
 	session_start();
 
 // set version for stuff to reference
-define('VERSION', 			     '0.40.0');
+define('VERSION', 			     '0.40.1');
 define('VERSION_NAME', 			'Goliath');
 
 // require the settings

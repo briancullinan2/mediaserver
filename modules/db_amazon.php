@@ -475,6 +475,15 @@ class db_amazon extends db_file
 		return $files;
 	}
 
+	static function remove($file, $module = NULL)
+	{
+		// remove the amazon entry for whatever is passed in
+		//  but only if the artist/album doesn't exist in the database anymore
+		//  so only remove when the last file is removed
+		//    always remove directories
+		//    
+	}
+
 
 	static function cleanup()
 	{

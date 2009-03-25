@@ -6,6 +6,13 @@
 
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
+// if none of the following is defined, tokenize and search
+if(!isset($_REQUEST['id']) && !isset($_REQUEST['item']) && !isset($_REQUEST['on']) && !isset($_REQUEST['file']) && !isset($_REQUEST['search']))
+{
+	$request_tokens = tokenize(join('&', $_REQUEST));
+	$_REQUEST['search'] = join(' ', $request_tokens['All']);
+}
+
 // add category
 if(!isset($_REQUEST['cat']) || !in_array($_REQUEST['cat'], $GLOBALS['modules']))
 	$_REQUEST['cat'] = USE_DATABASE?'db_file':'fs_file';
