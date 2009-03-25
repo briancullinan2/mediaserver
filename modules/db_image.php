@@ -54,14 +54,14 @@ class db_image extends db_file
 
 	}
 
-	static function handle($database, $file)
+	static function handle($file)
 	{
 		$file = str_replace('\\', '/', $file);
 		
 		if(self::handles($file))
 		{
 			// check to see if it is in the database
-			$db_image = $database->query(array(
+			$db_image = $GLOBALS['database']->query(array(
 					'SELECT' => self::DATABASE,
 					'COLUMNS' => 'id',
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
@@ -71,12 +71,12 @@ class db_image extends db_file
 			// try to get image information
 			if( count($db_image) == 0 )
 			{
-				$fileid = self::add($database, $file);
+				$fileid = self::add($file);
 			}
 			else
 			{
 				// check to see if the file was changed
-				$db_file = $database->query(array(
+				$db_file = $GLOBALS['database']->query(array(
 						'SELECT' => db_file::DATABASE,
 						'COLUMNS' => 'Filedate',
 						'WHERE' => 'Filepath = "' . addslashes($file) . '"'
@@ -86,7 +86,7 @@ class db_image extends db_file
 				// update audio if modified date has changed
 				if( date("Y-m-d h:i:s", filemtime($file)) != $db_file[0]['Filedate'] )
 				{
-					$id = self::add($database, $file, $db_image[0]['id']);
+					$id = self::add($file, $db_image[0]['id']);
 				}
 				
 			}
@@ -131,7 +131,7 @@ class db_image extends db_file
 		return $fileinfo;
 	}
 
-	static function add($database, $file, $image_id = NULL)
+	static function add($file, $image_id = NULL)
 	{
 		$fileinfo = self::getInfo($file);
 	
@@ -140,7 +140,7 @@ class db_image extends db_file
 			log_error('Modifying image: ' . $file);
 			
 			// update database
-			$id = $database->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $image_id));
+			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $image_id));
 		
 			return $image_id;
 		}
@@ -149,23 +149,23 @@ class db_image extends db_file
 			log_error('Adding image: ' . $file);
 			
 			// add to database
-			$id = $database->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
+			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 			
 			return $id;
 		}
 			
 	}
 	
-	static function get($database, $request, &$count, &$error)
+	static function get($request, &$count, &$error)
 	{
-		return parent::get($database, $request, $count, $error, get_class());
+		return parent::get($request, $count, $error, get_class());
 	}
 
 	
-	static function cleanup($database)
+	static function cleanup()
 	{
 		// call default cleanup function
-		parent::cleanup($database, get_class());
+		parent::cleanup(get_class());
 	}
 
 }

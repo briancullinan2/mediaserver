@@ -56,7 +56,7 @@ class db_file
 	}
 	
 	// this function determines if the file qualifies for this type and handles it according
-	static function handle($database, $file)
+	static function handle($file)
 	{
 		$file = str_replace('\\', '/', $file);
 		
@@ -65,7 +65,7 @@ class db_file
 		{
 			
 			// check if it is in the database
-			$db_file = $database->query(array(
+			$db_file = $GLOBALS['database']->query(array(
 					'SELECT' => self::DATABASE,
 					'COLUMNS' => array('id', 'Filedate'),
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
@@ -75,14 +75,14 @@ class db_file
 			if( count($db_file) == 0 )
 			{
 				// always add to file database
-				$id = self::add($database, $file);
+				$id = self::add($file);
 			}
 			else
 			{
 				// update file if modified date has changed
 				if( date("Y-m-d h:i:s", filemtime($file)) != $db_file[0]['Filedate'] )
 				{
-					$id = self::add($database, $file, $db_file[0]['id']);
+					$id = self::add($file, $db_file[0]['id']);
 				}
 				else
 				{
@@ -113,7 +113,7 @@ class db_file
 	// add a given file to the given database
 	// returns the id of the entry
 	// if the id is given then it updates the entry
-	static function add($database, $file, $id = NULL)
+	static function add($file, $id = NULL)
 	{
 		// get file information
 		$fileinfo = self::getInfo($file);
@@ -124,7 +124,7 @@ class db_file
 			log_error('Modifying file: ' . $file);
 			
 			// update database
-			$id = $database->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $id));
+			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $id));
 		
 			return $id;
 		}
@@ -133,7 +133,7 @@ class db_file
 			log_error('Adding file: ' . $file);
 			
 			// add to database
-			$id = $database->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
+			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 		
 			return $id;
 		}
@@ -142,7 +142,7 @@ class db_file
 	
 	// output provided file to given stream
 	//  no headers is used to prevent changing the headers, if it is called by a plugin it may just need the stream and no header changes
-	static function out($database, $file)
+	static function out($file)
 	{
 		$file = str_replace('\\', '/', $file);
 		
@@ -152,7 +152,7 @@ class db_file
 		// check to make sure file is valid
 		if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)))
 		{
-			$files = $database->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
+			$files = $GLOBALS['database']->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
 			if(count($files) > 0)
 			{				
 				if($fp = @fopen($file, 'rb'))
@@ -169,7 +169,7 @@ class db_file
 	// if the mysql is provided, then the file listings will be loaded from the database
 	// this is a very generalized module to provide a template for overriding, or for other modules to modify the $request and pass to this one
 	//  other modules are responsible for any validation of input that is not listed here, like making sure files exist on the filesystem
-	static function get($database, $request, &$count, &$error, $module = NULL)
+	static function get($request, &$count, &$error, $module = NULL)
 	{
 		if( $module == NULL )
 		{
@@ -181,7 +181,7 @@ class db_file
 		if(USE_DATABASE)
 		{
 			// do validation! for the fields we use
-			$database->validate($request, $props, $module);
+			$GLOBALS['database']->validate($request, $props, $module);
 
 			// select an array of ids!
 			if(isset($request['selected']) && count($request['selected']) > 0 )
@@ -458,13 +458,13 @@ class db_file
 				{
 				
 					// make sure directory is in the database
-					$dirs = $database->query(array('SELECT' => constant($module . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
+					$dirs = $GLOBALS['database']->query(array('SELECT' => constant($module . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
 					
 					// check the file database, some modules use their own database to store special paths,
 					//  while other modules only store files and no directories, but these should still be searchable paths
 					//  in which case the module is responsible for validation of it's own paths
 					if(count($dirs) == 0)
-						$dirs = $database->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
+						$dirs = $GLOBALS['database']->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
 					
 					// top level directory / should always exist
 					if($request['dir'] == realpath('/') || count($dirs) > 0)
@@ -536,7 +536,7 @@ class db_file
 				$props['COLUMNS'] = '*' . (isset($props['COLUMNS'])?$props['COLUMNS']:'');
 				
 				// get directory from database
-				$files = $database->query($props);
+				$files = $GLOBALS['database']->query($props);
 				
 				if($files !== false)
 				{
@@ -571,13 +571,13 @@ class db_file
 						$props = array('SELECT' => '(' . SQL::statement_builder($props) . ') AS db_to_count');
 						$props['COLUMNS'] = 'count(*)';
 						
-						$result = $database->query($props);
+						$result = $GLOBALS['database']->query($props);
 						
 						$count = intval($result[0]['count(*)']);
 					}
 					else
 					{
-						$count = 1;
+						$count = count($files);
 					}
 				}
 				else
@@ -597,7 +597,7 @@ class db_file
 	}
 	
 	// callback for the sql file list query
-	static function remove($database, $file, $module = NULL)
+	static function remove($file, $module = NULL)
 	{
 		if( $module == NULL )
 		{
@@ -611,12 +611,12 @@ class db_file
 		else $file_dir = $file;
 	
 		// remove file(s) from database
-		$database->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($file) . '" OR LEFT(Filepath, ' . strlen($file_dir) . ') = "' . addslashes($file_dir) . '"'));	
+		$GLOBALS['database']->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($file) . '" OR LEFT(Filepath, ' . strlen($file_dir) . ') = "' . addslashes($file_dir) . '"'));	
 	}
 	
 	
 	// cleanup the non-existant files
-	static function cleanup($database, $module = NULL)
+	static function cleanup($module = NULL)
 	{
 		if( $module == NULL )
 		{
@@ -697,10 +697,10 @@ class db_file
 		$where_str = '(' . $ignored_where . ') OR (' . $watched_to_where . ' AND ' . $watched_where . ')';
 		
 		// remove items that aren't in where directories
-		$database->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => $ignored_where));
+		$GLOBALS['database']->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => $ignored_where));
 		
 		// remove any duplicates
-		$files = $database->query(array(
+		$files = $GLOBALS['database']->query(array(
 				'SELECT' => constant($module . '::DATABASE'),
 				'COLUMNS' => array('MIN(id) as id', 'Filepath', 'COUNT(*) as num'),
 				'GROUP' => 'Filepath',
@@ -711,7 +711,7 @@ class db_file
 		// remove first item from all duplicates
 		foreach($files as $i => $file)
 		{
-			$database->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => 'id=' . $file['id']));
+			$GLOBALS['database']->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => 'id=' . $file['id']));
 			
 			log_error('Removing Duplicate ' . constant($module . '::NAME') . ': ' . $file['Filepath']);
 		}

@@ -133,6 +133,12 @@ function setup()
 	if( !isset($_REQUEST['detail']) || !is_numeric($_REQUEST['detail']) )
 		$_REQUEST['detail'] = 0;
 		
+	// set up database to be used everywhere
+	if(USE_DATABASE)
+		$GLOBALS['database'] = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+	else
+		$GLOBALS['database'] = NULL;
+	
 	// get the aliases to use to replace parts of the filepath
 	$GLOBALS['paths_regexp'] = array();
 	$GLOBALS['alias_regexp'] = array();
@@ -140,8 +146,7 @@ function setup()
 	$GLOBALS['alias'] = array();
 	if(USE_ALIAS == true && USE_DATABASE == true)
 	{
-		$database = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
-		$aliases = $database->query(array('SELECT' => 'alias'));
+		$aliases = $GLOBALS['database']->query(array('SELECT' => 'alias'));
 		
 		if($aliases !== false)
 		{
@@ -156,8 +161,8 @@ function setup()
 	}
 	
 	// get watched and ignored directories because they are used a lot
-	$GLOBALS['ignored'] = db_watch::get($database, array('search_Filepath' => '/^!/'), $count, $error);
-	$GLOBALS['watched'] = db_watch::get($database, array('search_Filepath' => '/^\\^/'), $count, $error);
+	$GLOBALS['ignored'] = db_watch::get(array('search_Filepath' => '/^!/'), $count, $error);
+	$GLOBALS['watched'] = db_watch::get(array('search_Filepath' => '/^\\^/'), $count, $error);
 	
 	// load templating system but only if we are using templates
 	if(defined('LOCAL_DEFAULT'))

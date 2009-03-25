@@ -69,7 +69,7 @@ class db_archive extends db_file
 
 	}
 
-	static function handle($database, $file)
+	static function handle($file)
 	{
 		$file = str_replace('\\', '/', $file);
 		
@@ -80,7 +80,7 @@ class db_archive extends db_file
 		if(self::handles($file))
 		{
 			// check to see if it is in the database
-			$db_archive = $database->query(array(
+			$db_archive = $GLOBALS['database']->query(array(
 					'SELECT' => self::DATABASE,
 					'COLUMNS' => 'id',
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
@@ -90,12 +90,12 @@ class db_archive extends db_file
 			// try to get music information
 			if( count($db_archive) == 0 )
 			{
-				$fileid = self::add($database, $file);
+				$fileid = self::add($file);
 			}
 			else
 			{
 				// check to see if the file was changed
-				$db_file = $database->query(array(
+				$db_file = $GLOBALS['database']->query(array(
 						'SELECT' => db_file::DATABASE,
 						'COLUMNS' => 'Filedate',
 						'WHERE' => 'Filepath = "' . addslashes($file) . '"'
@@ -105,7 +105,7 @@ class db_archive extends db_file
 				// update audio if modified date has changed
 				if( date("Y-m-d h:i:s", filemtime($file)) != $db_file[0]['Filedate'] )
 				{
-					$id = self::add($database, $file, $db_archive[0]['id']);
+					$id = self::add($file, $db_archive[0]['id']);
 				}
 				
 			}
@@ -114,14 +114,14 @@ class db_archive extends db_file
 		
 	}
 
-	static function add($database, $file, $archive_id = NULL)
+	static function add($file, $archive_id = NULL)
 	{
 		// do a little cleanup here
 		// if the archive changes remove all it's inside files from the database
 		if( $archive_id != NULL )
 		{
 			log_error('Removing archive: ' . $file);
-			$database->query(array('DELETE' => self::DATABASE, 'WHERE' => 'LEFT(Filepath, ' . (strlen($file)+1) . ') = "' . addslashes($file) . '/" AND (LOCATE("/", Filepath, ' . (strlen($file)+2) . ') = 0 OR LOCATE("/", Filepath, ' . (strlen($file)+2) . ') = LENGTH(Filepath))'));
+			$GLOBALS['database']->query(array('DELETE' => self::DATABASE, 'WHERE' => 'LEFT(Filepath, ' . (strlen($file)+1) . ') = "' . addslashes($file) . '/" AND (LOCATE("/", Filepath, ' . (strlen($file)+2) . ') = 0 OR LOCATE("/", Filepath, ' . (strlen($file)+2) . ') = LENGTH(Filepath))'));
 		}
 
 		// pull information from $info
@@ -159,7 +159,7 @@ class db_archive extends db_file
 					$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
 					
 					log_error('Adding file in archive: ' . $fileinfo['Filepath']);
-					$id = $database->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
+					$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 				}
 				
 				// get folders leading up to files
@@ -182,7 +182,7 @@ class db_archive extends db_file
 						$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
 						
 						log_error('Adding directory in archive: ' . $fileinfo['Filepath']);
-						$id = $database->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
+						$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 					}
 				}
 			}
@@ -208,7 +208,7 @@ class db_archive extends db_file
 			log_error('Modifying archive: ' . $fileinfo['Filepath']);
 			
 			// update database
-			$id = $database->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $archive_id));
+			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $archive_id));
 		
 			return $audio_id;
 		}
@@ -217,14 +217,14 @@ class db_archive extends db_file
 			log_error('Adding archive: ' . $fileinfo['Filepath']);
 			
 			// add to database
-			$id = $database->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
+			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 			
 			return $id;
 		}
 		
 	}
 
-	static function out($database, $file)
+	static function out($file)
 	{
 		$file = str_replace('\\', '/', $file);
 		
@@ -235,13 +235,13 @@ class db_archive extends db_file
 
 		if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
 		{
-			return db_file::out($database, $last_path);
+			return db_file::out($last_path);
 		}
 
 		return false;
 	}
 	
-	static function get($database, $request, &$count, &$error)
+	static function get($request, &$count, &$error)
 	{
 		if(isset($request['dir']))
 		{
@@ -259,15 +259,15 @@ class db_archive extends db_file
 			}
 		}
 		
-		$files = db_file::get($database, $request, $count, $error, 'db_archive');
+		$files = db_file::get($request, $count, $error, 'db_archive');
 		
 		return $files;
 	}
 
-	static function cleanup($database)
+	static function cleanup()
 	{
 		// call default cleanup function
-		parent::cleanup($database, get_class());
+		parent::cleanup(get_class());
 	}
 }
 

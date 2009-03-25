@@ -22,24 +22,24 @@ class db_alias extends db_file
 		return false;
 	}
 
-	static function handle($database, $file)
+	static function handle($file)
 	{
 	}
 	
-	static function get($database, $request, &$count, &$error)
+	static function get($request, &$count, &$error)
 	{
 		$request['order_by'] = 'id';
 		
-		$database->validate($request, $props, get_class());
+		$GLOBALS['database']->validate($request, $props, get_class());
 		
 		$props['SELECT'] = self::DATABASE;
 		
-		$files = $database->query($props);
+		$files = $GLOBALS['database']->query($props);
 		
 		return $files;
 	}
 	
-	static function cleanup($database)
+	static function cleanup()
 	{
 	}
 

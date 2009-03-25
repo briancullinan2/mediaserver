@@ -19,9 +19,9 @@ while (($file = readdir($dh)) !== false)
 
 closedir($dh);
 /*
-$database = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+$GLOBALS['database'] = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 
-$files = $database->query(array('SELECT' => 'files', 'WHERE' => 'Filepath REGEXP "^/home/share/Music/38 Special/Live at Sturgis/09"'));
+$files = $GLOBALS['database']->query(array('SELECT' => 'files', 'WHERE' => 'Filepath REGEXP "^/home/share/Music/38 Special/Live at Sturgis/09"'));
 
 if(count($files) > 0)
 {

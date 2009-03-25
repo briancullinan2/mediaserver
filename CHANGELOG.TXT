@@ -1,3 +1,6 @@
+2009-03-24
+Created a database GLOBAL because it is not at all state dependant, and there is no reason to pass it to a bunch of different functions
+
 2009-03-23
 Made cleanup faster by only checking for removed/non-existent files when the directory changes in the db_watch_list module
 	Non-standard modules are still responsible for doing cleanup
@@ -89,7 +92,7 @@ Started on new mobile template
 2009-02-19
 Added a few more status features to the cron.php plugin
 Fixed state for cron.php script using globals in the db_watch_list module
-Changed the $database->get() and $database->set() functions to $database->query() and improved the API for accessing the database
+Changed the $database->get() and $database->set() functions to $GLOBALS['database']->query() and improved the API for accessing the database
 Changed the cron script to use db_watch and db_watch_list modules for checking changed on the filesystem and adding files to the database
 	This will potenially allow us to load any directory on the file while it is being browsed
 Made improvements on sql queries which should allow easier parsing for different database types in the future

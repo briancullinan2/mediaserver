@@ -146,7 +146,7 @@ class db_diskimage extends db_file
 
 	}
 	
-	static function handle($database, $file)
+	static function handle($file)
 	{
 		$file = str_replace('\\', '/', $file);
 		
@@ -157,7 +157,7 @@ class db_diskimage extends db_file
 		if(self::handles($file))
 		{
 			// check to see if it is in the database
-			$db_diskimage = $database->query(array(
+			$db_diskimage = $GLOBALS['database']->query(array(
 					'SELECT' => self::DATABASE,
 					'COLUMNS' => 'id',
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
@@ -167,12 +167,12 @@ class db_diskimage extends db_file
 			// try to get music information
 			if( count($db_diskimage) == 0 )
 			{
-				$fileid = self::add($database, $file);
+				$fileid = self::add($file);
 			}
 			else
 			{
 				// check to see if the file was changed
-				$db_file = $database->query(array(
+				$db_file = $GLOBALS['database']->query(array(
 						'SELECT' => db_file::DATABASE,
 						'COLUMNS' => 'Filedate',
 						'WHERE' => 'Filepath = "' . addslashes($file) . '"'
@@ -182,7 +182,7 @@ class db_diskimage extends db_file
 				// update audio if modified date has changed
 				if( date("Y-m-d h:i:s", filemtime($file)) != $db_file[0]['Filedate'] )
 				{
-					$id = self::add($database, $file, $db_diskimage[0]['id']);
+					$id = self::add($file, $db_diskimage[0]['id']);
 				}
 				
 			}
@@ -191,14 +191,14 @@ class db_diskimage extends db_file
 		
 	}
 	
-	static function add($database, $file, $image_id = NULL)
+	static function add($file, $image_id = NULL)
 	{
 		// do a little cleanup here
 		// if the image changes remove all it's inside files from the database
 		if( $image_id != NULL )
 		{
 			log_error('Removing disk image: ' . $file);
-			$database->query(array('DELETE' => self::DATABASE, 'WHERE' => 'LEFT(Filepath, ' . (strlen($file)+1) . ') = "' . addslashes($file) . '/" AND (LOCATE("/", Filepath, ' . (strlen($file)+2) . ') = 0 OR LOCATE("/", Filepath, ' . (strlen($file)+2) . ') = LENGTH(Filepath))'));
+			$GLOBALS['database']->query(array('DELETE' => self::DATABASE, 'WHERE' => 'LEFT(Filepath, ' . (strlen($file)+1) . ') = "' . addslashes($file) . '/" AND (LOCATE("/", Filepath, ' . (strlen($file)+2) . ') = 0 OR LOCATE("/", Filepath, ' . (strlen($file)+2) . ') = LENGTH(Filepath))'));
 		}
 
 		// pull information from $info
@@ -231,7 +231,7 @@ class db_diskimage extends db_file
 						$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['recording_timestamp']);
 						
 						log_error('Adding file in disk image: ' . $fileinfo['Filepath']);
-						$id = $database->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
+						$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 					}
 				}
 			}
@@ -253,7 +253,7 @@ class db_diskimage extends db_file
 			log_error('Modifying Disk Image: ' . $fileinfo['Filepath']);
 			
 			// update database
-			$id = $database->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $archive_id));
+			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $archive_id));
 		
 			return $audio_id;
 		}
@@ -262,21 +262,21 @@ class db_diskimage extends db_file
 			log_error('Adding Disk Image: ' . $fileinfo['Filepath']);
 			
 			// add to database
-			$id = $database->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
+			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 			
 			return $id;
 		}
 		
 	}
 
-	static function out($database, $file)
+	static function out($file)
 	{
 		$file = str_replace('\\', '/', $file);
 		
 		if(USE_ALIAS == true)
 			$file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 			
-		$files = $database->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
+		$files = $GLOBALS['database']->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
 		if(count($files) > 0)
 		{				
 			return @fopen(self::PROTOCOL . '://' . $file, 'rb');
@@ -285,7 +285,7 @@ class db_diskimage extends db_file
 		return false;
 	}
 	
-	static function get($database, $request, &$count, &$error)
+	static function get($request, &$count, &$error)
 	{
 		if(isset($request['dir']))
 		{
@@ -303,15 +303,15 @@ class db_diskimage extends db_file
 			}
 		}
 		
-		$files = db_file::get($database, $request, $count, $error, get_class());
+		$files = db_file::get($request, $count, $error, get_class());
 		
 		return $files;
 	}
 
-	static function cleanup($database)
+	static function cleanup()
 	{
 		// call default cleanup function
-		parent::cleanup($database, get_class());
+		parent::cleanup(get_class());
 	}
 }
 

@@ -104,7 +104,7 @@ define('TMP_DIR', 	                             '/tmp/');
 define('USE_ALIAS', 							 true);
 
 // how long to search for directories that have changed
-define('DIRECTORY_SEEK_TIME',		60);
+define('DIRECTORY_SEEK_TIME',		5);
 
 // how long to search for changed files or add new files
 define('FILE_SEEK_TIME', 		   60);

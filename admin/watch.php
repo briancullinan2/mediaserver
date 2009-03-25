@@ -18,9 +18,6 @@ else
 
 $error = '';
 
-// get the current list of watches
-$database = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
-
 if( isset($_REQUEST['add']) && isset($_REQUEST['addpath']) && $_REQUEST['addpath'] != '' )
 {
 	if($_REQUEST['addpath'][0] != '!' && $_REQUEST['addpath'][0] != '^')
@@ -28,7 +25,7 @@ if( isset($_REQUEST['add']) && isset($_REQUEST['addpath']) && $_REQUEST['addpath
 	if(db_watch::handles($_REQUEST['addpath']))
 	{
 			// pass file to module
-			db_watch::handle($database, $_REQUEST['addpath']);
+			db_watch::handle($_REQUEST['addpath']);
 			
 			unset($_REQUEST['addpath']);
 	}
@@ -39,15 +36,15 @@ if( isset($_REQUEST['add']) && isset($_REQUEST['addpath']) && $_REQUEST['addpath
 }
 elseif( isset($_REQUEST['remove']) && is_numeric($_REQUEST['watch']) )
 {
-	$database->query(array('DELETE' => db_watch::DATABASE, 'WHERE' => 'id=' . $_REQUEST['watch']));
+	$GLOBALS['database']->query(array('DELETE' => db_watch::DATABASE, 'WHERE' => 'id=' . $_REQUEST['watch']));
 
 	// clear post
 	unset($_REQUEST['addpath']);
 }
 
 // reget the watched and ignored because they may have changed
-$GLOBALS['ignored'] = db_watch::get($database, array('search_Filepath' => '/^!/'), $count, $error);
-$GLOBALS['watched'] = db_watch::get($database, array('search_Filepath' => '/^\\^/'), $count, $error);
+$GLOBALS['ignored'] = db_watch::get(array('search_Filepath' => '/^!/'), $count, $error);
+$GLOBALS['watched'] = db_watch::get(array('search_Filepath' => '/^\\^/'), $count, $error);
 
 ?>
 <html>

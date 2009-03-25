@@ -17,7 +17,7 @@ require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY
 $GLOBALS['getID3'] = new getID3();
 
 // music handler
-class db_movies_tmp extends db_diskimage
+class db_movies extends db_file
 {
 	const DATABASE = 'movies';
 	
@@ -57,16 +57,22 @@ class db_movies_tmp extends db_diskimage
 			}
 		}
 		
-		switch($last_ext)
+		if($last_ext == 'iso')
 		{
-			case 'iso':
-				return true;
-			default:
-				return false;
+			$info = $GLOBALS['getID3']->analyze($last_path);
+			
+			if(isset($info['iso']) && isset($info['iso']['directories']))
+			{
+				
+			}
 		}
 		
 		return false;
 
+	}
+	
+	static function handle($file)
+	{
 	}
 	
 	static function getInfo($filename)
@@ -74,21 +80,21 @@ class db_movies_tmp extends db_diskimage
 		return array();
 	}
 
-	static function out($database, $file, $stream)
+	static function out($file)
 	{
 	}
 	
-	static function get($database, $request, &$count, &$error)
+	static function get($request, &$count, &$error)
 	{
-		$files = db_file::get($database, $request, $count, $error, get_class());
+		$files = db_file::get($request, $count, $error, get_class());
 		
 		return $files;
 	}
 	
-	static function cleanup($database)
+	static function cleanup()
 	{
 		// call default cleanup function
-		//db_file::cleanup($database, get_class());
+		//db_file::cleanup(get_class());
 	}
 
 }

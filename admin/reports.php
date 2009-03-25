@@ -261,8 +261,6 @@ $reports[0][0.1][(TYPE_BOLD).'-Logs'] = '	<form action="" method="post">
 // more information
 $reports[1][0][(TYPE_HEADING).'-Site Information'] = 'General information about the site.';
 
-$database = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
-
 // show some information about current setup
 $reports[-1][1][(TYPE_BOLD).'-Current Version'] = VERSION . ' (' . VERSION_NAME . ')';
 
@@ -270,7 +268,7 @@ $reports[-1][1][(TYPE_BOLD).'-Current Version'] = VERSION . ' (' . VERSION_NAME 
 $reports[1][1][(TYPE_BOLD).'-Database Counts'] = 'Here is a list of counts for the databases:<br />';
 foreach($GLOBALS['databases'] as $i => $db)
 {
-	$result = $database->query(array('SELECT' => $db, 'COLUMNS' => 'count(*)'));
+	$result = $GLOBALS['database']->query(array('SELECT' => $db, 'COLUMNS' => 'count(*)'));
 	if(count($result) > 0)
 	{
 		$reports[1][1][(TYPE_BOLD).'-Database Counts'] .= $db . ' database has ' . $result[0]['count(*)'] . ' entries' . (($i != count($GLOBALS['databases'])-1)?'<br />':'');
@@ -289,7 +287,7 @@ $reports[2][0][(TYPE_HEADING).'-Funny File Names'] = 'List of files that have st
 if(isset($_REQUEST['show2']) && $_REQUEST['show2'] == true)
 {
 	// get some non-standard filenames, ones that contain non ascii characters
-	$results = $database->query(array('SELECT' => db_file::DATABASE, 'WHERE' => 'Filepath REGEXP(CONCAT(\'[^\',CHAR(32),\'-\',CHAR(126),\']\'))', 'LIMIT' => '0,15', 'ORDER' => 'Filepath'));
+	$results = $GLOBALS['database']->query(array('SELECT' => db_file::DATABASE, 'WHERE' => 'Filepath REGEXP(CONCAT(\'[^\',CHAR(32),\'-\',CHAR(126),\']\'))', 'LIMIT' => '0,15', 'ORDER' => 'Filepath'));
 	
 	if(count($results) > 0)
 	{
@@ -300,7 +298,7 @@ if(isset($_REQUEST['show2']) && $_REQUEST['show2'] == true)
 			$reports[2][1][(TYPE_BOLD).'-Non-Ascii Files'] .= '<br />' . preg_replace('/([^\\x20-\\x7E])/i', '<span style="color:rgb(255,0,0);font-weight:bold;">$1</span>', htmlspecialchars($file['Filepath']));
 			
 			// get total
-			$count = $database->query(array('SELECT' => db_file::DATABASE, 'COLUMNS' => 'count(*)', 'WHERE' => 'Filepath REGEXP(CONCAT(\'[^\',CHAR(32),\'-\',CHAR(126),\']\'))'));
+			$count = $GLOBALS['database']->query(array('SELECT' => db_file::DATABASE, 'COLUMNS' => 'count(*)', 'WHERE' => 'Filepath REGEXP(CONCAT(\'[^\',CHAR(32),\'-\',CHAR(126),\']\'))'));
 			
 			if(count($count) > 0)
 			{

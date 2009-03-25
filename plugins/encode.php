@@ -43,10 +43,6 @@ switch($_REQUEST['encode'])
 		$_REQUEST['encode'] = 'MP3';
 }
 
-// load mysql to query the database
-if(USE_DATABASE) $database = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
-else $database = NULL;
-
 // add category
 if(!isset($_REQUEST['cat']) || !in_array($_REQUEST['cat'], $GLOBALS['modules']))
 	$_REQUEST['cat'] = USE_DATABASE?'db_file':'fs_file';
@@ -58,7 +54,7 @@ if(!isset($_REQUEST['%IF']) && isset($_REQUEST['id']))
 if(isset($_REQUEST))
 {
 	// get the file path from the database
-	$files = call_user_func_array($_REQUEST['cat'] . '::get', array($database, $_REQUEST, &$count, &$error));
+	$files = call_user_func_array($_REQUEST['cat'] . '::get', array($_REQUEST, &$count, &$error));
 	
 	if(count($files) > 0)
 	{
@@ -67,7 +63,7 @@ if(isset($_REQUEST))
 		{
 			if($module != $_REQUEST['cat'] && call_user_func_array($module . '::handles', array($files[0]['Filepath'])))
 			{
-				$return = call_user_func_array($module . '::get', array($database, array('file' => $files[0]['Filepath']), &$tmp_count, &$tmp_error));
+				$return = call_user_func_array($module . '::get', array(array('file' => $files[0]['Filepath']), &$tmp_count, &$tmp_error));
 				if(isset($return[0])) $files[0] = array_merge($return[0], $files[0]);
 			}
 		}
@@ -204,7 +200,7 @@ if(isset($files[0]['Length']))
 	//header('Content-Length: ' . $length);
 }
 
-$fp = call_user_func_array($_REQUEST['cat'] . '::out', array($database, $_REQUEST['%IF']));
+$fp = call_user_func_array($_REQUEST['cat'] . '::out', array($_REQUEST['%IF']));
 //$fp = fopen($_REQUEST['%IF'], 'rb');
 $php_out = fopen('php://output', 'wb');
 

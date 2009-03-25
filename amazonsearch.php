@@ -1,10 +1,10 @@
 <?php
-require('AmazonProduct.class.php');
-require('AmazonSearchEngine.class.php');
-require('Snoopy.class.inc');
+require('include/AmazonProduct.class.php');
+require('include/AmazonSearchEngine.class.php');
+require('include/Snoopy.class.php');
 
-$dev_key = 'xxxxxxxxxxxx';    // Your Amazon web services developer key
-$associate_id = 'none'; // Your (optional) Amazon associates ID
+$dev_key = '1D9T2665M4N4A7ACEZR2';    // Your Amazon web services developer key
+$associate_id = 'projblog-20'; // Your (optional) Amazon associates ID
 
 // Grab the term from the query string
 $term = isset($_GET['term']) ? $_GET['term'] : 'php';

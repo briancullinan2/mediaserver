@@ -203,7 +203,7 @@ class fs_diskimage extends fs_file
 		return $fileinfo;
 	}
 
-	static function out($database, $file)
+	static function out($file)
 	{
 		$file = str_replace('\\', '/', $file);
 		
@@ -217,7 +217,7 @@ class fs_diskimage extends fs_file
 		return false;
 	}
 	
-	static function get($database, $request, &$count, &$error)
+	static function get($request, &$count, &$error)
 	{
 		$files = array();
 		

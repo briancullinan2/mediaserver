@@ -8,10 +8,6 @@ require_once LOCAL_ROOT . 'plugins' . DIRECTORY_SEPARATOR . 'bttracker' . DIRECT
 require_once LOCAL_ROOT . 'plugins' . DIRECTORY_SEPARATOR . 'bttracker' . DIRECTORY_SEPARATOR . 'config.php';
 require_once LOCAL_ROOT . 'plugins' . DIRECTORY_SEPARATOR . 'bttracker' . DIRECTORY_SEPARATOR . 'funcsv2.php';
 
-// load mysql to query the database
-if(USE_DATABASE) $database = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
-else $database = NULL;
-
 // add category and validate it!
 if(!isset($_REQUEST['cat']) || !in_array($_REQUEST['cat'], $GLOBALS['modules']))
 	$_REQUEST['cat'] = 'db_file';
@@ -21,7 +17,7 @@ $files = array();
 $count = 0;
 $error = '';
 // make select call
-$files = call_user_func_array($_REQUEST['cat'] . '::get', array($database, $_REQUEST, &$count, &$error));
+$files = call_user_func_array($_REQUEST['cat'] . '::get', array($_REQUEST, &$count, &$error));
 
 $files_length = count($files);
 // get all the other information from other modules
@@ -34,7 +30,7 @@ for($index = 0; $index < $files_length; $index++)
 	{
 		if($module != $_REQUEST['cat'] && call_user_func_array($module . '::handles', array($file['Filepath'])))
 		{
-			$return = call_user_func_array($_REQUEST['cat'] . '::get', array($database, array('file' => $file['Filepath']), &$tmp_count, &$tmp_error));
+			$return = call_user_func_array($_REQUEST['cat'] . '::get', array(array('file' => $file['Filepath']), &$tmp_count, &$tmp_error));
 			if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
 		}
 	}
@@ -44,7 +40,7 @@ for($index = 0; $index < $files_length; $index++)
 	{
 		// get all files in directory
 		$props = array('dir' => $file['Filepath']);
-		$sub_files = call_user_func_array((USE_DATABASE?'db_':'fs_') . 'file::get', array($database, $props, &$tmp_count, &$tmp_error));
+		$sub_files = call_user_func_array((USE_DATABASE?'db_':'fs_') . 'file::get', array($props, &$tmp_count, &$tmp_error));
 		
 		// put these files on the end of the array so they also get processed
 		$files = array_merge($files, $sub_files);
@@ -85,7 +81,7 @@ if(count($files) > 0)
 	$current_file = 0;
 	$contents = '';
 	$read_amount = 0;
-	$fp = call_user_func_array($_REQUEST['cat'] . '::out', array($database, $files[$current_file]['Filepath']));
+	$fp = call_user_func_array($_REQUEST['cat'] . '::out', array($files[$current_file]['Filepath']));
 	while($current_file <= count($files))
 	{
 		$read_amount = $torrent['info']['piece length'] - strlen($contents);
@@ -101,7 +97,7 @@ if(count($files) > 0)
 		if(feof($fp) && $current_file < count($files))
 		{
 			//print $files[$current_file]['Filepath'] . '<br />';
-			$fp = call_user_func_array($_REQUEST['cat'] . '::out', array($database, $files[$current_file]['Filepath']));
+			$fp = call_user_func_array($_REQUEST['cat'] . '::out', array($files[$current_file]['Filepath']));
 		}
 		
 		// should keep reading files if middle file is shorter then piece length also

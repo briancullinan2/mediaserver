@@ -19,20 +19,16 @@ class db_watch_list extends db_watch
 	
 	static function handles($dir, $file = NULL)
 	{
-		global $database, $should_clean;
-		
 		$dir = str_replace('\\', '/', $dir);
 		
 		if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $dir)))
 		{
-			if(!isset($database)) $database = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
-		
 			if(self::is_watched($dir))
 			{
 				if($file == NULL)
 				{
 					// changed directories or directories that don't exist in the database
-					$db_files = $database->query(array(
+					$db_files = $GLOBALS['database']->query(array(
 							'SELECT' => db_file::DATABASE,
 							'COLUMNS' => array('id', 'Filedate'),
 							'WHERE' => 'Filepath = "' . addslashes($dir) . '"'
@@ -47,14 +43,11 @@ class db_watch_list extends db_watch
 				
 				if( !isset($file) || date("Y-m-d h:i:s", filemtime($dir)) != $file['Filedate'] )
 				{
-					// only change should clean if it was because of time difference
-					if(isset($file) && $should_clean === false)
-						$should_clean = true;
 					return true;
 				}
 				else
 				{
-					$db_files = $database->query(array(
+					$db_files = $GLOBALS['database']->query(array(
 							'SELECT' => db_file::DATABASE,
 							'COLUMNS' => array('count(*)'),
 							'WHERE' => 'LEFT(Filepath, ' . strlen($dir) . ') = "' . addslashes($dir) . '" AND (LOCATE("/", Filepath, ' . (strlen($dir)+1) . ') = 0 OR LOCATE("/", Filepath, ' . (strlen($dir)+1) . ') = LENGTH(Filepath))'
@@ -70,9 +63,9 @@ class db_watch_list extends db_watch
 						{
 							if(db_file::handles($dir . $file))
 							{
-								if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $dir . $file)))
+								if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $dir . $file . '/')))
 								{
-									if(self::is_watched($dir . $file))
+									if(self::is_watched($dir . $file . '/'))
 										$count++;
 								}
 								else
@@ -133,13 +126,13 @@ class db_watch_list extends db_watch
 		return false;
 	}
 
-	static function handle($database, $dir)
+	static function handle($dir)
 	{
 		$dir = str_replace('\\', '/', $dir);
 		
 		if(self::handles($dir))
 		{
-			$db_watch_list = $database->query(array(
+			$db_watch_list = $GLOBALS['database']->query(array(
 					'SELECT' => self::DATABASE,
 					'COLUMNS' => array('id'),
 					'WHERE' => 'Filepath = "' . addslashes($dir) . '"'
@@ -148,9 +141,9 @@ class db_watch_list extends db_watch
 			
 			if( count($db_watch_list) == 0 )
 			{
-				$id = self::add($database, $dir);
+				$id = self::add($dir);
 				
-				return self::handle_dir($database, $dir);
+				return self::handle_dir($dir);
 			}
 			else
 			{
@@ -164,20 +157,20 @@ class db_watch_list extends db_watch
 				$paths[] = $dir;
 				foreach($files as $i => $file)
 				{
-					if(is_file($file['Filepath']))
-					{
-						self::handle_file($database, $file['Filepath']);
-					}
+					self::handle_file($file['Filepath']);
+						
 					$paths[] = $file['Filepath'];
 				}
 				
 				// search for removed files
-				$db_files = $database->query(array(
+				$db_files = $GLOBALS['database']->query(array(
 						'SELECT' => db_file::DATABASE,
 						'COLUMNS' => array('Filepath'),
 						'WHERE' => 'LEFT(Filepath, ' . strlen($dir) . ') = "' . addslashes($dir) . '" AND (LOCATE("/", Filepath, ' . (strlen($dir)+1) . ') = 0 OR LOCATE("/", Filepath, ' . (strlen($dir)+1) . ') = LENGTH(Filepath))'
 					)
 				);
+				
+				$db_paths = array();
 				foreach($db_files as $j => $file)
 				{
 					if(!in_array($file['Filepath'], $paths))
@@ -188,16 +181,27 @@ class db_watch_list extends db_watch
 						foreach($GLOBALS['modules'] as $i => $module)
 						{
 							if($module != 'fs_file' && $module != 'db_watch' && $module != 'db_watch_list')
-								call_user_func_array($module . '::remove', array($database, $file['Filepath'], $module));
+								call_user_func_array($module . '::remove', array($file['Filepath'], $module));
 						}
 					}
+					$db_paths[] = $file['Filepath'];
 				}
 				
 				// add current directory to database
-				self::handle_file($database, $dir);
+				self::handle_file($dir);
+				
+				// check for new files
+				$paths = array_diff($paths, $db_paths);
+				foreach($paths as $i => $path)
+				{
+					if(is_dir($path))
+					{
+						self::add($path);
+					}
+				}
 				
 				// delete the selected folder from the database
-				$database->query(array('DELETE' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($dir) . '"'));
+				$GLOBALS['database']->query(array('DELETE' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($dir) . '"'));
 			}
 		}
 		// check directories recursively
@@ -207,11 +211,11 @@ class db_watch_list extends db_watch
 			if(self::is_watched($dir))
 			{
 				// search recursively
-				$status = self::handle_dir($database, $dir);
+				$status = self::handle_dir($dir);
 				
 				// remove any occurance of this directory from the database
 				//  it only gets here if it isn't handled, so it shouldn't be in the database
-				$database->query(array('DELETE' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($dir) . '"'));
+				$GLOBALS['database']->query(array('DELETE' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($dir) . '"'));
 				
 				return $status;
 			}
@@ -220,7 +224,7 @@ class db_watch_list extends db_watch
 		return true;
 	}
 	
-	static function handle_dir($database, $dir)
+	static function handle_dir($dir)
 	{
 		global $tm_start, $secs_total, $state, $dirs;
 		
@@ -272,7 +276,7 @@ class db_watch_list extends db_watch
 					}
 				
 					// keep processing files
-					$status = self::handle($database, $file['Filepath']);
+					$status = self::handle($file['Filepath']);
 					
 					if( $status === false )
 					{
@@ -287,17 +291,17 @@ class db_watch_list extends db_watch
 		return true;
 	}
 	
-	static function handle_file($database, $file)
+	static function handle_file($file)
 	{
 		foreach($GLOBALS['modules'] as $i => $module)
 		{
 			// never pass is to fs_file, it is only used to internals in this case
 			if($module != 'fs_file' && $module != 'db_watch' && $module != 'db_watch_list')
-				call_user_func_array($module . '::handle', array($database, $file));
+				call_user_func_array($module . '::handle', array($file));
 		}
 	}
 	
-	static function add($database, $file)
+	static function add($file)
 	{
 		// pull information from $info
 		$fileinfo = array();
@@ -306,12 +310,12 @@ class db_watch_list extends db_watch
 		log_error('Queueing directory: ' . $file);
 		
 		// add to database
-		$id = $database->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
+		$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 		
 		return $id;
 	}
 	
-	static function get($database, $request, &$count, &$error)
+	static function get($request, &$count, &$error)
 	{
 		// if this module handles this type of file and the get is being called
 		//   then we must add new files to database! so handle() it
@@ -326,13 +330,13 @@ class db_watch_list extends db_watch
 				
 				foreach($files as $i => $file)
 				{
-					self::handle_file($database, $file['Filepath']);
+					self::handle_file($file['Filepath']);
 				}
 				
-				self::handle_file($database, $request['file']);
+				self::handle_file($request['file']);
 				
 				// delete the selected folder from the database
-				$database->query(array('DELETE' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['file']) . '"'));
+				$GLOBALS['database']->query(array('DELETE' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['file']) . '"'));
 			}
 			else
 			{
@@ -340,13 +344,13 @@ class db_watch_list extends db_watch
 			}
 		}
 		
-		return db_file::get($database, $request, $count, $error, get_class());
+		return db_file::get($request, $count, $error, get_class());
 	}
 	
-	static function cleanup($database)
+	static function cleanup()
 	{
 		// call default cleanup function
-		db_file::cleanup($database, get_class());
+		db_file::cleanup(get_class());
 	}
 }
 

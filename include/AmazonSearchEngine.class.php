@@ -7,11 +7,11 @@
 
 // Currently only handles 'lite' queries on 'books'
 class AmazonSearchEngine {
-    var $server = 'xml.amazon.com';
+    var $server = 'ecs.amazonaws.com';
     var $search;
     var $dev_token;
     var $associates_id;
-    var $type = 'lite';
+    var $type = 'ItemLookup';
     var $results;  // Array of results
     var $_parser;   // The XML parser
     var $_currentResult;
@@ -46,6 +46,7 @@ class AmazonSearchEngine {
             }
         }
         */
+		print_r($contents);
         if (!xml_parse($this->_parser, $contents)) {
             die(sprintf('XML error: %s at line %d',
                 xml_error_string(xml_get_error_code($this->_parser)),
@@ -54,8 +55,8 @@ class AmazonSearchEngine {
         xml_parser_free($this->_parser);
     }
     function searchTerm($term, $mode = 'books') {
-        $url = "http://{$this->server}/onca/xml?t={$this->associates_id}&KeywordSearch=$term&mode=$mode";
-        $url .= "&f=xml&type={$this->type}&dev-t={$this->dev_token}&v=1";
+        $url = "http://{$this->server}/onca/xml?Service=AWSECommerceService&Version=2005-03-23&Operation=ItemSearch&ContentType=text%2Fxml&SubscriptionId={$this->dev_token}";
+		$url .= "&SearchIndex=Music&Artist=" . urlencode($term) . "&ResponseGroup=Images,Similarities,Small,Tracks";
         $this->doSearch($url);
     }
     function searchISBN($isbn) {

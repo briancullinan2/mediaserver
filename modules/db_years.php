@@ -24,13 +24,13 @@ class db_years extends db_audio
 		return false;
 	}
 
-	static function handle($database, $file)
+	static function handle($file)
 	{
 	}
 	
-	static function get($database, $request, &$count, &$error)
+	static function get($request, &$count, &$error)
 	{
-		$database->validate($request, $props, get_class());
+		$GLOBALS['database']->validate($request, $props, get_class());
 			
 		// modify some request stuff
 		if(isset($request['dir']))
@@ -44,14 +44,14 @@ class db_years extends db_audio
 			$request['columns'] = 'Year';
 			unset($request['dir']);
 			
-			$files = parent::get($database, $request, $count, $error, 'db_audio');
+			$files = parent::get($request, $count, $error, 'db_audio');
 		}
 		else
 		{
 			$request['order_by'] = 'Year';
 			$request['group_by'] = 'Year';
 			
-			$files = parent::get($database, $request, $count, $error, 'db_audio');
+			$files = parent::get($request, $count, $error, 'db_audio');
 			
 			// make some changes
 			foreach($files as $i => $file)
@@ -70,7 +70,7 @@ class db_years extends db_audio
 	}
 
 
-	static function cleanup($database)
+	static function cleanup()
 	{
 	}
 

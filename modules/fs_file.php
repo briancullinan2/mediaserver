@@ -76,7 +76,7 @@ class fs_file
 	}
 	
 	// output provided file to given stream
-	static function out($database, $file)
+	static function out($file)
 	{
 		$file = str_replace('\\', '/', $file);
 		
@@ -95,7 +95,7 @@ class fs_file
 	// the mysql can be left null to get the files from a directory, in which case a directory must be specified
 	// if the mysql is provided, then the file listings will be loaded from the database
 	// don't use $internals = true
-	static function get($database, $request, &$count, &$error, $internals = false)
+	static function get($request, &$count, &$error, $internals = false)
 	{
 		$files = array();
 		

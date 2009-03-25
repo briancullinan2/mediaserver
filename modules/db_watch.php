@@ -33,7 +33,7 @@ class db_watch extends db_file
 		return false;
 	}
 
-	static function handle($database, $file)
+	static function handle($file)
 	{
 		$file = str_replace('\\', '/', $file);
 			
@@ -43,7 +43,7 @@ class db_watch extends db_file
 			// add ending backslash
 			if( substr($file, strlen($file)-1) != '/' ) $file .= '/';
 			
-			$db_watch = $database->query(array(
+			$db_watch = $GLOBALS['database']->query(array(
 					'SELECT' => self::DATABASE,
 					'COLUMNS' => array('id'),
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
@@ -52,19 +52,19 @@ class db_watch extends db_file
 			
 			if( count($db_watch) == 0 )
 			{
-				$id = self::add($database, $file);
+				$id = self::add($file);
 			}
 			else
 			{
 				// just pass the first directories to watch_list module
-				return db_watch_list::handle($database, substr($file, 1));
+				return db_watch_list::handle(substr($file, 1));
 			}
 			
 		}
 		
 	}
 	
-	static function add($database, $file)
+	static function add($file)
 	{
 		// pull information from $info
 		$fileinfo = array();
@@ -73,20 +73,20 @@ class db_watch extends db_file
 		log_error('Adding watch: ' . $file);
 		
 		// add to database
-		$id = $database->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
+		$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 		
 		// add to watch_list and to files database
-		db_watch_list::handle($database, substr($file, 1));
+		db_watch_list::handle(substr($file, 1));
 		
-		db_watch_list::handle_file($database, substr($file, 1));
+		db_watch_list::handle_file(substr($file, 1));
 		
 		return $id;
 		
 	}
 	
-	static function get($database, $request, &$count, &$error)
+	static function get($request, &$count, &$error)
 	{
-		$files = parent::get($database, $request, $count, $error, get_class());
+		$files = parent::get($request, $count, $error, get_class());
 		
 		// make some changes
 		foreach($files as $i => $file)
@@ -97,7 +97,7 @@ class db_watch extends db_file
 		return $files;
 	}
 	
-	static function cleanup($database)
+	static function cleanup()
 	{
 		// do not do anything, watch directories are completely managed
 		return false;

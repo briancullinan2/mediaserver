@@ -44,14 +44,14 @@ class db_video extends db_file
 
 	}
 
-	static function handle($database, $file)
+	static function handle($file)
 	{
 		$file = str_replace('\\', '/', $file);
 		
 		if(self::handles($file))
 		{
 			// check to see if it is in the database
-			$db_video = $database->query(array(
+			$db_video = $GLOBALS['database']->query(array(
 					'SELECT' => self::DATABASE,
 					'COLUMNS' => 'id',
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
@@ -61,12 +61,12 @@ class db_video extends db_file
 			// try to get music information
 			if( count($db_video) == 0 )
 			{
-				$fileid = self::add($database, $file);
+				$fileid = self::add($file);
 			}
 			else
 			{
 				// check to see if the file was changed
-				$db_file = $database->query(array(
+				$db_file = $GLOBALS['database']->query(array(
 						'SELECT' => db_file::DATABASE,
 						'COLUMNS' => 'Filedate',
 						'WHERE' => 'Filepath = "' . addslashes($file) . '"'
@@ -76,7 +76,7 @@ class db_video extends db_file
 				// update audio if modified date has changed
 				if( date("Y-m-d h:i:s", filemtime($file)) != $db_file[0]['Filedate'] )
 				{
-					$id = self::add($database, $file, $db_video[0]['id']);
+					$id = self::add($file, $db_video[0]['id']);
 				}
 				
 			}
@@ -95,8 +95,8 @@ class db_video extends db_file
 		$fileinfo = array();
 		$fileinfo['Filepath'] = addslashes(str_replace('\\', '/', $file));
 		
-		$fileinfo['Title'] = @$info['comments_html']['title'][0];
-		$fileinfo['Comments'] = @$info['comments_html']['comments'][0];
+		$fileinfo['Title'] = @addslashes($info['comments_html']['title'][0]);
+		$fileinfo['Comments'] = @addslashes($info['comments_html']['comments'][0]);
 		$fileinfo['Bitrate'] = @$info['bitrate'];
 		$fileinfo['Length'] = @$info['playtime_seconds'];
 		$fileinfo['Channels'] = @$info['audio']['channels'];
@@ -108,7 +108,7 @@ class db_video extends db_file
 		return $fileinfo;
 	}
 
-	static function add($database, $file, $video_id = NULL)
+	static function add($file, $video_id = NULL)
 	{
 		// pull information from $info
 		$fileinfo = self::getInfo($file);
@@ -118,7 +118,7 @@ class db_video extends db_file
 			log_error('Modifying video: ' . $file);
 			
 			// update database
-			$id = $database->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $video_id));
+			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $video_id));
 		
 			return $audio_id;
 		}
@@ -127,23 +127,23 @@ class db_video extends db_file
 			log_error('Adding video: ' . $file);
 			
 			// add to database
-			$id = $database->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
+			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 			
 			return $id;
 		}
 		
 	}
 	
-	static function get($database, $request, &$count, &$error)
+	static function get($request, &$count, &$error)
 	{
-		return parent::get($database, $request, $count, $error, get_class());
+		return parent::get($request, $count, $error, get_class());
 	}
 
 
-	static function cleanup($database)
+	static function cleanup()
 	{
 		// call default cleanup function
-		parent::cleanup($database, get_class());
+		parent::cleanup(get_class());
 	}
 
 }

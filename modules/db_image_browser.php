@@ -39,28 +39,28 @@ class db_image_browser extends db_image
 	}
 	
 	// output provided file to given stream
-	static function out($database, $file)
+	static function out($file)
 	{
 		// check to make sure file is valid
 		header('Content-Disposition: ');
-		return db_file::out($database, $file);
+		return db_file::out($file);
 	}
 	
-	static function handle($database, $file)
+	static function handle($file)
 	{
 	}
 	
-	static function get($database, $request, &$count, &$error)
+	static function get($request, &$count, &$error)
 	{
-		$files = parent::get($database, $request, $count, $error);
+		$files = parent::get($request, $count, $error);
 		if(count($files) == 0)
 		{
-			$files = db_file::get($database, $request, $count, $error);
+			$files = db_file::get($request, $count, $error);
 		}
 		return $files;
 	}
 
-	static function cleanup($database)
+	static function cleanup()
 	{
 	}
 }

@@ -36,9 +36,6 @@ log_error('Cron Script: ' . VERSION . '_' . VERSION_NAME);
 if(USE_DATABASE == false)
 	exit;
 
-// get the directories to watch from the watch database
-$database = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
-
 // get the watched directories
 log_error('Ignored: ' . serialize($GLOBALS['ignored']));
 log_error('Watched: ' . serialize($GLOBALS['watched']));
@@ -132,7 +129,7 @@ for($i; $i < count($GLOBALS['watched']); $i++)
 	}
 	$watch = '^' . $GLOBALS['watched'][$i]['Filepath'];
 
-	$status = db_watch::handle($database, $watch);
+	$status = db_watch::handle($watch);
 
 	// if exited because of time, then save state
 	if( $status === false )
@@ -179,7 +176,7 @@ for($i; $i < count($GLOBALS['watched']); $i++)
 		}
 		
 		// set the last updated time in the watched table
-		$database->query(array('UPDATE' => db_watch::DATABASE, 'VALUES' => array('Lastwatch' => date("Y-m-d h:i:s")), 'WHERE' => 'Filepath = "' . $watch . '"'));
+		$GLOBALS['database']->query(array('UPDATE' => db_watch::DATABASE, 'VALUES' => array('Lastwatch' => date("Y-m-d h:i:s")), 'WHERE' => 'Filepath = "' . $watch . '"'));
 	}
 	
 	if(isset($_REQUEST['entry']) && is_numeric($_REQUEST['entry']) && $_REQUEST['entry'] < count($GLOBALS['watched']) && $_REQUEST['entry'] >= 0)
@@ -188,7 +185,7 @@ for($i; $i < count($GLOBALS['watched']); $i++)
 log_error("Phase 1: Complete!");
 
 // clean up the watch_list and remove stuff that doesn't exist in watch anymore
-db_watch_list::cleanup($database);
+db_watch_list::cleanup();
 
 // now scan some files
 $tm_start = array_sum(explode(' ', microtime()));
@@ -198,14 +195,14 @@ log_error("Phase 2: Checking modified directories for modified files");
 do
 {
 	// get 1 folder from the database to search the files for
-	$db_dirs = db_watch_list::get($database, array('limit' => 1), $count, $error);
+	$db_dirs = db_watch_list::get(array('limit' => 1), $count, $error);
 	
 	if(count($db_dirs) > 0)
 	{
 		$dir = $db_dirs[0]['Filepath'];
 		if(USE_ALIAS == true)
 			$dir = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $dir);
-		$status = db_watch_list::handle($database, $dir);
+		$status = db_watch_list::handle($dir);
 	}
 
 	// check if execution time is too long
@@ -239,7 +236,7 @@ log_error("Phase 3: Cleaning up");
 foreach($GLOBALS['modules'] as $i => $module)
 {
 	if($module != 'fs_file')
-		call_user_func_array($module . '::cleanup', array($database));
+		call_user_func_array($module . '::cleanup', array());
 }
 
 // read all the folders that lead up to the watched folder
@@ -271,12 +268,12 @@ for($i = 0; $i < count($GLOBALS['watched']); $i++)
 				
 				// if the USE_ALIAS is true this will only add the folder
 				//    if it is in the list of aliases
-				db_watch_list::handle_file($database, $curr_dir);
+				db_watch_list::handle_file($curr_dir);
 			}
 			// but make an exception for folders between an alias and the watch path
 			elseif(USE_ALIAS && $between)
 			{
-				db_watch_list::handle_file($database, $curr_dir);
+				db_watch_list::handle_file($curr_dir);
 			}
 		}
 	}

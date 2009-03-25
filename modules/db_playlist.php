@@ -40,11 +40,11 @@ class db_playlist extends db_file
 
 	}
 
-	static function handle($database, $file)
+	static function handle($file)
 	{
 	}
 	
-	static function get($database, $request, &$count, &$error, $module = NULL)
+	static function get($request, &$count, &$error, $module = NULL)
 	{
 		if(isset($request['dir']))
 		{
@@ -52,11 +52,11 @@ class db_playlist extends db_file
 			if(USE_ALIAS == true)
 				$request['file'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']);
 			
-			$files = $database->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['file']) . '"'));
+			$files = $GLOBALS['database']->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['file']) . '"'));
 			
 			if(count($files) > 0)
 			{
-				$database->validate($request, $props, get_class());
+				$GLOBALS['database']->validate($request, $props, get_class());
 			
 				// open playlist and parse out paths
 				if($fp = @fopen($request['file'], 'rb'))
@@ -189,7 +189,7 @@ class db_playlist extends db_file
 							unset($tmp_files[$i]);
 							
 						// search for file using terms
-						$result = db_audio::get($database, array('search' => join(' ', $valid_pieces), 'limit' => 1), $tmp_count, $tmp_error);
+						$result = db_audio::get(array('search' => join(' ', $valid_pieces), 'limit' => 1), $tmp_count, $tmp_error);
 						if($tmp_count > 0)
 						{
 							$files[] = $result[0];
@@ -197,7 +197,7 @@ class db_playlist extends db_file
 						}
 
 						// search for file using terms
-						$result = db_video::get($database, array('search' => join(' ', $valid_pieces), 'limit' => 1), $tmp_count, $tmp_error);
+						$result = db_video::get(array('search' => join(' ', $valid_pieces), 'limit' => 1), $tmp_count, $tmp_error);
 						if($tmp_count > 0)
 						{
 							$files[] = $result[0];
@@ -205,7 +205,7 @@ class db_playlist extends db_file
 						}
 						
 						// search for file using terms
-						$result = db_file::get($database, array('search' => join(' ', $valid_pieces), 'limit' => 1), $tmp_count, $tmp_error);
+						$result = db_file::get(array('search' => join(' ', $valid_pieces), 'limit' => 1), $tmp_count, $tmp_error);
 						if($tmp_count > 0)
 						{
 							$files[] = $result[0];
@@ -232,18 +232,18 @@ class db_playlist extends db_file
 		elseif(!isset($request['file']))
 		{
 			$request['search_Filename'] = '.wpl$';
-			$files = parent::get($database, $request, $count, $error, get_class());
+			$files = parent::get($request, $count, $error, get_class());
 		}
 		else
 		{
-			$files = parent::get($database, $request, $count, $error, get_class());
+			$files = parent::get($request, $count, $error, get_class());
 		}
 		
 		return $files;
 	}
 
 
-	static function cleanup($database)
+	static function cleanup()
 	{
 	}
 }

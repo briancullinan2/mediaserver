@@ -37,13 +37,13 @@ class fs_image_browser extends fs_image
 	}
 	
 	// output provided file to given stream
-	static function out($database, $file)
+	static function out($file)
 	{
 		header('Content-Disposition: ');
-		return fs_file::out($database, $file);
+		return fs_file::out($file);
 	}
 	
-	static function get($database, $request, &$count, &$error)
+	static function get($request, &$count, &$error)
 	{
 		return parent::get(NULL, $request, $count, $error, get_class());
 	}

@@ -176,6 +176,16 @@ class sql_global
 				Filetype		TEXT NOT NULL
 			)') or print_r(mysql_error());
 		
+		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'amazon (
+				id 				BIGINT NOT NULL AUTO_INCREMENT,
+								PRIMARY KEY(id),
+				AmazonId		TEXT NOT NULL,
+				AmazonTitle		TEXT NOT NULL,
+				AmazonType		TEXT NOT NULL,
+				AmazonInfo		TEXT NOT NULL,
+				Thumbnail		BLOB NOT NULL
+			)') or print_r(mysql_error());
+		
 	}
 	
 	// variables that can be defined in the request are validated here

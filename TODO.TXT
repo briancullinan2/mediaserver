@@ -1,3 +1,6 @@
+2009-03-24
+Use musicbrainz to sync music
+
 2009-03-23
 Work on discography.php plugin
 Preffered media type prediction based on browser/client, itunes gets mp4s, windows mediaplayer gets mpeg and wmv, if the parameter is left out, check the client info

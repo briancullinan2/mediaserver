@@ -135,20 +135,20 @@ class fs_archive extends fs_file
 		return $fileinfo;
 	}
 
-	static function out($database, $file)
+	static function out($file)
 	{
 		$file = str_replace('\\', '/', $file);
 		fs_file::parseInner($file, $last_path, $last_ext);
 
 		if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
 		{
-			return db_file::out($database, $last_path);
+			return db_file::out($last_path);
 		}
 
 		return false;
 	}
 	
-	static function get($database, $request, &$count, &$error)
+	static function get($request, &$count, &$error)
 	{
 		$files = array();
 		
