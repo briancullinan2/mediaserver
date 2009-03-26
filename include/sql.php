@@ -80,7 +80,7 @@ class sql_global
 							PRIMARY KEY(id),
 			Filepath		TEXT NOT NULL,
 			Hex				TEXT NOT NULL,';
-		foreach($GLOBALS['databases'] as $i => $db)
+		foreach($GLOBALS['tables'] as $i => $db)
 		{
 			$ids_query .= $db . '_id BIGINT NOT NULL,';
 		}
@@ -310,19 +310,41 @@ class sql_global
 			elseif(is_numeric($props['LIMIT'])) $limit = 'LIMIT ' . $props['LIMIT'];
 			elseif(is_string($props['LIMIT'])) $limit = 'LIMIT ' . $props['LIMIT'];
 				
-			if(isset($props['SELECT']))
+			if(isset($props['INSERT']))
+			{
+				$insert = 'INSERT INTO ' . (in_array($props['INSERT'], $GLOBALS['tables'])?(DB_PREFIX . $props['INSERT']):$props['INSERT']);
+				
+				if(!isset($props['COLUMNS']) && isset($props['VALUES']) && is_array($props['VALUES']))
+				{
+					$props['COLUMNS'] = array_keys($props['VALUES']);
+					$props['VALUES'] = array_values($props['VALUES']);
+				}
+				
+				if(!isset($props['COLUMNS'])) return false;
+				elseif(is_array($props['COLUMNS'])) $columns = '(' . join(', ', $props['COLUMNS']) . ')';
+				elseif(is_string($props['COLUMNS'])) $columns = '(' . $props['COLUMNS'] . ')';
+				
+				if(!isset($props['VALUES']) && !isset($props['SELECT'])) return false;
+				
+				if(!isset($props['VALUES'])) $values = $props['SELECT'];
+				elseif(is_array($props['VALUES'])) $values = 'VALUES ("' . join('", "', $props['VALUES']) . '")';
+				elseif(is_string($props['VALUES'])) $values = 'VALUES (' . $props['VALUES'] . ')';
+	
+				$statement = $insert . ' ' . $columns . ' ' . $values;
+			}
+			elseif(isset($props['SELECT']))
 			{
 				if(!isset($props['COLUMNS'])) $columns = '*';
 				elseif(is_array($props['COLUMNS'])) $columns = join(', ', $props['COLUMNS']);
 				elseif(is_string($props['COLUMNS'])) $columns = $props['COLUMNS'];
 				
-				$select = 'SELECT ' . $columns . ' FROM ' . (in_array($props['SELECT'], $GLOBALS['databases'])?(DB_PREFIX . $props['SELECT']):$props['SELECT']);
+				$select = 'SELECT ' . $columns . ' FROM ' . (in_array($props['SELECT'], $GLOBALS['tables'])?(DB_PREFIX . $props['SELECT']):$props['SELECT']);
 				
 				$statement = $select . ' ' . $where . ' ' . $group . ' ' . $having . ' ' . $order . ' ' . $limit;
 			}
 			elseif(isset($props['UPDATE']))
 			{
-				$update = 'UPDATE ' . (in_array($props['UPDATE'], $GLOBALS['databases'])?(DB_PREFIX . $props['UPDATE']):$props['UPDATE']) . ' SET';
+				$update = 'UPDATE ' . (in_array($props['UPDATE'], $GLOBALS['tables'])?(DB_PREFIX . $props['UPDATE']):$props['UPDATE']) . ' SET';
 				
 				if(!isset($props['COLUMNS']) && isset($props['VALUES']) && is_array($props['VALUES']))
 				{
@@ -346,29 +368,9 @@ class sql_global
 	
 				$statement = $update . ' ' . join(', ', $set) . ' ' . $where . ' ' . $order . ' ' . $limit;
 			}
-			elseif(isset($props['INSERT']))
-			{
-				$insert = 'INSERT INTO ' . (in_array($props['INSERT'], $GLOBALS['databases'])?(DB_PREFIX . $props['INSERT']):$props['INSERT']);
-				
-				if(!isset($props['COLUMNS']) && isset($props['VALUES']) && is_array($props['VALUES']))
-				{
-					$props['COLUMNS'] = array_keys($props['VALUES']);
-					$props['VALUES'] = array_values($props['VALUES']);
-				}
-				
-				if(!isset($props['COLUMNS'])) return false;
-				elseif(is_array($props['COLUMNS'])) $columns = '(' . join(', ', $props['COLUMNS']) . ')';
-				elseif(is_string($props['COLUMNS'])) $columns = '(' . $props['COLUMNS'] . ')';
-				
-				if(!isset($props['VALUES'])) return false;
-				elseif(is_array($props['VALUES'])) $values = 'VALUES ("' . join('", "', $props['VALUES']) . '")';
-				elseif(is_string($props['VALUES'])) $values = 'VALUES (' . $props['VALUES'] . ')';
-	
-				$statement = $insert . ' ' . $columns . ' ' . $values;
-			}
 			elseif(isset($props['DELETE']))
 			{
-				$delete = 'DELETE FROM ' . (in_array($props['DELETE'], $GLOBALS['databases'])?(DB_PREFIX . $props['DELETE']):$props['DELETE']);
+				$delete = 'DELETE FROM ' . (in_array($props['DELETE'], $GLOBALS['tables'])?(DB_PREFIX . $props['DELETE']):$props['DELETE']);
 	
 				$statement = $delete . ' ' . $where . ' ' . $order . ' ' . $limit;
 			}
@@ -412,7 +414,14 @@ class sql_global
 		}
 		elseif($result !== false && is_array($props) && (isset($props['INSERT']) || isset($props['UPDATE']) || isset($props['REPLACE']) || isset($props['DELETE'])))
 		{
-			return $this->affected();
+			if(isset($props['INSERT']))
+			{
+				return $this->getid();
+			}
+			else
+			{
+				return $this->affected();
+			}
 		}
 		else
 		{

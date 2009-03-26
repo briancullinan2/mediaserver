@@ -1,7 +1,11 @@
 2009-03-25
 New clause added to the top of plugins that require at least 1 file to be selected
 	They now search the request when all possible fields that would return a result are empty
-
+Added centralized ID database
+Fixed modules not updating their files because db_file module always changes the date before other modules get to it
+	Modules now return true if the file is added by the handle() method, 1 if the file modified, or false if the file is skipped
+	There are a few exceptions, the db_watch_list module returns true by default and false if there are still files to scan
+	
 2009-03-24 (14,000+ lines of code)
 Created a GLOBAL['database'] because it is not at all state dependant, and there is no reason to pass it to a bunch of different functions
 Worked on db_amazon module

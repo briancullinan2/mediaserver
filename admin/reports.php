@@ -266,12 +266,12 @@ $reports[-1][1][(TYPE_BOLD).'-Current Version'] = VERSION . ' (' . VERSION_NAME 
 
 // get database counts
 $reports[1][1][(TYPE_BOLD).'-Database Counts'] = 'Here is a list of counts for the databases:<br />';
-foreach($GLOBALS['databases'] as $i => $db)
+foreach($GLOBALS['tables'] as $i => $db)
 {
 	$result = $GLOBALS['database']->query(array('SELECT' => $db, 'COLUMNS' => 'count(*)'));
 	if(count($result) > 0)
 	{
-		$reports[1][1][(TYPE_BOLD).'-Database Counts'] .= $db . ' database has ' . $result[0]['count(*)'] . ' entries' . (($i != count($GLOBALS['databases'])-1)?'<br />':'');
+		$reports[1][1][(TYPE_BOLD).'-Database Counts'] .= $db . ' database has ' . $result[0]['count(*)'] . ' entries' . (($i != count($GLOBALS['tables'])-1)?'<br />':'');
 		if($db == db_watch_list::DATABASE)
 		{
 			$reports[1][2][(TYPE_BOLD).'-Watch List'] = 'The watch list contains directories that have to be searched for files<br />There are ' . $result[0]['count(*)'] . ' directories in the watch list database';

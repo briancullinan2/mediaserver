@@ -69,7 +69,7 @@ class db_archive extends db_file
 
 	}
 
-	static function handle($file)
+	static function handle($file, $force = false)
 	{
 		$file = str_replace('\\', '/', $file);
 		
@@ -91,41 +91,30 @@ class db_archive extends db_file
 			if( count($db_archive) == 0 )
 			{
 				$fileid = self::add($file);
+				return true;
 			}
-			else
+			elseif($force)
 			{
-				// check to see if the file was changed
-				$db_file = $GLOBALS['database']->query(array(
-						'SELECT' => db_file::DATABASE,
-						'COLUMNS' => 'Filedate',
-						'WHERE' => 'Filepath = "' . addslashes($file) . '"'
-					)
-				);
-				
-				// update audio if modified date has changed
-				if( date("Y-m-d h:i:s", filemtime($file)) != $db_file[0]['Filedate'] )
-				{
-					$id = self::add($file, $db_archive[0]['id']);
-				}
-				
+				$id = self::add($file, $db_archive[0]['id']);
+				return 1;
 			}
 
 		}
-		
+		return false;
 	}
 
 	static function add($file, $archive_id = NULL)
 	{
+		// pull information from $info
+		db_file::parseInner($file, $last_path, $inside_path);
+		
 		// do a little cleanup here
 		// if the archive changes remove all it's inside files from the database
 		if( $archive_id != NULL )
 		{
 			log_error('Removing archive: ' . $file);
-			$GLOBALS['database']->query(array('DELETE' => self::DATABASE, 'WHERE' => 'LEFT(Filepath, ' . (strlen($file)+1) . ') = "' . addslashes($file) . '/" AND (LOCATE("/", Filepath, ' . (strlen($file)+2) . ') = 0 OR LOCATE("/", Filepath, ' . (strlen($file)+2) . ') = LENGTH(Filepath))'));
+			self::remove($last_path . '/', get_class());
 		}
-
-		// pull information from $info
-		db_file::parseInner($file, $last_path, $inside_path);
 		
 		$info = $GLOBALS['getID3']->analyze($last_path);
 		
@@ -160,6 +149,7 @@ class db_archive extends db_file
 					
 					log_error('Adding file in archive: ' . $fileinfo['Filepath']);
 					$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
+					db_ids::handle($fileinfo['Filepath']);
 				}
 				
 				// get folders leading up to files
@@ -183,6 +173,7 @@ class db_archive extends db_file
 						
 						log_error('Adding directory in archive: ' . $fileinfo['Filepath']);
 						$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
+						db_ids::handle($fileinfo['Filepath']);
 					}
 				}
 			}

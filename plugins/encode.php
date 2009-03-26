@@ -45,16 +45,23 @@ if(isset($_REQUEST))
 	
 	if(count($files) > 0)
 	{
+		// replace id with centralized id
+		if(USE_DATABASE)
+		{
+			$ids = db_ids::get(array('file' => $files[0]['Filepath']), &$tmp_count, &$tmp_error);
+			if(count($ids) > 0) $files[0]['id'] = $ids[0]['id'];
+		}
+	
 		// get all the information incase we need to use it
 		foreach($GLOBALS['modules'] as $i => $module)
 		{
-			if($module != $_REQUEST['cat'] && call_user_func_array($module . '::handles', array($files[0]['Filepath'])))
+			if($module != 'db_ids' && $module != $_REQUEST['cat'] && call_user_func_array($module . '::handles', array($files[0]['Filepath'])))
 			{
 				$return = call_user_func_array($module . '::get', array(array('file' => $files[0]['Filepath']), &$tmp_count, &$tmp_error));
 				if(isset($return[0])) $files[0] = array_merge($return[0], $files[0]);
 			}
 		}
-		
+			
 		// fix the encode type
 		if(db_audio::handles($files[0]['Filepath']))
 		{

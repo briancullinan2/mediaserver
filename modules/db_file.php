@@ -27,7 +27,7 @@ class db_file
 			$filename = basename($file);
 
 			// make sure it isn't a hidden file
-			if($filename[0] != '.')
+			if(strlen($filename) > 0 && $filename[0] != '.')
 				return true;
 			else
 				return false;
@@ -56,7 +56,7 @@ class db_file
 	}
 	
 	// this function determines if the file qualifies for this type and handles it according
-	static function handle($file)
+	static function handle($file, $force = false)
 	{
 		$file = str_replace('\\', '/', $file);
 		
@@ -76,13 +76,16 @@ class db_file
 			{
 				// always add to file database
 				$id = self::add($file);
+				return true;
 			}
+			// not dependent on force because it checks for modification
 			else
 			{
 				// update file if modified date has changed
 				if( date("Y-m-d h:i:s", filemtime($file)) != $db_file[0]['Filedate'] )
 				{
 					$id = self::add($file, $db_file[0]['id']);
+					return 1;
 				}
 				else
 				{
@@ -92,7 +95,7 @@ class db_file
 			}
 			
 		}
-		
+		return false;
 	}
 	
 	static function getInfo($file)
@@ -134,7 +137,6 @@ class db_file
 			
 			// add to database
 			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
-		
 			return $id;
 		}
 		
@@ -192,12 +194,12 @@ class db_file
 				{
 					if(is_numeric($id))
 					{
-						$props['WHERE'] .= ' id=' . $id . ' OR';
+						$props['WHERE'] .= ' id = ' . $id . ' OR';
 					}
 					else
 					{
 						// unpack encoded path and add it to where
-						$props['WHERE'] .= ' Filepath="' . addslashes(str_replace('\\', '/', @pack('H*', $id))) . '" OR';
+						$props['WHERE'] .= ' Hex = "' . $id . '" OR';
 					}
 				}
 				// remove last or
@@ -207,6 +209,17 @@ class db_file
 				unset($props['LIMIT']);
 				unset($props['ORDER']);
 				unset($request);
+				
+				// get ids from centralized id database
+				$files = $GLOBALS['database']->query(array('WHERE' => $props['WHERE'], 'SELECT' => db_ids::DATABASE));
+				
+				// loop through ids and construct new where based on module
+				$props['WHERE'] = '';
+				foreach($files as $i => $file)
+				{
+						$props['WHERE'] .= ' id = ' . $file[constant($module . '::DATABASE') . '_id'] . ' OR';
+				}
+				$props['WHERE'] = substr($props['WHERE'], 0, strlen($props['WHERE'])-2);
 			}
 
 			// add where includes

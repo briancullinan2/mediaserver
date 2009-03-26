@@ -49,7 +49,7 @@ class fs_file
 				$filename = basename($file);
 	
 				// make sure it isn't a hidden file
-				if($filename[0] != '.')
+				if(strlen($filename) > 0 && $filename[0] != '.')
 					return true;
 				else
 					return false;

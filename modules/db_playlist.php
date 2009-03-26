@@ -40,8 +40,9 @@ class db_playlist extends db_file
 
 	}
 
-	static function handle($file)
+	static function handle($file, $force = false)
 	{
+		return false;
 	}
 	
 	static function get($request, &$count, &$error, $module = NULL)

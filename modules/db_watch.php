@@ -33,7 +33,7 @@ class db_watch extends db_file
 		return false;
 	}
 
-	static function handle($file)
+	static function handle($file, $force = false)
 	{
 		$file = str_replace('\\', '/', $file);
 			
@@ -53,6 +53,7 @@ class db_watch extends db_file
 			if( count($db_watch) == 0 )
 			{
 				$id = self::add($file);
+				return true;
 			}
 			else
 			{
@@ -61,7 +62,7 @@ class db_watch extends db_file
 			}
 			
 		}
-		
+		return false;
 	}
 	
 	static function add($file)

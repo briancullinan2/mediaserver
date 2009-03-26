@@ -54,7 +54,7 @@ class db_image extends db_file
 
 	}
 
-	static function handle($file)
+	static function handle($file, $force = false)
 	{
 		$file = str_replace('\\', '/', $file);
 		
@@ -72,27 +72,16 @@ class db_image extends db_file
 			if( count($db_image) == 0 )
 			{
 				$fileid = self::add($file);
+				return true;
 			}
-			else
+			elseif($force)
 			{
-				// check to see if the file was changed
-				$db_file = $GLOBALS['database']->query(array(
-						'SELECT' => db_file::DATABASE,
-						'COLUMNS' => 'Filedate',
-						'WHERE' => 'Filepath = "' . addslashes($file) . '"'
-					)
-				);
-				
-				// update audio if modified date has changed
-				if( date("Y-m-d h:i:s", filemtime($file)) != $db_file[0]['Filedate'] )
-				{
-					$id = self::add($file, $db_image[0]['id']);
-				}
-				
+				$id = self::add($file, $db_image[0]['id']);
+				return 1;
 			}
 
 		}
-		
+		return false;
 	}
 	
 	static function getInfo($file)

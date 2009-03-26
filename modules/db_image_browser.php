@@ -46,8 +46,9 @@ class db_image_browser extends db_image
 		return db_file::out($file);
 	}
 	
-	static function handle($file)
+	static function handle($file, $force = false)
 	{
+		return false;
 	}
 	
 	static function get($request, &$count, &$error)

@@ -126,7 +126,7 @@ class db_watch_list extends db_watch
 		return false;
 	}
 
-	static function handle($dir)
+	static function handle($dir, $force = false)
 	{
 		$dir = str_replace('\\', '/', $dir);
 		
@@ -150,7 +150,7 @@ class db_watch_list extends db_watch
 				log_error('Scanning directory: ' . $dir);
 				
 				// search all the files in the directory
-				$files = fs_file::get(NULL, array('dir' => $dir, 'limit' => 32000), $count, $error, true);
+				$files = fs_file::get(array('dir' => $dir, 'limit' => 32000), $count, $error, true);
 				
 				// send new/changed files to other modules
 				$paths = array();
@@ -235,7 +235,7 @@ class db_watch_list extends db_watch
 		{
 			log_error('Looking for changes in: ' . $dir);
 		
-			$files = fs_file::get(NULL, array('dir' => $dir, 'limit' => 32000), $count, $error, true);
+			$files = fs_file::get(array('dir' => $dir, 'limit' => 32000), $count, $error, true);
 					
 			if( isset($state) && is_array($state) ) $state_current = array_pop($state);
 			
@@ -293,12 +293,27 @@ class db_watch_list extends db_watch
 	
 	static function handle_file($file)
 	{
+		// since we are only dealing with files that actually exist
+		$result = db_file::handle($file);
+		
+		//   modify ids if something was added
+		$added = false;
+		if($result === true) $added = true;
+		
+		// if the file is skipped the only pass it to other handlers for adding, not modifing
+		//   if the file was modified or added the information could have changed, so the modules must modify it, if it is already added
 		foreach($GLOBALS['modules'] as $i => $module)
 		{
 			// never pass is to fs_file, it is only used to internals in this case
-			if($module != 'fs_file' && $module != 'db_watch' && $module != 'db_watch_list')
-				call_user_func_array($module . '::handle', array($file));
+			if($module != 'fs_file' && $module != 'db_file' && $module != 'db_watch' && $module != 'db_watch_list' && $module != 'db_ids')
+			{
+				$result = call_user_func_array($module . '::handle', array($file, ($result !== false)));
+				if($result === true) $added = true;
+			}
 		}
+		
+		// insert all the ids, force modifying only if something was added
+		db_ids::handle($file, ($added == true));
 	}
 	
 	static function add($file)
@@ -326,7 +341,7 @@ class db_watch_list extends db_watch
 			if(self::handles($request['file']))
 			{
 				// search all the files in the directory
-				$files = fs_file::get(NULL, array('dir' => $request['file'], 'limit' => 32000), $count, $error, true);
+				$files = fs_file::get(array('dir' => $request['file'], 'limit' => 32000), $count, $error, true);
 				
 				foreach($files as $i => $file)
 				{

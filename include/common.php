@@ -100,6 +100,7 @@ function setup()
 	
 	$error_count = 0;
 	$new_modules = array();
+	
 	// reorganize modules to reflect heirarchy
 	while(count($tmp_modules) > 0 && $error_count < 1000)
 	{
@@ -117,13 +118,13 @@ function setup()
 	$GLOBALS['modules'] = $new_modules;
 	
 	// loop through each module and compile a list of databases
-	$GLOBALS['databases'] = array();
+	$GLOBALS['tables'] = array();
 	foreach($GLOBALS['modules'] as $i => $module)
 	{
 		if(defined($module . '::DATABASE'))
-			$GLOBALS['databases'][] = constant($module . '::DATABASE');
+			$GLOBALS['tables'][] = constant($module . '::DATABASE');
 	}
-	$GLOBALS['databases'] = array_values(array_unique($GLOBALS['databases']));
+	$GLOBALS['tables'] = array_values(array_unique($GLOBALS['tables']));
 	
 	// merge some session variables with the request so modules only have to look in one place
 	if(isset($_SESSION['display']))

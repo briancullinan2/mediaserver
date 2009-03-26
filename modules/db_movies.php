@@ -71,8 +71,9 @@ class db_movies extends db_file
 
 	}
 	
-	static function handle($file)
+	static function handle($file, $force = false)
 	{
+		return false;
 	}
 	
 	static function getInfo($filename)

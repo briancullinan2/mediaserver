@@ -22,8 +22,9 @@ class db_alias extends db_file
 		return false;
 	}
 
-	static function handle($file)
+	static function handle($file, $force = false)
 	{
+		return false;
 	}
 	
 	static function get($request, &$count, &$error)

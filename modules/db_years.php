@@ -24,8 +24,9 @@ class db_years extends db_audio
 		return false;
 	}
 
-	static function handle($file)
+	static function handle($file, $force = false)
 	{
+		return false;
 	}
 	
 	static function get($request, &$count, &$error)

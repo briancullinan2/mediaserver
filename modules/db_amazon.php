@@ -54,7 +54,7 @@ class db_amazon extends db_file
 			{
 				$amazon = $GLOBALS['database']->query(array(
 						'SELECT' => self::DATABASE,
-						'WHERE' => 'AmazonTitle = "' . addslashes($audio[0]['Artist']) . ' - ' . addslashes($audio[0]['Album']) . '"'
+						'WHERE' => 'AmazonTitle = "' . addslashes($audio[0]['Artist'] . "\n" . $audio[0]['Album']) . '"'
 					)
 				);
 				if(count($amazon) == 0 || $amazon[0]['AmazonId'] != '')
@@ -95,7 +95,7 @@ class db_amazon extends db_file
 				// check if it is in database already
 				$amazon = $GLOBALS['database']->query(array(
 						'SELECT' => self::DATABASE,
-						'WHERE' => 'AmazonTitle = "' . addslashes($artist) . ' - ' . addslashes($album) . '"'
+						'WHERE' => 'AmazonTitle = "' . addslashes($artist . "\n" . $album) . '"'
 					)
 				);
 				if(count($amazon) == 0 || $amazon[0]['AmazonId'] != '')
@@ -106,7 +106,7 @@ class db_amazon extends db_file
 		return false;
 	}
 
-	static function handle($file)
+	static function handle($file, $force = false)
 	{
 		$file = str_replace('\\', '/', $file);
 		
@@ -148,13 +148,14 @@ class db_amazon extends db_file
 				
 				$amazon = $GLOBALS['database']->query(array(
 						'SELECT' => self::DATABASE,
-						'WHERE' => 'AmazonTitle = "' . addslashes($artist) . ' - ' . addslashes($album) . '"'
+						'WHERE' => 'AmazonTitle = "' . addslashes($artist . "\n" . $album) . '"'
 					)
 				);
 				
 				if( count($amazon) == 0 )
 				{
 					$id = self::add_music($artist, $album);
+					return true;
 				}
 				else
 				{
@@ -167,12 +168,13 @@ class db_amazon extends db_file
 				// try and get information from file
 			}
 		}
+		return false;
 	}
 	
 	static function getMusicInfo($artist, $album)
 	{
 		$fileinfo = array();
-		$fileinfo['AmazonTitle'] = addslashes($artist) . ' - ' . addslashes($album);
+		$fileinfo['AmazonTitle'] = addslashes($artist . "\n" . $album);
 		$fileinfo['AmazonId'] = '';
 		$fileinfo['AmazonType'] = 'Music';
 		$fileinfo['AmazonInfo'] = '';
@@ -225,106 +227,109 @@ class db_amazon extends db_file
 		else
 		{
 			$match = preg_match('/\<Item\>(.*)\<\/Item\>/i', $contents, $matches);
-			$items = preg_split('/\<\/Item\>\<Item\>/i', $matches[1]);
-			
-			// pick out best match
-			$best = '';
-			$best_tracks = '';
-			$best_count = 0;
-			foreach($items as $i => $item)
-			{
-				// first get the album and match that
-				$match = preg_match('/\<Title\>(.*)\<\/Title\>/i', $item, $matches);
-				$title = $matches[1];
-				$tmp_album_tokens = tokenize($title);
-				
-				$album_count = count(array_intersect($tmp_album_tokens['All'], $album_tokens['All']));
-				
-				// now match artists
-				$match = preg_match('/\<Artist\>(.*)\<\/Artist\>/i', $item, $matches);
-				if(!isset($matches[1]))
-				{
-					$artist_count = 0;
-				}
-				else
-				{
-					$artists = preg_split('/\<\/Artist\>\<Artist\>/i', $matches[1]);
-					
-					$artist_count = 0;
-					foreach($artists as $i => $tmp_artist)
-					{
-						$tmp_artist_tokens = tokenize($tmp_artist);
-						$tmp_count = count(array_intersect($tmp_artist_tokens['All'], $artist_tokens['All']));
-						if($tmp_count > $artist_count) $artist_count = $tmp_count;
-					}
-				}
-				
-				// track differences negatively affect the count
-				$tracks = db_audio::get(array('search_Artist' => '+' . join(' +', $artist_tokens['Few']), 'search_Album' => '+' . join(' +', $album_tokens['Few'])), $tmp_count, $tmp_error);
-				
-				// track counts are only affected if there is matching audio
-				$track_count = 0;
-				$match = preg_match('/\<Tracks[^\>]*\>(.*)\<\/Tracks\>/i', $item, $matches);
-				$disks = array();
-				if(isset($matches[1]))
-				{
-					$match = preg_match('/\<Disc[^\>]*\>(.*)\<\/Disc\>/i', $matches[1], $matches);
-					$disks = preg_split('/\<\/Disc\>\<Disc[^\>]*\>/i', $matches[1]);
-					foreach($disks as $i => $disk)
-					{
-						$match = preg_match('/\<Track[^\>]*\>(.*)\<\/Track\>/i', $disk, $matches);
-						$disks[$i] = preg_split('/\<\/Track\>\<Track[^\>]*\>/i', $matches[1]);
-						
-						if(count($tracks) > 0)
-						{
-							if(count($disks[$i]) == count($tracks)) $track_count = 1;
-							elseif($track_count == 0) $track_count = -1;
-						}
-					}
-				}
-				else
-				{
-					$track_count = -1;
-				}
-				
-				// if there are multiple disks add the words to the album tokens and recount
-				if(count($disks) > 1)
-				{
-					$tmp_artist_tokens['All'][] = 'disk';
-					$tmp_artist_tokens['All'][] = 'disc';
-					$tmp_artist_tokens['All'][] = 'volume';
-					
-					$album_count = count(array_intersect($tmp_album_tokens['All'], $album_tokens['All']));
-				}
-				
-				// set the new count
-				if($album_count + $artist_count + $track_count > $best_count)
-				{
-					$best_count = $album_count + $artist_count + $track_count;
-					$best = $item;
-					$best_tracks = $disks;
-				}
-			}
-			
-			// parse single result
-			$match = preg_match('/\<ASIN\>([a-z0-9]*)\<\/ASIN\>/i', $best, $matches);
-			if(!isset($matches[1]))
-			{
-				log_error('Error reading AmazonId: ' . htmlspecialchars($best));
-			}
-			else
-			{
-				$fileinfo['AmazonId'] = addslashes($matches[1]);
-			}
-			
-			// parse tracks for later use
-			$fileinfo['AmazonInfo'] = addslashes(serialize($best_tracks));
-			
-			$match = preg_match('/\<LargeImage\>\<URL\>(.*)\<\/URL\>/i', $best, $matches);
 			if(isset($matches[1]))
 			{
-				$GLOBALS['snoopy']->fetch($matches[1]);
-				$fileinfo['Thumbnail'] = addslashes($GLOBALS['snoopy']->results);
+				$items = preg_split('/\<\/Item\>\<Item\>/i', $matches[1]);
+				
+				// pick out best match
+				$best = '';
+				$best_tracks = '';
+				$best_count = 0;
+				foreach($items as $i => $item)
+				{
+					// first get the album and match that
+					$match = preg_match('/\<Title\>(.*)\<\/Title\>/i', $item, $matches);
+					$title = $matches[1];
+					$tmp_album_tokens = tokenize($title);
+					
+					$album_count = count(array_intersect($tmp_album_tokens['All'], $album_tokens['All']));
+					
+					// now match artists
+					$match = preg_match('/\<Artist\>(.*)\<\/Artist\>/i', $item, $matches);
+					if(!isset($matches[1]))
+					{
+						$artist_count = 0;
+					}
+					else
+					{
+						$artists = preg_split('/\<\/Artist\>\<Artist\>/i', $matches[1]);
+						
+						$artist_count = 0;
+						foreach($artists as $i => $tmp_artist)
+						{
+							$tmp_artist_tokens = tokenize($tmp_artist);
+							$tmp_count = count(array_intersect($tmp_artist_tokens['All'], $artist_tokens['All']));
+							if($tmp_count > $artist_count) $artist_count = $tmp_count;
+						}
+					}
+					
+					// track differences negatively affect the count
+					$tracks = db_audio::get(array('search_Artist' => '+' . join(' +', $artist_tokens['Few']), 'search_Album' => '+' . join(' +', $album_tokens['Few'])), $tmp_count, $tmp_error);
+					
+					// track counts are only affected if there is matching audio
+					$track_count = 0;
+					$match = preg_match('/\<Tracks[^\>]*\>(.*)\<\/Tracks\>/i', $item, $matches);
+					$disks = array();
+					if(isset($matches[1]))
+					{
+						$match = preg_match('/\<Disc[^\>]*\>(.*)\<\/Disc\>/i', $matches[1], $matches);
+						$disks = preg_split('/\<\/Disc\>\<Disc[^\>]*\>/i', $matches[1]);
+						foreach($disks as $i => $disk)
+						{
+							$match = preg_match('/\<Track[^\>]*\>(.*)\<\/Track\>/i', $disk, $matches);
+							$disks[$i] = preg_split('/\<\/Track\>\<Track[^\>]*\>/i', $matches[1]);
+							
+							if(count($tracks) > 0)
+							{
+								if(count($disks[$i]) == count($tracks)) $track_count = 1;
+								elseif($track_count == 0) $track_count = -1;
+							}
+						}
+					}
+					else
+					{
+						$track_count = -1;
+					}
+					
+					// if there are multiple disks add the words to the album tokens and recount
+					if(count($disks) > 1)
+					{
+						$tmp_artist_tokens['All'][] = 'disk';
+						$tmp_artist_tokens['All'][] = 'disc';
+						$tmp_artist_tokens['All'][] = 'volume';
+						
+						$album_count = count(array_intersect($tmp_album_tokens['All'], $album_tokens['All']));
+					}
+					
+					// set the new count
+					if($album_count + $artist_count + $track_count > $best_count)
+					{
+						$best_count = $album_count + $artist_count + $track_count;
+						$best = $item;
+						$best_tracks = $disks;
+					}
+				}
+				
+				// parse single result
+				$match = preg_match('/\<ASIN\>([a-z0-9]*)\<\/ASIN\>/i', $best, $matches);
+				if(!isset($matches[1]))
+				{
+					log_error('Error reading AmazonId: ' . htmlspecialchars($best));
+				}
+				else
+				{
+					$fileinfo['AmazonId'] = addslashes($matches[1]);
+				}
+				
+				// parse tracks for later use
+				$fileinfo['AmazonInfo'] = addslashes(serialize($best_tracks));
+				
+				$match = preg_match('/\<LargeImage\>\<URL\>(.*)\<\/URL\>/i', $best, $matches);
+				if(isset($matches[1]))
+				{
+					$GLOBALS['snoopy']->fetch($matches[1]);
+					$fileinfo['Thumbnail'] = addslashes($GLOBALS['snoopy']->results);
+				}
 			}
 		}
 		
@@ -359,6 +364,8 @@ class db_amazon extends db_file
 	
 	static function get($request, &$count, &$error)
 	{
+		$GLOBALS['database']->validate($request, $props, get_class());
+			
 		if(!isset($request['order_by']) || $request['order_by'] == 'Filepath')
 			$request['order_by'] = 'AmazonTitle';
 		
@@ -372,7 +379,7 @@ class db_amazon extends db_file
 				{
 					$files = $GLOBALS['database']->query(array(
 							'SELECT' => self::DATABASE,
-							'WHERE' => 'AmazonTitle = "' . addslashes($audio[0]['Artist']) . ' - ' . addslashes($audio[0]['Album']) . '"'
+							'WHERE' => 'AmazonTitle = "' . addslashes($audio[0]['Artist'] . "\n" . $audio[0]['Album']) . '"'
 						)
 					);
 				}
@@ -406,7 +413,7 @@ class db_amazon extends db_file
 				$artist = @$dirs[count($dirs)-2];
 				$files = $GLOBALS['database']->query(array(
 						'SELECT' => self::DATABASE,
-						'WHERE' => 'AmazonTitle = "' . addslashes($artist) . ' - ' . addslashes($album) . '"'
+						'WHERE' => 'AmazonTitle = "' . addslashes($artist . "\n" . $album) . '"'
 					)
 				);
 			}
@@ -425,9 +432,16 @@ class db_amazon extends db_file
 				if($request['dir'][0] == '/') $request['dir'] = substr($request['dir'], 1);
 				if($request['dir'][strlen($request['dir'])-1] == '/') $request['dir'] = substr($request['dir'], 0, strlen($request['dir'])-1);
 				
-				$title = $request['dir'];
+				if(strpos($request['dir'], '/') !== false)
+				{
+					$dirs = split('/', $request['dir']);
+					$title = $dirs[0] . "\n" . $dirs[1];
+				}
+				else
+				{
+					$title = $request['dir'];
+				}
 				unset($request['dir']);
-				
 				$amazon = $GLOBALS['database']->query(array(
 						'SELECT' => self::DATABASE,
 						'WHERE' => 'AmazonTitle = "' . addslashes($title) . '"'
@@ -438,11 +452,21 @@ class db_amazon extends db_file
 				{
 					if($amazon[0]['AmazonType'] = 'Music')
 					{
-						$title = split(' - ', $title);
-						$request['search_Artist'] = '"' . $title[0] . '"';
-						unset($title[0]);
-						$request['search_Album'] = join(' - ', $title);
-						$files = db_audio::get($request, $count, $error);
+						$title = split("\n", $title);
+						$request['search_Artist'] = '=' . $title[0] . '=';
+						$request['search_Album'] = '=' . $title[1] . '=';
+						$files = db_audio::get($request, $tmp_count, $error);
+						
+						if($amazon[0]['AmazonId'] != '')
+							$amazon[0]['AmazonLink'] = 'http://www.amazon.com/dp/' . $amazon[0]['AmazonId'] . '/?SubscriptionId=' . AMAZON_DEV_KEY;
+						$amazon[0]['Module'] = 'db_audio';
+						
+						foreach($files as $i => $file)
+						{
+							$amazon[0]['Filepath'] = $file['Filepath'];
+							$amazon[0]['id'] = $file['id'];
+							$files[$i] = $amazon[0];
+						}
 						
 						return $files;
 					}
@@ -455,6 +479,7 @@ class db_amazon extends db_file
 			}
 			else
 			{
+				//$request['search_AmazonId'] = '/[a-z0-9]+/';
 				// get files
 				$files = parent::get($request, $count, $error, get_class());
 			}
@@ -468,7 +493,7 @@ class db_amazon extends db_file
 			if(isset($request['file']))
 				$files[$i]['Filepath'] = $request['file'];
 			else
-				$files[$i]['Filepath'] = '/' . $file['AmazonTitle'] . '/';
+				$files[$i]['Filepath'] = '/' . join('/', split("\n", $file['AmazonTitle'])) . '/';
 			$files[$i]['Filetype'] = 'FOLDER';
 		}
 		
