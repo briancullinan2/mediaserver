@@ -69,7 +69,10 @@ class db_years extends db_audio
 		
 		return $files;
 	}
-
+	
+	static function remove($file)
+	{
+	}
 
 	static function cleanup()
 	{

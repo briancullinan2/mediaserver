@@ -180,7 +180,7 @@ class db_watch_list extends db_watch
 						// remove file from each module
 						foreach($GLOBALS['modules'] as $i => $module)
 						{
-							if($module != 'fs_file' && $module != 'db_watch' && $module != 'db_watch_list')
+							if($module != 'fs_file')
 								call_user_func_array($module . '::remove', array($file['Filepath'], $module));
 						}
 					}
@@ -305,7 +305,9 @@ class db_watch_list extends db_watch
 		foreach($GLOBALS['modules'] as $i => $module)
 		{
 			// never pass is to fs_file, it is only used to internals in this case
-			if($module != 'fs_file' && $module != 'db_file' && $module != 'db_watch' && $module != 'db_watch_list' && $module != 'db_ids')
+			// db_file and db_ids are handled independently
+			// skip db_watch and db_watch_list to prevent recursion
+			if($module != 'fs_file' && $module != 'db_watch' && $module != 'db_watch_list' && $module != 'db_ids' && $module != 'db_file')
 			{
 				$result = call_user_func_array($module . '::handle', array($file, ($result !== false)));
 				if($result === true) $added = true;
@@ -361,7 +363,12 @@ class db_watch_list extends db_watch
 		
 		return db_file::get($request, $count, $error, get_class());
 	}
-	
+		
+	static function remove($file)
+	{
+		parent::remove($file, get_class());
+	}
+
 	static function cleanup()
 	{
 		// call default cleanup function

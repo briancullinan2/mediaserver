@@ -254,6 +254,12 @@ class db_archive extends db_file
 		
 		return $files;
 	}
+	
+	static function remove($file)
+	{
+		// db_file can handle inside paths
+		parent::remove($file, get_class());
+	}
 
 	static function cleanup()
 	{

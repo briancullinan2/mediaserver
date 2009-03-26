@@ -627,6 +627,8 @@ class db_file
 		// remove files with inside paths like directories
 		if($file[strlen($file)-1] != '/') $file_dir = $file . '/';
 		else $file_dir = $file;
+		
+		log_error('Removing ' . constant($module . '::NAME') . ': ' . $file);
 	
 		// remove file(s) from database
 		$GLOBALS['database']->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($file) . '" OR LEFT(Filepath, ' . strlen($file_dir) . ') = "' . addslashes($file_dir) . '"'));	

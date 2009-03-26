@@ -60,6 +60,10 @@ class db_image_browser extends db_image
 		}
 		return $files;
 	}
+	
+	static function remove($file)
+	{
+	}
 
 	static function cleanup()
 	{

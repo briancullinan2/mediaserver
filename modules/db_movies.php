@@ -92,6 +92,11 @@ class db_movies extends db_file
 		return $files;
 	}
 	
+	static function remove($file)
+	{
+		//parent::remove($file, get_class());
+	}
+	
 	static function cleanup()
 	{
 		// call default cleanup function

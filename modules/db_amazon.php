@@ -464,7 +464,6 @@ class db_amazon extends db_file
 						foreach($files as $i => $file)
 						{
 							$amazon[0]['Filepath'] = $file['Filepath'];
-							$amazon[0]['id'] = $file['id'];
 							$files[$i] = $amazon[0];
 						}
 						
@@ -479,7 +478,8 @@ class db_amazon extends db_file
 			}
 			else
 			{
-				//$request['search_AmazonId'] = '/[a-z0-9]+/';
+				if(!isset($request['search_AmazonId']))
+					$request['search_AmazonId'] = '/[a-z0-9]+/';
 				// get files
 				$files = parent::get($request, $count, $error, get_class());
 			}

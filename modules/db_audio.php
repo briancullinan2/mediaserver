@@ -122,7 +122,11 @@ class db_audio extends db_file
 	{
 		return parent::get($request, $count, $error, get_class());
 	}
-
+	
+	static function remove($file)
+	{
+		parent::remove($file, get_class());
+	}
 
 	static function cleanup()
 	{

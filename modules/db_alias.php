@@ -40,6 +40,10 @@ class db_alias extends db_file
 		return $files;
 	}
 	
+	static function remove($file)
+	{
+	}
+	
 	static function cleanup()
 	{
 	}

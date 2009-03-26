@@ -93,6 +93,11 @@ class db_ids extends db_file
 		return $files;
 	}
 	
+	static function remove($file)
+	{
+		// all the removing will be done by other modules
+	}
+	
 	static function cleanup()
 	{
 		parent::cleanup(get_class());

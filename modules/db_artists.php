@@ -104,7 +104,10 @@ class db_artists extends db_audio
 		
 		return $files;
 	}
-
+	
+	static function remove($file)
+	{
+	}
 
 	static function cleanup()
 	{

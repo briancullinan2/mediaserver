@@ -98,6 +98,12 @@ class db_watch extends db_file
 		return $files;
 	}
 	
+	static function remove($file)
+	{
+		// watch directories are never removed by the script
+		return false;
+	}
+	
 	static function cleanup()
 	{
 		// do not do anything, watch directories are completely managed
