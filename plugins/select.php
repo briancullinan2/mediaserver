@@ -79,7 +79,12 @@ foreach($files as $index => &$file)
 	if(USE_DATABASE)
 	{
 		$ids = db_ids::get(array('file' => $file['Filepath']), &$tmp_count, &$tmp_error);
-		if(count($ids) > 0) $files[$index]['id'] = $ids[0]['id'];
+		if(count($ids) > 0)
+		{
+			$files[$index] = array_merge($ids[0], $files[$index]);
+			// also set id to centralize id
+			$files[$index]['id'] = $ids[0]['id'];
+		}
 	}
 	
 	// short results to not include information from all the modules

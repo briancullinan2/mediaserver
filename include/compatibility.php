@@ -7,7 +7,7 @@
  */
 
 //Errors spill information to hackers. 
-error_reporting(0);
+//error_reporting(0);
 
 //Disable register_globals becase it is a security hazard
 if(ini_get(register_globals)){

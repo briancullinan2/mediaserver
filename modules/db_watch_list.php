@@ -180,7 +180,9 @@ class db_watch_list extends db_watch
 						// remove file from each module
 						foreach($GLOBALS['modules'] as $i => $module)
 						{
-							if($module != 'fs_file')
+							// do not remove ids because other modules may still use the id
+							//  allow other modules to handle removing of ids
+							if($module != 'fs_file' && $module != 'db_ids')
 								call_user_func_array($module . '::remove', array($file['Filepath'], $module));
 						}
 					}
@@ -200,6 +202,7 @@ class db_watch_list extends db_watch
 					}
 				}
 				
+				// do not call self::remove because we want to leave the folders inside of the current one so they will be scanned also
 				// delete the selected folder from the database
 				$GLOBALS['database']->query(array('DELETE' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($dir) . '"'));
 			}
@@ -352,6 +355,7 @@ class db_watch_list extends db_watch
 				
 				self::handle_file($request['file']);
 				
+				// do not call self::remove because we want to leave the folders inside of the current one so they will be scanned also
 				// delete the selected folder from the database
 				$GLOBALS['database']->query(array('DELETE' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['file']) . '"'));
 			}

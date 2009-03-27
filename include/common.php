@@ -14,6 +14,9 @@ if(!isset($no_setup) || !$no_setup == true)
 define('VERSION', 			     '0.40.1');
 define('VERSION_NAME', 			'Goliath');
 
+// require compatibility
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'compatibility.php';
+
 // require the settings
 if(realpath('/') == '/')
 	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.nix.php';

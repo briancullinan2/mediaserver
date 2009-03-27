@@ -13,7 +13,7 @@ $this->assign('modules_named', $modules_named);
 	<div id="builder">
 		Use this form to generate the list of files you would like to view:
 		<br />
-		<form name="search" action="{$search_str}" method="get">
+		<form name="search" action="{$search_str|htmlspecialchars}" method="get">
             {foreach from=$smarty.get key=k item=v}
             {if $k != "search" && $k != "cat"}
                 <input type="hidden" name="{$k}" value="{$v}" />
@@ -36,7 +36,7 @@ $this->assign('modules_named', $modules_named);
 	<div id="builder">
 		Use this form to generate the list of files you would like to view:
 		<br />
-		<form name="search" action="{$smarty.server.PHP_SELF}" method="get">
+		<form name="search" action="{$search_str|htmlspecialchars}" method="get">
 			<select name="cat">
 			{section name=module loop=$modules}
 				{assign var=module value=$modules[module]}

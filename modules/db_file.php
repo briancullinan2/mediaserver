@@ -226,8 +226,6 @@ class db_file
 			{
 				$props['WHERE'] = '';
 				
-				$request['search'] = stripslashes($request['search']);
-				
 				// check if they are searching for a literal string
 				$is_literal = false;
 				$is_equal = false;
@@ -354,8 +352,6 @@ class db_file
 				{
 					if(!isset($props['WHERE'])) $props['WHERE'] = '';
 					elseif($props['WHERE'] != '') $props['WHERE'] .= ' AND ';
-					
-					//$request[$var] = stripslashes($request[$var]);
 				
 					$is_literal = false;
 					$is_equal = false;
@@ -581,8 +577,16 @@ class db_file
 						unset($props['ORDER']);
 						$props['COLUMNS'] = '*';
 						
-						// count the last query
-						$props = array('SELECT' => '(' . SQL::statement_builder($props) . ') AS db_to_count');
+						// if where is not set then there is no reason to count the entire database
+						if(!isset($props['WHERE']))
+						{
+							$props = array('SELECT' => constant($module . '::DATABASE'));
+						}
+						else
+						{
+							// count the last query
+							$props = array('SELECT' => '(' . SQL::statement_builder($props) . ') AS db_to_count');
+						}
 						$props['COLUMNS'] = 'count(*)';
 						
 						$result = $GLOBALS['database']->query($props);
@@ -631,6 +635,9 @@ class db_file
 	
 		// remove file(s) from database
 		$GLOBALS['database']->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($file) . '" OR LEFT(Filepath, ' . strlen($file_dir) . ') = "' . addslashes($file_dir) . '"'));	
+
+		// delete ids
+		db_ids::remove($file, $module);
 	}
 	
 	

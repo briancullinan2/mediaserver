@@ -406,7 +406,7 @@ class db_amazon extends db_file
 			}
 			elseif(is_dir($request['file']))
 			{
-				if($file[strlen($request['file'])-1] == '/') $request['file'] = substr($request['file'], 0, strlen($request['file'])-1);
+				if($request['file'][strlen($request['file'])-1] == '/') $request['file'] = substr($request['file'], 0, strlen($request['file'])-1);
 				$dirs = split('/', $request['file']);
 				
 				$album = $dirs[count($dirs)-1];

@@ -93,9 +93,20 @@ class db_ids extends db_file
 		return $files;
 	}
 	
-	static function remove($file)
+	static function remove($file, $module = NULL)
 	{
-		// all the removing will be done by other modules
+		if($module != NULL)
+		{
+			// do the same thing db_file does except update and set module_id to 0
+			$file = str_replace('\\', '/', $file);
+			
+			// remove files with inside paths like directories
+			if($file[strlen($file)-1] != '/') $file_dir = $file . '/';
+			else $file_dir = $file;
+			
+			// all the removing will be done by other modules
+			$GLOBALS['database']->query(array('UPDATE' => constant($module . '::DATABASE'), 'VALUES' => array(constant($module . '::DATABASE') . '_id' => 0), 'WHERE' => 'Filepath = "' . addslashes($file) . '" OR LEFT(Filepath, ' . strlen($file_dir) . ') = "' . addslashes($file_dir) . '"'));	
+		}
 	}
 	
 	static function cleanup()

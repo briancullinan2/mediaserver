@@ -1,6 +1,6 @@
 {if $smarty.request.detail < 3}
 <div id="display">
-	<form action="{$smarty.server.PHP_SELF}" method="post">
+	<form action="{$smarty.server.PHP_SELF|htmlspecialchars}" method="post">
 		Detail <select name="detail">
 			{section name=detail start=0 loop=6 step=1}
 			<option value="{$smarty.section.detail.index}" {if isset($display.detail) && $display.detail == $smarty.section.detail.index}selected{/if}>{if $smarty.section.detail.index == 0}None{else}{$smarty.section.detail.index}{/if}</option>
@@ -26,7 +26,7 @@
 </div>
 {elseif $smarty.request.detail == 3}
 <div id="display">
-	<form action="{$smarty.server.PHP_SELF}" method="post">
+	<form action="{$smarty.server.PHP_SELF|htmlspecialchars}" method="post">
 		Detail <select name="detail">
 			{section name=detail start=0 loop=6 step=1}
 			<option value="{$smarty.section.detail.index}" {if isset($display.detail) && $display.detail == $smarty.section.detail.index}selected{/if}>{if $smarty.section.detail.index == 0}None{else}{$smarty.section.detail.index}{/if}</option>
@@ -47,7 +47,7 @@
 </div>
 {elseif $smarty.request.detail == 4}
 <div id="display">
-	<form action="{$smarty.server.PHP_SELF}" method="post">
+	<form action="{$smarty.server.PHP_SELF|htmlspecialchars}" method="post">
 		<input type="hidden" name="off" value="_All_" />
 		Detail <select name="detail">
 			{section name=detail start=0 loop=6 step=1}
@@ -80,7 +80,7 @@
 </div>
 {elseif $smarty.request.detail == 5}
 <div id="display">
-	<form action="{$smarty.server.PHP_SELF}" method="post">
+	<form action="{$smarty.server.PHP_SELF|htmlspecialchars}" method="post">
 		<input type="hidden" name="off" value="_All_" />
 		Detail <select name="detail">
 			{section name=detail start=0 loop=6 step=1}

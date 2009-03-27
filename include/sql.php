@@ -246,9 +246,6 @@ class sql_global
 				$request['group_by'] = join(',', $columns);
 		}
 			
-		if( isset($request['dir']) )
-			$request['dir'] = stripslashes($request['dir']);
-			
 		// which columns to search
 		if( isset($request['columns']) && !in_array($request['columns'], $columns) )
 		{

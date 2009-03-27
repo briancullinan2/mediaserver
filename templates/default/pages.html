@@ -1,13 +1,13 @@
 {assign var=page_count value=$smarty.request.limit}
 {assign var=page_str value=''}
 {foreach from=$smarty.get key=k item=v}
-{assign var=v value=$v|stripslashes|urlencode|htmlspecialchars}
+{assign var=v value=$v|htmlspecialchars}
 {if $k != "start"}
 {if $page_str != ''}{assign var=page_str value=$page_str|cat:'&amp;'}{/if}
 {assign var=page_str value=$page_str|cat:$k|cat:'='|cat:$v}
 {/if}
 {/foreach}
-{assign var=page_str value=$smarty.server.PHP_SELF|cat:'?'|cat:$page_str}
+{assign var=page_str value=$smarty.server.PHP_SELF|htmlspecialchars|cat:'?'|cat:$page_str}
 Page {if $page > 0}
 		{if $page > $page_count}
 			<a href="{$page_str}&start=0">First</a>
