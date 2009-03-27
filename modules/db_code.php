@@ -4,7 +4,7 @@
 //  use highlighting library from codepaster.com
 
 
-/*$no_setup = true;
+$no_setup = true;
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
 require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'db_file.php';
@@ -21,6 +21,10 @@ class db_code extends db_file
 	static function columns()
 	{
 		return array('id', 'Code', 'Highlighted', 'LineCount', 'Language', 'Filepath');
+	}
+	
+	static function struct()
+	{
 	}
 	
 	static function handles($file)
@@ -52,4 +56,3 @@ class db_code extends db_file
 
 
 ?>
-*/

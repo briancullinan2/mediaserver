@@ -7,6 +7,14 @@ For exmaple, the db_audio module accepts parameters for searching artists and al
 On the other hand, the db_album and db_artists displayes a completely different structure.
 Modules are responsible for replacing Filepaths with the alias, module::get() and module::out() calls parse the input request with soft aliases, and output the soft alias
 	module::handles() calls parse with both hard and soft aliases, and module::handle() calls parse just the hard aliases
+	module::columns() returns the columns that the module handles in the module::get() function, this is useful when certain columns are ommitted from the database but filled in afterwards
+	for example in the db_albums module the SongCount isn't actually stored in the database, but it is filled in after the query, modules should be responsible for searching these types of fields
+	module::struct() defined what type the field is and the name, this information is used to install the database, id can be excluded
+	There is no biased towards particular columns, if a column is hidden it can just be excluded from the ::columns() list, but it can still be used in templates
+	For example, we don't necissarily want to display the Lastwatch timestamp from the db_watch module, so the columns can be removed from what db_watch::columns() returns without affecting the functionality of the script
+	Format is array('column_name' => 'type'), the type should be SQL compatible, and the php equivilent will try to be detected
+	You can only search columns listed by the module::columns() function, ::struct() is used internally
+	If a space is detected the type will be the first word and it will override NOT NULL being added to the create query
 
 Needs:
 A svn module for connecting to remove or local SVN databases

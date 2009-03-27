@@ -17,6 +17,16 @@ class db_watch extends db_file
 		return array('id', 'Lastwatch', 'Filepath');
 	}
 	
+	// return the structure of the database
+	static function struct()
+	{
+		return array(
+			'Filepath' => 'TEXT',
+			// add a space to the end so that it can be NULL in the database
+			'Lastwatch' => 'DATETIME '
+		);
+	}
+	
 	static function handles($file)
 	{
 		$dir = str_replace('\\', '/', $file);

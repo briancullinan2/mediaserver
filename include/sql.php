@@ -75,6 +75,7 @@ class sql_global
 	// install function
 	function install()
 	{
+		// create ids table
 		$ids_query = 'CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'ids (
 			id 				BIGINT NOT NULL AUTO_INCREMENT,
 							PRIMARY KEY(id),
@@ -89,18 +90,9 @@ class sql_global
 
 		$this->query($ids_query) or print_r(mysql_error());
 		
-		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'watch (
-				id 				BIGINT NOT NULL AUTO_INCREMENT,
-								PRIMARY KEY(id),
-				Filepath		TEXT NOT NULL,
-				Lastwatch		DATETIME
-			)') or print_r(mysql_error());
-			
-		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'watch_list (
-				id 				BIGINT NOT NULL AUTO_INCREMENT,
-								PRIMARY KEY(id),
-				Filepath		TEXT NOT NULL
-			)') or print_r(mysql_error());
+		// alter ids if a new module is added!
+		
+		// create module tables
 		
 		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'alias (
 				id 				BIGINT NOT NULL AUTO_INCREMENT,
@@ -111,16 +103,22 @@ class sql_global
 				Alias_regexp	TEXT NOT NULL
 			)') or print_r(mysql_error());
 		
-		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'files (
-				id 				BIGINT NOT NULL AUTO_INCREMENT,
-								PRIMARY KEY(id),
-				Filename		TEXT NOT NULL,
-				Filepath		TEXT NOT NULL,
-				Filesize		BIGINT NOT NULL,
-				Filemime		TEXT NOT NULL,
-				Filedate		DATETIME,
-				Filetype		TEXT NOT NULL
-			)') or print_r(mysql_error());
+		$query = 'CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . db_file::DATABASE . ' (';
+		$struct = db_file::struct();
+		if(!in_array('id', array_keys($struct)))
+			$query .= 'id INT NOT NULL AUTO_INCREMENT, PRIMARY KEY (id),';
+		foreach($struct as $column => $type)
+		{
+			if(strpos($type, ' ') === false)
+				$query .= $column . ' ' . $type . ' NOT NULL,';
+			else
+				$query .= $column . ' ' . $type . ',';
+		}
+		// remove last comma
+		$query[strlen($query)-1] = ')';
+		print $query;
+		exit;
+		$this->query($query) or print_r(mysql_error());
 		
 		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'audio (
 				id 				BIGINT NOT NULL AUTO_INCREMENT,

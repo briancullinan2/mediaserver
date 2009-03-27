@@ -17,10 +17,19 @@ class db_watch_list extends db_watch
 		return array('id', 'Filepath');
 	}
 	
+	// return the structure of the database
+	static function struct()
+	{
+		return array(
+			'Filepath' => 'TEXT'
+		);
+	}
+	
 	static function handles($dir, $file = NULL)
 	{
 		$dir = str_replace('\\', '/', $dir);
-		
+		if(USE_ALIAS == true) $dir = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $dir);
+
 		if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $dir)))
 		{
 			if(self::is_watched($dir))
@@ -39,7 +48,6 @@ class db_watch_list extends db_watch
 						$file = $db_files[0];
 					}
 				}
-				
 				
 				if( !isset($file) || date("Y-m-d h:i:s", filemtime($dir)) != $file['Filedate'] )
 				{
@@ -160,6 +168,9 @@ class db_watch_list extends db_watch
 					self::handle_file($file['Filepath']);
 						
 					$paths[] = $file['Filepath'];
+				
+					// don't put too much load of the system
+					usleep(10);
 				}
 				
 				// search for removed files
@@ -288,6 +299,9 @@ class db_watch_list extends db_watch
 						return false;
 					}
 				}
+				
+				// don't put too much load on the system
+				usleep(1);
 			}
 		}
 		

@@ -26,7 +26,6 @@ class db_archive extends db_file
 	static function handles($file)
 	{
 		$file = str_replace('\\', '/', $file);
-		
 		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 		
 		// parse through the file path and try to find a zip

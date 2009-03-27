@@ -13,7 +13,21 @@ class db_file
 	// this function specifies the level of detail for the array of file info, ORDER matters!
 	static function columns()
 	{
-		return array('id', 'Filename', 'Filemime', 'Filesize', 'Filedate', 'Filetype', 'Filepath');
+		return array_keys(self::struct());
+	}
+	
+	// return the structure of the database
+	static function struct()
+	{
+		return array(
+			'id' => 'BIGINT NOT NULL AUTO_INCREMENT, PRIMARY KEY(id)',
+			'Filename' => 'TEXT',
+			'Filemime' => 'TEXT',
+			'Filesize' => 'BIGINT',
+			'Filedate' => 'DATETIME',
+			'Filetype' => 'TEXT',
+			'Filepath' => 'TEXT'
+		);
 	}
 	
 	// return whether or not this module handles trhe specified type of file

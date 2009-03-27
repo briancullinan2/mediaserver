@@ -205,6 +205,9 @@ do
 		$status = db_watch_list::handle($dir);
 	}
 
+	// don't put too much load on the system
+	usleep(1);
+
 	// check if execution time is too long
 	$secs_total = array_sum(explode(' ', microtime())) - $tm_start;
 	

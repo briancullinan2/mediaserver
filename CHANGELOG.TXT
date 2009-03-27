@@ -1,4 +1,11 @@
 2009-03-26
+Added a few sleeps in the file looping, the directory looping, and the cron script watch_list looping
+Added a struct() function to each module that returns the structure of the database
+	Format is array('column_name' => 'type'), the type should be SQL compatible, and the php equivilent will try to be detected
+	You can only search columns listed by the module::columns() function, ::struct() is used internally
+	If a space is detected the type will be the first word and it will override NOT NULL being added to the create query
+
+2009-03-26
 Made all the modules add() functions handle the ID for modifying in the same order as the handle() function
 Fixed modules handling the removing of ids from database
 Fixed some vulnerablities with not using htmlspecialchars() from global variables in templates

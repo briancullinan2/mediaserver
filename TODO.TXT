@@ -2,8 +2,6 @@
 More compatibility testing with clients
 ------------- GENERAL TODO -------------
 Make hard links and soft links, hard links are replaced when they are put in to the database, soft links are replaced when they are read from the database, this will allow us to do more network stuff
-Make backup ways of accessing files, store old IDs for removed files in a backup database
-	If a filename is supplied to the file.php plugin, do a search for that file if the ID doesn't exist
 Do memory checks and don't run cron if it's above a certain threshhold, maybe run some stuff with niceness
 Make a class for handling CSV as the database type, make sure all the queries can refer to the statement builder
 File uploading and personal folders
@@ -30,7 +28,6 @@ Make a discography module that parses out wikipedia discographys, store album in
 	It handles artists, when an album count changes or doesn't exist it updates the database
 Work on playlist module, use hard links to help find files
 Make a code module that handles code and uses that pretty hilighing from the codepaster.com website
-Make a template module that compiles and cache the smarty templates, then accessing a page can be done by accessing the template module
 Work on db_movies, use cUrl to download movie information from imdb, use the volume decriptor for lookup, this shouldn't change even if they edited an image
 	Look up movies on amazon, and see if that will help with searching IMDb
 	Research the video_ts.ifo file, there must be a way of getting the full name from a DVD image, windows media center projects can do it, so can we
