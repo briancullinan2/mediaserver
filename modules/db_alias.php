@@ -11,10 +11,23 @@ class db_alias extends db_file
 	const DATABASE = 'alias';
 	
 	const NAME = 'Aliased Paths from Database';
+	
+	const INTERNAL = true;
 
 	static function columns()
 	{
-		return array('id', 'Paths', 'Paths_regexp', 'Alias', 'Alias_regexp');
+		return array('id', 'Filepath');
+	}
+	
+	// return the structure of the database
+	static function struct()
+	{
+		return array(
+			'Paths' 		=> 'TEXT',
+			'Alias' 		=> 'TEXT',
+			'Paths_regexp'	=> 'TEXT',
+			'Alias_regexp'	=> 'TEXT'
+		);
 	}
 	
 	static function handles($file)
@@ -34,6 +47,7 @@ class db_alias extends db_file
 		$GLOBALS['database']->validate($request, $props, get_class());
 		
 		$props['SELECT'] = self::DATABASE;
+		$props['COLUMNS'] = '*,Alias as Filepath';
 		
 		$files = $GLOBALS['database']->query($props);
 		

@@ -20,9 +20,24 @@ class db_audio extends db_file
 
 	static function columns()
 	{
-		return array('id', 'Track', 'Title', 'Artist', 'Album', 'Genre', 'Year', 'Length', 'Bitrate', 'Comments', 'Filepath');
+		return array_keys(self::struct());
 	}
 	
+	static function struct()
+	{
+		return array(
+			'Filepath' 	=> 'TEXT',
+			'Title'		=> 'TEXT',
+			'Artist' 	=> 'TEXT',
+			'Album'		=> 'TEXT',
+			'Track'		=> 'INT',
+			'Year'		=> 'INT',
+			'Genre'		=> 'TEXT',
+			'Length'	=> 'DOUBLE',
+			'Comments'	=> 'TEXT',
+			'Bitrate'	=> 'DOUBLE'
+		);
+	}
 
 	static function handles($file)
 	{

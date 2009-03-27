@@ -21,7 +21,7 @@
  * @link       http://pear.php.net/package/Text_Highlighter
  */
 
-require_once 'Text/Highlighter/Generator.php';
+require_once 'Highlighter/Generator.php';
 require_once 'Console/Getopt.php';
 
 $options = Console_Getopt::getopt($argv, 'x:p:d:h', array('xml=', 'php=','dir=', 'help'));

@@ -24,7 +24,7 @@
  * @ignore
  */
 
-require_once 'Text/Highlighter.php';
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'Highlighter.php';
 
 /**
  * Auto-generated class. DIFF syntax highlighting

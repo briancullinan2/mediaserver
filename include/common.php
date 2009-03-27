@@ -85,7 +85,7 @@ function setup()
 		while (($file = readdir($dh)) !== false)
 		{
 			// filter out only the modules for our USE_DATABASE setting
-			if ($file[0] != '.' && !is_dir(LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . $file) && (substr($file, 0, 3) == (USE_DATABASE?'db_':'fs_') || $file == 'fs_file.php'))
+			if ($file[0] != '.' && !is_dir(LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . $file))
 			{
 				// include all the modules
 				require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . $file;
@@ -94,7 +94,8 @@ function setup()
 				// only use the module if it is properly defined
 				if(class_exists($class_name))
 				{
-					$tmp_modules[] = $class_name;
+					if(substr($file, 0, 3) == (USE_DATABASE?'db_':'fs_') || $file == 'fs_file.php')
+						$tmp_modules[] = $class_name;
 				}
 			}
 		}
@@ -253,9 +254,6 @@ function tokenize($string)
 	$string = strtolower($string);
 	$valid_pieces = array();
 	$pieces = split('[^a-zA-Z0-9]', $string);
-	$empty = array_search('', $pieces, true);
-	if($empty !== false) unset($pieces[$empty]);
-	$pieces = array_values($pieces);
 	$return['All'] = $pieces;
 	$return['Unique'] = array_unique($pieces);
 	for($i = 0; $i < count($pieces); $i++)
@@ -315,6 +313,25 @@ function termSort($a, $b)
 	} else {
 		return 1;
 	}
+}
+
+function parseInner($file, &$last_path, &$inside_path)
+{
+	$paths = split('/', $file);
+	$last_path = '';
+	foreach($paths as $i => $tmp_file)
+	{
+		if(file_exists(str_replace('/', DIRECTORY_SEPARATOR, $last_path . $tmp_file)) || $last_path == '')
+		{
+			$last_path = $last_path . $tmp_file . '/';
+		} else {
+			if(file_exists(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
+				break;
+		}
+	}
+	
+	$inside_path = substr($file, strlen($last_path));
+	if($last_path[strlen($last_path)-1] == '/') $last_path = substr($last_path, 0, strlen($last_path)-1);
 }
 
 // get all columns from every modules

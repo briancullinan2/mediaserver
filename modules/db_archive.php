@@ -20,7 +20,20 @@ class db_archive extends db_file
 
 	static function columns()
 	{
-		return array('id', 'Filename', 'Filemime', 'Filesize', 'Compressed', 'Filedate', 'Filetype', 'Filepath');
+		return array_keys(self::struct());
+	}
+	
+	static function struct()
+	{
+		return array(
+			'Filepath' 		=> 'TEXT',
+			'Filename'		=> 'TEXT',
+			'Compressed'	=> 'BIGINT',
+			'Filesize'		=> 'BIGINT',
+			'Filemime'		=> 'TEXT',
+			'Filedate'		=> 'DATETIME ',
+			'Filetype'		=> 'TEXT',
+		);
 	}
 
 	static function handles($file)
@@ -72,7 +85,7 @@ class db_archive extends db_file
 	{
 		$file = str_replace('\\', '/', $file);
 		
-		db_file::parseInner($file, $last_path, $inside_path);
+		parseInner($file, $last_path, $inside_path);
 		
 		$file = $last_path;
 
@@ -105,7 +118,7 @@ class db_archive extends db_file
 	static function add($file, $archive_id = NULL)
 	{
 		// pull information from $info
-		db_file::parseInner($file, $last_path, $inside_path);
+		parseInner($file, $last_path, $inside_path);
 		
 		// do a little cleanup here
 		// if the archive changes remove all it's inside files from the database
@@ -221,7 +234,7 @@ class db_archive extends db_file
 		if(USE_ALIAS == true)
 			$file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 			
-		db_file::parseInner($file, $last_path, $inside_path);
+		parseInner($file, $last_path, $inside_path);
 
 		if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
 		{
@@ -238,7 +251,7 @@ class db_archive extends db_file
 			$request['dir'] = str_replace('\\', '/', $request['dir']);
 			if(USE_ALIAS == true) $request['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
 
-			db_file::parseInner($request['dir'], $last_path, $inside_path);
+			parseInner($request['dir'], $last_path, $inside_path);
 			if(strlen($inside_path) == 0 || $inside_path[0] != '/') $inside_path = '/' . $inside_path;
 			$request['dir'] = $last_path . $inside_path;
 			

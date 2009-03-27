@@ -11,17 +11,19 @@ class db_watch extends db_file
 	const DATABASE = 'watch';
 	
 	const NAME = 'Watched Directories from Database';
+	
+	const INTERNAL = true;
 
 	static function columns()
 	{
-		return array('id', 'Lastwatch', 'Filepath');
+		return array('id', 'Filepath');
 	}
 	
 	// return the structure of the database
 	static function struct()
 	{
 		return array(
-			'Filepath' => 'TEXT',
+			'Filepath' 	=> 'TEXT',
 			// add a space to the end so that it can be NULL in the database
 			'Lastwatch' => 'DATETIME '
 		);

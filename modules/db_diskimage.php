@@ -21,20 +21,19 @@ class db_diskimage extends db_file
 	// this is for stream stuff when controlling output of the file
     const PROTOCOL = 'diskimage'; /* Underscore not allowed */
        
-    protected $internal_fp  = NULL;
-    protected $internal_length  = NULL;
-    protected $internal_pos  = NULL;
+    protected $internal_fp = NULL;
+    protected $internal_start = NULL;
+    protected $internal_length = NULL;
+    protected $internal_pos = NULL;
 	
     function stream_open($path, $mode, $options, &$opened_path)
     {
 		if(substr($path, 0, 12) == 'diskimage://')
 			$path = substr($path, 12);
 			
-		$path = str_replace('\\', '/', $path);
-			
-		db_file::parseInner($path, $last_path, $inside_path);
+		parseInner(str_replace('/', DIRECTORY_SEPARATOR, $path), $last_path, $inside_path);
 
-		if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
+		if(is_file($last_path))
 		{
 	
 			$info = $GLOBALS['getID3']->analyze($last_path);
@@ -54,6 +53,7 @@ class db_diskimage extends db_file
 								{
 									fseek($fp, $file['offset_bytes']);
 									$this->internal_fp = $fp;
+									$this->internal_start = $file['offset_bytes'];
 									$this->internal_length = $file['filesize'];
 									$this->internal_pos = 0;
 									
@@ -93,16 +93,29 @@ class db_diskimage extends db_file
     function stream_seek($position){
 		if($position > $this->internal_length)
 		{
-			$this->internal_pos = $this->internal_length;
-			return 0;
+			$position = $this->internal_length;
 		}
 		$this->internal_pos = $position;
+		fseek($this->internal_fp, $this->internal_start + $this->internal_pos);
         return 0;
     }
 
 	static function columns()
 	{
-		return array('id', 'Offset', 'Filename', 'Filemime', 'Filesize', 'Filedate', 'Filetype', 'Filepath');
+		return array_keys(self::struct());
+	}
+	
+	// return the structure of the database
+	static function struct()
+	{
+		return array(
+			'Filename' => 'TEXT',
+			'Filemime' => 'TEXT',
+			'Filesize' => 'BIGINT',
+			'Filedate' => 'DATETIME',
+			'Filetype' => 'TEXT',
+			'Filepath' => 'TEXT'
+		);
 	}
 
 	static function handles($file)
@@ -149,7 +162,7 @@ class db_diskimage extends db_file
 	{
 		$file = str_replace('\\', '/', $file);
 		
-		db_file::parseInner($file, $last_path, $inside_path);
+		parseInner($file, $last_path, $inside_path);
 		
 		$file = $last_path;
 
@@ -182,7 +195,7 @@ class db_diskimage extends db_file
 	static function add($file, $image_id = NULL)
 	{
 		// pull information from $info
-		db_file::parseInner($file, $last_path, $inside_path);
+		parseInner($file, $last_path, $inside_path);
 		
 		// do a little cleanup here
 		// if the image changes remove all it's inside files from the database
@@ -281,7 +294,7 @@ class db_diskimage extends db_file
 			$request['dir'] = str_replace('\\', '/', $request['dir']);
 			if(USE_ALIAS == true) $request['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
 
-			db_file::parseInner($request['dir'], $last_path, $inside_path);
+			parseInner($request['dir'], $last_path, $inside_path);
 			if(strlen($inside_path) == 0 || $inside_path[0] != '/') $inside_path = '/' . $inside_path;
 			$request['dir'] = $last_path . $inside_path;
 			

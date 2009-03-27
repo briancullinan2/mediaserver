@@ -25,7 +25,23 @@ class db_video extends db_file
 
 	static function columns()
 	{
-		return array('id', 'Length', 'Bitrate', 'VideoBitrate', 'AudioBitrate', 'Title', 'Comments', 'Channels', 'Resolution', 'FrameRate', 'Filepath');
+		return array_keys(self::struct());
+	}
+	
+	static function struct()
+	{
+		return array(
+			'Filepath' 		=> 'TEXT',
+			'Title'			=> 'TEXT',
+			'Length'		=> 'DOUBLE',
+			'Comments'		=> 'TEXT',
+			'Bitrate'		=> 'DOUBLE',
+			'VideoBitrate'	=> 'DOUBLE',
+			'AudioBitrate'	=> 'DOUBLE',
+			'Channels'		=> 'INT',
+			'FrameRate'		=> 'INT',
+			'Resolution'	=> 'TEXT'
+		);
 	}
 	
 	static function handles($file)

@@ -10,6 +10,9 @@ class db_file
 	
 	const NAME = 'Files from Database';
 	
+	// define if this module is internal so templates won't try to use it
+	const INTERNAL = false;
+	
 	// this function specifies the level of detail for the array of file info, ORDER matters!
 	static function columns()
 	{
@@ -48,25 +51,6 @@ class db_file
 		} else {
 			return false;
 		}
-	}
-
-	static function parseInner($file, &$last_path, &$inside_path)
-	{
-		$paths = split('/', $file);
-		$last_path = '';
-		foreach($paths as $i => $tmp_file)
-		{
-			if(file_exists(str_replace('/', DIRECTORY_SEPARATOR, $last_path . $tmp_file)) || $last_path == '')
-			{
-				$last_path = $last_path . $tmp_file . '/';
-			} else {
-				if(file_exists(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
-					break;
-			}
-		}
-		
-		$inside_path = substr($file, strlen($last_path));
-		if($last_path[strlen($last_path)-1] == '/') $last_path = substr($last_path, 0, strlen($last_path)-1);
 	}
 	
 	// this function determines if the file qualifies for this type and handles it according

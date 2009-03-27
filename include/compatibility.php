@@ -39,4 +39,18 @@ if(ini_get('magic_quotes_gpc')){
    stripslashes_arrays($_COOKIE);
    stripslashes_arrays($_REQUEST);
 }
+//Make all Posts immune to xsrf.
+//$_GET is only used for navigation. 
+if($_SERVER[REQUEST_METHOD]=="POST"){
+	//The referer can be forged on old, unpatched browsers.
+	//The token cannot be forged unless it is guessed. 
+	$referer_check=parse_url($_SERVER['HTTP_REFERER']);
+	if($_SERVER['HTTP_HOST'] != $referer_check['host']){
+		die('Session Riding(XSRF) Detected!');	
+	}
+}else{
+	//Paranoia
+	unset($_POST);
+}
+	
 ?>

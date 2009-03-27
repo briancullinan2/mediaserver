@@ -42,8 +42,17 @@ if(isset($_REQUEST['search']))
 // set the search vars in the template
 if(isset($_SESSION['search']))
 	$smarty->assign('search', $_SESSION['search']);
-	
-$smarty->assign('modules', $GLOBALS['modules']);
+
+// parse out internal modules
+$out_modules = array();
+foreach($GLOBALS['modules'] as $i => $module)
+{
+	if($module != 'fs_file' && constant($module . '::INTERNAL') == false)
+	{
+		$out_modules[] = $module;
+	}
+}
+$smarty->assign('modules', $out_modules);
 
 $smarty->assign('templates', $GLOBALS['templates']);
 if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)

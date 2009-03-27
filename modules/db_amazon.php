@@ -34,7 +34,18 @@ class db_amazon extends db_file
 
 	static function columns()
 	{
-		return array('id', 'AmazonId', 'AmazonLink', 'AmazonTitle', 'AmazonType', 'AmazonInfo', 'Thumbnail', 'Filetype', 'Filepath');
+		return array('id', 'AmazonId', 'AmazonLink', 'AmazonTitle', 'Filepath');
+	}
+
+	static function struct()
+	{
+		return array(
+			'AmazonId' 		=> 'TEXT',
+			'AmazonTitle' 	=> 'TEXT',
+			'AmazonType' 	=> 'TEXT',
+			'AmazonInfo' 	=> 'TEXT',
+			'Thumbnail' 	=> 'BLOB'
+		);
 	}
 
 	static function handles($file)

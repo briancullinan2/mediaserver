@@ -21,14 +21,6 @@ class fs_image extends fs_file
 		return array('id', 'Height', 'Width', 'Make', 'Model', 'Title', 'Keywords', 'Author', 'Comments', 'ExposureTime', 'Filepath');
 	}
 	
-	
-	// this is the priority of sections to check for picture information
-	// from most accurate --> least accurate
-	static function PRIORITY()
-	{
-		return array('COMPUTED', 'WINXP', 'IFD0', 'EXIF', 'THUMBNAIL');
-	}
-
 	// COMPUTED usually contains the most accurate height and width values
 	// IFD0 contains the make and model we are looking for
 	// WINXP contains comments we should copy
@@ -50,40 +42,14 @@ class fs_image extends fs_file
 		return false;
 
 	}
-
+		
 	static function getInfo($file)
 	{
 		$file = str_replace('/', DIRECTORY_SEPARATOR, $file);
 		
-		$priority = array_reverse(fs_image::PRIORITY());
-		$info = $GLOBALS['getID3']->analyze($file);
-		
-		// pull information from $info
-		$fileinfo = array();
+		$fileinfo = db_image::getInfo($file);
 		$fileinfo['id'] = bin2hex($file);
-		$fileinfo['Filepath'] = str_replace('\\', '/', $file);
-		
-		// get information from sections
-		if(isset($info['fileformat']) && isset($info[$info['fileformat']]['exif']))
-		{
-			$exif = $info[$info['fileformat']]['exif'];
-			foreach($priority as $i => $section)
-			{
-				if(isset($exif[$section]))
-				{
-					foreach($exif[$section] as $key => $value)
-					{
-						if($key == 'Height' || $key == 'Width' || $key == 'Make' || $key == 'Model' || $key == 'Comments' || $key == 'Keywords' || $key == 'Title' || $key == 'Author' || $key == 'ExposureTime')
-						{
-							$fileinfo[$key] = $value;
-						}
-					}
-				}
-			}
-		}
-	
-		// do not get thumbnails of image
-		//$fileinfo['Thumbnail'] = addslashes(fs_image::makeThumbs($file));
+		$fileinfo['Filepath'] = stripslashes($fileinfo['Filepath']);
 		
 		return $fileinfo;
 	}

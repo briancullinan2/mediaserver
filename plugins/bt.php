@@ -16,7 +16,7 @@ if(!isset($_REQUEST['id']) && !isset($_REQUEST['item']) && !isset($_REQUEST['on'
 }
 
 // add category and validate it!
-if(!isset($_REQUEST['cat']) || !in_array($_REQUEST['cat'], $GLOBALS['modules']))
+if(!isset($_REQUEST['cat']) || !in_array($_REQUEST['cat'], $GLOBALS['modules']) || constant($_REQUEST['cat'] . '::INTERNAL') == true)
 	$_REQUEST['cat'] = 'db_file';
 
 $files = array();

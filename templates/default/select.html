@@ -77,7 +77,9 @@ $this->assign('parts', $parts);
                 : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}convert.php/{$smarty.request.cat}/{$files[file].id}/JPG/{$files[file].Filename}.jpg">jpg</a>
                 : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}convert.php/{$smarty.request.cat}/{$files[file].id}/GIF/{$files[file].Filename}.gif">gif</a>
                 : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}convert.php/{$smarty.request.cat}/{$files[file].id}/PNG/{$files[file].Filename}.png">png</a>
-                {/if}
+                {elseif $files[file].Filepath|@handles:'code'}
+                : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}file.php/{$prefix}code/{$files[file].id}/{$files[file].Filename}.html">view</a>
+              {/if}
 			<br />
 		{/section}
 		</p>

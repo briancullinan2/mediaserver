@@ -27,7 +27,7 @@
  * @ignore
  */
 
-require_once 'Text/Highlighter/Renderer.php';
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'Renderer.php';
 
 /**
  * Array renderer, based on Andrey Demenev's HTML renderer.

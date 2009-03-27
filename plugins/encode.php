@@ -94,6 +94,9 @@ else
 	exit;
 }
 
+// close session so the client can continue browsing the site
+if(isset($_SESSION)) session_write_close();
+
 // set the headers
 switch($_REQUEST['encode'])
 {
@@ -120,7 +123,7 @@ switch($_REQUEST['encode'])
 }
 
 // add category
-if(!isset($_REQUEST['cat']) || !in_array($_REQUEST['cat'], $GLOBALS['modules']))
+if(!isset($_REQUEST['cat']) || !in_array($_REQUEST['cat'], $GLOBALS['modules']) || constant($_REQUEST['cat'] . '::INTERNAL') == true)
 	$_REQUEST['cat'] = USE_DATABASE?'db_file':'fs_file';
 
 if(!isset($_REQUEST['%IF']) && isset($_REQUEST['id']))
@@ -243,9 +246,6 @@ if(isset($files[0]['Length']))
 $fp = call_user_func_array($_REQUEST['cat'] . '::out', array($_REQUEST['%IF']));
 //$fp = fopen($_REQUEST['%IF'], 'rb');
 $php_out = fopen('php://output', 'wb');
-
-// close session so the client can continue browsing the site
-if(isset($_SESSION)) session_write_close();
 
 // if %IF is not in the arguments, it is reading from stdin so use pipe
 // output file

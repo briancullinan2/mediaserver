@@ -29,7 +29,7 @@ class fs_diskimage extends fs_file
 			
 		$path = str_replace('\\', '/', $path);
 			
-		fs_file::parseInner($path, $last_path, $inside_path);
+		parseInner($path, $last_path, $inside_path);
 
 		if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
 		{
@@ -145,7 +145,7 @@ class fs_diskimage extends fs_file
 	static function getInfo($filename)
 	{
 		$filename = str_replace('\\', '/', $filename);
-		fs_file::parseInner($filename, $last_path, $inside_path);
+		parseInner($filename, $last_path, $inside_path);
 		
 		if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
 		{
@@ -207,7 +207,7 @@ class fs_diskimage extends fs_file
 	{
 		$file = str_replace('\\', '/', $file);
 		
-		fs_file::parseInner($file, $last_path, $last_ext);
+		parseInner($file, $last_path, $last_ext);
 
 		if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
 		{
@@ -273,7 +273,7 @@ class fs_diskimage extends fs_file
 				// this is perfectly acceptable so lets check to see if this module handles it
 				if(fs_diskimage::handles($request['dir']))
 				{
-					fs_file::parseInner($request['dir'], $last_path, $inside_path);
+					parseInner($request['dir'], $last_path, $inside_path);
 					if(strlen($inside_path) == 0 || $inside_path[0] != '/') $inside_path = '\/' . $inside_path;
 					
 					// make sure the file they are trying is access is actually a file

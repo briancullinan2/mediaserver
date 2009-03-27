@@ -73,7 +73,7 @@ class fs_archive extends fs_file
 	static function getInfo($filename)
 	{
 		$filename = str_replace('\\', '/', $filename);
-		fs_file::parseInner($filename, $last_path, $inside_path);
+		parseInner($filename, $last_path, $inside_path);
 		
 		if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
 		{
@@ -138,7 +138,7 @@ class fs_archive extends fs_file
 	static function out($file)
 	{
 		$file = str_replace('\\', '/', $file);
-		fs_file::parseInner($file, $last_path, $last_ext);
+		parseInner($file, $last_path, $last_ext);
 
 		if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
 		{
@@ -205,7 +205,7 @@ class fs_archive extends fs_file
 					
 				if(fs_archive::handles($request['dir']))
 				{
-					fs_file::parseInner($request['dir'], $last_path, $last_ext);
+					parseInner($request['dir'], $last_path, $last_ext);
 					
 					// make sure the file they are trying is access is actually a file
 					if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))

@@ -1,6 +1,5 @@
 <?php
 
-
 // just like with the way zip files should work, return the list of files that are in a playlist by parsing through their path
 //  maybe use aliases to parse any path leading to the same place?
 $no_setup = true;
@@ -15,7 +14,7 @@ require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'db_video.php';
 // music handler
 class db_playlist extends db_file
 {
-	const DATABASE = 'Playlist';
+	const DATABASE = 'playlist';
 	
 	const NAME = 'Playlists from Database';
 	

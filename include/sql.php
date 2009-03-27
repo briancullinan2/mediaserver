@@ -14,44 +14,6 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'common.php';
 // everything should fit into the main 3 mediums (music,pictures,videos) and everything else is just a file
 // scalability (add a calendar handler? rss-handler?)
 
-// database structure:
-/*
-File:
-id
-Filename (for quick reference)
-Filepath (full filesystem path)
-Filesize (size in bytes)
-Filemime (mime-type, or file extension for unrecognized files, file extensions and mime-types in lowercase, FOLDER if actually a folder, FILE if no extension)
-Filedate (the access date of the file)
-Filetype (the connected information database MUSIC,PHOTO,VIDEO)
-Fileinfo (the id of the file information from the connected database)
-
-Audio:
-id
-Title
-Artist
-Album
-Track
-Year
-Genre
-Length
-Comments
-Other
-Bitrate
-Fileinfo (the id of the entry containing the file info)
-
-Photo:
-id
-
-Video:
-
-Watch: (mainly used by the cron.php to update all directories)
-id
-Filepath
-Lastwatch (the last time the directory was searched, even partially)
-
-*/
-
 // pretty self explanator handler class for sql databases
 class sql_global
 {
@@ -75,129 +37,60 @@ class sql_global
 	// install function
 	function install()
 	{
-		// create ids table
-		$ids_query = 'CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'ids (
-			id 				BIGINT NOT NULL AUTO_INCREMENT,
-							PRIMARY KEY(id),
-			Filepath		TEXT NOT NULL,
-			Hex				TEXT NOT NULL,';
-		foreach($GLOBALS['tables'] as $i => $db)
-		{
-			$ids_query .= $db . '_id BIGINT NOT NULL,';
-		}
-		// replace last comma with close paren
-		$ids_query[strlen($ids_query)-1] = ')';
-
-		$this->query($ids_query) or print_r(mysql_error());
-		
-		// alter ids if a new module is added!
-		
 		// create module tables
-		
-		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'alias (
-				id 				BIGINT NOT NULL AUTO_INCREMENT,
-								PRIMARY KEY(id),
-				Paths			TEXT NOT NULL,
-				Alias			TEXT NOT NULL,
-				Paths_regexp	TEXT NOT NULL,
-				Alias_regexp	TEXT NOT NULL
-			)') or print_r(mysql_error());
-		
-		$query = 'CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . db_file::DATABASE . ' (';
-		$struct = db_file::struct();
-		if(!in_array('id', array_keys($struct)))
-			$query .= 'id INT NOT NULL AUTO_INCREMENT, PRIMARY KEY (id),';
-		foreach($struct as $column => $type)
+		$tables_created = array();
+		foreach($GLOBALS['modules'] as $i => $module)
 		{
-			if(strpos($type, ' ') === false)
-				$query .= $column . ' ' . $type . ' NOT NULL,';
-			else
-				$query .= $column . ' ' . $type . ',';
+			if($module != 'fs_file')
+			{
+				$query = 'CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . constant($module . '::DATABASE') . ' (';
+				$struct = call_user_func($module . '::struct');
+				if(is_array($struct) && !in_array(constant($module . '::DATABASE'), $tables_created))
+				{
+					$tables_created[] = constant($module . '::DATABASE');
+					if(!in_array('id', array_keys($struct)))
+						$query .= 'id BIGINT NOT NULL AUTO_INCREMENT, PRIMARY KEY (id),';
+					foreach($struct as $column => $type)
+					{
+						if(strpos($type, ' ') === false)
+							$query .= ' ' . $column . ' ' . $type . ' NOT NULL,';
+						else
+							$query .= ' ' . $column . ' ' . $type . ',';
+					}
+					// remove last comma
+					$query[strlen($query)-1] = ')';
+					
+					// query database
+					$this->query($query) or print_r(mysql_error());
+				}
+			}
 		}
-		// remove last comma
-		$query[strlen($query)-1] = ')';
-		print $query;
-		exit;
-		$this->query($query) or print_r(mysql_error());
 		
-		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'audio (
-				id 				BIGINT NOT NULL AUTO_INCREMENT,
-								PRIMARY KEY(id),
-				Filepath		TEXT NOT NULL,
-				Title			TEXT NOT NULL,
-				Artist			TEXT NOT NULL,
-				Album			TEXT NOT NULL,
-				Track			INT NOT NULL,
-				Year			INT NOT NULL,
-				Genre			TEXT NOT NULL,
-				Length			DOUBLE NOT NULL,
-				Comments		TEXT NOT NULL,
-				Bitrate			DOUBLE NOT NULL
-			)') or print_r(mysql_error());
+		// alter table to match the struct
 		
-		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'video (
-				id 				BIGINT NOT NULL AUTO_INCREMENT,
-								PRIMARY KEY(id),
-				Filepath		TEXT NOT NULL,
-				Title			TEXT NOT NULL,
-				Length			DOUBLE NOT NULL,
-				Comments		TEXT NOT NULL,
-				Bitrate			DOUBLE NOT NULL,
-				VideoBitrate	DOUBLE NOT NULL,
-				AudioBitrate	DOUBLE NOT NULL,
-				Channels		INT NOT NULL,
-				FrameRate		INT NOT NULL,
-				Resolution		TEXT NOT NULL
-			)') or print_r(mysql_error());
-
-		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'image (
-				id 				BIGINT NOT NULL AUTO_INCREMENT,
-								PRIMARY KEY(id),
-				Filepath		TEXT NOT NULL,
-				Height			INT NOT NULL,
-				Width			INT NOT NULL,
-				Make			TEXT NOT NULL,
-				Model			TEXT NOT NULL,
-				Comments		TEXT NOT NULL,
-				Keywords		TEXT NOT NULL,
-				Title			TEXT NOT NULL,
-				Author			TEXT NOT NULL,
-				ExposureTime	TEXT NOT NULL
-			)') or print_r(mysql_error());
-		
-		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'archive (
-				id 				BIGINT NOT NULL AUTO_INCREMENT,
-								PRIMARY KEY(id),
-				Filename		TEXT NOT NULL,
-				Filepath		TEXT NOT NULL,
-				Compressed		BIGINT NOT NULL,
-				Filesize		BIGINT NOT NULL,
-				Filemime		TEXT NOT NULL,
-				Filedate		DATETIME,
-				Filetype		TEXT NOT NULL
-			)') or print_r(mysql_error());
-		
-		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'diskimage (
-				id 				BIGINT NOT NULL AUTO_INCREMENT,
-								PRIMARY KEY(id),
-				Filename		TEXT NOT NULL,
-				Filepath		TEXT NOT NULL,
-				Filesize		BIGINT NOT NULL,
-				Filemime		TEXT NOT NULL,
-				Filedate		DATETIME,
-				Filetype		TEXT NOT NULL
-			)') or print_r(mysql_error());
-		
-		$this->query('CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'amazon (
-				id 				BIGINT NOT NULL AUTO_INCREMENT,
-								PRIMARY KEY(id),
-				AmazonId		TEXT NOT NULL,
-				AmazonTitle		TEXT NOT NULL,
-				AmazonType		TEXT NOT NULL,
-				AmazonInfo		TEXT NOT NULL,
-				Thumbnail		BLOB NOT NULL
-			)') or print_r(mysql_error());
-		
+		$ids_tables = array();
+		$ids = $this->query(array('SELECT' => db_ids::DATABASE, 'LIMIT' => 1)) or print_r(mysql_error());
+		print_r($ids);
+		if(count($ids) > 0)
+		{
+			foreach(array_keys($ids[0]) as $i => $key)
+			{
+				if(substr($key, strlen($key)-3) == '_id')
+				{
+					$ids_tables[] = substr($key, 0, strlen($key) - 3);
+				}
+			}
+			
+			// go through tables and find missing
+			foreach($GLOBALS['tables'] as $i => $db)
+			{
+				if(!in_array($db, $ids_tables))
+				{
+					// alter the table
+					$this->query('ALTER TABLE ' . DB_PREFIX . db_ids::DATABASE . ' ADD ' . $db . '_id BIGINT NOT NULL') or print_r(mysql_error());
+				}
+			}
+		}
 	}
 	
 	// variables that can be defined in the request are validated here

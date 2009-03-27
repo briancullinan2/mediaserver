@@ -403,7 +403,7 @@ Creating a highlighter object
 To create a highlighter for a certain language, use Text_Highlighter::factory()
 static method:
 
-    require_once 'Text/Highlighter.php';
+    require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'Highlighter.php';
     $hl =& Text_Highlighter::factory('php');
 
 
@@ -412,7 +412,7 @@ Setting a renderer
 
 Actual output is produced by a renderer.
 
-    require_once 'Text/Highlighter.php';
+    require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'Highlighter.php';
     require_once 'Text/Highlighter/Renderer/Html.php';
     $options = array(
         'numbers' => HL_NUMBERS_LI,
@@ -427,7 +427,7 @@ renderer. If no renderer is set, HTML renderer will be used by default. In
 this case, you should pass options as second parameter to factory method. The
 following example works exactly as previous one:
 
-    require_once 'Text/Highlighter.php';
+    require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'Highlighter.php';
     $options = array(
         'numbers' => HL_NUMBERS_LI,
         'tabsize' => 8,
@@ -440,7 +440,7 @@ Getting output
 
 And finally, do the highlighting and get the output:
 
-    require_once 'Text/Highlighter.php';
+    require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'Highlighter.php';
     require_once 'Text/Highlighter/Renderer/Html.php';
     $options = array(
         'numbers' => HL_NUMBERS_LI,

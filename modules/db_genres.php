@@ -1,5 +1,5 @@
 <?php
-// provide an easy to access interface to all the unique albums
+// provide an easy to access interface to all the unique genres
 
 $no_setup = true;
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';

@@ -20,9 +20,24 @@ class db_image extends db_file
 
 	static function columns()
 	{
-		return array('id', 'Height', 'Width', 'Make', 'Model', 'Title', 'Keywords', 'Author', 'Comments', 'ExposureTime', 'Filepath');
+		return array_keys(self::struct());
 	}
 	
+	static function struct()
+	{
+		return array(
+			'Filepath' 		=> 'TEXT',
+			'Height'		=> 'INT',
+			'Width'			=> 'INT',
+			'Make'			=> 'TEXT',
+			'Model'			=> 'TEXT',
+			'Comments'		=> 'TEXT',
+			'Keywords'		=> 'TEXT',
+			'Title'			=> 'TEXT',
+			'Author'		=> 'TEXT',
+			'ExposureTime'	=> 'TEXT'
+		);
+	}
 	
 	// this is the priority of sections to check for picture information
 	// from most accurate --> least accurate

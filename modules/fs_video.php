@@ -41,25 +41,14 @@ class fs_video extends fs_file
 		return false;
 
 	}
-	
+		
 	static function getInfo($file)
 	{
 		$file = str_replace('/', DIRECTORY_SEPARATOR, $file);
 		
-		$info = $GLOBALS['getID3']->analyze($file);
-		getid3_lib::CopyTagsToComments($info);
-		
-		$fileinfo = array();
-		$fileinfo['Filepath'] = str_replace('\\', '/', $file);
-		$fileinfo['Title'] = @$info['comments_html']['title'][0];
-		$fileinfo['Comments'] = @$info['comments_html']['comments'][0];
-		$fileinfo['Bitrate'] = @$info['bitrate'];
-		$fileinfo['Length'] = @$info['playtime_seconds'];
-		$fileinfo['Channels'] = @$info['audio']['channels'];
-		$fileinfo['AudioBitrate'] = @$info['audio']['bitrate'];
-		$fileinfo['VideoBitrate'] = @$info['video']['bitrate'];
-		$fileinfo['Resolution'] = @$info['video']['resolution_x'] . 'x' . @$info['video']['resolution_y'];
-		$fileinfo['FrameRate'] = @$info['video']['frame_rate'];
+		$fileinfo = db_video::getInfo($file);
+		$fileinfo['id'] = bin2hex($file);
+		$fileinfo['Filepath'] = stripslashes($fileinfo['Filepath']);
 		
 		return $fileinfo;
 	}

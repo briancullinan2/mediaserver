@@ -1,0 +1,45 @@
+.css-default {
+    color: Black;
+}
+.css-code {
+    color: Gray;
+}
+.css-brackets {
+    color: Fuchsia;
+}
+.css-comment {
+    color: Gray;
+}
+.css-quotes {
+    color: Blue;
+}
+.css-string {
+    color: Maroon;
+}
+.css-identifier {
+    color: Fuchsia;
+}
+.css-builtin {
+    color: Teal;
+}
+.css-reserved {
+    color: Darkblue;
+}
+.css-inlinedoc {
+    color: Blue;
+}
+.css-var {
+    color: Blue;
+}
+.css-url {
+    color: Blue;
+}
+.css-special {
+    color: Navy;
+}
+.css-number {
+    color: Maroon;
+}
+.css-inlinetags {
+    color: Blue;
+}

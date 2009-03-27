@@ -16,7 +16,7 @@ switch($_REQUEST['convert'])
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
 // add category
-if(!isset($_REQUEST['cat']) || !in_array($_REQUEST['cat'], $GLOBALS['modules']))
+if(!isset($_REQUEST['cat']) || !in_array($_REQUEST['cat'], $GLOBALS['modules']) || constant($_REQUEST['cat'] . '::INTERNAL') == true)
 	$_REQUEST['cat'] = USE_DATABASE?'db_archive':'fs_archive';
 
 if(!isset($_REQUEST['%IF']) && isset($_REQUEST['id']))

@@ -5,7 +5,7 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATO
 
 require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'db_image.php';
 
-// music handler
+// image wrapper for images that a browser can read
 class db_image_browser extends db_image
 {
 	const DATABASE = 'image';
@@ -53,12 +53,7 @@ class db_image_browser extends db_image
 	
 	static function get($request, &$count, &$error)
 	{
-		$files = parent::get($request, $count, $error);
-		if(count($files) == 0)
-		{
-			$files = db_file::get($request, $count, $error);
-		}
-		return $files;
+		return parent::get($request, $count, $error);
 	}
 	
 	static function remove($file)

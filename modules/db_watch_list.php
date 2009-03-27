@@ -11,6 +11,8 @@ class db_watch_list extends db_watch
 	const DATABASE = 'watch_list';
 	
 	const NAME = 'New and Changed Directories from Database';
+	
+	const INTERNAL = true;
 
 	static function columns()
 	{

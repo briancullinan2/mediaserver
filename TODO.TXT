@@ -8,6 +8,7 @@ File uploading and personal folders
 	Limit access to watch and alias tables after implementing users and permissions
 Interface with mediatomb and support UPnP protocol
 ------------- Plugin TODO -------------
+Make admin plugins use templates
 Work on reports.php plugin for admin
 	Provide useful information in reports section about missing songs
 Make a sync plugin in admin section for syncing between two databases and pulling out differences

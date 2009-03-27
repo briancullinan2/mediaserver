@@ -26,8 +26,8 @@
  * @ignore
  */
 
-require_once 'Text/Highlighter/Renderer.php';
-require_once 'Text/Highlighter/Renderer/Array.php';
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'Renderer.php';
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'Array.php';
 
 /**
  * HTML basic tags renderer, based on Andrey Demenev's HTML renderer.

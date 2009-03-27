@@ -80,7 +80,7 @@ define ('HL_INFINITY',      1000000000);
  *
  * Usage example
  * <code>
- *require_once 'Text/Highlighter.php';
+ *require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'Highlighter.php';
  *$hlSQL =& Text_Highlighter::factory('SQL',array('numbers'=>true));
  *echo $hlSQL->highlight('SELECT * FROM table a WHERE id = 12');
  * </code>
@@ -197,12 +197,12 @@ class Text_Highlighter
     function &factory($lang, $options = array())
     {
         $lang = strtoupper($lang);
-        @include_once 'Text/Highlighter/' . $lang . '.php';
+        @include_once 'Highlighter/' . $lang . '.php';
 
         $classname = 'Text_Highlighter_' . $lang;
 
         if (!class_exists($classname)) {
-            return PEAR::raiseError('Highlighter for ' . $lang . ' not found');
+            die('Highlighter for ' . $lang . ' not found');
         }
 
         $obj =& new $classname($options);

@@ -5,21 +5,32 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATO
 
 require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'db_file.php';
 
-// music handler
+// id handler
 class db_ids extends db_file
 {
 	const DATABASE = 'ids';
 	
 	const NAME = 'IDs from Database';
+	
+	const INTERNAL = true;
 
 	static function columns()
 	{
-		$columns = array('id', 'Filepath', 'Hex');
+		return array('id', 'Filepath', 'Hex');
+	}
+	
+	static function struct()
+	{
+		$struct = array(
+			'Filepath' 		=> 'TEXT',
+			'Hex'			=> 'TEXT',
+		);
 		foreach($GLOBALS['tables'] as $i => $db)
 		{
-			$columns[] = $db . '_id';
+			$struct[$db . '_id'] = 'BIGINT';
 		}
-		return $columns;
+		
+		return $struct;
 	}
 	
 	static function handles($file)

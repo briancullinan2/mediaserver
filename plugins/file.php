@@ -14,7 +14,7 @@ if(!isset($_REQUEST['id']) && !isset($_REQUEST['item']) && !isset($_REQUEST['on'
 }
 
 // add category
-if(!isset($_REQUEST['cat']) || !in_array($_REQUEST['cat'], $GLOBALS['modules']))
+if(!isset($_REQUEST['cat']) || !in_array($_REQUEST['cat'], $GLOBALS['modules']) || constant($_REQUEST['cat'] . '::INTERNAL') == true)
 	$_REQUEST['cat'] = USE_DATABASE?'db_file':'fs_file';
 
 if(isset($_REQUEST['id']))

@@ -14,25 +14,6 @@ class fs_file
 		return array('id', 'Filename', 'Filemime', 'Filesize', 'Filedate', 'Filetype', 'Filepath');
 	}
 
-	static function parseInner($file, &$last_path, &$inside_path)
-	{
-		$paths = split('/', $file);
-		$last_path = '';
-		foreach($paths as $i => $tmp_file)
-		{
-			if(file_exists(str_replace('/', DIRECTORY_SEPARATOR, $last_path . $tmp_file)) || $last_path == '')
-			{
-				$last_path = $last_path . $tmp_file . '/';
-			} else {
-				if(file_exists(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
-					break;
-			}
-		}
-		
-		$inside_path = substr($file, strlen($last_path));
-		if($last_path[strlen($last_path)-1] == '/') $last_path = substr($last_path, 0, strlen($last_path)-1);
-	}
-
 	// return whether or not this module handles trhe specified type of file
 	static function handles($file, $internals = false)
 	{
@@ -63,14 +44,9 @@ class fs_file
 	{
 		$file = str_replace('/', DIRECTORY_SEPARATOR, $file);
 		
-		$fileinfo = array();
+		$fileinfo = db_file::getInfo($file);
 		$fileinfo['id'] = bin2hex($file);
-		$fileinfo['Filepath'] = str_replace('\\', '/', $file);
-		$fileinfo['Filename'] = basename($file);
-		$fileinfo['Filesize'] = filesize($file);
-		$fileinfo['Filemime'] = getMime($file);
-		$fileinfo['Filedate'] = date("Y-m-d h:i:s", filemtime($file));
-		$fileinfo['Filetype'] = getFileType($file);
+		$fileinfo['Filepath'] = stripslashes($fileinfo['Filepath']);
 		
 		return $fileinfo;
 	}
