@@ -166,7 +166,6 @@ class db_file
 		return false;
 	}
 	
-	
 	// the mysql can be left null to get the files from a directory, in which case a directory must be specified
 	// if the mysql is provided, then the file listings will be loaded from the database
 	// this is a very generalized module to provide a template for overriding, or for other modules to modify the $request and pass to this one

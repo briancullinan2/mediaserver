@@ -75,7 +75,7 @@ else
 // first filter out all the unwanted request vars
 foreach($_REQUEST as $key => $value)
 {
-	if(!in_array($key, array('convert', '%IF', '%FM')))
+	if(!in_array($key, array('convert', '%IF', '%FM', '%TW', '%TH')))
 		unset($_REQUEST[$key]);
 }
 

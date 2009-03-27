@@ -1,4 +1,10 @@
 <?php
+//$_GET[test]=stripslashes($_GET[test]);
+
+$form='<form action='. $_SERVER['PHP_SELF'].' method=post>
+	<input name="search" value=\''.htmlspecialchars($_GET[test],ENT_QUOTES).'\' type="text"> 
+</form>';
+die($form);
 
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 

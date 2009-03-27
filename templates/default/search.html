@@ -25,7 +25,7 @@ $this->assign('modules_named', $modules_named);
 			{/foreach}
 			</select>
 			<br />
-			Contains <input name="search" type="text" value="{if isset($smarty.request.search)}{$smarty.request.search|stripslashes|htmlspecialchars}{/if}" /> (Enter keywords)
+			Contains <input name="search" type="text" value="{if isset($smarty.request.search)}{$smarty.request.search|htmlspecialchars}{/if}" /> (Enter keywords)
 			<br />
 			Submit to apply filter.
 			<br />

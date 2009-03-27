@@ -157,7 +157,7 @@ class db_amazon extends db_file
 					$id = self::add_music($artist, $album);
 					return true;
 				}
-				else
+				elseif($force)
 				{
 					// don't modify because amazon information doesn't change
 				}

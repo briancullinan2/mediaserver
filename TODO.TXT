@@ -1,3 +1,7 @@
+2009-03-26
+Fix the db_playlist module to do all searching during the handle() and cache the centralized id results
+Base discography module on discogs.com
+
 2009-03-25
 Create a centralized ID system
 

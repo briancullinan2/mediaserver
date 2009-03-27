@@ -96,16 +96,7 @@ class db_audio extends db_file
 		// pull information from $info
 		$fileinfo = self::getInfo($file);
 	
-		if( $audio_id != NULL )
-		{
-			log_error('Modifying audio: ' . $file);
-			
-			// update database
-			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $audio_id));
-		
-			return $audio_id;
-		}
-		else
+		if( $audio_id == NULL )
 		{
 			log_error('Adding audio: ' . $file);
 			
@@ -113,6 +104,15 @@ class db_audio extends db_file
 			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 			
 			return $id;
+		}
+		else
+		{
+			log_error('Modifying audio: ' . $file);
+			
+			// update database
+			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $audio_id));
+		
+			return $audio_id;
 		}
 		
 	}

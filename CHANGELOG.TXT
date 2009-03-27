@@ -1,3 +1,6 @@
+2009-03-26
+Made all the modules add() functions handle the ID for modifying in the same order as the handle() function
+
 2009-03-25
 New clause added to the top of plugins that require at least 1 file to be selected
 	They now search the request when all possible fields that would return a result are empty
