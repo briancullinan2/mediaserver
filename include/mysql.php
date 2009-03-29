@@ -9,10 +9,10 @@ class sql extends sql_global
 	{
 		$this->sql_global();
 		
-		$this->db_connect_id = mysql_connect($SQL_server, $SQL_username, $SQL_password, $new) or print_r(mysql_error());
+		$this->db_connect_id = mysql_connect($SQL_server, $SQL_username, $SQL_password, $new) or die(mysql_error());
 		if ($SQL_db_name != "")
 		{
-			mysql_select_db($SQL_db_name, $this->db_connect_id)or print_r("Function Error: " . mysql_error());
+			mysql_select_db($SQL_db_name, $this->db_connect_id)or die("Function Error: " . mysql_error());
 		}
 	}
 	

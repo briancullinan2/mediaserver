@@ -94,7 +94,7 @@ define('ARCHIVE_ARGS_RAR',                           ' p %IF'); // a program tha
 // finally some general options, just used to avoid hardcoding stuff
 
 // max amount to output when accessing a file
-define('BUFFER_SIZE', 	                         4*1024);
+define('BUFFER_SIZE', 	                         2*1024*8);
 
 // a temporary directory to use for creating thumbnails
 define('TMP_DIR', 	                             '/tmp/');
@@ -104,13 +104,13 @@ define('TMP_DIR', 	                             '/tmp/');
 define('USE_ALIAS', 							 true);
 
 // how long to search for directories that have changed
-define('DIRECTORY_SEEK_TIME',		6000);
+define('DIRECTORY_SEEK_TIME',		60);
 
 // how long to search for changed files or add new files
-define('FILE_SEEK_TIME', 		   6000);
+define('FILE_SEEK_TIME', 		   60);
 
 // how long to clean up files
-define('CLEAN_UP_BUFFER_TIME',				600);
+define('CLEAN_UP_BUFFER_TIME',				45);
 
 // how many times should we be able to run the cron script before a cleanup is needed?
 //  cleanup will also be fired when a directory change is detected, this may not always be accurate

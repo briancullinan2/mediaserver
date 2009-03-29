@@ -94,7 +94,7 @@ function setup()
 				// only use the module if it is properly defined
 				if(class_exists($class_name))
 				{
-					if(substr($file, 0, 3) == (USE_DATABASE?'db_':'fs_') || $file == 'fs_file.php')
+					if(substr($file, 0, 3) == (USE_DATABASE?'db_':'fs_'))
 						$tmp_modules[] = $class_name;
 				}
 			}
@@ -159,7 +159,7 @@ function setup()
 			{
 				$GLOBALS['paths_regexp'][] = $alias_props['Paths_regexp'];
 				$GLOBALS['alias_regexp'][] = $alias_props['Alias_regexp'];
-				$GLOBALS['paths'][] = $alias_props['Paths'];
+				$GLOBALS['paths'][] = $alias_props['Filepath'];
 				$GLOBALS['alias'][] = $alias_props['Alias'];
 			}
 		}

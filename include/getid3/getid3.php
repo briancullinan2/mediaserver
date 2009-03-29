@@ -9,11 +9,11 @@
 //                                                            ///
 /////////////////////////////////////////////////////////////////
 
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'common.php';
+
 // Defines
 define('GETID3_VERSION', '1.7.8b3');
-define('GETID3_FREAD_BUFFER_SIZE', 16384); // read buffer size in bytes
-
-
+define('GETID3_FREAD_BUFFER_SIZE', BUFFER_SIZE); // read buffer size in bytes
 
 class getID3
 {

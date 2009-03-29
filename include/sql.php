@@ -41,53 +41,89 @@ class sql_global
 		$tables_created = array();
 		foreach($GLOBALS['modules'] as $i => $module)
 		{
-			if($module != 'fs_file')
+			$query = 'CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . constant($module . '::DATABASE') . ' (';
+			$struct = call_user_func($module . '::struct');
+			if(is_array($struct) && !in_array(constant($module . '::DATABASE'), $tables_created))
 			{
-				$query = 'CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . constant($module . '::DATABASE') . ' (';
-				$struct = call_user_func($module . '::struct');
-				if(is_array($struct) && !in_array(constant($module . '::DATABASE'), $tables_created))
+				$tables_created[] = constant($module . '::DATABASE');
+				if(!isset($struct['id']))
+					$query .= 'id BIGINT NOT NULL AUTO_INCREMENT, PRIMARY KEY (id),';
+				foreach($struct as $column => $type)
 				{
-					$tables_created[] = constant($module . '::DATABASE');
-					if(!in_array('id', array_keys($struct)))
-						$query .= 'id BIGINT NOT NULL AUTO_INCREMENT, PRIMARY KEY (id),';
-					foreach($struct as $column => $type)
-					{
-						if(strpos($type, ' ') === false)
-							$query .= ' ' . $column . ' ' . $type . ' NOT NULL,';
-						else
-							$query .= ' ' . $column . ' ' . $type . ',';
-					}
-					// remove last comma
-					$query[strlen($query)-1] = ')';
-					
-					// query database
-					$this->query($query) or print_r(mysql_error());
+					if(strpos($type, ' ') === false)
+						$query .= ' ' . $column . ' ' . $type . ' NOT NULL,';
+					else
+						$query .= ' ' . $column . ' ' . $type . ',';
 				}
+				// remove last comma
+				$query[strlen($query)-1] = ')';
+				
+				// query database
+				$this->query($query) or print_r(mysql_error());
 			}
 		}
-		
-		// alter table to match the struct
-		
-		$ids_tables = array();
-		$ids = $this->query(array('SELECT' => db_ids::DATABASE, 'LIMIT' => 1)) or print_r(mysql_error());
-		print_r($ids);
-		if(count($ids) > 0)
+	}
+	
+	function upgrade()
+	{
+		$tables_updated = array();
+		foreach($GLOBALS['modules'] as $i => $module)
 		{
-			foreach(array_keys($ids[0]) as $i => $key)
+			$struct = call_user_func($module . '::struct');
+			if(is_array($struct) && !in_array(constant($module . '::DATABASE'), $tables_updated))
 			{
-				if(substr($key, strlen($key)-3) == '_id')
+				$tables_updated[] = constant($module . '::DATABASE');
+				
+				// first insert a row with id 0 to use for reading
+				$ids = $this->query(array('INSERT' => constant($module . '::DATABASE'), 'VALUES' => array('Filepath' => ''))) or print_r(mysql_error());
+				
+				// alter table to match the struct
+				$files = $this->query(array('SELECT' => constant($module . '::DATABASE'), 'WHERE' => 'Filepath=""')) or print_r(mysql_error());
+				
+				if(count($files) > 0)
 				{
-					$ids_tables[] = substr($key, 0, strlen($key) - 3);
-				}
-			}
-			
-			// go through tables and find missing
-			foreach($GLOBALS['tables'] as $i => $db)
-			{
-				if(!in_array($db, $ids_tables))
-				{
-					// alter the table
-					$this->query('ALTER TABLE ' . DB_PREFIX . db_ids::DATABASE . ' ADD ' . $db . '_id BIGINT NOT NULL') or print_r(mysql_error());
+					$columns = array_keys($files[0]);
+						
+					// find missing columns
+					$query = 'ALTER TABLE ' . DB_PREFIX . constant($module . '::DATABASE');
+					foreach($struct as $column => $type)
+					{
+						if(!in_array($column, $columns))
+						{
+							// alter the table
+							if(strpos($type, ' ') === false)
+								$this->query('ALTER TABLE ' . DB_PREFIX . constant($module . '::DATABASE') . ' ADD ' . $column . ' ' . $type . ' NOT NULL') or print_r(mysql_error());
+							else
+								$this->query('ALTER TABLE ' . DB_PREFIX . constant($module . '::DATABASE') . ' ADD ' . $column . ' ' . $type) or print_r(mysql_error());
+						}
+						
+						if($column != 'id')
+						{
+							if(strpos($type, ' ') === false)
+								$query .= ' MODIFY ' . $column . ' ' . $type . ' NOT NULL,';
+							else
+								$query .= ' MODIFY ' . $column . ' ' . $type . ',';
+						}
+					}
+					// remove last comma
+					$query = substr($query, 0, strlen($query)-1);
+					
+					// remove unnessicary columns
+					if(!isset($struct['id']))
+						$struct['id'] = 'BIGINT NOT NULL AUTO_INCREMENT, PRIMARY KEY (id)';
+					foreach($columns as $i => $key)
+					{
+						if(!isset($struct[$key]))
+						{
+							$this->query('ALTER TABLE ' . DB_PREFIX . constant($module . '::DATABASE') . ' DROP ' . $key) or print_r(mysql_error());
+						}
+					}
+				
+					// finally modify the table types
+					$this->query($query) or print_r(mysql_error());
+				
+					// remove id 0
+					$files = $this->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => 'Filepath=""')) or print_r(mysql_error());
 				}
 			}
 		}

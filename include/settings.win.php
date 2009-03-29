@@ -91,7 +91,7 @@ define('ARCHIVE_ARGS_RAR',                           ' p %IF'); // a program tha
 // finally some general options, just used to avoid hardcoding stuff
 
 // max amount to output when accessing a file
-define('BUFFER_SIZE', 	                                                        2048);
+define('BUFFER_SIZE', 	                         2*1024*8);
 
 // a temporary directory to use for creating thumbnails
 define('TMP_DIR', 	                                                            'C:\wamp\tmp\\');
