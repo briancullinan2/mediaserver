@@ -34,14 +34,14 @@ class db_amazon extends db_file
 
 	static function columns()
 	{
-		return array('id', 'AmazonId', 'AmazonLink', 'AmazonTitle', 'Filepath');
+		return array_keys(self::struct());
 	}
 
 	static function struct()
 	{
 		return array(
 			'AmazonId' 		=> 'TEXT',
-			'AmazonTitle' 	=> 'TEXT',
+			'Filepath' 		=> 'TEXT',
 			'AmazonType' 	=> 'TEXT',
 			'AmazonInfo' 	=> 'TEXT',
 			'Thumbnail' 	=> 'BLOB'
@@ -65,7 +65,7 @@ class db_amazon extends db_file
 			{
 				$amazon = $GLOBALS['database']->query(array(
 						'SELECT' => self::DATABASE,
-						'WHERE' => 'AmazonTitle = "' . addslashes($audio[0]['Artist'] . "\n" . $audio[0]['Album']) . '"'
+						'WHERE' => 'Filepath = "' . addslashes($audio[0]['Artist'] . "\n" . $audio[0]['Album']) . '"'
 					)
 				);
 				if(count($amazon) == 0 || $amazon[0]['AmazonId'] != '')
@@ -84,7 +84,7 @@ class db_amazon extends db_file
 			{
 				$amazon = $GLOBALS['database']->query(array(
 						'SELECT' => self::DATABASE,
-						'WHERE' => 'AmazonTitle = "' . addslashes($movie[0]['Title']) . '"'
+						'WHERE' => 'Filepath = "' . addslashes($movie[0]['Title']) . '"'
 					)
 				);
 				if(count($amazon) == 0 || $amazon[0]['AmazonId'] != '')
@@ -106,7 +106,7 @@ class db_amazon extends db_file
 				// check if it is in database already
 				$amazon = $GLOBALS['database']->query(array(
 						'SELECT' => self::DATABASE,
-						'WHERE' => 'AmazonTitle = "' . addslashes($artist . "\n" . $album) . '"'
+						'WHERE' => 'Filepath = "' . addslashes($artist . "\n" . $album) . '"'
 					)
 				);
 				if(count($amazon) == 0 || $amazon[0]['AmazonId'] != '')
@@ -159,7 +159,7 @@ class db_amazon extends db_file
 				
 				$amazon = $GLOBALS['database']->query(array(
 						'SELECT' => self::DATABASE,
-						'WHERE' => 'AmazonTitle = "' . addslashes($artist . "\n" . $album) . '"'
+						'WHERE' => 'Filepath = "' . addslashes($artist . "\n" . $album) . '"'
 					)
 				);
 				
@@ -185,7 +185,7 @@ class db_amazon extends db_file
 	static function getMusicInfo($artist, $album)
 	{
 		$fileinfo = array();
-		$fileinfo['AmazonTitle'] = addslashes($artist . "\n" . $album);
+		$fileinfo['Filepath'] = addslashes($artist . "\n" . $album);
 		$fileinfo['AmazonId'] = '';
 		$fileinfo['AmazonType'] = 'Music';
 		$fileinfo['AmazonInfo'] = '';
@@ -376,9 +376,6 @@ class db_amazon extends db_file
 	static function get($request, &$count, &$error)
 	{
 		$GLOBALS['database']->validate($request, $props, get_class());
-			
-		if(!isset($request['order_by']) || $request['order_by'] == 'Filepath')
-			$request['order_by'] = 'AmazonTitle';
 		
 		// modify the request
 		if(isset($request['file']))
@@ -390,7 +387,7 @@ class db_amazon extends db_file
 				{
 					$files = $GLOBALS['database']->query(array(
 							'SELECT' => self::DATABASE,
-							'WHERE' => 'AmazonTitle = "' . addslashes($audio[0]['Artist'] . "\n" . $audio[0]['Album']) . '"'
+							'WHERE' => 'Filepath = "' . addslashes($audio[0]['Artist'] . "\n" . $audio[0]['Album']) . '"'
 						)
 					);
 				}
@@ -406,7 +403,7 @@ class db_amazon extends db_file
 				{
 					$files = $GLOBALS['database']->query(array(
 							'SELECT' => self::DATABASE,
-							'WHERE' => 'AmazonTitle = "' . addslashes($movie[0]['Title']) . '"'
+							'WHERE' => 'Filepath = "' . addslashes($movie[0]['Title']) . '"'
 						)
 					);
 				}
@@ -424,7 +421,7 @@ class db_amazon extends db_file
 				$artist = @$dirs[count($dirs)-2];
 				$files = $GLOBALS['database']->query(array(
 						'SELECT' => self::DATABASE,
-						'WHERE' => 'AmazonTitle = "' . addslashes($artist . "\n" . $album) . '"'
+						'WHERE' => 'Filepath = "' . addslashes($artist . "\n" . $album) . '"'
 					)
 				);
 			}
@@ -455,7 +452,7 @@ class db_amazon extends db_file
 				unset($request['dir']);
 				$amazon = $GLOBALS['database']->query(array(
 						'SELECT' => self::DATABASE,
-						'WHERE' => 'AmazonTitle = "' . addslashes($title) . '"'
+						'WHERE' => 'Filepath = "' . addslashes($title) . '"'
 					)
 				);
 				
@@ -504,7 +501,7 @@ class db_amazon extends db_file
 			if(isset($request['file']))
 				$files[$i]['Filepath'] = $request['file'];
 			else
-				$files[$i]['Filepath'] = '/' . join('/', split("\n", $file['AmazonTitle'])) . '/';
+				$files[$i]['Filepath'] = '/' . join('/', split("\n", $file['Filepath'])) . '/';
 			$files[$i]['Filetype'] = 'FOLDER';
 		}
 		

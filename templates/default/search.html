@@ -1,14 +1,3 @@
-{php}
-$modules = $this->get_template_vars('modules');
-$modules_named = array();
-foreach($modules as $i => $module)
-{
-	$modules_named[] = constant($module . '::NAME');
-}
-array_multisort($modules_named, SORT_STRING, $modules);
-$this->assign('modules', $modules);
-$this->assign('modules_named', $modules_named);
-{/php}
 {if $smarty.request.detail < 4}
 	<div id="builder">
 		Use this form to generate the list of files you would like to view:
@@ -20,8 +9,8 @@ $this->assign('modules_named', $modules_named);
             {/if}
             {/foreach}
 			<select name="cat">
-			{foreach item=module key=i from=$modules}
-				<option value="{$module}" {if isset($smarty.request.cat) && $smarty.request.cat eq $module}selected{/if}>{$modules_named.$i}</option>
+			{foreach item=name key=module from=$modules}
+				<option value="{$module}" {if isset($smarty.request.cat) && $smarty.request.cat eq $module}selected{/if}>{$name}</option>
 			{/foreach}
 			</select>
 			<br />

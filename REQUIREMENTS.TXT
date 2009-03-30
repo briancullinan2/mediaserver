@@ -1,3 +1,6 @@
+This script requires at least 96MB of ram, it will need to be changed from the default 8M in the php.ini file
+It can run on 32MB if you are not trying to scan big code files, including html files
+
 If (Linux) or (Windows) is next to an item, either/or should work for your set up, see the settings.php for help on formatting the commands.
 PHP >= 5.2.6 (http://www.php.net/)
 ImageMagick >= 6.0.0 (http://www.imagemagick.org/script/index.php)

@@ -1,0 +1,123 @@
+{if $smarty.const.USE_DATABASE}{assign var=prefix value='db_'}{else}{assign var=prefix value='fs_'}{/if}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>{$smarty.const.HTML_NAME|@htmlspecialchars}</title>
+<link rel="stylesheet" href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}live.css" type="text/css"/>
+</head>
+
+<body>
+<div id="bodydiv">
+	<div id="sizer">
+		<div id="expander">
+			<table id="header" cellpadding="0" cellspacing="0"></table>
+			<div id="container">
+				<table width="100%" cellpadding="5" cellspacing="0">
+					<tr>
+						<td>
+							<div id="breadcrumb">
+								<ul>
+{assign var=dirlen value=$smarty.request.dir|strlen}
+{assign var=dirlen value=$dirlen-1}
+{if $smarty.request.dir|substr:$dirlen:1 eq '/'}{assign var=dir value=$smarty.request.dir|substr:0:$dirlen}{else}{assign var=dir value=$smarty.request.dir}{/if}
+{assign var=crumbs value='/'|split:$dir}
+{assign var=crumbcount value=$crumbs|@count}
+{assign var=crumbcount value=$crumbcount-1}
+{assign var=path value='/'}
+{foreach from=$crumbs item=dir key=i}
+{if $i eq 0}
+									<li><a href="?dir=/&amp;cat={$smarty.request.cat}">{$smarty.const.HTML_NAME|@htmlspecialchars}</a></li>
+{else}{assign var=path value=$path|cat:$dir|cat:'/'}
+{/if}
+{if $i eq $crumbcount}{assign var=current value=$dir}
+									<li>{$dir|@htmlspecialchars}</li>
+{else}
+									<li><a href="?dir={$path|urlencode|htmlspecialchars}&amp;cat={$smarty.request.cat}">{$dir|@htmlspecialchars}</a></li>
+									<li><img src="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}carat.gif" class="crumbsep"></li>
+{/if}
+{/foreach}
+								</ul>
+							</div>
+						</td>
+					</tr>
+				</table>
+				<div id="content">
+					<table id="main" cellpadding="0" cellspacing="0">
+						<tr>
+							<td class="sideColumn"></td>
+							<td id="mainColumn">
+								<table id="mainTable" cellpadding="0" cellspacing="0">
+									<tr>
+										<td>
+											<div class="contentSpacing">
+												<h1 class="title">{if $current eq ''}{$smarty.const.HTML_NAME|@htmlspecialchars}{else}{$current|@htmlspecialchars}{/if}</h1>
+												<span class="subText">Use remote access to browse and download files.</span>
+												<div class="titlePadding"></div>
+												<div class="files">
+													{section name=file loop=$files}
+														<div class="file"><div class="selected"></div>
+															{assign var=encoded value=$files[file].Filepath|urlencode|htmlspecialchars}
+															{if $files[file].Filetype=="FOLDER" || 
+																($files[file].Filepath|@handles:'archive' && $smarty.request.cat != $prefix|cat:'archive') || 
+																($files[file].Filepath|@handles:'playlist' && $smarty.request.cat != $prefix|cat:'playlist') || 
+																($files[file].Filepath|@handles:'diskimage' && $smarty.request.cat != $prefix|cat:'diskimage')
+															}
+																{if $files[file].Filepath|@handles:'archive'}
+																	{assign var=cat value=$prefix|cat:archive}
+																{elseif $files[file].Filepath|@handles:'diskimage'}
+																	{assign var=cat value=$prefix|cat:diskimage}
+																{elseif $files[file].Filepath|@handles:'playlist'}
+																	{assign var=cat value=$prefix|cat:playlist}
+																{else}
+																	{assign var=cat value=$smarty.request.cat}
+																{/if}
+																{assign var=link value='?dir='|cat:$encoded|cat:'&amp;cat='|cat:$cat}
+															{elseif $files[file].Filepath|@handles:'archive'}{assign var=link value='/'|cat:$smarty.const.HTML_ROOT|cat:$smarty.const.HTML_PLUGINS|cat:'archive.php/'|cat:$smarty.request.cat|cat:'/'|cat:$files[file].id|cat:'/OUT/'|cat:$files[file].Filename}
+															{elseif $files[file].Filepath|@handles:'diskimage'}{assign var=link value='/'|cat:$smarty.const.HTML_ROOT|cat:$smarty.const.HTML_PLUGINS|cat:'file.php/'|cat:$prefix|cat:'diskimage/'|cat:$files[file].id|cat:'/'|cat:$files[file].Filename}
+															{elseif $files[file].Filepath|@handles:'image_browser'}{assign var=link value='/'|cat:$smarty.const.HTML_ROOT|cat:$smarty.const.HTML_PLUGINS|cat:'file.php/'|cat:$prefix|cat:'image_browser/'|cat:$files[file].id|cat:'/'|cat:$files[file].Filename}
+															{else}{assign var=link value='/'|cat:$smarty.const.HTML_ROOT|cat:$smarty.const.HTML_PLUGINS|cat:'file.php/'|cat:$smarty.request.cat|cat:'/'|cat:$files[file].id|cat:'/'|cat:$files[file].Filename}{/if}
+															<table class="itemTable" cellpadding="0" cellspacing="0" onclick="location.href = '{$link}';">
+																<tr>
+																	<td>
+																		<img height="48" width="48">
+																	</td>
+																</tr>
+															</table>
+															<a class="itemLink" href="{$link}" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden';" onmouseover="this.parentNode.firstChild.style.visibility = 'visible';"><span>{$files[file].Filename}</span></a>
+														</div>
+													{/section}
+												</div>
+											</div>
+										</td>
+									</tr>
+								</table>
+							</td>
+							<td class="sideColumn" cellpadding="0" cellspacing="0"></td>
+						</tr>
+					</table>
+				</div>
+				<div id="footer">
+					<table id="footerCtr">
+						<tr>
+							<td>
+								<ul>
+								{assign var=mod_count value=0}
+								{assign var=mod_total value=$modules|@count}
+								{assign var=mod_total value=$mod_total-1}
+								{foreach item=name key=module from=$modules}
+									{assign var=name value=' from Database'|@str_replace:'':$name}
+									<li {if $mod_count eq $mod_total}class="last"{/if}><a href="?cat={$module}">{$name}</a></li>
+									{assign var=mod_count value=$mod_count+1}
+								{/foreach}
+								</ul>
+							</td>
+						</tr>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+</body>
+</html>

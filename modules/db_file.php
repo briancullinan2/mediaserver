@@ -708,20 +708,27 @@ class db_file
 		// remove last AND
 		$watched_to_where = substr($watched_to_where, 0, strlen($watched_to_where)-3);
 		
-		$ignored_where = '';
-		// clean up items that are in the ignore list
-		foreach($GLOBALS['ignored'] as $i => $ignore)
-		{
-			$tmp_ignore = str_replace('\\', '/', $ignore['Filepath']);
-			$ignored_where .= ' LEFT(Filepath, ' . strlen($tmp_ignore) . ') = "' . addslashes($tmp_ignore) . '" OR';
-		}
-		// remove last OR
-		$ignored_where = substr($ignored_where, 0, strlen($ignored_where)-2);
-		
-		$where_str = '(' . $ignored_where . ') OR (' . $watched_to_where . ' AND ' . $watched_where . ')';
+		$where_str = $watched_to_where . ' AND ' . $watched_where;
 		
 		// remove items that aren't in where directories
-		$GLOBALS['database']->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => $ignored_where));
+		$GLOBALS['database']->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => $where_str));
+		
+		if(count($GLOBALS['ignored']) > 0)
+		{
+			
+			$ignored_where = '';
+			// clean up items that are in the ignore list
+			foreach($GLOBALS['ignored'] as $i => $ignore)
+			{
+				$tmp_ignore = str_replace('\\', '/', $ignore['Filepath']);
+				$ignored_where .= ' LEFT(Filepath, ' . strlen($tmp_ignore) . ') = "' . addslashes($tmp_ignore) . '" OR';
+			}
+			// remove last OR
+			$ignored_where = substr($ignored_where, 0, strlen($ignored_where)-2);
+			
+			// remove items that are ignored
+			$GLOBALS['database']->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => $ignored_where));
+		}
 		
 		// remove any duplicates
 		$files = $GLOBALS['database']->query(array(
@@ -731,7 +738,7 @@ class db_file
 				'HAVING' => 'num > 1'
 			)
 		);
-		
+	
 		// remove first item from all duplicates
 		foreach($files as $i => $file)
 		{

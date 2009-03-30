@@ -47,9 +47,9 @@ if(isset($_SESSION['search']))
 $out_modules = array();
 foreach($GLOBALS['modules'] as $i => $module)
 {
-	if($module != 'fs_file' && constant($module . '::INTERNAL') == false)
+	if(constant($module . '::INTERNAL') == false)
 	{
-		$out_modules[] = $module;
+		$out_modules[$module] = constant($module . '::NAME');
 	}
 }
 $smarty->assign('modules', $out_modules);

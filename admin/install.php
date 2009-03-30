@@ -26,5 +26,9 @@ $GLOBALS['database'] = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 
 $GLOBALS['database']->install();
 
+// upgrade for good measure just to make sure
+if(isset($_REQUEST['upgrade']) && $_REQUEST['upgrade'] == true)
+	$GLOBALS['database']->upgrade();
+
 ?>
 Install script has completed, if there were errors you would see them above!

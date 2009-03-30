@@ -133,6 +133,9 @@ class db_code extends db_file
 			case "xml":
 				return 'xml';
 				break;
+			case "vbs":
+				return 'vbscript';
+				break;
 			default:
 				return false;
 		}
@@ -191,23 +194,26 @@ class db_code extends db_file
 			
 			$fileinfo['LineCount'] = count($lines);
 			$fileinfo['Words'] = join(' ', $words);
+				
+			$lines = join("\n", $lines);
 			
 			$lang = self::getLanguage(getExt(basename($file)));
-			if($lang !== false)
+			if($lang !== false && $lines != '')
 			{
 				$fileinfo['Language'] = $lang;
 				
-				$lines = join("\n", $lines);
-				
 				$highlighter = Text_Highlighter::factory($fileinfo['Language']);
+				$highlighter->setRenderer(new Text_Highlighter_Renderer_Array);
 				
 				$fileinfo['HTML'] = addslashes($highlighter->highlight($lines));
+				print_r($fileinfo['HTML']);
+				exit;
 			}
 			else
 			{
 				$fileinfo['Language'] = '';
 				
-				$fileinfo['HTML'] = addslashes(htmlspecialchars(join("\n", $lines)));
+				$fileinfo['HTML'] = addslashes(htmlspecialchars($lines));
 			}
 		}
 		

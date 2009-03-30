@@ -23,7 +23,7 @@ class db_alias extends db_file
 	static function struct()
 	{
 		return array(
-			'Paths' 		=> 'TEXT',
+			'Filepath' 		=> 'TEXT',
 			'Alias' 		=> 'TEXT',
 			'Paths_regexp'	=> 'TEXT',
 			'Alias_regexp'	=> 'TEXT'
@@ -47,7 +47,6 @@ class db_alias extends db_file
 		$GLOBALS['database']->validate($request, $props, get_class());
 		
 		$props['SELECT'] = self::DATABASE;
-		$props['COLUMNS'] = '*,Alias as Filepath';
 		
 		$files = $GLOBALS['database']->query($props);
 		

@@ -132,7 +132,8 @@ class db_playlist extends db_file
 					{
 						$buffer = trim(fgets($fp));
 						$buffer = str_replace(chr(0), '', $buffer);
-						$count = preg_match('/(([^\\\\\\/\\:\\*\\?\\<\\>\\|]+[\\\\\\/])*[^\\\\\\/\\:\\*\\?\\<\\>\\|]+\.[a-z0-9]+)([^a-z0-9]|$)/i', $buffer, $matches);
+						// there must be at least 1 directory
+						$count = preg_match('/(([^\\\\\\/\\:\\*\\?\\<\\>\\|]+[\\\\\\/])+[^\\\\\\/\\:\\*\\?\\<\\>\\|]+\.[a-z0-9]+)([^a-z0-9]|$)/i', $buffer, $matches);
 						if($count > 0 && trim($matches[1]) != '')
 						{
 							$tmp_files[] = trim($matches[1]);

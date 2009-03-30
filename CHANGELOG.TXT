@@ -11,6 +11,7 @@ All modules are now included and accessible, but only the appropriate db_ or fs_
 	This is so functionality can be extracted from the db_modules and used in the fs_modules or vice versa
 	But templates should still only use the modules that are not INTERNAL and are listed in $GLOBALS['modules']
 Fixed plugins that check for cat, now they make sure the module being accessed isn't an INTERNAL module
+Fixed db_watch_list module, and cron.php plugins, now it recognizes connection_abort() and doesn't exit immedialy, but instead when the current process is complete
 
 2009-03-26
 Made all the modules add() functions handle the ID for modifying in the same order as the handle() function

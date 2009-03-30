@@ -20,6 +20,9 @@ session_write_close();
 // add 30 seconds becase the cleanup shouldn't take any longer then that
 set_time_limit(DIRECTORY_SEEK_TIME + FILE_SEEK_TIME + CLEAN_UP_BUFFER_TIME);
 
+// ignore user abort because the script will handle it
+ignore_user_abort(1);
+
 // start output buffer so we can save in tmp file
 $log_fp = @fopen(TMP_DIR . 'mediaserver.log', 'wb');
 ob_start(create_function('$buffer', 'global $log_fp; @fwrite($log_fp, $buffer); return $buffer;'));
@@ -33,7 +36,7 @@ log_error('Cron Script: ' . VERSION . '_' . VERSION_NAME);
 <?php
 
 // the cron script is useless if it has nowhere to store the information it reads
-if(USE_DATABASE == false)
+if(USE_DATABASE == false || count($GLOBALS['watched']) == 0)
 	exit;
 
 // get the watched directories
@@ -184,8 +187,12 @@ for($i; $i < count($GLOBALS['watched']); $i++)
 }
 log_error("Phase 1: Complete!");
 
+if(connection_status()!=0)
+	exit;
+
 // clean up the watch_list and remove stuff that doesn't exist in watch anymore
-db_watch_list::cleanup();
+if($should_clean !== 0)
+	db_watch_list::cleanup();
 
 // now scan some files
 $tm_start = array_sum(explode(' ', microtime()));
@@ -214,9 +221,12 @@ do
 	if($secs_total > FILE_SEEK_TIME)
 		log_error("Ran out of Time: Changed directories still in database");
 	
-} while( $secs_total < FILE_SEEK_TIME && count($db_dirs) > 0 );
+} while( $secs_total < FILE_SEEK_TIME && count($db_dirs) > 0 && connection_status()==0 );
 
 log_error("Phase 2: Complete!");
+
+if(connection_status()!=0)
+	exit;
 
 // now do some cleanup
 //  but only if we need it!
@@ -238,8 +248,7 @@ log_error("Phase 3: Cleaning up");
 
 foreach($GLOBALS['modules'] as $i => $module)
 {
-	if($module != 'fs_file')
-		call_user_func_array($module . '::cleanup', array());
+	call_user_func_array($module . '::cleanup', array());
 }
 
 // read all the folders that lead up to the watched folder

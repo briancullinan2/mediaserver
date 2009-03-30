@@ -28,7 +28,7 @@ Here is a full example of an alias in use:<br />
 +--------------+----------+-----------------------+---------------------+------+<br />
 | Paths &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Alias &nbsp;&nbsp; | Paths_regexp &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Alias_regexp &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Hard |<br />
 +--------------+----------+-----------------------+---------------------+------+<br />
-| /home/share/ | /Shared/ | /\/home\/(share\/)?/i | /^\/$|^\/Shared\//i | &nbsp;&nbsp; 0 |<br />
+| /home/share/ | /Shared/ | /^\/home\/(share\/)?/i | /^\/$|^\/Shared\//i | &nbsp;&nbsp; 0 |<br />
 +--------------+----------+-----------------------+---------------------+------+<br />
 </code>
 The breakdown:<br />

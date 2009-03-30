@@ -1,3 +1,7 @@
+2009-03-28
+Put duplicate removing in the Scanning check, that way cleanup()s only handle watch and ignored list
+Make a fs_code module
+
 2009-03-26 (Full)
 More compatibility testing with clients
 ------------- GENERAL TODO -------------

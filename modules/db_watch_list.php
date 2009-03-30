@@ -171,6 +171,10 @@ class db_watch_list extends db_watch
 						
 					$paths[] = $file['Filepath'];
 				
+					// if the connection is lost pretend everything is ok and return
+					if(connection_status()!=0)
+						return true;
+						
 					// don't put too much load of the system
 					usleep(10);
 				}
@@ -195,7 +199,7 @@ class db_watch_list extends db_watch
 						{
 							// do not remove ids because other modules may still use the id
 							//  allow other modules to handle removing of ids
-							if($module != 'fs_file' && $module != 'db_ids')
+							if($module != 'db_ids')
 								call_user_func_array($module . '::remove', array($file['Filepath'], $module));
 						}
 					}
@@ -294,7 +298,7 @@ class db_watch_list extends db_watch
 					// keep processing files
 					$status = self::handle($file['Filepath']);
 					
-					if( $status === false )
+					if( $status === false || connection_status() != 0)
 					{
 						array_push($state, array('index' => $i, 'file' => $file['Filepath']));
 						
@@ -326,7 +330,7 @@ class db_watch_list extends db_watch
 			// never pass is to fs_file, it is only used to internals in this case
 			// db_file and db_ids are handled independently
 			// skip db_watch and db_watch_list to prevent recursion
-			if($module != 'fs_file' && $module != 'db_watch' && $module != 'db_watch_list' && $module != 'db_ids' && $module != 'db_file')
+			if($module != 'db_watch' && $module != 'db_watch_list' && $module != 'db_ids' && $module != 'db_file')
 			{
 				$result = call_user_func_array($module . '::handle', array($file, ($result !== false)));
 				if($result === true) $added = true;
