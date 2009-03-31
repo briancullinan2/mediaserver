@@ -11,7 +11,13 @@
 <div id="bodydiv">
 	<div id="sizer">
 		<div id="expander">
-			<table id="header" cellpadding="0" cellspacing="0"></table>
+			<table id="header" cellpadding="0" cellspacing="0">
+				<tr>
+					<td>
+					{include file=$templates.TEMPLATE_TEMPLATE}
+					</td>
+				</tr>
+			</table>
 			<div id="container">
 				<table width="100%" cellpadding="5" cellspacing="0">
 					<tr>
@@ -79,8 +85,8 @@
 															{else}{assign var=link value='/'|cat:$smarty.const.HTML_ROOT|cat:$smarty.const.HTML_PLUGINS|cat:'file.php/'|cat:$smarty.request.cat|cat:'/'|cat:$files[file].id|cat:'/'|cat:$files[file].Filename}{/if}
 															<table class="itemTable" cellpadding="0" cellspacing="0" onclick="location.href = '{$link}';">
 																<tr>
-																	<td>
-																		<img height="48" width="48">
+																	<td class="thumb file_ext_{$files[file].Filetype} file_type_{'/'|str_replace:' file_type_':$files[file].Filemime}">
+																		<img src="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}image/s.gif" height="48" width="48">
 																	</td>
 																</tr>
 															</table>

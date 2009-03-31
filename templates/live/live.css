@@ -13,6 +13,17 @@ body {
 	direction:ltr;
 }
 
+.template_box {
+	position:absolute;
+	z-index:9999;
+	right:0;
+	top:0;
+}
+
+.template_box a {
+	color:#FFF;
+}
+
 #bodydiv {
 	padding:0 400px 0 400px
 }

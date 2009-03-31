@@ -1,0 +1,16 @@
+@charset "utf-8";
+/* CSS Document */
+
+.thumb {
+	background-repeat:no-repeat;
+}
+.thumb, .thumb.file_ext_ {
+	background-image:url(images/filetypes/file_48x48.png);
+}
+.thumb.file_ext_FOLDER {
+	background-image:url(images/filetypes/folder_48x48.png);
+}
+.thumb.file_type_audio {
+	background-image:url(images/filetypes/music_48x48.png);
+}
+

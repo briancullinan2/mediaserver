@@ -8,5 +8,6 @@ $GLOBALS['templates']['TEMPLATE_TYPE'] = LOCAL_ROOT . LOCAL_DEFAULT . 'type.html
 $GLOBALS['templates']['TEMPLATE_ADDRESS'] = LOCAL_ROOT . LOCAL_DEFAULT . 'address.html';
 $GLOBALS['templates']['TEMPLATE_PAGES'] = LOCAL_ROOT . LOCAL_DEFAULT . 'pages.html';
 $GLOBALS['templates']['TEMPLATE_INDEX'] = LOCAL_ROOT . LOCAL_DEFAULT . 'index.html';
+$GLOBALS['templates']['TEMPLATE_TEMPLATE'] = LOCAL_ROOT . LOCAL_DEFAULT . 'template.html';
 
 ?>

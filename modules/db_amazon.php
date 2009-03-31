@@ -53,43 +53,9 @@ class db_amazon extends db_file
 		$file = str_replace('\\', '/', $file);
 		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 		
-		if(db_audio::handles($file))
+		if(db_audio::handles($file) || db_movies::handles($file))
 		{
-			// make sure it isn't already in the database and wasn't found
-			$audio = $GLOBALS['database']->query(array(
-					'SELECT' => db_audio::DATABASE,
-					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
-				)
-			);
-			if(count($audio) > 0)
-			{
-				$amazon = $GLOBALS['database']->query(array(
-						'SELECT' => self::DATABASE,
-						'WHERE' => 'Filepath = "' . addslashes($audio[0]['Artist'] . "\n" . $audio[0]['Album']) . '"'
-					)
-				);
-				if(count($amazon) == 0 || $amazon[0]['AmazonId'] != '')
-					return true;
-			}
-		}
-		elseif(db_movies::handles($file))
-		{
-			// make sure it isn't already in the database and wasn't found
-			$movie = $GLOBALS['database']->query(array(
-					'SELECT' => db_movies::DATABASE,
-					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
-				)
-			);
-			if(count($movie) > 0)
-			{
-				$amazon = $GLOBALS['database']->query(array(
-						'SELECT' => self::DATABASE,
-						'WHERE' => 'Filepath = "' . addslashes($movie[0]['Title']) . '"'
-					)
-				);
-				if(count($amazon) == 0 || $amazon[0]['AmazonId'] != '')
-					return true;
-			}
+			return true;
 		}
 		elseif(is_dir($file))
 		{
@@ -104,14 +70,7 @@ class db_amazon extends db_file
 			
 			if(isset($album) && isset($artist) && $album != '' && $artist != '' && $artist != 'Music' && in_array('music', $tokens['Unique']))
 			{
-				// check if it is in database already
-				$amazon = $GLOBALS['database']->query(array(
-						'SELECT' => self::DATABASE,
-						'WHERE' => 'Filepath = "' . addslashes($artist . "\n" . $album) . '"'
-					)
-				);
-				if(count($amazon) == 0 || $amazon[0]['AmazonId'] != '')
-					return true;
+				return true;
 			}
 		}
 		

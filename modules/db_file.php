@@ -538,6 +538,10 @@ class db_file
 				
 				// add file to where
 				$props['WHERE'] .= ' Filepath = "' . addslashes($request['file']) . '"';
+				
+				// these variables are no longer nessesary
+				unset($props['LIMIT']);
+				unset($props['ORDER']);
 			}
 			
 			// finally check for error and start processing query
