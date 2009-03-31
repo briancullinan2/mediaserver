@@ -72,7 +72,7 @@ class db_playlist extends db_file
 				
 				$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 				
-				return true;
+				return $id;
 			}
 			elseif($force)
 			{
@@ -86,7 +86,7 @@ class db_playlist extends db_file
 				
 				$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $db_playlist[0]['id']));
 				
-				return 1;
+				return $db_playlist[0]['id'];
 			}
 
 		}

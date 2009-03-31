@@ -64,8 +64,7 @@ class db_watch extends db_file
 			
 			if( count($db_watch) == 0 )
 			{
-				$id = self::add($file);
-				return true;
+				return self::add($file);
 			}
 			else
 			{

@@ -157,71 +157,7 @@ class db_watch_list extends db_watch
 			}
 			else
 			{
-				log_error('Scanning directory: ' . $dir);
-				
-				// search all the files in the directory
-				$files = fs_file::get(array('dir' => $dir, 'limit' => 32000), $count, $error, true);
-				
-				// send new/changed files to other modules
-				$paths = array();
-				$paths[] = $dir;
-				foreach($files as $i => $file)
-				{
-					self::handle_file($file['Filepath']);
-						
-					$paths[] = $file['Filepath'];
-				
-					// if the connection is lost pretend everything is ok and return
-					if(connection_status()!=0)
-						return true;
-						
-					// don't put too much load of the system
-					usleep(10);
-				}
-				
-				// search for removed files
-				$db_files = $GLOBALS['database']->query(array(
-						'SELECT' => db_file::DATABASE,
-						'COLUMNS' => array('Filepath'),
-						'WHERE' => 'LEFT(Filepath, ' . strlen($dir) . ') = "' . addslashes($dir) . '" AND (LOCATE("/", Filepath, ' . (strlen($dir)+1) . ') = 0 OR LOCATE("/", Filepath, ' . (strlen($dir)+1) . ') = LENGTH(Filepath))'
-					)
-				);
-				
-				$db_paths = array();
-				foreach($db_files as $j => $file)
-				{
-					if(!in_array($file['Filepath'], $paths))
-					{
-						log_error('Removing: ' . $file['Filepath']);
-						
-						// remove file from each module
-						foreach($GLOBALS['modules'] as $i => $module)
-						{
-							// do not remove ids because other modules may still use the id
-							//  allow other modules to handle removing of ids
-							if($module != 'db_ids')
-								call_user_func_array($module . '::remove', array($file['Filepath'], $module));
-						}
-					}
-					$db_paths[] = $file['Filepath'];
-				}
-				
-				// add current directory to database
-				self::handle_file($dir);
-				
-				// check for new files
-				$paths = array_diff($paths, $db_paths);
-				foreach($paths as $i => $path)
-				{
-					if(is_dir($path))
-					{
-						self::add($path);
-					}
-				}
-				
-				// do not call self::remove because we want to leave the folders inside of the current one so they will be scanned also
-				// delete the selected folder from the database
-				$GLOBALS['database']->query(array('DELETE' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($dir) . '"'));
+				return self::scan_dir($dir);
 			}
 		}
 		// check directories recursively
@@ -242,6 +178,75 @@ class db_watch_list extends db_watch
 		}
 		
 		return true;
+	}
+	
+	static function scan_dir($dir)
+	{
+		log_error('Scanning directory: ' . $dir);
+		
+		// search all the files in the directory
+		$files = fs_file::get(array('dir' => $dir, 'limit' => 32000), $count, $error, true);
+		
+		// send new/changed files to other modules
+		$paths = array();
+		$paths[] = $dir;
+		foreach($files as $i => $file)
+		{
+			self::handle_file($file['Filepath']);
+				
+			$paths[] = $file['Filepath'];
+		
+			// if the connection is lost pretend everything is ok and return
+			if(connection_status()!=0)
+				return true;
+				
+			// don't put too much load of the system
+			usleep(10);
+		}
+		
+		// search for removed files
+		$db_files = $GLOBALS['database']->query(array(
+				'SELECT' => db_file::DATABASE,
+				'COLUMNS' => array('Filepath'),
+				'WHERE' => 'LEFT(Filepath, ' . strlen($dir) . ') = "' . addslashes($dir) . '" AND (LOCATE("/", Filepath, ' . (strlen($dir)+1) . ') = 0 OR LOCATE("/", Filepath, ' . (strlen($dir)+1) . ') = LENGTH(Filepath))'
+			)
+		);
+		
+		$db_paths = array();
+		foreach($db_files as $j => $file)
+		{
+			if(!in_array($file['Filepath'], $paths))
+			{
+				log_error('Removing: ' . $file['Filepath']);
+				
+				// remove file from each module
+				foreach($GLOBALS['modules'] as $i => $module)
+				{
+					// do not remove ids because other modules may still use the id
+					//  allow other modules to handle removing of ids
+					if($module != 'db_ids')
+						call_user_func_array($module . '::remove', array($file['Filepath'], $module));
+				}
+			}
+			$db_paths[] = $file['Filepath'];
+		}
+		
+		// add current directory to database
+		self::handle_file($dir);
+		
+		// check for new files
+		$paths = array_diff($paths, $db_paths);
+		foreach($paths as $i => $path)
+		{
+			if(is_dir($path))
+			{
+				self::add($path);
+			}
+		}
+		
+		// do not call self::remove because we want to leave the folders inside of the current one so they will be scanned also
+		// delete the selected folder from the database
+		$GLOBALS['database']->query(array('DELETE' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($dir) . '"'));
 	}
 	
 	static function handle_dir($dir)
@@ -316,12 +321,18 @@ class db_watch_list extends db_watch
 	
 	static function handle_file($file)
 	{
+		$ids = array();
+		
 		// since we are only dealing with files that actually exist
 		$result = db_file::handle($file);
 		
 		//   modify ids if something was added
 		$added = false;
-		if($result === true) $added = true;
+		if($result !== false)
+		{
+			$added = true;
+			$ids[db_file::DATABASE . '_id'] = $result;
+		}
 		
 		// if the file is skipped the only pass it to other handlers for adding, not modifing
 		//   if the file was modified or added the information could have changed, so the modules must modify it, if it is already added
@@ -333,12 +344,20 @@ class db_watch_list extends db_watch
 			if($module != 'db_watch' && $module != 'db_watch_list' && $module != 'db_ids' && $module != 'db_file')
 			{
 				$result = call_user_func_array($module . '::handle', array($file, ($result !== false)));
-				if($result === true) $added = true;
+				if($result !== false)
+				{
+					$added = true;
+					$ids[constant($module . '::DATABASE') . '_id'] = $result;
+				}
+				elseif(!isset($ids[constant($module . '::DATABASE') . '_id']))
+				{
+					$ids[constant($module . '::DATABASE') . '_id'] = false;
+				}
 			}
 		}
 		
 		// insert all the ids, force modifying only if something was added
-		db_ids::handle($file, ($added == true));
+		db_ids::handle($file, ($added == true), $ids);
 	}
 	
 	static function add($file)
@@ -357,33 +376,8 @@ class db_watch_list extends db_watch
 	
 	static function get($request, &$count, &$error)
 	{
-		// if this module handles this type of file and the get is being called
-		//   then we must add new files to database! so handle() it
 		if(isset($request['file']))
-		{
-			$request['file'] = str_replace('\\', '/', $request['file']);
-			if(USE_ALIAS == true) $request['file'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']);
-			if(self::handles($request['file']))
-			{
-				// search all the files in the directory
-				$files = fs_file::get(array('dir' => $request['file'], 'limit' => 32000), $count, $error, true);
-				
-				foreach($files as $i => $file)
-				{
-					self::handle_file($file['Filepath']);
-				}
-				
-				self::handle_file($request['file']);
-				
-				// do not call self::remove because we want to leave the folders inside of the current one so they will be scanned also
-				// delete the selected folder from the database
-				$GLOBALS['database']->query(array('DELETE' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['file']) . '"'));
-			}
-			else
-			{
-				return array();
-			}
-		}
+			return array();
 		
 		return db_file::get($request, $count, $error, get_class());
 	}

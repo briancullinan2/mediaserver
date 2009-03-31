@@ -179,13 +179,11 @@ class db_diskimage extends db_file
 			// try to get music information
 			if( count($db_diskimage) == 0 )
 			{
-				$fileid = self::add($file);
-				return true;
+				return self::add($file);
 			}
 			elseif($force)
 			{
-				$id = self::add($file, $db_diskimage[0]['id']);
-				return 1;
+				return self::add($file, $db_diskimage[0]['id']);
 			}
 
 		}
@@ -250,16 +248,7 @@ class db_diskimage extends db_file
 		$fileinfo['Filedate'] = date("Y-m-d h:i:s", filemtime($last_path));
 
 		// print status
-		if( $image_id != NULL )
-		{
-			log_error('Modifying Disk Image: ' . $fileinfo['Filepath']);
-			
-			// update database
-			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $archive_id));
-		
-			return $audio_id;
-		}
-		else
+		if( $image_id == NULL )
 		{
 			log_error('Adding Disk Image: ' . $fileinfo['Filepath']);
 			
@@ -267,6 +256,15 @@ class db_diskimage extends db_file
 			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 			
 			return $id;
+		}
+		else
+		{
+			log_error('Modifying Disk Image: ' . $fileinfo['Filepath']);
+			
+			// update database
+			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $image_id));
+		
+			return $image_id;
 		}
 		
 	}

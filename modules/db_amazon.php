@@ -97,11 +97,12 @@ class db_amazon extends db_file
 			if($file[strlen($file)-1] == '/') $file = substr($file, 0, strlen($file)-1);
 						
 			$dirs = split('/', $file);
+			$tokens = tokenize($file);
 			
 			$album = @$dirs[count($dirs)-1];
 			$artist = @$dirs[count($dirs)-2];
 			
-			if(isset($album) && isset($artist) && $album != '' && $artist != '' && $artist != 'Music')
+			if(isset($album) && isset($artist) && $album != '' && $artist != '' && $artist != 'Music' && in_array('music', $tokens['Unique']))
 			{
 				// check if it is in database already
 				$amazon = $GLOBALS['database']->query(array(
@@ -165,8 +166,7 @@ class db_amazon extends db_file
 				
 				if( count($amazon) == 0 )
 				{
-					$id = self::add_music($artist, $album);
-					return true;
+					return self::add_music($artist, $album);
 				}
 				elseif($force)
 				{
@@ -356,7 +356,7 @@ class db_amazon extends db_file
 		
 		// add to database
 		$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
-		
+
 		return $id;
 	}
 	

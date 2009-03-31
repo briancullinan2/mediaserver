@@ -16,7 +16,7 @@ class db_ids extends db_file
 
 	static function columns()
 	{
-		return array('id', 'Filepath', 'Hex');
+		return array_keys(self::struct());
 	}
 	
 	static function struct()
@@ -27,7 +27,8 @@ class db_ids extends db_file
 		);
 		foreach($GLOBALS['tables'] as $i => $db)
 		{
-			$struct[$db . '_id'] = 'BIGINT';
+			if($db != db_ids::DATABASE && $db != db_watch_list::DATABASE)
+				$struct[$db . '_id'] = 'BIGINT';
 		}
 		
 		return $struct;
@@ -38,7 +39,7 @@ class db_ids extends db_file
 		return true;
 	}
 
-	static function handle($file, $force = false)
+	static function handle($file, $force = false, $ids = array())
 	{
 		$file = str_replace('\\', '/', $file);
 		
@@ -56,15 +57,23 @@ class db_ids extends db_file
 		$fileinfo['Hex'] = bin2hex($file);
 		foreach($GLOBALS['tables'] as $i => $db)
 		{
-			if($db != 'ids')
+			if($db != db_ids::DATABASE && $db != db_watch_list::DATABASE)
 			{
-				$ids = $GLOBALS['database']->query(array(
-						'SELECT' => $db,
-						'COLUMNS' => 'id',
-						'WHERE' => 'Filepath = "' . addslashes($file) . '"'
-					)
-				);
-				if(isset($ids[0])) $fileinfo[$db . '_id'] = $ids[0]['id'];
+				if(isset($ids[$db . '_id']))
+				{
+					if($ids[$db . '_id'] !== false)
+						$fileinfo[$db . '_id'] = $ids[$db . '_id'];
+				}
+				else
+				{
+					$ids = $GLOBALS['database']->query(array(
+							'SELECT' => $db,
+							'COLUMNS' => 'id',
+							'WHERE' => 'Filepath = "' . addslashes($file) . '"'
+						)
+					);
+					if(isset($ids[0])) $fileinfo[$db . '_id'] = $ids[0]['id'];
+				}
 			}
 		}
 		
@@ -76,8 +85,7 @@ class db_ids extends db_file
 				log_error('Adding id for file: ' . $file);
 				
 				// add to database
-				$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
-				return true;
+				return $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 			}
 			// update ids
 			elseif($force)
@@ -85,7 +93,7 @@ class db_ids extends db_file
 				log_error('Modifying id for file: ' . $file);
 				
 				$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $db_ids[0]['id']));
-				return 1;
+				return $db_ids[0]['id'];
 			}
 		}
 		return false;
@@ -97,7 +105,7 @@ class db_ids extends db_file
 		
 		if(isset($request['file']) && $count == 0)
 		{
-			self::handle(preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']));
+			self::handle(preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']), true);
 			$files = parent::get($request, $count, $error, get_class());
 		}
 		

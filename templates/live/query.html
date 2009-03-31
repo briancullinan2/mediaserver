@@ -27,13 +27,13 @@
 {assign var=path value='/'}
 {foreach from=$crumbs item=dir key=i}
 {if $i eq 0}
-									<li><a href="?dir=/&amp;cat={$smarty.request.cat}">{$smarty.const.HTML_NAME|@htmlspecialchars}</a></li>
+									<li><a href="?dir=/&amp;cat={$prefix}_file">{$smarty.const.HTML_NAME|@htmlspecialchars}</a></li>
 {else}{assign var=path value=$path|cat:$dir|cat:'/'}
 {/if}
 {if $i eq $crumbcount}{assign var=current value=$dir}
 									<li>{$dir|@htmlspecialchars}</li>
 {else}
-									<li><a href="?dir={$path|urlencode|htmlspecialchars}&amp;cat={$smarty.request.cat}">{$dir|@htmlspecialchars}</a></li>
+									<li><a href="?dir={$path|urlencode|htmlspecialchars}&amp;cat={if $path|@handles:'file'}db_file{else}{$smarty.request.cat}{/if}">{$dir|@htmlspecialchars}</a></li>
 									<li><img src="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}carat.gif" class="crumbsep"></li>
 {/if}
 {/foreach}

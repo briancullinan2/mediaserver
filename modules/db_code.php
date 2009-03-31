@@ -159,13 +159,11 @@ class db_code extends db_file
 			// try to get music information
 			if( count($db_code) == 0 )
 			{
-				$fileid = self::add($file);
-				return true;
+				return self::add($file);
 			}
 			elseif($force)
 			{
-				$id = self::add($file, $db_code[0]['id']);
-				return 1;
+				return self::add($file, $db_code[0]['id']);
 			}
 
 		}
@@ -241,7 +239,7 @@ class db_code extends db_file
 			// update database
 			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $code_id));
 		
-			return $audio_id;
+			return $code_id;
 		}
 		
 	}

@@ -86,13 +86,11 @@ class db_image extends db_file
 			// try to get image information
 			if( count($db_image) == 0 )
 			{
-				$fileid = self::add($file);
-				return true;
+				return self::add($file);
 			}
 			elseif($force)
 			{
-				$id = self::add($file, $db_image[0]['id']);
-				return 1;
+				return self::add($file, $db_image[0]['id']);
 			}
 
 		}
@@ -139,16 +137,7 @@ class db_image extends db_file
 	{
 		$fileinfo = self::getInfo($file);
 	
-		if( $image_id != NULL )
-		{
-			log_error('Modifying image: ' . $file);
-			
-			// update database
-			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $image_id));
-		
-			return $image_id;
-		}
-		else
+		if( $image_id == NULL )
 		{
 			log_error('Adding image: ' . $file);
 			
@@ -156,6 +145,15 @@ class db_image extends db_file
 			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 			
 			return $id;
+		}
+		else
+		{
+			log_error('Modifying image: ' . $file);
+			
+			// update database
+			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $image_id));
+		
+			return $image_id;
 		}
 			
 	}

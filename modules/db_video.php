@@ -77,13 +77,11 @@ class db_video extends db_file
 			// try to get music information
 			if( count($db_video) == 0 )
 			{
-				$fileid = self::add($file);
-				return true;
+				return self::add($file);
 			}
 			elseif($force)
 			{
-				$id = self::add($file, $db_video[0]['id']);
-				return 1;
+				return self::add($file, $db_video[0]['id']);
 			}
 
 		}
@@ -120,21 +118,21 @@ class db_video extends db_file
 	
 		if( $video_id != NULL )
 		{
-			log_error('Modifying video: ' . $file);
-			
-			// update database
-			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $video_id));
-		
-			return $audio_id;
-		}
-		else
-		{
 			log_error('Adding video: ' . $file);
 			
 			// add to database
 			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 			
 			return $id;
+		}
+		else
+		{
+			log_error('Modifying video: ' . $file);
+			
+			// update database
+			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $video_id));
+		
+			return $video_id;
 		}
 		
 	}

@@ -73,8 +73,7 @@ class db_file
 			if( count($db_file) == 0 )
 			{
 				// always add to file database
-				$id = self::add($file);
-				return true;
+				return self::add($file);
 			}
 			// not dependent on force because it checks for modification
 			else
@@ -82,8 +81,7 @@ class db_file
 				// update file if modified date has changed
 				if( date("Y-m-d h:i:s", filemtime($file)) != $db_file[0]['Filedate'] )
 				{
-					$id = self::add($file, $db_file[0]['id']);
-					return 1;
+					return self::add($file, $db_file[0]['id']);
 				}
 				else
 				{
@@ -120,21 +118,21 @@ class db_file
 		$fileinfo = self::getInfo($file);
 			
 		// if the id is set then we are updating and entry
-		if( $id != NULL )
+		if( $id == NULL )
+		{
+			log_error('Adding file: ' . $file);
+			
+			// add to database
+			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
+			return $id;
+		}
+		else
 		{
 			log_error('Modifying file: ' . $file);
 			
 			// update database
 			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $id));
 		
-			return $id;
-		}
-		else
-		{
-			log_error('Adding file: ' . $file);
-			
-			// add to database
-			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 			return $id;
 		}
 		
@@ -450,6 +448,7 @@ class db_file
 				$request['dir'] = str_replace('\\', '/', $request['dir']);
 				
 				if($request['dir'] == '') $request['dir'] = DIRECTORY_SEPARATOR;
+				
 				// this is necissary for dealing with windows and cross platform queries coming from templates
 				//  yes: the template should probably handle this by itself, but this is convenient and easy
 				//   it is purely for making all the paths look prettier
@@ -471,6 +470,12 @@ class db_file
 					//  in which case the module is responsible for validation of it's own paths
 					if(count($dirs) == 0)
 						$dirs = $GLOBALS['database']->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
+						
+					// maybe the dir is not loaded yet, this party is costly but it is a good way to do it
+					if(db_watch_list::handles($request['dir']))
+					{
+						db_watch_list::scan_dir($request['dir']);
+					}
 					
 					// top level directory / should always exist
 					if($request['dir'] == realpath('/') || count($dirs) > 0)

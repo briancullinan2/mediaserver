@@ -71,13 +71,11 @@ class db_audio extends db_file
 			// try to get music information
 			if( count($db_audio) == 0 )
 			{
-				$fileid = self::add($file);
-				return true;
+				return self::add($file);
 			}
 			elseif($force)
 			{
-				$id = self::add($file, $db_audio[0]['id']);
-				return 1;
+				return self::add($file, $db_audio[0]['id']);
 			}
 
 		}

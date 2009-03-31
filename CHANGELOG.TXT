@@ -1,3 +1,7 @@
+2009-03-30
+All modules return the ID of added or modified entry
+	This makes adding items to the IDs database much faster when they are already known
+
 2009-03-26
 Added a few sleeps in the file looping, the directory looping, and the cron script watch_list looping
 Added a struct() function to each module that returns the structure of the database
