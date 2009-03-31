@@ -171,6 +171,14 @@ body {
 
 .itemTable td {
 	width:7em;
+	text-align:center;
+}
+
+.itemTable div {
+	text-align:center;
+	margin-left:1.2em;
+	height:48px;
+	width:48px;
 }
 
 .itemLink {

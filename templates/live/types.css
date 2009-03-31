@@ -11,6 +11,18 @@
 	background-image:url(images/filetypes/folder_48x48.png);
 }
 .thumb.file_type_audio {
-	background-image:url(images/filetypes/music_48x48.png);
+	background-image:url(images/filetypes/audio_48x48.png);
+}
+.thumb.file_ext_ISO {
+	background-image:url(images/filetypes/iso_48x48.png);
+}
+.thumb.file_type_text {
+	background-image:url(images/filetypes/text_48x48.png);
+}
+.thumb.file_type_video {
+	background-image:url(images/filetypes/video_48x48.png);
+}
+.thumb.file_type_image {
+	background-image:url(images/filetypes/image_48x48.png);
 }
 

@@ -5,6 +5,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>{$smarty.const.HTML_NAME|@htmlspecialchars}</title>
 <link rel="stylesheet" href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}live.css" type="text/css"/>
+<link rel="stylesheet" href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}types.css" type="text/css"/>
 </head>
 
 <body>
@@ -85,8 +86,8 @@
 															{else}{assign var=link value='/'|cat:$smarty.const.HTML_ROOT|cat:$smarty.const.HTML_PLUGINS|cat:'file.php/'|cat:$smarty.request.cat|cat:'/'|cat:$files[file].id|cat:'/'|cat:$files[file].Filename}{/if}
 															<table class="itemTable" cellpadding="0" cellspacing="0" onclick="location.href = '{$link}';">
 																<tr>
-																	<td class="thumb file_ext_{$files[file].Filetype} file_type_{'/'|str_replace:' file_type_':$files[file].Filemime}">
-																		<img src="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}image/s.gif" height="48" width="48">
+																	<td>
+																		<div class="thumb file_ext_{$files[file].Filetype} file_type_{'/'|str_replace:' file_type_':$files[file].Filemime}"><img src="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}images/s.gif" height="48" width="48"></div>
 																	</td>
 																</tr>
 															</table>
