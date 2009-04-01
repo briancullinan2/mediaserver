@@ -1,5 +1,7 @@
 2009-03-31
 Fixed db_amazon module to not access the database unnessicarily
+Nearly finished live template
+Fixed some problems in db_files and db_ids
 
 2009-03-30
 All modules return the ID of added or modified entry
