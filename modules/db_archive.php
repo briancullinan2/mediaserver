@@ -72,6 +72,7 @@ class db_archive extends db_file
 			case 'gz':
 			case 'szip':
 			case 'tar':
+			case '7z':
 				return true;
 			default:
 				return false;
