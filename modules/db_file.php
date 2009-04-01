@@ -575,8 +575,11 @@ class db_file
 						}
 					}
 					
-					// only get count if filepath is not set, otherwise we know it is only one
-					if(!isset($request['file']))
+					// only get count if the query is not limited by the limit field
+					//  get count if limit is not set, which is should always be because of validate()
+					//  get count if it is greater than or equal to the limit, even though it will always be equal to or less then limit
+					//  if it is less, only get count if start is set
+					if(!isset($request['limit']) || count($files) >= $request['limit'] || (isset($request['start']) && $request['start'] > 0))
 					{
 						// this is how we get the count of all the items
 						//  unset the limit to count it

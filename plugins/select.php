@@ -95,7 +95,7 @@ foreach($files as $index => &$file)
 		// merge all the other information to each file
 		foreach($GLOBALS['modules'] as $i => $module)
 		{
-			if($module != 'db_ids' && $module != $_REQUEST['cat'] && call_user_func_array($module . '::handles', array($file['Filepath'], $file)))
+			if($module != 'db_watch_list' && $module != 'db_ids' && $module != $_REQUEST['cat'] && call_user_func_array($module . '::handles', array($file['Filepath'], $file)))
 			{
 				$return = call_user_func_array($module . '::get', array(array('file' => $file['Filepath']), &$tmp_count, &$tmp_error));
 				if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);

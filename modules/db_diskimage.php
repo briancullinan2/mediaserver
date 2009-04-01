@@ -207,6 +207,11 @@ class db_diskimage extends db_file
 		
 		if(isset($info['iso']) && isset($info['iso']['directories']))
 		{
+			$ids = array();
+			foreach(db_ids::columns() as $i => $column)
+			{
+				$ids[$column] = false;
+			}
 			$directories = array();
 			foreach($info['iso']['directories'] as $i => $directory)
 			{
@@ -231,7 +236,8 @@ class db_diskimage extends db_file
 						
 						log_error('Adding file in disk image: ' . $fileinfo['Filepath']);
 						$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
-						db_ids::handle($fileinfo['Filepath']);
+						$ids[self::DATABASE . '_id'] = $id;
+						db_ids::handle($fileinfo['Filepath'], true, $ids);
 					}
 				}
 			}

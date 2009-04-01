@@ -221,6 +221,7 @@ do
 	if($secs_total > FILE_SEEK_TIME)
 		log_error("Ran out of Time: Changed directories still in database");
 	
+// if the connection is lost complete current directory then quit
 } while( $secs_total < FILE_SEEK_TIME && count($db_dirs) > 0 && connection_status()==0 );
 
 log_error("Phase 2: Complete!");

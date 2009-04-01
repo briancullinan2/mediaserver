@@ -107,8 +107,7 @@ class db_archive extends db_file
 			}
 			elseif($force)
 			{
-				$id = self::add($file, $db_archive[0]['id']);
-				return $db_archive[0]['id'];
+				return self::add($file, $db_archive[0]['id']);
 			}
 
 		}
@@ -132,6 +131,11 @@ class db_archive extends db_file
 		
 		if(isset($info['zip']) && isset($info['zip']['central_directory']))
 		{
+			$ids = array();
+			foreach(db_ids::columns() as $i => $column)
+			{
+				$ids[$column] = false;
+			}
 			$directories = array();
 			foreach($info['zip']['central_directory'] as $i => $file)
 			{
@@ -161,7 +165,8 @@ class db_archive extends db_file
 					
 					log_error('Adding file in archive: ' . $fileinfo['Filepath']);
 					$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
-					db_ids::handle($fileinfo['Filepath']);
+					$ids[self::DATABASE . '_id'] = $id;
+					db_ids::handle($fileinfo['Filepath'], true, $ids);
 				}
 				
 				// get folders leading up to files
@@ -185,7 +190,8 @@ class db_archive extends db_file
 						
 						log_error('Adding directory in archive: ' . $fileinfo['Filepath']);
 						$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
-						db_ids::handle($fileinfo['Filepath']);
+						$ids[self::DATABASE . '_id'] = $id;
+						db_ids::handle($fileinfo['Filepath'], true, $ids);
 					}
 				}
 			}

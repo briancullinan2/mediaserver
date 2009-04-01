@@ -1,3 +1,9 @@
+2009-04-01
+Fixed some speed issues when loading files, apparently checking the connection takes a while, so the watch_list now exists when it done scanning a directory instead of in between files
+	Reduced the sleep, if they want efficiency and not as much load, you should use the small version on the system the files actually live on
+	Fixed the archive and disk image module to set up the IDs to pass to db_ids, all IDs are 0 except for the respective module database
+	Fixed db_watch_list modules handle_file() method to not "force" file modification if it is skipped
+
 2009-03-31
 Fixed db_amazon module to not access the database unnessicarily
 Nearly finished live template

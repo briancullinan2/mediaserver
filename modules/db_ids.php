@@ -51,32 +51,37 @@ class db_ids extends db_file
 			)
 		);
 		
-		// get all the ids from all the tables
+		// only do this very expensive part if it is not in database or force is true
 		$fileinfo = array();
-		$fileinfo['Filepath'] = addslashes($file);
-		$fileinfo['Hex'] = bin2hex($file);
-		foreach($GLOBALS['tables'] as $i => $db)
+		if(count($db_ids) == 0 || $force == true)
 		{
-			if($db != db_ids::DATABASE && $db != db_watch_list::DATABASE)
+			// get all the ids from all the tables
+			$fileinfo['Filepath'] = addslashes($file);
+			$fileinfo['Hex'] = bin2hex($file);
+			foreach($GLOBALS['tables'] as $i => $db)
 			{
-				if(isset($ids[$db . '_id']))
+				if($db != db_ids::DATABASE && $db != db_watch_list::DATABASE)
 				{
-					if($ids[$db . '_id'] !== false)
-						$fileinfo[$db . '_id'] = $ids[$db . '_id'];
-				}
-				else
-				{
-					$ids = $GLOBALS['database']->query(array(
-							'SELECT' => $db,
-							'COLUMNS' => 'id',
-							'WHERE' => 'Filepath = "' . addslashes($file) . '"'
-						)
-					);
-					if(isset($ids[0])) $fileinfo[$db . '_id'] = $ids[0]['id'];
+					if(isset($ids[$db . '_id']))
+					{
+						if($ids[$db . '_id'] !== false)
+							$fileinfo[$db . '_id'] = $ids[$db . '_id'];
+					}
+					else
+					{
+						$ids = $GLOBALS['database']->query(array(
+								'SELECT' => $db,
+								'COLUMNS' => 'id',
+								'WHERE' => 'Filepath = "' . addslashes($file) . '"'
+							)
+						);
+						if(isset($ids[0])) $fileinfo[$db . '_id'] = $ids[0]['id'];
+					}
 				}
 			}
 		}
 		
+		// only add to database if the filepath exists in another table
 		if(count($fileinfo) > 2)
 		{
 			// add list of ids
@@ -101,8 +106,18 @@ class db_ids extends db_file
 	
 	static function get($request, &$count, &$error)
 	{
-		$files = parent::get($request, $count, $error, get_class());
+		// find an id column being searched for
+		$columns = db_ids::columns();
+		foreach($columns as $i => $column)
+		{
+			if(isset($request['search_' . $column]))
+			{
+				$files = parent::get(array('search_' . $column => $request['search_' . $column]), $count, $error, get_class());
+				break;
+			}
+		}
 		
+		// if the id is not found for the file, add it
 		if(isset($request['file']) && $count == 0)
 		{
 			self::handle(preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']), true);

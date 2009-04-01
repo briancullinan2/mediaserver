@@ -201,11 +201,8 @@ class db_code extends db_file
 				$fileinfo['Language'] = $lang;
 				
 				$highlighter = Text_Highlighter::factory($fileinfo['Language']);
-				$highlighter->setRenderer(new Text_Highlighter_Renderer_Array);
 				
 				$fileinfo['HTML'] = addslashes($highlighter->highlight($lines));
-				print_r($fileinfo['HTML']);
-				exit;
 			}
 			else
 			{

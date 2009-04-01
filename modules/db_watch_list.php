@@ -195,13 +195,9 @@ class db_watch_list extends db_watch
 			self::handle_file($file['Filepath']);
 				
 			$paths[] = $file['Filepath'];
-		
-			// if the connection is lost pretend everything is ok and return
-			if(connection_status()!=0)
-				return true;
 				
 			// don't put too much load of the system
-			usleep(10);
+			usleep(1);
 		}
 		
 		// search for removed files
@@ -324,14 +320,14 @@ class db_watch_list extends db_watch
 		$ids = array();
 		
 		// since we are only dealing with files that actually exist
-		$result = db_file::handle($file);
+		$skipped = db_file::handle($file);
 		
 		//   modify ids if something was added
 		$added = false;
-		if($result !== false)
+		if($skipped !== false)
 		{
 			$added = true;
-			$ids[db_file::DATABASE . '_id'] = $result;
+			$ids[db_file::DATABASE . '_id'] = $skipped;
 		}
 		
 		// if the file is skipped the only pass it to other handlers for adding, not modifing
@@ -343,7 +339,7 @@ class db_watch_list extends db_watch
 			// skip db_watch and db_watch_list to prevent recursion
 			if($module != 'db_watch' && $module != 'db_watch_list' && $module != 'db_ids' && $module != 'db_file')
 			{
-				$result = call_user_func_array($module . '::handle', array($file, ($result !== false)));
+				$result = call_user_func_array($module . '::handle', array($file, ($skipped !== false)));
 				if($result !== false)
 				{
 					$added = true;
@@ -355,7 +351,7 @@ class db_watch_list extends db_watch
 				}
 			}
 		}
-		
+
 		// insert all the ids, force modifying only if something was added
 		db_ids::handle($file, ($added == true), $ids);
 	}
