@@ -457,6 +457,12 @@ class db_file
 				// replace aliased path with actual path
 				if(USE_ALIAS == true)
 					$request['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
+					
+				// maybe the dir is not loaded yet, this party is costly but it is a good way to do it
+				if(db_watch_list::handles($request['dir']))
+				{
+					db_watch_list::scan_dir($request['dir']);
+				}
 				
 				// make sure file exists if we are using the file module
 				if($module != 'db_file' || is_dir(realpath($request['dir'])) !== false)
@@ -470,12 +476,6 @@ class db_file
 					//  in which case the module is responsible for validation of it's own paths
 					if(count($dirs) == 0)
 						$dirs = $GLOBALS['database']->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
-						
-					// maybe the dir is not loaded yet, this party is costly but it is a good way to do it
-					if(db_watch_list::handles($request['dir']))
-					{
-						db_watch_list::scan_dir($request['dir']);
-					}
 					
 					// top level directory / should always exist
 					if($request['dir'] == realpath('/') || count($dirs) > 0)

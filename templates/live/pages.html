@@ -21,7 +21,7 @@
 {assign var=upper value=$page_int+8}
 {assign var=total_count value=$total_count-1}
 {assign var=pages value=$total_count/$page_count|floor}
-{if $pages > 1}
+{if $pages > 0}
 	{if $lower < 0}{assign var=upper value=$upper-$lower}{assign var=lower value=0}{/if}
 	{if $upper > $pages}{assign var=upper value=$pages}{assign var=lower value=$pages-$page_count-1}{/if}
 	{if $lower < 0}{assign var=lower value=0}{/if}

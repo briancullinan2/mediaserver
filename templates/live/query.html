@@ -34,7 +34,7 @@
 {assign var=path value='/'}
 {foreach from=$crumbs item=dir key=i}
 {if $i eq 0}
-									<li><a href="?dir=/&amp;cat={$prefix}_file">{$smarty.const.HTML_NAME|@htmlspecialchars}</a></li>
+									<li><a href="?dir=/&amp;cat={$prefix}file">{$smarty.const.HTML_NAME|@htmlspecialchars}</a></li>
 {else}{assign var=path value=$path|cat:$dir|cat:'/'}
 {/if}
 {if $i eq $crumbcount}{assign var=current value=$dir}
@@ -97,7 +97,7 @@
 																	</td>
 																</tr>
 															</table>
-															<a class="itemLink" href="{$link}" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden';document.getElementById('info_{$files[file].id}').style.display = 'none';document.getElementById('info_{$files[file].id}').style.visibility = 'hidden';document.getElementById('info_none').style.display = '';document.getElementById('info_none').style.visibility = 'visible';" onmouseover="this.parentNode.firstChild.style.visibility = 'visible';document.getElementById('info_{$files[file].id}').style.display = '';document.getElementById('info_{$files[file].id}').style.visibility = 'visible';document.getElementById('info_none').style.display = 'none';document.getElementById('info_none').style.visibility = 'hidden';"><span>{$files[file].Filename}</span></a>
+															<a class="itemLink" href="{$link}" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden';document.getElementById('info_{$files[file].id}').style.display = 'none';document.getElementById('info_{$files[file].id}').style.visibility = 'hidden';" onmouseover="this.parentNode.firstChild.style.visibility = 'visible';document.getElementById('info_{$files[file].id}').style.display = '';document.getElementById('info_{$files[file].id}').style.visibility = 'visible';"><span>{$files[file].Filename}</span></a>
 														</div>
 													{/section}
 													{/if}
@@ -108,9 +108,16 @@
 										</td>
 									</tr>
 									<tr>
-										<td id="infoBar" style="background-color:#009;">
 										{assign var=biggest value=0}
+										{assign var=image_count value=1}
+										{assign var=video_count value=1}
+										{assign var=audio_count value=1}
+										{assign var=files_count value=1}
 										{section name=file loop=$files}
+											{if $files[file].Filepath|@handles:'audio'}{assign var=audio_count value=$audio_count+1}
+											{elseif $files[file].Filepath|@handles:'video'}{assign var=video_count value=$video_count+1}
+											{elseif $files[file].Filepath|@handles:'image'}{assign var=image_count value=$image_count+1}
+											{else}{assign var=files_count value=$files_count+1}{/if}
 											{assign var=info_count value=0}
 											{foreach from=$columns item=column_value}
 											{if isset($files[file].$column_value) && $files[file].$column_value ne '' && $column_value|substr:-3 ne '_id' && $column_value ne 'id' && $column_value ne 'Hex' && $column_value ne 'Filepath' && $column_value ne 'Filename'}
@@ -120,6 +127,7 @@
 											{assign var=info_count value=$info_count/2|ceil}
 											{if $info_count > $biggest}{assign var=biggest value=$info_count}{/if}
 										{/section}
+										<td id="infoBar" style="background-color:{if $audio_count > $image_count && $audio_count > $video_count && $audio_count > $files_count}#900{elseif $image_count > $files_count && $image_count > $video_count && $image_count > $audio_count}#990{elseif $video_count > $files_count && $video_count > $image_count && $video_count > $audio_count}#093{else}#039{/if}; height:{$biggest+2|max:6}em;">
 										{section name=file loop=$files}
 											{assign var=info_count value=0}
 											{foreach from=$columns item=column_value}
@@ -129,10 +137,10 @@
 											{/foreach}
 											{assign var=info_count value=$info_count/2|ceil}
 											{if $info_count > $biggest}{assign var=biggest value=$info_count}{/if}
-											<table cellpadding="0" cellspacing="0" class="fileInfo" id="info_{$files[file].id}" style="display:none; visibility:hidden;">
+											<table cellpadding="0" cellspacing="0" border="0" class="fileInfo" id="info_{$files[file].id}" style="display:none; visibility:hidden;">
 												<tr>
 													<td>
-														<table cellpadding="0" cellspacing="0" class="fileThumb">
+														<table cellpadding="0" cellspacing="0" border="0" class="fileThumb">
 															<tr>
 																<td><div class="thumb file_ext_{$files[file].Filetype} file_type_{'/'|str_replace:' file_type_':$files[file].Filemime}"><img src="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}images/s.gif" height="48" width="48"></div></td>
 																<td class="infoCell">
@@ -147,33 +155,17 @@
 													{foreach from=$columns item=column_value}
 													{if isset($files[file].$column_value) && $files[file].$column_value ne '' && $column_value|substr:-3 ne '_id' && $column_value ne 'id' && $column_value ne 'Hex' && $column_value ne 'Filepath' && $column_value ne 'Filename'}
 														{assign var=count value=$count+1}
-														{if $count > $info_count && $count < $biggest}
-															&nbsp;<br />
-														{else}
-														<span class="label">{$column_value}:</span>{if $column_value eq 'Filesize'}{$files[file].$column_value|roundFileSize}{elseif $column_value eq 'Bitrate'}{$files[file].$column_value/1000|round:1} kbs{elseif $column_value eq 'Length'}{$files[file].$column_value/60|floor} minues {$files[file].$column_value%60|floor} seconds{else}{$files[file].$column_value|utf8_encode|htmlspecialchars}{/if}<br />
-														{/if}
-														{if $count eq $biggest && $info_count > 3}
+														<span class="label" style="color:{if $audio_count > $image_count && $audio_count > $video_count && $audio_count > $files_count}#F66{elseif $image_count > $files_count && $image_count > $video_count && $image_count > $audio_count}#FFA{elseif $video_count > $files_count && $video_count > $image_count && $video_count > $audio_count}#6FA{else}#6AF{/if};">{$column_value}:</span>{if $column_value eq 'Filesize'}{$files[file].$column_value|roundFileSize}{elseif $column_value eq 'Bitrate'}{$files[file].$column_value/1000|round:1} kbs{elseif $column_value eq 'Length'}{$files[file].$column_value/60|floor} minues {$files[file].$column_value%60|floor} seconds{else}{$files[file].$column_value|utf8_encode|htmlspecialchars}{/if}<br />
+														{if $count eq $info_count && $info_count >= 3}
 													</td>
 													<td>
 														{/if}
 													{/if}
 													{/foreach}
-													{section name=blanks loop=$biggest start=$count max=$biggest}
-														&nbsp;<br />
-													{/section}
 													</td>
 												</tr>
 											</table>
 										{/section}
-											<table cellpadding="0" cellspacing="0" class="fileInfo" id="info_none">
-												<tr>
-													<td>
-													{section name=foo loop=$biggest}
-														&nbsp;<br />
-													{/section}
-													</td>
-												</tr>
-											</table>
 										</td>
 									</tr>
 								</table>
