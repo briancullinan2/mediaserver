@@ -25,7 +25,7 @@ if(!isset($_SESSION['template']))
 }
 // this means they haven't overrides the index template
 // so instead just load query and show that template
-elseif($GLOBALS['templates']['TEMPLATE_INDEX'] == LOCAL_ROOT . LOCAL_DEFAULT . 'index.html')
+elseif($GLOBALS['templates']['TEMPLATE_INDEX'] == LOCAL_ROOT . LOCAL_BASE . 'index.html')
 {
 	include_once LOCAL_ROOT . 'plugins' . DIRECTORY_SEPARATOR . 'query.php';
 	if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)

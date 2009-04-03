@@ -36,15 +36,21 @@ if(!isset($_REQUEST['%IF']) && isset($_REQUEST['id']))
 if(isset($_REQUEST['%IF']))
 {
 	// get the file path from the database
-	$files = call_user_func_array($_REQUEST['cat'] . '::get', array(array('id' => $_REQUEST['id']), &$count, &$error));
+	$files = call_user_func_array($_REQUEST['cat'] . '::get', array($_REQUEST, &$count, &$error));
 	
 	if(count($files) > 0)
 	{
 		// replace id with centralized id
 		if(USE_DATABASE)
 		{
-			$ids = db_ids::get(array('file' => $files[0]['Filepath']), &$tmp_count, &$tmp_error);
-			if(count($ids) > 0) $files[0]['id'] = $ids[0]['id'];
+			// use the module_id column to look up keys
+			$ids = db_ids::get(array('file' => $files[0]['Filepath'], 'search_' . constant($_REQUEST['cat'] . '::DATABASE') . '_id' => '=' . $files[0]['id'] . '='), &$tmp_count, &$tmp_error);
+			if(count($ids) > 0)
+			{
+				$files[0] = array_merge($ids[0], $files[0]);
+				// also set id to centralize id
+				$files[0]['id'] = $ids[0]['id'];
+			}
 		}
 	
 		// get all the information incase we need to use it
@@ -65,9 +71,18 @@ if(isset($_REQUEST['%IF']))
 		
 		$_REQUEST['%IF'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $files[0]['Filepath']);
 	}
+	else
+	{
+		header('Content-Type: text/html');
+		print 'File does not exist!';
+		exit;
+	}
+	
 }
 else
 {
+	header('Content-Type: text/html');
+	print 'Must specify a file!';
 	exit;
 }
 

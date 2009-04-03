@@ -31,7 +31,12 @@ define('HTML_DOMAIN',            			             'http://127.0.0.1/');
 // a slash / is always preppended to this when the HTML_DOMAIN is not preceeding this
 define('HTML_ROOT',                                           'mediaserver/');
 
+// this template folder includes all the files in pages that are accessible
+//  this includes the types of list outputs so other templates don't have to reimplement them to use them
+define('LOCAL_BASE',            				        'templates\default\\');
+
 // this is the local filesystem path to the default template, this path should not be used in web pages, instead use HTML_TEMPLATE
+//  this is the template that is used when a template is not specified
 define('LOCAL_DEFAULT',            				        'templates\default\\');
 
 // this is the optional template that will be used

@@ -170,7 +170,7 @@ function setup()
 	$GLOBALS['watched'] = db_watch::get(array('search_Filepath' => '/^\\^/'), $count, $error);
 	
 	// load templating system but only if we are using templates
-	if(defined('LOCAL_DEFAULT'))
+	if(defined('LOCAL_BASE'))
 	{
 		require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'Smarty' . DIRECTORY_SEPARATOR . 'Smarty.class.php';
 	
@@ -204,12 +204,16 @@ function setup()
 			}
 			else
 			{
-				define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR);
 				if(preg_match('/.*mobile.*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
 				{
 					$_SESSION['template'] = 'mobile' . DIRECTORY_SEPARATOR;
+					define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . $_SESSION['template']);
 				}
-				// don't set a template, allow them to choose
+				else
+				{
+					$_SESSION['template'] = basename(LOCAL_DEFAULT) . DIRECTORY_SEPARATOR;
+					define('LOCAL_TEMPLATE',            					 LOCAL_DEFAULT);
+				}
 			}
 		}
 		else
@@ -221,7 +225,7 @@ function setup()
 		define('HTML_TEMPLATE', str_replace(DIRECTORY_SEPARATOR, '/', LOCAL_TEMPLATE));
 		
 		// include template constants
-		require_once LOCAL_ROOT . LOCAL_DEFAULT . 'config.php';
+		require_once LOCAL_ROOT . LOCAL_BASE . 'config.php';
 		
 		if(file_exists(LOCAL_ROOT . LOCAL_TEMPLATE . 'config.php'))
 			require_once LOCAL_ROOT . LOCAL_TEMPLATE . 'config.php';

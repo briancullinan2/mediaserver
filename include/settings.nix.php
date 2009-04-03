@@ -31,8 +31,13 @@ define('HTML_DOMAIN',            			    'http://dev.bjcullinan.com/');
 // a slash / is always preppended to this when the HTML_DOMAIN is not preceeding this
 define('HTML_ROOT',                                        '');
 
+// this template folder includes all the files in pages that are accessible
+//  this includes the types of list outputs so other templates don't have to reimplement them to use them
+define('LOCAL_BASE',            				        'templates/default/');
+
 // this is the local filesystem path to the default template, this path should not be used in web pages, instead use HTML_TEMPLATE
-define('LOCAL_DEFAULT',            				        'templates/default/');
+//  this is the template that is used when a template is not specified
+define('LOCAL_DEFAULT',            				        'templates/live/');
 
 // this is the optional template that will be used
 // if this is defined here, the user will not be given an option to choose a template
@@ -116,7 +121,8 @@ define('CLEAN_UP_BUFFER_TIME',				45);
 //  cleanup will also be fired when a directory change is detected, this may not always be accurate
 define('CLEAN_UP_THREASHOLD', 				3);
 
+ini_set('include_path', '.:/usr/share/php:/usr/share/pear:' . LOCAL_ROOT . 'include/');
+
 // comment-out-able
 ini_set('error_reporting', E_ALL);
-
 ?>

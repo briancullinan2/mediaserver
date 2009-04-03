@@ -7,6 +7,7 @@ require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'db_file.php';
 
 // include the id handler
 require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.php';
+require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'File' . DIRECTORY_SEPARATOR . 'Archive.php';
 
 // set up id3 reader incase any files need it
 $GLOBALS['getID3'] = new getID3();
@@ -69,13 +70,16 @@ class db_archive extends db_file
 		{
 			case 'zip':
 			case 'rar':
+			case 'tgz':
 			case 'gz':
+			case 'bz2':
+			case 'tbz':
+			case 'ar':
+			case 'deb':
 			case 'szip':
 			case 'tar':
 			case '7z':
 				return true;
-			default:
-				return false;
 		}
 		
 		return false;
@@ -127,76 +131,49 @@ class db_archive extends db_file
 			self::remove($last_path . '/', get_class());
 		}
 		
-		$info = $GLOBALS['getID3']->analyze($last_path);
-		
-		if(isset($info['zip']) && isset($info['zip']['central_directory']))
+		// set up empty ids array since we know archive_id will be the only entry
+		$ids = array();
+		foreach(db_ids::columns() as $i => $column)
 		{
-			$ids = array();
-			foreach(db_ids::columns() as $i => $column)
-			{
-				$ids[$column] = false;
-			}
-			$directories = array();
-			foreach($info['zip']['central_directory'] as $i => $file)
-			{
-				if(!in_array($file['filename'], $directories))
-				{
-					$file['filename'] = str_replace('\\', '/', $file['filename']);
-					$directories[] = $file['filename'];
-					$fileinfo = array();
-					$fileinfo['Filepath'] = addslashes($last_path . '/' . $file['filename']);
-					$fileinfo['Filename'] = basename($file['filename']);
-					if($file['filename'][strlen($file['filename'])-1] == '/')
-					{
-						$fileinfo['Filetype'] = 'FOLDER';
-						$fileinfo['Filesize'] = 0;
-						$fileinfo['Compressed'] = 0;
-					}
-					else
-					{
-						$fileinfo['Filetype'] = getExt($file['filename']);
-						$fileinfo['Filesize'] = $file['uncompressed_size'];
-						$fileinfo['Compressed'] = $file['compressed_size'];
-					}
-					if($fileinfo['Filetype'] === false)
-						$fileinfo['Filetype'] = 'FILE';
-					$fileinfo['Filemime'] = getMime($file['filename']);
-					$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
-					
-					log_error('Adding file in archive: ' . $fileinfo['Filepath']);
-					$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
-					$ids[self::DATABASE . '_id'] = $id;
-					db_ids::handle($fileinfo['Filepath'], true, $ids);
-				}
-				
-				// get folders leading up to files
-				$paths = split('/', '/' . $file['filename']);
-				unset($paths[count($paths)-1]); // remove last item either a file name or empty
-				$current = '';
-				foreach($paths as $i => $path)
-				{
-					$current .= $path . '/';
-					if(!in_array(substr($current, 1), $directories))
-					{
-						$directories[] = substr($current, 1);
-						$fileinfo = array();
-						$fileinfo['Filepath'] = addslashes($last_path . $current);
-						$fileinfo['Filename'] = basename($fileinfo['Filepath']);
-						$fileinfo['Filetype'] = 'FOLDER';
-						$fileinfo['Filesize'] = 0;
-						$fileinfo['Compressed'] = 0;
-						$fileinfo['Filemime'] = getMime($file['filename']);
-						$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
-						
-						log_error('Adding directory in archive: ' . $fileinfo['Filepath']);
-						$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
-						$ids[self::DATABASE . '_id'] = $id;
-						db_ids::handle($fileinfo['Filepath'], true, $ids);
-					}
-				}
-			}
+			$ids[$column] = false;
 		}
 		
+		// loop through files
+		$source = File_Archive::read($last_path . '/');
+		$total_size = 0;
+		while($source->next())
+		{
+			$stat = $source->getStat();
+			$fileinfo = array();
+			$fileinfo['Filepath'] = addslashes($last_path . '/' . $source->getFilename());
+			$fileinfo['Filename'] = basename($source->getFilename());
+			$fileinfo['Compressed'] = 0;
+			if($fileinfo['Filename'][strlen($fileinfo['Filename'])-1] == '/')
+			{
+				$fileinfo['Filetype'] = 'FOLDER';
+				$fileinfo['Filesize'] = 0;
+			}
+			else
+			{
+				$fileinfo['Filetype'] = getExt($fileinfo['Filename']);
+				$fileinfo['Filesize'] = @$stat['size'];
+			}
+			if($fileinfo['Filetype'] === false)
+				$fileinfo['Filetype'] = 'FILE';
+			else
+				$fileinfo['Filetype'] = strtoupper($fileinfo['Filetype']);
+				
+			$fileinfo['Filemime'] = @$source->getMime();
+			$fileinfo['Filedate'] = @$stat['mtime'];
+			
+			$total_size += $fileinfo['Filesize'];
+			
+			log_error('Adding file in archive: ' . $fileinfo['Filepath']);
+			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
+			$ids[self::DATABASE . '_id'] = $id;
+			db_ids::handle($fileinfo['Filepath'], true, $ids);
+		}
+					
 		$last_path = str_replace('/', DIRECTORY_SEPARATOR, $last_path);
 		// get entire archive information
 		$fileinfo = array();
@@ -204,10 +181,7 @@ class db_archive extends db_file
 		$fileinfo['Filename'] = basename($last_path);
 		$fileinfo['Compressed'] = filesize($last_path);
 		$fileinfo['Filetype'] = getFileType($last_path);
-		if(isset($info['zip']) && isset($info['zip']['uncompressed_size']))
-			$fileinfo['Filesize'] = $info['zip']['uncompressed_size'];
-		else
-			$fileinfo['Filesize'] = 0;
+		$fileinfo['Filesize'] = $total_size;
 		$fileinfo['Filemime'] = getMime($last_path);
 		$fileinfo['Filedate'] = date("Y-m-d h:i:s", filemtime($last_path));
 

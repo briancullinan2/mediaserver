@@ -15,6 +15,7 @@ body {
 
 .template_box a {
 	color:#FFF;
+	padding-right:10px;
 }
 
 #bodydiv {
@@ -44,13 +45,18 @@ body {
 	font-weight:normal;
 	line-height:normal;
 	width:100%;
-	background:#0066A7 url(hig/img/h/headerBG_24_~HeaderGradientImageType~.png) repeat scroll center top;
+	background:#0066A7 url(images/headerBG_24_~HeaderGradientImageType~.png) repeat scroll center top;
 	height:39px;
 	text-align:left;
 }
 
 #header * {
 	line-height:normal;
+}
+
+#header td {
+	white-space:nowrap;
+	vertical-align:middle;
 }
 
 #siteTitle, #templates {
@@ -61,6 +67,15 @@ body {
 	font-family:Verdana,Arial,sans-serif;
 	font-size:125%;
 	line-height:37px;
+}
+
+#siteTitle {
+	padding:0px 0px 0px 10px;
+}
+
+#middleArea {
+	margin-left:auto;
+	margin-right:auto;
 }
 
 .searchParent {

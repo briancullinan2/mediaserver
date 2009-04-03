@@ -48,8 +48,14 @@ foreach($files as $index => $file)
 	// replace id with centralized id
 	if(USE_DATABASE)
 	{
-		$ids = db_ids::get(array('file' => $file['Filepath']), &$tmp_count, &$tmp_error);
-		if(count($ids) > 0) $files[$index]['id'] = $ids[0]['id'];
+		// use the module_id column to look up keys
+		$ids = db_ids::get(array('file' => $file['Filepath'], 'search_' . constant($_REQUEST['cat'] . '::DATABASE') . '_id' => '=' . $file['id'] . '='), &$tmp_count, &$tmp_error);
+		if(count($ids) > 0)
+		{
+			$files[$index] = array_merge($ids[0], $files[$index]);
+			// also set id to centralize id
+			$files[$index]['id'] = $ids[0]['id'];
+		}
 	}
 	
 	// merge all the other information to each file

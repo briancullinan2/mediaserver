@@ -9,7 +9,7 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATO
 
 require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'db_file.php';
 
-require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'highlighter' . DIRECTORY_SEPARATOR . 'Highlighter.php';
+require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'Text' . DIRECTORY_SEPARATOR . 'Text_Highlighter' . DIRECTORY_SEPARATOR . 'Highlighter.php';
 
 // music handler
 class db_code extends db_file

@@ -15,7 +15,7 @@
 			<table id="header" cellpadding="0" cellspacing="0">
 				<tr>
 					<td id="siteTitle">{$smarty.const.HTML_NAME|@htmlspecialchars}</td>
-					<td class="searchParent">{include file=$templates.TEMPLATE_SEARCH}</td>
+					<td><table cellpadding="0" cellspacing="0" id="middleArea"><tr><td class="searchParent">{include file=$templates.TEMPLATE_SEARCH}</td></tr></table></td>
 					<td id="templates">{include file=$templates.TEMPLATE_TEMPLATE}</td>
 				</tr>
 			</table>
@@ -63,6 +63,11 @@
 												{include file=$templates.TEMPLATE_PAGES}
 												<div class="titlePadding"></div>
 												<div class="files">
+													{if isset($error) and $error != ''}
+														<span style="color:#C00"><b>{$error}</b></span>
+													{elseif count($files) == 0}
+														<b>There are no files to display</b>
+													{else}
 													{section name=file loop=$files}
 														<div class="file"><div class="selected"></div>
 															{assign var=encoded value=$files[file].Filepath|urlencode|htmlspecialchars}
@@ -95,6 +100,7 @@
 															<a class="itemLink" href="{$link}" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden';" onmouseover="this.parentNode.firstChild.style.visibility = 'visible';"><span>{$files[file].Filename}</span></a>
 														</div>
 													{/section}
+													{/if}
 												</div>
 												<div class="titlePadding"></div>
 												{include file=$templates.TEMPLATE_PAGES}
