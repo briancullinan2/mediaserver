@@ -28,18 +28,17 @@ class db_diskimage extends db_file
 	
     function stream_open($path, $mode, $options, &$opened_path)
     {
-		if(substr($path, 0, 12) == 'diskimage://')
-			$path = substr($path, 12);
+		if(substr($path, 0, strlen(self::PROTOCOL . '://')) == self::PROTOCOL . '://')
+			$path = substr($path, strlen(self::PROTOCOL . '://'));
 			
 		parseInner(str_replace('/', DIRECTORY_SEPARATOR, $path), $last_path, $inside_path);
 
 		if(is_file($last_path))
 		{
-	
-			$info = $GLOBALS['getID3']->analyze($last_path);
-			
 			if($inside_path != '')
 			{
+				$info = $GLOBALS['getID3']->analyze($last_path);
+			
 				if(strlen($inside_path) == 0 || $inside_path[0] != '/') $inside_path = '/' . $inside_path;
 				if(isset($info['iso']) && isset($info['iso']['directories']))
 				{
@@ -293,7 +292,7 @@ class db_diskimage extends db_file
 	
 	static function get($request, &$count, &$error)
 	{
-		if(isset($request['dir']))
+		if(isset($request['dir']) && self::handles($request['dir']))
 		{
 			$request['dir'] = str_replace('\\', '/', $request['dir']);
 			if(USE_ALIAS == true) $request['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);

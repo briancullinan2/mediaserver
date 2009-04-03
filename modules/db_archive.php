@@ -18,6 +18,96 @@ class db_archive extends db_file
 	const DATABASE = 'archive';
 	
 	const NAME = 'Archives from Database';
+	
+	// this is for stream stuff when controlling output of the file
+    const PROTOCOL = 'archive'; /* Underscore not allowed */
+       
+    protected $internal_fp = NULL;
+    protected $internal_length = NULL;
+    protected $internal_pos = NULL;
+	
+    function stream_open($path, $mode, $options, &$opened_path)
+    {
+		if(substr($path, 0, strlen(self::PROTOCOL . '://')) == self::PROTOCOL . '://')
+			$path = substr($path, strlen(self::PROTOCOL . '://'));
+			
+		parseInner(str_replace('/', DIRECTORY_SEPARATOR, $path), $last_path, $inside_path);
+		if(is_file($last_path))
+		{
+			if($inside_path != '')
+			{
+				$this->internal_fp = File_Archive::read($last_path . '/' . $inside_path);
+				return true;
+			}
+			// download entire image
+			else
+			{
+				if($fp = @fopen($last_path, 'rb'))
+				{
+					$this->internal_fp = $fp;
+					$this->internal_length = filesize($last_path);
+					$this->internal_pos = 0;
+					return true;
+				}
+			}
+		}
+		return false;
+    }
+    function stream_read($count){
+		if(is_resource($this->internal_fp))
+		{
+			if($this->internal_pos + $count > $this->internal_length)
+				$count = $this->internal_length - $this->internal_pos;
+			$this->internal_pos += $count;
+			return fread($this->internal_fp, $count);
+		}
+		elseif(is_object($this->internal_fp))
+		{
+			return $this->internal_fp->getData($count);
+		}
+    }
+    function stream_eof(){
+		if(is_resource($this->internal_fp))
+		{
+			return $this->internal_pos >= $this->internal_length;
+		}
+		elseif(is_object($this->internal_fp))
+		{
+			$stat = $this->internal_fp->getStat();
+			return ($this->internal_fp->tell() >= $stat[7]);
+		}
+    }
+    function stream_tell(){
+		if(is_resource($this->internal_fp))
+		{
+			return $this->internal_pos;
+		}
+		elseif(is_object($this->internal_fp))
+		{
+			return $this->internal_fp->tell();
+		}
+    }
+    function stream_seek($position){
+		if(is_resource($this->internal_fp))
+		{
+			if($position > $this->internal_length)
+			{
+				$position = $this->internal_length;
+			}
+			$this->internal_pos = $position;
+			fseek($this->internal_fp, $this->internal_pos);
+			return 0;
+		}
+		elseif(is_object($this->internal_fp))
+		{
+			$stat = $this->internal_fp->getStat();
+			if($position > $stat[7])
+			{
+				$position = $stat[7];
+			}
+			$this->internal_fp->skip($position);
+		}
+    }
 
 	static function columns()
 	{
@@ -75,6 +165,7 @@ class db_archive extends db_file
 			case 'bz2':
 			case 'tbz':
 			case 'ar':
+			case 'ark':
 			case 'deb':
 			case 'szip':
 			case 'tar':
@@ -148,7 +239,7 @@ class db_archive extends db_file
 			$fileinfo['Filepath'] = addslashes($last_path . '/' . $source->getFilename());
 			$fileinfo['Filename'] = basename($source->getFilename());
 			$fileinfo['Compressed'] = 0;
-			if($fileinfo['Filename'][strlen($fileinfo['Filename'])-1] == '/')
+			if($fileinfo['Filepath'][strlen($fileinfo['Filepath'])-1] == '/')
 			{
 				$fileinfo['Filetype'] = 'FOLDER';
 				$fileinfo['Filesize'] = 0;
@@ -164,7 +255,7 @@ class db_archive extends db_file
 				$fileinfo['Filetype'] = strtoupper($fileinfo['Filetype']);
 				
 			$fileinfo['Filemime'] = @$source->getMime();
-			$fileinfo['Filedate'] = @$stat['mtime'];
+			$fileinfo['Filedate'] = date("Y-m-d h:i:s", @$stat['mtime']);
 			
 			$total_size += $fileinfo['Filesize'];
 			
@@ -177,14 +268,23 @@ class db_archive extends db_file
 		$last_path = str_replace('/', DIRECTORY_SEPARATOR, $last_path);
 		// get entire archive information
 		$fileinfo = array();
-		$fileinfo['Filepath'] = addslashes(str_replace('\\', '/', $last_path));
 		$fileinfo['Filename'] = basename($last_path);
 		$fileinfo['Compressed'] = filesize($last_path);
-		$fileinfo['Filetype'] = getFileType($last_path);
+		$fileinfo['Filetype'] = 'FOLDER';
 		$fileinfo['Filesize'] = $total_size;
 		$fileinfo['Filemime'] = getMime($last_path);
 		$fileinfo['Filedate'] = date("Y-m-d h:i:s", filemtime($last_path));
+		
+		// add root file which is the filepath but with a / for compatibility
+		$fileinfo['Filepath'] = addslashes(str_replace('\\', '/', $last_path . '/'));
+		log_error('Adding file in archive: ' . $fileinfo['Filepath']);
+		$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
+		$ids[self::DATABASE . '_id'] = $id;
+		db_ids::handle($fileinfo['Filepath'], true, $ids);
 
+		$fileinfo['Filepath'] = addslashes(str_replace('\\', '/', $last_path));
+		$fileinfo['Filetype'] = getFileType($last_path);
+		
 		// print status
 		if( $archive_id == NULL )
 		{
@@ -214,11 +314,10 @@ class db_archive extends db_file
 		if(USE_ALIAS == true)
 			$file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 			
-		parseInner($file, $last_path, $inside_path);
-
-		if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
-		{
-			return db_file::out($last_path);
+		$files = $GLOBALS['database']->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
+		if(count($files) > 0)
+		{				
+			return @fopen(self::PROTOCOL . '://' . $file, 'rb');
 		}
 
 		return false;
@@ -226,7 +325,7 @@ class db_archive extends db_file
 	
 	static function get($request, &$count, &$error)
 	{
-		if(isset($request['dir']))
+		if(isset($request['dir']) && self::handles($request['dir']))
 		{
 			$request['dir'] = str_replace('\\', '/', $request['dir']);
 			if(USE_ALIAS == true) $request['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
@@ -234,7 +333,7 @@ class db_archive extends db_file
 			parseInner($request['dir'], $last_path, $inside_path);
 			if(strlen($inside_path) == 0 || $inside_path[0] != '/') $inside_path = '/' . $inside_path;
 			$request['dir'] = $last_path . $inside_path;
-			
+
 			if(!is_file(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
 			{
 				unset($_REQUEST['dir']);
@@ -242,7 +341,7 @@ class db_archive extends db_file
 			}
 		}
 		
-		$files = db_file::get($request, $count, $error, 'db_archive');
+		$files = db_file::get($request, $count, $error, get_class());
 		
 		return $files;
 	}
@@ -259,5 +358,10 @@ class db_archive extends db_file
 		parent::cleanup(get_class());
 	}
 }
+
+stream_wrapper_register(
+    db_archive::PROTOCOL,
+   'db_archive'
+);
 
 ?>

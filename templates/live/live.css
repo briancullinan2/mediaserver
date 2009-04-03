@@ -250,7 +250,7 @@ body {
 }
 
 .pageHighlight, .pageHighlightW {
-	background:#F7FBFF url(../images/browse_select_bg.png) repeat-x scroll center bottom;
+	background:#F7FBFF url(images/browse_select_bg.png) repeat-x scroll center bottom;
 	border:1px solid #D8F0FA;
 	height:1.5em;
 	left:0;
@@ -268,7 +268,7 @@ body {
 }
 
 .pageLink {
-	background:transparent url(../images/transparent.gif) repeat scroll 0 0;
+	background:transparent url(images/transparent.gif) repeat scroll 0 0;
 	color:#0066A7;
 	font-weight:inherit;
 	height:100%;
@@ -298,7 +298,7 @@ body {
 
 .selected {
 	visibility:hidden;
-	background:#F7FBFF url(../images/browse_select_bg.png) repeat-x scroll center bottom;
+	background:#F7FBFF url(images/browse_select_bg.png) repeat-x scroll center bottom;
 	border:1px solid #D8F0FA;
 	height:9.5em;
 	left:0;
@@ -331,7 +331,7 @@ body {
 }
 
 .itemLink {
-	background:transparent url(../images/transparent.gif) repeat scroll 0 0;
+	background:transparent url(images/transparent.gif) repeat scroll 0 0;
 	height:100%;
 	left:0;
 	position:absolute;
@@ -353,6 +353,57 @@ body {
 	position:absolute;
 	text-align:center;
 	width:6em;
+}
+
+#infoBar {
+	border-top:1px solid #E0E0E0;
+	height:64px;
+	background:transparent url(images/middle_fade.png) repeat scroll 0 0;
+	color:#FFF;
+	width:100%;
+	line-height:normal;
+	margin:0;
+	padding:0;
+	vertical-align:middle;
+	white-space:nowrap;
+}
+
+#infoBar * {
+	line-height:normal;
+}
+
+.fileInfo {
+	width:100%;
+	vertical-align:top;
+	height:48px;
+	white-space:nowrap;
+}
+
+.fileInfo .title {
+	font-size:14px;
+}
+
+.fileInfo .label {
+	color:#6AF;
+	font-weight:bold;
+	width:50%;
+	text-align:right;
+	margin-right:4px;
+}
+
+.fileInfo td {
+	width:33%;
+	vertical-align:middle;
+	padding:4px;
+}
+
+.fileInfo .fileThumb, .fileInfo .fileThumb td {
+	padding:0;
+	width:auto;
+}
+
+.fileInfo infoCell {
+	width:100%;
 }
 
 .crumbsep {

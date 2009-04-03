@@ -26,6 +26,6 @@
 	background-image:url(images/filetypes/image_48x48.png);
 }
 
-.thumb.file_ext_ZIP, .thumb.file_ext_RAR, .thumb.file_ext_7Z, .thumb.file_ext_TAR, .thumb.file_ext_GZ, .thumb.file_ext_SZIP {
+.thumb.file_ext_ZIP, .thumb.file_ext_RAR, .thumb.file_ext_TGZ, .thumb.file_ext_BZ2, .thumb.file_ext_TBZ, .thumb.file_ext_ARK, .thumb.file_ext_DEB, .thumb.file_ext_7Z, .thumb.file_ext_TAR, .thumb.file_ext_GZ, .thumb.file_ext_SZIP {
 	background-image:url(images/filetypes/archive_48x48.png);
 }

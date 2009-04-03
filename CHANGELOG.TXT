@@ -2,6 +2,7 @@
 Created a LOCAL_BASE variable that is the base template for holding shared pages for other templates to use
 Changed LOCAL_DEFAULT to the default template that loads when one is not selected
 Modified db_archive module to use PEAR archive library, which works much better then the lib_id3
+Worked on live template
 
 2009-04-01
 Fixed some speed issues when loading files, apparently checking the connection takes a while, so the watch_list now exists when it done scanning a directory instead of in between files

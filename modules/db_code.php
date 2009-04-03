@@ -9,7 +9,7 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATO
 
 require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'db_file.php';
 
-require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'Text' . DIRECTORY_SEPARATOR . 'Text_Highlighter' . DIRECTORY_SEPARATOR . 'Highlighter.php';
+require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'Text' . DIRECTORY_SEPARATOR . 'Highlighter.php';
 
 // music handler
 class db_code extends db_file
@@ -26,8 +26,8 @@ class db_code extends db_file
 	
     function stream_open($path, $mode, $options, &$opened_path)
     {
-		if(substr($path, 0, 7) == 'code://')
-			$path = substr($path, 7);
+		if(substr($path, 0, strlen(self::PROTOCOL . '://')) == self::PROTOCOL . '://')
+			$path = substr($path, strlen(self::PROTOCOL . '://'));
 
 		$files = $GLOBALS['database']->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($path) . '"'));
 		
