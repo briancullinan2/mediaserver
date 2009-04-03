@@ -45,7 +45,7 @@ body {
 	font-weight:normal;
 	line-height:normal;
 	width:100%;
-	background:#0066A7 url(images/headerBG_24_~HeaderGradientImageType~.png) repeat scroll center top;
+	background:url(images/headerBG_24_~HeaderGradientImageType~.png) repeat scroll center top;
 	height:39px;
 	text-align:left;
 }
@@ -66,7 +66,17 @@ body {
 	width:0.1%;
 	font-family:Verdana,Arial,sans-serif;
 	font-size:125%;
-	line-height:37px;
+	line-height:normal;
+	font-weight:bold;
+}
+
+#advancedSearch {
+	font-size:12px;
+	font-weight:normal;
+}
+
+#advancedSearch a {
+	color:#FFF;
 }
 
 #siteTitle {
@@ -90,7 +100,7 @@ body {
 }
 
 .searchBorder {
-	border-color:#81B4D4 #61A0C9 #5394BD;
+	border-color:#88BBDD #66AACC #5599BB;
 	border-style:solid;
 	border-width:1px;
 	padding-bottom:6px;
@@ -99,7 +109,7 @@ body {
 
 .innerSearchBorder {
 	background-color:#FFFFFF;
-	border-color:#43708C #285E82 #1C5478;
+	border-color:#446688 #335588 #115577;
 	border-style:solid;
 	border-width:1px;
 	padding-bottom:5px;
@@ -376,7 +386,7 @@ body {
 	width:100%;
 	vertical-align:top;
 	height:48px;
-	white-space:nowrap;
+	white-space:normal;
 }
 
 .fileInfo .title {

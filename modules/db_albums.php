@@ -33,6 +33,11 @@ class db_albums extends db_audio
 	{
 		$GLOBALS['database']->validate($request, $props, get_class());
 		
+		if(isset($request['dir']) && ($request['dir'] == '' || $request['dir'] == '/'))
+		{
+			unset($request['dir']);
+		}
+		
 		// modify some request stuff
 		if(isset($request['dir']))
 		{
@@ -63,6 +68,11 @@ class db_albums extends db_audio
 				$files[$i]['Filepath'] = '/' . $files[$i]['Album'] . '/';
 				$files[$i]['Filename'] = $files[$i]['Album'];
 				$files[$i]['SongCount'] = $files[$i]['count(*)'];
+				unset($files[$i]['Title']);
+				unset($files[$i]['Track']);
+				unset($files[$i]['Bitrate']);
+				unset($files[$i]['Length']);
+				unset($files[$i]['Artist']);
 			}
 		}
 		

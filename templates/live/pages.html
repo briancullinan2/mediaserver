@@ -15,7 +15,7 @@
 			<table cellpadding="0" cellspacing="0">
 				<tr>
 					<td>
-{assign var=page_str value=$smarty.server.PHP_SELF|htmlspecialchars|cat:'?'|cat:$page_str}
+{assign var=page_str value=$smarty.const.HTML_ROOT|cat:'?'|cat:$page_str}
 {assign var=page_int value=$page/$page_count}
 {assign var=lower value=$page_int-8}
 {assign var=upper value=$page_int+8}
@@ -23,7 +23,7 @@
 {assign var=pages value=$total_count/$page_count|floor}
 {if $pages > 0}
 	{if $lower < 0}{assign var=upper value=$upper-$lower}{assign var=lower value=0}{/if}
-	{if $upper > $pages}{assign var=upper value=$pages}{assign var=lower value=$pages-$page_count-1}{/if}
+	{if $upper > $pages}{assign var=upper value=$pages}{assign var=lower value=$lower-8}{/if}
 	{if $lower < 0}{assign var=lower value=0}{/if}
 	{if $page > 0}
 		{if $page > $page_count}
@@ -36,9 +36,9 @@
 	{/if}
 	{section name=page_select start=$lower loop=$upper+1 step=1}
 		{if $smarty.section.page_select.index == $page_int}
-		<div class="page"><b>{$page_int+1}</b></div>
+		<div class="page{if strlen($page_int+1) > 2}W{/if}"><b>{$page_int+1}</b></div>
 		{else}
-		<div class="page"><div class="pageHighlight" style="visibility:hidden"></div><a class="pageLink" href="{$page_str}&start={$smarty.section.page_select.index*$page_count}" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden';" onmouseover="this.parentNode.firstChild.style.visibility = 'visible';">{$smarty.section.page_select.index+1}</a></div>
+		<div class="page{if strlen($smarty.section.page_select.index+1) > 2}W{/if}"><div class="pageHighlight{if strlen($smarty.section.page_select.index+1) > 2}W{/if}" style="visibility:hidden"></div><a class="pageLink" href="{$page_str}&start={$smarty.section.page_select.index*$page_count}" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden';" onmouseover="this.parentNode.firstChild.style.visibility = 'visible';">{$smarty.section.page_select.index+1}</a></div>
 		{/if}
 	{/section}
 	{if $page <= $total_count-$page_count}

@@ -1,0 +1,28 @@
+										</td>
+									</tr>
+								</table>
+							</td>
+							<td class="sideColumn"></td>
+						</tr>
+					</table>
+				</div>
+				<div id="footer">
+					<table id="footerCtr">
+						<tr>
+							<td>
+								<ul>
+{assign var=mod_count value=0}{assign var=mod_total value=$modules|@count}{assign var=mod_total value=$mod_total-1}{foreach item=name key=module from=$modules}
+{assign var=name value=' from Database'|@str_replace:'':$name}
+									<li {if $mod_count eq $mod_total}class="last"{/if}><a href="?cat={$module}{if $module ne 'db_file'}&search={else}&dir=/{/if}">{$name}</a></li>
+{assign var=mod_count value=$mod_count+1}{/foreach}
+								</ul>
+							</td>
+						</tr>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+</body>
+</html>

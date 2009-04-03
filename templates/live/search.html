@@ -1,1 +1,11 @@
-<form action="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}query.php" method="get" id="search">{foreach from=$smarty.get key=k item=v}{if $k == "dir"}<input type="hidden" name="{$k}" value="{$v}" />{/if}{/foreach}<span class="searchBorder"><span class="innerSearchBorder"><input type="text" name="search" value="" id="searchInput" /><span class="buttonBorder"><input type="submit" value="Search" id="searchButton" /></span></span></span></form>
+{include file=$templates.TEMPLATE_HEADER}
+<div class="contentSpacing">
+	<h1 class="title">Advanced Search</h1>
+	<span class="subText">Use this form to search for files.</span>
+	<div class="titlePadding"></div>
+	<form action="/{$smarty.const.HTML_ROOT}" method="get">
+		
+	</form>
+</div>
+
+{include file=$templates.TEMPLATE_FOOTER}

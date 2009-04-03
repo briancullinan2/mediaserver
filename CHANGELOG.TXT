@@ -1,3 +1,6 @@
+2009-04-03
+Worked on live template, added information box, and Advanced Search button
+
 2009-04-02
 Created a LOCAL_BASE variable that is the base template for holding shared pages for other templates to use
 Changed LOCAL_DEFAULT to the default template that loads when one is not selected

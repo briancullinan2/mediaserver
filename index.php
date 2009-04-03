@@ -18,6 +18,8 @@ $smarty->debugging = false;
 $smarty->caching = false;
 $smarty->force_compile = true;
 
+$smarty->assign('templates', $GLOBALS['templates']);
+
 if(!isset($_SESSION['template']))
 {
 	if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)

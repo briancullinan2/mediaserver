@@ -32,6 +32,13 @@ class db_artists extends db_audio
 	
 	static function get($request, &$count, &$error)
 	{
+		$GLOBALS['database']->validate($request, $props, get_class());
+		
+		if(isset($request['dir']) && ($request['dir'] == '' || $request['dir'] == '/'))
+		{
+			unset($request['dir']);
+		}
+		
 		if(isset($request['dir']))
 		{
 			$request['dir'] = str_replace('\\', '/', $request['dir']);
@@ -77,6 +84,11 @@ class db_artists extends db_audio
 					$files[$i]['Filepath'] = '/' . $files[$i]['Artist'] . '/' . $files[$i]['Album'] . '/';
 					$files[$i]['Filename'] = $files[$i]['Album'];
 					$files[$i]['SongCount'] = $files[$i]['count(*)'];
+					unset($files[$i]['Title']);
+					unset($files[$i]['Track']);
+					unset($files[$i]['Bitrate']);
+					unset($files[$i]['Length']);
+					unset($files[$i]['Album']);
 				}
 			}
 		}
@@ -99,6 +111,11 @@ class db_artists extends db_audio
 				$files[$i]['Filepath'] = '/' . $files[$i]['Artist'] . '/';
 				$files[$i]['Filename'] = $files[$i]['Artist'];
 				$files[$i]['SongCount'] = $files[$i]['count(*)'];
+				unset($files[$i]['Title']);
+				unset($files[$i]['Track']);
+				unset($files[$i]['Bitrate']);
+				unset($files[$i]['Length']);
+				unset($files[$i]['Album']);
 			}
 		}
 		
