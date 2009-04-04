@@ -1,7 +1,60 @@
-{include file=$templates.TEMPLATE_HEADER}
+{if $smarty.const.USE_DATABASE}{assign var=prefix value='db_'}{else}{assign var=prefix value='fs_'}{/if}
 {php}
+$parts = array();
+$search = stripslashes($_REQUEST['search']);
+if($search[0] != '"' && $search[strlen($search)-1] != '"' && $search[0] != '/' && $search[strlen($search)-1] != '/' && $search[0] != '=' && $search[strlen($search)-1] != '=')
+{
+	if(isset($_REQUEST['search']))
+	{
+		$tmp_parts = array_unique(split(' ', stripslashes($_REQUEST['search'])));
+		foreach($tmp_parts as $i => $part)
+		{
+			if($part != '')
+			{
+				if($part[0] == '+') $part = substr($part, 1);
+				$parts[] = '/' . preg_quote(htmlspecialchars($part)) . '/i';
+			}
+		}
+	}
+}
+elseif($search[0] == '"' && $search[strlen($search)-1] == '"')
+{
+	$parts = array(0 => '/' . preg_quote(substr($search, 1, strlen($search)-2)) . '/i');
+}
+elseif($search[0] == '/' && $search[strlen($search)-1] == '/')
+{
+	$parts = array(0 => $search . 'i');
+}
+elseif($search[0] == '=' && $search[strlen($search)-1] == '=')
+{
+	$parts = array(0 => '/^' . preg_quote(substr($search, 1, strlen($search)-2)) . '$/i');
+}
+if(count($parts) != 0)
+	$this->assign('parts', $parts);
 $this->assign('newlineregexp', '/([^ ]{25})/i');
 {/php}
+{assign var=biggest value=0}
+{assign var=image_count value=1}
+{assign var=video_count value=1}
+{assign var=audio_count value=1}
+{assign var=files_count value=1}
+{section name=file loop=$files}
+{if $files[file].Filepath|@handles:'audio'}{assign var=audio_count value=$audio_count+1}
+{elseif $files[file].Filepath|@handles:'video'}{assign var=video_count value=$video_count+1}
+{elseif $files[file].Filepath|@handles:'image'}{assign var=image_count value=$image_count+1}
+{else}{assign var=files_count value=$files_count+1}{/if}
+{assign var=info_count value=0}
+{foreach from=$columns item=column_value}
+{if isset($files[file].$column_value) && $files[file].$column_value ne '' && strlen($files[file].$column_value) <= 200 && $column_value|substr:-3 ne '_id' && $column_value ne 'id' && $column_value ne 'Hex' && $column_value ne 'Filepath' && $column_value ne 'Filename'}
+{assign var=info_count value=$info_count+1}
+{/if}
+{/foreach}
+{assign var=info_count value=$info_count/2|ceil}
+{if $info_count > $biggest}{assign var=biggest value=$info_count}{/if}
+{/section}
+
+{include file=$templates.TEMPLATE_HEADER}
+
 		<div class="contentSpacing">
 			<h1 class="title">{if $current eq ''}{$smarty.const.HTML_NAME|@htmlspecialchars}{else}{$current|@htmlspecialchars}{/if}</h1>
 {assign var=page value=$smarty.request.start|intval}
@@ -59,7 +112,7 @@ $this->assign('newlineregexp', '/([^ ]{25})/i');
 {section name=file loop=$files}
 {assign var=info_count value=0}
 {foreach from=$columns item=column_value}
-{if isset($files[file].$column_value) && $files[file].$column_value ne '' && $column_value|substr:-3 ne '_id' && $column_value ne 'id' && $column_value ne 'Hex' && $column_value ne 'Filepath' && $column_value ne 'Filename' && $column_value ne 'Thumbnail' && $column_value ne 'AmazonInfo'}
+{if isset($files[file].$column_value) && $files[file].$column_value ne '' && strlen($files[file].$column_value) <= 200 && $column_value|substr:-3 ne '_id' && $column_value ne 'id' && $column_value ne 'Hex' && $column_value ne 'Filepath' && $column_value ne 'Filename'}
 {assign var=info_count value=$info_count+1}
 {/if}
 {/foreach}
@@ -89,7 +142,7 @@ $this->assign('newlineregexp', '/([^ ]{25})/i');
 {else}
 {assign var=itemvalue value=$files[file].$column_value}
 {/if}
-{if isset($files[file].$column_value) && $files[file].$column_value ne '' && $column_value|substr:-3 ne '_id' && $column_value ne 'id' && $column_value ne 'Hex' && $column_value ne 'Filepath' && $column_value ne 'Filename' && $column_value ne 'Thumbnail' && $column_value ne 'AmazonInfo'}
+{if isset($files[file].$column_value) && $files[file].$column_value ne '' && strlen($files[file].$column_value) <= 200 && $column_value|substr:-3 ne '_id' && $column_value ne 'id' && $column_value ne 'Hex' && $column_value ne 'Filepath' && $column_value ne 'Filename'}
 {assign var=count value=$count+1}
 					<span class="label" style="color:{if $audio_count > $image_count && $audio_count > $video_count && $audio_count > $files_count}#F66{elseif $image_count > $files_count && $image_count > $video_count && $image_count > $audio_count}#FFA{elseif $video_count > $files_count && $video_count > $image_count && $video_count > $audio_count}#6FA{else}#6CF{/if};">{$column_value}:</span>{if $column_value eq 'Filesize'}{$files[file].$column_value|roundFileSize}{elseif $column_value eq 'Bitrate'}{$files[file].$column_value/1000|round:1} kbs{elseif $column_value eq 'Length'}{$files[file].$column_value/60|floor} minues {$files[file].$column_value%60|floor} seconds{else}{$itemvalue}{/if}<br />
 {if $count eq $info_count && $info_count >= 3}
