@@ -130,6 +130,7 @@ class db_amazon extends db_file
 				elseif($force)
 				{
 					// don't modify because amazon information doesn't change
+					return $amazon[0]['id'];
 				}
 			}
 			elseif(db_movies::handles($file))

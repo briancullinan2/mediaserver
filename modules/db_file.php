@@ -177,6 +177,7 @@ class db_file
 		
 		if(USE_DATABASE)
 		{
+//---------------------------------------- Selection ----------------------------------------\\
 			// do validation! for the fields we use
 			$GLOBALS['database']->validate($request, $props, $module);
 
@@ -216,11 +217,119 @@ class db_file
 				}
 				$props['WHERE'] = substr($props['WHERE'], 0, strlen($props['WHERE'])-2);
 			}
+		
+//---------------------------------------- Directory ----------------------------------------\\
+			// add dir filter to where
+			if(isset($request['dir']))
+			{
+				// replace separator
+				$request['dir'] = str_replace('\\', '/', $request['dir']);
+				
+				if($request['dir'] == '') $request['dir'] = DIRECTORY_SEPARATOR;
+				
+				// this is necissary for dealing with windows and cross platform queries coming from templates
+				//  yes: the template should probably handle this by itself, but this is convenient and easy
+				//   it is purely for making all the paths look prettier
+				if($request['dir'][0] == DIRECTORY_SEPARATOR) $request['dir'] = realpath('/') . substr($request['dir'], 1);
+				
+				// replace aliased path with actual path
+				if(USE_ALIAS == true)
+					$request['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
+					
+				// maybe the dir is not loaded yet, this party is costly but it is a good way to do it
+				if(db_watch_list::handles($request['dir']))
+				{
+					db_watch_list::scan_dir($request['dir']);
+				}
+				
+				// make sure file exists if we are using the file module
+				if($module != 'db_file' || is_dir(realpath($request['dir'])) !== false)
+				{
+				
+					// make sure directory is in the database
+					$dirs = $GLOBALS['database']->query(array('SELECT' => constant($module . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
+					
+					// check the file database, some modules use their own database to store special paths,
+					//  while other modules only store files and no directories, but these should still be searchable paths
+					//  in which case the module is responsible for validation of it's own paths
+					if(count($dirs) == 0)
+						$dirs = $GLOBALS['database']->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
+					
+					// top level directory / should always exist
+					if($request['dir'] == realpath('/') || count($dirs) > 0)
+					{
+						if(!isset($props['WHERE'])) $props['WHERE'] = '';
+						elseif($props['WHERE'] != '') $props['WHERE'] .= ' AND ';
+					
+						// if the includes is blank then only show files from current directory
+						if(!isset($request['search']))
+						{
+							if(isset($request['dirs_only']))
+								$props['WHERE'] .= 'LEFT(Filepath, ' . strlen($request['dir']) . ') = "' . addslashes($request['dir']) . '" AND LOCATE("/", Filepath, ' . (strlen($request['dir'])+1) . ') = LENGTH(Filepath)';
+							else
+								$props['WHERE'] .= 'LEFT(Filepath, ' . strlen($request['dir']) . ') = "' . addslashes($request['dir']) . '" AND (LOCATE("/", Filepath, ' . (strlen($request['dir'])+1) . ') = 0 OR LOCATE("/", Filepath, ' . (strlen($request['dir'])+1) . ') = LENGTH(Filepath)) AND Filepath != "' . addslashes($request['dir']) . '"';
+						}
+						// show all results underneath directory
+						else
+						{
+							if(isset($request['dirs_only']))
+								$props['WHERE'] .= 'LEFT(Filepath, ' . strlen($request['dir']) . ') = "' . addslashes($request['dir']) . '" AND RIGHT(Filepath, 1) = "/" AND Filepath != "' . addslashes($request['dir']) . '"';
+							else
+								$props['WHERE'] .= 'LEFT(Filepath, ' . strlen($request['dir']) . ') = "' . addslashes($request['dir']) . '" AND Filepath != "' . addslashes($request['dir']) . '"';
+						}
+					}
+					else
+					{
+						$error = 'Directory does not exist!';
+					}
+				}
+				else
+				{
+					$error = 'Directory does not exist!';
+				}
+			}
+			
+//---------------------------------------- File ----------------------------------------\\
+			// add file filter to where - this is mostly for internal use
+			if(isset($request['file']))
+			{
+				// replace separator
+				$request['file'] = str_replace('\\', '/', $request['file']);
+				
+				// this is necissary for dealing with windows and cross platform queries coming from templates
+				if($request['file'][0] == DIRECTORY_SEPARATOR) $request['file'] = realpath('/') . substr($request['file'], 1);
+				
+				// replace aliased path with actual path
+				if(USE_ALIAS == true)
+					$request['file'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']);
+				
+				// make sure file exists if we are using the file module
+				if($module != 'db_file' || file_exists(realpath($request['file'])) !== false)
+				{
+				
+					if(!isset($props['WHERE'])) $props['WHERE'] = '';
+					elseif($props['WHERE'] != '') $props['WHERE'] .= ' AND ';
+					
+					// add file to where
+					$props['WHERE'] .= ' Filepath = "' . addslashes($request['file']) . '"';
+				}
+				else
+				{
+					$error = 'File does not exist!';
+				}
+				
+				// these variables are no longer nessesary
+				unset($props['LIMIT']);
+				unset($props['ORDER']);
+			}
 
+//---------------------------------------- Search All ----------------------------------------\\
 			// add where includes
+			$columns = call_user_func($module . '::columns');
 			if(isset($request['search']) && $request['search'] != '')
 			{
-				$props['WHERE'] = '';
+				if(!isset($props['WHERE'])) $props['WHERE'] = '';
+				elseif($props['WHERE'] != '') $props['WHERE'] .= ' AND ';
 				
 				// check if they are searching for a literal string
 				$is_literal = false;
@@ -277,7 +386,7 @@ class db_file
 					
 					foreach($columns as $i => $column)
 					{
-						if($column != 'id')
+						if($column != 'id' && (!isset($request['search_' . $column]) || $request['search_' . $column] == ''))
 						{
 							$first_or = false;
 							$count = 0;
@@ -321,26 +430,29 @@ class db_file
 				{
 					foreach($columns as $i => $column)
 					{
-						if($is_equal)
+						if(!isset($request[$var]) || $request[$var] == '')
 						{
-							$parts[] = $column . ' = "' . addslashes($request['search']) . '"';
-						}
-						elseif($is_regular)
-						{
-							$parts[] = $column . ' REGEXP "' . addslashes($request['search']) . '"';
-						}
-						elseif($is_literal)
-						{
-							$parts[] = ' LOCATE("' . addslashes($request['search']) . '", ' . $column . ')';
+							if($is_equal)
+							{
+								$parts[] = $column . ' = "' . addslashes($request['search']) . '"';
+							}
+							elseif($is_regular)
+							{
+								$parts[] = $column . ' REGEXP "' . addslashes($request['search']) . '"';
+							}
+							elseif($is_literal)
+							{
+								$parts[] = ' LOCATE("' . addslashes($request['search']) . '", ' . $column . ')';
+							}
 						}
 					}
 				}
 				$props['WHERE'] .= join(' OR ', $parts) . ')';
 			}
 			
+//---------------------------------------- Search Individual ----------------------------------------\\
 			// search for individual column queries
 			//   search multiple columns for different string
-			$columns = call_user_func($module . '::columns');
 			foreach($columns as $i => $column)
 			{
 				$var = 'search_' . $column;
@@ -388,7 +500,6 @@ class db_file
 						// rearrange pieces, but keep track of index so we can sort them correctly
 						uasort($pieces, 'termSort');
 					
-						$column = 'Filepath';
 						$first_or = false;
 						$count = 0;
 						foreach($pieces as $j => $piece)
@@ -440,110 +551,8 @@ class db_file
 					}
 				}
 			}
-		
-			// add dir filter to where
-			if(isset($request['dir']))
-			{
-				// replace separator
-				$request['dir'] = str_replace('\\', '/', $request['dir']);
-				
-				if($request['dir'] == '') $request['dir'] = DIRECTORY_SEPARATOR;
-				
-				// this is necissary for dealing with windows and cross platform queries coming from templates
-				//  yes: the template should probably handle this by itself, but this is convenient and easy
-				//   it is purely for making all the paths look prettier
-				if($request['dir'][0] == DIRECTORY_SEPARATOR) $request['dir'] = realpath('/') . substr($request['dir'], 1);
-				
-				// replace aliased path with actual path
-				if(USE_ALIAS == true)
-					$request['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
-					
-				// maybe the dir is not loaded yet, this party is costly but it is a good way to do it
-				if(db_watch_list::handles($request['dir']))
-				{
-					db_watch_list::scan_dir($request['dir']);
-				}
-				
-				// make sure file exists if we are using the file module
-				if($module != 'db_file' || is_dir(realpath($request['dir'])) !== false)
-				{
-				
-					// make sure directory is in the database
-					$dirs = $GLOBALS['database']->query(array('SELECT' => constant($module . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
-					
-					// check the file database, some modules use their own database to store special paths,
-					//  while other modules only store files and no directories, but these should still be searchable paths
-					//  in which case the module is responsible for validation of it's own paths
-					if(count($dirs) == 0)
-						$dirs = $GLOBALS['database']->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
-					
-					// top level directory / should always exist
-					if($request['dir'] == realpath('/') || count($dirs) > 0)
-					{
-						if(!isset($props['WHERE'])) $props['WHERE'] = '';
-						elseif($props['WHERE'] != '') $props['WHERE'] .= ' AND ';
-						
-						// if the includes is blank then only show files from current directory
-						if(!isset($request['search']))
-						{
-							if(isset($request['dirs_only']))
-								$props['WHERE'] .= 'LEFT(Filepath, ' . strlen($request['dir']) . ') = "' . addslashes($request['dir']) . '" AND LOCATE("/", Filepath, ' . (strlen($request['dir'])+1) . ') = LENGTH(Filepath)';
-							else
-								$props['WHERE'] .= 'LEFT(Filepath, ' . strlen($request['dir']) . ') = "' . addslashes($request['dir']) . '" AND (LOCATE("/", Filepath, ' . (strlen($request['dir'])+1) . ') = 0 OR LOCATE("/", Filepath, ' . (strlen($request['dir'])+1) . ') = LENGTH(Filepath)) AND Filepath != "' . addslashes($request['dir']) . '"';
-						}
-						// show all results underneath directory
-						else
-						{
-							if(isset($request['dirs_only']))
-								$props['WHERE'] .= 'LEFT(Filepath, ' . strlen($request['dir']) . ') = "' . addslashes($request['dir']) . '" AND RIGHT(Filepath, 1) = "/" AND Filepath != "' . addslashes($request['dir']) . '"';
-							else
-								$props['WHERE'] .= 'LEFT(Filepath, ' . strlen($request['dir']) . ') = "' . addslashes($request['dir']) . '" AND Filepath != "' . addslashes($request['dir']) . '"';
-						}
-					}
-					else
-					{
-						$error = 'Directory does not exist!';
-					}
-				}
-				else
-				{
-					$error = 'Directory does not exist!';
-				}
-			}
 			
-			// add file filter to where - this is mostly for internal use
-			if(isset($request['file']))
-			{
-				// replace separator
-				$request['file'] = str_replace('\\', '/', $request['file']);
-				
-				// this is necissary for dealing with windows and cross platform queries coming from templates
-				if($request['file'][0] == DIRECTORY_SEPARATOR) $request['file'] = realpath('/') . substr($request['file'], 1);
-				
-				// replace aliased path with actual path
-				if(USE_ALIAS == true)
-					$request['file'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']);
-				
-				// make sure file exists if we are using the file module
-				if($module != 'db_file' || file_exists(realpath($request['file'])) !== false)
-				{
-				
-					if(!isset($props['WHERE'])) $props['WHERE'] = '';
-					elseif($props['WHERE'] != '') $props['WHERE'] .= ' AND ';
-				}
-				else
-				{
-					$error = 'File does not exist!';
-				}
-				
-				// add file to where
-				$props['WHERE'] .= ' Filepath = "' . addslashes($request['file']) . '"';
-				
-				// these variables are no longer nessesary
-				unset($props['LIMIT']);
-				unset($props['ORDER']);
-			}
-			
+//---------------------------------------- Query ----------------------------------------\\
 			// finally check for error and start processing query
 			if($error == '')
 			{
@@ -575,6 +584,7 @@ class db_file
 						}
 					}
 					
+//---------------------------------------- Get Count ----------------------------------------\\
 					// only get count if the query is not limited by the limit field
 					//  get count if limit is not set, which is should always be because of validate()
 					//  get count if it is greater than or equal to the limit, even though it will always be equal to or less then limit

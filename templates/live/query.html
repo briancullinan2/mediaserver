@@ -45,7 +45,7 @@ $this->assign('newlineregexp', '/([^ ]{25})/i');
 {else}{assign var=files_count value=$files_count+1}{/if}
 {assign var=info_count value=0}
 {foreach from=$columns item=column_value}
-{if isset($files[file].$column_value) && $files[file].$column_value ne '' && strlen($files[file].$column_value) <= 200 && $column_value|substr:-3 ne '_id' && $column_value ne 'id' && $column_value ne 'Hex' && $column_value ne 'Filepath' && $column_value ne 'Filename'}
+{if isset($files[file].$column_value) && $files[file].$column_value ne '' && strlen($files[file].$column_value) <= 200 && $column_value|substr:-3 ne '_id' && $column_value ne 'id' && $column_value ne 'Hex' && $column_value ne 'Filepath' && $column_value ne 'Filename' && $column_value ne 'Filetype'}
 {assign var=info_count value=$info_count+1}
 {/if}
 {/foreach}
@@ -59,7 +59,7 @@ $this->assign('newlineregexp', '/([^ ]{25})/i');
 			<h1 class="title">{if $current eq ''}{$smarty.const.HTML_NAME|@htmlspecialchars}{else}{$current|@htmlspecialchars}{/if}</h1>
 {assign var=page value=$smarty.request.start|intval}
 {assign var=item_count value=$files|@count}
-			<span class="subText">Use remote access to browse and download files.</span>{if $error eq '' and count($files) > 0}<span class="subText">Displaying items {$smarty.request.start} to {$page+$item_count} out of {$total_count} file(s).</span>{/if}
+			<span class="subText">Use remote access to browse and download files.</span>{if $error eq '' and count($files) > 0}<span class="subText">Displaying items {$smarty.request.start} to {$page+$item_count}{if $total_count > $smarty.request.limit} out of {$total_count} file(s){/if}.</span>{/if}
 {include file=$templates.TEMPLATE_PAGES}
 			<div class="titlePadding"></div>
 			<div class="files">
@@ -112,7 +112,7 @@ $this->assign('newlineregexp', '/([^ ]{25})/i');
 {section name=file loop=$files}
 {assign var=info_count value=0}
 {foreach from=$columns item=column_value}
-{if isset($files[file].$column_value) && $files[file].$column_value ne '' && strlen($files[file].$column_value) <= 200 && $column_value|substr:-3 ne '_id' && $column_value ne 'id' && $column_value ne 'Hex' && $column_value ne 'Filepath' && $column_value ne 'Filename'}
+{if isset($files[file].$column_value) && $files[file].$column_value ne '' && strlen($files[file].$column_value) <= 200 && $column_value|substr:-3 ne '_id' && $column_value ne 'id' && $column_value ne 'Hex' && $column_value ne 'Filepath' && $column_value ne 'Filename' && $column_value ne 'Filetype'}
 {assign var=info_count value=$info_count+1}
 {/if}
 {/foreach}
@@ -142,7 +142,7 @@ $this->assign('newlineregexp', '/([^ ]{25})/i');
 {else}
 {assign var=itemvalue value=$files[file].$column_value}
 {/if}
-{if isset($files[file].$column_value) && $files[file].$column_value ne '' && strlen($files[file].$column_value) <= 200 && $column_value|substr:-3 ne '_id' && $column_value ne 'id' && $column_value ne 'Hex' && $column_value ne 'Filepath' && $column_value ne 'Filename'}
+{if isset($files[file].$column_value) && $files[file].$column_value ne '' && strlen($files[file].$column_value) <= 200 && $column_value|substr:-3 ne '_id' && $column_value ne 'id' && $column_value ne 'Hex' && $column_value ne 'Filepath' && $column_value ne 'Filename' && $column_value ne 'Filetype'}
 {assign var=count value=$count+1}
 					<span class="label" style="color:{if $audio_count > $image_count && $audio_count > $video_count && $audio_count > $files_count}#F66{elseif $image_count > $files_count && $image_count > $video_count && $image_count > $audio_count}#FFA{elseif $video_count > $files_count && $video_count > $image_count && $video_count > $audio_count}#6FA{else}#6CF{/if};">{$column_value}:</span>{if $column_value eq 'Filesize'}{$files[file].$column_value|roundFileSize}{elseif $column_value eq 'Bitrate'}{$files[file].$column_value/1000|round:1} kbs{elseif $column_value eq 'Length'}{$files[file].$column_value/60|floor} minues {$files[file].$column_value%60|floor} seconds{else}{$itemvalue}{/if}<br />
 {if $count eq $info_count && $info_count >= 3}

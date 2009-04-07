@@ -1,3 +1,11 @@
+2009-04-05
+Changed db_files search feature to put the directory matching first to narrow down results better
+Worked on search page for live template
+
+2009-04-04
+Using the general search no longer affects other columns specified in the query
+Worked on Live template, search page now looks nice
+
 2009-04-03
 Worked on live template, added information box, and Advanced Search button
 

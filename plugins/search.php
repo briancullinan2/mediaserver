@@ -10,6 +10,11 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATO
 if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
 	$smarty = new Smarty();
 $smarty->compile_dir = LOCAL_ROOT . 'templates_c' . DIRECTORY_SEPARATOR;
+	
+$smarty->compile_check = true;
+$smarty->debugging = false;
+$smarty->caching = false;
+$smarty->force_compile = true;
 
 // get all columns from every module
 $columns = getAllColumns();

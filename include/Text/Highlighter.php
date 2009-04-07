@@ -261,8 +261,8 @@ class Text_Highlighter
         $n = 1;
  
  
-         foreach ($this->_counts[$this->_state] as $i=>$count) {
-            if (!isset($m[$n])) {
+		foreach ($this->_counts[$this->_state] as $i=>$count) {
+			if (!isset($m[$n])) {
                 break;
             }
             if ($m[$n][1]>-1 && ($endpos == -1 || $m[$n][1] < $endpos)) {

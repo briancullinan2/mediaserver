@@ -344,7 +344,8 @@ function getAllColumns()
 	$columns = array();
 	foreach($GLOBALS['modules'] as $i => $module)
 	{
-		$columns = array_merge($columns, array_flip(call_user_func($module . '::columns')));
+		if(constant($module . '::INTERNAL') == false)
+			$columns = array_merge($columns, array_flip(call_user_func($module . '::columns')));
 	}
 	
 	$columns = array_keys($columns);

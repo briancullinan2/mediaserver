@@ -70,12 +70,14 @@ body {
 	font-weight:bold;
 }
 
+#siteTitle a {
+	color:#FFF;
+	text-decoration:none;
+}
+
 #advancedSearch {
 	font-size:12px;
 	font-weight:normal;
-}
-
-#advancedSearch a {
 	color:#FFF;
 }
 

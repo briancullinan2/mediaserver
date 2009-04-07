@@ -1,3 +1,54 @@
+2009-04-05 (Full)
+More compatibility testing with clients
+------------- GENERAL TODO -------------
+Make hard links and soft links, hard links are replaced when they are put in to the database, soft links are replaced when they are read from the database, this will allow us to do more network stuff
+Do memory checks and don't run cron if it's above a certain threshhold, maybe run some stuff with niceness
+Make a class for handling CSV as the database type, make sure all the queries can refer to the statement builder
+File uploading and personal folders
+	Limit access to watch and alias tables after implementing users and permissions
+Interface with mediatomb and support UPnP protocol
+------------- Plugin TODO -------------
+Make admin plugins use templates
+Work on reports.php plugin for admin
+	Provide useful information in reports section about missing songs
+Make a sync plugin in admin section for syncing between two databases and pulling out differences
+	Use musicbrainz to sync music
+Fix bt.php plugin, using the stream methods won't work with md5
+	maybe it should only handle files on disk because the ctorrent seeder won't be able to read files out of a zip anyways
+	FIX bt.php plugin to work with command line torrent seeder on windows
+Set up conditions for when the streams are used based on if %OF and %IF are used in the command arguments
+Get ranges working in encode plugin
+	only allow the option if the argument can read from stdin and read the input from the module and write it to the input stream
+Figure out a way of doing this with files even if stdin is not being used in the command, if fopen is writing to a file, does it file feof when reading from the same file simulaneously?
+Make convert.php plugin recognize video thumbnails and use vlc to extract them
+------------- Module TODO -------------
+Make a discography module that parses out wikipedia discographys, store album information, and return links to Full Discography, and Partial Discography
+	Base discography module on discogs.com
+	this will list out each artist with full or missing albums
+	It handles artists, when an album count changes or doesn't exist it updates the database
+Work on playlist module, use hard links to help find files
+Make a fs_code module
+Work on db_movies, use cUrl to download movie information from imdb, use the volume decriptor for lookup, this shouldn't change even if they edited an image
+	Look up movies on amazon, and see if that will help with searching IMDb
+	Research the video_ts.ifo file, there must be a way of getting the full name from a DVD image, windows media center projects can do it, so can we
+------------- All Template TODO -------------
+Finish mobile template.
+FIX detail options in default template
+Add podcast list template
+Add Ampache XML API template
+Work on finishing EXT JS template, and add more templates from Ampache, Jinzora, and WinAmp Remote
+------------- EXT JS -------------
+Fix arrow-key movement in extjs template, in thumbnails view of the FolderView.js
+Add desktop.ini/folder.ini files and fix up thumbnails in FolderView.js
+Fix initial load time in FolderView.js
+Work on category view/show in groups in FolderView.js, add items that take up whole line and have headers
+Fix tooltip popup in FolderView.js, in wrong panel maybe?
+Press letter on the keyboard to go to that folder in FolderView.js and select.php
+Change desktop style to be buttons like folders in Desktop.js but render buttons to index.html
+Get settings dialog working and set up user accounts to control it
+Finish the player app that displays pictures
+Make players resize to Player window
+
 2009-04-02
 Add a stream reader to db_archive module, have the archive library read into a variable and read from that
 
