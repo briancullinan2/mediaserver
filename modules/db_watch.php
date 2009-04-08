@@ -58,7 +58,8 @@ class db_watch extends db_file
 			$db_watch = $GLOBALS['database']->query(array(
 					'SELECT' => self::DATABASE,
 					'COLUMNS' => array('id'),
-					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
+					'WHERE' => 'Filepath = "' . addslashes($file) . '"',
+					'LIMIT' => 1
 				)
 			);
 			

@@ -42,7 +42,8 @@ class db_watch_list extends db_watch
 					$db_files = $GLOBALS['database']->query(array(
 							'SELECT' => db_file::DATABASE,
 							'COLUMNS' => array('id', 'Filedate'),
-							'WHERE' => 'Filepath = "' . addslashes($dir) . '"'
+							'WHERE' => 'Filepath = "' . addslashes($dir) . '"',
+							'LIMIT' => 1
 						)
 					);
 					if(count($db_files) > 0)
@@ -145,7 +146,8 @@ class db_watch_list extends db_watch
 			$db_watch_list = $GLOBALS['database']->query(array(
 					'SELECT' => self::DATABASE,
 					'COLUMNS' => array('id'),
-					'WHERE' => 'Filepath = "' . addslashes($dir) . '"'
+					'WHERE' => 'Filepath = "' . addslashes($dir) . '"',
+					'LIMIT' => 1
 				)
 			);
 			

@@ -99,7 +99,8 @@ class db_amazon extends db_file
 					// get information from database
 					$audio = $GLOBALS['database']->query(array(
 							'SELECT' => db_audio::DATABASE,
-							'WHERE' => 'Filepath = "' . addslashes($file) . '"'
+							'WHERE' => 'Filepath = "' . addslashes($file) . '"',
+							'LIMIT' => 1
 						)
 					);
 					if(count($audio) > 0)
@@ -120,7 +121,8 @@ class db_amazon extends db_file
 				
 				$amazon = $GLOBALS['database']->query(array(
 						'SELECT' => self::DATABASE,
-						'WHERE' => 'Filepath = "' . addslashes($artist . "\n" . $album) . '"'
+						'WHERE' => 'Filepath = "' . addslashes($artist . "\n" . $album) . '"',
+						'LIMIT' => 1
 					)
 				);
 				
@@ -128,7 +130,7 @@ class db_amazon extends db_file
 				{
 					return self::add_music($artist, $album);
 				}
-				else
+				elseif($force)
 				{
 					// don't modify because amazon information doesn't change
 					return $amazon[0]['id'];
@@ -356,7 +358,8 @@ class db_amazon extends db_file
 				{
 					$files = $GLOBALS['database']->query(array(
 							'SELECT' => self::DATABASE,
-							'WHERE' => 'Filepath = "' . addslashes($audio[0]['Artist'] . "\n" . $audio[0]['Album']) . '"'
+							'WHERE' => 'Filepath = "' . addslashes($audio[0]['Artist'] . "\n" . $audio[0]['Album']) . '"',
+							'LIMIT' => 1
 						)
 					);
 				}
@@ -372,7 +375,8 @@ class db_amazon extends db_file
 				{
 					$files = $GLOBALS['database']->query(array(
 							'SELECT' => self::DATABASE,
-							'WHERE' => 'Filepath = "' . addslashes($movie[0]['Title']) . '"'
+							'WHERE' => 'Filepath = "' . addslashes($movie[0]['Title']) . '"',
+							'LIMIT' => 1
 						)
 					);
 				}
@@ -390,7 +394,8 @@ class db_amazon extends db_file
 				$artist = @$dirs[count($dirs)-2];
 				$files = $GLOBALS['database']->query(array(
 						'SELECT' => self::DATABASE,
-						'WHERE' => 'Filepath = "' . addslashes($artist . "\n" . $album) . '"'
+						'WHERE' => 'Filepath = "' . addslashes($artist . "\n" . $album) . '"',
+						'LIMIT' => 1
 					)
 				);
 			}
@@ -421,7 +426,8 @@ class db_amazon extends db_file
 				unset($request['dir']);
 				$amazon = $GLOBALS['database']->query(array(
 						'SELECT' => self::DATABASE,
-						'WHERE' => 'Filepath = "' . addslashes($title) . '"'
+						'WHERE' => 'Filepath = "' . addslashes($title) . '"',
+						'LIMIT' => 1
 					)
 				);
 				

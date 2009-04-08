@@ -70,7 +70,8 @@ class db_video extends db_file
 			$db_video = $GLOBALS['database']->query(array(
 					'SELECT' => self::DATABASE,
 					'COLUMNS' => 'id',
-					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
+					'WHERE' => 'Filepath = "' . addslashes($file) . '"',
+					'LIMIT' => 1
 				)
 			);
 			
@@ -82,10 +83,6 @@ class db_video extends db_file
 			elseif($force)
 			{
 				return self::add($file, $db_video[0]['id']);
-			}
-			else
-			{
-				return $db_video[0]['id'];
 			}
 
 		}

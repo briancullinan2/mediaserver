@@ -258,6 +258,7 @@ foreach($GLOBALS['modules'] as $i => $module)
 
 // read all the folders that lead up to the watched folder
 // these might be delete by cleanup, so check again because there are only a couple
+$directories = array();
 for($i = 0; $i < count($GLOBALS['watched']); $i++)
 {
 	$folders = split('/', $GLOBALS['watched'][$i]['Filepath']);
@@ -283,13 +284,20 @@ for($i = 0; $i < count($GLOBALS['watched']); $i++)
 				//   of the path is an aliased path
 				$between = true;
 				
-				// if the USE_ALIAS is true this will only add the folder
-				//    if it is in the list of aliases
-				db_watch_list::handle_file($curr_dir);
+				// don't add twice
+				if(!in_array($curr_dir, $directories))
+				{
+					$directories[] = $curr_dir;
+					// if the USE_ALIAS is true this will only add the folder
+					//    if it is in the list of aliases
+					db_watch_list::handle_file($curr_dir);
+				}
 			}
 			// but make an exception for folders between an alias and the watch path
-			elseif(USE_ALIAS && $between)
+			elseif(USE_ALIAS && $between && !in_array($curr_dir, $directories))
 			{
+				$directories[] = $curr_dir;
+				
 				db_watch_list::handle_file($curr_dir);
 			}
 		}

@@ -79,7 +79,8 @@ class db_image extends db_file
 			$db_image = $GLOBALS['database']->query(array(
 					'SELECT' => self::DATABASE,
 					'COLUMNS' => 'id',
-					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
+					'WHERE' => 'Filepath = "' . addslashes($file) . '"',
+					'LIMIT' => 1
 				)
 			);
 			
@@ -91,10 +92,6 @@ class db_image extends db_file
 			elseif($force)
 			{
 				return self::add($file, $db_image[0]['id']);
-			}
-			else
-			{
-				return $db_image[0]['id'];
 			}
 
 		}

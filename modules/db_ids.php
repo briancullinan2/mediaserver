@@ -47,7 +47,8 @@ class db_ids extends db_file
 		$db_ids = $GLOBALS['database']->query(array(
 				'SELECT' => self::DATABASE,
 				'COLUMNS' => array('id'),
-				'WHERE' => 'Filepath = "' . addslashes($file) . '"'
+				'WHERE' => 'Filepath = "' . addslashes($file) . '"',
+				'LIMIT' => 1
 			)
 		);
 		
@@ -72,7 +73,8 @@ class db_ids extends db_file
 						$tmp_ids = $GLOBALS['database']->query(array(
 								'SELECT' => $table,
 								'COLUMNS' => 'id',
-								'WHERE' => 'Filepath = "' . addslashes($file) . '"'
+								'WHERE' => 'Filepath = "' . addslashes($file) . '"',
+								'LIMIT' => 1
 							)
 						);
 						if(isset($tmp_ids[0])) $fileinfo[$table . '_id'] = $tmp_ids[0]['id'];

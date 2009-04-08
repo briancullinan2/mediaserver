@@ -52,7 +52,8 @@ class db_playlist extends db_file
 			$db_playlist = $GLOBALS['database']->query(array(
 					'SELECT' => self::DATABASE,
 					'COLUMNS' => 'id',
-					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
+					'WHERE' => 'Filepath = "' . addslashes($file) . '"',
+					'LIMIT' => 1
 				)
 			);
 			
@@ -86,10 +87,6 @@ class db_playlist extends db_file
 				
 				$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $db_playlist[0]['id']));
 				
-				return $db_playlist[0]['id'];
-			}
-			else
-			{
 				return $db_playlist[0]['id'];
 			}
 

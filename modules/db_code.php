@@ -29,7 +29,7 @@ class db_code extends db_file
 		if(substr($path, 0, strlen(self::PROTOCOL . '://')) == self::PROTOCOL . '://')
 			$path = substr($path, strlen(self::PROTOCOL . '://'));
 
-		$files = $GLOBALS['database']->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($path) . '"'));
+		$files = $GLOBALS['database']->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($path) . '"', 'LIMIT' => 1));
 		
 		if(count($files) > 0)
 		{
@@ -152,7 +152,8 @@ class db_code extends db_file
 			$db_code = $GLOBALS['database']->query(array(
 					'SELECT' => self::DATABASE,
 					'COLUMNS' => 'id',
-					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
+					'WHERE' => 'Filepath = "' . addslashes($file) . '"',
+					'LIMIT' => 1
 				)
 			);
 			
@@ -163,10 +164,6 @@ class db_code extends db_file
 			elseif($force)
 			{
 				return self::add($file, $db_code[0]['id']);
-			}
-			else
-			{
-				return $db_code[0]['id'];
 			}
 
 		}

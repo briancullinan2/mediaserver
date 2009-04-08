@@ -66,7 +66,8 @@ class db_file
 			$db_file = $GLOBALS['database']->query(array(
 					'SELECT' => self::DATABASE,
 					'COLUMNS' => array('id', 'Filedate'),
-					'WHERE' => 'Filepath = "' . addslashes($file) . '"'
+					'WHERE' => 'Filepath = "' . addslashes($file) . '"',
+					'LIMIT' => 1
 				)
 			);
 			
@@ -86,7 +87,6 @@ class db_file
 				else
 				{
 					log_error('Skipping file: ' . $file);
-					return $db_file[0]['id'];
 				}
 				
 			}
@@ -151,7 +151,7 @@ class db_file
 		// check to make sure file is valid
 		if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)))
 		{
-			$files = $GLOBALS['database']->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"'));
+			$files = $GLOBALS['database']->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"', 'LIMIT' => 1));
 			if(count($files) > 0)
 			{				
 				if($fp = @fopen($file, 'rb'))
@@ -251,13 +251,13 @@ class db_file
 				{
 				
 					// make sure directory is in the database
-					$dirs = $GLOBALS['database']->query(array('SELECT' => constant($module . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
+					$dirs = $GLOBALS['database']->query(array('SELECT' => constant($module . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"', 'LIMIT' => 1));
 					
 					// check the file database, some modules use their own database to store special paths,
 					//  while other modules only store files and no directories, but these should still be searchable paths
 					//  in which case the module is responsible for validation of it's own paths
 					if(count($dirs) == 0)
-						$dirs = $GLOBALS['database']->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
+						$dirs = $GLOBALS['database']->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"', 'LIMIT' => 1));
 						
 					// top level directory / should always exist
 					if($request['dir'] == realpath('/') || count($dirs) > 0)
@@ -340,8 +340,9 @@ class db_file
 				}
 				
 				// these variables are no longer nessesary
-				unset($props['LIMIT']);
+				$props['LIMIT'] = 1;
 				unset($props['ORDER']);
+				unset($props['GROUP']);
 			}
 
 //---------------------------------------- Search All ----------------------------------------\\
