@@ -156,7 +156,6 @@ class db_code extends db_file
 				)
 			);
 			
-			// try to get music information
 			if( count($db_code) == 0 )
 			{
 				return self::add($file);
@@ -170,7 +169,7 @@ class db_code extends db_file
 		return false;
 	}
 	
-	static function getInfo($file)
+	static function getInfo($file, &$lines)
 	{
 		$fileinfo = array();
 		$fileinfo['Filepath'] = addslashes($file);
@@ -199,26 +198,36 @@ class db_code extends db_file
 			if($lang !== false && $lines != '')
 			{
 				$fileinfo['Language'] = $lang;
-				
-				$highlighter = Text_Highlighter::factory($fileinfo['Language']);
-				
-				$fileinfo['HTML'] = addslashes($highlighter->highlight($lines));
 			}
 			else
 			{
 				$fileinfo['Language'] = '';
-				
-				$fileinfo['HTML'] = addslashes(htmlspecialchars($lines));
 			}
 		}
 		
 		return $fileinfo;
 	}
 
+	static function getHTML($lines, $lang)
+	{
+		$fileinfo = array();
+		if($lang !== false && $lines != '')
+		{
+			$highlighter = Text_Highlighter::factory($fileinfo['Language']);
+			
+			$fileinfo['HTML'] = addslashes($highlighter->highlight($lines));
+		}
+		else
+		{
+			$fileinfo['HTML'] = addslashes(htmlspecialchars($lines));
+		}
+	}
+
 	static function add($file, $code_id = NULL)
 	{
 		// pull information from $info
-		$fileinfo = self::getInfo($file);
+		$lines = '';
+		$fileinfo = self::getInfo($file, $lines);
 	
 		if( $code_id == NULL )
 		{
@@ -226,19 +235,22 @@ class db_code extends db_file
 			
 			// add to database
 			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
-			
-			return $id;
 		}
 		else
 		{
 			log_error('Modifying code: ' . $file);
 			
 			// update database
-			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $code_id));
+			$return = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $code_id));
 		
-			return $code_id;
+			$id = $code_id;
 		}
 		
+		// now add the HTML so if this takes too long and fails it won't happen again
+		$fileinfo = self::getHTML($lines, $fileinfo['Language']);
+		$return = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $id));
+		
+		return $id;
 	}
 
 	static function out($file)

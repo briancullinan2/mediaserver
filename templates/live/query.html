@@ -93,7 +93,7 @@ $this->assign('newlineregexp', '/([^ ]{25})/i');
 						<table class="itemTable" cellpadding="0" cellspacing="0" onclick="location.href = '{$link}';">
 							<tr>
 								<td>
-									<div class="thumb file_ext_{$files[file].Filetype} file_type_{'/'|str_replace:' file_type_':$files[file].Filemime}"><img src="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}images/s.gif" height="48" width="48"></div>
+									<div class="thumb file_ext_{$files[file].Filetype} file_type_{'/'|str_replace:' file_type_':$files[file].Filemime}"><img src="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}images/s.gif" alt="{$files[file].Filetype}" height="48" width="48"></div>
 								</td>
 							</tr>
 						</table>

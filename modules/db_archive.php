@@ -259,10 +259,10 @@ class db_archive extends db_file
 			
 			$total_size += $fileinfo['Filesize'];
 			
-			log_error('Adding file in archive: ' . $fileinfo['Filepath']);
+			log_error('Adding file in archive: ' . stripslashes($fileinfo['Filepath']));
 			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 			$ids[self::DATABASE . '_id'] = $id;
-			db_ids::handle($fileinfo['Filepath'], true, $ids);
+			db_ids::handle(stripslashes($fileinfo['Filepath']), true, $ids);
 		}
 					
 		$last_path = str_replace('/', DIRECTORY_SEPARATOR, $last_path);
@@ -277,11 +277,12 @@ class db_archive extends db_file
 		
 		// add root file which is the filepath but with a / for compatibility
 		$fileinfo['Filepath'] = addslashes(str_replace('\\', '/', $last_path . '/'));
-		log_error('Adding file in archive: ' . $fileinfo['Filepath']);
+		log_error('Adding file in archive: ' . stripslashes($fileinfo['Filepath']));
 		$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 		$ids[self::DATABASE . '_id'] = $id;
-		db_ids::handle($fileinfo['Filepath'], true, $ids);
+		db_ids::handle(stripslashes($fileinfo['Filepath']), true, $ids);
 
+		// use same information for actual file, but change these back
 		$fileinfo['Filepath'] = addslashes(str_replace('\\', '/', $last_path));
 		$fileinfo['Filetype'] = getFileType($last_path);
 		

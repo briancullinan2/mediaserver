@@ -36,7 +36,7 @@ Finish mobile template.
 FIX detail options in default template
 Add podcast list template
 Add Ampache XML API template
-Work on finishing EXT JS template, and add more templates from Ampache, Jinzora, and WinAmp Remote
+Work on finishing EXT JS template, and add more templates from Ampache, Jinzora, Subsonic, and WinAmp Remote
 ------------- EXT JS -------------
 Fix arrow-key movement in extjs template, in thumbnails view of the FolderView.js
 Add desktop.ini/folder.ini files and fix up thumbnails in FolderView.js

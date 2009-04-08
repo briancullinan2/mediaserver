@@ -233,10 +233,10 @@ class db_diskimage extends db_file
 						$fileinfo['Filemime'] = getMime($file['filename']);
 						$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['recording_timestamp']);
 						
-						log_error('Adding file in disk image: ' . $fileinfo['Filepath']);
+						log_error('Adding file in disk image: ' . stripslashes($fileinfo['Filepath']));
 						$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
 						$ids[self::DATABASE . '_id'] = $id;
-						db_ids::handle($fileinfo['Filepath'], true, $ids);
+						db_ids::handle(stripslashes($fileinfo['Filepath']), true, $ids);
 					}
 				}
 			}
@@ -255,7 +255,7 @@ class db_diskimage extends db_file
 		// print status
 		if( $image_id == NULL )
 		{
-			log_error('Adding Disk Image: ' . $fileinfo['Filepath']);
+			log_error('Adding Disk Image: ' . $last_path);
 			
 			// add to database
 			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
@@ -264,7 +264,7 @@ class db_diskimage extends db_file
 		}
 		else
 		{
-			log_error('Modifying Disk Image: ' . $fileinfo['Filepath']);
+			log_error('Modifying Disk Image: ' . $last_path);
 			
 			// update database
 			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $image_id));

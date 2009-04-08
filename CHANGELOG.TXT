@@ -1,3 +1,6 @@
+2009-04-08
+Fixed a bad error with db_archive and db_diskimage module, the Filepath was being passed to the db_ids modules with the addslashes before, so slashes were added twice
+
 2009-04-07
 Added the db_ids results to the file requests in plugins, this is so modules can try to be more efficient then just looking up filepaths
 	Changed modules to use int ids, bigint is unnessicary and cost twice as much time, it is unlikely that anyone will load more then 2 billion files into the database
