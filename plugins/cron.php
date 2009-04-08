@@ -32,7 +32,7 @@ $tm_start = array_sum(explode(' ', microtime()));
 log_error('Cron Script: ' . VERSION . '_' . VERSION_NAME);
 
 // start the page with a pre to output messages that can be viewed in a browser
-?><script language="javascript">var timer=null;var last_height=0;var same_count=0;function body_scroll() {timer=setTimeout('body_scroll()', 100);if(document.body.scrollHeight!=last_height) {same_count=0;last_height=document.body.scrollHeight;document.body.scrollTop = document.body.scrollHeight;} else {same_count++;}if(same_count == 1000) {clearTimeout(timer);}}timer=setTimeout('body_scroll()', 100)</script><code>
+?><script language="javascript">var timer=null;var last_height=0;var same_count=0;function body_scroll() {timer=setTimeout('body_scroll()', 100);if(document.body.scrollHeight!=last_height) {same_count=0;last_height=document.body.scrollHeight;document.body.scrollTop = document.body.scrollHeight;} else {same_count++;}if(same_count == 1000) {clearTimeout(timer);}}timer=setTimeout('body_scroll()', 100)</script><code style="white-space:nowrap;">
 <?php
 
 // the cron script is useless if it has nowhere to store the information it reads
