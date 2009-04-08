@@ -329,7 +329,7 @@ class db_watch_list extends db_watch
 			// never pass is to fs_file, it is only used to internals in this case
 			// db_file and db_ids are handled independently
 			// skip db_watch and db_watch_list to prevent recursion
-			if($module != 'db_watch' && $module != 'db_watch_list' && $module != 'db_ids' && $module != 'db_file')
+			if(constant($module . '::INTERNAL') != true && $module != 'db_file')
 			{
 				$result = call_user_func_array($module . '::handle', array($file, ($skipped !== false)));
 				if($result !== false)

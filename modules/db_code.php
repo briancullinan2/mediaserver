@@ -217,7 +217,7 @@ class db_code extends db_file
 		$fileinfo = array();
 		if($lang !== false && $lines != '')
 		{
-			$highlighter = Text_Highlighter::factory($fileinfo['Language']);
+			$highlighter = Text_Highlighter::factory($lang);
 			
 			$fileinfo['HTML'] = addslashes($highlighter->highlight($lines));
 		}
