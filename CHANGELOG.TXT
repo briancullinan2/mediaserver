@@ -3,6 +3,7 @@ Fixed a bad error with db_archive and db_diskimage module, the Filepath was bein
 Fixed an error with db_ids module, if an ID wasn't in the array it overwrote the entire id array so it then rechecked every id
 	Doesn't check for IDs in watch, watch_list, alias, and itself now
 Worked on speed issues for cron.php script
+Limit all select calls that include Filepath = "" by 1 because filepaths are unique
 
 2009-04-07
 Added the db_ids results to the file requests in plugins, this is so modules can try to be more efficient then just looking up filepaths

@@ -724,7 +724,9 @@ function log_error($message)
 {
 	if(realpath($_SERVER['SCRIPT_FILENAME']) == realpath(LOCAL_ROOT . 'plugins/cron.php') || (isset($_REQUEST['debug']) && $_REQUEST['debug'] == true && loggedIn()))
 	{
-		print date('[m/d/Y:H:i:s O] ') . $message . "<br />\n";
+		print date('[m/d/Y:H:i:s O] ');
+		print_r($message);
+		print "<br />\n";
 		flush();
 		@ob_flush();
 	}

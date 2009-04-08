@@ -233,39 +233,47 @@ class db_archive extends db_file
 		// loop through files
 		$source = File_Archive::read($last_path . '/');
 		$total_size = 0;
-		while($source->next())
+		if(PEAR::isError($source))
 		{
-			$stat = $source->getStat();
-			$fileinfo = array();
-			$fileinfo['Filepath'] = addslashes($last_path . '/' . trim($source->getFilename()));
-			$fileinfo['Filename'] = basename($source->getFilename());
-			$fileinfo['Compressed'] = 0;
-			if($fileinfo['Filepath'][strlen($fileinfo['Filepath'])-1] == '/')
-			{
-				$fileinfo['Filetype'] = 'FOLDER';
-				$fileinfo['Filesize'] = 0;
-			}
-			else
-			{
-				$fileinfo['Filetype'] = getExt($fileinfo['Filename']);
-				$fileinfo['Filesize'] = @$stat['size'];
-			}
-			if($fileinfo['Filetype'] === false)
-				$fileinfo['Filetype'] = 'FILE';
-			else
-				$fileinfo['Filetype'] = strtoupper($fileinfo['Filetype']);
-				
-			$fileinfo['Filemime'] = @$source->getMime();
-			$fileinfo['Filedate'] = date("Y-m-d h:i:s", @$stat['mtime']);
-			
-			$total_size += $fileinfo['Filesize'];
-			
-			log_error('Adding file in archive: ' . stripslashes($fileinfo['Filepath']));
-			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
-			$ids[self::DATABASE . '_id'] = $id;
-			db_ids::handle(stripslashes($fileinfo['Filepath']), true, $ids);
+			log_error('Error reading archive: ' . $last_path);
+			log_error($source);
 		}
+		else
+		{
+			while($source->next())
+			{
+				$stat = $source->getStat();
+				$fileinfo = array();
+				$fileinfo['Filepath'] = addslashes($last_path . '/' . trim($source->getFilename()));
+				$fileinfo['Filename'] = basename($source->getFilename());
+				$fileinfo['Compressed'] = 0;
+				if($fileinfo['Filepath'][strlen($fileinfo['Filepath'])-1] == '/')
+				{
+					$fileinfo['Filetype'] = 'FOLDER';
+					$fileinfo['Filesize'] = 0;
+				}
+				else
+				{
+					$fileinfo['Filetype'] = getExt($fileinfo['Filename']);
+					$fileinfo['Filesize'] = @$stat['size'];
+				}
+				if($fileinfo['Filetype'] === false)
+					$fileinfo['Filetype'] = 'FILE';
+				else
+					$fileinfo['Filetype'] = strtoupper($fileinfo['Filetype']);
 					
+				$fileinfo['Filemime'] = @$source->getMime();
+				$fileinfo['Filedate'] = date("Y-m-d h:i:s", @$stat['mtime']);
+				
+				$total_size += $fileinfo['Filesize'];
+				
+				log_error('Adding file in archive: ' . stripslashes($fileinfo['Filepath']));
+				$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
+				$ids[self::DATABASE . '_id'] = $id;
+				db_ids::handle(stripslashes($fileinfo['Filepath']), true, $ids);
+			}
+		}
+		
 		$last_path = str_replace('/', DIRECTORY_SEPARATOR, $last_path);
 		// get entire archive information
 		$fileinfo = array();

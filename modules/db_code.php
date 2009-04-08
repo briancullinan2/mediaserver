@@ -170,7 +170,7 @@ class db_code extends db_file
 		return false;
 	}
 	
-	static function getInfo($file, &$lines)
+	static function getInfo($file)
 	{
 		$fileinfo = array();
 		$fileinfo['Filepath'] = addslashes($file);
@@ -193,7 +193,7 @@ class db_code extends db_file
 			$fileinfo['LineCount'] = count($lines);
 			$fileinfo['Words'] = join(' ', $words);
 				
-			$lines = join("\n", $lines);
+			$fileinfo['lines'] = join("\n", $lines);
 			
 			$lang = self::getLanguage(getExt(basename($file)));
 			if($lang !== false && $lines != '')
@@ -222,13 +222,15 @@ class db_code extends db_file
 		{
 			$fileinfo['HTML'] = addslashes(htmlspecialchars($lines));
 		}
+		return $fileinfo;
 	}
 
 	static function add($file, $code_id = NULL)
 	{
 		// pull information from $info
-		$lines = '';
-		$fileinfo = self::getInfo($file, $lines);
+		$fileinfo = self::getInfo($file);
+		$lines = $fileinfo['lines'];
+		unset($fileinfo['lines']);
 	
 		if( $code_id == NULL )
 		{

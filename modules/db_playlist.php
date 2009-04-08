@@ -32,8 +32,17 @@ class db_playlist extends db_file
 		{
 			case 'wpl':
 			case 'm3u':
-			case 'txt':
 				return true;
+			case 'txt':
+				// read in the buffer size from the file and check to see if it even contains a file path
+				if($fp = @fopen($file, 'rb'))
+				{
+					$buffer = fread($fp, BUFFER_SIZE);
+					fclose($fp);
+					$count = preg_match('/(([^\\\\\\/\\:\\*\\?\\<\\>\\|]+[\\\\\\/])+[^\\\\\\/\\:\\*\\?\\<\\>\\|]+\.[a-z0-9]+)([^a-z0-9]|$)/i', $buffer, $matches);
+					if($count > 0 && trim($matches[1]) != '')
+						return true;
+				}
 			default:
 				return false;
 		}

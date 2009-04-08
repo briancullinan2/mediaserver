@@ -202,7 +202,7 @@ log_error("Phase 2: Checking modified directories for modified files");
 do
 {
 	// get 1 folder from the database to search the files for
-	$db_dirs = db_watch_list::get(array('limit' => 1), $count, $error);
+	$db_dirs = db_watch_list::get(array('limit' => 1, 'order_by' => 'id', 'direction' => 'ASC'), $count, $error);
 	
 	if(count($db_dirs) > 0)
 	{
