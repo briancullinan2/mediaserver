@@ -215,7 +215,7 @@ class db_code extends db_file
 	static function getHTML($lines, $lang)
 	{
 		$fileinfo = array();
-		if($lang !== false && $lines != '')
+		if($lang !== '' && $lines != '')
 		{
 			$highlighter = Text_Highlighter::factory($lang);
 			
