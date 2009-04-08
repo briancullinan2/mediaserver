@@ -326,7 +326,7 @@ class sql_global
 		$query = SQL::statement_builder($props);
 		
 		if(isset($_REQUEST['log_sql']) && $_REQUEST['log_sql'] == true)
-			log_error('DATABASE: ' . $query);
+			log_error('DATABASE: ' . substr($query, 0, 512));
 			
 		if(isset($props['CALLBACK']))
 		{

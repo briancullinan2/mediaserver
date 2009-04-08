@@ -204,6 +204,10 @@ class db_archive extends db_file
 			{
 				return self::add($file, $db_archive[0]['id']);
 			}
+			else
+			{
+				return $db_archive[0]['id'];
+			}
 
 		}
 		return false;
@@ -224,9 +228,9 @@ class db_archive extends db_file
 		
 		// set up empty ids array since we know archive_id will be the only entry
 		$ids = array();
-		foreach(db_ids::columns() as $i => $column)
+		foreach($GLOBALS['tables'] as $i => $table)
 		{
-			$ids[$column] = false;
+			$ids[$table . '_id'] = false;
 		}
 		
 		// loop through files
@@ -236,7 +240,7 @@ class db_archive extends db_file
 		{
 			$stat = $source->getStat();
 			$fileinfo = array();
-			$fileinfo['Filepath'] = addslashes($last_path . '/' . $source->getFilename());
+			$fileinfo['Filepath'] = addslashes($last_path . '/' . trim($source->getFilename()));
 			$fileinfo['Filename'] = basename($source->getFilename());
 			$fileinfo['Compressed'] = 0;
 			if($fileinfo['Filepath'][strlen($fileinfo['Filepath'])-1] == '/')

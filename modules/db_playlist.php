@@ -88,6 +88,10 @@ class db_playlist extends db_file
 				
 				return $db_playlist[0]['id'];
 			}
+			else
+			{
+				return $db_playlist[0]['id'];
+			}
 
 		}
 		return false;

@@ -86,6 +86,7 @@ class db_file
 				else
 				{
 					log_error('Skipping file: ' . $file);
+					return $db_file[0]['id'];
 				}
 				
 			}

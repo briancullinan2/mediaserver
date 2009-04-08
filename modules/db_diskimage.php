@@ -184,6 +184,10 @@ class db_diskimage extends db_file
 			{
 				return self::add($file, $db_diskimage[0]['id']);
 			}
+			else
+			{
+				return $db_diskimage[0]['id'];
+			}
 
 		}
 		return false;
@@ -207,9 +211,9 @@ class db_diskimage extends db_file
 		if(isset($info['iso']) && isset($info['iso']['directories']))
 		{
 			$ids = array();
-			foreach(db_ids::columns() as $i => $column)
+			foreach($GLOBALS['tables'] as $i => $table)
 			{
-				$ids[$column] = false;
+				$ids[$table . '_id'] = false;
 			}
 			$directories = array();
 			foreach($info['iso']['directories'] as $i => $directory)

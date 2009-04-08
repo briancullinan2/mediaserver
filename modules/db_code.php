@@ -164,6 +164,10 @@ class db_code extends db_file
 			{
 				return self::add($file, $db_code[0]['id']);
 			}
+			else
+			{
+				return $db_code[0]['id'];
+			}
 
 		}
 		return false;

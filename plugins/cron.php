@@ -210,6 +210,10 @@ do
 		if(USE_ALIAS == true)
 			$dir = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $dir);
 		$status = db_watch_list::handle($dir);
+		
+		// do not call self::remove because we want to leave the folders inside of the current one so they will be scanned also
+		// delete the selected folder from the database
+		$GLOBALS['database']->query(array('DELETE' => db_watch_list::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($dir) . '"'));
 	}
 
 	// don't put too much load on the system

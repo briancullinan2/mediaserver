@@ -25,10 +25,10 @@ class db_ids extends db_file
 			'Filepath' 		=> 'TEXT',
 			'Hex'			=> 'TEXT',
 		);
-		foreach($GLOBALS['tables'] as $i => $db)
+		foreach($GLOBALS['tables'] as $i => $table)
 		{
-			if($db != db_ids::DATABASE && $db != db_watch_list::DATABASE)
-				$struct[$db . '_id'] = 'INT';
+			if($table != db_ids::DATABASE && $table != db_watch_list::DATABASE && $table != db_alias::DATABASE && $table != db_watch::DATABASE)
+				$struct[$table . '_id'] = 'INT';
 		}
 		
 		return $struct;
@@ -58,24 +58,24 @@ class db_ids extends db_file
 			// get all the ids from all the tables
 			$fileinfo['Filepath'] = addslashes($file);
 			$fileinfo['Hex'] = bin2hex($file);
-			foreach($GLOBALS['tables'] as $i => $db)
+			foreach($GLOBALS['tables'] as $i => $table)
 			{
-				if($db != db_ids::DATABASE && $db != db_watch_list::DATABASE)
+				if($table != db_ids::DATABASE && $table != db_watch_list::DATABASE && $table != db_alias::DATABASE && $table != db_watch::DATABASE)
 				{
-					if(isset($ids[$db . '_id']))
+					if(isset($ids[$table . '_id']))
 					{
-						if($ids[$db . '_id'] !== false)
-							$fileinfo[$db . '_id'] = $ids[$db . '_id'];
+						if($ids[$table . '_id'] !== false)
+							$fileinfo[$table . '_id'] = $ids[$table . '_id'];
 					}
 					else
 					{
-						$ids = $GLOBALS['database']->query(array(
-								'SELECT' => $db,
+						$tmp_ids = $GLOBALS['database']->query(array(
+								'SELECT' => $table,
 								'COLUMNS' => 'id',
 								'WHERE' => 'Filepath = "' . addslashes($file) . '"'
 							)
 						);
-						if(isset($ids[0])) $fileinfo[$db . '_id'] = $ids[0]['id'];
+						if(isset($tmp_ids[0])) $fileinfo[$table . '_id'] = $tmp_ids[0]['id'];
 					}
 				}
 			}

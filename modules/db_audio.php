@@ -77,7 +77,10 @@ class db_audio extends db_file
 			{
 				return self::add($file, $db_audio[0]['id']);
 			}
-
+			else
+			{
+				return $db_audio[0]['id'];
+			}
 		}
 		return false;
 	}

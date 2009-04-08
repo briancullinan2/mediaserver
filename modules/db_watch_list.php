@@ -169,10 +169,6 @@ class db_watch_list extends db_watch
 				// search recursively
 				$status = self::handle_dir($dir);
 				
-				// remove any occurance of this directory from the database
-				//  it only gets here if it isn't handled, so it shouldn't be in the database
-				$GLOBALS['database']->query(array('DELETE' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($dir) . '"'));
-				
 				return $status;
 			}
 		}
@@ -239,10 +235,6 @@ class db_watch_list extends db_watch
 				self::add($path);
 			}
 		}
-		
-		// do not call self::remove because we want to leave the folders inside of the current one so they will be scanned also
-		// delete the selected folder from the database
-		$GLOBALS['database']->query(array('DELETE' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($dir) . '"'));
 	}
 	
 	static function handle_dir($dir)

@@ -83,6 +83,10 @@ class db_video extends db_file
 			{
 				return self::add($file, $db_video[0]['id']);
 			}
+			else
+			{
+				return $db_video[0]['id'];
+			}
 
 		}
 		return false;

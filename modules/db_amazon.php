@@ -44,6 +44,7 @@ class db_amazon extends db_file
 			'Filepath' 		=> 'TEXT',
 			'AmazonType' 	=> 'TEXT',
 			'AmazonInfo' 	=> 'TEXT',
+			'Matches' 		=> 'TEXT',
 			'Thumbnail' 	=> 'BLOB'
 		);
 	}
@@ -127,7 +128,7 @@ class db_amazon extends db_file
 				{
 					return self::add_music($artist, $album);
 				}
-				elseif($force)
+				else
 				{
 					// don't modify because amazon information doesn't change
 					return $amazon[0]['id'];
@@ -149,6 +150,7 @@ class db_amazon extends db_file
 		$fileinfo['AmazonId'] = '';
 		$fileinfo['AmazonType'] = 'Music';
 		$fileinfo['AmazonInfo'] = '';
+		$fileinfo['Matches'] = '';
 		$fileinfo['Thumbnail'] = '';
 		
 		$artist_tokens = tokenize($artist);
@@ -206,6 +208,7 @@ class db_amazon extends db_file
 				$best = '';
 				$best_tracks = '';
 				$best_count = 0;
+				$all_matches = array();
 				foreach($items as $i => $item)
 				{
 					// first get the album and match that
@@ -279,6 +282,11 @@ class db_amazon extends db_file
 						$best = $item;
 						$best_tracks = $disks;
 					}
+					
+					// record all results
+					$match = preg_match('/\<ASIN\>([a-z0-9]*)\<\/ASIN\>/i', $item, $matches);
+					if(isset($matches[1]))
+						$all_matches[] = addslashes($matches[1]);
 				}
 				
 				// parse single result
@@ -291,6 +299,7 @@ class db_amazon extends db_file
 				{
 					$fileinfo['AmazonId'] = addslashes($matches[1]);
 				}
+				$fileinfo['Matches'] = join(';', $all_matches);
 				
 				// parse tracks for later use
 				$fileinfo['AmazonInfo'] = addslashes(serialize($best_tracks));

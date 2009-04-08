@@ -92,6 +92,10 @@ class db_image extends db_file
 			{
 				return self::add($file, $db_image[0]['id']);
 			}
+			else
+			{
+				return $db_image[0]['id'];
+			}
 
 		}
 		return false;

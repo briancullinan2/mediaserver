@@ -57,7 +57,20 @@ class db_movies extends db_file
 			}
 		}
 		
-		if($last_ext == 'iso')
+		// if it is an extracted dvd image
+		if(is_dir($last_path))
+		{
+			$tokens = tokenize($last_path);
+			if(in_array('video_ts', $tokens['Unique']))
+			{
+			}
+		}
+		// if it is a potential movie in compressed file format
+		elseif(db_video::handles($file) && in_array('movies', $tokens['Unique']))
+		{
+		}
+		// if it is an iso image with a video_ts folder in it
+		elseif($last_ext == 'iso')
 		{
 			$info = $GLOBALS['getID3']->analyze($last_path);
 			
