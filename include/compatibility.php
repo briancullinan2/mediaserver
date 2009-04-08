@@ -10,7 +10,7 @@
 //error_reporting(0);
 
 //Disable register_globals becase it is a security hazard
-if(ini_get(register_globals)){
+if(ini_get('register_globals')){
 	foreach(get_defined_vars() as $var=>$val){
 		//only keep superglobals we need on this whitelist,  _SESSION will take care of its self:
 		if(!in_array($var,array('_GET','_POST','_COOKIE','_SERVER', '_REQUEST'))){
@@ -41,11 +41,13 @@ if(ini_get('magic_quotes_gpc')){
 }
 //Make all Posts immune to xsrf.
 //$_GET is only used for navigation. 
-if($_SERVER[REQUEST_METHOD]=="POST"){
+if($_SERVER['REQUEST_METHOD']=="POST"){
 	//The referer can be forged on old, unpatched browsers.
 	//The token cannot be forged unless it is guessed. 
-	$referer_check=parse_url($_SERVER['HTTP_REFERER']);
-	if($_SERVER['HTTP_HOST'] != $referer_check['host']){
+	$referer_check = parse_url($_SERVER['HTTP_REFERER']);
+	$server_host = parse_url($_SERVER['HTTP_HOST']);
+	print_r($server_host);
+	if($server_host['path'] != $referer_check['host'] && $server_host['host'] != $referer_check['host']){
 		die('Session Riding(XSRF) Detected!');	
 	}
 }else{

@@ -176,16 +176,14 @@ function setup()
 	
 		// get the list of templates
 		$GLOBALS['templates'] = array();
-		if ($dh = @opendir(LOCAL_ROOT . 'templates'))
+		$files = fs_file::get(array('dir' => LOCAL_ROOT . 'templates/', 'limit' => 32000), $count, $error, true);
+		if(is_array($files))
 		{
-			while (($file = readdir($dh)) !== false)
+			foreach($files as $i => $temp_file)
 			{
-				if ($file != '.' && $file != '..' && is_dir(LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR . $file))
-				{
-					$GLOBALS['templates'][] = $file;
-				}
+				if(is_dir($temp_file['Filepath']))
+					$GLOBALS['templates'][] = $temp_file['Filename'];
 			}
-			closedir($dh);
 		}
 		
 		// set the template if a permenent one isn't already set in the settings file
@@ -327,7 +325,9 @@ function parseInner($file, &$last_path, &$inside_path)
 	{
 		if(file_exists(str_replace('/', DIRECTORY_SEPARATOR, $last_path . $tmp_file)) || $last_path == '')
 		{
-			$last_path = $last_path . $tmp_file . '/';
+			$last_path = $last_path . $tmp_file;
+			if($last_path == '' || $last_path[strlen($last_path)-1] != '/')
+				$last_path .= '/';
 		} else {
 			if(file_exists(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
 				break;

@@ -336,7 +336,7 @@ class db_archive extends db_file
 
 			if(!is_file(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
 			{
-				unset($_REQUEST['dir']);
+				unset($request['dir']);
 				$error = 'Directory does not exist!';
 			}
 		}

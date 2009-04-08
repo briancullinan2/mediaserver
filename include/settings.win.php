@@ -118,6 +118,8 @@ define('CLEAN_UP_BUFFER_TIME',				60);
 //  cleanup will also be fired when a directory change is detected, this may not always be accurate
 define('CLEAN_UP_THREASHOLD', 				1);
 
+ini_set('include_path', '.;C:\php5\pear;' . LOCAL_ROOT . 'include/');
+
 // comment-out-able
 ini_set('error_reporting', E_ALL);
 

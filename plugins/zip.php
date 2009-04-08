@@ -27,7 +27,8 @@ $files = call_user_func_array($_REQUEST['cat'] . '::get', array($_REQUEST, &$cou
 $files_length = count($files);
 
 // the ids module will do the replacement of the ids
-$files = db_ids::get(array('cat' => $_REQUEST['cat']), &$tmp_count, &$tmp_error, $files);
+if(count($files) > 0)
+	$files = db_ids::get(array('cat' => $_REQUEST['cat']), $tmp_count, $tmp_error, $files);
 
 // get all the other information from other modules
 for($index = 0; $index < $files_length; $index++)
@@ -43,7 +44,7 @@ for($index = 0; $index < $files_length; $index++)
 	if(count(array_intersect_key($file, $id_keys)) == 0)
 	{
 		// use the module_id column to look up keys
-		$ids = db_ids::get(array('file' => $file['Filepath'], constant($_REQUEST['cat'] . '::DATABASE') . '_id' => $file['id']), &$tmp_count, &$tmp_error);
+		$ids = db_ids::get(array('file' => $file['Filepath'], constant($_REQUEST['cat'] . '::DATABASE') . '_id' => $file['id']), $tmp_count, $tmp_error);
 		if(count($ids) > 0)
 		{
 			$files[$index] = array_merge($ids[0], $files[$index]);

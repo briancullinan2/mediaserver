@@ -43,7 +43,8 @@ if(!isset($_REQUEST['list']) || !isset($types[$_REQUEST['list']]))
 $files = call_user_func_array($_REQUEST['cat'] . '::get', array($_REQUEST, &$count, &$error));
 
 // the ids module will do the replacement of the ids
-$files = db_ids::get(array('cat' => $_REQUEST['cat']), &$tmp_count, &$tmp_error, $files);
+if(count($files) > 0)
+	$files = db_ids::get(array('cat' => $_REQUEST['cat']), $tmp_count, $tmp_error, $files);
 
 // get all the other information from other modules
 foreach($files as $index => $file)

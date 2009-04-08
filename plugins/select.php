@@ -74,7 +74,8 @@ if($files === false)
 $order_keys_values = array();
 
 // the ids module will do the replacement of the ids
-$files = db_ids::get(array('cat' => $_REQUEST['cat']), &$tmp_count, &$tmp_error, $files);
+if(count($files) > 0)
+	$files = db_ids::get(array('cat' => $_REQUEST['cat']), $tmp_count, $tmp_error, $files);
 
 // get all the other information from other modules
 foreach($files as $index => $file)

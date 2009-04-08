@@ -38,11 +38,12 @@ var loaded = false;
 {foreach from=$crumbs item=dir key=i}
 {if $i eq 0}
 									<li><a href="/{$smarty.const.HTML_ROOT}?dir=/&amp;cat={$prefix}file">{$smarty.const.HTML_NAME|@htmlspecialchars}</a></li>
-{else}{assign var=path value=$path|cat:$dir|cat:'/'}
-{/if}
-{if $i eq $crumbcount}{assign var=current value=$dir}
+									<li><img src="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}images/carat.gif" class="crumbsep"></li>
+{elseif $i eq $crumbcount}{assign var=current value=$dir}
+{assign var=path value=$path|cat:$dir|cat:'/'}
 									<li>{$dir|@htmlspecialchars}</li>
 {else}
+{assign var=path value=$path|cat:$dir|cat:'/'}
 									<li><a href="/{$smarty.const.HTML_ROOT}?dir={$path|urlencode|htmlspecialchars}&amp;cat={if $path|@handles:'file'}db_file{else}{$smarty.request.cat}{/if}">{$dir|@htmlspecialchars}</a></li>
 									<li><img src="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}images/carat.gif" class="crumbsep"></li>
 {/if}

@@ -43,11 +43,11 @@ if(isset($_REQUEST))
 	// get the file path from the database
 	$files = call_user_func_array($_REQUEST['cat'] . '::get', array($_REQUEST, &$count, &$error));
 	
-	// the ids module will do the replacement of the ids
-	$files = db_ids::get(array('cat' => $_REQUEST['cat']), &$tmp_count, &$tmp_error, $files);
-	
 	if(count($files) > 0)
 	{
+		// the ids module will do the replacement of the ids
+		$files = db_ids::get(array('cat' => $_REQUEST['cat']), $tmp_count, $tmp_error, $files);
+		
 		$tmp_request = array();
 		$tmp_request['file'] = $files[0]['Filepath'];
 	

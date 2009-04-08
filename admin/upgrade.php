@@ -14,49 +14,20 @@ else
 	exit();
 }
 
-// from version 0.40.0 to 0.40.1
+$_REQUEST['debug'] = true;
+$_REQUEST['log_sql'] = true;
 
-// install new tables
-$GLOBALS['database']->install();
+// install stuff based on what step we are on
+// things to consider:
+// install stuff on each page
+// show output information
+// if there are errors do not go on
 
-// alter ids table
 
-// go through each database and add the keys to db_ids
-foreach($GLOBALS['tables'] as $i => $db)
-{
-	if($db != 'ids' && $db != 'amazon' && $db != 'files')
-		$GLOBALS['database']->query(array(
-			'SELECT' => $db,
-			'COLUMNS' => 'Filepath,id',
-			'CALLBACK' => array(
-				'FUNCTION' => 'id_update',
-				'ARGUMENTS' => array('db' => $db)
-			)
-		));
-}
+// upgrade for good measure just to make sure
+$GLOBALS['database'] = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
 
-// remove duplicates
-db_ids::cleanup();
-
-function id_update($row, $args)
-{
-	$GLOBALS['database']->query(array(
-		'UPDATE' 	=> 'ids',
-		'COLUMNS' 	=> $args['db'] . '_id',
-		'VALUES' 	=> $row['id'],
-		'WHERE' 	=> 'Filepath = "' . addslashes($row['Filepath']) . '"'
-	));
-	if($GLOBALS['database']->affected() == 0)
-	{
-		$GLOBALS['database']->query(array(
-			'INSERT' => 'ids',
-			'VALUES' => array(
-				$args['db'] . '_id' => $row['id'],
-				'Filepath' 			=> addslashes($row['Filepath']),
-				'Hex' 				=> bin2hex($row['Filepath'])
-			)
-		));
-	}
-}
+$GLOBALS['database']->upgrade();
 
 ?>
+Upgrade script has completed, if there were errors you would see them above!

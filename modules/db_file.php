@@ -39,7 +39,7 @@ class db_file
 		$file = str_replace('\\', '/', $file);
 		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 		
-		if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $file)) || is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)))
+		if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $file)) || (is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)) && $file[strlen($file)-1] != '/'))
 		{
 			$filename = basename($file);
 
@@ -225,15 +225,15 @@ class db_file
 			// add dir filter to where
 			if(isset($request['dir']))
 			{
-				// replace separator
-				$request['dir'] = str_replace('\\', '/', $request['dir']);
-				
-				if($request['dir'] == '') $request['dir'] = DIRECTORY_SEPARATOR;
+				if($request['dir'] == '') $request['dir'] = '/';
 				
 				// this is necissary for dealing with windows and cross platform queries coming from templates
 				//  yes: the template should probably handle this by itself, but this is convenient and easy
 				//   it is purely for making all the paths look prettier
-				if($request['dir'][0] == DIRECTORY_SEPARATOR) $request['dir'] = realpath('/') . substr($request['dir'], 1);
+				if($request['dir'][0] == '/') $request['dir'] = realpath('/') . substr($request['dir'], 1);
+
+				// replace separator
+				$request['dir'] = str_replace('\\', '/', $request['dir']);
 				
 				// replace aliased path with actual path
 				if(USE_ALIAS == true)
@@ -257,7 +257,7 @@ class db_file
 					//  in which case the module is responsible for validation of it's own paths
 					if(count($dirs) == 0)
 						$dirs = $GLOBALS['database']->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"'));
-					
+						
 					// top level directory / should always exist
 					if($request['dir'] == realpath('/') || count($dirs) > 0)
 					{
