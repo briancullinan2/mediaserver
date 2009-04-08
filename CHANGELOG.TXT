@@ -1,3 +1,8 @@
+2009-04-07
+Added the db_ids results to the file requests in plugins, this is so modules can try to be more efficient then just looking up filepaths
+	Changed modules to use int ids, bigint is unnessicary and cost twice as much time, it is unlikely that anyone will load more then 2 billion files into the database
+Changed db_ids to look up all the ids at once, it now accepts a $files parameter and appends all the needed id information
+
 2009-04-05
 Changed db_files search feature to put the directory matching first to narrow down results better
 Worked on search page for live template

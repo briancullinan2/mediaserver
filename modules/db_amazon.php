@@ -342,7 +342,7 @@ class db_amazon extends db_file
 		{
 			if(db_audio::handles($request['file']))
 			{
-				$audio = db_audio::get(array('file' => $request['file']), $tmp_count, $error);
+				$audio = db_audio::get(array('file' => $request['file'], 'audio_id' => (isset($request['audio_id'])?$request['audio_id']:0)), $tmp_count, $error);
 				if(count($audio) > 0)
 				{
 					$files = $GLOBALS['database']->query(array(
@@ -358,7 +358,7 @@ class db_amazon extends db_file
 			}
 			elseif(db_movies::handles($request['file']))
 			{
-				$movie = db_movies::get(array('file' => $request['file']), $tmp_count, $error);
+				$movie = db_movies::get(array('file' => $request['file'], 'video_id' => (isset($request['video_id'])?$request['video_id']:0)), $tmp_count, $error);
 				if(count($movie) > 0)
 				{
 					$files = $GLOBALS['database']->query(array(

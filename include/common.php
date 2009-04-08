@@ -451,6 +451,16 @@ function getIDsFromRequest($request, &$selected)
 	if(count($selected) == 0) unset($selected);
 }
 
+function getIDKeys()
+{
+	$id_keys = array_flip(db_ids::columns());
+	unset($id_keys['id']);
+	unset($id_keys['Filepath']);
+	unset($id_keys['Hex']);
+	
+	return $id_keys;
+}
+
 // notify of ascii problems when reading data
 function utf8_is_ascii($str) {
 	

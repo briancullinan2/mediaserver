@@ -73,22 +73,17 @@ if($files === false)
 
 $order_keys_values = array();
 
+// the ids module will do the replacement of the ids
+$files = db_ids::get(array('cat' => $_REQUEST['cat']), &$tmp_count, &$tmp_error, $files);
+
 // get all the other information from other modules
-foreach($files as $index => &$file)
+foreach($files as $index => $file)
 {
-	// replace id with centralized id
-	if(USE_DATABASE)
-	{
-		// use the module_id column to look up keys
-		$ids = db_ids::get(array('file' => $file['Filepath'], 'search_' . constant($_REQUEST['cat'] . '::DATABASE') . '_id' => '=' . $file['id'] . '='), &$tmp_count, &$tmp_error);
-		if(count($ids) > 0)
-		{
-			$files[$index] = array_merge($ids[0], $files[$index]);
-			
-			// also set id to centralize id
-			$files[$index]['id'] = $ids[0]['id'];
-		}
-	}
+	$tmp_request = array();
+	$tmp_request['file'] = $file['Filepath'];
+
+	// merge with tmp_request to look up more information
+	$tmp_request = array_merge(array_intersect_key($file, getIDKeys()), $tmp_request);
 	
 	// short results to not include information from all the modules
 	if(!isset($_REQUEST['short']))
@@ -98,7 +93,7 @@ foreach($files as $index => &$file)
 		{
 			if($module != 'db_watch_list' && $module != 'db_ids' && $module != $_REQUEST['cat'] && call_user_func_array($module . '::handles', array($file['Filepath'], $file)))
 			{
-				$return = call_user_func_array($module . '::get', array(array('file' => $file['Filepath']), &$tmp_count, &$tmp_error));
+				$return = call_user_func_array($module . '::get', array($tmp_request, &$tmp_count, &$tmp_error));
 				if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
 			}
 		}

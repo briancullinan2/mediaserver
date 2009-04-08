@@ -27,16 +27,25 @@ $error = '';
 $files = call_user_func_array($_REQUEST['cat'] . '::get', array($_REQUEST, &$count, &$error));
 
 $files_length = count($files);
+
+// the ids module will do the replacement of the ids
+$files = db_ids::get(array('cat' => $_REQUEST['cat']), &$tmp_count, &$tmp_error, $files);
+
 // get all the other information from other modules
 for($index = 0; $index < $files_length; $index++)
 {
 	$file = $files[$index];
+	$tmp_request = array();
+	$tmp_request['file'] = $file['Filepath'];
+
+	// merge with tmp_request to look up more information
+	$tmp_request = array_merge(array_intersect_key($file, getIDKeys()), $tmp_request);
 	
 	// replace id with centralized id
-	if(USE_DATABASE)
+	if(count(array_intersect_key($file, $id_keys)) == 0)
 	{
 		// use the module_id column to look up keys
-		$ids = db_ids::get(array('file' => $file['Filepath'], 'search_' . constant($_REQUEST['cat'] . '::DATABASE') . '_id' => '=' . $file['id'] . '='), &$tmp_count, &$tmp_error);
+		$ids = db_ids::get(array('file' => $file['Filepath'], constant($_REQUEST['cat'] . '::DATABASE') . '_id' => $file['id']), &$tmp_count, &$tmp_error);
 		if(count($ids) > 0)
 		{
 			$files[$index] = array_merge($ids[0], $files[$index]);
@@ -50,7 +59,7 @@ for($index = 0; $index < $files_length; $index++)
 	{
 		if($module != 'db_ids' && $module != $_REQUEST['cat'] && call_user_func_array($module . '::handles', array($file['Filepath'])))
 		{
-			$return = call_user_func_array($module . '::get', array(array('file' => $file['Filepath']), &$tmp_count, &$tmp_error));
+			$return = call_user_func_array($module . '::get', array($tmp_request, &$tmp_count, &$tmp_error));
 			if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
 		}
 	}

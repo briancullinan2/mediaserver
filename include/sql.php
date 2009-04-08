@@ -47,7 +47,7 @@ class sql_global
 			{
 				$tables_created[] = constant($module . '::DATABASE');
 				if(!isset($struct['id']))
-					$query .= 'id BIGINT NOT NULL AUTO_INCREMENT, PRIMARY KEY (id),';
+					$query .= 'id INT NOT NULL AUTO_INCREMENT, PRIMARY KEY (id),';
 				foreach($struct as $column => $type)
 				{
 					if(strpos($type, ' ') === false)
@@ -110,7 +110,7 @@ class sql_global
 					
 					// remove unnessicary columns
 					if(!isset($struct['id']))
-						$struct['id'] = 'BIGINT NOT NULL AUTO_INCREMENT, PRIMARY KEY (id)';
+						$struct['id'] = 'INT NOT NULL AUTO_INCREMENT, PRIMARY KEY (id)';
 					foreach($columns as $i => $key)
 					{
 						if(!isset($struct[$key]))
@@ -172,7 +172,7 @@ class sql_global
 			else
 				$request['group_by'] = join(',', $columns);
 		}
-			
+		
 		// which columns to search
 		if( isset($request['columns']) && !in_array($request['columns'], $columns) )
 		{
@@ -188,10 +188,23 @@ class sql_global
 			else
 				$request['columns'] = join(',', $columns);
 		}
+		
+		// if an id is provided only find that id, discard items
 		if( isset($request['id']) )
 			$request['item'] = $request['id'];
 			
+		// validate ids
 		getIDsFromRequest($request, $request['selected']);
+		
+		// validate database ids
+		foreach($GLOBALS['tables'] as $i => $table)
+		{
+			if(isset($request[$table . '_id']) && ($request[$table . '_id'] == 0 || !is_numeric($request[$table . '_id'])))
+			{
+				unset($request[$table . '_id']);
+			}
+		}
+		
 		if(isset($request['group_by'])) $props['GROUP'] = $request['group_by'];
 		if(isset($request['order_trimmed']) && $request['order_trimmed'] == true)
 		{

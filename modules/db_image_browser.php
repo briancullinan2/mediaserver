@@ -53,6 +53,7 @@ class db_image_browser extends db_image
 	
 	static function get($request, &$count, &$error)
 	{
+		if(isset($request['file'])) return array();
 		return parent::get($request, $count, $error);
 	}
 	

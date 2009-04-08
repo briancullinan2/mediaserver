@@ -23,7 +23,7 @@ class db_file
 	static function struct()
 	{
 		return array(
-			'id' => 'BIGINT NOT NULL AUTO_INCREMENT, PRIMARY KEY(id)',
+			'id' => 'INT NOT NULL AUTO_INCREMENT, PRIMARY KEY(id)',
 			'Filename' => 'TEXT',
 			'Filemime' => 'TEXT',
 			'Filesize' => 'BIGINT',
@@ -177,6 +177,9 @@ class db_file
 		
 		if(USE_DATABASE)
 		{
+			// get columns to use in various places
+			$columns = call_user_func($module . '::columns');
+			
 //---------------------------------------- Selection ----------------------------------------\\
 			// do validation! for the fields we use
 			$GLOBALS['database']->validate($request, $props, $module);
@@ -268,6 +271,12 @@ class db_file
 								$props['WHERE'] .= 'LEFT(Filepath, ' . strlen($request['dir']) . ') = "' . addslashes($request['dir']) . '" AND LOCATE("/", Filepath, ' . (strlen($request['dir'])+1) . ') = LENGTH(Filepath)';
 							else
 								$props['WHERE'] .= 'LEFT(Filepath, ' . strlen($request['dir']) . ') = "' . addslashes($request['dir']) . '" AND (LOCATE("/", Filepath, ' . (strlen($request['dir'])+1) . ') = 0 OR LOCATE("/", Filepath, ' . (strlen($request['dir'])+1) . ') = LENGTH(Filepath)) AND Filepath != "' . addslashes($request['dir']) . '"';
+							
+							// put folders at top if the module supports a filetype
+							if(in_array('Filetype', $columns))
+							{
+								$props['ORDER'] = '(Filetype = "FOLDER") DESC,' . (isset($props['ORDER'])?$props['ORDER']:'');
+							}
 						}
 						// show all results underneath directory
 						else
@@ -303,19 +312,30 @@ class db_file
 				if(USE_ALIAS == true)
 					$request['file'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']);
 				
-				// make sure file exists if we are using the file module
-				if($module != 'db_file' || file_exists(realpath($request['file'])) !== false)
+				// if the id is available then use that instead
+				if(isset($request[constant($module . '::DATABASE') . '_id']) && $request[constant($module . '::DATABASE') . '_id'] != 0)
 				{
-				
 					if(!isset($props['WHERE'])) $props['WHERE'] = '';
 					elseif($props['WHERE'] != '') $props['WHERE'] .= ' AND ';
 					
-					// add file to where
-					$props['WHERE'] .= ' Filepath = "' . addslashes($request['file']) . '"';
+					// add single id to where
+					$props['WHERE'] .= ' id = ' . $request[constant($module . '::DATABASE') . '_id'];					
 				}
 				else
 				{
-					$error = 'File does not exist!';
+					// make sure file exists if we are using the file module
+					if($module != 'db_file' || file_exists(realpath($request['file'])) !== false)
+					{					
+						if(!isset($props['WHERE'])) $props['WHERE'] = '';
+						elseif($props['WHERE'] != '') $props['WHERE'] .= ' AND ';
+						
+						// add file to where
+						$props['WHERE'] .= ' Filepath = "' . addslashes($request['file']) . '"';
+					}
+					else
+					{
+						$error = 'File does not exist!';
+					}
 				}
 				
 				// these variables are no longer nessesary
@@ -325,7 +345,6 @@ class db_file
 
 //---------------------------------------- Search All ----------------------------------------\\
 			// add where includes
-			$columns = call_user_func($module . '::columns');
 			if(isset($request['search']) && $request['search'] != '')
 			{
 				if(!isset($props['WHERE'])) $props['WHERE'] = '';
@@ -383,6 +402,7 @@ class db_file
 					// sort items by inclusive, exclusive, and string size
 					// rearrange pieces, but keep track of index so we can sort them correctly
 					uasort($pieces, 'termSort');
+					$length = strlen(join(' ', $pieces));
 					
 					foreach($columns as $i => $column)
 					{
@@ -391,6 +411,7 @@ class db_file
 							$first_or = false;
 							$count = 0;
 							$part = '';
+							$props['ORDER'] = 'r_count' . $i . ' ASC,' . (isset($props['ORDER'])?$props['ORDER']:'');
 							foreach($pieces as $j => $piece)
 							{
 								if($piece[0] == '+')
@@ -422,6 +443,7 @@ class db_file
 								$props['ORDER'] = 'result' . $i . (count($pieces) - $j - 1) . ' DESC,' . (isset($props['ORDER'])?$props['ORDER']:'');
 								$count++;
 							}
+							$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',ABS(LENGTH(' . $column . ') - ' . $length . ') as r_count' . $i;
 							$parts[] = $part;
 						}
 					}
@@ -499,9 +521,11 @@ class db_file
 						// sort items by inclusive, exclusive, and string size
 						// rearrange pieces, but keep track of index so we can sort them correctly
 						uasort($pieces, 'termSort');
+						$length = strlen(join(' ', $pieces));
 					
 						$first_or = false;
 						$count = 0;
+						$props['ORDER'] = 'r_count' . $i . ' ASC,' . (isset($props['ORDER'])?$props['ORDER']:'');
 						foreach($pieces as $j => $piece)
 						{
 							if($piece[0] == '+')
@@ -533,6 +557,7 @@ class db_file
 							$props['ORDER'] = 'result' . $i . (count($pieces) - $j - 1) . ' DESC,' . (isset($props['ORDER'])?$props['ORDER']:'');
 							$count++;
 						}
+						$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',ABS(LENGTH(' . $column . ') - ' . $length . ') as r_count' . $i;
 					}
 					else
 					{
