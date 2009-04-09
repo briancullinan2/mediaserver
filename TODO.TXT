@@ -1,3 +1,8 @@
+2009-04-09
+Store the remote_address in the session, and if it doesn't match up with what is in the session then kill the session and die
+Create a unique id and insert it into forms, this is required when the form is submitted
+Create a list of DB_MODULE_ENABLED and check for ones set to false, exclude that module from the module list and don't allow use of it, do this before including the file
+
 2009-04-05 (Full)
 More compatibility testing with clients
 ------------- GENERAL TODO -------------
