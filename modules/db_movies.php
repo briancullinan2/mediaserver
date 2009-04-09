@@ -57,10 +57,11 @@ class db_movies extends db_file
 			}
 		}
 		
+		$tokens = tokenize($last_path);
+		
 		// if it is an extracted dvd image
 		if(is_dir($last_path))
 		{
-			$tokens = tokenize($last_path);
 			if(in_array('video_ts', $tokens['Unique']))
 			{
 			}
