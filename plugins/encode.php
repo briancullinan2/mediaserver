@@ -2,7 +2,12 @@
 set_time_limit(0);
 ignore_user_abort(1);
 
+$fp = fopen('/tmp/test.txt', 'a');
+fwrite($fp, var_export($_SERVER, true));
+fclose($fp);
+
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
+session_cache_limiter("nocache");
 
 // if none of the following is defined, tokenize and search
 if(!isset($_REQUEST['id']) && !isset($_REQUEST['item']) && !isset($_REQUEST['on']) && !isset($_REQUEST['file']) && !isset($_REQUEST['search']))
@@ -15,7 +20,7 @@ if(!isset($_REQUEST['id']) && !isset($_REQUEST['item']) && !isset($_REQUEST['on'
 if(!isset($_REQUEST['encode']))
 {
 	// use client type prediction
-	if(preg_match('/.*(windows-media-player|NSplayer).*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
+	if(preg_match('/.*(windows-media-player|NSplayer|WMPCE).*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
 	{
 		$_REQUEST['encode'] = 'WMV';
 	}
@@ -103,7 +108,7 @@ if(isset($_SESSION)) session_write_close();
 switch($_REQUEST['encode'])
 {
 	case 'MP4':
-		header('Content-Type: video/mp4');
+	header('Content-Type: video/mp4');
 		break;
 	case 'MPG':
 		header('Content-Type: video/mpg');
@@ -144,30 +149,33 @@ switch($_REQUEST['encode'])
 {
 	case 'MP4':
 		$_REQUEST['%VC'] = 'mp4v';
-		$_REQUEST['%AC'] = 'mp4a';
-		$_REQUEST['%VB'] = 512;
-		$_REQUEST['%AB'] = 64;
-		$_REQUEST['%SR'] = 44100;
-		$_REQUEST['%CH'] = 2;
-		$_REQUEST['%MX'] = 'ts';
-		break;
-	case 'MPG':
-		$_REQUEST['%VC'] = 'mp1v';
-		$_REQUEST['%AC'] = 'mpga';
-		$_REQUEST['%VB'] = 512;
-		$_REQUEST['%AB'] = 64;
-		$_REQUEST['%SR'] = 44100;
-		$_REQUEST['%CH'] = 2;
-		$_REQUEST['%MX'] = 'ts';
-		break;
-	case 'WMV':
-		$_REQUEST['%VC'] = 'WMV2';
 		$_REQUEST['%AC'] = 'mp3';
-		$_REQUEST['%VB'] = 512;
+		$_REQUEST['%VB'] = 384;
 		$_REQUEST['%AB'] = 64;
 		$_REQUEST['%SR'] = 44100;
 		$_REQUEST['%CH'] = 2;
 		$_REQUEST['%MX'] = 'asf';
+		$_REQUEST['%SC'] = .5;
+		break;
+	case 'MPG':
+		$_REQUEST['%VC'] = 'mpgv';
+		$_REQUEST['%AC'] = 'mpga';
+		$_REQUEST['%VB'] = 384;
+		$_REQUEST['%AB'] = 64;
+		$_REQUEST['%SR'] = 44100;
+		$_REQUEST['%CH'] = 2;
+		$_REQUEST['%MX'] = 'ts';
+		$_REQUEST['%SC'] = .5;
+		break;
+	case 'WMV':
+		$_REQUEST['%VC'] = 'WMV2';
+		$_REQUEST['%AC'] = 'mp3';
+		$_REQUEST['%VB'] = 384;
+		$_REQUEST['%AB'] = 64;
+		$_REQUEST['%SR'] = 44100;
+		$_REQUEST['%CH'] = 2;
+		$_REQUEST['%MX'] = 'asf';
+		$_REQUEST['%SC'] = .5;
 		break;
 	case 'MP4A':
 		$_REQUEST['%VC'] = 'dummy';
@@ -177,6 +185,7 @@ switch($_REQUEST['encode'])
 		$_REQUEST['%SR'] = 44100;
 		$_REQUEST['%CH'] = 2;
 		$_REQUEST['%MX'] = 'ts';
+		$_REQUEST['%SC'] = 1;
 		break;
 	case 'MP3':
 		$_REQUEST['%VC'] = 'dummy';
@@ -186,6 +195,7 @@ switch($_REQUEST['encode'])
 		$_REQUEST['%SR'] = 44100;
 		$_REQUEST['%CH'] = 2;
 		$_REQUEST['%MX'] = 'dummy';
+		$_REQUEST['%SC'] = 1;
 		break;
 	case 'WMA':
 		$_REQUEST['%VC'] = 'dummy';
@@ -195,11 +205,12 @@ switch($_REQUEST['encode'])
 		$_REQUEST['%SR'] = 44100;
 		$_REQUEST['%CH'] = 2;
 		$_REQUEST['%MX'] = 'asf';
+		$_REQUEST['%SC'] = 1;
 		break;
 }
 
 // validate each individually, these also go to default if there is invalid input! (in this case it uses mpg1 settings)
-if(!isset($_REQUEST['%VC']) || !in_array($_REQUEST['%VC'], array('mp4v', 'mp1v', 'WMV2', 'dummy')))
+if(!isset($_REQUEST['%VC']) || !in_array($_REQUEST['%VC'], array('mp4v', 'mp1v', 'WMV2', 'DIV3','dummy')))
 	$_REQUEST['%VC'] = 'mp1v';
 	
 if(!isset($_REQUEST['%AC']) || !in_array($_REQUEST['%AC'], array('mp4a', 'mpga', 'mp3', 'wma2', 'dummy')))
@@ -213,15 +224,74 @@ if(!isset($_REQUEST['%AB']) || !is_numeric($_REQUEST['%AB']))
 
 if(!isset($_REQUEST['%SR']) || !is_numeric($_REQUEST['%SR']))
 	$_REQUEST['%SR'] = 44100;
+
+if(!isset($_REQUEST['%SC']) || !is_numeric($_REQUEST['%SC']))
+	$_REQUEST['%SC'] = 1;
 	
 if(!isset($_REQUEST['%CH']) || !is_numeric($_REQUEST['%CH']))
 	$_REQUEST['%CH'] = 2;
 
-if(!isset($_REQUEST['%MX']) || !in_array($_REQUEST['%MX'], array('ts', 'ps', 'mpeg1', 'asf', 'mp4', 'dummy')))
+if(!isset($_REQUEST['%MX']) || !in_array($_REQUEST['%MX'], array('ts', 'ps', 'mpeg1', 'asf', 'mp4', 'ogg', 'dummy')))
 	$_REQUEST['%MX'] = 'mpeg1';
 	
 if(!isset($_REQUEST['%TO']) || !is_numeric($_REQUEST['%TO']))
 	$_REQUEST['%TO'] = 0;
+
+// make up some header to takes the length of the media into consideration
+if(isset($files[0]['Length']))
+{
+	$files[0]['Filesize'] = ($files[0]['Length'] * ($_REQUEST['%VB'] * 128 + $_REQUEST['%AB'] * 128)) + 1024;
+}
+if(isset($files[0]['Filesize']))
+{				
+	// check for range request
+	if(isset($_SERVER['HTTP_RANGE']))
+	{
+		list($size_unit, $range_orig) = explode('=', $_SERVER['HTTP_RANGE'], 2);
+
+		if ($size_unit == 'bytes')
+		{
+			// multiple ranges could be specified at the same time, but for simplicity only serve the first range
+			// http://tools.ietf.org/id/draft-ietf-http-range-retrieval-00.txt
+			if(strpos($range_orig, ',') !== false)
+				list($range, $extra_ranges) = explode(',', $range_orig, 2);
+			else
+				$range = $range_orig;
+		}
+		else
+		{
+			$range = '-';
+		}
+	}
+	else
+	{
+		$range = '-';
+	}
+	
+	// figure out download piece from range (if set)
+	list($seek_start, $seek_end) = explode('-', $range, 2);
+
+	// set start and end based on range (if set), else set defaults
+	// also check for invalid ranges.
+	$seek_end = (empty($seek_end)) ? ($files[0]['Filesize'] - 1) : min(abs(intval($seek_end)),($files[0]['Filesize'] - 1));
+	//$seek_end = $file['Filesize'] - 1;
+	$seek_start = (empty($seek_start) || $seek_end < abs(intval($seek_start))) ? 0 : max(abs(intval($seek_start)),0);
+	
+	// Only send partial content header if downloading a piece of the file (IE workaround)
+	if ($seek_start > 0 || $seek_end < ($files[0]['Filesize'] - 1))
+	{
+		header('HTTP/1.1 206 Partial Content');
+	}
+
+	header('Accept-Ranges: bytes');
+	//header('Content-Range: bytes ' . $seek_start . '-' . $seek_end . '/' . $files[0]['Filesize']);
+
+	//headers for IE Bugs (is this necessary?)
+	header("Cache-Control: no-cache, must-revalidate");  
+	header("Pragma: public");
+
+	header('Content-Length: ' . ($seek_end - $seek_start + 1));
+}
 
 // replace the argument string with the contents of $_REQUEST
 //  without validation this is VERY DANGEROUS!
@@ -238,14 +308,9 @@ $process = proc_open($cmd, $descriptorspec, $pipes, dirname(ENCODE), NULL); //ar
 stream_set_blocking($pipes[0], 0);
 stream_set_blocking($pipes[1], 0);
 
-// make up some header to takes the length of the media into consideration
-if(isset($files[0]['Length']))
-{
-	//$length = ($files[0]['Length'] * ($_REQUEST['%VB'] * 1024 + $_REQUEST['%AB'] * 1024)) + 4 * 1024;
-	//header('Content-Length: ' . $length);
-}
-
 $fp = call_user_func_array($_REQUEST['cat'] . '::out', array($_REQUEST['%IF']));
+if(isset($seek_start))
+	fseek($fp, $seek_start);
 //$fp = fopen($_REQUEST['%IF'], 'rb');
 $php_out = fopen('php://output', 'wb');
 

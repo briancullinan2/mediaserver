@@ -83,7 +83,7 @@ define('CONVERT_ARGS', 			   '"%IF" %FM:-'); // image magick's convert program
 // More options can be added but you will have to do some scripting in the encode.php plugin
 // remember ffmpeg uses generally the same codec names as the default vlc, however custom commands may be needed to convert to each type
 define('ENCODE',                                'C:\Program Files\VideoLAN\VLC\vlc.exe'); // a program that can convert video and audio streams
-define('ENCODE_ARGS',                           '"%IF" :sout=#transcode{vcodec=%VC,acodec=%AC,vb=%VB,ab=%AB,samplerate=%SR,channels=%CH,deinterlace,audio-sync}:std{mux=%MX,access=file,dst=-} vlc://quit'); // a program that can convert video and audio streams
+define('ENCODE_ARGS',                           '"%IF" :sout=#transcode{vcodec=%VC,acodec=%AC,vb=%VB,ab=%AB,samplerate=%SR,channels=%CH,audio-sync,scale=%SC,fps=15}:std{mux=%MX,access=file,dst=-} vlc://quit'); // a program that can convert video and audio streams
 
 // the arguments to use with archive are as follows
 /*
