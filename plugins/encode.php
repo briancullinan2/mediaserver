@@ -108,7 +108,7 @@ if(isset($_SESSION)) session_write_close();
 switch($_REQUEST['encode'])
 {
 	case 'MP4':
-	header('Content-Type: video/mp4');
+		//header('Content-Type: video/mp4');
 		break;
 	case 'MPG':
 		header('Content-Type: video/mpg');
@@ -140,7 +140,7 @@ if(!isset($_REQUEST['%IF']) && isset($_REQUEST['id']))
 // first filter out all the unwanted request vars
 foreach($_REQUEST as $key => $value)
 {
-	if(!in_array($key, array('encode', 'cat', '%IF', '%VC', '%AC', '%VB', '%AB', '%SR', '%CH', '%MX', '%TO')))
+	if(!in_array($key, array('encode', 'cat', '%IF', '%VC', '%AC', '%VB', '%AB', '%SR', '%CH', '%MX', '%TO', '%SC', '%FS')))
 		unset($_REQUEST[$key]);
 }
 
@@ -156,6 +156,7 @@ switch($_REQUEST['encode'])
 		$_REQUEST['%CH'] = 2;
 		$_REQUEST['%MX'] = 'asf';
 		$_REQUEST['%SC'] = .5;
+		$_REQUEST['%FS'] = 15;
 		break;
 	case 'MPG':
 		$_REQUEST['%VC'] = 'mpgv';
@@ -166,6 +167,7 @@ switch($_REQUEST['encode'])
 		$_REQUEST['%CH'] = 2;
 		$_REQUEST['%MX'] = 'ts';
 		$_REQUEST['%SC'] = .5;
+		$_REQUEST['%FS'] = 0;
 		break;
 	case 'WMV':
 		$_REQUEST['%VC'] = 'WMV2';
@@ -176,6 +178,7 @@ switch($_REQUEST['encode'])
 		$_REQUEST['%CH'] = 2;
 		$_REQUEST['%MX'] = 'asf';
 		$_REQUEST['%SC'] = .5;
+		$_REQUEST['%FS'] = 15;
 		break;
 	case 'MP4A':
 		$_REQUEST['%VC'] = 'dummy';
@@ -236,6 +239,9 @@ if(!isset($_REQUEST['%MX']) || !in_array($_REQUEST['%MX'], array('ts', 'ps', 'mp
 	
 if(!isset($_REQUEST['%TO']) || !is_numeric($_REQUEST['%TO']))
 	$_REQUEST['%TO'] = 0;
+	
+if(!isset($_REQUEST['%FS']) || !is_numeric($_REQUEST['%FS']))
+	$_REQUEST['%FS'] = 0;
 
 // make up some header to takes the length of the media into consideration
 if(isset($files[0]['Length']))
@@ -280,17 +286,17 @@ if(isset($files[0]['Filesize']))
 	// Only send partial content header if downloading a piece of the file (IE workaround)
 	if ($seek_start > 0 || $seek_end < ($files[0]['Filesize'] - 1))
 	{
-		header('HTTP/1.1 206 Partial Content');
+		//header('HTTP/1.1 206 Partial Content');
 	}
 
-	header('Accept-Ranges: bytes');
+	//header('Accept-Ranges: bytes');
 	//header('Content-Range: bytes ' . $seek_start . '-' . $seek_end . '/' . $files[0]['Filesize']);
 
 	//headers for IE Bugs (is this necessary?)
-	header("Cache-Control: no-cache, must-revalidate");  
-	header("Pragma: public");
+	//header("Cache-Control: no-cache, must-revalidate");  
+	//header("Pragma: public");
 
-	header('Content-Length: ' . ($seek_end - $seek_start + 1));
+	//header('Content-Length: ' . ($seek_end - $seek_start + 1));
 }
 
 // replace the argument string with the contents of $_REQUEST
@@ -309,8 +315,6 @@ stream_set_blocking($pipes[0], 0);
 stream_set_blocking($pipes[1], 0);
 
 $fp = call_user_func_array($_REQUEST['cat'] . '::out', array($_REQUEST['%IF']));
-if(isset($seek_start))
-	fseek($fp, $seek_start);
 //$fp = fopen($_REQUEST['%IF'], 'rb');
 $php_out = fopen('php://output', 'wb');
 

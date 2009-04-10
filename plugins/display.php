@@ -5,14 +5,9 @@
 // load template
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
-// load template to create output
-if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
-	$smarty = new Smarty();
-$smarty->compile_dir = LOCAL_ROOT . 'templates_c' . DIRECTORY_SEPARATOR;
-
 // get all columns from every module
 $columns = getAllColumns();
-$smarty->assign('columns', $columns);
+$GLOBALS['smarty']->assign('columns', getAllColumns());
 
 if(isset($_REQUEST['display']))
 {
@@ -91,14 +86,17 @@ if(isset($_REQUEST['display']))
 
 // set the search vars in the template
 if(isset($_SESSION['display']))
-	$smarty->assign('display', $_SESSION['display']);
+	$GLOBALS['smarty']->assign('display', $_SESSION['display']);
 
-
-$smarty->assign('templates', $GLOBALS['templates']);
 if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
 {
-	header('Content-Type: ' . getMime($GLOBALS['templates']['TEMPLATE_DISPLAY']));
-	$smarty->display($GLOBALS['templates']['TEMPLATE_DISPLAY']);
+	if(getExt($GLOBALS['templates']['TEMPLATE_DISPLAY']) == 'php')
+		@include $GLOBALS['templates']['TEMPLATE_DISPLAY'];
+	else
+	{
+		header('Content-Type: ' . getMime($GLOBALS['templates']['TEMPLATE_DISPLAY']));
+		$GLOBALS['smarty']->display($GLOBALS['templates']['TEMPLATE_DISPLAY']);
+	}
 }
 
 ?>

@@ -2,23 +2,16 @@
 
 // handle selecting of files
 
+// Variables Used:
+//  files, total_count, error, select
+// Shared Variables:
+//  columns, templates
 
 // load template
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
-
-// load template to create output
-if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
-	$smarty = new Smarty();
-$smarty->compile_dir = LOCAL_ROOT . 'templates_c' . DIRECTORY_SEPARATOR;
-	
-$smarty->compile_check = true;
-$smarty->debugging = false;
-$smarty->caching = false;
-$smarty->force_compile = true;
 	
 // get all columns from every module
 $columns = getAllColumns();
-$smarty->assign('columns', $columns);
 
 // check if trying to change selected items
 if(isset($_REQUEST['select']))
@@ -123,22 +116,26 @@ if($_REQUEST['order'] != $_REQUEST['order_by'])
 	array_multisort($files, SORT_ASC, $sorting, $order_keys_values);
 }
 
-$smarty->assign('files', $files);
+$GLOBALS['smarty']->assign('files', $files);
 
-$smarty->assign('total_count', $count);
+$GLOBALS['smarty']->assign('total_count', $count);
 
-$smarty->assign('error', $error);
+$GLOBALS['smarty']->assign('error', $error);
 
 // set select variables in template
 // set them here because the keys in the list array are recursive
 if(isset($_SESSION['select']))
-	$smarty->assign('select', $_SESSION['select']);
+	$GLOBALS['smarty']->assign('select', $_SESSION['select']);
 
-$smarty->assign('templates', $GLOBALS['templates']);
 if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
 {
-	header('Content-Type: ' . getMime($GLOBALS['templates']['TEMPLATE_SELECT']));
-	$smarty->display($GLOBALS['templates']['TEMPLATE_SELECT']);
+	if(getExt($GLOBALS['templates']['TEMPLATE_SELECT']) == 'php')
+		@include $GLOBALS['templates']['TEMPLATE_SELECT'];
+	else
+	{
+		header('Content-Type: ' . getMime($GLOBALS['templates']['TEMPLATE_SELECT']));
+		$GLOBALS['smarty']->display($GLOBALS['templates']['TEMPLATE_SELECT']);
+	}
 }
 
 

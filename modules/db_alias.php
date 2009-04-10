@@ -5,7 +5,7 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATO
 
 require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'db_file.php';
 
-// music handler
+// don't actually do anything in this class, this is just used for holding the database, and the get() method
 class db_alias extends db_file
 {
 	const DATABASE = 'alias';

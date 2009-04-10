@@ -29,6 +29,10 @@ if(!isset($no_setup) || !$no_setup == true)
 
 function setup()
 {
+	// this is where most of the initialization occurs, some global variables are set up for other pages and modules to use
+	//  first the variables are parsed out of the path, just incase mod_rewrite isn't enabled
+	//  in order of importance, the database is set up, the modules are loaded, the aliases and watch list are loaded, the template system is loaded
+	
 	// first fix the REQUEST_URI and pull out what is meant to be pretty dirs
 	if(isset($_SERVER['PATH_INFO']))
 	{
@@ -74,6 +78,12 @@ function setup()
 	{
 		include_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'mysql.php';
 	}
+		
+	// set up database to be used everywhere
+	if(USE_DATABASE)
+		$GLOBALS['database'] = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+	else
+		$GLOBALS['database'] = NULL;
 	
 	// some modules depend on the mime-types in order to determine if it can handle that type of file
 	loadMime();
@@ -87,15 +97,18 @@ function setup()
 			// filter out only the modules for our USE_DATABASE setting
 			if ($file[0] != '.' && !is_dir(LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . $file))
 			{
-				// include all the modules
-				require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . $file;
-				$class_name = substr($file, 0, strrpos($file, '.'));
-				
-				// only use the module if it is properly defined
-				if(class_exists($class_name))
+				if(!defined(strtoupper($file) . '_ENABLED') || constant(strtoupper($file) . '_ENABLED') != false)
 				{
-					if(substr($file, 0, 3) == (USE_DATABASE?'db_':'fs_'))
-						$tmp_modules[] = $class_name;
+					// include all the modules
+					require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . $file;
+					$class_name = substr($file, 0, strrpos($file, '.'));
+					
+					// only use the module if it is properly defined
+					if(class_exists($class_name))
+					{
+						if(substr($file, 0, 3) == (USE_DATABASE?'db_':'fs_'))
+							$tmp_modules[] = $class_name;
+					}
 				}
 			}
 		}
@@ -129,20 +142,6 @@ function setup()
 			$GLOBALS['tables'][] = constant($module . '::DATABASE');
 	}
 	$GLOBALS['tables'] = array_values(array_unique($GLOBALS['tables']));
-	
-	// merge some session variables with the request so modules only have to look in one place
-	if(isset($_SESSION['display']))
-		$_REQUEST = array_merge($_SESSION['display'], $_REQUEST);
-	
-	//set the detail for the template
-	if( !isset($_REQUEST['detail']) || !is_numeric($_REQUEST['detail']) )
-		$_REQUEST['detail'] = 0;
-		
-	// set up database to be used everywhere
-	if(USE_DATABASE)
-		$GLOBALS['database'] = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
-	else
-		$GLOBALS['database'] = NULL;
 	
 	// get the aliases to use to replace parts of the filepath
 	$GLOBALS['paths_regexp'] = array();
@@ -186,9 +185,10 @@ function setup()
 			}
 		}
 		
-		// set the template if a permenent one isn't already set in the settings file
+		// don't use a template if they comment out this define, this enables the tiny remote version
 		if(!defined('LOCAL_TEMPLATE'))
 		{
+			// set the template if a permenent one isn't already set in the settings file
 			if(isset($_REQUEST['template']) && in_array($_REQUEST['template'], $GLOBALS['templates']))
 			{
 				if(substr($_REQUEST['template'], strlen($_REQUEST['template']) - 1, 1) != DIRECTORY_SEPARATOR)
@@ -227,9 +227,24 @@ function setup()
 		
 		if(file_exists(LOCAL_ROOT . LOCAL_TEMPLATE . 'config.php'))
 			require_once LOCAL_ROOT . LOCAL_TEMPLATE . 'config.php';
+			
+		// start smarty global for plugins to use
+		$GLOBALS['smarty'] = new Smarty();
+		$GLOBALS['smarty']->compile_dir = LOCAL_ROOT . 'templates_c' . DIRECTORY_SEPARATOR;
+		$GLOBALS['smarty']->compile_check = true;
+		$GLOBALS['smarty']->debugging = false;
+		$GLOBALS['smarty']->caching = false;
+		$GLOBALS['smarty']->force_compile = true;
+		
+		// assign some shared variables
+		$GLOBALS['smarty']->assign('templates', $GLOBALS['templates']);
+		$GLOBALS['smarty']->assign('columns', getAllColumns());
+		
 	}
 }
 
+// check if a module handles a certain type of files
+//  this is a useful call for templates to use because it provides short syntax
 function handles($file, $module)
 {
 	if(class_exists((USE_DATABASE?'db_':'fs_') . $module))
@@ -296,6 +311,7 @@ function tokenize($string)
 	return $return;
 }
 
+// sorting function for terms in a keyword search
 function termSort($a, $b)
 {
 	if(($a[0] == '+' && $a[0] == $b[0]) || ($a[0] == '-' && $a[0] == $b[0]) || ($a[0] != '+' && $a[0] != '-' && $b[0] != '+' && $b[0] != '-'))
@@ -317,6 +333,7 @@ function termSort($a, $b)
 	}
 }
 
+// parses the path inside of a file, useful to modules like archive and diskimage
 function parseInner($file, &$last_path, &$inside_path)
 {
 	$paths = split('/', $file);
@@ -338,62 +355,8 @@ function parseInner($file, &$last_path, &$inside_path)
 	if($last_path[strlen($last_path)-1] == '/') $last_path = substr($last_path, 0, strlen($last_path)-1);
 }
 
-// get all columns from every modules
-function getAllColumns()
-{
-	$columns = array();
-	foreach($GLOBALS['modules'] as $i => $module)
-	{
-		if(constant($module . '::INTERNAL') == false)
-			$columns = array_merge($columns, array_flip(call_user_func($module . '::columns')));
-	}
-	
-	$columns = array_keys($columns);
-
-	return $columns;
-}
-
-function getRequestString($request)
-{
-	$request_str = '';
-	foreach($request as $key => $value) $request_str .= '&amp;' . $key . '=' . $value;
-	return substr($request_str, 5, strlen($request_str) - 5);
-}
-
-
-function parseCommandArgs($string)
-{
-	$args = array();
-	$current = '';
-	$quote_switch = false;
-	for($i = 0; $i < strlen($string); $i++)
-	{
-		if(substr($string, $i, 1) == ' ' && $quote_switch == false)
-		{
-			$args[] = $current;
-			$current = '';
-		}
-		elseif(substr($string, $i, 1) == '"')
-		{
-			$quote_switch = !$quote_switch;
-		}
-		else
-		{
-			$current .= substr($string, $i, 1);
-		}
-	}
-	if($current != '')
-		$args[] = $current;
-		
-	return $args;
-}
-
-function roundFileSize($dirsize)
-{
-	$dirsize = ( $dirsize < 1024 ) ? ($dirsize . " B") : (( $dirsize < 1048576 ) ? (round($dirsize / 1024, 2) . " KB") : (( $dirsize < 1073741824 ) ? (round($dirsize / 1048576, 2) . " MB") : (( $dirsize < 1099511627776 ) ? (round($dirsize / 1073741824, 2) . " GB") : (round($dirsize / 1099511627776, 2) . " TB") ) ) );
-	return $dirsize;
-}
-
+// combine and manipulate the IDs from a request
+//  this function looks for item, on, and off, variables in a request and generates a list of IDs
 function getIDsFromRequest($request, &$selected)
 {
 	if(!isset($selected))
@@ -451,6 +414,66 @@ function getIDsFromRequest($request, &$selected)
 	if(count($selected) == 0) unset($selected);
 }
 
+// get all columns from every modules
+function getAllColumns()
+{
+	$columns = array();
+	foreach($GLOBALS['modules'] as $i => $module)
+	{
+		if(constant($module . '::INTERNAL') == false)
+			$columns = array_merge($columns, array_flip(call_user_func($module . '::columns')));
+	}
+	
+	$columns = array_keys($columns);
+
+	return $columns;
+}
+
+// string together everything in the request
+function getRequestString($request)
+{
+	$request_str = '';
+	foreach($request as $key => $value) $request_str .= '&amp;' . $key . '=' . $value;
+	return substr($request_str, 5, strlen($request_str) - 5);
+}
+
+// simple parser for command line like arguments
+function parseCommandArgs($string)
+{
+	$args = array();
+	$current = '';
+	$quote_switch = false;
+	for($i = 0; $i < strlen($string); $i++)
+	{
+		if(substr($string, $i, 1) == ' ' && $quote_switch == false)
+		{
+			$args[] = $current;
+			$current = '';
+		}
+		elseif(substr($string, $i, 1) == '"')
+		{
+			$quote_switch = !$quote_switch;
+		}
+		else
+		{
+			$current .= substr($string, $i, 1);
+		}
+	}
+	if($current != '')
+		$args[] = $current;
+		
+	return $args;
+}
+
+// rounds the filesize and adds the extension
+function roundFileSize($dirsize)
+{
+	$dirsize = ( $dirsize < 1024 ) ? ($dirsize . " B") : (( $dirsize < 1048576 ) ? (round($dirsize / 1024, 2) . " KB") : (( $dirsize < 1073741824 ) ? (round($dirsize / 1048576, 2) . " MB") : (( $dirsize < 1099511627776 ) ? (round($dirsize / 1073741824, 2) . " GB") : (round($dirsize / 1099511627776, 2) . " TB") ) ) );
+	return $dirsize;
+}
+
+// just a function for getting the names keys used in the db_ids module
+//  this is used is most plugins for simplifying database access by looking up the key first
 function getIDKeys()
 {
 	$id_keys = array_flip(db_ids::columns());
@@ -477,9 +500,8 @@ function utf8_is_ascii($str) {
 	
 }
 
-
-
 // simple check for login to admin
+// TODO: remove and abstract this, complete user section
 function loggedIn()
 {
 
@@ -500,7 +522,6 @@ function loggedIn()
 	}
 
 }
-
 
 // get our file types, stuff the website can handle
 function getFileType($file)
@@ -552,7 +573,7 @@ function getExt($file)
 	}
 }
 
-
+// get mime type based on file extension
 function getMime($ext)
 {
 	if(strpos($ext, '.') !== false)
@@ -570,7 +591,7 @@ function getMime($ext)
 	}
 }
 
-
+// get the type which is the first part of a mime based on extension
 function getExtType($ext)
 {
 	if(strpos($ext, '.') !== false)
@@ -588,6 +609,7 @@ function getExtType($ext)
 	}
 }
 
+// create the crc32 from a file, this uses a buffer size so it doesn't error out
 function crc32_file($filename)
 {
     $fp = @fopen($filename, "rb");
@@ -693,7 +715,7 @@ function unix2DosTime($unixtime = 0)
 			($timearray['hours'] << 11) | ($timearray['minutes'] << 5) | ($timearray['seconds'] >> 1);
 } // end of the 'unix2DosTime()' method
 
-
+// kill a process on linux, for some reason closing the streams isn't working
 function kill9($command, $startpid, $limit = 2)
 {
 	$ps = `ps -u www-data --sort=pid -o comm= -o pid=`;
@@ -720,6 +742,8 @@ function kill9($command, $startpid, $limit = 2)
 	}
 }
 
+// simple function for displaying errors
+//  TODO: abstract this and make it more useful to templates
 function log_error($message)
 {
 	if(realpath($_SERVER['SCRIPT_FILENAME']) == realpath(LOCAL_ROOT . 'plugins/cron.php') || (isset($_REQUEST['debug']) && $_REQUEST['debug'] == true && loggedIn()))
@@ -732,6 +756,7 @@ function log_error($message)
 	}
 }
 
+// parse mime types from a mime.types file
 function loadMime()
 {
 	// this will load the mime-types from a linux dist mime.types file stored in includes

@@ -1,3 +1,13 @@
+This site uses a modal, view, controller paradigm.
+The Modules control access to data, they handle files and read off of the filesystem and store the cached information in the database.
+The Plugins control user input, this is the controller, it reads and manipulates the data and interacts with the user from the back-end.
+The Templates control the view, this is how the information is displayed to the user, buttons and forms can then be submitted to the controller.
+
+Plugins:
+At the top of each plugin the variables that it assigns to templates are listed
+	Shared variables are ones placed in most plugins but assign the same values, this is because the plugin probably uses it, and because it is probably useful to the template
+Plugins pick the template page to compile generally in the form of TEMPLATE_<PLUGIN NAME>
+
 Templates:
 If the template honors the ability to use mod_rewrite, every path has to add .php to the plugins path.
 

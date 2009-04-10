@@ -6,16 +6,6 @@
 // load template
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
-// load template to create output
-if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
-	$smarty = new Smarty();
-$smarty->compile_dir = LOCAL_ROOT . 'templates_c' . DIRECTORY_SEPARATOR;
-
-$smarty->compile_check = true;
-$smarty->debugging = false;
-$smarty->caching = false;
-$smarty->force_compile = true;
-
 include_once LOCAL_ROOT . 'plugins' . DIRECTORY_SEPARATOR . 'type.php';
 
 // get these listed items over the ones saved in the session!
@@ -66,7 +56,7 @@ foreach($files as $index => $file)
 	}
 }
 
-$smarty->assign('files', $files);
+$GLOBALS['smarty']->assign('files', $files);
 
 
 header('Cache-Control: no-cache');
@@ -88,8 +78,12 @@ else
 // this is how we implement FRAME functionality! very tricky
 // this makes the caller in charge of using the output whereever it wants
 if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
-	$smarty->display($types[$_REQUEST['list']]['file']);
-	
+{
+	if(getExt($types[$_REQUEST['list']]['file']) == 'php')
+		@include $types[$_REQUEST['list']]['file'];
+	else
+		$GLOBALS['smarty']->display($types[$_REQUEST['list']]['file']);
+}
 	
 
 

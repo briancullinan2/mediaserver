@@ -1,3 +1,12 @@
+2009-04-10
+Plugins not include pages that contain template information if the extension of the template is a .php
+Smarty system is now a GLOBAL that is setup in common
+Added some comments in the code
+
+2009-04-09
+Worked on encoding presets in the encode.php plugin
+Added constants for disabling modules
+
 2009-04-08
 Fixed a bad error with db_archive and db_diskimage module, the Filepath was being passed to the db_ids modules with the addslashes before, so slashes were added twice
 Fixed an error with db_ids module, if an ID wasn't in the array it overwrote the entire id array so it then rechecked every id

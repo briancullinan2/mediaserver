@@ -1,3 +1,10 @@
+2009-04-10
+If the detected template extension is a php file, include it and supress warnings instead of running through smarty
+Make the templating system global
+If they try to access a script other then cron in the tiny remote version, forward them to the HTML_SITE defined in the settings
+Make display plugin obsolete by completing the settings plugins
+Use PEAR::Error_Stack for error handling?
+
 2009-04-09
 Store the remote_address in the session, and if it doesn't match up with what is in the session then kill the session and die
 Create a unique id and insert it into forms, this is required when the form is submitted
