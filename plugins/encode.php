@@ -108,7 +108,7 @@ if(isset($_SESSION)) session_write_close();
 switch($_REQUEST['encode'])
 {
 	case 'MP4':
-		//header('Content-Type: video/mp4');
+		header('Content-Type: video/mp4');
 		break;
 	case 'MPG':
 		header('Content-Type: video/mpg');
