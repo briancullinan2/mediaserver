@@ -41,7 +41,7 @@ for($index = 0; $index < $files_length; $index++)
 	$tmp_request = array_merge(array_intersect_key($file, getIDKeys()), $tmp_request);
 	
 	// replace id with centralized id
-	if(count(array_intersect_key($file, $id_keys)) == 0)
+	if(count(array_intersect_key($file, getIDKeys())) == 0)
 	{
 		// use the module_id column to look up keys
 		$ids = db_ids::get(array('file' => $file['Filepath'], constant($_REQUEST['cat'] . '::DATABASE') . '_id' => $file['id']), $tmp_count, $tmp_error);
