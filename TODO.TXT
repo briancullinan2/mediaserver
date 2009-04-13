@@ -1,3 +1,14 @@
+2009-04-12
+Go through all template and check for XSS, that's the only vulnerability found so far
+	Check for places that need htmlspecialchars()
+Convert some templates to php instead of smarty because it would look nicer to developers
+Work on settings.php plugin
+Use INTERNAL option in more places, check for excessive exlusions when iterating through databases
+Work on default template, give fancy options like
+	Space evenly which does the spacing and and 
+	Use tables, which puts results in a table, and 
+	Use Javascript which selects item with javascript instead of forms
+
 2009-04-10
 If the detected template extension is a php file, include it and supress warnings instead of running through smarty
 Make the templating system global

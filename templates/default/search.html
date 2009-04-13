@@ -5,7 +5,7 @@
 		<form name="search" action="{$search_str|htmlspecialchars}" method="get">
             {foreach from=$smarty.get key=k item=v}
             {if $k != "search" && $k != "cat"}
-                <input type="hidden" name="{$k}" value="{$v}" />
+                <input type="hidden" name="{$k}" value="{$v|htmlspecialchars}" />
             {/if}
             {/foreach}
 			<select name="cat">

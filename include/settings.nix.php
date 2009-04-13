@@ -5,7 +5,7 @@
 
 // global admin username and pass
 define('ADMIN_USER',			   'tmpuser');
-define('ADMIN_PASS',			   'tmppass');
+define('ADMIN_PASS',			   'H3H37gKsDjTeL4ay');
 
 
 // database connection constants
