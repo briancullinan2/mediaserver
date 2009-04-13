@@ -58,7 +58,7 @@ for($index = 0; $index < $files_length; $index++)
 	// merge all the other information to each file
 	foreach($GLOBALS['modules'] as $i => $module)
 	{
-		if($module != 'db_ids' && $module != $_REQUEST['cat'] && call_user_func_array($module . '::handles', array($file['Filepath'])))
+		if($module != $_REQUEST['cat'] && constant($module . '::INTERNAL') == false && call_user_func_array($module . '::handles', array($file['Filepath'])))
 		{
 			$return = call_user_func_array($module . '::get', array($tmp_request, &$tmp_count, &$tmp_error));
 			if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);

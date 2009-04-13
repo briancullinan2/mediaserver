@@ -52,7 +52,7 @@ if(isset($_REQUEST['%IF']))
 		// get all the information incase we need to use it
 		foreach($GLOBALS['modules'] as $i => $module)
 		{
-			if($module != 'db_ids' && $module != $_REQUEST['cat'] && call_user_func_array($module . '::handles', array($files[0]['Filepath'])))
+			if($module != $_REQUEST['cat'] && constant($module . '::INTERNAL') == false && call_user_func_array($module . '::handles', array($files[0]['Filepath'])))
 			{
 				$return = call_user_func_array($module . '::get', array($tmp_request, &$tmp_count, &$tmp_error));
 				if(isset($return[0])) $files[0] = array_merge($return[0], $files[0]);
