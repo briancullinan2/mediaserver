@@ -296,18 +296,18 @@ if(isset($_REQUEST['show2']) && $_REQUEST['show2'] == true)
 		foreach($results as $i => $file)
 		{
 			$reports[2][1][(TYPE_BOLD).'-Non-Ascii Files'] .= '<br />' . preg_replace('/([^\\x20-\\x7E])/i', '<span style="color:rgb(255,0,0);font-weight:bold;">$1</span>', htmlspecialchars($file['Filepath']));
-			
-			// get total
-			$count = $GLOBALS['database']->query(array('SELECT' => db_file::DATABASE, 'COLUMNS' => 'count(*)', 'WHERE' => 'Filepath REGEXP(CONCAT(\'[^\',CHAR(32),\'-\',CHAR(126),\']\'))'));
-			
-			if(count($count) > 0)
-			{
-				$reports[2][1.1][(TYPE_BOLD|TYPE_R).'-Non-Ascii Files Count'] = '<br />There is a total of ' . $count[0]['count(*)'] . ' file(s) with non-ascii characters';
-			}
-			else
-			{
-				$reports[2][1.1][(TYPE_BOLD|TYPE_ENTIRE|TYPE_R).'-Non-Ascii Files Count'] = '<br />There was an error getting the total count.';
-			}
+		}
+		
+		// get total
+		$count = $GLOBALS['database']->query(array('SELECT' => db_file::DATABASE, 'COLUMNS' => 'count(*)', 'WHERE' => 'Filepath REGEXP(CONCAT(\'[^\',CHAR(32),\'-\',CHAR(126),\']\'))'));
+		
+		if(count($count) > 0)
+		{
+			$reports[2][1.1][(TYPE_BOLD|TYPE_R).'-Non-Ascii Files Count'] = '<br />There is a total of ' . $count[0]['count(*)'] . ' file(s) with non-ascii characters';
+		}
+		else
+		{
+			$reports[2][1.1][(TYPE_BOLD|TYPE_ENTIRE|TYPE_R).'-Non-Ascii Files Count'] = '<br />There was an error getting the total count.';
 		}
 	}
 	else
@@ -316,6 +316,143 @@ if(isset($_REQUEST['show2']) && $_REQUEST['show2'] == true)
 	}
 	
 	// downloaded files commonly have _ underscores as spaces, find excessive underscores and recommend change
+	// check request for replacements
+	
+	if(isset($_POST) && count($_POST) > 0 && isset($_POST['rename']))
+	{
+		$files = $GLOBALS['database']->query(array('SELECT' => db_file::DATABASE, 'WHERE' => 'id=' . join(' OR id=', array_keys($_POST['File']))));
+
+		if(count($files) > 0)
+		{
+			$files = db_ids::get(array('cat' => 'db_file'), $tmp_count, $tmp_error, $files);
+			
+			$directories = array();
+			$win_commands = '';
+			$nix_commands = '';
+			// do the renaming
+			foreach($files as $index => $file)
+			{
+				// make sure all the folders leading up to it exists
+				$dirs = split('/', dirname($_POST['File'][$file['files_id']]));
+				$tmpdir = realpath('/');
+				foreach($dirs as $i => $dir)
+				{
+					if($dir != '')
+					{
+						$tmpdir = $tmpdir . $dir . '/';
+						if(!is_file($tmpdir) && !is_dir($tmpdir) && !in_array($tmpdir, $directories))
+						{
+							$directories[] = $tmpdir;
+							$result = @mkdir($tmpdir);
+							
+							if($result == false)
+							{
+								$win_commands .= 'md "' . $tmpdir . '"<br />';
+								$nix_commands .= 'mkdir "' . $tmpdir . '"<br />';
+								break;
+							}
+						}
+					}
+				}
+				
+				// move file
+				$result = @rename($file['Filename'], $_POST['File'][$file['files_id']]);
+				if($result == false)
+				{
+					$win_commands .= 'move "' . $file['Filename'] . '" "' . $_POST['File'][$file['files_id']] . '"<br />';
+					$nix_commands .= 'mv "' . $file['Filename'] . '" "' . $_POST['File'][$file['files_id']] . '"<br />';
+				}
+				else
+				{
+					// replace filename in each module
+					foreach($GLOBALS['modules'] as $i => $module)
+					{
+					}
+				}
+			}
+			
+			if($win_commands != '')
+			{
+				$reports[2][2.999][(TYPE_BOLD|TYPE_R).'-Permission Error'] = 'You must temporarily give the webserver write permission or run these commands:<table><tr><td>Windows</td><td>*Nix</td></tr><tr><td>' .
+					$win_commands . '</td><td>' . $nix_commands . '</td></tr></table>';
+			}
+		}
+	}
+	
+	// query some files
+	$results = $GLOBALS['database']->query(array('SELECT' => db_file::DATABASE, 'WHERE' => 'Filename REGEXP "(.*_.*_.*_.*|.*\\\..*\\\..*\\\..*)"', 'LIMIT' => '0,15', 'ORDER' => 'Filepath'));
+	
+	if(count($results) > 0)
+	{
+		$reports[2][2][(TYPE_BOLD).'-Excessive Periods and Underscores'] = 'These files could be better organized, consider revising:<form action="" method="post">';
+		
+		foreach($results as $i => $file)
+		{
+			$reports[2][2][(TYPE_BOLD).'-Excessive Periods and Underscores'] .= '<br />' . preg_replace('/(_|\.)/i', '<span style="color:rgb(255,0,0);font-weight:bold;">$1</span>', htmlspecialchars($file['Filepath']));
+		
+			// figure out what the file should be named
+			//  remove extension
+			$ext = getExt($file['Filepath']);
+			$file['Filepath'] = substr($file['Filepath'], 0, strlen($file['Filepath']) - strlen($ext) - 1);
+			
+			//  first replace all the periods or underscores with spaces except for the last period of course
+			$file['Filepath'] = preg_replace('/[_\.]/', ' ', $file['Filepath']);
+			
+			//  capitalize first letters
+			$file['Filepath'] = ucwords(dirname($file['Filepath'])) . '/' . ucwords(basename($file['Filepath']));
+			
+			//  move some key words that describe the rip into parens
+			$match_count = preg_match_all('/(hdtv|xvid)/i', $file['Filepath'], $matches);
+			
+			//  remove the distributers logo
+			$file['Filepath'] = preg_replace('/(-?lol|-?notv)/i', '', $file['Filepath']);
+			
+			// replace season - episode if it is in the name
+			$file['Filepath'] = preg_replace('/ ?-? ?([0-9][0-9]?)x([0-9][0-9]?) ?-? ?/i', ' - Season \1 - Episode \2 - ', $file['Filepath']);
+			$file['Filepath'] = preg_replace('/ ?-? ?s([0-9][0-9]?)e([0-9][0-9]?) ?-? ?/i', ' - Season \1 - Episode \2 - ', $file['Filepath']);
+			
+			// add information from folder if it organized properly
+			//  check for properly formatted season and episode
+			$result = preg_replace('/.*season ([0-9][0-9]?) - episode ([0-9][0-9]?).*/i', '/ ?-? ?(0?\1)(0?\2) ?-? ?/i', $file['Filepath']);
+			$file['Filepath'] = preg_replace($result, ' - Season \1 - Episode \2 - ', $file['Filepath']);
+			
+			//  get some tokens from the folder
+			//   skip over episode stuff we only want whats on the end
+			$tokens = tokenize(preg_replace('/.*season [0-9][0-9]? - episode [0-9][0-9]?(.*)/i', '\1', basename(dirname($file['Filepath']))));
+			$tokens_file = tokenize(basename($file['Filepath']));
+			$tokens_in_dir = array_diff($tokens['Unique'], $tokens_file['Unique']);
+			
+			//  replace some extra mess
+			//  remove double spaces
+			$file['Filepath'] = str_replace('  ', ' ', $file['Filepath']);
+			$file['Filepath'] = str_replace('  ', ' ', $file['Filepath']);
+			
+			$file['Filepath'] .= ucwords(join(' ', $tokens_in_dir));
+			
+			if(isset($matches[1]) && count($matches[1]) > 0)
+			{
+				$file['Filepath'] = preg_replace('/(hdtv|xvid)/i', '', $file['Filepath']) . ' (' . join(' ', $matches[1]) . ')';
+			}
+			
+			$reports[2][2][(TYPE_BOLD).'-Excessive Periods and Underscores'] .= ' -> <input type="text" size="150" name="File[' . $file['id'] . ']" value="' . $file['Filepath'] . '.' . $ext . '" />';
+		}
+		
+		$reports[2][2][(TYPE_BOLD).'-Excessive Periods and Underscores'] .= '<br /><input type="submit" name="rename" value="Rename!" /><input type="checkbox" name="remove_empty" value="true!" />Remove empty directories.</form>';
+		
+		// get total
+		$count = $GLOBALS['database']->query(array('SELECT' => db_file::DATABASE, 'COLUMNS' => 'count(*)', 'WHERE' => 'Filename REGEXP "(.*_.*_.*_.*|.*\\\..*\\\..*\\\..*)"'));
+		
+		if(count($count) > 0)
+		{
+			$reports[2][2.1][(TYPE_BOLD|TYPE_R).'-Excessive Periods and Underscores Count'] = '<br />There is a total of ' . $count[0]['count(*)'] . ' file(s) with excessive underscores and periods characters';
+		}
+		else
+		{
+			$reports[2][2.1][(TYPE_BOLD|TYPE_ENTIRE|TYPE_R).'-Excessive Periods and Underscores Count'] = '<br />There was an error getting the total count.';
+		}
+	}
+	
+	// organize files with common parts in the name
 	
 }
 
