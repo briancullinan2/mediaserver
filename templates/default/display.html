@@ -1,114 +1,19 @@
-{if $smarty.request.detail < 3}
-<div id="display">
-	<form action="{$smarty.server.PHP_SELF|htmlspecialchars}" method="post">
-		Detail <select name="detail">
-			{section name=detail start=0 loop=6 step=1}
-			<option value="{$smarty.section.detail.index}" {if isset($display.detail) && $display.detail == $smarty.section.detail.index}selected{/if}>{if $smarty.section.detail.index == 0}None{else}{$smarty.section.detail.index}{/if}</option>
-			{/section}			
-		</select><br />
-		<input type="checkbox" name="column_Filepath" value="on" checked="checked" disabled="disabled" />Filepath<br />
-		{if $smarty.request.detail == 2}
-			{section name=column loop=$columns}
-				{assign var=column_key value=$columns[column]}
-				{if isset($smarty.session.columns)}
-					{assign var=column_selected value=$column_key|in_array:$smarty.session.columns}
-				{else}
-					{assign var=column_selected value=false}
-				{/if}
-				{if $column_key neq 'Filepath'}
-				<input type="checkbox" name="column[{$columns[column]}]" value="on" {if $column_selected}checked="checked"{/if} />{$columns[column]}<br />
-				{/if}
-			{/section}		
-		{/if}	
-		Apply Settings.
-		<input type="submit" name="display" value="Go" />
-	</form>
-</div>
-{elseif $smarty.request.detail == 3}
-<div id="display">
-	<form action="{$smarty.server.PHP_SELF|htmlspecialchars}" method="post">
-		Detail <select name="detail">
-			{section name=detail start=0 loop=6 step=1}
-			<option value="{$smarty.section.detail.index}" {if isset($display.detail) && $display.detail == $smarty.section.detail.index}selected{/if}>{if $smarty.section.detail.index == 0}None{else}{$smarty.section.detail.index}{/if}</option>
-			{/section}			
-		</select><br />
-		{section name=column loop=$columns}
-			{assign var=column_key value=$columns[column]}
-			{if isset($smarty.session.columns)}
-				{assign var=column_selected value=$column_key|in_array:$smarty.session.columns}
-			{else}
-				{assign var=column_selected value=false}
-			{/if}
-			<input type="checkbox" name="column[{$columns[column]}]" value="on" {if $column_selected}checked="checked"{/if} />{$columns[column]}<br />
-		{/section}		
-		Apply Settings.
-		<input type="submit" name="display" value="Go" />
-	</form>
-</div>
-{elseif $smarty.request.detail == 4}
-<div id="display">
-	<form action="{$smarty.server.PHP_SELF|htmlspecialchars}" method="post">
-		<input type="hidden" name="off" value="_All_" />
-		Detail <select name="detail">
-			{section name=detail start=0 loop=6 step=1}
-			<option value="{$smarty.section.detail.index}" {if isset($display.detail) && $display.detail == $smarty.section.detail.index}selected{/if}>{if $smarty.section.detail.index == 0}None{else}{$smarty.section.detail.index}{/if}</option>
-			{/section}			
-		</select><br />
-		Count <select name="count">
-			{section name=count start=5 loop=51 step=5}
-			<option value="{$smarty.section.count.index}" {if isset($display.count) && $display.count == $smarty.section.count.index}selected{/if}>{$smarty.section.count.index}</option>
-			{/section}			
-		</select><br />
-		Order <select name="order">
-			{section name=order loop=$columns}
-			<option value="{$columns[order]}" {if isset($display.order) && $display.order eq $columns[order]}selected{/if}>{$columns[order]}</option>
-			{/section}
-		</select>
-		<br />
-		{section name=column loop=$columns}
-			{assign var=column_key value=$columns[column]}
-			{if isset($smarty.session.columns)}
-				{assign var=column_selected value=$column_key|in_array:$smarty.session.columns}
-			{else}
-				{assign var=column_selected value=false}
-			{/if}
-			<input type="checkbox" name="columns_on[]" value="{$columns[column]}" {if $column_selected}checked="checked"{/if} />{$columns[column]}<br />
-		{/section}		
-		Apply Settings.
-		<input type="submit" name="display" value="Go" />
-	</form>
-</div>
-{elseif $smarty.request.detail == 5}
-<div id="display">
-	<form action="{$smarty.server.PHP_SELF|htmlspecialchars}" method="post">
-		<input type="hidden" name="off" value="_All_" />
-		Detail <select name="detail">
-			{section name=detail start=0 loop=6 step=1}
-			<option value="{$smarty.section.detail.index}" {if isset($display.detail) && $display.detail == $smarty.section.detail.index}selected{/if}>{if $smarty.section.detail.index == 0}None{else}{$smarty.section.detail.index}{/if}</option>
-			{/section}			
-		</select><br />
-		Count <select name="count">
-			{section name=count start=5 loop=51 step=5}
-			<option value="{$smarty.section.count.index}" {if isset($display.count) && $display.count == $smarty.section.count.index}selected{/if}>{$smarty.section.count.index}</option>
-			{/section}			
-		</select><br />
-		Order <select name="order">
-			{section name=order loop=$columns}
-			<option value="{$columns[order]}" {if isset($display.order) && $display.order eq $columns[order]}selected{/if}>{$columns[order]}</option>
-			{/section}
-		</select>
-		<br />
-		{section name=column loop=$columns}
-			{assign var=column_key value=$columns[column]}
-			{if isset($smarty.session.columns)}
-				{assign var=column_selected value=$column_key|in_array:$smarty.session.columns}
-			{else}
-				{assign var=column_selected value=false}
-			{/if}
-			<input type="checkbox" name="columns_on[]" value="{$columns[column]}" {if $column_selected}checked="checked"{/if} />{$columns[column]}<br />
-		{/section}		
-		Apply Settings.
-		<input type="submit" name="display" value="Go" />
-	</form>
-</div>
+<form action="{$smarty.server.PHP_SELF|htmlspecialchars}" method="post">
+Display Options:<br />
+{assign var=column_count value=0}
+{section name=column loop=$columns}
+{assign var=column_key value=$columns[column]}
+{if isset($smarty.session.columns)}
+	{assign var=column_selected value=$column_key|in_array:$smarty.session.columns}
+{else}
+	{assign var=column_selected value=false}
 {/if}
+{assign var=column_count value=$column_count+1}
+<input type="checkbox" name="column[{$columns[column]}]" value="on" {if $column_selected}checked="checked"{/if} />{$columns[column]}{if $column_count < count($columns)} | {/if}
+{/section}
+<br /><br />
+List view:<br />
+<input type="radio" name="type" value="mono" />Monospace | <input type="radio" name="type" value="table" />Table | <input type="radio" name="type" value="dash" />Dash demilited 
+<br />
+<input type="submit" name="display" value="Save" />
+</form>

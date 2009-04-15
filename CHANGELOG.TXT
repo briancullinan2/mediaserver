@@ -1,3 +1,7 @@
+2009-04-14
+Worked on default template
+Worked on reports
+
 2009-04-10
 Plugins not include pages that contain template information if the extension of the template is a .php
 Smarty system is now a GLOBAL that is setup in common

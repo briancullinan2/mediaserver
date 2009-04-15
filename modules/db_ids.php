@@ -128,7 +128,8 @@ class db_ids extends db_file
 			{
 				$return = $GLOBALS['database']->query(array(
 						'SELECT' => self::DATABASE,
-						'WHERE' => constant($request['cat'] . '::DATABASE') . '_id = ' . join(' OR ' . constant($request['cat'] . '::DATABASE') . '_id = ', $request['selected'])
+						'WHERE' => constant($request['cat'] . '::DATABASE') . '_id = ' . join(' OR ' . constant($request['cat'] . '::DATABASE') . '_id = ', $request['selected']),
+						'LIMIT' => count($files)
 					)
 				);
 				
