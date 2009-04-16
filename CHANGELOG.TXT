@@ -1,3 +1,7 @@
+2009-04-16
+Worked on reports.php plugin, file renaming working fairly well
+Added lock detection to cron.php script, now if the log is locked it will exit the script, so they don't overlap
+
 2009-04-14
 Worked on default template
 Worked on reports

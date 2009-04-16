@@ -27,6 +27,22 @@ ignore_user_abort(1);
 $log_fp = @fopen(TMP_DIR . 'mediaserver.log', 'wb');
 ob_start(create_function('$buffer', 'global $log_fp; @fwrite($log_fp, $buffer); return $buffer;'));
 
+// lock the file so the next script can detect it
+$lock_result = flock($log_fp, LOCK_EX+LOCK_NB, $would_lock);
+if($lock_result === false)
+{
+	if(!isset($_REQUEST['ignore']) || $_REQUEST['ignore'] != true)
+	{
+		fclose($log_fp);
+		log_error('Error: Log file locked, this usually means the script is already running, override with ?ignore=true in the request');
+		exit;
+	}
+	else
+	{
+		log_error('Error: Log file locked, continuing');
+	}
+}
+
 $tm_start = array_sum(explode(' ', microtime()));
 
 log_error('Cron Script: ' . VERSION . '_' . VERSION_NAME);
@@ -37,7 +53,10 @@ log_error('Cron Script: ' . VERSION . '_' . VERSION_NAME);
 
 // the cron script is useless if it has nowhere to store the information it reads
 if(USE_DATABASE == false || count($GLOBALS['watched']) == 0)
+{
+	@fclose($log_fp);
 	exit;
+}
 
 // get the watched directories
 log_error('Ignored: ' . serialize($GLOBALS['ignored']));
@@ -188,7 +207,10 @@ for($i; $i < count($GLOBALS['watched']); $i++)
 log_error("Phase 1: Complete!");
 
 if(connection_status()!=0)
+{
+	@fclose($log_fp);
 	exit;
+}
 
 // clean up the watch_list and remove stuff that doesn't exist in watch anymore
 if($should_clean !== 0)
@@ -231,7 +253,10 @@ do
 log_error("Phase 2: Complete!");
 
 if(connection_status()!=0)
+{
+	@fclose($log_fp);
 	exit;
+}
 
 // now do some cleanup
 //  but only if we need it!

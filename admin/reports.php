@@ -387,6 +387,8 @@ if(isset($_REQUEST['show3']) && $_REQUEST['show3'] == true)
 							$result = $GLOBALS['database']->query(array('UPDATE' => $table, 'VALUES' => array('Filepath' => addslashes($_POST['File'][$file['files_id']])), 'WHERE' => 'id = ' . $file[$table . '_id']));
 						}
 					}
+					
+					// update file time, since it is just a move it hasn't really changed
 				}
 				
 				// delete directory if it is empty
@@ -437,7 +439,7 @@ if(isset($_REQUEST['show3']) && $_REQUEST['show3'] == true)
 	}
 	
 	// query some files
-	$results = $GLOBALS['database']->query(array('SELECT' => db_file::DATABASE, 'WHERE' => 'Filename REGEXP "(.*_.*_.*_.*|[^\.]+\\\.[^\.]+\\\.[^\.]+\\\.[^\.]+)" AND Filename NOT REGEXP BINARY "[^\.]*[A-Z]\\\.[^\.]*[A-Z]\\\.[^\.]*[A-Z]\\\.[^\.]*" AND Filename NOT REGEXP "\\\([^\.]+\\\.[^\.]+\\\.[^\.]+\\\.[^\.]+\\\)" AND (LEFT(Filemime, 5) = "audio" OR LEFT(Filemime, 5) = "video")', 'LIMIT' => '0,15', 'ORDER' => 'Filepath'));
+	$results = $GLOBALS['database']->query(array('SELECT' => db_file::DATABASE, 'WHERE' => 'Filename REGEXP "^[^ ]*(_.*_.*_|\\\.[^\.]+\\\.[^\.]+\\\.).*$" AND Filename NOT REGEXP BINARY "[^\.]*[A-Z]\\\.[^\.]*[A-Z]\\\.[^\.]*[A-Z]\\\.[^\.]*" AND (LEFT(Filemime, 5) = "audio" OR LEFT(Filemime, 5) = "video")', 'LIMIT' => '0,15', 'ORDER' => 'Filepath'));
 	
 	if(count($results) > 0)
 	{
@@ -471,8 +473,8 @@ if(isset($_REQUEST['show3']) && $_REQUEST['show3'] == true)
 			$file['Filename'] = preg_replace('/ ?(-lol|-notv|-0tv|-xor|-sys|-2hd|-rns)/i', '', $file['Filename']);
 			
 			$parts = array();
-			$parts = array_merge($parts, preg_split('/-/', $file['Filename']));
-			$parent = preg_split('/-/', preg_replace('/[_\.]/', ' ', basename(dirname($file['Filepath']))));
+			$parts = array_merge($parts, preg_split('/ - /', $file['Filename']));
+			$parent = preg_split('/ - /', preg_replace('/[_\.]/', ' ', basename(dirname($file['Filepath']))));
 			if(count($parent) > 1)
 				$parts = array_merge($parts, $parent);
 			
