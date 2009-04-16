@@ -287,7 +287,7 @@ $reports[2][0][(TYPE_HEADING).'-Ascii File Names'] = 'List of files that have as
 if(isset($_REQUEST['show2']) && $_REQUEST['show2'] == true)
 {
 	// get some non-standard filenames, ones that contain non ascii characters
-	$results = $GLOBALS['database']->query(array('SELECT' => db_file::DATABASE, 'WHERE' => 'Filepath REGEXP(CONCAT(\'[^\',CHAR(32),\'-\',CHAR(126),\']\')) AND (LEFT(Filemime, 5) = "audio" OR LEFT(Filemime, 5) = "video" OR LEFT(Filemime, 5) = "image")', 'LIMIT' => '0,15', 'ORDER' => 'Filepath'));
+	$results = $GLOBALS['database']->query(array('SELECT' => db_file::DATABASE, 'WHERE' => 'Filepath REGEXP(CONCAT(\'[^\',CHAR(32),\'-\',CHAR(126),\']\')) AND (LEFT(Filemime, 5) = "audio" OR LEFT(Filemime, 5) = "video")', 'LIMIT' => '0,15', 'ORDER' => 'Filepath'));
 	
 	if(count($results) > 0)
 	{
@@ -437,7 +437,7 @@ if(isset($_REQUEST['show3']) && $_REQUEST['show3'] == true)
 	}
 	
 	// query some files
-	$results = $GLOBALS['database']->query(array('SELECT' => db_file::DATABASE, 'WHERE' => 'Filename REGEXP "(.*_.*_.*_.*|.*\\\..*\\\..*\\\..*)" AND (LEFT(Filemime, 5) = "audio" OR LEFT(Filemime, 5) = "video" OR LEFT(Filemime, 5) = "image")', 'LIMIT' => '0,15', 'ORDER' => 'Filepath'));
+	$results = $GLOBALS['database']->query(array('SELECT' => db_file::DATABASE, 'WHERE' => 'Filename REGEXP "(.*_.*_.*_.*|[^\.]+\\\.[^\.]+\\\.[^\.]+\\\.[^\.]+)" AND Filename NOT REGEXP BINARY "[^\.]*[A-Z]\\\.[^\.]*[A-Z]\\\.[^\.]*[A-Z]\\\.[^\.]*" AND Filename NOT REGEXP "\\\([^\.]+\\\.[^\.]+\\\.[^\.]+\\\.[^\.]+\\\)" AND (LEFT(Filemime, 5) = "audio" OR LEFT(Filemime, 5) = "video")', 'LIMIT' => '0,15', 'ORDER' => 'Filepath'));
 	
 	if(count($results) > 0)
 	{
@@ -468,61 +468,97 @@ if(isset($_REQUEST['show3']) && $_REQUEST['show3'] == true)
 			$file['Filename'] = preg_replace('/ ?(hdtv|xvid|aaf|dsr)/i', '', $file['Filename']);
 			
 			//  remove the distributers logo
-			$file['Filename'] = preg_replace('/ ?(-lol|-notv|-0tv|-xor|-sys|-2hd)/i', '', $file['Filename']);
+			$file['Filename'] = preg_replace('/ ?(-lol|-notv|-0tv|-xor|-sys|-2hd|-rns)/i', '', $file['Filename']);
 			
-			// get show name
-			$show_name = preg_replace('/ ?-?(.*) ?-? ?[0-9][0-9]?x[0-9][0-9]?.*/i', '\1 ', $file['Filename']);
-			if($show_name == '' || $show_name == $file['Filename'])
-				$show_name = preg_replace('/ ?-?(.*) ?-? ?s[0-9][0-9]?e[0-9][0-9]?.*/i', '\1 ', $file['Filename']);
-			if($show_name == '' || $show_name == $file['Filename'])
-				$show_name = preg_replace('/ ?-?([a-z0-9]+.*) ?-? ?[1-9][0-9][0-9]([^0-9].*|$)/i', '\1 ', $file['Filename']);
-			if($show_name == $file['Filename'])
-				$show_name = '';
+			$parts = array();
+			$parts = array_merge($parts, preg_split('/-/', $file['Filename']));
+			$parent = preg_split('/-/', preg_replace('/[_\.]/', ' ', basename(dirname($file['Filepath']))));
+			if(count($parent) > 1)
+				$parts = array_merge($parts, $parent);
 			
-			// get season - episode if it is in the name
-			$season_episode = preg_replace('/.*([0-9][0-9]?)x([0-9][0-9]?)-([0-9][0-9]?).*/i', 'Season \1 - Episode \2 & \3', $file['Filename']);
-			if($season_episode == '' || $season_episode == $file['Filename'])
-				$season_episode = preg_replace('/.*s([0-9][0-9]?)e([0-9][0-9]?)e([0-9][0-9]?).*/i', 'Season \1 - Episode \2 & \3', $file['Filename']);
+			foreach($parts as $i => $part)
+			{
+				// get season - episode if it is in the name
+				$parts[$i] = preg_replace('/([0-9][0-9]?)x([0-9][0-9]?)-([0-9][0-9]?)/i', 'season \1 - episode \2 & \3', $parts[$i]);
+				$parts[$i] = preg_replace('/([0-9][0-9]?)x([0-9][0-9]?)/i', 'season \1 - episode \2', $parts[$i]);
+				$parts[$i] = preg_replace('/s([0-9][0-9]?)e([0-9][0-9]?)e([0-9][0-9]?)/i', 'season \1 - episode \2 & \3', $parts[$i]);
+				$parts[$i] = preg_replace('/s([0-9][0-9]?)e([0-9][0-9]?)/i', 'season \1 - episode \2', $parts[$i]);
+				$parts[$i] = preg_replace('/(^|[^0-9])([1-9])([0-9]{2})($|[^0-9])/i', '\1season \2 - episode \3\4', $parts[$i]);
+				$parts[$i] = preg_replace('/(^|[^0-9])(0[0-9])([0-9])($|[^0-9])/i', '\1season \2 - episode \3\4', $parts[$i]);
 				
-			if($season_episode == '' || $season_episode == $file['Filename'])
-				$season_episode = preg_replace('/.*([0-9][0-9]?)x([0-9][0-9]?).*/i', 'Season \1 - Episode \2', $file['Filename']);
-			if($season_episode == '' || $season_episode == $file['Filename'])
-				$season_episode = preg_replace('/.*s([0-9][0-9]?)e([0-9][0-9]?).*/i', 'Season \1 - Episode \2', $file['Filename']);
-			if($season_episode == '' || $season_episode == $file['Filename'])
-				$season_episode = preg_replace('/[a-z0-9]+.*([1-9])([0-9][0-9])([^0-9].*|$)/i', 'Season \1 - Episode \2', $file['Filename']);
+				// replace all single digits with preceding zeros
+				$parts[$i] = preg_replace('/([^0-9])([1-9])([^0-9]|$)/', '${1}0\2\3', $parts[$i]);
 				
-			if($season_episode == $file['Filename'])
-				$season_episode = '';
-			
-			
-			// get episode name
-			$episode_name = preg_replace('/.*[0-9][0-9]?x[0-9][0-9]?-[0-9][0-9]? ?-? ?(.*)/i', '\1 ', $file['Filename']);
-			if($episode_name == '' || $episode_name == $file['Filename'])
-				$episode_name = preg_replace('/.*s[0-9][0-9]?e[0-9][0-9]?e[0-9][0-9]? ?-? ?(.*)/i', '\1 ', $file['Filename']);
+				if(strlen($parts[$i]) > 0)
+				{
+					// remove some extra mess
+					if($parts[$i][0] == '-' || $parts[$i][0] == ' ') $parts[$i] = substr($parts[$i], 1);
+					if($parts[$i][strlen($parts[$i])-1] == ' ') $parts[$i] = substr($parts[$i], 0, strlen($parts[$i]) - 1);
+					$parts[$i] = str_replace('  ', ' ', $parts[$i]);
+					
+					// CAPITALIZE
+					$parts[$i] = ucwords($parts[$i]);
+					
+					// split where the replacement was done
+					if(strlen($parts[$i]) > 22)
+					{
+						$tmp_parts = preg_split('/season [0-9]{2} - episode [0-9]{2}( & [0-9]{2})?/i', $parts[$i]);
+						$tmp_str = $parts[$i];
+						$index = $i;
+						$pos = 0;
+						for($i = 0; $i < count($tmp_parts) - 1; $i++)
+						{
+							$parts['' . $index] = $tmp_parts[$i];
+							$pos += strlen($tmp_parts[$i]);
+							$index += 1.0 / (count($tmp_parts) + (count($tmp_parts) - 1));
+							if(preg_match('/season [0-9]{2} - episode [0-9]{2} & [0-9]{2}/i', substr($tmp_str, $pos, 27)) == 1)
+							{
+								$parts['' . $index] = substr($tmp_str, $pos, 27);
+								$pos += 27;
+							}
+							else
+							{
+								$parts['' . $index] = substr($tmp_str, $pos, 22);
+								$pos += 22;
+							}
+							$index += 1.0 / (count($tmp_parts) + (count($tmp_parts) - 1));
+						}
+						$parts['' . $index] = $tmp_parts[$i];
+					}
+				}
 				
-			if($episode_name == '' || $episode_name == $file['Filename'])
-				$episode_name = preg_replace('/.*[0-9][0-9]?x[0-9][0-9]? ?-? ?(.*)/i', '\1 ', $file['Filename']);
-			if($episode_name == '' || $episode_name == $file['Filename'])
-				$episode_name = preg_replace('/.*s[0-9][0-9]?e[0-9][0-9]? ?-? ?(.*)/i', '\1 ', $file['Filename']);
-			if($episode_name == '' || $episode_name == $file['Filename'])
-				$episode_name = preg_replace('/[a-z0-9]+.*[1-9][0-9][0-9] ?-? ?([^0-9].*|$)/i', '\1 ', $file['Filename']);
+				// remove if empty
+				if($parts[$i] == '')
+					unset($parts[$i]);
+			}
+			
+			foreach($parts as $i => $part)
+			{
+				if(strlen($parts[$i]) > 0)
+				{
+					// remove some extra mess
+					if($parts[$i][0] == '-' || $parts[$i][0] == ' ') $parts[$i] = substr($parts[$i], 1);
+					if($parts[$i][strlen($parts[$i])-1] == ' ') $parts[$i] = substr($parts[$i], 0, strlen($parts[$i]) - 1);
+					$parts[$i] = str_replace('  ', ' ', $parts[$i]);
+					$parts[$i] = preg_replace('/^Season ?[0-9]?[0-9]?$/i', '', $parts[$i]);
+					$parts[$i] = preg_replace('/^Episode ?[0-9]?[0-9]?$/i', '', $parts[$i]);
+					
+					// CAPITALIZE
+					$parts[$i] = ucwords($parts[$i]);
+				}
 				
-			if($episode_name == $file['Filename'])
-				$episode_name = '';
+				// remove if empty
+				if($parts[$i] == '')
+					unset($parts[$i]);
+			}
 			
-			// get information from folder if it organized properly
+			ksort($parts);
+			$parts = array_unique(array_values($parts));
 			
-			//  get some tokens from the folder
+			print_r($parts);
 			
-			//  replace some extra mess
-			$file['Filename'] = ucwords($show_name) . ' - ' . ucwords($season_episode) . ' - ' . ucwords($episode_name) . (($rip_type != '')?(' (' . $rip_type . ')'):'') . '.' . $ext;
-			
-			//  remove double spaces
-			$file['Filename'] = str_replace('  ', ' ', $file['Filename']);
-			$file['Filename'] = str_replace('  ', ' ', $file['Filename']);
-			$file['Filename'] = str_replace('  ', ' ', $file['Filename']);
-			$file['Filename'] = str_replace('  ', ' ', $file['Filename']);
-			$file['Filename'] = str_replace('  ', ' ', $file['Filename']);
+			// create filename
+			$file['Filename'] = join(' - ', $parts) . (($rip_type != '')?(' (' . $rip_type . ')'):'') . '.' . $ext;
 			
 			$file['Filepath'] = dirname($file['Filepath']) . '/' . $file['Filename'];
 			
