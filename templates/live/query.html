@@ -54,8 +54,16 @@ $this->assign('newlineregexp', '/([^ ]{25})/i');
 {/section}
 
 {include file=$templates.TEMPLATE_HEADER}
-
 		<div class="contentSpacing">
+{assign var=dirlen value=$smarty.request.dir|strlen}
+{assign var=dirlen value=$dirlen-1}
+{if $smarty.request.dir|substr:$dirlen:1 eq '/'}{assign var=dir value=$smarty.request.dir|substr:0:$dirlen}{else}{assign var=dir value=$smarty.request.dir}{/if}
+{assign var=crumbs value='/'|split:$dir}
+{assign var=crumbcount value=$crumbs|@count}
+{assign var=crumbcount value=$crumbcount-1}
+{foreach from=$crumbs item=dir key=i}
+{if $i eq $crumbcount}{assign var=current value=$dir}{/if}
+{/foreach}
 			<h1 class="title">{if $current eq ''}{$smarty.const.HTML_NAME|@htmlspecialchars}{else}{$current|@htmlspecialchars}{/if}</h1>
 {assign var=page value=$smarty.request.start|intval}
 {assign var=item_count value=$files|@count}
