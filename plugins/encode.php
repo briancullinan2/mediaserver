@@ -150,8 +150,8 @@ switch($_REQUEST['encode'])
 	case 'MP4':
 		$_REQUEST['%VC'] = 'mp4v';
 		$_REQUEST['%AC'] = 'mp3';
-		$_REQUEST['%VB'] = 384;
-		$_REQUEST['%AB'] = 64;
+		$_REQUEST['%VB'] = 512;
+		$_REQUEST['%AB'] = 160;
 		$_REQUEST['%SR'] = 44100;
 		$_REQUEST['%CH'] = 2;
 		$_REQUEST['%MX'] = 'asf';
@@ -161,8 +161,8 @@ switch($_REQUEST['encode'])
 	case 'MPG':
 		$_REQUEST['%VC'] = 'mpgv';
 		$_REQUEST['%AC'] = 'mpga';
-		$_REQUEST['%VB'] = 384;
-		$_REQUEST['%AB'] = 64;
+		$_REQUEST['%VB'] = 512;
+		$_REQUEST['%AB'] = 160;
 		$_REQUEST['%SR'] = 44100;
 		$_REQUEST['%CH'] = 2;
 		$_REQUEST['%MX'] = 'ts';
@@ -172,8 +172,8 @@ switch($_REQUEST['encode'])
 	case 'WMV':
 		$_REQUEST['%VC'] = 'WMV2';
 		$_REQUEST['%AC'] = 'mp3';
-		$_REQUEST['%VB'] = 384;
-		$_REQUEST['%AB'] = 64;
+		$_REQUEST['%VB'] = 512;
+		$_REQUEST['%AB'] = 160;
 		$_REQUEST['%SR'] = 44100;
 		$_REQUEST['%CH'] = 2;
 		$_REQUEST['%MX'] = 'asf';
