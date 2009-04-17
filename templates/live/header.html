@@ -6,12 +6,13 @@
 <title>{$smarty.const.HTML_NAME|@htmlspecialchars}</title>
 <link rel="stylesheet" href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}live.css" type="text/css"/>
 <link rel="stylesheet" href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}types.css" type="text/css"/>
+<script language="javascript" type="text/javascript" src="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}dragclick.js"></script>
 <script language="javascript">
 var loaded = false;
 </script>
 </head>
 
-<body>
+<body onload="init();" onmousemove="setSelector()" onmousedown="startDrag(event);return false;" onmouseup="endDrag();return false;">
 <div id="bodydiv">
 	<div id="sizer">
 		<div id="expander">
@@ -53,7 +54,8 @@ var loaded = false;
 						</td>
 					</tr>
 				</table>
-				<div id="content">
+				<div id="content" onmousedown="return false;">
+					<div id="selector" style="display:none;"></div>
 					<table id="main" cellpadding="0" cellspacing="0">
 						<tr>
 							<td class="sideColumn"></td>

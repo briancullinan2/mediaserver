@@ -1,6 +1,11 @@
 @charset "utf-8";
 /* CSS Document */
 
+body, html {
+	height:100%;
+	width:100%;
+}
+
 body {
 	margin:0px;
 	background-color:#FFFFFF;
@@ -11,6 +16,16 @@ body {
 	font-size:70%;
 	color:#444444;
 	direction:ltr;
+}
+
+#selector {
+	-moz-opacity:.25;
+	opacity: .25;
+	filter:alpha(opacity=25);
+	position:absolute;
+	background-color:#09F;
+	border:1px solid #039;
+	z-index:1000;
 }
 
 .template_box a {
@@ -308,7 +323,11 @@ body {
 	width:7em;
 }
 
-.selected {
+.select .selected, .select .notselected {
+	visibility: visible;
+}
+
+.notselected {
 	visibility:hidden;
 	background:#F7FBFF url(images/browse_select_bg.png) repeat-x scroll center bottom;
 	border:1px solid #D8F0FA;
@@ -316,7 +335,17 @@ body {
 	left:0;
 	position:absolute;
 	top:0;
-	visibility:hidden;
+	width:7em;
+}
+
+.selected {
+	visibility:visible;
+	background:#F7FBFF url(images/browse_select_bg.png) repeat-x scroll center bottom;
+	border:1px solid #D8F0FA;
+	height:9.5em;
+	left:0;
+	position:absolute;
+	top:0;
 	width:7em;
 }
 
