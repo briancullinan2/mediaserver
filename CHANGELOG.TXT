@@ -1,3 +1,6 @@
+2009-04-18
+Worked on live template, right click menu
+
 2009-04-16
 Worked on live template, got drag selecting working
 

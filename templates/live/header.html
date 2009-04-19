@@ -12,7 +12,7 @@ var loaded = false;
 </script>
 </head>
 
-<body onload="init();" onmousemove="setSelector()" onmousedown="startDrag(event);return false;" onmouseup="endDrag();return false;">
+<body onload="init();" onmousemove="setSelector()" onmousedown="return startDrag(event);" onmouseup="endDrag();return false;">
 <div id="bodydiv">
 	<div id="sizer">
 		<div id="expander">
@@ -56,6 +56,14 @@ var loaded = false;
 				</table>
 				<div id="content" onmousedown="return false;">
 					<div id="selector" style="display:none;"></div>
+					<ul class="menu" id="menu">
+						<li><a href="#" onmouseout="this.className = '';" onmouseover="this.className = 'itemSelect';">Play Now</a></li>
+						<li><a href="#" onmouseout="this.className = '';" onmouseover="this.className = 'itemSelect';">Download File</a><div class="sep"></div></li>
+						<li><a href="#" onmouseout="this.className = '';" onmouseover="this.className = 'itemSelect';">Download Zip</a></li>
+						<li><a href="#" onmouseout="this.className = '';" onmouseover="this.className = 'itemSelect';">Download Torrent</a></li>
+						<li><a href="#" onmouseout="this.className = '';" onmouseover="this.className = 'itemSelect';">Add to Queue</a></li>
+					</ul>
+					<div class="menuShadow" id="shadow"></div>
 					<table id="main" cellpadding="0" cellspacing="0">
 						<tr>
 							<td class="sideColumn"></td>

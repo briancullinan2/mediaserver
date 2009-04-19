@@ -23,9 +23,64 @@ body {
 	opacity: .25;
 	filter:alpha(opacity=25);
 	position:absolute;
-	background-color:#09F;
-	border:1px solid #039;
+	background-color:#6CF;
+	border:1px solid #169;
 	z-index:1000;
+}
+
+.menu {
+	background:#FCFCFC none repeat scroll 0 0;
+	border:1px solid #CCCCCC;
+	display:none;
+	list-style-image:none;
+	list-style-position:outside;
+	list-style-type:none;
+	margin:0;
+	min-width:120px;
+	padding:0 0 2px;
+	position:absolute;
+	z-index:2000001;
+}
+
+.menuShadow {
+	background-color:#000000;
+	display:none;
+	-moz-opacity:.5;
+	opacity: .5;
+	filter:alpha(opacity=50);
+	position:absolute;
+	z-index:2000000;
+}
+
+.menu li {
+	display:block;
+	list-style-image:none;
+	list-style-position:outside;
+	list-style-type:none;
+	margin:2px 2px 0;
+}
+
+.menu li a {
+	border:1px solid #FFFFFF;
+	color:#444444;
+	display:block !important;
+	overflow:visible;
+	padding:3px 6px 5px;
+	text-align:left;
+	text-decoration:none;
+	white-space:nowrap;
+	cursor:pointer;
+	font-weight:inherit;
+}
+
+.menu .itemSelect {
+	background:#F7FBFF url(images/browse_select_bg.png) repeat-x scroll center bottom;
+	border:1px solid #D8F0FA;
+}
+
+.menu .sep {
+	border-bottom:1px solid #DCDCDC;
+	margin:2px 2px 0;
 }
 
 .template_box a {
@@ -220,6 +275,12 @@ body {
 
 .sideColumn {
 	width:10px;
+}
+
+.sideColumn.right {
+	background-image:url(images/shadow.png);
+	background-position:0 0;
+	background-repeat:no-repeat;
 }
 
 #mainColumn {

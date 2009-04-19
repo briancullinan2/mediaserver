@@ -4,8 +4,6 @@ var IE = document.all?true:false
 
 var selectOffset = 0;
 
-if (!IE) document.captureEvents(Event.MOUSEMOVE)
-
 document.onmousemove = getMouseXY;
 document.onselectstart = new Function ("return false")
 window.onresize = pauseInit;
@@ -32,6 +30,8 @@ var file_width;
 
 var selected = new Array();
 
+var selector_off = false;
+
 function pauseInit()
 {
 	clearTimeout(tmp_timer);
@@ -49,6 +49,11 @@ function init()
 	min_top = 0;
 	
 	// go through objects and get information
+	if(!document.getElementById('files'))
+	{
+		selector_off = true;
+		return;
+	}
 	objs = document.getElementById('files').childNodes;
 	
 	count = 0;
@@ -95,8 +100,10 @@ function init()
 			
 			index++;
 		}
-		
 	}
+	
+	if(file_obj.length == 0)
+		selector_off = true;
 }
 
 function showMenu(file)
@@ -106,6 +113,31 @@ function showMenu(file)
 		deselectAll();
 		fileSelect(file, true);
 	}
+	
+	var menu = document.getElementById("menu");
+	
+	menu.style.display = "block";
+	menu.style.visibility = "visible";
+	menu.style.top = startY + 1 + "px";
+	menu.style.left = startX + 1 + "px";
+	
+	var shadow = document.getElementById("shadow");
+	shadow.style.display = "block";
+	shadow.style.visibility = "visible";
+	shadow.style.height = menu.offsetHeight + "px";
+	shadow.style.width = menu.offsetWidth + "px";
+	shadow.style.top = startY + 7 + "px";
+	shadow.style.left = startX + 7 + "px";
+}
+
+function hideMenu()
+{
+	var menu = document.getElementById("menu");
+	menu.style.display = "none";
+	menu.style.visibility = "hidden";
+	var shadow = document.getElementById("shadow");
+	shadow.style.display = "none";
+	shadow.style.visibility = "hidden";
 }
 
 function getFolder(href)
@@ -315,40 +347,50 @@ function getPositionInWindow()
 
 function startDrag(evt)
 {
-	if((evt.which && evt.which == 1) || (evt.button && evt.button == 1))
+	hideMenu();
+	
+	if(tempY > min_top && tempX > min_left && inited == true)
 	{
-		if(tempY > min_top && tempX > min_left && inited == true)
+		window_pos = getPositionInWindow();
+		if (IE) {
+			insideX = document.body.offsetWidth - 4;
+			insideY = document.body.offsetHeight - 4;
+		} else {
+			insideX = window.innerWidth - 20;
+			insideY = window.innerHeight - 20;
+		}
+		if(window_pos[0] < insideX && window_pos[1] < insideY)
 		{
-			window_pos = getPositionInWindow();
-			if (IE) {
-				insideX = document.body.offsetWidth - 4;
-				insideY = document.body.offsetHeight - 4;
-			} else {
-				insideX = window.innerWidth - 20;
-				insideY = window.innerHeight - 20;
-			}
-			if(window_pos[0] < insideX && window_pos[1] < insideY)
+			// set min
+			if(tempY < min_top)
+				tempY = min_top;
+			if(tempX < min_left)
+				tempX = min_left;
+			// set starting
+			startX = tempX;
+			startY = tempY;
+			document.getElementById('selector').style.top = startY + 'px';
+			document.getElementById('selector').style.left = startX + 'px';
+			
+			if((evt.which && evt.which == 1) || (evt.button && evt.button == 1))
 			{
-				
 				is_dragging = true;
-				
-				// set min
-				if(tempY < min_top)
-					tempY = min_top;
-				if(tempX < min_left)
-					tempX = min_left;
-				// set starting
-				startX = tempX;
-				startY = tempY;
-				document.getElementById('selector').style.top = startY + 'px';
-				document.getElementById('selector').style.left = startX + 'px';
 			}
+			if(startY < 39)
+			{
+				is_dragging = false;
+				return true;
+			}
+			
+			return false;
 		}
 	}
 }
 
 function endDrag()
 {
+	if(selector_off)
+		return;
 	if(inited == true)
 	{
 		is_dragging = false;
