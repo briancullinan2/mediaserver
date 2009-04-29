@@ -1,5 +1,6 @@
 2009-04-18
 Worked on live template, right click menu
+Cron doesn't run if it is already running, so only one instance is working at a time
 
 2009-04-16
 Worked on live template, got drag selecting working

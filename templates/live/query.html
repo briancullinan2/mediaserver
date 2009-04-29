@@ -67,7 +67,7 @@ $this->assign('newlineregexp', '/([^ ]{25})/i');
 			<h1 class="title">{if $current eq ''}{$smarty.const.HTML_NAME|@htmlspecialchars}{else}{$current|@htmlspecialchars}{/if}</h1>
 {assign var=page value=$smarty.request.start|intval}
 {assign var=item_count value=$files|@count}
-			<span class="subText">Use remote access to browse files. Drag to select files, and right click for download options.</span>{if $error eq '' and count($files) > 0}<span class="subText">Displaying items {$smarty.request.start} to {$page+$item_count}{if $total_count > $smarty.request.limit} out of {$total_count} file(s){/if}.</span>{/if}
+			<span class="subText">Click to browse files. Drag to select files, and right click for download options.</span>{if $error eq '' and count($files) > 0}<span class="subText">Displaying items {$smarty.request.start} to {$page+$item_count}{if $total_count > $smarty.request.limit} out of {$total_count} file(s){/if}.</span>{/if}
 {include file=$templates.TEMPLATE_PAGES}
 			<div class="titlePadding"></div>
 			<div class="files" id="files">
@@ -77,7 +77,7 @@ $this->assign('newlineregexp', '/([^ ]{25})/i');
 					<b>There are no files to display</b>
 {else}
 {section name=file loop=$files}
-					<div class="file" onmousedown="deselectAll(event);fileSelect(this, true, event);return false;" oncontextmenu="showMenu(this);return false;"><div class="notselected"></div>
+					<div class="file {$files[file].Filetype}" onmousedown="deselectAll(event);fileSelect(this, true, event);return false;" oncontextmenu="showMenu(this);return false;" id="{$files[file].id}"><div class="notselected"></div>
 {assign var=encoded value=$files[file].Filepath|urlencode|htmlspecialchars}
 {if $files[file].Filetype=="FOLDER" || 
 ($files[file].Filepath|@handles:'archive' && $smarty.request.cat != $prefix|cat:'archive') || 

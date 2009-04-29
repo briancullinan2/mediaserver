@@ -123,29 +123,9 @@ class db_diskimage extends db_file
 		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 		
 		// parse through the file path and try to find a zip
-		$paths = split('/', $file);
-		$last_path = '';
-		$last_ext = '';
-		foreach($paths as $i => $tmp_file)
-		{
-			// this will continue until either the end of the requested file (a .zip extension for example)
-			// or if the entire path exists then it must be an actual folder on disk with a .zip in the name
-			if(file_exists(str_replace('/', DIRECTORY_SEPARATOR, $last_path . $tmp_file)) || $last_path == '')
-			{
-				$last_ext = getExt($last_path . $tmp_file);
-				$last_path = $last_path . $tmp_file . '/';
-			}
-			else
-			{
-				if(file_exists(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
-				{
-					// we can break
-					break;
-				}
-			}
-		}
+		parseInner($file, $last_path, $inside_path);
 
-		switch($last_ext)
+		switch(getExt($last_path))
 		{
 			case 'iso':
 				return true;

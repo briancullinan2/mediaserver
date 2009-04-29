@@ -64,11 +64,13 @@ class db_movies extends db_file
 		{
 			if(in_array('video_ts', $tokens['Unique']))
 			{
+				return true;
 			}
 		}
 		// if it is a potential movie in compressed file format
 		elseif(db_video::handles($file) && in_array('movies', $tokens['Unique']))
 		{
+			return true;
 		}
 		// if it is an iso image with a video_ts folder in it
 		elseif($last_ext == 'iso')

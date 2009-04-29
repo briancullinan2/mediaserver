@@ -116,6 +116,32 @@ function showMenu(file)
 	
 	var menu = document.getElementById("menu");
 	
+	// change default action depending on type of file
+	if(selected.length == 1)
+	{
+		if(selected[0].className.indexOf(' FOLDER') != -1)
+		{
+			document.getElementById('option_download').style.display = 'none';
+			document.getElementById('option_download').style.visiblity = 'hidden';
+			document.getElementById('option_open').style.display = '';
+			document.getElementById('option_open').style.visiblity = 'visible';
+		}
+		else
+		{
+			document.getElementById('option_open').style.display = 'none';
+			document.getElementById('option_open').style.visiblity = 'hidden';
+			document.getElementById('option_download').style.display = '';
+			document.getElementById('option_download').style.visiblity = 'visible';
+		}
+	}
+	else
+	{
+		document.getElementById('option_open').style.display = 'none';
+		document.getElementById('option_open').style.visiblity = 'hidden';
+		document.getElementById('option_download').style.display = 'none';
+		document.getElementById('option_download').style.visiblity = 'hidden';
+	}
+	
 	menu.style.display = "block";
 	menu.style.visibility = "visible";
 	menu.style.top = startY + 1 + "px";
@@ -393,12 +419,21 @@ function endDrag()
 		return;
 	if(inited == true)
 	{
+		var new_selected = new Array();
 		is_dragging = false;
 		document.getElementById('selector').style.display = 'none';
 		for(i = 0; i < file_changed.length; i++)
 		{
 			file_changed[i] = false;
 		}
+		for(i = 0; i < selected.length; i++)
+		{
+			if(selected[i].className.indexOf(' select') != -1)
+			{
+				new_selected.push(selected[i]);
+			}
+		}
+		selected = new_selected;
 	}
 }
 
