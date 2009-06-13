@@ -1,3 +1,4 @@
+Figure out why directories take so song to check for changes
 More compatibility testing with clients
 ------------- GENERAL TODO -------------
 Use PEAR::Error_Stack for error handling?

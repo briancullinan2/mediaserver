@@ -4,7 +4,7 @@
 
 class db_file
 {	
-	// most of these methods should just be static, no need to intantiate the class
+	// most of these methods should just be static, no need to instantiate the class
 	// just good for organization purposes
 	const DATABASE = 'files';
 	
@@ -36,6 +36,7 @@ class db_file
 	// return whether or not this module handles trhe specified type of file
 	static function handles($file)
 	{
+		//print_r(self::struct());
 		$file = str_replace('\\', '/', $file);
 		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 		
@@ -163,6 +164,7 @@ class db_file
 		return false;
 	}
 	
+	//----------------------- Magic, do not tough -----------------------
 	// the mysql can be left null to get the files from a directory, in which case a directory must be specified
 	// if the mysql is provided, then the file listings will be loaded from the database
 	// this is a very generalized module to provide a template for overriding, or for other modules to modify the $request and pass to this one

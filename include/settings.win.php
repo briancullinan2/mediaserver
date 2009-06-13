@@ -23,6 +23,10 @@ define('DB_PREFIX',				         'db_');
 // site constants these are used throughout the entire system
 define('LOCAL_ROOT',                'C:\wamp\www\mediaserver\\');
 
+// where to put the user directory for storing user uploaded files
+//   this directory must be writtable by the web server
+define('LOCAL_USERS', 							LOCAL_ROOT . 'users\\');
+
 // this is the path used by html pages to refer back to the website domain, HTML_ROOT is usually appended to this
 define('HTML_DOMAIN',            			             'http://127.0.0.1/');
 

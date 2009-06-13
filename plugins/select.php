@@ -7,7 +7,7 @@
 // Shared Variables:
 //  columns, templates
 
-// load template
+// load stuff we might need
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 	
 // get all columns from every module
