@@ -63,14 +63,14 @@ class db_users extends db_file
 			$username = basename($path);
 			
 			// check if it is in the database
-			$db_file = $GLOBALS['database']->query(array(
+			$db_user = $GLOBALS['database']->query(array(
 					'SELECT' => self::DATABASE,
 					'WHERE' => 'Username = "' . addslashes($username) . '"',
 					'LIMIT' => 1
 				)
 			);
 			
-			if( count($db_file) == 0 )
+			if( count($db_user) == 0 )
 			{
 				// just set up the user with default information
 			}
