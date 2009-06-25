@@ -53,23 +53,39 @@
 	</div>
     <!-- include everything after the loading indicator -->
     <link rel="stylesheet" type="text/css" href="/<?php echo HTML_ROOT . HTML_BASE; ?>extjs/resources/css/ext-all.css" />
+    <link rel="stylesheet" type="text/css" href="/<?php echo HTML_TEMPLATE; ?>types.css" />
 
     <!-- GC -->
- 	<!-- LIBS -->
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading Core API...';</script>
  	<script type="text/javascript" src="/<?php echo HTML_ROOT . HTML_BASE; ?>extjs/adapter/ext/ext-base.js"></script>
 
- 	<!-- ENDLIBS -->
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading UI Components... (Core Components)';</script>
-    <script type="text/javascript" src="/<?php echo HTML_ROOT . HTML_BASE; ?>extjs/ext-core-debug.js"></script>
+    <script type="text/javascript" src="/<?php echo HTML_ROOT . HTML_BASE; ?>extjs/ext-all-debug.js"></script>
+    <script type="text/javascript" src="/<?php echo HTML_ROOT . HTML_BASE; ?>extjs/ux/XmlTreeLoader.js"></script>
+    <script type="text/javascript" src="/<?php echo HTML_ROOT . HTML_BASE; ?>extjs/ux/XMLTreeNode.js"></script>
+    <script type="text/javascript" src="/<?php echo HTML_ROOT . HTML_BASE; ?>extjs/ux/BufferView.js"></script>
+	
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading UI Components... (Library Mods)';</script>
+    <script type="text/javascript" src="/<?php echo HTML_TEMPLATE; ?>Library.js"></script>
+	
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading UI Components... (Media Components)';</script>
+    <script type="text/javascript" src="/<?php echo HTML_TEMPLATE; ?>main.js"></script>
 
     <!-- PLAYER -->
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Initializing Player...';</script>
 	
     <!-- ACCESSING -->
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Accessing Library...';</script>
+	
+	<script type="text/javascript">
+	setTimeout(function(){
+		Ext.get('loading').remove();
+		Ext.get('loading-mask').fadeOut({remove:true});
+	}, 300);
+	
+	Ext.BLANK_IMAGE_URL = '/<?php echo HTML_ROOT . HTML_BASE; ?>extjs/resources/images/default/s.gif';
+	
+	</script>
 	
 </body>
 </html>

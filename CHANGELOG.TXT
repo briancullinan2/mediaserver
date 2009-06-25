@@ -1,3 +1,7 @@
+2009-06-21
+Worked on users.php plugin, laid out the design for all types of user management
+Started WMP template, modeled after the new Windows Media Player for Windows 7
+
 2009-04-18
 Worked on live template, right click menu
 Cron doesn't run if it is already running, so only one instance is working at a time
