@@ -93,6 +93,23 @@ elseif($_REQUEST['users'] == 'view')
 }
 
 // select the user == template first, if it does not exist them it is possible the "Users" template contains a handler for each case
-
+if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
+{
+	// check to see if there is a template for the action
+	$template = $GLOBALS['templates']['TEMPLATE_USERS'];
+	if(isset($GLOBALS['templates']['TEMPLATE_' . strtoupper($_REQUEST['users'])]))
+	{
+		$template = $GLOBALS['templates']['TEMPLATE_' . strtoupper($_REQUEST['users'])];
+	}
+	
+	// if not use the default users template
+	if(getExt($template) == 'php')
+		@include $template;
+	else
+	{
+		header('Content-Type: ' . getMime($template));
+		$GLOBALS['smarty']->display($template);
+	}
+}
 
 ?>
