@@ -2,6 +2,10 @@
 
 // a simple login script for the admin section
 
+// Variables Used:
+//  username
+// Shared Variables:
+
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
 $error = '';
@@ -46,18 +50,30 @@ else
 	
 }
 
-if( $error != '' )
+// assign variables for a smarty template to use
+$GLOBALS['smarty']->assign('username', $_REQUEST['username']);
+
+$GLOBALS['smarty']->assign('error', $error);
+
+// show login template
+if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
 {
-?>
-	<span style="color:#990000; font-weight:bold;"><?php echo $error?></span><br />
-<?php
-}
-?>
-
-<form action="" method="post">
-
-	Username: <input type="text" name="username" value="<?php echo (isset($_REQUEST['username'])?$_REQUEST['username']:"")?>" /><br />
-	Password: <input type="password" name="password" value="" /><br />
-	<input type="submit" value="Login" /><input type="reset" value="Reset" />
+	// check to see if there is a template for the action
+	$template = $GLOBALS['templates']['TEMPLATE_USERS'];
+	if(isset($GLOBALS['templates']['TEMPLATE_LOGIN']))
+	{
+		$template = $GLOBALS['templates']['TEMPLATE_LOGIN'];
+	}
 	
-</form>
+	// if not use the default users template
+	if(getExt($template) == 'php')
+		@include $template;
+	else
+	{
+		header('Content-Type: ' . getMime($template));
+		$GLOBALS['smarty']->display($template);
+	}
+}
+
+
+?>

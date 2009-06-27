@@ -2,6 +2,10 @@
 
 // handles the watch tables
 
+// Variables Used:
+//  watched, ignored, error
+// Shared Variables:
+
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
 // make sure user in logged in
@@ -46,50 +50,23 @@ elseif( isset($_REQUEST['remove']) && is_numeric($_REQUEST['watch']) )
 $GLOBALS['ignored'] = db_watch::get(array('search_Filepath' => '/^!/'), $count, $error);
 $GLOBALS['watched'] = db_watch::get(array('search_Filepath' => '/^\\^/'), $count, $error);
 
-?>
-<html>
-<head>
-	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-	<meta http-equiv="Pragma" content="no-cache">
-	<meta http-equiv="Expires" content="-1">
-	<title><?php echo HTML_NAME?>: Watch Editor</title>
-</head>
-<body>
+// assign variables for a smarty template to use
+$GLOBALS['smarty']->assign('watched', $GLOBALS['watched']);
 
-This is a list of folders on the server to watch for media files:<br />
-<?php
-if( $error != '' )
+$GLOBALS['smarty']->assign('ignored', $GLOBALS['ignored']);
+
+$GLOBALS['smarty']->assign('error', $error);
+
+// show watch template
+if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
 {
-?>
-	<span style="color:#990000; font-weight:bold;"><?php echo $error?></span><br />
-<?php
+	if(getExt($GLOBALS['templates']['TEMPLATE_WATCH']) == 'php')
+		@include $GLOBALS['templates']['TEMPLATE_WATCH'];
+	else
+	{
+		header('Content-Type: ' . getMime($GLOBALS['templates']['TEMPLATE_WATCH']));
+		$GLOBALS['smarty']->display($GLOBALS['templates']['TEMPLATE_WATCH']);
+	}
 }
+
 ?>
-	<form action="" method="post">
-		<select name="watch" size="10">
-		
-		<?php
-			foreach($GLOBALS['ignored'] as $i => $watch)
-			{
-			?>
-				<option value="<?php echo $watch['id']; ?>">ignore: <?php echo $watch['Filepath']; ?></option>
-			<?php
-			}
-			foreach($GLOBALS['watched'] as $i => $watch)
-			{
-			?>
-				<option value="<?php echo $watch['id']; ?>">watch: <?php echo $watch['Filepath']; ?></option>
-			<?php
-			}
-		?>
-		</select>
-		<br />
-		<input type="submit" value="Remove" name="remove" />
-	</form>
-	<form action="" method="post">
-		<input type="text" name="addpath" size="50" value="<?php echo (isset($_REQUEST['addpath'])?$_REQUEST['addpath']:"")?>" />
-		<input type="submit" value="Add" name="add" />
-		<br />
-	</form>
-</body>
-</html>

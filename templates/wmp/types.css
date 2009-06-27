@@ -3,6 +3,7 @@
 
 .thumb {
 	background-repeat:no-repeat;
+	background-position:center center;
 	height:16px;
 	width:16px;
 }

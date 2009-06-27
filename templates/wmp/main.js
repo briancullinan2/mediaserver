@@ -104,16 +104,57 @@ Ext.onReady(function(){
 			 }]
 		});
 	
+		var rootNode = new Ext.tree.TreeNode({
+			text:'Media Server'
+		})
+		
+		var filesNode = new Ext.ux.XMLTreeNode({
+			text: 'Files',
+			path: '/'
+		});
+		
+		var musicNode = new Ext.tree.TreeNode({
+			text: 'Music',
+			path: '/'
+		});
+		
+		musicNode.appendChild(new Ext.tree.TreeNode({
+			text: 'Artist',
+			path: '/'
+		}));
+		
+		musicNode.appendChild(new Ext.tree.TreeNode({
+			text: 'Album',
+			path: '/'
+		}));
+		
+		musicNode.appendChild(new Ext.tree.TreeNode({
+			text: 'Genre',
+			path: '/'
+		}));
+		
+		var videosNode = new Ext.tree.TreeNode({
+			text: 'Videos',
+			path: '/'
+		});
+		
+		var picturesNode = new Ext.tree.TreeNode({
+			text: 'Pictures',
+			path: '/'
+		});
+		
+		rootNode.appendChild(filesNode);
+		rootNode.appendChild(musicNode);
+		rootNode.appendChild(videosNode);
+		rootNode.appendChild(picturesNode);
+	
 		// Panel for the west
 		var nav = new Ext.tree.TreePanel({
 			title: 'Library',
 			region    : 'west',
 			autoScroll: true,
 			width : 250,
-			root: new Ext.ux.XMLTreeNode({
-				text:'Media Server',
-				path: '/'
-			}),
+			root: rootNode,
 			loader: new Ext.data.Store({
 				url: plugins_path + 'select.php',
 				reader: FileReader,

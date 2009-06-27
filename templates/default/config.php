@@ -13,5 +13,9 @@ $GLOBALS['templates']['TEMPLATE_ADDRESS'] = LOCAL_ROOT . LOCAL_BASE . 'address.h
 $GLOBALS['templates']['TEMPLATE_PAGES'] = LOCAL_ROOT . LOCAL_BASE . 'pages.html';
 $GLOBALS['templates']['TEMPLATE_INDEX'] = LOCAL_ROOT . LOCAL_BASE . 'index.html';
 $GLOBALS['templates']['TEMPLATE_TEMPLATE'] = LOCAL_ROOT . LOCAL_BASE . 'template.html';
+$GLOBALS['templates']['TEMPLATE_AMPACHE'] = LOCAL_ROOT . LOCAL_BASE . 'ampache.php';
+$GLOBALS['templates']['TEMPLATE_LOGIN'] = LOCAL_ROOT . LOCAL_BASE . 'login.php';
+$GLOBALS['templates']['TEMPLATE_LOGOUT'] = LOCAL_ROOT . LOCAL_BASE . 'login.php';
+$GLOBALS['templates']['TEMPLATE_WATCH'] = LOCAL_ROOT . LOCAL_BASE . 'watch.php';
 
 ?>

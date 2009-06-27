@@ -14,5 +14,10 @@ RewriteRule ^plugins/([^/\.]+)(\.php)?/([^/]*)/([^/]*)/([^/]*)$ 					plugins/$1.
 RewriteRule ^plugins/([^/\.]+)(\.php)?/([^/]*)/([^/]*)/([^/]*)/([^/]*)$ 			plugins/$1.php?cat=$3&id=$4&$1=$5&filename=$6 [L]
 RewriteRule ^plugins/([^/\.]+)(\.php)?/([^/]*)/([^/]*)/([^/]*)/([^/]*)/([^/]*)$ 	plugins/$1.php?cat=$3&id=$4&$1=$5&extra=$6&filename=$7 [L]
 
+#plugin not found, try the request plugin
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule .? /plugins/request.php [L]
+
 
 </IfModule>
