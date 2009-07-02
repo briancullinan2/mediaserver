@@ -12,7 +12,6 @@ Interface with mediatomb and support UPnP protocol
 If they try to access a script other then cron in the tiny remote version, forward them to the HTML_SITE defined in the settings
 Work on settings.php plugin
 	Make display plugin obsolete by completing the settings plugins
-Make admin plugins use templates
 Work on reports.php plugin for admin
 	Provide useful information in reports section about missing songs
 Make a sync plugin in admin section for syncing between two databases and pulling out differences

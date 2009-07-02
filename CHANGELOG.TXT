@@ -1,3 +1,13 @@
+2009-07-01
+Worked on WMP template
+Commented users.php plugin
+
+2009-06-27
+Converted most admin plugins to use the template system
+
+2009-06-26
+Created an xml api compatible with ampache, amarok can now connect to the media server using the same ampache plugin
+
 2009-06-21
 Worked on users.php plugin, laid out the design for all types of user management
 Started WMP template, modeled after the new Windows Media Player for Windows 7

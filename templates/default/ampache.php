@@ -8,14 +8,17 @@ echo '<?xml version="1.0" encoding="utf-8" ?>';
 ?>
 <root><?php
 
+// if there is an error print that out and exit
+if($error != '')
+{
+	?><error code="<?php echo $error_code; ?>"><![CDATA[<?php echo $error; ?>]]></error><?php
+	exit;
+}
+
 // do different stuff based on action
 switch($_REQUEST['action'])
 {
 	case 'ping':
-		if($_REQUEST['auth'] != session_id())
-		{
-			?><error code="401"><![CDATA[Session Expired]]></error><?php
-		}
 	break;
 	case 'handshake':
 		?>

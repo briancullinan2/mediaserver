@@ -41,7 +41,7 @@ switch($_REQUEST['users'] == 'register')
 	
 		// validate other fields
 		//  password
-		if(strlen($_REQUEST['password']) < 4 || strlen($_REQUEST['password']) > 16)
+		if(!isset($_REQUEST['password']) || strlen($_REQUEST['password']) < 4 || strlen($_REQUEST['password']) > 16)
 		{
 			$error = 'Password must be between 4 and 16 characters long.';
 		}
@@ -58,9 +58,10 @@ switch($_REQUEST['users'] == 'register')
 		{
 				
 			// create database entry
-			db_users::handle(LOCAL_USERS . $_REQUEST['username']);
+			$user_id = db_users::handle(LOCAL_USERS . $_REQUEST['username']);
 			
 			// add password and profile information
+			
 			
 			// send out confirmation email
 		}
@@ -69,11 +70,14 @@ switch($_REQUEST['users'] == 'register')
 // allow a use to remove themselves, administrators may also remove themselves
 elseif($_REQUEST['users'] == 'remove')
 {
+	// delete from database
+	// remove from filesystem
+	// start new session and logout
 }
 // a variation of register except users may not change certain properties
-//  like their username
 elseif($_REQUEST['users'] == 'modify')
 {
+	// cannot modify their username
 }
 // cache a users login information so they may access the site
 elseif($_REQUEST['users'] == 'login')
@@ -82,14 +86,19 @@ elseif($_REQUEST['users'] == 'login')
 // remove all cookies and session information
 elseif($_REQUEST['users'] == 'logout')
 {
+	// delete current session
+	// login cookies become irrelevant
+	// create new session
 }
 // show a list of users, this may have different administrator requirements
 elseif($_REQUEST['users'] == 'list')
 {
+	// possibly belongs under admin
 }
 // view information about a user
 elseif($_REQUEST['users'] == 'view')
 {
+	// allow users to view their profile
 }
 
 // select the user == template first, if it does not exist them it is possible the "Users" template contains a handler for each case

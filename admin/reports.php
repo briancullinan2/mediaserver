@@ -124,7 +124,7 @@ if(isset($_REQUEST['logs']))
 						
 						if(version_compare($last_version, VERSION) == -1)
 						{
-							$reports[0][2.1][(TYPE_BOLD|TYPE_R).'-Upgrade'] = 'The last version of the logs are before your current running version.<br />Possible causes of this include:<br />You are running a remove script that needs to be upgraded!';
+							$reports[0][2.1][(TYPE_BOLD|TYPE_R).'-Upgrade'] = 'The last version of the logs are before your current running version.<br />Possible causes of this include:<br />You are running a remote script that needs to be upgraded!';
 						}
 						
 						// do some other stuff for each run

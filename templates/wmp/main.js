@@ -54,24 +54,29 @@ Ext.onReady(function(){
 			url: plugins_path + 'select.php',
 			reader: FileReader,
 			baseParams: {
-				limit: 50,
-				dir: '/'
+				limit: 50
 			}
 		});
-	
+		
+		// set up the columns
+		var columns = [];
+		for(var i = 0; i < File.prototype.fields.items.length; i++)
+		{
+			if(File.prototype.fields.items[i].name.substring(0, 5) == "info-")
+			{
+				columns[columns.length] = {
+					header: File.prototype.fields.items[i].name.substring(5, File.prototype.fields.items[i].name.length),
+					dataIndex: File.prototype.fields.items[i].name,
+					sortable:true
+				};
+			}
+		}
+		
 		var grid = new Ext.grid.GridPanel({
 			region    : 'center',
-			autoExpandColumn: 'filename',
 			store: store,
 	
-			columns: [{
-				id: 'filename',
-				header: "Filename",
-				dataIndex: 'info-Filename',
-				renderer: renderFilename,
-				width: 420,
-				sortable:true
-			}],
+			columns: columns,
 			
 			bbar: new Ext.PagingToolbar({
 				store: store,
@@ -86,8 +91,6 @@ Ext.onReady(function(){
 				scrollDelay: false
 			})
 		});
-	
-	
 	
 		// tabs for the center
 		var tabs = new Ext.TabPanel({
@@ -115,7 +118,35 @@ Ext.onReady(function(){
 		
 		var musicNode = new Ext.tree.TreeNode({
 			text: 'Music',
-			path: '/'
+			path: '/',
+			listeners: {
+				"click": {
+					fn: function(node, e) {
+						// change the items displayed
+						this.store.reload({
+							params: {
+								cat: "db_audio",
+								order_by: "Filepath"
+							}
+						});
+						
+						// hide all the columns
+						for(var i = 0; i < this.colModel.getColumnCount(); i++)
+						{
+							var index = this.colModel.getColumnAt(i).dataIndex;
+							if(index == "info-Album" || index == "info-Artist" || index == "info-Track" || index == "info-Title" || index == "info-Length" || index == "info-Year" || index == "info-Genre")
+							{
+								this.colModel.setHidden(i, false);
+							}
+							else
+							{
+								this.colModel.setHidden(i, true);
+							}
+						}
+					},
+					scope: grid
+				}
+			}
 		});
 		
 		musicNode.appendChild(new Ext.tree.TreeNode({
