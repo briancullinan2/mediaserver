@@ -1,3 +1,6 @@
+2009-07-02
+All relevant admin scripts now use templates the same way any other plugin does
+
 2009-07-01
 Worked on WMP template
 Commented users.php plugin
