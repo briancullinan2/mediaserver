@@ -97,7 +97,7 @@ if(isset($_REQUEST['logs']))
 			// loop through file and get lines
 			while(!feof($fh))
 			{
-				$line = fgets($fh);
+				$line = fgets($fh, BUFFER_SIZE);
 				$line_count++;
 			
 				// try and regexp parse the line

@@ -43,7 +43,7 @@ foreach($type_files as $i => $type_file)
 {
 	// read first line of file to check if it is a list tag
 	$fp = @fopen($type_file, 'r');
-	$line = fgets($fp, 128); // unlikely that it will ever be longer then this
+	$line = fgets($fp, BUFFER_SIZE); // unlikely that it will ever be longer then this
 	fclose($fp);
 	
 	// check if it is LIST tag

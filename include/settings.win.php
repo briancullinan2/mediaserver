@@ -37,11 +37,11 @@ define('HTML_ROOT',                                           'mediaserver/');
 
 // this template folder includes all the files in pages that are accessible
 //  this includes the types of list outputs so other templates don't have to reimplement them to use them
-define('LOCAL_BASE',            				        'templates\default\\');
+define('LOCAL_BASE',            				        'templates\plain\\');
 
 // this is the local filesystem path to the default template, this path should not be used in web pages, instead use HTML_TEMPLATE
 //  this is the template that is used when a template is not specified
-define('LOCAL_DEFAULT',            				        'templates\default\\');
+define('LOCAL_DEFAULT',            				        'templates\plain\\');
 
 // this is the optional template that will be used
 // if this is defined here, the user will not be given an option to choose a template

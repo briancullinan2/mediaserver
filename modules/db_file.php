@@ -456,7 +456,7 @@ class db_file
 				{
 					foreach($columns as $i => $column)
 					{
-						if(!isset($request[$var]) || $request[$var] == '')
+						if(!isset($request['search_' . $column]) || $request['search_' . $column] == '')
 						{
 							if($is_equal)
 							{
@@ -793,9 +793,9 @@ class db_file
 		// remove first item from all duplicates
 		foreach($files as $i => $file)
 		{
-			$GLOBALS['database']->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => 'id=' . $file['id']));
-			
 			log_error('Removing Duplicate ' . constant($module . '::NAME') . ': ' . $file['Filepath']);
+			
+			$GLOBALS['database']->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => 'id=' . $file['id']));
 		}
 		
 		log_error('Cleanup: for ' . constant($module . '::NAME') . ' complete.');

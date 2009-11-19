@@ -2,14 +2,13 @@ Ext.onReady(function(){
 	
 	var defaultRecord = [
 		{name: 'name'},
-		{name: 'icon'},
 		{name: 'index'},
 		{name: 'id'},
-		{name: 'tip'},
 		{name: 'short'},
+		{name: 'class'},
+		{name: 'icon'},
 		{name: 'link'},
 		{name: 'path'},
-		{name: 'ext'},
 		{name: 'cat'},
 		{name: 'selected'}
 	];
@@ -37,6 +36,42 @@ Ext.onReady(function(){
 		}
 		
 		setup();
+	}
+	
+	function renderAlbum(value, metaData, record, rowIndex, colIndex, store)
+	{
+		metaData.css = "albumicon";
+		if(record.data.class == "album")
+		{
+			metaData.attr = 'style="background-image:url(' + record.data.icon + ');background-repeat:no-repeat;background-position:0px 0px;"';
+			return value;
+		}
+		else if(record.data.class == "artist")
+		{
+			metaData.attr = 'style="background-image:url(' + record.data.icon + ');background-repeat:no-repeat;background-position:0px -20px;"';
+			return record.data["info-Artist"];
+		}
+		else if(record.data.class == "genre")
+		{
+			metaData.attr = 'style="background-image:url(' + record.data.icon + ');background-repeat:no-repeat;background-position:0px -40px;"';
+			return record.data["info-Genre"];
+		}
+		else if(record.data.class == "year")
+		{
+			metaData.attr = 'style="background-image:url(' + record.data.icon + ');background-repeat:no-repeat;background-position:0px -60px;"';
+			return record.data["info-Year"];
+		}
+		else if(record.data.class == "last")
+		{
+			metaData.attr = 'style="background-image:url(' + record.data.icon + ');background-repeat:no-repeat;background-position:0px -80px;"';
+			return "";
+		}
+		else if(record.data.class == "none")
+		{
+			metaData.attr = "";
+			metaData.css = "";
+			return "";
+		}
 	}
 	
 	function setup()
@@ -69,26 +104,38 @@ Ext.onReady(function(){
 					dataIndex: File.prototype.fields.items[i].name,
 					sortable:true
 				};
+				
+				if(File.prototype.fields.items[i].name == "info-Album")
+				{
+					columns[columns.length-1].renderer = renderAlbum;
+				}
 			}
 		}
 		
-		var grid = new Ext.grid.GridPanel({
-			region    : 'center',
-			store: store,
-	
-			columns: columns,
-			
-			bbar: new Ext.PagingToolbar({
-				store: store,
-				pageSize:500,
-				displayInfo:true
-			}),
+		var view = new Ext.ux.grid.livegrid.GridView({
+			nearLimit : 100,
+			loadMask  : {
+				msg :  'Buffering. Please wait...'
+			}
+		});
 		
-			view: new Ext.ux.BufferView({
-				// custom row height
-				//rowHeight: 34,
-				// render rows as they come into viewable area.
-				scrollDelay: false
+		var grid = new Ext.ux.grid.livegrid.GridPanel({
+			region         : 'center',
+			enableDragDrop : false,
+			cm             : new Ext.grid.ColumnModel(columns),
+			loadMask       : {
+				msg          : 'Loading...'
+			},
+			store          : new Ext.ux.grid.livegrid.Store({
+				url          : plugins_path + 'select.php',
+				bufferSize   : 300,
+				reader       : FileReader
+			}),
+			selModel       : new Ext.ux.grid.livegrid.RowSelectionModel(),
+			view           : view,
+			bbar           : new Ext.ux.grid.livegrid.Toolbar({
+				view          : view,
+				displayInfo   : true
 			})
 		});
 	
@@ -122,19 +169,13 @@ Ext.onReady(function(){
 			listeners: {
 				"click": {
 					fn: function(node, e) {
-						// change the items displayed
-						this.store.reload({
-							params: {
-								cat: "db_audio",
-								order_by: "Filepath"
-							}
-						});
+						// clear the table
 						
 						// hide all the columns
 						for(var i = 0; i < this.colModel.getColumnCount(); i++)
 						{
 							var index = this.colModel.getColumnAt(i).dataIndex;
-							if(index == "info-Album" || index == "info-Artist" || index == "info-Track" || index == "info-Title" || index == "info-Length" || index == "info-Year" || index == "info-Genre")
+							if(index == "info-Album" || index == "info-Artist" || index == "info-Track" || index == "info-Title" || index == "info-Length" || index == "info-Year" || index == "info-Genre" || index == "info-Filepath")
 							{
 								this.colModel.setHidden(i, false);
 							}
@@ -143,6 +184,15 @@ Ext.onReady(function(){
 								this.colModel.setHidden(i, true);
 							}
 						}
+						
+						// change the items displayed
+						this.store.reload({
+							params: {
+								cat: "db_audio",
+								order_by: "Album,Artist",
+								short: ''
+							}
+						});
 					},
 					scope: grid
 				}

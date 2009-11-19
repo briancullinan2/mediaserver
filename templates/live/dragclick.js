@@ -373,6 +373,9 @@ function getPositionInWindow()
 
 function startDrag(evt)
 {
+	if(selector_off)
+		return true;
+		
 	hideMenu();
 	
 	if(tempY > min_top && tempX > min_left && inited == true)

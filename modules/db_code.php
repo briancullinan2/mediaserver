@@ -179,10 +179,16 @@ class db_code extends db_file
 		$words = array('');
 		if($fp = @fopen(str_replace('/', DIRECTORY_SEPARATOR, $file), 'rb'))
 		{
+			$word_count = 0;
 			while(!feof($fp))
 			{
-				$buffer = trim(fgets($fp));
-				$words = array_unique(array_merge(split('[^a-zA-Z0-9]', strtolower($buffer)), $words));
+				$buffer = trim(fgets($fp, 4096));
+				if($word_count < 4096)
+				{
+					$symbols = split('[^a-zA-Z0-9]', strtolower($buffer), 512);
+					$words = array_merge($symbols, $words);
+					$word_count = count($words);
+				}
 				$lines[] = $buffer;
 			}
 			fclose($fp);
@@ -250,8 +256,12 @@ class db_code extends db_file
 		}
 		
 		// now add the HTML so if this takes too long and fails it won't happen again
-		$fileinfo = self::getHTML($lines, $fileinfo['Language']);
-		$return = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $id));
+		// don't even bother if there are too many words
+		if($fileinfo['Words'] < 4096)
+		{
+			$fileinfo = self::getHTML($lines, $fileinfo['Language']);
+			$return = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $id));
+		}
 		
 		return $id;
 	}

@@ -198,7 +198,7 @@ class db_watch_list extends db_watch
 			usleep(1);
 		}
 		
-		// search for removed files
+		// search for files removed from filesystem
 		$db_files = $GLOBALS['database']->query(array(
 				'SELECT' => db_file::DATABASE,
 				'COLUMNS' => array('Filepath'),
@@ -232,7 +232,7 @@ class db_watch_list extends db_watch
 		$paths = array_diff($paths, $db_paths);
 		foreach($paths as $i => $path)
 		{
-			if(is_dir($path))
+			if(is_dir($path) && self::is_watched($dir))
 			{
 				self::add($path);
 			}

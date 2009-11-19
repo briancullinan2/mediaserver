@@ -1,3 +1,6 @@
+Error found in Live template
+	Advanced search is not using the right variable names in the get request
+	search= variable must also be used in order to override the empty dir
 Figure out why directories take so song to check for changes
 More compatibility testing with clients
 ------------- GENERAL TODO -------------

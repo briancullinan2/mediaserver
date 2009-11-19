@@ -56,7 +56,7 @@ if(!isset($_REQUEST['order']))
 	$_REQUEST['order'] = $_REQUEST['order_by'];
 
 // make select call
-$files = call_user_func_array($_REQUEST['cat'] . '::get', array($_REQUEST, &$count, &$error));
+$files = call_user_func_array($_REQUEST['cat'] . '::get', array($_REQUEST, &$total_count, &$error));
 
 if($files === false)
 {
@@ -118,7 +118,7 @@ if($_REQUEST['order'] != $_REQUEST['order_by'])
 
 $GLOBALS['smarty']->assign('files', $files);
 
-$GLOBALS['smarty']->assign('total_count', $count);
+$GLOBALS['smarty']->assign('total_count', $total_count);
 
 $GLOBALS['smarty']->assign('error', $error);
 
@@ -130,7 +130,7 @@ if(isset($_SESSION['select']))
 if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
 {
 	if(getExt($GLOBALS['templates']['TEMPLATE_SELECT']) == 'php')
-		@include $GLOBALS['templates']['TEMPLATE_SELECT'];
+		include $GLOBALS['templates']['TEMPLATE_SELECT'];
 	else
 	{
 		header('Content-Type: ' . getMime($GLOBALS['templates']['TEMPLATE_SELECT']));

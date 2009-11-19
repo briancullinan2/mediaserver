@@ -105,7 +105,7 @@ else
 if(isset($_SESSION)) session_write_close();
 
 // set the headers
-switch($_REQUEST['encode'])
+switch(strtoupper($_REQUEST['encode']))
 {
 	case 'MP4':
 		header('Content-Type: video/mp4');
@@ -126,6 +126,7 @@ switch($_REQUEST['encode'])
 		header('Content-Type: audio/x-ms-wma');
 		break;
 	default:
+		header('Content-Type: audio/mpeg');
 		$_REQUEST['encode'] = 'MP3';
 }
 
@@ -145,7 +146,7 @@ foreach($_REQUEST as $key => $value)
 }
 
 // here is some presets:
-switch($_REQUEST['encode'])
+switch(strtoupper($_REQUEST['encode']))
 {
 	case 'MP4':
 		$_REQUEST['%VC'] = 'mp4v';

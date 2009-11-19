@@ -1,5 +1,7 @@
 {include file=$templates.TEMPLATE_HEADER}
 <script language="javascript">
+noselect = true;
+
 var cat_columns = [];
 {foreach item=name key=module from=$modules}
 {assign var=tmp_columns value=$module|cat:'::columns'|call_user_func}

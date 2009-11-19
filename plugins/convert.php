@@ -2,6 +2,8 @@
 set_time_limit(0);
 ignore_user_abort(1);
 
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
+
 // if none of the following is defined, tokenize and search
 if(!isset($_REQUEST['id']) && !isset($_REQUEST['item']) && !isset($_REQUEST['on']) && !isset($_REQUEST['file']) && !isset($_REQUEST['search']))
 {
@@ -10,7 +12,7 @@ if(!isset($_REQUEST['id']) && !isset($_REQUEST['item']) && !isset($_REQUEST['on'
 }
 
 // set the header first thing so browser doesn't stall or get tired of waiting for the process to start
-switch($_REQUEST['convert'])
+switch(strtoupper($_REQUEST['convert']))
 {
 	case 'JPG':
 		header('Content-Type: image/jpg');
@@ -21,19 +23,17 @@ switch($_REQUEST['convert'])
 	case 'PNG':
 		header('Content-Type: image/png');
 		break;
+	default:
+		header('Content-Type: image/jpg');
+		$_REQUEST['convert'] = 'header';
 }
-
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
 // add category
 if(!isset($_REQUEST['cat']) || !in_array($_REQUEST['cat'], $GLOBALS['modules']) || constant($_REQUEST['cat'] . '::INTERNAL') == true)
 	$_REQUEST['cat'] = USE_DATABASE?'db_image':'fs_image';
 
-if(!isset($_REQUEST['%IF']) && isset($_REQUEST['id']))
-	$_REQUEST['%IF'] = $_REQUEST['id'];
-
 // check the id and stuff
-if(isset($_REQUEST['%IF']))
+if(isset($_REQUEST))
 {
 	// get the file path from the database
 	$files = call_user_func_array($_REQUEST['cat'] . '::get', array($_REQUEST, &$count, &$error));
@@ -94,7 +94,7 @@ foreach($_REQUEST as $key => $value)
 }
 
 // here is some presets:
-switch($_REQUEST['convert'])
+switch(strtoupper($_REQUEST['convert']))
 {
 	case 'JPG':
 		$_REQUEST['%FM'] = 'jpeg';

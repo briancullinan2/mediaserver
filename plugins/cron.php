@@ -136,81 +136,90 @@ elseif(isset($state_current))
 	$state = array();
 }
 
-if(isset($_REQUEST['entry']) && is_numeric($_REQUEST['entry']) && $_REQUEST['entry'] < count($GLOBALS['watched']) && $_REQUEST['entry'] >= 0)
-	$i = $_REQUEST['entry'];
-
-log_error("Phase 1: Checking for modified Directories; Recursively");
-
-// loop through each watched folder and get a list of all the files
-for($i; $i < count($GLOBALS['watched']); $i++)
+// allow skipping of scanning and go straight to file processing
+if(!isset($_REQUEST['skip_scan']))
 {
-	if(!file_exists(str_replace('/', DIRECTORY_SEPARATOR, $GLOBALS['watched'][$i]['Filepath'])))
+	
+	if(isset($_REQUEST['entry']) && is_numeric($_REQUEST['entry']) && $_REQUEST['entry'] < count($GLOBALS['watched']) && $_REQUEST['entry'] >= 0)
+		$i = $_REQUEST['entry'];
+	
+	log_error("Phase 1: Checking for modified Directories; Recursively");
+	
+	// loop through each watched folder and get a list of all the files
+	for($i; $i < count($GLOBALS['watched']); $i++)
 	{
-		log_error("Error: Directory does not exist! " . $GLOBALS['watched'][$i]['Filepath'] . " is missing!");
-		$should_clean = 0;
-		continue;
-	}
-	$watch = '^' . $GLOBALS['watched'][$i]['Filepath'];
-
-	$status = db_watch::handle($watch);
-
-	// if exited because of time, then save state
-	if( $status === false )
-	{
-		// record the current directory
-		array_push($state, array('index' => $i, 'file' => substr($watch, 1)));
-		array_push($state, array('clean_count' => $clean_count));
-		
-		// serialize and save
-		log_error("Ran out of Time: State saved");
-		$fp = @fopen(LOCAL_ROOT . "state_dirs.txt", "w");
-		if($fp === false) // try tmp dir
-			$fp = @fopen(TMP_DIR . "state_dirs.txt", "w");
-		if($fp !== false)
+		if(!file_exists(str_replace('/', DIRECTORY_SEPARATOR, $GLOBALS['watched'][$i]['Filepath'])))
 		{
-			fwrite($fp, serialize($state));
-			fclose($fp);
+			log_error("Error: Directory does not exist! " . $GLOBALS['watched'][$i]['Filepath'] . " is missing!");
+			$should_clean = 0;
+			continue;
 		}
-		// remove clean because it will mess up the script further down
-		array_pop($state);
-		
-		// since it exited because of time we don't want to continue our for loop
-		//   exit out of the loop so it start off in the same place next time
-		break;
-	}
-	else
-	{
-		// clear state information
-		if(file_exists(LOCAL_ROOT . "state_dirs.txt"))
+		$watch = '^' . $GLOBALS['watched'][$i]['Filepath'];
+	
+		$status = db_watch::handle($watch);
+	
+		// if exited because of time, then save state
+		if( $status === false )
 		{
+			// record the current directory
+			array_push($state, array('index' => $i, 'file' => substr($watch, 1)));
+			array_push($state, array('clean_count' => $clean_count));
+			
+			// serialize and save
+			log_error("Ran out of Time: State saved");
 			$fp = @fopen(LOCAL_ROOT . "state_dirs.txt", "w");
 			if($fp === false) // try tmp dir
 				$fp = @fopen(TMP_DIR . "state_dirs.txt", "w");
 			if($fp !== false)
 			{
-				log_error("Completed successfully: State cleared");
-				$state = array();
-				array_push($state, array('clean_count' => $clean_count));
 				fwrite($fp, serialize($state));
 				fclose($fp);
-				// remove clean because it will mess up the script further down
-				array_pop($state);
 			}
+			// remove clean because it will mess up the script further down
+			array_pop($state);
+			
+			// since it exited because of time we don't want to continue our for loop
+			//   exit out of the loop so it start off in the same place next time
+			break;
+		}
+		else
+		{
+			// clear state information
+			if(file_exists(LOCAL_ROOT . "state_dirs.txt"))
+			{
+				$fp = @fopen(LOCAL_ROOT . "state_dirs.txt", "w");
+				if($fp === false) // try tmp dir
+					$fp = @fopen(TMP_DIR . "state_dirs.txt", "w");
+				if($fp !== false)
+				{
+					log_error("Completed successfully: State cleared");
+					$state = array();
+					array_push($state, array('clean_count' => $clean_count));
+					fwrite($fp, serialize($state));
+					fclose($fp);
+					// remove clean because it will mess up the script further down
+					array_pop($state);
+				}
+			}
+			
+			// set the last updated time in the watched table
+			$GLOBALS['database']->query(array('UPDATE' => db_watch::DATABASE, 'VALUES' => array('Lastwatch' => date("Y-m-d h:i:s")), 'WHERE' => 'Filepath = "' . $watch . '"'));
 		}
 		
-		// set the last updated time in the watched table
-		$GLOBALS['database']->query(array('UPDATE' => db_watch::DATABASE, 'VALUES' => array('Lastwatch' => date("Y-m-d h:i:s")), 'WHERE' => 'Filepath = "' . $watch . '"'));
+		if(isset($_REQUEST['entry']) && is_numeric($_REQUEST['entry']) && $_REQUEST['entry'] < count($GLOBALS['watched']) && $_REQUEST['entry'] >= 0)
+			break;
 	}
+	log_error("Phase 1: Complete!");
 	
-	if(isset($_REQUEST['entry']) && is_numeric($_REQUEST['entry']) && $_REQUEST['entry'] < count($GLOBALS['watched']) && $_REQUEST['entry'] >= 0)
-		break;
+	if(connection_status()!=0)
+	{
+		@fclose($log_fp);
+		exit;
+	}
 }
-log_error("Phase 1: Complete!");
-
-if(connection_status()!=0)
+else
 {
-	@fclose($log_fp);
-	exit;
+	log_error("Phase 1: Skipped because of skip_scan argument.");
 }
 
 // clean up the watch_list and remove stuff that doesn't exist in watch anymore

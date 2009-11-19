@@ -53,7 +53,9 @@
 	</div>
     <!-- include everything after the loading indicator -->
     <link rel="stylesheet" type="text/css" href="/<?php echo HTML_ROOT . HTML_BASE; ?>extjs/resources/css/ext-all.css" />
+	<link rel="stylesheet" type="text/css" href="/<?php echo HTML_ROOT . HTML_BASE; ?>extjs/ux/livegrid/build/resources/css/ext-ux-livegrid.css" />
     <link rel="stylesheet" type="text/css" href="/<?php echo HTML_TEMPLATE; ?>types.css" />
+    <link rel="stylesheet" type="text/css" href="/<?php echo HTML_TEMPLATE; ?>styles.css" />
 
     <!-- GC -->
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading Core API...';</script>
@@ -61,6 +63,7 @@
 
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading UI Components... (Core Components)';</script>
     <script type="text/javascript" src="/<?php echo HTML_ROOT . HTML_BASE; ?>extjs/ext-all-debug.js"></script>
+	<script type="text/javascript" src="/<?php echo HTML_ROOT . HTML_BASE; ?>extjs/ux/livegrid/build/livegrid-all-debug.js"></script>
     <script type="text/javascript" src="/<?php echo HTML_ROOT . HTML_BASE; ?>extjs/ux/XmlTreeLoader.js"></script>
     <script type="text/javascript" src="/<?php echo HTML_ROOT . HTML_BASE; ?>extjs/ux/XMLTreeNode.js"></script>
     <script type="text/javascript" src="/<?php echo HTML_ROOT . HTML_BASE; ?>extjs/ux/BufferView.js"></script>

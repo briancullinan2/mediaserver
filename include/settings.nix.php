@@ -29,7 +29,7 @@ define('LOCAL_USERS', 							LOCAL_ROOT . 'users/');
 
 // this template folder includes all the files in pages that are accessible
 //  this includes the types of list outputs so other templates don't have to reimplement them to use them
-define('LOCAL_BASE',            				        'templates/default/');
+define('LOCAL_BASE',            				        'templates/plain/');
 
 // this is the local filesystem path to the default template, this path should not be used in web pages, instead use HTML_TEMPLATE
 //  this is the template that is used when a template is not specified
@@ -115,17 +115,17 @@ define('TMP_DIR', 	                             '/tmp/');
 define('USE_ALIAS', 							 true);
 
 // how long to search for directories that have changed
-define('DIRECTORY_SEEK_TIME',		60);
+define('DIRECTORY_SEEK_TIME',		120);
 
 // how long to search for changed files or add new files
-define('FILE_SEEK_TIME', 		   60);
+define('FILE_SEEK_TIME', 		   240);
 
 // how long to clean up files
 define('CLEAN_UP_BUFFER_TIME',				45);
 
 // how many times should we be able to run the cron script before a cleanup is needed?
 //  cleanup will also be fired when a directory change is detected, this may not always be accurate
-define('CLEAN_UP_THREASHOLD', 				3);
+define('CLEAN_UP_THREASHOLD', 				10);
 
 ini_set('include_path', '.:/usr/share/php:/usr/share/pear:' . LOCAL_ROOT . 'include/');
 

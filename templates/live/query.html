@@ -67,7 +67,7 @@ $this->assign('newlineregexp', '/([^ ]{25})/i');
 			<h1 class="title">{if $current eq ''}{$smarty.const.HTML_NAME|@htmlspecialchars}{else}{$current|@htmlspecialchars}{/if}</h1>
 {assign var=page value=$smarty.request.start|intval}
 {assign var=item_count value=$files|@count}
-			<span class="subText">Click to browse files. Drag to select files, and right click for download options.</span>{if $error eq '' and count($files) > 0}<span class="subText">Displaying items {$smarty.request.start} to {$page+$item_count}{if $total_count > $smarty.request.limit} out of {$total_count} file(s){/if}.</span>{/if}
+			<span class="subText">Click to browse files. Drag to select files, and right click for download options.</span>{if $error eq '' and count($files) > 0}<span class="subText">Displaying items {$smarty.request.start+1} through {$page+$item_count}{if $total_count > $smarty.request.limit} out of {$total_count} file(s){/if}.</span>{/if}
 {include file=$templates.TEMPLATE_PAGES}
 			<div class="titlePadding"></div>
 			<div class="files" id="files">

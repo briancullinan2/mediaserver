@@ -118,7 +118,7 @@ class db_playlist extends db_file
 				case 'WPL':
 					while(!feof($fp))
 					{
-						$buffer = trim(fgets($fp));
+						$buffer = trim(fgets($fp, 4096));
 						$count = preg_match('/\<media src="([^"]*)"( ?(t|c)id=| ?\/\>)/i', $buffer, $matches);
 						if($count > 0 && trim($matches[1]) != '')
 						{
@@ -128,7 +128,7 @@ class db_playlist extends db_file
 				case 'M3U':
 					while(!feof($fp))
 					{
-						$buffer = trim(fgets($fp));
+						$buffer = trim(fgets($fp, 4096));
 						$count = preg_match('/^\s*([^#])(.*)/i', $buffer, $matches);
 						if($count > 0 && trim($matches[1] . $matches[2]) != '')
 						{
@@ -137,10 +137,10 @@ class db_playlist extends db_file
 					}
 				case 'TXT':
 					// try and find some paths or something
-					$buffer = fgets($fp);
+					$buffer = fgets($fp, 4096);
 					while(!feof($fp))
 					{
-						$buffer = trim(fgets($fp));
+						$buffer = trim(fgets($fp, 4096));
 						$buffer = str_replace(chr(0), '', $buffer);
 						// there must be at least 1 directory
 						$count = preg_match('/(([^\\\\\\/\\:\\*\\?\\<\\>\\|]+[\\\\\\/])+[^\\\\\\/\\:\\*\\?\\<\\>\\|]+\.[a-z0-9]+)([^a-z0-9]|$)/i', $buffer, $matches);

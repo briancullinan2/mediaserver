@@ -51,7 +51,8 @@ else
 }
 
 // assign variables for a smarty template to use
-$GLOBALS['smarty']->assign('username', $_REQUEST['username']);
+if(isset($_REQUEST['username']))
+	$GLOBALS['smarty']->assign('username', $_REQUEST['username']);
 
 $GLOBALS['smarty']->assign('error', $error);
 
@@ -59,10 +60,13 @@ $GLOBALS['smarty']->assign('error', $error);
 if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
 {
 	// check to see if there is a template for the action
-	$template = $GLOBALS['templates']['TEMPLATE_USERS'];
 	if(isset($GLOBALS['templates']['TEMPLATE_LOGIN']))
 	{
 		$template = $GLOBALS['templates']['TEMPLATE_LOGIN'];
+	}
+	else
+	{
+		$template = $GLOBALS['templates']['TEMPLATE_USERS'];
 	}
 	
 	// if not use the default users template
