@@ -1,0 +1,45 @@
+.html-default {
+    color: Black;
+}
+.html-code {
+    color: Gray;
+}
+.html-brackets {
+    color: Olive;
+}
+.html-comment {
+    color: Orange;
+}
+.html-quotes {
+    color: Blue;
+}
+.html-string {
+    color: Blue;
+}
+.html-identifier {
+    color: Blue;
+}
+.html-builtin {
+    color: Teal;
+}
+.html-reserved {
+    color: Green;
+}
+.html-inlinedoc {
+    color: Blue;
+}
+.html-var {
+    color: Darkblue;
+}
+.html-url {
+    color: Blue;
+}
+.html-special {
+    color: Navy;
+}
+.html-number {
+    color: Maroon;
+}
+.html-inlinetags {
+    color: Blue;
+}

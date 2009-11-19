@@ -1,0 +1,19 @@
+<form action="{$smarty.server.PHP_SELF|htmlspecialchars}" method="post">
+Display Options:<br />
+{assign var=column_count value=0}
+{section name=column loop=$columns}
+{assign var=column_key value=$columns[column]}
+{if isset($smarty.session.columns)}
+	{assign var=column_selected value=$column_key|in_array:$smarty.session.columns}
+{else}
+	{assign var=column_selected value=false}
+{/if}
+{assign var=column_count value=$column_count+1}
+<input type="checkbox" name="column[{$columns[column]}]" value="on" {if $column_selected}checked="checked"{/if} />{$columns[column]}{if $column_count < count($columns)} | {/if}
+{/section}
+<br /><br />
+List view:<br />
+<input type="radio" name="type" value="mono" />Monospace | <input type="radio" name="type" value="table" />Table | <input type="radio" name="type" value="dash" />Dash demilited 
+<br />
+<input type="submit" name="display" value="Save" />
+</form>

@@ -1,0 +1,51 @@
+.java-default {
+    color: Black;
+}
+.java-code {
+    color: Gray;
+}
+.java-brackets {
+    color: #0000CC;
+}
+.java-comment {
+    color: #009900;
+}
+.java-javadoc {
+    color: #6666CC;
+}
+.java-quotes {
+    color: Blue;
+}
+.java-string {
+    color: Blue;
+}
+.java-identifier {
+    color: Black;
+}
+.java-builtin {
+    color: Teal;
+}
+.java-reserved {
+    color: #990066;
+	font-weight:bold;
+}
+.java-inlinedoc {
+    color: #0099CC;
+	font-weight:bold;
+}
+.java-var {
+    color: Darkblue;
+}
+.java-url {
+    color: Blue;
+}
+.java-special {
+    color: Navy;
+}
+.java-number {
+    color: Red;
+}
+.java-inlinetags {
+    color: Red;
+	font-weight:bold;
+}

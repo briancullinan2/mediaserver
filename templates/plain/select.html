@@ -1,0 +1,223 @@
+{if $smarty.const.USE_DATABASE}{assign var=prefix value='db_'}{else}{assign var=prefix value='fs_'}{/if}
+{php}
+$parts = array();
+$search = stripslashes($_REQUEST['search']);
+if($search[0] != '"' && $search[strlen($search)-1] != '"' && $search[0] != '/' && $search[strlen($search)-1] != '/' && $search[0] != '=' && $search[strlen($search)-1] != '=')
+{
+	if(isset($_REQUEST['search'])) $parts = split(' ', stripslashes($_REQUEST['search']));
+	foreach($parts as $i => $part)
+	{
+		if($part[0] == '+') $part = substr($part, 1);
+		$parts[$i] = '/' . preg_quote($part) . '/i';
+	}
+}
+elseif($search[0] == '"' && $search[strlen($search)-1] == '"')
+{
+	$parts = array(0 => '/' . preg_quote(substr($search, 1, strlen($search)-2)) . '/i');
+}
+elseif($search[0] == '/' && $search[strlen($search)-1] == '/')
+{
+	$parts = array(0 => $search . 'i');
+}
+elseif($search[0] == '=' && $search[strlen($search)-1] == '=')
+{
+	$parts = array(0 => '/^' . preg_quote(substr($search, 1, strlen($search)-2)) . '$/i');
+}
+$this->assign('parts', $parts);
+{/php}
+{if $smarty.request.detail == 0 || $smarty.request.detail == 1 || $smarty.request.detail == 2}
+	There are {$total_count} result(s).<br />
+	{assign var=page value=$smarty.request.start|intval}
+	{assign var=item_count value=$files|@count}
+	Displaying items {$smarty.request.start} to {$page+$item_count}.
+	<form name="select" action="" method="post">
+		<input type="submit" name="select" value="All" /><input type="submit" name="select" value="None" /><br />
+		<p style="white-space:nowrap">
+		Select<br />
+		On : Off<br />
+		{section name=file loop=$files}
+            {assign var=type_arr value='/'|@split:$files[file].Filemime}
+            {assign var=type value=$type_arr.0}
+			{if isset($smarty.session.selected)}
+				{assign var=item_selected value=$files[file].id|in_array:$smarty.session.selected}
+			{else}
+				{assign var=item_selected value=false}
+			{/if}
+			<input type="radio" name="item[{$files[file].id}]" value="on" {if $item_selected}checked="checked"{/if} />
+			<input type="radio" name="item[{$files[file].id}]" value="off" {if !$item_selected}checked="checked"{/if} />
+            {if $smarty.request.detail < 2}
+                {if $files[file].Filetype=="FOLDER" || 
+                	($files[file].Filepath|@handles:'archive' && $smarty.request.cat != $prefix|cat:'archive') || 
+                    ($files[file].Filepath|@handles:'playlist' && $smarty.request.cat != $prefix|cat:'playlist') || 
+                    ($files[file].Filepath|@handles:'diskimage' && $smarty.request.cat != $prefix|cat:'diskimage')
+                }<a href="?dir={$files[file].Filepath|urlencode|htmlspecialchars}{if $files[file].Filepath|@handles:'archive'}&cat={$prefix}archive{elseif $files[file].Filepath|@handles:'diskimage'}&cat={$prefix}diskimage{elseif $files[file].Filepath|@handles:'playlist'}&cat={$prefix}playlist{else}&cat={$smarty.request.cat}{/if}">{$parts|@preg_replace:'<b>$0</b>':$files[file].Filepath}</a>
+                {elseif $files[file].Filepath|@handles:'archive'}<a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}archive.php/{$smarty.request.cat}/{$files[file].id}/OUT/{$files[file].Filename}">{$parts|@preg_replace:'<b>$0</b>':$files[file].Filepath}</a>
+                {elseif $files[file].Filepath|@handles:'diskimage'}<a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}file.php/{$prefix}diskimage/{$files[file].id}/{$files[file].Filename}">{$parts|@preg_replace:'<b>$0</b>':$files[file].Filepath}</a>
+                {elseif $files[file].Filepath|@handles:'image_browser'}<a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}file.php/{$prefix}image_browser/{$files[file].id}/{$files[file].Filename}">{$parts|@preg_replace:'<b>$0</b>':$files[file].Filepath}</a>
+                {else}<a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}file.php/{$smarty.request.cat}/{$files[file].id}/{$files[file].Filename}">{$parts|@preg_replace:'<b>$0</b>':$files[file].Filepath}</a>{/if}
+            {elseif $smarty.request.detail == 2}
+				{foreach from=$smarty.session.columns item=column_value}
+					{if isset($files[file].$column_value)}
+						- {$files[file].$column_value}
+					{/if}
+				{/foreach}
+			{/if}
+            - Download:
+            	<a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}zip.php/{$smarty.request.cat}/{$files[file].id}/Files.zip">zip</a> :
+                <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}bt.php/{$smarty.request.cat}/{$files[file].id}/Files.torrent">torrent</a>
+                {if $files[file].Filepath|@handles:'video'}
+                : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode.php/{$smarty.request.cat}/{$files[file].id}/MP4/{$files[file].Filename}.mp4">mp4</a>
+                : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode.php/{$smarty.request.cat}/{$files[file].id}/MPG/{$files[file].Filename}.mpeg">mpg</a>
+                : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode.php/{$smarty.request.cat}/{$files[file].id}/WMV/{$files[file].Filename}.wmv">wmv</a>
+                {elseif $files[file].Filepath|@handles:'audio'}
+                : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode.php/{$smarty.request.cat}/{$files[file].id}/MP4A/{$files[file].Filename}.mp4">mp4</a>
+                : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode.php/{$smarty.request.cat}/{$files[file].id}/MP3/{$files[file].Filename}.mp3">mp3</a>
+                : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}encode.php/{$smarty.request.cat}/{$files[file].id}/WMA/{$files[file].Filename}.wma">wma</a>
+                {elseif $files[file].Filepath|@handles:'image'}
+                : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}convert.php/{$smarty.request.cat}/{$files[file].id}/JPG/{$files[file].Filename}.jpg">jpg</a>
+                : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}convert.php/{$smarty.request.cat}/{$files[file].id}/GIF/{$files[file].Filename}.gif">gif</a>
+                : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}convert.php/{$smarty.request.cat}/{$files[file].id}/PNG/{$files[file].Filename}.png">png</a>
+                {elseif $files[file].Filepath|@handles:'code'}
+                : <a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}file.php/{$prefix}code/{$files[file].id}/{$files[file].Filename}.html">view</a>
+              {/if}
+			<br />
+		{/section}
+		</p>
+		<input name="select" type="submit" value="Save" /><input type="reset" value="Reset" /><br />
+	</form>
+	{include file=$templates.TEMPLATE_PAGES}<br />
+{elseif $smarty.request.detail == 3}
+	There are {$total_count} result(s).<br />
+	{assign var=page value=$smarty.request.start|intval}
+	{assign var=item_count value=$files|@count}
+	Displaying items {$smarty.request.start} to {$page+$item_count}.
+	<form name="select" action="" method="post">
+		<input type="submit" name="select" value="All" /><input type="submit" name="select" value="None" /><br />
+		<p style="white-space:nowrap">
+		{php}
+        $files = $this->get_template_vars('files');
+		// get the longest column for each row
+		$column_lengths = array();
+        if(isset($_SESSION['columns']))
+        {
+            foreach($_SESSION['columns'] as $i => $name)
+            {
+                $column_lengths[$name] = strlen($name);
+                foreach($files as $i => $file)
+                {
+                    if(strlen($file[$name]) > $column_lengths[$name]) $column_lengths[$name] = strlen($file[$name]);
+                }
+            }
+        }
+		$this->assign('column_lengths', $column_lengths);
+		{/php}
+		<span class="column">On/Off</span>
+		{foreach from=$smarty.session.columns item=column_value key=column_key}
+            {assign var=column_len value=$column_lengths.$column_value}
+            {assign var=format_str value="%-"|cat:$column_len+2|cat:"s"}
+            <span class="column">{$column_value|string_format:$format_str}</span>
+		{/foreach}
+		<span class="column">Download</span>
+		<br />
+		{section name=file loop=$files}
+			{if isset($smarty.session.selected)}
+				{assign var=item_selected value=$files[file].id|in_array:$smarty.session.selected}
+			{else}
+				{assign var=item_selected value=false}
+			{/if}
+			<span class="column"> <input type="radio" name="item[{$files[file].id}]" value="on" {if $item_selected}checked="checked"{/if} /><input type="radio" name="item[{$files[file].id}]" value="off" {if !$item_selected}checked="checked"{/if} /> </span>
+			{foreach from=$smarty.session.columns item=column_value}
+				{if isset($files[file].$column_value)}
+					{assign var=column_len value=$column_lengths.$column_value}
+					{assign var=format_str value="%-"|cat:$column_len+2|cat:"s"}
+					<span class="column">{$files[file].$column_value|string_format:$format_str}</span>
+				{/if}
+			{/foreach}
+			<span class="column"><a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}zip.php/{$smarty.request.cat}/{$files[file].id}/Files.zip">zip</a>:<a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}bt.php/{$smarty.request.cat}/{$files[file].id}/Files.torrent">torrent</a></span>
+			<span style="display:block; float:left; clear:both;"></span><br />
+		{/section}
+		</p>
+		<input name="select" type="submit" value="Save" /><input type="reset" value="Reset" /><br />
+	</form>
+	{include file=$templates.TEMPLATE_PAGES}<br />
+{elseif $smarty.request.detail == 4}
+	There are {$total_count} result(s).<br />
+	{assign var=page value=$smarty.request.start|intval}
+	{assign var=item_count value=$files|@count}
+	Displaying items {$smarty.request.start} to {$page+$item_count}.
+	<form name="select" action="" method="post">
+		<input type="submit" name="select" value="All" /><input type="submit" name="select" value="None" /><br />
+		<table class="select_list">
+			<thead>
+				<td>On/Off</td>
+{assign var=columns value=$smarty.session.columns}{assign var=column_count value=$columns|@count}
+{foreach name=columns from=$columns item=column_value}{assign var=items_after value=''}{assign var=items_before value=''}
+{section name=link_column loop=$columns}
+{assign var=item_after value=$smarty.section.link_column.index-1}{assign var=item_before value=$smarty.section.link_column.index+1}
+{if $columns[link_column] neq $column_value}
+{if $column_value eq $columns.$item_after}{assign var=items_after value=$items_after|cat:$columns[link_column]|cat:","|cat:$column_value|cat:","}
+{else}{assign var=items_after value=$items_after|cat:$columns[link_column]|cat:","}{/if}
+{if $column_value eq $columns.$item_before}{assign var=items_before value=$items_before|cat:$column_value|cat:","|cat:$columns[link_column]|cat:","}
+{else}{assign var=items_before value=$items_before|cat:$columns[link_column]|cat:","}{/if}
+{/if}
+{/section}
+{assign var=column_link_len value=$items_before|strlen}{assign var=items_before value=$items_before|substr:0:$column_link_len-1}{assign var=column_link_len value=$items_after|strlen}{assign var=items_after value=$items_after|substr:0:$column_link_len-1}
+				<td>{if $smarty.foreach.columns.index > 0}<a href="{$smarty.server.PHP_SELF}?column={$items_before}&display=">&lt;</a> {/if}{if isset($display.order) && $display.order eq $column_value}{$column_value}{else}<a href="{$smarty.server.PHP_SELF}?order={$column_value}&display=">{$column_value}</a>{/if}{if $smarty.foreach.columns.index < $column_count-1} <a href="{$smarty.server.PHP_SELF}?column={$items_after}&display=">&gt;</a>{/if}</td>
+{/foreach}
+				<td>Download</td>
+			</thead>
+{section name=file loop=$files}
+			<tr>
+{if isset($smarty.session.selected)}{assign var=item_selected value=$files[file].id|in_array:$smarty.session.selected}
+{else}{assign var=item_selected value=false}{/if}
+				<td><input type="radio" name="item[{$files[file].id}]" value="on" {if $item_selected}checked="checked"{/if} /><input type="radio" name="item[{$files[file].id}]" value="off" {if !$item_selected}checked="checked"{/if} /></td>
+{foreach from=$smarty.session.columns item=column_value}
+				<td>{if isset($files[file].$column_value)}{$files[file].$column_value}{/if}</td>
+{/foreach}
+				<td><a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}zip.php/{$smarty.request.cat}/{$files[file].id}/Files.zip">zip</a>:<a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}bt.php/{$smarty.request.cat}/{$files[file].id}/Files.torrent">torrent</a></td>
+			</tr>
+{/section}
+		</table>
+		<input name="select" type="submit" value="Save" /><input type="reset" value="Reset" /><br />
+	</form>
+	{include file=$templates.TEMPLATE_PAGES}<br />
+{elseif $smarty.request.detail == 5}
+	There are {$total_count} result(s).<br />
+	{assign var=page value=$smarty.request.start|intval}
+	{assign var=item_count value=$files|@count}
+	Displaying items {$smarty.request.start} to {$page+$item_count}.
+	<form name="select" action="" method="post">
+		<input type="submit" name="select" value="All" /><input type="submit" name="select" value="None" /><br />
+		<table class="select_list">
+			<thead style="white-space:nowrap">
+{assign var=columns value=$smarty.session.columns}{assign var=column_count value=$columns|@count}
+{foreach name=columns from=$columns item=column_value}{assign var=items_after value=''}{assign var=items_before value=''}
+{section name=link_column loop=$columns}
+{assign var=item_after value=$smarty.section.link_column.index-1}{assign var=item_before value=$smarty.section.link_column.index+1}
+{if $columns[link_column] neq $column_value}
+{if $column_value eq $columns.$item_after}{assign var=items_after value=$items_after|cat:$columns[link_column]|cat:","|cat:$column_value|cat:","}
+{else}{assign var=items_after value=$items_after|cat:$columns[link_column]|cat:","}{/if}
+{if $column_value eq $columns.$item_before}{assign var=items_before value=$items_before|cat:$column_value|cat:","|cat:$columns[link_column]|cat:","}
+{else}{assign var=items_before value=$items_before|cat:$columns[link_column]|cat:","}{/if}
+{/if}
+{/section}
+{assign var=column_link_len value=$items_before|strlen}{assign var=items_before value=$items_before|substr:0:$column_link_len-1}{assign var=column_link_len value=$items_after|strlen}{assign var=items_after value=$items_after|substr:0:$column_link_len-1}
+				<td>{if $smarty.foreach.columns.index > 0}<a href="{$smarty.server.PHP_SELF}?column={$items_before}&display=">&lt;</a> {/if}{if isset($display.order) && $display.order eq $column_value}{$column_value}{else}<a href="{$smarty.server.PHP_SELF}?order={$column_value}&display=">{$column_value}</a>{/if}{if $smarty.foreach.columns.index < $column_count-1} <a href="{$smarty.server.PHP_SELF}?column={$items_after}&display=">&gt;</a>{/if}</td>
+{/foreach}
+				<td>Download</td>
+			</thead>
+{section name=file loop=$files}
+			<tr style="white-space:nowrap">
+{if isset($smarty.session.selected)}{assign var=item_selected value=$files[file].id|in_array:$smarty.session.selected}
+{else}{assign var=item_selected value=false}{/if}
+{foreach from=$smarty.session.columns item=column_value}
+				<td>{if isset($files[file].$column_value)}{$files[file].$column_value}{/if}</td>
+{/foreach}
+				<td><a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}zip.php/{$smarty.request.cat}/{$files[file].id}/Files.zip">zip</a>:<a href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}bt.php/{$smarty.request.cat}/{$files[file].id}/Files.torrent">torrent</a></td>
+			</tr>
+{/section}
+		</table>
+		<input name="select" type="submit" value="Save" /><input type="reset" value="Reset" /><br />
+	</form>
+	{include file=$templates.TEMPLATE_PAGES}<br />
+{/if}
