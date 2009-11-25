@@ -102,11 +102,11 @@ items[{$files[file].id}] = {if $item_selected}true{else}false{/if};
 <a href="javascript:none_on();" class="big" style="float:left; clear:none; display:inline;">None</a>
 {include file=$templates.TEMPLATE_PAGES}
 {else}
-{section name=module loop=$modules}
-	{assign var=module_name value=$modules[module]|cat:'::NAME'|@constant}
+{foreach key=module from=$modules item=desc}
+	{assign var=module_name value=$module|cat:'::NAME'|@constant}
 	{assign var=cut_off value=$module_name|@strpos:' from'}
     {if $cut_off != 0} <a href="?cat={$modules[module]}" class="big">{$module_name|@substr:0:$cut_off} &gt;</a> {/if}
-{/section}
+{/foreach}
 {/if}
 </body>
 </html>
