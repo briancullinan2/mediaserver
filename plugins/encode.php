@@ -16,6 +16,10 @@ if(!isset($_REQUEST['id']) && !isset($_REQUEST['item']) && !isset($_REQUEST['on'
 	$_REQUEST['search'] = join(' ', $request_tokens['All']);
 }
 
+// add category
+if(!isset($_REQUEST['cat']) || !in_array($_REQUEST['cat'], $GLOBALS['modules']) || constant($_REQUEST['cat'] . '::INTERNAL') == true)
+	$_REQUEST['cat'] = USE_DATABASE?'db_file':'fs_file';
+
 // check for file extension if this encode variable is not set
 if(!isset($_REQUEST['encode']))
 {

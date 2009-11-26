@@ -18,6 +18,9 @@ fclose($fp);
 
 $error = '';
 
+if(isset($_REQUEST['auth']) && !isset($_REQUEST['action']))
+	$_REQUEST['action'] = 'ping';
+
 // check for the action
 if(isset($_REQUEST['action']))
 {
@@ -70,7 +73,7 @@ if(isset($_REQUEST['action']))
 		$genre_count = $result[0]['count(*)'];
 		
 		// set the variables in the template
-		$GLOBALS['smarty']->assign('auth', $session_id());
+		$GLOBALS['smarty']->assign('auth', session_id());
 		
 		$GLOBALS['smarty']->assign('song_count', $song_count);
 		
@@ -108,8 +111,6 @@ if(isset($_REQUEST['action']))
 				$files[$artist['Artist']]['AlbumCount'] += 1;
 			}
 		}
-		
-		$files = array_values($files);
 		
 		// set the variables in the template		
 		$GLOBALS['smarty']->assign('files', $files);
@@ -165,6 +166,10 @@ if(isset($_REQUEST['action']))
 			'WHERE' => 'Album = "' . addslashes($artist_album[0]['Album']) . '" AND Artist = "' . addslashes($artist_album[0]['Artist']) . '"'
 		));
 		
+		// the ids module will do the replacement of the ids
+		if(count($files) > 0)
+			$files = db_ids::get(array('cat' => 'db_audio'), $tmp_count, $tmp_error, $files);
+				
 		// set the variables in the template		
 		$GLOBALS['smarty']->assign('files', $files);
 		

@@ -11,7 +11,7 @@ echo '<?xml version="1.0" encoding="utf-8" ?>';
 // if there is an error print that out and exit
 if($error != '')
 {
-	?><error code="<?php echo $error_code; ?>"><![CDATA[<?php echo $error; ?>]]></error><?php
+	?><error code="<?php echo $error_code; ?>"><![CDATA[<?php echo $error; ?>]]></error></root><?php
 	exit;
 }
 
