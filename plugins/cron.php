@@ -203,7 +203,7 @@ if(!isset($_REQUEST['skip_scan']))
 			}
 			
 			// set the last updated time in the watched table
-			$GLOBALS['database']->query(array('UPDATE' => db_watch::DATABASE, 'VALUES' => array('Lastwatch' => date("Y-m-d h:i:s")), 'WHERE' => 'Filepath = "' . $watch . '"'));
+			$GLOBALS['database']->query(array('UPDATE' => db_watch::DATABASE, 'VALUES' => array('Lastwatch' => date("Y-m-d h:i:s")), 'WHERE' => 'Filepath = "' . $watch . '"'), false);
 		}
 		
 		if(isset($_REQUEST['entry']) && is_numeric($_REQUEST['entry']) && $_REQUEST['entry'] < count($GLOBALS['watched']) && $_REQUEST['entry'] >= 0)
@@ -245,7 +245,7 @@ do
 		
 		// do not call self::remove because we want to leave the folders inside of the current one so they will be scanned also
 		// delete the selected folder from the database
-		$GLOBALS['database']->query(array('DELETE' => db_watch_list::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($dir) . '"'));
+		$GLOBALS['database']->query(array('DELETE' => db_watch_list::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($dir) . '"'), false);
 	}
 
 	// don't put too much load on the system

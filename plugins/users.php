@@ -1,5 +1,7 @@
 <?php
 
+define('USERS_PRIV', 				1);
+
 // add users
 // remove users
 // view a user profile
@@ -7,6 +9,14 @@
 
 // load stuff we might need
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
+
+if( $_SESSION['privilage'] < USERS_PRIV )
+{
+	// redirect to login page
+	header('Location: /' . HTML_PLUGINS . 'login.php?return=' . $_SERVER['REQUEST_URI'] . '&required_priv=' . USERS_PRIV);
+	
+	exit();
+}
 
 // add category
 if(!isset($_REQUEST['users']))
@@ -32,7 +42,7 @@ switch($_REQUEST['users'] == 'register')
 				'WHERE' => 'Username = "' . addslashes($_REQUEST['username']) . '"',
 				'LIMIT' => 1
 			)
-		);
+		, false);
 		
 		if( count($db_user) > 0 )
 		{

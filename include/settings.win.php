@@ -102,6 +102,9 @@ define('ARCHIVE_ARGS_RAR',                           ' p %IF'); // a program tha
 
 // finally some general options, just used to avoid hardcoding stuff
 
+// debug mode is used by many templates to display debugging options on the page
+define('DEBUG_MODE', 							true);
+
 // max amount to output when accessing a file
 define('BUFFER_SIZE', 	                         2*1024*8);
 

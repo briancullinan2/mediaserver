@@ -1,14 +1,25 @@
 <?php
 
-// handle selecting of files
-
 // Variables Used:
 //  files, total_count, error, select
 // Shared Variables:
 //  columns, templates
 
+define('SELECT_PRIV', 				1);
+
+// handle selecting of files
+
 // load stuff we might need
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
+
+// make sure user in logged in
+if( $_SESSION['privilage'] < SELECT_PRIV )
+{
+	// redirect to login page
+	header('Location: /' . HTML_PLUGINS . 'login.php?return=' . $_SERVER['REQUEST_URI'] . '&required_priv=' . SELECT_PRIV);
+	
+	exit();
+}
 	
 // get all columns from every module
 $columns = getAllColumns();
@@ -68,7 +79,10 @@ $order_keys_values = array();
 
 // the ids module will do the replacement of the ids
 if(count($files) > 0)
+{
 	$files = db_ids::get(array('cat' => $_REQUEST['cat']), $tmp_count, $tmp_error, $files);
+	$files = db_users::get(array(), $tmp_count, $tmp_error, $files);
+}
 
 // get all the other information from other modules
 foreach($files as $index => $file)

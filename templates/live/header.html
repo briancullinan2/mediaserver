@@ -23,6 +23,7 @@ var loaded = false;
 					<td id="templates">{include file=$templates.TEMPLATE_TEMPLATE}</td>
 				</tr>
 			</table>
+{if $smarty.const.DEBUG_MODE eq true}<div id="debug" class="debug">{if $smarty.session.loggedin eq true}{else}<form action="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}login.php?return={$smarty.server.REQUEST_URI}" method="post">Administrators: Log in to select debug options. Username: <input type="text" name="username" value="" /> Password: <input type="password" name="password" value="" /><input type="submit" value="Login" /><input type="reset" value="Reset" /></form>{/if}</div>{/if}
 			<div id="container">
 				<table width="100%" cellpadding="5" cellspacing="0">
 					<tr>

@@ -102,7 +102,7 @@ class db_amazon extends db_file
 							'WHERE' => 'Filepath = "' . addslashes($file) . '"',
 							'LIMIT' => 1
 						)
-					);
+					, false);
 					if(count($audio) > 0)
 					{
 						$artist = $audio[0]['Artist'];
@@ -124,7 +124,7 @@ class db_amazon extends db_file
 						'WHERE' => 'Filepath = "' . addslashes($artist . "\n" . $album) . '"',
 						'LIMIT' => 1
 					)
-				);
+				, false);
 				
 				if( count($amazon) == 0 )
 				{
@@ -326,7 +326,7 @@ class db_amazon extends db_file
 		log_error('Adding Amazon Music: ' . $artist . ' - ' . $album);
 		
 		// add to database
-		$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
+		$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
 
 		return $id;
 	}
@@ -339,7 +339,7 @@ class db_amazon extends db_file
 		log_error('Adding Amazon Movie: ' . $title);
 		
 		// add to database
-		$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
+		$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
 		
 		return $id;
 	}
@@ -361,7 +361,7 @@ class db_amazon extends db_file
 							'WHERE' => 'Filepath = "' . addslashes($audio[0]['Artist'] . "\n" . $audio[0]['Album']) . '"',
 							'LIMIT' => 1
 						)
-					);
+					, true);
 				}
 				else
 				{
@@ -378,7 +378,7 @@ class db_amazon extends db_file
 							'WHERE' => 'Filepath = "' . addslashes($movie[0]['Title']) . '"',
 							'LIMIT' => 1
 						)
-					);
+					, true);
 				}
 				else
 				{
@@ -397,7 +397,7 @@ class db_amazon extends db_file
 						'WHERE' => 'Filepath = "' . addslashes($artist . "\n" . $album) . '"',
 						'LIMIT' => 1
 					)
-				);
+				, true);
 			}
 			else
 			{
@@ -429,7 +429,7 @@ class db_amazon extends db_file
 						'WHERE' => 'Filepath = "' . addslashes($title) . '"',
 						'LIMIT' => 1
 					)
-				);
+				, true);
 				
 				if(count($amazon) > 0)
 				{

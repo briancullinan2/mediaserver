@@ -2,7 +2,18 @@
 set_time_limit(0);
 ignore_user_abort(1);
 
+define('CONVERT_PRIV', 				1);
+
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
+
+// make sure user in logged in
+if( $_SESSION['privilage'] < CONVERT_PRIV )
+{
+	// redirect to login page
+	header('Location: /' . HTML_PLUGINS . 'login.php?return=' . $_SERVER['REQUEST_URI'] . '&required_priv=' . CONVERT_PRIV);
+	
+	exit();
+}
 
 // if none of the following is defined, tokenize and search
 if(!isset($_REQUEST['id']) && !isset($_REQUEST['item']) && !isset($_REQUEST['on']) && !isset($_REQUEST['file']) && !isset($_REQUEST['search']))

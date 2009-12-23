@@ -18,6 +18,11 @@ body {
 	direction:ltr;
 }
 
+.debug {
+	border:3px solid #FC0;
+	background-color:#FF6;
+}
+
 #selector {
 	-moz-opacity:.25;
 	opacity: .25;

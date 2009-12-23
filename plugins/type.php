@@ -1,10 +1,19 @@
 <?php
 
 // type selector for list.php
-
+define('TYPE_PRIV', 				1);
 
 // load template
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
+
+// make sure user in logged in
+if( $_SESSION['privilage'] < TYPE_PRIV )
+{
+	// redirect to login page
+	header('Location: /' . HTML_PLUGINS . 'login.php?return=' . $_SERVER['REQUEST_URI'] . '&required_priv=' . TYPE_PRIV);
+	
+	exit();
+}
 
 if(isset($_REQUEST['type_select']))
 {

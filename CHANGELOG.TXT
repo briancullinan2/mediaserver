@@ -1,3 +1,22 @@
+2009-12-20
+Worked on user implementation
+	checkAccess() function in common.php double checks that each file is accessible by the current user
+	sql.php creates default users in install() function, used in other places
+	Statement_builder() function adds to where clause so that only files the current user has access to appears in the results
+	New required variable to query() function in sql.php, determines whether or not to add to where clause based on if the results will ever be displayed to users
+Changed all plugins to check for user permissions
+Changes all modules and Database->query() calls to decide to include private user files
+Fixed some template issues
+Added SECRET_KEY value to settings.php
+Also added DEBUG_MODE to settings.php so templates can add debugging options
+
+2009-12-12
+Created user database
+Added user settings to be loaded in the setup() section in common.php
+Added user requirements to all plugins including admin section
+	Now checks for user privilage
+Removed loggedIn() function from common.php, plugins now must use privilage settings
+
 2009-07-05
 Fixed some size limiting problems in the db_code script
 Worked on WMP template

@@ -50,7 +50,7 @@ class db_ids extends db_file
 				'WHERE' => 'Filepath = "' . addslashes($file) . '"',
 				'LIMIT' => 1
 			)
-		);
+		, false);
 		
 		// only do this very expensive part if it is not in database or force is true
 		$fileinfo = array();
@@ -76,7 +76,7 @@ class db_ids extends db_file
 								'WHERE' => 'Filepath = "' . addslashes($file) . '"',
 								'LIMIT' => 1
 							)
-						);
+						, false);
 						if(isset($tmp_ids[0])) $fileinfo[$table . '_id'] = $tmp_ids[0]['id'];
 					}
 				}
@@ -92,14 +92,14 @@ class db_ids extends db_file
 				log_error('Adding id for file: ' . $file);
 				
 				// add to database
-				return $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
+				return $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
 			}
 			// update ids
 			elseif($force)
 			{
 				log_error('Modifying id for file: ' . $file);
 				
-				$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $db_ids[0]['id']));
+				$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $db_ids[0]['id']), false);
 				return $db_ids[0]['id'];
 			}
 		}
@@ -131,7 +131,7 @@ class db_ids extends db_file
 						'WHERE' => constant($request['cat'] . '::DATABASE') . '_id = ' . join(' OR ' . constant($request['cat'] . '::DATABASE') . '_id = ', $request['selected']),
 						'LIMIT' => count($files)
 					)
-				);
+				, true);
 				
 				if(count($files) == 0)
 					return $return;
@@ -155,7 +155,7 @@ class db_ids extends db_file
 								'WHERE' => 'id = ' . $id,
 								'LIMIT' => 1
 							)
-						);
+						, true);
 						
 						if(count($tmp_id) == 0)
 						{
@@ -185,7 +185,7 @@ class db_ids extends db_file
 								'WHERE' => $table . '_id = ' . $request[$table . '_id'],
 								'LIMIT' => 1
 							)
-						);
+						, true);
 						break;
 					}
 				}
@@ -199,7 +199,7 @@ class db_ids extends db_file
 							'WHERE' => 'id = ' . $id,
 							'LIMIT' => 1
 						)
-					);
+					, true);
 					
 					if(count($files) == 0)
 					{
@@ -230,7 +230,7 @@ class db_ids extends db_file
 			else $file_dir = $file;
 			
 			// all the removing will be done by other modules
-			$GLOBALS['database']->query(array('UPDATE' => constant($module . '::DATABASE'), 'VALUES' => array(constant($module . '::DATABASE') . '_id' => 0), 'WHERE' => 'Filepath = "' . addslashes($file) . '" OR LEFT(Filepath, ' . strlen($file_dir) . ') = "' . addslashes($file_dir) . '"'));	
+			$GLOBALS['database']->query(array('UPDATE' => constant($module . '::DATABASE'), 'VALUES' => array(constant($module . '::DATABASE') . '_id' => 0), 'WHERE' => 'Filepath = "' . addslashes($file) . '" OR LEFT(Filepath, ' . strlen($file_dir) . ') = "' . addslashes($file_dir) . '"'), false);	
 		}
 	}
 	
@@ -249,7 +249,7 @@ class db_ids extends db_file
 		$GLOBALS['database']->query(array(
 			'DELETE' => self::DATABASE,
 			'WHERE' => $where
-		));
+		), false);
 	}
 
 }

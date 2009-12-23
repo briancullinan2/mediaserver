@@ -173,7 +173,7 @@ class db_archive extends db_file
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"',
 					'LIMIT' => 1
 				)
-			);
+			, false);
 			
 			// try to get music information
 			if( count($db_archive) == 0 )
@@ -247,7 +247,7 @@ class db_archive extends db_file
 				$total_size += $fileinfo['Filesize'];
 				
 				log_error('Adding file in archive: ' . stripslashes($fileinfo['Filepath']));
-				$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
+				$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
 				$ids[self::DATABASE . '_id'] = $id;
 				db_ids::handle(stripslashes($fileinfo['Filepath']), true, $ids);
 			}
@@ -266,7 +266,7 @@ class db_archive extends db_file
 		// add root file which is the filepath but with a / for compatibility
 		$fileinfo['Filepath'] = addslashes(str_replace('\\', '/', $last_path . '/'));
 		log_error('Adding file in archive: ' . stripslashes($fileinfo['Filepath']));
-		$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
+		$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
 		$ids[self::DATABASE . '_id'] = $id;
 		db_ids::handle(stripslashes($fileinfo['Filepath']), true, $ids);
 
@@ -280,7 +280,7 @@ class db_archive extends db_file
 			log_error('Adding archive: ' . $fileinfo['Filepath']);
 			
 			// add to database
-			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
+			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
 			
 			return $id;
 		}
@@ -289,7 +289,7 @@ class db_archive extends db_file
 			log_error('Modifying archive: ' . $fileinfo['Filepath']);
 			
 			// update database
-			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $archive_id));
+			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $archive_id), false);
 		
 			return $archive_id;
 		}
@@ -303,7 +303,7 @@ class db_archive extends db_file
 		if(USE_ALIAS == true)
 			$file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 			
-		$files = $GLOBALS['database']->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"', 'LIMIT' => 1));
+		$files = $GLOBALS['database']->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"', 'LIMIT' => 1), true);
 		if(count($files) > 0)
 		{				
 			return @fopen(self::PROTOCOL . '://' . $file, 'rb');

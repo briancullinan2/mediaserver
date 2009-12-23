@@ -64,7 +64,7 @@ class db_playlist extends db_file
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"',
 					'LIMIT' => 1
 				)
-			);
+			, false);
 			
 			$fileinfo = array();
 			$fileinfo['Filepath'] = addslashes($file);
@@ -80,7 +80,7 @@ class db_playlist extends db_file
 				$fileinfo['SongCount'] = count($paths);
 				$fileinfo['Files'] = serialize($paths);
 				
-				$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
+				$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
 				
 				return $id;
 			}
@@ -94,7 +94,7 @@ class db_playlist extends db_file
 				$fileinfo['SongCount'] = count($paths);
 				$fileinfo['Files'] = serialize($paths);
 				
-				$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $db_playlist[0]['id']));
+				$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $db_playlist[0]['id']), false);
 				
 				return $db_playlist[0]['id'];
 			}

@@ -2,6 +2,8 @@
 set_time_limit(0);
 ignore_user_abort(1);
 
+define('ARCHIVE_PRIV', 				1);
+
 // set the header first thing so browser doesn't stall or get tired of waiting for the process to start
 switch($_REQUEST['convert'])
 {
@@ -14,6 +16,15 @@ switch($_REQUEST['convert'])
 }
 
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
+
+// make sure user in logged in
+if( $_SESSION['privilage'] < ARCHIVE_PRIV )
+{
+	// redirect to login page
+	header('Location: /' . HTML_PLUGINS . 'login.php?return=' . $_SERVER['REQUEST_URI'] . '&required_priv=' . ARCHIVE_PRIV);
+	
+	exit();
+}
 
 // add category
 if(!isset($_REQUEST['cat']) || !in_array($_REQUEST['cat'], $GLOBALS['modules']) || constant($_REQUEST['cat'] . '::INTERNAL') == true)

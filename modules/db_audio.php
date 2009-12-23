@@ -67,7 +67,7 @@ class db_audio extends db_file
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"',
 					'LIMIT' => 1
 				)
-			);
+			, false);
 			
 			// try to get music information
 			if( count($db_audio) == 0 )
@@ -114,7 +114,7 @@ class db_audio extends db_file
 			log_error('Adding audio: ' . $file);
 			
 			// add to database
-			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
+			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
 			
 			return $id;
 		}
@@ -123,7 +123,7 @@ class db_audio extends db_file
 			log_error('Modifying audio: ' . $file);
 			
 			// update database
-			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $audio_id));
+			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $audio_id), false);
 		
 			return $audio_id;
 		}

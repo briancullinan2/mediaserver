@@ -1,15 +1,14 @@
 <?php
 
+define('UPGRADE_PRIV', 				10);
+
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
 // make sure user in logged in
-if( loggedIn() )
-{
-}
-else
+if( $_SESSION['privilage'] < UPGRADE_PRIV )
 {
 	// redirect to login page
-	header('Location: login.php?return=' . $_SERVER['REQUEST_URI']);
+	header('Location: /' . HTML_PLUGINS . 'login.php?return=' . $_SERVER['REQUEST_URI'] . '&required_priv=' . UPGRADE_PRIV);
 	
 	exit();
 }

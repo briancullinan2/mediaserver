@@ -73,7 +73,7 @@ class db_video extends db_file
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"',
 					'LIMIT' => 1
 				)
-			);
+			, false);
 			
 			// try to get music information
 			if( count($db_video) == 0 )
@@ -122,7 +122,7 @@ class db_video extends db_file
 			log_error('Adding video: ' . $file);
 			
 			// add to database
-			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
+			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
 			
 			return $id;
 		}
@@ -131,7 +131,7 @@ class db_video extends db_file
 			log_error('Modifying video: ' . $file);
 			
 			// update database
-			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $video_id));
+			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $video_id), false);
 		
 			return $video_id;
 		}

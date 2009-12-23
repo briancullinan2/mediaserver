@@ -29,7 +29,7 @@ class db_code extends db_file
 		if(substr($path, 0, strlen(self::PROTOCOL . '://')) == self::PROTOCOL . '://')
 			$path = substr($path, strlen(self::PROTOCOL . '://'));
 
-		$files = $GLOBALS['database']->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($path) . '"', 'LIMIT' => 1));
+		$files = $GLOBALS['database']->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($path) . '"', 'LIMIT' => 1), true);
 		
 		if(count($files) > 0)
 		{
@@ -155,7 +155,7 @@ class db_code extends db_file
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"',
 					'LIMIT' => 1
 				)
-			);
+			, false);
 			
 			if( count($db_code) == 0 )
 			{
@@ -243,14 +243,14 @@ class db_code extends db_file
 			log_error('Adding code: ' . $file);
 			
 			// add to database
-			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
+			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
 		}
 		else
 		{
 			log_error('Modifying code: ' . $file);
 			
 			// update database
-			$return = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $code_id));
+			$return = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $code_id), false);
 		
 			$id = $code_id;
 		}
@@ -260,7 +260,7 @@ class db_code extends db_file
 		if($fileinfo['Words'] < 4096)
 		{
 			$fileinfo = self::getHTML($lines, $fileinfo['Language']);
-			$return = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $id));
+			$return = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $id), false);
 		}
 		
 		return $id;

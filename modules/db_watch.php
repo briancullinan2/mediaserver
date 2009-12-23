@@ -61,9 +61,9 @@ class db_watch extends db_file
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"',
 					'LIMIT' => 1
 				)
-			);
+			, false);
 			
-			if( count($db_watch) == 0 )
+			if( count($db_watch) == 0 && $file != '^' . LOCAL_USERS )
 			{
 				return self::add($file);
 			}
@@ -86,7 +86,7 @@ class db_watch extends db_file
 		log_error('Adding watch: ' . $file);
 		
 		// add to database
-		$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
+		$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
 		
 		// add to watch_list and to files database
 		db_watch_list::handle(substr($file, 1));
@@ -99,12 +99,27 @@ class db_watch extends db_file
 	
 	static function get($request, &$count, &$error)
 	{
-		$files = parent::get($request, $count, $error, get_class());
-		
-		// make some changes
-		foreach($files as $i => $file)
+		$files = array();
+		if(USE_DATABASE)
 		{
-			$files[$i]['Filepath'] = substr($file['Filepath'], 1);
+			$props = array();
+			
+			// do validation! for the fields we use
+			$GLOBALS['database']->validate($request, $props, get_class());
+			
+			$props = array(
+				'SELECT' => self::DATABASE,
+				'WHERE' => 'Filepath REGEXP "' . substr($request['search_Filepath'], 1, strlen($request['search_Filepath']) - 2) . '"'
+			);
+			
+			// get directory from database
+			$files = $GLOBALS['database']->query($props, false);
+			
+			// make some changes
+			foreach($files as $i => $file)
+			{
+				$files[$i]['Filepath'] = substr($file['Filepath'], 1);
+			}
 		}
 		
 		return $files;

@@ -2,6 +2,7 @@ Error found in Live template
 	Advanced search is not using the right variable names in the get request
 	search= variable must also be used in order to override the empty dir
 Figure out why directories take so song to check for changes
+Speed testing with new User queries
 More compatibility testing with clients
 ------------- GENERAL TODO -------------
 Use PEAR::Error_Stack for error handling?
@@ -10,12 +11,19 @@ Create a unique id and insert it into forms, this is required when the form is s
 Make hard links and soft links, hard links are replaced when they are put in to the database, soft links are replaced when they are read from the database, this will allow us to do more network stuff
 Make a class for handling CSV as the database type, make sure all the queries can refer to the statement builder
 File uploading and personal folders
+	Finish implementing user privilages to user directories
+	Modules must check for access denied on request variables
+	Plugins must check for access denied on file results, this will eliminate security risks
 Interface with mediatomb and support UPnP protocol
 ------------- Plugin TODO -------------
 If they try to access a script other then cron in the tiny remote version, forward them to the HTML_SITE defined in the settings
 Work on settings.php plugin
+	Global settings such as default template to use for each devide logged in the to account
+	Template settings, must provide specification in template config, use database for storing fields?
 	Make display plugin obsolete by completing the settings plugins
 Work on reports.php plugin for admin
+	Split up reports section into different files and put them in the tools folder
+	Dynamically loaded tools, check for custom templates or use template included in the tool file
 	Provide useful information in reports section about missing songs
 Make a sync plugin in admin section for syncing between two databases and pulling out differences
 	Use musicbrainz to sync music

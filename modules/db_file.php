@@ -70,7 +70,7 @@ class db_file
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"',
 					'LIMIT' => 1
 				)
-			);
+			, false);
 			
 			if( count($db_file) == 0 )
 			{
@@ -125,7 +125,7 @@ class db_file
 			log_error('Adding file: ' . $file);
 			
 			// add to database
-			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
+			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
 			return $id;
 		}
 		else
@@ -133,7 +133,7 @@ class db_file
 			log_error('Modifying file: ' . $file);
 			
 			// update database
-			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $id));
+			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $id), false);
 		
 			return $id;
 		}
@@ -152,7 +152,7 @@ class db_file
 		// check to make sure file is valid
 		if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)))
 		{
-			$files = $GLOBALS['database']->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"', 'LIMIT' => 1));
+			$files = $GLOBALS['database']->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"', 'LIMIT' => 1), true);
 			if(count($files) > 0)
 			{				
 				if($fp = @fopen($file, 'rb'))
@@ -213,7 +213,7 @@ class db_file
 				unset($request);
 				
 				// get ids from centralized id database
-				$files = $GLOBALS['database']->query(array('WHERE' => $props['WHERE'], 'SELECT' => db_ids::DATABASE));
+				$files = $GLOBALS['database']->query(array('WHERE' => $props['WHERE'], 'SELECT' => db_ids::DATABASE), true);
 				
 				// loop through ids and construct new where based on module
 				$props['WHERE'] = '';
@@ -253,13 +253,13 @@ class db_file
 				{
 				
 					// make sure directory is in the database
-					$dirs = $GLOBALS['database']->query(array('SELECT' => constant($module . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"', 'LIMIT' => 1));
+					$dirs = $GLOBALS['database']->query(array('SELECT' => constant($module . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"', 'LIMIT' => 1), true);
 					
 					// check the file database, some modules use their own database to store special paths,
 					//  while other modules only store files and no directories, but these should still be searchable paths
 					//  in which case the module is responsible for validation of it's own paths
 					if(count($dirs) == 0)
-						$dirs = $GLOBALS['database']->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"', 'LIMIT' => 1));
+						$dirs = $GLOBALS['database']->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"', 'LIMIT' => 1), true);
 						
 					// top level directory / should always exist
 					if($request['dir'] == realpath('/') || count($dirs) > 0)
@@ -590,7 +590,7 @@ class db_file
 				$props['COLUMNS'] = '*' . (isset($props['COLUMNS'])?$props['COLUMNS']:'');
 				
 				// get directory from database
-				$files = $GLOBALS['database']->query($props);
+				$files = $GLOBALS['database']->query($props, true);
 				
 				if($files !== false)
 				{
@@ -634,11 +634,11 @@ class db_file
 						else
 						{
 							// count the last query
-							$props = array('SELECT' => '(' . SQL::statement_builder($props) . ') AS db_to_count');
+							$props = array('SELECT' => '(' . SQL::statement_builder($props, true) . ') AS db_to_count');
 						}
 						$props['COLUMNS'] = 'count(*)';
 						
-						$result = $GLOBALS['database']->query($props);
+						$result = $GLOBALS['database']->query($props, true);
 						
 						$count = intval($result[0]['count(*)']);
 					}
@@ -683,7 +683,7 @@ class db_file
 		log_error('Removing ' . constant($module . '::NAME') . ': ' . $file);
 	
 		// remove file(s) from database
-		$GLOBALS['database']->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($file) . '" OR LEFT(Filepath, ' . strlen($file_dir) . ') = "' . addslashes($file_dir) . '"'));	
+		$GLOBALS['database']->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($file) . '" OR LEFT(Filepath, ' . strlen($file_dir) . ') = "' . addslashes($file_dir) . '"'), false);	
 
 		// delete ids
 		db_ids::remove($file, $module);
@@ -762,7 +762,7 @@ class db_file
 		$where_str = $watched_to_where . ' AND ' . $watched_where;
 		
 		// remove items that aren't in where directories
-		$GLOBALS['database']->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => $where_str));
+		$GLOBALS['database']->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => $where_str), false);
 		
 		if(count($GLOBALS['ignored']) > 0)
 		{
@@ -778,7 +778,7 @@ class db_file
 			$ignored_where = substr($ignored_where, 0, strlen($ignored_where)-2);
 			
 			// remove items that are ignored
-			$GLOBALS['database']->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => $ignored_where));
+			$GLOBALS['database']->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => $ignored_where), false);
 		}
 		
 		// remove any duplicates
@@ -788,14 +788,14 @@ class db_file
 				'GROUP' => 'Filepath',
 				'HAVING' => 'num > 1'
 			)
-		);
+		, false);
 	
 		// remove first item from all duplicates
 		foreach($files as $i => $file)
 		{
 			log_error('Removing Duplicate ' . constant($module . '::NAME') . ': ' . $file['Filepath']);
 			
-			$GLOBALS['database']->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => 'id=' . $file['id']));
+			$GLOBALS['database']->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => 'id=' . $file['id']), false);
 		}
 		
 		log_error('Cleanup: for ' . constant($module . '::NAME') . ' complete.');

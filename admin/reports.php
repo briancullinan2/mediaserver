@@ -1,13 +1,24 @@
 <?php
 
-// check for obvious information first
-
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
-
 // Variables Used:
 //  reports
 // Shared Variables:
 
+define('REPORTS_PRIV', 				10);
+
+
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
+
+// make sure user in logged in
+if( $_SESSION['privilage'] < REPORTS_PRIV )
+{
+	// redirect to login page
+	header('Location: /' . HTML_PLUGINS . 'login.php?return=' . $_SERVER['REQUEST_URI'] . '&required_priv=' . REPORTS_PRIV);
+	
+	exit();
+}
+
+// check for obvious information first
 // how many directories still to search
 // how many files added in the last 24 hours
 // load multiple log files
@@ -35,18 +46,6 @@ define('TYPE_R', 		4);
 define('TYPE_G', 		2);
 // makes the entry blue, used to indicate some notice
 define('TYPE_B', 		1);
-
-// make sure user in logged in
-if( loggedIn() )
-{
-}
-else
-{
-	// redirect to login page
-	header('Location: login.php?return=' . $_SERVER['REQUEST_URI']);
-	
-	exit();
-}
 
 $reports = array();
 

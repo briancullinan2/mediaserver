@@ -48,7 +48,7 @@ class db_alias extends db_file
 		
 		$props['SELECT'] = self::DATABASE;
 		
-		$files = $GLOBALS['database']->query($props);
+		$files = $GLOBALS['database']->query($props, false);
 		
 		return $files;
 	}

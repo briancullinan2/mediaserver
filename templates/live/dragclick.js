@@ -4,6 +4,8 @@ var IE = document.all?true:false
 
 var selectOffset = 0;
 
+var header_height = 39;
+
 document.onmousemove = getMouseXY;
 document.onselectstart = new Function ("return false")
 window.onresize = pauseInit;
@@ -405,7 +407,7 @@ function startDrag(evt)
 			{
 				is_dragging = true;
 			}
-			if(startY < 39)
+			if(startY < header_height)
 			{
 				is_dragging = false;
 				return true;

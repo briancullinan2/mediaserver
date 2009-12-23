@@ -1,10 +1,19 @@
 <?php
 
 // query the database based on search stored in session
-
+define('LIST_PRIV', 				1);
 
 // load template
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
+
+// make sure user in logged in
+if( $_SESSION['privilage'] < LIST_PRIV )
+{
+	// redirect to login page
+	header('Location: /' . HTML_PLUGINS . 'login.php?return=' . $_SERVER['REQUEST_URI'] . '&required_priv=' . LIST_PRIV);
+	
+	exit();
+}
 
 include_once LOCAL_ROOT . 'plugins' . DIRECTORY_SEPARATOR . 'type.php';
 

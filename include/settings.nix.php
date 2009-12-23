@@ -16,6 +16,11 @@ define('DB_PASS',           '2Yq1MBsyqk0Q0jVx');
 define('DB_NAME',                'mediaserver');
 define('DB_TYPE',				       'mysql');
 
+// this secrect key is prepended to all passwords before encryption
+//   this is so if someone access the database, they still must know the secret key before they can get the passwords
+//   this key should be very random
+define('DB_SECRET', 		'QyzoH2zqp%MGs1yD');
+
 // this prefix can be used to include completely different sets of files in the same database
 // don't be decieved though, some files use the db_<file type> where <file type> refers to a module!
 define('DB_PREFIX',				         'db_');
@@ -103,6 +108,9 @@ define('ARCHIVE_RAR',                                'C:\Program Files\WinRAR\Ra
 define('ARCHIVE_ARGS_RAR',                           ' p %IF'); // a program that can convert video and audio streams
 
 // finally some general options, just used to avoid hardcoding stuff
+
+// debug mode is used by many templates to display debugging options on the page
+define('DEBUG_MODE', 							true);
 
 // max amount to output when accessing a file
 define('BUFFER_SIZE', 	                         2*1024*8);

@@ -154,7 +154,7 @@ class db_diskimage extends db_file
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"',
 					'LIMIT' => 1
 				)
-			);
+			, false);
 			
 			// try to get music information
 			if( count($db_diskimage) == 0 )
@@ -215,7 +215,7 @@ class db_diskimage extends db_file
 						$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['recording_timestamp']);
 						
 						log_error('Adding file in disk image: ' . stripslashes($fileinfo['Filepath']));
-						$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
+						$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
 						$ids[self::DATABASE . '_id'] = $id;
 						db_ids::handle(stripslashes($fileinfo['Filepath']), true, $ids);
 					}
@@ -239,7 +239,7 @@ class db_diskimage extends db_file
 			log_error('Adding Disk Image: ' . $last_path);
 			
 			// add to database
-			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
+			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
 			
 			return $id;
 		}
@@ -248,7 +248,7 @@ class db_diskimage extends db_file
 			log_error('Modifying Disk Image: ' . $last_path);
 			
 			// update database
-			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $image_id));
+			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $image_id), false);
 		
 			return $image_id;
 		}
@@ -262,7 +262,7 @@ class db_diskimage extends db_file
 		if(USE_ALIAS == true)
 			$file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 			
-		$files = $GLOBALS['database']->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"', 'LIMIT' => 1));
+		$files = $GLOBALS['database']->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($file) . '"', 'LIMIT' => 1), true);
 		if(count($files) > 0)
 		{				
 			return @fopen(self::PROTOCOL . '://' . $file, 'rb');

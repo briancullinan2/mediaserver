@@ -4,6 +4,25 @@
 if( !isset($_REQUEST['detail']) || !is_numeric($_REQUEST['detail']) )
 	$_REQUEST['detail'] = 0;
 
+$tmp_columns = getAllColumns();
+$columns = array();
+foreach($tmp_columns as $i => $column)
+{
+	$columns[$column] = $column;
+}
+
+$GLOBALS['templates']['settings'] = array(
+	'view' => array(
+		'type' => 'radio',
+		'values' => array('mono' => 'Monospace',
+						  'table' => 'Table',
+						  'dash' => 'Dash delimited')
+	),
+	'columns' => array(
+		'type' => 'checkbox',
+		'values' => $columns
+	)
+);
 $GLOBALS['templates']['TEMPLATE_SELECT'] = LOCAL_ROOT . LOCAL_BASE . 'select.html';
 $GLOBALS['templates']['TEMPLATE_DISPLAY'] = LOCAL_ROOT . LOCAL_BASE . 'display.html';
 $GLOBALS['templates']['TEMPLATE_QUERY'] = LOCAL_ROOT . LOCAL_BASE . 'query.html';

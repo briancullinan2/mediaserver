@@ -39,7 +39,7 @@ if(isset($_REQUEST['action']))
 		// send out the ssid information
 		// send out some counts instead of running select
 		// song count
-		$result = $GLOBALS['database']->query(array('SELECT' => 'audio', 'COLUMNS' => 'count(*)'));
+		$result = $GLOBALS['database']->query(array('SELECT' => 'audio', 'COLUMNS' => 'count(*)'), true);
 		$song_count = $result[0]['count(*)'];
 		
 		// album count
@@ -49,7 +49,7 @@ if(isset($_REQUEST['action']))
 				'GROUP' => 'Album'
 			)) . ') as counter',
 			'COLUMNS' => 'count(*)'
-		));
+		), true);
 		$album_count = $result[0]['count(*)'];
 		
 		// artist count
@@ -59,7 +59,7 @@ if(isset($_REQUEST['action']))
 				'GROUP' => 'Artist'
 			)) . ') as counter',
 			'COLUMNS' => 'count(*)'
-		));
+		), true);
 		$artist_count = $result[0]['count(*)'];
 		
 		// genre count
@@ -69,7 +69,7 @@ if(isset($_REQUEST['action']))
 				'GROUP' => 'Genre'
 			)) . ') as counter',
 			'COLUMNS' => 'count(*)'
-		));
+		), true);
 		$genre_count = $result[0]['count(*)'];
 		
 		// set the variables in the template
@@ -90,7 +90,7 @@ if(isset($_REQUEST['action']))
 			'SELECT' => 'audio',
 			'GROUP' => 'Artist,Album',
 			'COLUMNS' => 'MIN(id) as id,Artist,count(*) as SongCount'
-		));
+		), true);
 		
 		// go through and merge the artist album and counts
 		$files = array();
@@ -122,7 +122,7 @@ if(isset($_REQUEST['action']))
 		$result = $GLOBALS['database']->query(array(
 			'SELECT' => 'audio',
 			'WHERE' => 'id = ' . intval($_REQUEST['filter'])
-		));
+		), true);
 		
 		// get the list of albums
 		$files = $GLOBALS['database']->query(array(
@@ -130,7 +130,7 @@ if(isset($_REQUEST['action']))
 			'GROUP' => 'Album',
 			'COLUMNS' => '*,MIN(id) as id,count(*) as SongCount',
 			'WHERE' => 'Artist = "' . addslashes($result[0]['Artist']) . '"'
-		));
+		), true);
 		
 		// set the variables in the template		
 		$GLOBALS['smarty']->assign('files', $files);
@@ -142,14 +142,14 @@ if(isset($_REQUEST['action']))
 		$artist_album = $GLOBALS['database']->query(array(
 			'SELECT' => 'audio',
 			'WHERE' => 'id = ' . intval($_REQUEST['filter'])
-		));
+		), true);
 		
 		// get the id for genre
 		$result = $GLOBALS['database']->query(array(
 			'SELECT' => 'audio',
 			'COLUMNS' => 'MIN(id) as id',
 			'WHERE' => 'Genre = ' . addslashes($artist_album[0]['Genre'])
-		));
+		), true);
 		$genre_id = $result[0]['id'];
 		
 		// get the min id for artist
@@ -157,14 +157,14 @@ if(isset($_REQUEST['action']))
 			'SELECT' => 'audio',
 			'COLUMNS' => 'MIN(id) as id',
 			'WHERE' => 'Artist = ' . addslashes($artist_album[0]['Artist'])
-		));
+		), true);
 		$artist_id = $result[0]['id'];
 		
 		// get the list of songs
 		$files = $GLOBALS['database']->query(array(
 			'SELECT' => 'audio',
 			'WHERE' => 'Album = "' . addslashes($artist_album[0]['Album']) . '" AND Artist = "' . addslashes($artist_album[0]['Artist']) . '"'
-		));
+		), true);
 		
 		// the ids module will do the replacement of the ids
 		if(count($files) > 0)

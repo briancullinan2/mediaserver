@@ -62,6 +62,52 @@ class sql_global
 				$this->query($query) or print_r(mysql_error());
 			}
 		}
+		
+		$db_user = $this->query(array(
+				'SELECT' => 'users',
+				'WHERE' => 'Username = "guest"',
+				'LIMIT' => 1
+			)
+		, false);
+		
+		if( count($db_user) == 0 )
+		{
+			// create guest user
+			$this->query(array('INSERT' => 'users', 'VALUES' => array(
+						'id' => -2,
+						'Username' => 'guest',
+						'Password' => '',
+						'Email' => 'guest@bjcullinan.com',
+						'Settings' => serialize(array()),
+						'Privilage' => 1,
+						'PublicKey' => md5(microtime())
+					)
+				)
+			, false);
+		}
+		
+		$db_user = $this->query(array(
+				'SELECT' => 'users',
+				'WHERE' => 'Username = "admin"',
+				'LIMIT' => 1
+			)
+		, false);
+		
+		if( count($db_user) == 0 )
+		{
+			// create default administrator
+			$this->query(array('INSERT' => 'users', 'VALUES' => array(
+						'id' => -1,
+						'Username' => 'admin',
+						'Password' => md5(DB_SECRET . 'tmpuser'),
+						'Email' => 'admin@bjcullinan.com',
+						'Settings' => serialize(array()),
+						'Privilage' => 10,
+						'PublicKey' => md5(microtime())
+					)
+				)
+			, false);
+		}
 	}
 	
 	function upgrade()
@@ -221,109 +267,123 @@ class sql_global
 	
 	
 	// compile the statmeent based on an abstract representation
-	static function statement_builder($props)
+	static function statement_builder($props, $require_permit)
 	{
-		if(is_string($props))
+		if($require_permit)
 		{
-			return $props;
+			$where_security = '(LEFT(Filepath, ' . strlen(LOCAL_USERS) . ') != "' . addslashes(LOCAL_USERS) . '" OR ' . 
+								'Filepath = "' . addslashes(LOCAL_USERS) . '" OR ' . 
+								'(LEFT(Filepath, ' . strlen(LOCAL_USERS) . ') = "' . addslashes(LOCAL_USERS) . '" AND LOCATE("/", Filepath, ' . (strlen(LOCAL_USERS) + 1) . ') = LENGTH(Filepath)) OR ' . 
+								'LEFT(Filepath, ' . strlen(LOCAL_USERS . $_SESSION['username'] . '/') . ') = "' . addslashes(LOCAL_USERS . $_SESSION['username'] . '/') . '" OR ' . 
+								'SUBSTR(Filepath, ' . strlen(LOCAL_USERS) . ' + LOCATE("/", SUBSTR(Filepath, ' . (strlen(LOCAL_USERS) + 1) . ')), 8) = "/public/"';
+			if(isset($_SESSION['settings']['keys_usernames']) && count($_SESSION['settings']['keys_usernames']) > 0)
+			{
+				foreach($_SESSION['settings']['keys_usernames'] as $i => $username)
+				{
+					$where_security .= ' OR LEFT(Filepath, ' . strlen(LOCAL_USERS . $username . '/') . ') = "' . addslashes(LOCAL_USERS . $username . '/') . '"';
+				}
+			}
+			$where_security .= ')';
+			
+			if(!isset($props['WHERE'])) $where = 'WHERE ' . $where_security;
+			elseif(is_array($props['WHERE'])) $where = 'WHERE (' . join(' AND ', $props['WHERE']) . ') AND ' . $where_security;
+			elseif(is_string($props['WHERE'])) $where = 'WHERE (' . $props['WHERE'] . ') AND ' . $where_security;
 		}
-		elseif(is_array($props))
+		else
 		{
 			if(!isset($props['WHERE'])) $where = '';
 			elseif(is_array($props['WHERE'])) $where = 'WHERE ' . join(' AND ', $props['WHERE']);
 			elseif(is_string($props['WHERE'])) $where = 'WHERE ' . $props['WHERE'];
-				
-			if(!isset($props['GROUP'])) $group = '';
-			elseif(is_string($props['GROUP'])) $group = 'GROUP BY ' . $props['GROUP'];
-				
-			if(!isset($props['HAVING'])) $having = '';
-			elseif(is_array($props['HAVING'])) $having = 'HAVING ' . join(' AND ', $props['HAVING']);
-			elseif(is_string($props['HAVING'])) $having = 'HAVING ' . $props['HAVING'];
-			
-			if(!isset($props['ORDER'])) $order = '';
-			elseif(is_string($props['ORDER'])) $order = 'ORDER BY ' . $props['ORDER'];
-			
-			if(!isset($props['LIMIT'])) $limit = '';
-			elseif(is_numeric($props['LIMIT'])) $limit = 'LIMIT ' . $props['LIMIT'];
-			elseif(is_string($props['LIMIT'])) $limit = 'LIMIT ' . $props['LIMIT'];
-				
-			if(isset($props['INSERT']))
-			{
-				$insert = 'INSERT INTO ' . (in_array($props['INSERT'], $GLOBALS['tables'])?(DB_PREFIX . $props['INSERT']):$props['INSERT']);
-				
-				if(!isset($props['COLUMNS']) && isset($props['VALUES']) && is_array($props['VALUES']))
-				{
-					$props['COLUMNS'] = array_keys($props['VALUES']);
-					$props['VALUES'] = array_values($props['VALUES']);
-				}
-				
-				if(!isset($props['COLUMNS'])) return false;
-				elseif(is_array($props['COLUMNS'])) $columns = '(' . join(', ', $props['COLUMNS']) . ')';
-				elseif(is_string($props['COLUMNS'])) $columns = '(' . $props['COLUMNS'] . ')';
-				
-				if(!isset($props['VALUES']) && !isset($props['SELECT'])) return false;
-				
-				if(!isset($props['VALUES'])) $values = $props['SELECT'];
-				elseif(is_array($props['VALUES'])) $values = 'VALUES ("' . join('", "', $props['VALUES']) . '")';
-				elseif(is_string($props['VALUES'])) $values = 'VALUES (' . $props['VALUES'] . ')';
-	
-				$statement = $insert . ' ' . $columns . ' ' . $values;
-			}
-			elseif(isset($props['SELECT']))
-			{
-				if(!isset($props['COLUMNS'])) $columns = '*';
-				elseif(is_array($props['COLUMNS'])) $columns = join(', ', $props['COLUMNS']);
-				elseif(is_string($props['COLUMNS'])) $columns = $props['COLUMNS'];
-				
-				$select = 'SELECT ' . $columns . ' FROM ' . (in_array($props['SELECT'], $GLOBALS['tables'])?(DB_PREFIX . $props['SELECT']):$props['SELECT']);
-				
-				$statement = $select . ' ' . $where . ' ' . $group . ' ' . $having . ' ' . $order . ' ' . $limit;
-			}
-			elseif(isset($props['UPDATE']))
-			{
-				$update = 'UPDATE ' . (in_array($props['UPDATE'], $GLOBALS['tables'])?(DB_PREFIX . $props['UPDATE']):$props['UPDATE']) . ' SET';
-				
-				if(!isset($props['COLUMNS']) && isset($props['VALUES']) && is_array($props['VALUES']))
-				{
-					$props['COLUMNS'] = array_keys($props['VALUES']);
-					$props['VALUES'] = array_values($props['VALUES']);
-				}
-				
-				if(!isset($props['COLUMNS'])) return false;
-				elseif(is_array($props['COLUMNS'])) $columns = $props['COLUMNS'];
-				elseif(is_string($props['COLUMNS'])) $columns = split(',', $props['COLUMNS']);
-	
-				if(!isset($props['VALUES'])) return false;
-				elseif(is_array($props['VALUES'])) $values = $props['VALUES'];
-				elseif(is_string($props['VALUES'])) $values = split(',', $props['VALUES']);
-				
-				$set = array();
-				foreach($columns as $i => $key)
-				{
-					$set[] = $key . ' = "' . $values[$i] . '"';
-				}
-	
-				$statement = $update . ' ' . join(', ', $set) . ' ' . $where . ' ' . $order . ' ' . $limit;
-			}
-			elseif(isset($props['DELETE']))
-			{
-				$delete = 'DELETE FROM ' . (in_array($props['DELETE'], $GLOBALS['tables'])?(DB_PREFIX . $props['DELETE']):$props['DELETE']);
-	
-				$statement = $delete . ' ' . $where . ' ' . $order . ' ' . $limit;
-			}
-			else
-			{
-				return $props;
-			}
-			
-			return $statement;
 		}
+		
+		if(!isset($props['GROUP'])) $group = '';
+		elseif(is_string($props['GROUP'])) $group = 'GROUP BY ' . $props['GROUP'];
+			
+		if(!isset($props['HAVING'])) $having = '';
+		elseif(is_array($props['HAVING'])) $having = 'HAVING ' . join(' AND ', $props['HAVING']);
+		elseif(is_string($props['HAVING'])) $having = 'HAVING ' . $props['HAVING'];
+		
+		if(!isset($props['ORDER'])) $order = '';
+		elseif(is_string($props['ORDER'])) $order = 'ORDER BY ' . $props['ORDER'];
+		
+		if(!isset($props['LIMIT'])) $limit = '';
+		elseif(is_numeric($props['LIMIT'])) $limit = 'LIMIT ' . $props['LIMIT'];
+		elseif(is_string($props['LIMIT'])) $limit = 'LIMIT ' . $props['LIMIT'];
+			
+		if(isset($props['INSERT']))
+		{
+			$insert = 'INSERT INTO ' . (in_array($props['INSERT'], $GLOBALS['tables'])?(DB_PREFIX . $props['INSERT']):$props['INSERT']);
+			
+			if(!isset($props['COLUMNS']) && isset($props['VALUES']) && is_array($props['VALUES']))
+			{
+				$props['COLUMNS'] = array_keys($props['VALUES']);
+				$props['VALUES'] = array_values($props['VALUES']);
+			}
+			
+			if(!isset($props['COLUMNS'])) return false;
+			elseif(is_array($props['COLUMNS'])) $columns = '(' . join(', ', $props['COLUMNS']) . ')';
+			elseif(is_string($props['COLUMNS'])) $columns = '(' . $props['COLUMNS'] . ')';
+			
+			if(!isset($props['VALUES']) && !isset($props['SELECT'])) return false;
+			
+			if(!isset($props['VALUES'])) $values = $props['SELECT'];
+			elseif(is_array($props['VALUES'])) $values = 'VALUES ("' . join('", "', $props['VALUES']) . '")';
+			elseif(is_string($props['VALUES'])) $values = 'VALUES (' . $props['VALUES'] . ')';
+
+			$statement = $insert . ' ' . $columns . ' ' . $values;
+		}
+		elseif(isset($props['SELECT']))
+		{
+			if(!isset($props['COLUMNS'])) $columns = '*';
+			elseif(is_array($props['COLUMNS'])) $columns = join(', ', $props['COLUMNS']);
+			elseif(is_string($props['COLUMNS'])) $columns = $props['COLUMNS'];
+			
+			$select = 'SELECT ' . $columns . ' FROM ' . (in_array($props['SELECT'], $GLOBALS['tables'])?(DB_PREFIX . $props['SELECT']):$props['SELECT']);
+			
+			$statement = $select . ' ' . $where . ' ' . $group . ' ' . $having . ' ' . $order . ' ' . $limit;
+		}
+		elseif(isset($props['UPDATE']))
+		{
+			$update = 'UPDATE ' . (in_array($props['UPDATE'], $GLOBALS['tables'])?(DB_PREFIX . $props['UPDATE']):$props['UPDATE']) . ' SET';
+			
+			if(!isset($props['COLUMNS']) && isset($props['VALUES']) && is_array($props['VALUES']))
+			{
+				$props['COLUMNS'] = array_keys($props['VALUES']);
+				$props['VALUES'] = array_values($props['VALUES']);
+			}
+			
+			if(!isset($props['COLUMNS'])) return false;
+			elseif(is_array($props['COLUMNS'])) $columns = $props['COLUMNS'];
+			elseif(is_string($props['COLUMNS'])) $columns = split(',', $props['COLUMNS']);
+
+			if(!isset($props['VALUES'])) return false;
+			elseif(is_array($props['VALUES'])) $values = $props['VALUES'];
+			elseif(is_string($props['VALUES'])) $values = split(',', $props['VALUES']);
+			
+			$set = array();
+			foreach($columns as $i => $key)
+			{
+				$set[] = $key . ' = "' . $values[$i] . '"';
+			}
+
+			$statement = $update . ' ' . join(', ', $set) . ' ' . $where . ' ' . $order . ' ' . $limit;
+		}
+		elseif(isset($props['DELETE']))
+		{
+			$delete = 'DELETE FROM ' . (in_array($props['DELETE'], $GLOBALS['tables'])?(DB_PREFIX . $props['DELETE']):$props['DELETE']);
+
+			$statement = $delete . ' ' . $where . ' ' . $order . ' ' . $limit;
+		}
+			
+		return $statement;
 	}
 	
 	// function for making calls on the database, this is what is called by the rest of the site
-	function query($props)
+	//   for_users tells the script whether or not these results will eventually be used by plugins and template and be printed out
+	//   this allows the script to add user permissions filters to the query easily
+	function query($props, $require_permit)
 	{
-		$query = SQL::statement_builder($props);
+		$query = SQL::statement_builder($props, $require_permit);
 		
 		if(isset($_REQUEST['log_sql']) && $_REQUEST['log_sql'] == true)
 			log_error('DATABASE: ' . substr($query, 0, 512));

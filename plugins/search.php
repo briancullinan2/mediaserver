@@ -1,10 +1,19 @@
 <?php
 
 // search form for selecting files from the database
-
+define('SEARCH_PRIV', 				1);
 
 // load template
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
+
+// make sure user in logged in
+if( $_SESSION['privilage'] < SEARCH_PRIV )
+{
+	// redirect to login page
+	header('Location: /' . HTML_PLUGINS . 'login.php?return=' . $_SERVER['REQUEST_URI'] . '&required_priv=' . SEARCH_PRIV);
+	
+	exit();
+}
 
 // process search query and save in session
 if(isset($_REQUEST['search']))

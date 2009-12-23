@@ -45,7 +45,7 @@ class db_watch_list extends db_watch
 							'WHERE' => 'Filepath = "' . addslashes($dir) . '"',
 							'LIMIT' => 1
 						)
-					);
+					, false);
 					if(count($db_files) > 0)
 					{
 						$file = $db_files[0];
@@ -63,7 +63,7 @@ class db_watch_list extends db_watch
 							'COLUMNS' => array('count(*)'),
 							'WHERE' => 'LEFT(Filepath, ' . strlen($dir) . ') = "' . addslashes($dir) . '" AND (LOCATE("/", Filepath, ' . (strlen($dir)+1) . ') = 0 OR LOCATE("/", Filepath, ' . (strlen($dir)+1) . ') = LENGTH(Filepath))'
 						)
-					);
+					, false);
 					
 					// check for file count inconsistency but don't process anything
 					$count = 1;
@@ -149,7 +149,7 @@ class db_watch_list extends db_watch
 					'WHERE' => 'Filepath = "' . addslashes($dir) . '"',
 					'LIMIT' => 1
 				)
-			);
+			, false);
 			
 			if( count($db_watch_list) == 0 )
 			{
@@ -204,7 +204,7 @@ class db_watch_list extends db_watch
 				'COLUMNS' => array('Filepath'),
 				'WHERE' => 'LEFT(Filepath, ' . strlen($dir) . ') = "' . addslashes($dir) . '" AND (LOCATE("/", Filepath, ' . (strlen($dir)+1) . ') = 0 OR LOCATE("/", Filepath, ' . (strlen($dir)+1) . ') = LENGTH(Filepath))'
 			)
-		);
+		, false);
 		
 		$db_paths = array();
 		foreach($db_files as $j => $file)
@@ -359,7 +359,7 @@ class db_watch_list extends db_watch
 		log_error('Queueing directory: ' . $file);
 		
 		// add to database
-		$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
+		$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
 		
 		return $id;
 	}

@@ -1,15 +1,14 @@
 <?php
 
+define('INSTALL_PRIV', 				10);
+
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
-// make sure user in logged in
-if( loggedIn() )
-{
-}
-else
+// check security level
+if( $_SESSION['privilage'] < INSTALL_PRIV )
 {
 	// redirect to login page
-	header('Location: login.php?return=' . $_SERVER['REQUEST_URI']);
+	header('Location: /' . HTML_PLUGINS . 'login.php?return=' . $_SERVER['REQUEST_URI'] . '&required_priv=' . INSTALL_PRIV);
 	
 	exit();
 }

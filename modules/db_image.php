@@ -82,7 +82,7 @@ class db_image extends db_file
 					'WHERE' => 'Filepath = "' . addslashes($file) . '"',
 					'LIMIT' => 1
 				)
-			);
+			, false);
 			
 			// try to get image information
 			if( count($db_image) == 0 )
@@ -143,7 +143,7 @@ class db_image extends db_file
 			log_error('Adding image: ' . $file);
 			
 			// add to database
-			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo));
+			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
 			
 			return $id;
 		}
@@ -152,7 +152,7 @@ class db_image extends db_file
 			log_error('Modifying image: ' . $file);
 			
 			// update database
-			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $image_id));
+			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $image_id), false);
 		
 			return $image_id;
 		}

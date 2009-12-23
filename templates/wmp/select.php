@@ -16,7 +16,7 @@ if(isset($error) && $error != '')
 else
 {
 	// get number of songs in first album
-	$result = $GLOBALS['database']->query(array('SELECT' => 'audio', 'COLUMNS' => 'count(*)', 'WHERE' => 'Album = "' . $files[0]['Album'] . '"'));
+	$result = $GLOBALS['database']->query(array('SELECT' => 'audio', 'COLUMNS' => 'count(*)', 'WHERE' => 'Album = "' . $files[0]['Album'] . '"'), true);
 	
 	// calculate starting offset
 	$album_count = 0;
@@ -113,7 +113,7 @@ else
 				{
 					?>
 
-		<info-<?php echo $column; ?>><?php echo isset($file[$column])?htmlspecialchars(utf8_encode($file[$column])):''; ?></info-<?php echo $column; ?>><?php
+		<info-<?php echo $column; ?>><?php echo isset($file[$column])?htmlspecialchars(utf8_encode($file[$column])):''; ?></info-><?php echo $column; ?>><?php
 				}
 			}
 		?>

@@ -1,5 +1,8 @@
 <?php
 
+define('DEBUG_PRIV', 				1);
+
+
 // the most basic functions used a lot
 // things to consider:
 // get the extension for a file using getExt
@@ -11,7 +14,7 @@ if(!isset($no_setup) || !$no_setup == true)
 	session_start();
 
 // set version for stuff to reference
-define('VERSION', 			     '0.40.1');
+define('VERSION', 			     '0.40.2');
 define('VERSION_NAME', 			'Goliath');
 
 // require compatibility
@@ -150,7 +153,7 @@ function setup()
 	$GLOBALS['alias'] = array();
 	if(USE_ALIAS == true && USE_DATABASE == true)
 	{
-		$aliases = $GLOBALS['database']->query(array('SELECT' => 'alias'));
+		$aliases = $GLOBALS['database']->query(array('SELECT' => 'alias'), false);
 		
 		if($aliases !== false)
 		{
@@ -167,6 +170,98 @@ function setup()
 	// get watched and ignored directories because they are used a lot
 	$GLOBALS['ignored'] = db_watch::get(array('search_Filepath' => '/^!/'), $count, $error);
 	$GLOBALS['watched'] = db_watch::get(array('search_Filepath' => '/^\\^/'), $count, $error);
+	// always add user local to watch list
+	$GLOBALS['watched'][] = array('id' => 0, 'Filepath' => LOCAL_USERS);
+	
+	// set up user settings
+	if(!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] == false)
+	{
+		// check if user is logged in
+		if( isset($_SESSION['username']) && isset($_SESSION['password']) )
+		{
+			// lookup username in table
+			$db_user = $GLOBALS['database']->query(array(
+					'SELECT' => 'users',
+					'WHERE' => 'Username = "' . addslashes($_SESSION['username']) . '"',
+					'LIMIT' => 1
+				)
+			, false);
+			
+			if( count($db_user) > 0 )
+			{
+				if($_SESSION['password'] == $db_user[0]['Password'])
+				{
+					// set up user information in session
+					$_SESSION['loggedin'] = true;
+					
+					// the security level is the most important property
+					$_SESSION['privilage'] = $db_user[0]['Privilage'];
+					
+					// the settings are also very important
+					$_SESSION['settings'] = unserialize($db_user[0]['Settings']);
+					
+					// just incase a template wants to access the rest of the information; include the user
+					unset($db_user[0]['Password']);
+					unset($db_user[0]['Settings']);
+					unset($db_user[0]['Privilage']);
+					
+					$_SESSION['user'] = $db_user[0];
+				}
+			}
+		}
+		// use guest information
+		else
+		{
+			$_SESSION['loggedin'] = false;
+			
+			$db_user = $GLOBALS['database']->query(array(
+					'SELECT' => 'users',
+					'WHERE' => 'id = -2',
+					'LIMIT' => 1
+				)
+			, false);
+			
+			$_SESSION['username'] = $db_user[0]['Username'];
+	
+			// the security level is the most important property
+			$_SESSION['privilage'] = $db_user[0]['Privilage'];
+			
+			// the settings are also very important
+			$_SESSION['settings'] = unserialize($db_user[0]['Settings']);
+			//$_SESSION['settings']['keys'] = array('5a277c44344eaf04e1d92085eabfda02');
+			
+			// just incase a template wants to access the rest of the information; include the user
+			unset($db_user[0]['Password']);
+			unset($db_user[0]['Settings']);
+			unset($db_user[0]['Privilage']);
+			
+			$_SESSION['user'] = $db_user[0];
+		}
+	}
+	
+	// this will hold a cached list of the users that were looked up
+	$GLOBALS['user_cache'] = array();
+	
+	// get users associated with the keys
+	if(isset($_SESSION['settings']['keys']))
+	{
+		$return = $GLOBALS['database']->query(array(
+				'SELECT' => db_users::DATABASE,
+				'WHERE' => 'PrivateKey = "' . join('" OR PrivateKey = "', $_SESSION['settings']['keys']) . '"',
+				'LIMIT' => count($_SESSION['settings']['keys'])
+			)
+		, false);
+		
+		$_SESSION['settings']['keys_usernames'] = array();
+		foreach($return as $index => $user)
+		{
+			$_SESSION['settings']['keys_usernames'][] = $user['Username'];
+			
+			unset($return[$index]['Password']);
+		}
+		
+		$_SESSION['settings']['keys_users'] = $return;
+	}
 	
 	// load templating system but only if we are using templates
 	if(defined('LOCAL_BASE'))
@@ -241,6 +336,7 @@ function setup()
 		$GLOBALS['smarty']->assign('columns', getAllColumns());
 		
 	}
+
 }
 
 // check if a module handles a certain type of files
@@ -261,6 +357,46 @@ function selfURL()
 	$protocol = substr(strtolower($_SERVER["SERVER_PROTOCOL"]), 0, strpos(strtolower($_SERVER["SERVER_PROTOCOL"]), "/")).$s;
 	$port = ($_SERVER["SERVER_PORT"] == "80") ? "" : (":".$_SERVER["SERVER_PORT"]);
 	return $protocol."://".$_SERVER['SERVER_NAME'].$port.$_SERVER['REQUEST_URI'];
+}
+
+// check a list of files for access by comparing session keys and user information to each file
+//  return the modified list of files with items removed
+//  leave keys alone so plugin can profile more feedback
+function checkAccess($file)
+{
+	// user can access files not handled by user module
+	if(!db_users::handles($file['Filepath']))
+		return true;
+		
+	$tmp_file = str_replace('\\', '/', $file['Filepath']);
+	if(USE_ALIAS == true) $tmp_file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $tmp_file);
+	
+	// user can always access own files
+	if(substr($tmp_file, 0, strlen(LOCAL_USERS)) == LOCAL_USERS)
+		$user = substr($tmp_file, strlen(LOCAL_USERS));
+	
+	if(strpos($user, '/') !== false)
+		$user = substr($user, 0, strpos($user, '/'));
+	
+	if($user == $_SESSION['username'])
+		return true;
+	
+	// the current user can access public files
+	if(substr($tmp_file, 0, strlen(LOCAL_USERS . $user . '/public/')) == LOCAL_USERS . $user . '/public/')
+		return true;
+	
+	// the current user can access private files if they provided a key
+	if(substr($tmp_file, 0, strlen(LOCAL_USERS . $user . '/private/')) == LOCAL_USERS . $user . '/private/')
+	{
+		if(isset($_SESSION['settings']['keys']) && 
+		   isset($file['PrivateKey']) &&
+		   in_array($file['PrivateKey'], $_SESSION['settings']['keys']) == true)
+		{
+			return true;
+		}
+	}
+	
+	return false;
 }
 
 // tokenize a string, assumed to be a filepath, in various different ways
@@ -500,29 +636,6 @@ function utf8_is_ascii($str) {
 	
 }
 
-// simple check for login to admin
-// TODO: remove and abstract this, complete user section
-function loggedIn()
-{
-
-	if( isset($_SESSION['username']) && isset($_SESSION['password']) )
-	{
-		if( $_SESSION['username'] == ADMIN_USER && $_SESSION['password'] == ADMIN_PASS )
-		{
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
-	else
-	{
-		return false;
-	}
-
-}
-
 // get our file types, stuff the website can handle
 function getFileType($file)
 {
@@ -746,7 +859,7 @@ function kill9($command, $startpid, $limit = 2)
 //  TODO: abstract this and make it more useful to templates
 function log_error($message)
 {
-	if(realpath($_SERVER['SCRIPT_FILENAME']) == realpath(LOCAL_ROOT . 'plugins/cron.php') || (isset($_REQUEST['debug']) && $_REQUEST['debug'] == true && loggedIn()))
+	if(realpath($_SERVER['SCRIPT_FILENAME']) == realpath(LOCAL_ROOT . 'plugins/cron.php') || $_SESSION['privilage'] >= DEBUG_PRIV)
 	{
 		print date('[m/d/Y:H:i:s O] ');
 		print_r($message);

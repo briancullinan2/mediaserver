@@ -5,49 +5,46 @@
 // Variables Used:
 //  username
 // Shared Variables:
+$no_setup = true;
 
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
+session_start();
+
+// process post variables
+if(isset($_POST['password']))
+{
+	$_SESSION['password'] = md5(DB_SECRET . $_POST['password']);
+}
+if(isset($_POST['username']))
+{
+	$_SESSION['username'] = $_POST['username'];
+}
+
+// finally run setup since required session information for logging in a user is set up
+setup();
+
 $error = '';
 
-if( loggedIn() )
+if( $_SESSION['loggedin'] == true )
 {
-	if( isset($_REQUEST['return']) )
+	if( isset($_REQUEST['return']) && (!isset($_REQUEST['required_priv']) || $_SESSION['privilage'] >= $_REQUEST['required_priv']))
 	{
 		header('Location: ' . $_REQUEST['return']);
 		exit();
 	}
-		
-	$error = 'Already logged in as admin.';
+	elseif(!isset($_REQUEST['required_priv']))
+	{
+		$error = 'Already logged in.';
+	}
+	elseif(intval($_REQUEST['required_priv']) > intval($_SESSION['privilage']))
+	{
+		$error = 'You do not have the required privilages to access this page.';
+	}
 }
 else
 {
-
-	if( isset($_REQUEST['username']) && isset($_REQUEST['password']) )
-	{
-		if( $_REQUEST['username'] == ADMIN_USER && $_REQUEST['password'] == ADMIN_PASS )
-		{
-			$_SESSION['username'] = $_REQUEST['username'];
-			$_SESSION['password'] = $_REQUEST['password'];
-			
-			if( isset($_REQUEST['return']) )
-			{
-				header('Location: ' . $_REQUEST['return']);
-				exit();
-			}
-			
-			$error = 'Already logged in as admin.';
-		}
-		else
-		{
-			$error = 'Wrong username or password.';
-		}
-	}
-	else
-	{
-		$error = 'You must enter a username and password to access this section.';
-	}
-	
+	$error = 'You must enter a username and password to access this section.';
 }
 
 // assign variables for a smarty template to use
