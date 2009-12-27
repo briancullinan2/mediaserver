@@ -9,12 +9,17 @@ define('ADMIN_PASS',			   'tmppass');
 
 
 // database connection constants
-define('USE_DATABASE', 	                  true); // set to false to make modules load information about every file on the fly
+define('USE_DATABASE', 	                  false); // set to false to make modules load information about every file on the fly
 define('DB_SERVER',                'localhost');
 define('DB_USER',                    'tmpuser');
 define('DB_PASS',                    'tmppass');
 define('DB_NAME',                'mediaserver');
 define('DB_TYPE',				       'mysql');
+
+// this secrect key is prepended to all passwords before encryption
+//   this is so if someone access the database, they still must know the secret key before they can get the passwords
+//   this key should be very random
+define('DB_SECRET', 		'QyzoH2zqp%MGs1yD');
 
 // this prefix can be used to include completely different sets of files in the same database
 // don't be decieved though, some files use the db_<file type> where <file type> refers to a module!
@@ -28,7 +33,7 @@ define('LOCAL_ROOT',                'C:\wamp\www\mediaserver\\');
 define('LOCAL_USERS', 							LOCAL_ROOT . 'users\\');
 
 // this is the path used by html pages to refer back to the website domain, HTML_ROOT is usually appended to this
-define('HTML_DOMAIN',            			             'http://127.0.0.1/');
+define('HTML_DOMAIN',            			             'http://192.168.1.109:8080/');
 
 // this is the root directory of the site, this is needed if the site is not running on it's own domain
 // this is so HTML pages can refer to the root of the site, without making the brower validate the entire domain, this saves time loading pages

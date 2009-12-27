@@ -1,3 +1,4 @@
+Fix file mode (USE_DATABASE == false), lots of errors
 Error found in Live template
 	Advanced search is not using the right variable names in the get request
 	search= variable must also be used in order to override the empty dir

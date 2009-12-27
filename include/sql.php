@@ -59,7 +59,7 @@ class sql_global
 				$query[strlen($query)-1] = ')';
 				
 				// query database
-				$this->query($query) or print_r(mysql_error());
+				$this->db_query($query) or print_r(mysql_error());
 			}
 		}
 		
@@ -80,7 +80,7 @@ class sql_global
 						'Email' => 'guest@bjcullinan.com',
 						'Settings' => serialize(array()),
 						'Privilage' => 1,
-						'PublicKey' => md5(microtime())
+						'PrivateKey' => md5(microtime())
 					)
 				)
 			, false);
@@ -99,11 +99,11 @@ class sql_global
 			$this->query(array('INSERT' => 'users', 'VALUES' => array(
 						'id' => -1,
 						'Username' => 'admin',
-						'Password' => md5(DB_SECRET . 'tmpuser'),
+						'Password' => md5(DB_SECRET . 'tmppass'),
 						'Email' => 'admin@bjcullinan.com',
 						'Settings' => serialize(array()),
 						'Privilage' => 10,
-						'PublicKey' => md5(microtime())
+						'PrivateKey' => md5(microtime())
 					)
 				)
 			, false);

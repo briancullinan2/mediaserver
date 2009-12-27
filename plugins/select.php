@@ -16,7 +16,7 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATO
 if( $_SESSION['privilage'] < SELECT_PRIV )
 {
 	// redirect to login page
-	header('Location: /' . HTML_PLUGINS . 'login.php?return=' . $_SERVER['REQUEST_URI'] . '&required_priv=' . SELECT_PRIV);
+	header('Location: /' . HTML_ROOT . HTML_PLUGINS . 'login.php?return=' . $_SERVER['REQUEST_URI'] . '&required_priv=' . SELECT_PRIV);
 	
 	exit();
 }
@@ -99,7 +99,7 @@ foreach($files as $index => $file)
 		// merge all the other information to each file
 		foreach($GLOBALS['modules'] as $i => $module)
 		{
-			if($module != $_REQUEST['cat'] && constant($module . '::INTERNAL') == false && call_user_func_array($module . '::handles', array($file['Filepath'], $file)))
+			if(USE_DATABASE == false || ($module != $_REQUEST['cat'] && constant($module . '::INTERNAL') == false && call_user_func_array($module . '::handles', array($file['Filepath'], $file))))
 			{
 				$return = call_user_func_array($module . '::get', array($tmp_request, &$tmp_count, &$tmp_error));
 				if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);

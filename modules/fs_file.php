@@ -148,6 +148,8 @@ class fs_file
 					
 					// parse out all the files that this module doesn't handle, just like a filter
 					//  but only if we are not called by internals
+					var_dump($module);
+					var_dump($request);
 					for($j = 0; $j < $count; $j++)
 						if(!call_user_func($module . '::handles', $request['dir'] . $tmp_files[$j], $internals)) unset($tmp_files[$j]);
 						

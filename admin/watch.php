@@ -14,7 +14,7 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATO
 if( $_SESSION['privilage'] < WATCH_PRIV )
 {
 	// redirect to login page
-	header('Location: /' . HTML_PLUGINS . 'login.php?return=' . $_SERVER['REQUEST_URI'] . '&required_priv=' . WATCH_PRIV);
+	header('Location: /' . HTML_ROOT . HTML_PLUGINS . 'login.php?return=' . $_SERVER['REQUEST_URI'] . '&required_priv=' . WATCH_PRIV);
 	
 	exit();
 }
@@ -48,7 +48,7 @@ elseif( isset($_REQUEST['remove']) && is_numeric($_REQUEST['watch']) )
 // reget the watched and ignored because they may have changed
 $GLOBALS['ignored'] = db_watch::get(array('search_Filepath' => '/^!/'), $count, $error);
 $GLOBALS['watched'] = db_watch::get(array('search_Filepath' => '/^\\^/'), $count, $error);
-$GLOBALS['watched'][] = array('id' => 0, 'Filepath' => LOCAL_USERS);
+$GLOBALS['watched'][] = array('id' => 0, 'Filepath' => str_replace('\\', '/', LOCAL_USERS));
 
 // assign variables for a smarty template to use
 $GLOBALS['smarty']->assign('watched', $GLOBALS['watched']);

@@ -171,7 +171,7 @@ function setup()
 	$GLOBALS['ignored'] = db_watch::get(array('search_Filepath' => '/^!/'), $count, $error);
 	$GLOBALS['watched'] = db_watch::get(array('search_Filepath' => '/^\\^/'), $count, $error);
 	// always add user local to watch list
-	$GLOBALS['watched'][] = array('id' => 0, 'Filepath' => LOCAL_USERS);
+	$GLOBALS['watched'][] = array('id' => 0, 'Filepath' => str_replace('\\', '/', LOCAL_USERS));
 	
 	// set up user settings
 	if(!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] == false)
@@ -221,21 +221,24 @@ function setup()
 				)
 			, false);
 			
-			$_SESSION['username'] = $db_user[0]['Username'];
-	
-			// the security level is the most important property
-			$_SESSION['privilage'] = $db_user[0]['Privilage'];
-			
-			// the settings are also very important
-			$_SESSION['settings'] = unserialize($db_user[0]['Settings']);
-			//$_SESSION['settings']['keys'] = array('5a277c44344eaf04e1d92085eabfda02');
-			
-			// just incase a template wants to access the rest of the information; include the user
-			unset($db_user[0]['Password']);
-			unset($db_user[0]['Settings']);
-			unset($db_user[0]['Privilage']);
-			
-			$_SESSION['user'] = $db_user[0];
+			if(is_array($db_user) && count($db_user) > 0)
+			{
+				$_SESSION['username'] = $db_user[0]['Username'];
+		
+				// the security level is the most important property
+				$_SESSION['privilage'] = $db_user[0]['Privilage'];
+				
+				// the settings are also very important
+				$_SESSION['settings'] = unserialize($db_user[0]['Settings']);
+				//$_SESSION['settings']['keys'] = array('5a277c44344eaf04e1d92085eabfda02');
+				
+				// just incase a template wants to access the rest of the information; include the user
+				unset($db_user[0]['Password']);
+				unset($db_user[0]['Settings']);
+				unset($db_user[0]['Privilage']);
+				
+				$_SESSION['user'] = $db_user[0];
+			}
 		}
 	}
 	
@@ -556,7 +559,7 @@ function getAllColumns()
 	$columns = array();
 	foreach($GLOBALS['modules'] as $i => $module)
 	{
-		if(constant($module . '::INTERNAL') == false)
+		if(USE_DATABASE == false || constant($module . '::INTERNAL') == false)
 			$columns = array_merge($columns, array_flip(call_user_func($module . '::columns')));
 	}
 	
@@ -859,7 +862,7 @@ function kill9($command, $startpid, $limit = 2)
 //  TODO: abstract this and make it more useful to templates
 function log_error($message)
 {
-	if(realpath($_SERVER['SCRIPT_FILENAME']) == realpath(LOCAL_ROOT . 'plugins/cron.php') || $_SESSION['privilage'] >= DEBUG_PRIV)
+	if(realpath($_SERVER['SCRIPT_FILENAME']) == realpath(LOCAL_ROOT . 'plugins/cron.php') || ($_SESSION['privilage'] >= DEBUG_PRIV && isset($_REQUEST['debug']) && $_REQUEST['debug'] == true))
 	{
 		print date('[m/d/Y:H:i:s O] ');
 		print_r($message);

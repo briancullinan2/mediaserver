@@ -15,7 +15,7 @@ session_cache_limiter("nocache");
 if( $_SESSION['privilage'] < ENCODE_PRIV )
 {
 	// redirect to login page
-	header('Location: /' . HTML_PLUGINS . 'login.php?return=' . $_SERVER['REQUEST_URI'] . '&required_priv=' . ENCODE_PRIV);
+	header('Location: /' . HTML_ROOT . HTML_PLUGINS . 'login.php?return=' . $_SERVER['REQUEST_URI'] . '&required_priv=' . ENCODE_PRIV);
 	
 	exit();
 }
