@@ -9,6 +9,9 @@ require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'fs_image.php';
 class fs_image_browser extends fs_image
 {
 	const NAME = 'Browser Images on Filesystem';
+	
+	// define if this module is internal so templates won't try to use it
+	const INTERNAL = false;
 
 	static function handles($file)
 	{
@@ -45,7 +48,7 @@ class fs_image_browser extends fs_image
 	
 	static function get($request, &$count, &$error)
 	{
-		return parent::get(NULL, $request, $count, $error, get_class());
+		return parent::get($request, $count, $error, get_class());
 	}
 }
 

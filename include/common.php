@@ -210,7 +210,7 @@ function setup()
 			}
 		}
 		// use guest information
-		else
+		elseif(USE_DATABASE == true)
 		{
 			$_SESSION['loggedin'] = false;
 			
@@ -239,6 +239,12 @@ function setup()
 				
 				$_SESSION['user'] = $db_user[0];
 			}
+		}
+		else
+		{
+			$_SESSION['username'] = 'guest';
+			$_SESSION['privilage'] = 1;
+			
 		}
 	}
 	
@@ -273,7 +279,7 @@ function setup()
 	
 		// get the list of templates
 		$GLOBALS['templates'] = array();
-		$files = fs_file::get(array('dir' => LOCAL_ROOT . 'templates/', 'limit' => 32000), $count, $error, true);
+		$files = fs_file::get(array('dir' => LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR, 'limit' => 32000), $count, $error, true);
 		if(is_array($files))
 		{
 			foreach($files as $i => $temp_file)

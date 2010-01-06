@@ -33,7 +33,7 @@ define('LOCAL_ROOT',                'C:\wamp\www\mediaserver\\');
 define('LOCAL_USERS', 							LOCAL_ROOT . 'users\\');
 
 // this is the path used by html pages to refer back to the website domain, HTML_ROOT is usually appended to this
-define('HTML_DOMAIN',            			             'http://192.168.1.109:8080/');
+define('HTML_DOMAIN',            			             'http://192.168.1.120:8080/');
 
 // this is the root directory of the site, this is needed if the site is not running on it's own domain
 // this is so HTML pages can refer to the root of the site, without making the brower validate the entire domain, this saves time loading pages

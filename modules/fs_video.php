@@ -20,6 +20,9 @@ $GLOBALS['getID3'] = new getID3();
 class fs_video extends fs_file
 {
 	const NAME = 'Video from Database';
+	
+	// define if this module is internal so templates won't try to use it
+	const INTERNAL = false;
 
 	static function columns()
 	{
@@ -55,7 +58,7 @@ class fs_video extends fs_file
 	
 	static function get($request, &$count, &$error)
 	{
-		return parent::get(NULL, $request, $count, $error, get_class());
+		return parent::get($request, $count, $error, get_class());
 	}
 
 

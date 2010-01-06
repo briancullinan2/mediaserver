@@ -15,6 +15,9 @@ $GLOBALS['getID3'] = new getID3();
 class fs_diskimage extends fs_file
 {
 	const NAME = 'Disk Images on Filesystem';
+	
+	// define if this module is internal so templates won't try to use it
+	const INTERNAL = false;
 
 	static function columns()
 	{

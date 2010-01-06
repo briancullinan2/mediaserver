@@ -18,6 +18,9 @@ $GLOBALS['getID3'] = new getID3();
 class fs_archive extends fs_file
 {
 	const NAME = 'Archives on Filesystem';
+	
+	// define if this module is internal so templates won't try to use it
+	const INTERNAL = false;
 
 	static function columns()
 	{
