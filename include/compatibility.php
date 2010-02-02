@@ -46,6 +46,8 @@ if($_SERVER['REQUEST_METHOD']=="POST"){
 	//The token cannot be forged unless it is guessed. 
 	$referer_check = parse_url($_SERVER['HTTP_REFERER']);
 	$server_host = parse_url($_SERVER['HTTP_HOST']);
+	if(!isset($server_host['host']))
+		$server_host['host'] = $server_host['path'];
 	if($server_host['host'] != $referer_check['host']){
 		die('Session Riding(XSRF) Detected!');	
 	}

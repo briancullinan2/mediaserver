@@ -485,7 +485,7 @@ class db_file
 				if(isset($request[$var]) && $request[$var] != '')
 				{
 					if(!isset($props['WHERE'])) $props['WHERE'] = '';
-					elseif($props['WHERE'] != '') $props['WHERE'] .= ' AND ';
+					//elseif($props['WHERE'] != '') $props['WHERE'] .= ' AND ';
 				
 					$is_literal = false;
 					$is_equal = false;
@@ -550,7 +550,7 @@ class db_file
 							{
 								if($first_or == false)
 								{
-									$props['WHERE'] .= (($count != 0)?' AND':'') . ' (';
+									$props['WHERE'] .= (($props['WHERE'] != '')?' AND':'') . ' (';
 									$first_or = true;
 								}
 								elseif($props['WHERE'] != '') $props['WHERE'] .= ' OR';

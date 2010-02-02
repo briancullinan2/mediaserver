@@ -67,7 +67,11 @@ class sql extends sql_global
 			$this->num_queries++;
 
 			$this->query_result = mysql_query($query, $this->db_connect_id) or $error = true;
-			if(isset($error)) return false;
+			if(isset($error))
+			{
+				log_error('DATABASE: ' . mysql_error($this->db_connect_id));
+				return false;
+			}
 		}
 		if($this->query_result)
 		{

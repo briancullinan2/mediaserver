@@ -49,7 +49,7 @@ function makeVisible(cat)
 		</select><br /><br />
 		<div id="fields">
 		{foreach from=$columns item=column_value}
-			<div id="search_{$column_value}">{$column_value}: <input type="text" name="{$column}" size="40" value="{if isset($smarty.request.$column)}{$smarty.request.$column|htmlspecialchars}{/if}" /><br /><br /></div>
+			<div id="search_{$column_value}">{$column_value}: <input type="text" name="search_{$column_value}" size="40" value="{if isset($smarty.request.$column)}{$smarty.request.$column|htmlspecialchars}{/if}" /><br /><br /></div>
 		{/foreach}
 		<script language="javascript">
 		makeVisible('{if isset($smarty.request.cat)}{$smarty.request.cat}{else}db_file{/if}');
