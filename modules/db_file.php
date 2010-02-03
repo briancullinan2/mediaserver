@@ -412,42 +412,41 @@ class db_file
 					{
 						if($column != 'id' && (!isset($request['search_' . $column]) || $request['search_' . $column] == ''))
 						{
-							$first_or = false;
-							$count = 0;
-							$part = '';
-							$props['ORDER'] = 'r_count' . $i . ' ASC,' . (isset($props['ORDER'])?$props['ORDER']:'');
+							$required = '';
+							$excluded = '';
+							$includes = '';
+							if($request['order_by'] == 'Relevance')
+								$props['ORDER'] = 'r_count' . $i . ' ASC,' . (isset($props['ORDER'])?$props['ORDER']:'');
 							foreach($pieces as $j => $piece)
 							{
 								if($piece[0] == '+')
 								{
-									if($part != '') $part .= ' AND';
+									if($required != '') $required .= ' AND';
 									$piece = substr($piece, 1);
-									$part .= ' LOCATE("' . addslashes($piece) . '", ' . $column . ') > 0';
+									$required .= ' LOCATE("' . addslashes($piece) . '", ' . $column . ') > 0';
 									$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',(LOCATE("' . addslashes($piece) . '", ' . $column . ') > 0) AS result' . $i . $j;
 								}
 								elseif($piece[0] == '-')
 								{
-									if($part != '') $part .= ' AND';
+									if($excluded != '') $excluded .= ' AND';
 									$piece = substr($piece, 1);
-									$part .= ' LOCATE("' . addslashes($piece) . '", ' . $column . ') = 0';
+									$excluded .= ' LOCATE("' . addslashes($piece) . '", ' . $column . ') = 0';
 									$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',(LOCATE("' . addslashes($piece) . '", ' . $column . ') = 0) AS result' . $i . $j;
 								}
 								else
 								{
-									if($first_or == false)
-									{
-										$part .= (($count != 0)?' AND':'') . ' (';
-										$first_or = true;
-									}
-									elseif($part != '') $part .= ' OR';
-									$part .= ' LOCATE("' . addslashes($piece) . '", ' . $column . ') > 0';
+									if($includes != '') $includes .= ' OR';
+									$includes .= ' LOCATE("' . addslashes($piece) . '", ' . $column . ') > 0';
 									$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',(LOCATE("' . addslashes($piece) . '", ' . $column . ') > 0) AS result' . $i . $j;
-									if($count == count($pieces)-1) $part .= ')';
 								}
-								$props['ORDER'] = 'result' . $i . (count($pieces) - $j - 1) . ' DESC,' . (isset($props['ORDER'])?$props['ORDER']:'');
-								$count++;
+								if($request['order_by'] == 'Relevance')
+									$props['ORDER'] = 'result' . $i . (count($pieces) - $j - 1) . ' DESC,' . (isset($props['ORDER'])?$props['ORDER']:'');
 							}
 							$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',ABS(LENGTH(' . $column . ') - ' . $length . ') as r_count' . $i;
+							$part = '';
+							$part .= (($required != '')?(($part != '')?' AND':'') . $required:'');
+							$part .= (($excluded != '')?(($part != '')?' AND':'') . $excluded:'');
+							$part .= (($includes != '')?(($part != '')?' AND':'') . $includes:'');
 							$parts[] = $part;
 						}
 					}
@@ -485,7 +484,6 @@ class db_file
 				if(isset($request[$var]) && $request[$var] != '')
 				{
 					if(!isset($props['WHERE'])) $props['WHERE'] = '';
-					//elseif($props['WHERE'] != '') $props['WHERE'] .= ' AND ';
 				
 					$is_literal = false;
 					$is_equal = false;
@@ -527,44 +525,44 @@ class db_file
 						uasort($pieces, 'termSort');
 						$length = strlen(join(' ', $pieces));
 					
-						$first_or = false;
-						$count = 0;
-						$props['ORDER'] = 'r_count' . $i . ' ASC,' . (isset($props['ORDER'])?$props['ORDER']:'');
+						$required = '';
+						$excluded = '';
+						$includes = '';
+						if($request['order_by'] == 'Relevance')
+							$props['ORDER'] = 'r_count' . $i . ' ASC,' . (isset($props['ORDER'])?$props['ORDER']:'');
 						foreach($pieces as $j => $piece)
 						{
 							if($piece[0] == '+')
 							{
-								if($props['WHERE'] != '') $props['WHERE'] .= ' AND';
+								if($required != '') $required .= ' AND';
 								$piece = substr($piece, 1);
-								$props['WHERE'] .= ' LOCATE("' . addslashes($piece) . '", ' . $column . ') > 0';
+								$required .= ' LOCATE("' . addslashes($piece) . '", ' . $column . ') > 0';
 								$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',(LOCATE("' . addslashes($piece) . '", ' . $column . ') > 0) AS result' . $i . $j;
 							}
 							elseif($piece[0] == '-')
 							{
-								if($props['WHERE'] != '') $props['WHERE'] .= ' AND';
+								if($excluded != '') $excluded .= ' AND';
 								$piece = substr($piece, 1);
-								$props['WHERE'] .= ' LOCATE("' . addslashes($piece) . '", ' . $column . ') = 0';
+								$excluded .= ' LOCATE("' . addslashes($piece) . '", ' . $column . ') = 0';
 								$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',(LOCATE("' . addslashes($piece) . '", ' . $column . ') = 0) AS result' . $i . $j;
 							}
 							else
 							{
-								if($first_or == false)
-								{
-									$props['WHERE'] .= (($props['WHERE'] != '')?' AND':'') . ' (';
-									$first_or = true;
-								}
-								elseif($props['WHERE'] != '') $props['WHERE'] .= ' OR';
-								$props['WHERE'] .= ' LOCATE("' . addslashes($piece) . '", ' . $column . ') > 0';
+								if($includes != '') $includes .= ' OR';
+								$includes .= ' LOCATE("' . addslashes($piece) . '", ' . $column . ') > 0';
 								$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',(LOCATE("' . addslashes($piece) . '", ' . $column . ') > 0) AS result' . $i . $j;
-								if($count == count($pieces)-1) $props['WHERE'] .= ')';
 							}
-							$props['ORDER'] = 'result' . $i . (count($pieces) - $j - 1) . ' DESC,' . (isset($props['ORDER'])?$props['ORDER']:'');
-							$count++;
+							if($request['order_by'] == 'Relevance')
+								$props['ORDER'] = 'result' . $i . (count($pieces) - $j - 1) . ' DESC,' . (isset($props['ORDER'])?$props['ORDER']:'');
 						}
 						$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',ABS(LENGTH(' . $column . ') - ' . $length . ') as r_count' . $i;
+						$props['WHERE'] .= (($required != '')?(($props['WHERE'] != '')?' AND':'') . $required:'');
+						$props['WHERE'] .= (($excluded != '')?(($props['WHERE'] != '')?' AND':'') . $excluded:'');
+						$props['WHERE'] .= (($includes != '')?(($props['WHERE'] != '')?' AND':'') . $includes:'');
 					}
 					else
 					{
+						if($props['WHERE'] != '') $props['WHERE'] .= ' AND ';
 						if($is_equal)
 						{
 							$props['WHERE'] .= $column . ' = "' . addslashes($request[$var]) . '"';

@@ -22,6 +22,17 @@ class db_playlist extends db_file
 	{
 		return array('id', 'SongCount', 'Files', 'Filepath');
 	}
+	
+	// return the structure of the database
+	static function struct()
+	{
+		return array(
+			'id' => 'INT NOT NULL AUTO_INCREMENT, PRIMARY KEY(id)',
+			'SongCount' => 'INT',
+			'Files' => 'TEXT',
+			'Filepath' => 'TEXT'
+		);
+	}
 
 	static function handles($file)
 	{
@@ -78,7 +89,7 @@ class db_playlist extends db_file
 				$paths = self::getFiles($file);
 				
 				$fileinfo['SongCount'] = count($paths);
-				$fileinfo['Files'] = serialize($paths);
+				$fileinfo['Files'] = addslashes(serialize($paths));
 				
 				$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
 				
@@ -92,7 +103,7 @@ class db_playlist extends db_file
 				$paths = self::getFiles($file);
 				
 				$fileinfo['SongCount'] = count($paths);
-				$fileinfo['Files'] = serialize($paths);
+				$fileinfo['Files'] = addslashes(serialize($paths));
 				
 				$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $db_playlist[0]['id']), false);
 				

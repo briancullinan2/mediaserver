@@ -94,7 +94,7 @@ class db_watch_list extends db_watch
 						}
 						closedir($dh);
 					}
-					
+
 					// if count if less then number of directories in database
 					if($count < $db_files[0]['count(*)'])
 					{

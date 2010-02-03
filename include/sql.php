@@ -188,6 +188,7 @@ class sql_global
 			$request['start'] = 0;
 		if( !isset($request['limit']) || !is_numeric($request['limit']) || $request['limit'] < 0 )
 			$request['limit'] = 15;
+		$order_not_set = false;
 		if( !isset($request['order_by']) || !in_array($request['order_by'], $columns) )
 		{
 			// make sure if it is a list that it is all valid columns
@@ -262,6 +263,8 @@ class sql_global
 		{
 			$props['ORDER'] = $request['order_by'] . ' ' . $request['direction'];
 		}
+		if(!isset($_GET['order_by']) && !isset($_POST['order_by']) && isset($_REQUEST['search']))
+			$request['order_by'] = 'Relevance';
 		$props['LIMIT'] = $request['start'] . ',' . $request['limit'];
 	}
 	
@@ -386,8 +389,13 @@ class sql_global
 		$query = SQL::statement_builder($props, $require_permit);
 		
 		if(isset($_REQUEST['log_sql']) && $_REQUEST['log_sql'] == true)
-			log_error('DATABASE: ' . substr($query, 0, 512));
-			
+		{
+			if(!isset($_REQUEST['full_sql']) || $_REQUEST['full_sql'] != true)
+				log_error('DATABASE: ' . substr($query, 0, 512));
+			else
+				log_error('DATABASE: ' . $query);
+		}
+		
 		if(isset($props['CALLBACK']))
 		{
 			$result = $this->db_query_callback($query);
