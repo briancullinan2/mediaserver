@@ -40,7 +40,7 @@ class db_file
 		$file = str_replace('\\', '/', $file);
 		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 		
-		if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $file)) || (is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)) && $file[strlen($file)-1] != '/'))
+		if((is_dir(str_replace('/', DIRECTORY_SEPARATOR, $file)) || (is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)) && $file[strlen($file)-1] != '/')) && !in_array($file, $GLOBALS['ignored']))
 		{
 			$filename = basename($file);
 
@@ -164,7 +164,7 @@ class db_file
 		return false;
 	}
 	
-	//----------------------- Magic, do not tough -----------------------
+	//----------------------- Magic, do not touch -----------------------
 	// the mysql can be left null to get the files from a directory, in which case a directory must be specified
 	// if the mysql is provided, then the file listings will be loaded from the database
 	// this is a very generalized module to provide a template for overriding, or for other modules to modify the $request and pass to this one
@@ -242,8 +242,8 @@ class db_file
 				if(USE_ALIAS == true)
 					$request['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
 					
-				// maybe the dir is not loaded yet, this party is costly but it is a good way to do it
-				if(db_watch_list::handles($request['dir']))
+				// maybe the dir is not loaded yet, this part is costly but it is a good way to do it
+				if(RECURSIVE_GET && db_watch_list::handles($request['dir']))
 				{
 					db_watch_list::scan_dir($request['dir']);
 				}

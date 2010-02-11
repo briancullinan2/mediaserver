@@ -328,7 +328,7 @@ class db_watch_list extends db_watch
 		//   if the file was modified or added the information could have changed, so the modules must modify it, if it is already added
 		foreach($GLOBALS['modules'] as $i => $module)
 		{
-			// never pass is to fs_file, it is only used to internals in this case
+			// never pass it to fs_file, it is only used to internals in this case
 			// db_file and db_ids are handled independently
 			// skip db_watch and db_watch_list to prevent recursion
 			if(constant($module . '::INTERNAL') == false && $module != 'db_file')

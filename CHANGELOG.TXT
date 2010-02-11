@@ -1,3 +1,17 @@
+2010-02-10
+Added RECURSIVE_GET to the Settings and db_file.php to allow for an option to turn on reading directories while the site is being used
+Started converting Settings to fill in the definitions automatically, the install script should verify this information
+Added a check to db_file.php module to make sure that it doesn't add directories that are ignored
+
+2010-02-04
+Fixed some problems with searching in the Live template
+	Was not printing out field name in the Input element
+Fixed problems with searching in db_file.php
+	Query was not being generated correctly, specifically the individual search terms had errors
+Fixed errors with USE_DATABASE=false
+Fixed compatibility.php, getting the server url and comparing with referrer url is behaves differently on Windows
+Tested directory loading, turns out is it mostly valid queries
+
 2009-12-20
 Worked on user implementation
 	checkAccess() function in common.php double checks that each file is accessible by the current user

@@ -3,11 +3,6 @@
 // the most basic settings for getting the system running
 // all other settings are stored in the appropriate classes that handle each section
 
-// global admin username and pass
-define('ADMIN_USER',			   'tmpuser');
-define('ADMIN_PASS',			   'tmppass');
-
-
 // database connection constants
 define('USE_DATABASE', 	                  false); // set to false to make modules load information about every file on the fly
 define('DB_SERVER',                'localhost');
@@ -109,6 +104,11 @@ define('ARCHIVE_ARGS_RAR',                           ' p %IF'); // a program tha
 
 // debug mode is used by many templates to display debugging options on the page
 define('DEBUG_MODE', 							true);
+
+// when a user tries to access a directory listing, this will load missing directories on the fly
+//   this is good when there are few files in a directory, but the site hasn't scanned them all
+//   don't use this when there are many complex files and the site has loaded thousands already
+define('RECURSIVE_GET', 				false);
 
 // max amount to output when accessing a file
 define('BUFFER_SIZE', 	                         2*1024*8);

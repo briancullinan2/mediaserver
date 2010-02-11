@@ -3,11 +3,6 @@
 // the most basic settings for getting the system running
 // all other settings are stored in the appropriate classes that handle each section
 
-// global admin username and pass
-define('ADMIN_USER',			   'tmpuser');
-define('ADMIN_PASS',			   'tmppass');
-
-
 // database connection constants
 define('USE_DATABASE', 	                  true); // set to false to make modules load information about every file on the fly
 define('DB_SERVER',                'localhost');
@@ -26,23 +21,23 @@ define('DB_SECRET', 		'QyzoH2zqp%MGs1yD');
 define('DB_PREFIX',				         'db_');
 
 // site constants these are used throughout the entire system
-define('LOCAL_ROOT',                '/var/www/mediaserver/');
+define('LOCAL_ROOT',                dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR);
 
 // where to put the user directory for storing user uploaded files
 //   this directory must be writtable by the web server
-define('LOCAL_USERS', 							LOCAL_ROOT . 'users/');
+define('LOCAL_USERS', 							LOCAL_ROOT . 'users' . DIRECTORY_SEPARATOR);
 
 // this template folder includes all the files in pages that are accessible
 //  this includes the types of list outputs so other templates don't have to reimplement them to use them
-define('LOCAL_BASE',            				        'templates/plain/');
+define('LOCAL_BASE',            				        'templates' . DIRECTORY_SEPARATOR . 'plain' . DIRECTORY_SEPARATOR);
 
 // this is the local filesystem path to the default template, this path should not be used in web pages, instead use HTML_TEMPLATE
 //  this is the template that is used when a template is not specified
-define('LOCAL_DEFAULT',            				        'templates/live/');
+define('LOCAL_DEFAULT',            				        'templates' . DIRECTORY_SEPARATOR . 'live' . DIRECTORY_SEPARATOR);
 
 // this is the optional template that will be used
 // if this is defined here, the user will not be given an option to choose a template
-#define('LOCAL_TEMPLATE',            					 'templates\extjs\\');
+#define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . 'extjs' . DIRECTORY_SEPARATOR);
 
 // this is the path used by html pages to refer back to the website domain, HTML_ROOT is usually appended to this
 define('HTML_DOMAIN',            			    'http://dev.bjcullinan.com/');
@@ -112,6 +107,11 @@ define('ARCHIVE_ARGS_RAR',                           ' p %IF'); // a program tha
 // debug mode is used by many templates to display debugging options on the page
 define('DEBUG_MODE', 							true);
 
+// when a user tries to access a directory listing, this will load missing directories on the fly
+//   this is good when there are few files in a directory, but the site hasn't scanned them all
+//   don't use this when there are many complex files and the site has loaded thousands already
+define('RECURSIVE_GET', 				false);
+
 // max amount to output when accessing a file
 define('BUFFER_SIZE', 	                         2*1024*8);
 
@@ -139,4 +139,5 @@ ini_set('include_path', '.:/usr/share/php:/usr/share/pear:' . LOCAL_ROOT . 'incl
 
 // comment-out-able
 ini_set('error_reporting', E_ALL);
+
 ?>

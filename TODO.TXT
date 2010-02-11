@@ -1,11 +1,7 @@
-Fix file mode (USE_DATABASE == false), lots of errors
-Error found in Live template
-	Advanced search is not using the right variable names in the get request
-	search= variable must also be used in order to override the empty dir
-Figure out why directories take so song to check for changes
 Speed testing with new User queries
 More compatibility testing with clients
 ------------- GENERAL TODO -------------
+Use ADOdb for all database activity?  Pear_MDB2?
 Use PEAR::Error_Stack for error handling?
 Store the remote_address in the session, and if it doesn't match up with what is in the session then kill the session and die
 Create a unique id and insert it into forms, this is required when the form is submitted
@@ -37,6 +33,7 @@ Get ranges working in encode plugin
 Figure out a way of doing this with files even if stdin is not being used in the command, if fopen is writing to a file, does it file feof when reading from the same file simulaneously?
 Make convert.php plugin recognize video thumbnails and use vlc to extract them
 ------------- Module TODO -------------
+Look in to the possibility of corruption if the db_files::handles check for is_dir or is_file is removed
 Make a discography module that parses out wikipedia discographys, store album information, and return links to Full Discography, and Partial Discography
 	Base discography module on discogs.com
 	this will list out each artist with full or missing albums
@@ -71,3 +68,5 @@ Change desktop style to be buttons like folders in Desktop.js but render buttons
 Get settings dialog working and set up user accounts to control it
 Finish the player app that displays pictures
 Make players resize to Player window
+------------- LIVE -------------
+Add basename to template output if filename is not available from module selection
