@@ -1,0 +1,34 @@
+@charset "utf-8";
+/* CSS Document */
+
+.warning span, .info .warning span {
+	font-size:12pt;
+	font-weight:bold;
+	color:#F90;
+}
+
+.warning {
+	border:2px solid #960;
+	background-color:#FF9;
+}
+
+.info span {
+	font-size:12pt;
+	font-weight:bold;
+	color:#009;
+}
+
+.section {
+	border:2px solid #006;
+}
+
+.section span {
+	font-size:12pt;
+	font-weight:bold;
+	color:#009;
+}
+
+.note {
+	border:2px solid #030;
+	background-color:#6F9;
+}

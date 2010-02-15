@@ -37,7 +37,7 @@ function makeVisible(cat)
 	To look for fields that are equal to the search query use an equal sign (=) on both sides.<br />
 	Finally, to include terms preceed the term with a plus sign (+) and to exclude use a minus sign (-).</span>
 	<div class="titlePadding"></div>
-	<form action="/{$smarty.const.HTML_ROOT}" method="get">
+	<form action="{$smarty.const.HTML_ROOT}" method="get">
 		<h3>Search All Available Fields:</h3>
 		Search: <input type="text" name="search" size="40" value="{if isset($smarty.request.search)}{$smarty.request.search|htmlspecialchars}{/if}" /><br /><br />
 		Directory: <input type="text" name="dir" size="40" value="{if isset($smarty.request.dir)}{$smarty.request.dir|htmlspecialchars}{/if}" />

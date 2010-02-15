@@ -36,6 +36,6 @@ $GLOBALS['templates']['TEMPLATE_AMPACHE'] = LOCAL_ROOT . LOCAL_BASE . 'ampache.p
 $GLOBALS['templates']['TEMPLATE_LOGIN'] = LOCAL_ROOT . LOCAL_BASE . 'login.php';
 $GLOBALS['templates']['TEMPLATE_LOGOUT'] = LOCAL_ROOT . LOCAL_BASE . 'login.php';
 $GLOBALS['templates']['TEMPLATE_WATCH'] = LOCAL_ROOT . LOCAL_BASE . 'watch.php';
-$GLOBALS['templates']['TEMPLATE_REPORTS'] = LOCAL_ROOT . LOCAL_BASE . 'reports.php';
+$GLOBALS['templates']['TEMPLATE_TOOLS'] = LOCAL_ROOT . LOCAL_BASE . 'tools.php';
 
 ?>

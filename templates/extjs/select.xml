@@ -2,11 +2,11 @@
 {if $smarty.const.USE_DATABASE}{assign var=prefix value='db_'}{else}{assign var=prefix value='fs_'}{/if}
 {php}
 $ext_icons = array();
-$ext_icons['FOLDER'] = '/' . HTML_ROOT . HTML_TEMPLATE . 'images/filetypes/folder_96x96.png';
-$ext_icons['FILE'] = '/' . HTML_ROOT . HTML_TEMPLATE . 'images/filetypes/file_96x96.png';
+$ext_icons['FOLDER'] = HTML_ROOT . HTML_TEMPLATE . 'images/filetypes/folder_96x96.png';
+$ext_icons['FILE'] = HTML_ROOT . HTML_TEMPLATE . 'images/filetypes/file_96x96.png';
 
 $type_icons = array();
-$type_icons['audio'] = '/' . HTML_ROOT . HTML_TEMPLATE . 'images/filetypes/music_96x96.png';
+$type_icons['audio'] = HTML_ROOT . HTML_TEMPLATE . 'images/filetypes/music_96x96.png';
 
 $this->assign('ext_icons', $ext_icons);
 $this->assign('type_icons', $type_icons);
@@ -29,7 +29,7 @@ $this->assign('type_icons', $type_icons);
 		<ext>{$ext|htmlspecialchars}</ext>
 		<tip>{foreach from=$columns item=column_value}{if isset($files[file].$column_value)}{$column_value}: {$files[file].$column_value|utf8_encode|htmlspecialchars}&lt;br /&gt;{/if}{/foreach}</tip>
 		<path>{$files[file].Filepath|utf8_encode|htmlspecialchars}</path>
-		<link>{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}file.php/{$smarty.request.cat}/{$files[file].id}/{$files[file].Filename|utf8_encode|urlencode|htmlspecialchars}</link>
+		<link>{$smarty.const.HTML_DOMAIN}{$smarty.const.HTML_ROOT}plugins/file.php/{$smarty.request.cat}/{$files[file].id}/{$files[file].Filename|utf8_encode|urlencode|htmlspecialchars}</link>
 		<short>{$files[file].Filename|truncate:13:"...":true|utf8_encode|htmlspecialchars}</short>
 {if $files[file].Filepath|@handles:'archive'}<cat>{$prefix}archive</cat>
 {elseif $files[file].Filepath|@handles:'diskimage'}<cat>{$prefix}diskimage</cat>

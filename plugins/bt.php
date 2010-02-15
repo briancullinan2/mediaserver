@@ -9,7 +9,7 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATO
 if( $_SESSION['privilage'] < BT_PRIV )
 {
 	// redirect to login page
-	header('Location: /' . HTML_ROOT . HTML_PLUGINS . 'login.php?return=' . $_SERVER['REQUEST_URI'] . '&required_priv=' . BT_PRIV);
+	header('Location: ' . HTML_ROOT . 'plugins/login.php?return=' . $_SERVER['REQUEST_URI'] . '&required_priv=' . BT_PRIV);
 	
 	exit();
 }
@@ -161,7 +161,7 @@ if(count($files) > 0)
 	}
 	$torrent['info']['pieces'] = $output;
 	
-	$torrent['announce'] = HTML_DOMAIN . HTML_ROOT . HTML_PLUGINS . 'bttracker.php/announce.php';
+	$torrent['announce'] = HTML_DOMAIN . HTML_ROOT . 'plugins/bttracker/announce.php';
 	$torrent['creation date'] = time();
 	$torrent['comment'] = HTML_NAME;
 	$torrent['created by'] = HTML_NAME;

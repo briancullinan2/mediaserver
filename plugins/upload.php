@@ -8,7 +8,7 @@ define('UPLOAD_PRIV', 				5);
 if( $_SESSION['privilage'] < UPLOAD_PRIV )
 {
 	// redirect to login page
-	header('Location: /' . HTML_ROOT . HTML_PLUGINS . 'login.php?return=' . $_SERVER['REQUEST_URI'] . '&required_priv=' . UPLOAD_PRIV);
+	header('Location: ' . HTML_ROOT . 'plugins/login.php?return=' . $_SERVER['REQUEST_URI'] . '&required_priv=' . UPLOAD_PRIV);
 	
 	exit();
 }

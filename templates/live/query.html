@@ -93,15 +93,15 @@ $this->assign('newlineregexp', '/([^ ]{25})/i');
 {else}
 {assign var=cat value=$smarty.request.cat}
 {/if}
-{assign var=link value='/'|cat:$smarty.const.HTML_ROOT|cat:'?dir='|cat:$encoded|cat:'&amp;cat='|cat:$cat}
-{elseif $files[file].Filepath|@handles:'archive'}{assign var=link value='/'|cat:$smarty.const.HTML_ROOT|cat:$smarty.const.HTML_PLUGINS|cat:'file.php/'|cat:$prefix|cat:'archive/'|cat:$files[file].id|cat:'/'|cat:$files[file].Filename}
-{elseif $files[file].Filepath|@handles:'diskimage'}{assign var=link value='/'|cat:$smarty.const.HTML_ROOT|cat:$smarty.const.HTML_PLUGINS|cat:'file.php/'|cat:$prefix|cat:'diskimage/'|cat:$files[file].id|cat:'/'|cat:$files[file].Filename}
-{elseif $files[file].Filepath|@handles:'image_browser'}{assign var=link value='/'|cat:$smarty.const.HTML_ROOT|cat:$smarty.const.HTML_PLUGINS|cat:'file.php/'|cat:$prefix|cat:'image_browser/'|cat:$files[file].id|cat:'/'|cat:$files[file].Filename}
-{else}{assign var=link value='/'|cat:$smarty.const.HTML_ROOT|cat:$smarty.const.HTML_PLUGINS|cat:'file.php/'|cat:$smarty.request.cat|cat:'/'|cat:$files[file].id|cat:'/'|cat:$files[file].Filename}{/if}
+{assign var=link value=$smarty.const.HTML_ROOT|cat:'?dir='|cat:$encoded|cat:'&amp;cat='|cat:$cat}
+{elseif $files[file].Filepath|@handles:'archive'}{assign var=link value=$smarty.const.HTML_ROOT|cat:'plugins/file.php/'|cat:$prefix|cat:'archive/'|cat:$files[file].id|cat:'/'|cat:$files[file].Filename}
+{elseif $files[file].Filepath|@handles:'diskimage'}{assign var=link value=$smarty.const.HTML_ROOT|cat:'plugins/file.php/'|cat:$prefix|cat:'diskimage/'|cat:$files[file].id|cat:'/'|cat:$files[file].Filename}
+{elseif $files[file].Filepath|@handles:'image_browser'}{assign var=link value=$smarty.const.HTML_ROOT|cat:'plugins/file.php/'|cat:$prefix|cat:'image_browser/'|cat:$files[file].id|cat:'/'|cat:$files[file].Filename}
+{else}{assign var=link value=$smarty.const.HTML_ROOT|cat:'plugins/file.php/'|cat:$smarty.request.cat|cat:'/'|cat:$files[file].id|cat:'/'|cat:$files[file].Filename}{/if}
 						<table class="itemTable" cellpadding="0" cellspacing="0" onclick="location.href = '{$link}';">
 							<tr>
 								<td>
-									<div class="thumb file_ext_{$files[file].Filetype} file_type_{'/'|str_replace:' file_type_':$files[file].Filemime}"><img src="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}images/s.gif" alt="{$files[file].Filetype}" height="48" width="48"></div>
+									<div class="thumb file_ext_{$files[file].Filetype} file_type_{'/'|str_replace:' file_type_':$files[file].Filemime}"><img src="{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}images/s.gif" alt="{$files[file].Filetype}" height="48" width="48"></div>
 								</td>
 							</tr>
 						</table>
@@ -133,7 +133,7 @@ $this->assign('newlineregexp', '/([^ ]{25})/i');
 				<td>
 					<table cellpadding="0" cellspacing="0" border="0" class="fileThumb">
 						<tr>
-							<td><div class="thumb file_ext_{$files[file].Filetype} file_type_{'/'|str_replace:' file_type_':$files[file].Filemime}"><img src="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}images/s.gif" height="48" width="48"></div></td>
+							<td><div class="thumb file_ext_{$files[file].Filetype} file_type_{'/'|str_replace:' file_type_':$files[file].Filemime}"><img src="{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}images/s.gif" height="48" width="48"></div></td>
 							<td class="infoCell">
 								<span class="title">{if isset($parts)}{$parts|@preg_replace:'<b style="background-color:#990">$0</b>':$itemvalue}{else}{$itemvalue}{/if}</span><br />
 								<span>{$files[file].Filetype}</span>

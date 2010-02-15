@@ -37,9 +37,9 @@
     }
     </style>
 	<script type="text/javascript">
-		site_path = '/<?php echo HTML_ROOT; ?>';
-		template_path = '/<?php echo HTML_ROOT . HTML_TEMPLATE; ?>';
-		plugins_path = '/<?php echo HTML_ROOT . HTML_PLUGINS; ?>';
+		site_path = '<?php echo HTML_ROOT; ?>';
+		template_path = '<?php echo HTML_ROOT . HTML_TEMPLATE; ?>';
+		plugins_path = '<?php echo HTML_ROOT . 'plugins/'; ?>';
 		dir_sep = "\<?php echo DIRECTORY_SEPARATOR; ?>";
 		
 	</script>
@@ -52,27 +52,27 @@
 		<div class="loading-indicator">Media Server<br /><span id="loading-msg" class="loading-msg">Loading styles and images...</span></div>
 	</div>
     <!-- include everything after the loading indicator -->
-    <link rel="stylesheet" type="text/css" href="/<?php echo HTML_ROOT . HTML_BASE; ?>extjs/resources/css/ext-all.css" />
-	<link rel="stylesheet" type="text/css" href="/<?php echo HTML_ROOT . HTML_BASE; ?>extjs/ux/livegrid/build/resources/css/ext-ux-livegrid.css" />
-    <link rel="stylesheet" type="text/css" href="/<?php echo HTML_TEMPLATE; ?>types.css" />
-    <link rel="stylesheet" type="text/css" href="/<?php echo HTML_TEMPLATE; ?>styles.css" />
+    <link rel="stylesheet" type="text/css" href="<?php echo HTML_ROOT . HTML_BASE; ?>extjs/resources/css/ext-all.css" />
+	<link rel="stylesheet" type="text/css" href="<?php echo HTML_ROOT . HTML_BASE; ?>extjs/ux/livegrid/build/resources/css/ext-ux-livegrid.css" />
+    <link rel="stylesheet" type="text/css" href="<?php echo HTML_TEMPLATE; ?>types.css" />
+    <link rel="stylesheet" type="text/css" href="<?php echo HTML_TEMPLATE; ?>styles.css" />
 
     <!-- GC -->
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading Core API...';</script>
- 	<script type="text/javascript" src="/<?php echo HTML_ROOT . HTML_BASE; ?>extjs/adapter/ext/ext-base.js"></script>
+ 	<script type="text/javascript" src="<?php echo HTML_ROOT . HTML_BASE; ?>extjs/adapter/ext/ext-base.js"></script>
 
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading UI Components... (Core Components)';</script>
-    <script type="text/javascript" src="/<?php echo HTML_ROOT . HTML_BASE; ?>extjs/ext-all-debug.js"></script>
-	<script type="text/javascript" src="/<?php echo HTML_ROOT . HTML_BASE; ?>extjs/ux/livegrid/build/livegrid-all-debug.js"></script>
-    <script type="text/javascript" src="/<?php echo HTML_ROOT . HTML_BASE; ?>extjs/ux/XmlTreeLoader.js"></script>
-    <script type="text/javascript" src="/<?php echo HTML_ROOT . HTML_BASE; ?>extjs/ux/XMLTreeNode.js"></script>
-    <script type="text/javascript" src="/<?php echo HTML_ROOT . HTML_BASE; ?>extjs/ux/BufferView.js"></script>
+    <script type="text/javascript" src="<?php echo HTML_ROOT . HTML_BASE; ?>extjs/ext-all-debug.js"></script>
+	<script type="text/javascript" src="<?php echo HTML_ROOT . HTML_BASE; ?>extjs/ux/livegrid/build/livegrid-all-debug.js"></script>
+    <script type="text/javascript" src="<?php echo HTML_ROOT . HTML_BASE; ?>extjs/ux/XmlTreeLoader.js"></script>
+    <script type="text/javascript" src="<?php echo HTML_ROOT . HTML_BASE; ?>extjs/ux/XMLTreeNode.js"></script>
+    <script type="text/javascript" src="<?php echo HTML_ROOT . HTML_BASE; ?>extjs/ux/BufferView.js"></script>
 	
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading UI Components... (Library Mods)';</script>
-    <script type="text/javascript" src="/<?php echo HTML_TEMPLATE; ?>Library.js"></script>
+    <script type="text/javascript" src="<?php echo HTML_TEMPLATE; ?>Library.js"></script>
 	
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading UI Components... (Media Components)';</script>
-    <script type="text/javascript" src="/<?php echo HTML_TEMPLATE; ?>main.js"></script>
+    <script type="text/javascript" src="<?php echo HTML_TEMPLATE; ?>main.js"></script>
 
     <!-- PLAYER -->
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Initializing Player...';</script>
@@ -86,7 +86,7 @@
 		Ext.get('loading-mask').fadeOut({remove:true});
 	}, 300);
 	
-	Ext.BLANK_IMAGE_URL = '/<?php echo HTML_ROOT . HTML_BASE; ?>extjs/resources/images/default/s.gif';
+	Ext.BLANK_IMAGE_URL = '<?php echo HTML_ROOT . HTML_BASE; ?>extjs/resources/images/default/s.gif';
 	
 	</script>
 	

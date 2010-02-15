@@ -7,21 +7,17 @@ Store the remote_address in the session, and if it doesn't match up with what is
 Create a unique id and insert it into forms, this is required when the form is submitted
 Make hard links and soft links, hard links are replaced when they are put in to the database, soft links are replaced when they are read from the database, this will allow us to do more network stuff
 Make a class for handling CSV as the database type, make sure all the queries can refer to the statement builder
-File uploading and personal folders
-	Finish implementing user privilages to user directories
-	Modules must check for access denied on request variables
-	Plugins must check for access denied on file results, this will eliminate security risks
 Interface with mediatomb and support UPnP protocol
 ------------- Plugin TODO -------------
+Finish users.php plugin
+Add user permissions to ampache.php plugin
 If they try to access a script other then cron in the tiny remote version, forward them to the HTML_SITE defined in the settings
 Work on settings.php plugin
 	Global settings such as default template to use for each devide logged in the to account
 	Template settings, must provide specification in template config, use database for storing fields?
 	Make display plugin obsolete by completing the settings plugins
 Work on reports.php plugin for admin
-	Split up reports section into different files and put them in the tools folder
-	Dynamically loaded tools, check for custom templates or use template included in the tool file
-	Provide useful information in reports section about missing songs
+	Provide useful information in reports section about missing songs (music.php tool?)
 Make a sync plugin in admin section for syncing between two databases and pulling out differences
 	Use musicbrainz to sync music
 Fix bt.php plugin, using the stream methods won't work with md5
@@ -33,7 +29,7 @@ Get ranges working in encode plugin
 Figure out a way of doing this with files even if stdin is not being used in the command, if fopen is writing to a file, does it file feof when reading from the same file simulaneously?
 Make convert.php plugin recognize video thumbnails and use vlc to extract them
 ------------- Module TODO -------------
-Look in to the possibility of corruption if the db_files::handles check for is_dir or is_file is removed
+Look in to the possibility of corruption if the db_files::handles check for is_dir or is_file is removed (if file is removed before cron.php detects it, it won't load all the available information from DB)
 Make a discography module that parses out wikipedia discographys, store album information, and return links to Full Discography, and Partial Discography
 	Base discography module on discogs.com
 	this will list out each artist with full or missing albums
@@ -69,4 +65,4 @@ Get settings dialog working and set up user accounts to control it
 Finish the player app that displays pictures
 Make players resize to Player window
 ------------- LIVE -------------
-Add basename to template output if filename is not available from module selection
+Add basename to template output if filename is not available from module selection otherwise it just shows up blank

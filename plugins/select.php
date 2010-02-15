@@ -1,7 +1,7 @@
 <?php
 
 // Variables Used:
-//  files, total_count, error, select
+//  files[], total_count, error, select
 // Shared Variables:
 //  columns, templates
 
@@ -16,7 +16,7 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATO
 if( $_SESSION['privilage'] < SELECT_PRIV )
 {
 	// redirect to login page
-	header('Location: /' . HTML_ROOT . HTML_PLUGINS . 'login.php?return=' . $_SERVER['REQUEST_URI'] . '&required_priv=' . SELECT_PRIV);
+	header('Location: ' . HTML_ROOT . 'plugins/login.php?return=' . $_SERVER['REQUEST_URI'] . '&required_priv=' . SELECT_PRIV);
 	
 	exit();
 }

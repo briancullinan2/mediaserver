@@ -4,9 +4,9 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>{$smarty.const.HTML_NAME|@htmlspecialchars}</title>
-<link rel="stylesheet" href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}live.css" type="text/css"/>
-<link rel="stylesheet" href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}types.css" type="text/css"/>
-<script language="javascript" type="text/javascript" src="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}dragclick.js"></script>
+<link rel="stylesheet" href="{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}live.css" type="text/css"/>
+<link rel="stylesheet" href="{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}types.css" type="text/css"/>
+<script language="javascript" type="text/javascript" src="{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}dragclick.js"></script>
 <script language="javascript">
 var loaded = false;
 </script>
@@ -18,12 +18,12 @@ var loaded = false;
 		<div id="expander">
 			<table id="header" cellpadding="0" cellspacing="0" style="background-color:{if $audio_count > $image_count && $audio_count > $video_count && $audio_count > $files_count}#900{elseif $image_count > $files_count && $image_count > $video_count && $image_count > $audio_count}#990{elseif $video_count > $files_count && $video_count > $image_count && $video_count > $audio_count}#093{else}#06A{/if};">
 				<tr>
-					<td id="siteTitle"><a href="/{$smarty.const.HTML_ROOT}">{$smarty.const.HTML_NAME|@htmlspecialchars}</a></td>
-					<td><table cellpadding="0" cellspacing="0" id="middleArea"><tr><td class="searchParent">{if isset($smarty.request.cat) and $smarty.request.cat ne 'db_file'}{assign var=category value=$smarty.request.cat}{' from Database'|@str_replace:'':$modules.$category} Search: {/if}<form action="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}query.php" method="get" id="search">{foreach from=$smarty.get key=k item=v}{if $k == "cat"}<input type="hidden" name="{$k}" value="{$v|htmlspecialchars}" />{/if}{/foreach}<span class="searchBorder" style="border-color:{if $audio_count > $image_count && $audio_count > $video_count && $audio_count > $files_count}#BB8888 #AA6666 #995555{elseif $image_count > $files_count && $image_count > $video_count && $image_count > $audio_count}#BBBBAA #AAAACC #9999BB{elseif $video_count > $files_count && $video_count > $image_count && $video_count > $audio_count}#88DDBB #66CCAA #55BB99{else}#88BBDD #66AACC #5599BB{/if};"><span class="innerSearchBorder" style="border-color:{if $audio_count > $image_count && $audio_count > $video_count && $audio_count > $files_count}#883333 #883322 #772211{elseif $image_count > $files_count && $image_count > $video_count && $image_count > $audio_count}#888844 #888833 #777722{elseif $video_count > $files_count && $video_count > $image_count && $video_count > $audio_count}#668866 #448844 #447744{else}#446688 #335588 #115577{/if};"><input type="text" name="search" value="{if isset($smarty.request.search)}{$smarty.request.search|htmlspecialchars}{/if}" id="searchInput" /><span class="buttonBorder"><input type="submit" value="Search" id="searchButton" /></span></span></span>&nbsp;&nbsp;<a id="advancedSearch" href="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}search.php?dir={$smarty.request.dir|htmlspecialchars}">Advanced Search</a></form></td></tr></table></td>
+					<td id="siteTitle"><a href="{$smarty.const.HTML_ROOT}">{$smarty.const.HTML_NAME|@htmlspecialchars}</a></td>
+					<td><table cellpadding="0" cellspacing="0" id="middleArea"><tr><td class="searchParent">{if isset($smarty.request.cat) and $smarty.request.cat ne 'db_file'}{assign var=category value=$smarty.request.cat}{' from Database'|@str_replace:'':$modules.$category} Search: {/if}<form action="{$smarty.const.HTML_ROOT}plugins/query.php" method="get" id="search">{foreach from=$smarty.get key=k item=v}{if $k == "cat"}<input type="hidden" name="{$k}" value="{$v|htmlspecialchars}" />{/if}{/foreach}<span class="searchBorder" style="border-color:{if $audio_count > $image_count && $audio_count > $video_count && $audio_count > $files_count}#BB8888 #AA6666 #995555{elseif $image_count > $files_count && $image_count > $video_count && $image_count > $audio_count}#BBBBAA #AAAACC #9999BB{elseif $video_count > $files_count && $video_count > $image_count && $video_count > $audio_count}#88DDBB #66CCAA #55BB99{else}#88BBDD #66AACC #5599BB{/if};"><span class="innerSearchBorder" style="border-color:{if $audio_count > $image_count && $audio_count > $video_count && $audio_count > $files_count}#883333 #883322 #772211{elseif $image_count > $files_count && $image_count > $video_count && $image_count > $audio_count}#888844 #888833 #777722{elseif $video_count > $files_count && $video_count > $image_count && $video_count > $audio_count}#668866 #448844 #447744{else}#446688 #335588 #115577{/if};"><input type="text" name="search" value="{if isset($smarty.request.search)}{$smarty.request.search|htmlspecialchars}{/if}" id="searchInput" /><span class="buttonBorder"><input type="submit" value="Search" id="searchButton" /></span></span></span>&nbsp;&nbsp;<a id="advancedSearch" href="{$smarty.const.HTML_ROOT}plugins/search.php?dir={$smarty.request.dir|htmlspecialchars}">Advanced Search</a></form></td></tr></table></td>
 					<td id="templates">{include file=$templates.TEMPLATE_TEMPLATE}</td>
 				</tr>
 			</table>
-{if $smarty.const.DEBUG_MODE eq true}<div id="debug" class="debug">{if $smarty.session.loggedin eq true}{else}<form action="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}login.php?return={$smarty.server.REQUEST_URI}" method="post">Administrators: Log in to select debug options. Username: <input type="text" name="username" value="" /> Password: <input type="password" name="password" value="" /><input type="submit" value="Login" /><input type="reset" value="Reset" /></form>{/if}</div>{/if}
+{if $smarty.const.DEBUG_MODE eq true}<div id="debug" class="debug">{if $smarty.session.loggedin eq true}{else}<form action="{$smarty.const.HTML_ROOT}plugins/login.php?return={$smarty.server.REQUEST_URI}" method="post">Administrators: Log in to select debug options. Username: <input type="text" name="username" value="" /> Password: <input type="password" name="password" value="" /><input type="submit" value="Login" /><input type="reset" value="Reset" /></form>{/if}</div>{/if}
 			<div id="container">
 				<table width="100%" cellpadding="5" cellspacing="0">
 					<tr>
@@ -39,15 +39,15 @@ var loaded = false;
 {assign var=path value='/'}
 {foreach from=$crumbs item=dir key=i}
 {if $i eq 0}
-									<li><a href="/{$smarty.const.HTML_ROOT}?dir=/&amp;cat={$prefix}file">{$smarty.const.HTML_NAME|@htmlspecialchars}</a></li>
-									<li><img src="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}images/carat.gif" class="crumbsep"></li>
+									<li><a href="{$smarty.const.HTML_ROOT}?dir=/&amp;cat={$prefix}file">{$smarty.const.HTML_NAME|@htmlspecialchars}</a></li>
+									<li><img src="{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}images/carat.gif" class="crumbsep"></li>
 {elseif $i eq $crumbcount}{assign var=current value=$dir}
 {assign var=path value=$path|cat:$dir|cat:'/'}
 									<li>{$dir|@htmlspecialchars}</li>
 {else}
 {assign var=path value=$path|cat:$dir|cat:'/'}
-									<li><a href="/{$smarty.const.HTML_ROOT}?dir={$path|urlencode|htmlspecialchars}&amp;cat={if $path|@handles:'file'}db_file{else}{$smarty.request.cat}{/if}">{$dir|@htmlspecialchars}</a></li>
-									<li><img src="/{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}images/carat.gif" class="crumbsep"></li>
+									<li><a href="{$smarty.const.HTML_ROOT}?dir={$path|urlencode|htmlspecialchars}&amp;cat={if $path|@handles:'file'}db_file{else}{$smarty.request.cat}{/if}">{$dir|@htmlspecialchars}</a></li>
+									<li><img src="{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}images/carat.gif" class="crumbsep"></li>
 {/if}
 {/foreach}
 								</ul>

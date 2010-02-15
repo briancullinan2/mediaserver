@@ -13,7 +13,7 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATO
 if( $_SESSION['privilage'] < REPORTS_PRIV )
 {
 	// redirect to login page
-	header('Location: /' . HTML_ROOT . HTML_PLUGINS . 'login.php?return=' . $_SERVER['REQUEST_URI'] . '&required_priv=' . REPORTS_PRIV);
+	header('Location: ' . HTML_ROOT . 'plugins/login.php?return=' . $_SERVER['REQUEST_URI'] . '&required_priv=' . REPORTS_PRIV);
 	
 	exit();
 }
@@ -271,7 +271,7 @@ $reports[-1][1][(TYPE_BOLD).'-Current Version'] = VERSION . ' (' . VERSION_NAME 
 $reports[1][1][(TYPE_BOLD).'-Database Counts'] = 'Here is a list of counts for the databases:<br />';
 foreach($GLOBALS['tables'] as $i => $db)
 {
-	$result = $GLOBALS['database']->query(array('SELECT' => $db, 'COLUMNS' => 'count(*)'));
+	$result = $GLOBALS['database']->query(array('SELECT' => $db, 'COLUMNS' => 'count(*)'), false);
 	if(count($result) > 0)
 	{
 		$reports[1][1][(TYPE_BOLD).'-Database Counts'] .= $db . ' database has ' . $result[0]['count(*)'] . ' entries' . (($i != count($GLOBALS['tables'])-1)?'<br />':'');

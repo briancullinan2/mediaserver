@@ -40,17 +40,12 @@ define('LOCAL_DEFAULT',            				        'templates' . DIRECTORY_SEPARATOR
 #define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . 'extjs' . DIRECTORY_SEPARATOR);
 
 // this is the path used by html pages to refer back to the website domain, HTML_ROOT is usually appended to this
-define('HTML_DOMAIN',            			    'http://dev.bjcullinan.com/');
+define('HTML_DOMAIN',            			    'http://dev.bjcullinan.com');
 
 // this is the root directory of the site, this is needed if the site is not running on it's own domain
 // this is so HTML pages can refer to the root of the site, without making the brower validate the entire domain, this saves time loading pages
 // a slash / is always preppended to this when the HTML_DOMAIN is not preceeding this
-define('HTML_ROOT',                                        '');
-
-// plugins directory	
-// this is the path for templates to access the plugins directory to provide links to extra functionality
-// this should be the absolute path from the root of the site
-define('HTML_PLUGINS', 						 'plugins/');
+define('HTML_ROOT',                                        '/');
 
 // extra constants
 // site name is used through various templates, generally a subtitle is appended to this

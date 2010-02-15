@@ -1,3 +1,10 @@
+2010-02-14
+Created tools.php in the admin section that makes the functionality from reports.php modular
+	Made reports.php obsolete
+Created a tools.php plain/template to handle basic output and provide examples on how to handle tools
+Created statistics.php admin tool for displaying information about the current install
+Created filetools.php admin tool for manipulating files the site has loaded
+
 2010-02-10
 Added RECURSIVE_GET to the Settings and db_file.php to allow for an option to turn on reading directories while the site is being used
 Started converting Settings to fill in the definitions automatically, the install script should verify this information

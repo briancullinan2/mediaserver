@@ -28,12 +28,12 @@ define('LOCAL_ROOT',                'C:\wamp\www\mediaserver\\');
 define('LOCAL_USERS', 							LOCAL_ROOT . 'users\\');
 
 // this is the path used by html pages to refer back to the website domain, HTML_ROOT is usually appended to this
-define('HTML_DOMAIN',            			             'http://192.168.1.120:8080/');
+define('HTML_DOMAIN',            			             'http://192.168.1.120:8080');
 
 // this is the root directory of the site, this is needed if the site is not running on it's own domain
 // this is so HTML pages can refer to the root of the site, without making the brower validate the entire domain, this saves time loading pages
 // a slash / is always preppended to this when the HTML_DOMAIN is not preceeding this
-define('HTML_ROOT',                                           'mediaserver/');
+define('HTML_ROOT',                                           '/mediaserver/');
 
 // this template folder includes all the files in pages that are accessible
 //  this includes the types of list outputs so other templates don't have to reimplement them to use them
@@ -46,11 +46,6 @@ define('LOCAL_DEFAULT',            				        'templates\plain\\');
 // this is the optional template that will be used
 // if this is defined here, the user will not be given an option to choose a template
 #define('LOCAL_TEMPLATE',            					 'templates\extjs\\');
-
-// plugins directory	
-// this is the path for templates to access the plugins directory to provide links to extra functionality
-// this should be the absolute path from the root of the site
-define('HTML_PLUGINS', 						 'plugins/');
 
 // extra constants
 // site name is used through various templates, generally a subtitle is appended to this
