@@ -74,6 +74,32 @@ function setup()
 		}
 	}
 	
+	// do not let GoogleBot perform searches or file downloads
+	if(NO_BOTS)
+	{
+		if(preg_match('/.*Googlebot.*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
+		{
+			if(basename($_SERVER['SCRIPT_NAME']) != 'select.php' && 
+				basename($_SERVER['SCRIPT_NAME']) != 'index.php' &&
+				basename($_SERVER['SCRIPT_NAME']) != 'sitemap.php' &&
+				basename($_SERVER['SCRIPT_NAME']) != 'query.php')
+			{
+				header('Location: ' . HTML_ROOT . 'plugins/sitemap.php');
+			}
+			else
+			{
+				// don't let google bots perform searches, this takes up a lot of resources
+				foreach($_REQUEST as $key => $value)
+				{
+					if(substr($key, 0, 6) == 'search')
+					{
+						unset($_REQUEST[$key]);
+					}
+				}
+			}
+		}
+	}
+	
 	if( USE_DATABASE ) require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'sql.php';
 	
 	// include the sql class so it can be used by any page
@@ -100,11 +126,11 @@ function setup()
 			// filter out only the modules for our USE_DATABASE setting
 			if ($file[0] != '.' && !is_dir(LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . $file))
 			{
-				if(!defined(strtoupper($file) . '_ENABLED') || constant(strtoupper($file) . '_ENABLED') != false)
+				$class_name = substr($file, 0, strrpos($file, '.'));
+				if(!defined(strtoupper($class_name) . '_ENABLED') || constant(strtoupper($class_name) . '_ENABLED') != false)
 				{
 					// include all the modules
 					require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . $file;
-					$class_name = substr($file, 0, strrpos($file, '.'));
 					
 					// only use the module if it is properly defined
 					if(class_exists($class_name))

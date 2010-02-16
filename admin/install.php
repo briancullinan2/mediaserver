@@ -86,614 +86,36 @@ sybase');
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>Media Server Installer</title>
+<link rel="stylesheet" href="./live.css" type="text/css"/>
 <style>
 
-body, html {
-	height:100%;
-	width:100%;
+td {
+	padding-left:20px;
 }
 
-body {
-	margin:0px;
-	background-color:#FFFFFF;
-	background-image:none;
-	background-repeat:repeat;
-	background-position:top left;
-	font-family:Verdana, Arial, sans-serif;
-	font-size:70%;
-	color:#444444;
-	direction:ltr;
-}
-
-.debug {
-	border:3px solid #FC0;
-	background-color:#FF6;
-}
-
-#selector {
-	-moz-opacity:.25;
-	opacity: .25;
-	filter:alpha(opacity=25);
-	position:absolute;
-	background-color:#6CF;
-	border:1px solid #169;
-	z-index:1000;
-}
-
-.menu {
-	background:#FCFCFC none repeat scroll 0 0;
-	border:1px solid #CCCCCC;
-	display:none;
-	list-style-image:none;
-	list-style-position:outside;
-	list-style-type:none;
-	margin:0;
-	min-width:120px;
-	padding:0 0 2px;
-	position:absolute;
-	z-index:2000001;
-}
-
-.menuShadow {
-	background-color:#000000;
-	display:none;
-	-moz-opacity:.5;
-	opacity: .5;
-	filter:alpha(opacity=50);
-	position:absolute;
-	z-index:2000000;
-}
-
-.menu li {
-	display:block;
-	list-style-image:none;
-	list-style-position:outside;
-	list-style-type:none;
-	margin:2px 2px 0;
-}
-
-.menu li a {
-	border:1px solid #FFFFFF;
-	color:#444444;
-	display:block !important;
-	overflow:visible;
-	padding:3px 6px 5px;
-	text-align:left;
-	text-decoration:none;
-	white-space:nowrap;
-	cursor:pointer;
-	font-weight:inherit;
-}
-
-.menu .itemSelect {
-	background:#F7FBFF url(images/browse_select_bg.png) repeat-x scroll center bottom;
-	border:1px solid #D8F0FA;
-}
-
-.menu .sep {
-	border-bottom:1px solid #DCDCDC;
-	margin:2px 2px 0;
-}
-
-.template_box a {
-	color:#FFF;
-	padding-right:10px;
-}
-
-#bodydiv {
-	padding:0 400px 0 400px
-}
-* {
-	line-height:130%;
-}
-#sizer {
-	width:100%
-}
-#expander {
-	margin:0 -400px 0 -400px;
-	position:relative;
-	min-width:800px
-}
-
-#header {
-	color:white;
-	-x-system-font:none;
-	font-family:Verdana,Arial,sans-serif;
-	font-size:100%;
-	font-size-adjust:none;
-	font-stretch:normal;
-	font-style:normal;
-	font-variant:normal;
-	font-weight:normal;
-	line-height:normal;
-	width:100%;
-	background:url(images/headerBG_24_~HeaderGradientImageType~.png) repeat scroll center top;
-	height:39px;
-	text-align:left;
-}
-
-#header * {
-	line-height:normal;
-}
-
-#header td {
-	white-space:nowrap;
-	vertical-align:middle;
-}
-
-#siteTitle, #templates {
-	padding:0;
-	white-space:nowrap;
-	vertical-align:middle;
-	width:0.1%;
-	font-family:Verdana,Arial,sans-serif;
-	font-size:125%;
-	line-height:normal;
-	font-weight:bold;
-}
-
-#siteTitle a {
-	color:#FFF;
-	text-decoration:none;
-}
-
-#advancedSearch {
-	font-size:12px;
-	font-weight:normal;
-	color:#FFF;
-}
-
-#siteTitle {
-	padding:0px 0px 0px 10px;
-}
-
-#middleArea {
-	margin-left:auto;
-	margin-right:auto;
-}
-
-.searchParent {
-	padding:0;
-	white-space:nowrap;
-	vertical-align:middle;
-	text-align:center;
-}
-
-#search {
-	display:inline;
-}
-
-.searchBorder {
-	border-color:#88BBDD #66AACC #5599BB;
-	border-style:solid;
-	border-width:1px;
-	padding-bottom:6px;
-	padding-top:3px;
-}
-
-.innerSearchBorder {
-	background-color:#FFFFFF;
-	border-color:#446688 #335588 #115577;
-	border-style:solid;
-	border-width:1px;
-	padding-bottom:5px;
-	padding-top:2px;
-}
-
-#searchInput {
-	border-right:1px solid #8F8F8F;
-	border-style:none solid none none;
-	padding-bottom:4px;
-	padding-left:2px;
-	padding-top:3px;
-	width:21em;
-	vertical-align:middle;
-	-x-system-font:none;
-	font-family:Verdana,Arial,sans-serif;
-	font-size:100%;
-	font-size-adjust:none;
-	font-stretch:normal;
-	font-style:normal;
-	font-variant:normal;
-	font-weight:normal;
-	line-height:normal;
-}
-
-.buttonBorder {
-	border-color:#CFE3C4 #99C383 #5DA253;
-	border-style:solid;
-	border-width:1px;
-	padding-bottom:4px;
-	padding-top:1px;
-}
-
-#searchButton {
-	vertical-align:middle;
-	font-family:Verdana,Arial,sans-serif;
-	font-size:100%;
-	font-size-adjust:none;
-	font-stretch:normal;
-	font-style:normal;
-	font-variant:normal;
-	font-weight:normal;
-	line-height:normal;
-	width:auto;
-	background:#307C0B url(images/headerBG_24_~HeaderGradientImageType~.png) repeat scroll center center;
-	border:medium none;
-	color:#FFFFFF;
-	margin:0;
-	padding-bottom:2px;
-	padding-top:1px;
-}
-
-#container {
-	margin:auto;
-	max-width:900px;
-	width:100%;
-}
-
-#breadcrumb {
-	color:#444444;
-	margin-left:9px;
-	overflow:hidden;
-	width:99%;
-}
-
-#breadcrumb ul {
-	list-style-image:none;
-	list-style-position:outside;
-	list-style-type:none;
-	margin:0;
-	padding-left:0;
-	padding:0 0 0 1em;
-}
-
-#breadcrumb li {
-	display:block;
-	float:left;
-	margin:0;
-}
-
-#breadcrumb a {
-	color:#0066A7;
-	text-decoration:none;
-}
-
-#main {
-	height:100%;
-	table-layout:fixed;
-	width:100%;
-}
-
-.sideColumn {
-	width:10px;
-}
-
-.sideColumn.right {
-	background-image:url(images/shadow.png);
-	background-position:0 0;
-	background-repeat:no-repeat;
-}
-
-#mainColumn {
-	height:100%;
-}
-
-#mainTable {
-	border:1px solid #E0E0E0;
-	table-layout:fixed;
-	vertical-align:top;
-	width:100%;
-}
-
-.contentSpacing {
-	overflow:hidden;
-	padding:1.25em;
-	position:relative;
-	width:auto;
-}
-
-.title {
-	font-size:160%;
-	font-weight:normal;
-	margin:0;
-	overflow:hidden;
-	padding:0 0 0.2em;
-	line-height:145%;
-}
-
-.titlePadding {
-	clear:both;
-	height:1.25em;
-	width:1em;
-}
-
-.pageTable {
-	width:100%;
-}
-
-.page, .pageW {
-	border:1px solid #FEFEFE;
-	margin:0.2em 1px;
-	position:relative;
-	height:1.5em;
-	float:left;
-	text-align:center;
-}
-
-.page {
-	width:1.5em;
-}
-
-.pageW {
-	width:2.5em;
-}
-
-.pageHighlight, .pageHighlightW {
-	background:#F7FBFF url(images/browse_select_bg.png) repeat-x scroll center bottom;
-	border:1px solid #D8F0FA;
-	height:1.5em;
-	left:0;
-	position:absolute;
-	top:0;
-	visibility:hidden;
-}
-
-.pageHighlight {
-	width:1.5em;
-}
-
-.pageHighlightW {
-	width:2.5em;
-}
-
-.pageLink {
-	background:transparent url(images/transparent.gif) repeat scroll 0 0;
-	color:#0066A7;
-	font-weight:inherit;
-	height:100%;
-	left:0;
-	position:absolute;
-	text-decoration:none;
-	top:0;
-	width:100%;
-	z-index:100;
-}
-
-.files {
-	margin:0;
-	top:0;
-	float:left;
-	position:relative;
-}
-
-.file {
-	border:1px solid #FEFEFE;
-	float:left;
-	height:9.5em;
-	margin:0.2em 1px;
-	position:relative;
-	width:7em;
-}
-
-.select .selected, .select .notselected {
-	visibility: visible;
-}
-
-.notselected {
-	visibility:hidden;
-	background:#F7FBFF url(images/browse_select_bg.png) repeat-x scroll center bottom;
-	border:1px solid #D8F0FA;
-	height:9.5em;
-	left:0;
-	position:absolute;
-	top:0;
-	width:7em;
-}
-
-.selected {
-	visibility:visible;
-	background:#F7FBFF url(images/browse_select_bg.png) repeat-x scroll center bottom;
-	border:1px solid #D8F0FA;
-	height:9.5em;
-	left:0;
-	position:absolute;
-	top:0;
-	width:7em;
-}
-
-.itemTable {
-	left:0;
-	position:absolute;
-	top:0;
-}
-
-.itemTable tr {
-	height:5.5em;
-}
-
-.itemTable td {
-	width:7em;
-	text-align:center;
-}
-
-.itemTable div {
-	text-align:center;
-	margin-left:1.2em;
-	height:48px;
-	width:48px;
-}
-
-.itemLink {
-	background:transparent url(images/transparent.gif) repeat scroll 0 0;
-	height:100%;
-	left:0;
-	position:absolute;
-	top:0;
-	width:100%;
-	z-index:100;
-	color:#0066A7;
-	font-weight:inherit;
-	text-decoration:none;
-}
-
-.itemLink span {
-	bottom:0;
-	cursor:pointer;
-	display:block;
-	height:4em;
-	left:0.5em;
-	overflow:hidden;
-	position:absolute;
-	text-align:center;
-	width:6em;
-}
-
-#infoBar {
-	border-top:1px solid #E0E0E0;
-	height:64px;
-	background:transparent url(images/middle_fade.png) repeat scroll 0 0;
-	color:#FFF;
-	width:100%;
-	line-height:normal;
-	margin:0;
-	padding:0;
-	vertical-align:middle;
-	white-space:nowrap;
-}
-
-#infoBar * {
-	line-height:normal;
-}
-
-.fileInfo {
-	width:100%;
-	vertical-align:top;
-	height:48px;
-	white-space:normal;
-}
-
-.fileInfo .title {
-	font-size:14px;
-}
-
-.fileInfo .label {
-	font-weight:bold;
-	width:50%;
-	text-align:right;
-	margin-right:4px;
-}
-
-.fileInfo td {
-	width:33%;
-	vertical-align:middle;
-	padding:4px;
-}
-
-.fileInfo .fileThumb, .fileInfo .fileThumb td {
-	padding:0;
-	width:auto;
-}
-
-.fileInfo infoCell {
-	width:100%;
-}
-
-.crumbsep {
-	display:inline-block;
-	height:8px;
-	margin:2px 8px 4px;
-	vertical-align:middle;
-	width:8px;
-}
-
-.subText {
-	color:#8B8B8B;
-	display:block;
-	overflow:hidden;
-	padding-bottom:0.1em;
-	width:100%;
-}
-
-#footer {
-	margin-top:0.42em;
-}
-
-#footerCtr {
-	border-color:#F7F3F7;
-	background-color:transparent;
-	border-top-style:solid;
-	border-top-width:1px;
-	color:#444444;
-	font-size:100%;
-	width:100%;
-}
-
-#footerCtr td {
-	padding:8px 0;
-	vertical-align:top;
-}
-
-#footerCtr ul {
-	list-style-image:none;
-	list-style-position:outside;
-	list-style-type:none;
-	margin:0;
-	padding:0;
-	white-space:nowrap;
-}
-
-#footerCtr ul li {
-	border-right-style:solid;
-	border-right-width:1px;
-	float:left;
-	padding:0 8px;
-	white-space:nowrap;
-	margin:0 0 3px;
-}
-
-#footerCtr ul li a {
-	color:#444444;
-	text-decoration:none;
-	font-weight:inherit;
-}
-
-#footerCtr ul li.last {
-	border-right-style:none;
-}
-
-span.title {
-	width:150px;
-	margin-right:50px;
+td.title {
+	width:175px;
+	padding-left:20px;
 	font-weight:bold;
 	font-size:10pt;
-	display:block;
-	float:left;
-	border-right:1px solid #999;
-	clear:both;
 	background-color:#6F9;
 }
 
 input {
 	width:194px;
-	float:left;
 	margin-right:50px;
 }
 
 select, a.wide {
 	width: 200px;
-	float:left;
 	margin-right:50px;
 }
 
-ul.desc {
+td.desc {
 	width:300px;
-	display:block;
-	float:left;
 	border-left:1px solid #999;
 	border-bottom:1px solid #999;
-	padding-left:50px;
-	margin:0px;
+	padding-left:10px;
 }
 
 input.button {
@@ -710,7 +132,6 @@ input.button {
 
 h2 {
 	font-size:12pt;
-	clear:both;
 }
 </style>
 </head>
@@ -771,6 +192,8 @@ h2 {
                                                 
                                                 <h2>Requirements</h2>
                                                 <p>First the script must check for a few necissary requirements in order for the site to run properly.</p>
+                                                
+                                                <table border="0" cellpadding="0" cellspacing="0" bordercolor="#FFFFFF">
                                                 <?php
 												
 												// check for permission to settings file
@@ -783,59 +206,79 @@ h2 {
 												}
 												else
 													$SYSTEM_TYPE = 'win';
-												?><span class="title">System Type</span>
+												?><tr><td class="title">System Type</td>
+                                                <td>
 												<select name="SYSTEM_TYPE">
 													<option value="win" <?php echo ($SYSTEM_TYPE == 'win')?'selected="selected"':''; ?>>Windows</option>
 													<option value="nix" <?php echo ($SYSTEM_TYPE == 'nix')?'selected="selected"':''; ?>>Linux or Unix</option>
 													<option value="mac" <?php echo ($SYSTEM_TYPE == 'mac')?'selected="selected"':''; ?>>Mac OS</option>
 												</select>
-												<ul class="desc">
+                                                </td>
+												<td class="desc">
+                                                <ul>
 													<li>The system has detected that you are running <?php echo ($SYSTEM_TYPE=='win')?'Windows':(($SYSTEM_TYPE=='nix')?'Linux or Unix':'Mac OS'); ?>.</li>
 													<li>If this is not correct, you must provide permissions to the correct settings.&lt;os&gt;.php file.</li>
-												</ul>
+                                                </ul>
+												</td></tr>
 												<?php
 												
 												// check for file permissions
 												$settings = dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'include/settings.' . $SYSTEM_TYPE . '.php';
 												if(@fopen($settings, 'w') === false)
 												{
-													?><span class="title fail">Access to Settings</span>
+													?><tr><td class="title fail">Access to Settings</td>
+                                                    <td>
                                                     <input type="text" disabled="disabled" value="<?php echo $settings; ?>" />
-                                                    <ul class="desc">
+                                                    </td>
+                                                    <td class="desc">
+                                                    <ul>
                                                         <li>The system would like access to the following file.  This is so it can write all the settings when we are done with the install.</li>
                                                         <li>Please create this file, and grant it Read/Write permissions.</li>
                                                     </ul>
+                                                    </td></tr>
 													<?php
 												}
 												else
 												{
-													?><span class="title fail">Access to Settings</span>
+													?><tr><td class="title fail">Access to Settings</td>
+                                                    <td>
                                                     <input type="text" disabled="disabled" value="<?php echo $settings; ?>" />
-                                                    <ul class="desc">
+                                                    </td>
+                                                    <td class="desc">
+                                                    <ul>
                                                         <li>The system has detected that is has access to the settings file.  Write permissions should be removed when this installation is complete.</li>
                                                     </ul>
+                                                    </td></tr>
 													<?php
 												}
 												
 												// check for mod_rewrite
 												if(isset($_REQUEST['modrewrite']) && $_REQUEST['modrewrite'] == true)
 												{
-													?><span class="title">Mod_Rewrite Enabled</span>
+													?><tr><td class="title">Mod_Rewrite Enabled</td>
+                                                    <td>
                                                     <a class="wide" href="http://httpd.apache.org/docs/1.3/mod/mod_rewrite.html">Mod_Rewrite Instructions</a>
-                                                    <ul class="desc">
+                                                    </td>
+                                                    <td class="desc">
+                                                    <ul>
                                                         <li>The system has detected that you have mod_rewrite enabled.</li>
                                                         <li>Mod_rewrite is used by some templates and plugins to make the paths look prettier.</li>
                                                     </ul>
+                                                    </td></tr>
 													<?php
 												}
 												else
 												{
-													?><span class="title warn">Mod_Rewrite Enabled</span>
+													?><tr><td class="title warn">Mod_Rewrite Enabled</td>
+                                                    <td>
                                                     <a class="wide" href="http://httpd.apache.org/docs/1.3/mod/mod_rewrite.html">Mod_Rewrite Instructions</a>
-                                                    <ul class="desc">
+                                                    </td>
+                                                    <td class="desc">
+                                                    <ul>
                                                         <li>The system has detected that you do not have mod_rewrite enabled.  Please follow the link for instructions on enabling mod_rewrite.</li>
                                                         <li>Mod_rewrite is used by some templates and plugins to make the paths look prettier.</li>
                                                     </ul>
+                                                    </td></tr>
 													<?php
 												}
 												
@@ -843,24 +286,32 @@ h2 {
 												$limit = ini_get('memory_limit');
 												if(intval($limit) >= 96)
 												{
-													?><span class="title">Memory Limit</span>
+													?><tr><td class="title">Memory Limit</td>
+                                                    <td>
                                                     <a class="wide" href="http://php.net/manual/en/ini.core.php">PHP Core INI Settings</a>
-                                                    <ul class="desc">
+                                                    </td>
+                                                    <td class="desc">
+                                                    <ul>
                                                         <li>The system has detected that the set memory limit is enough to function properly.</li>
                                                         <li>This system requires a large amount of memory for encoding and converting files, some of the third party libraries are not memory efficient.</li>
                                                         <li>PHP reports that the set memory_limit is <?php echo $limit; ?>.</li>
                                                     </ul>
+                                                    </td></tr>
 													<?php
 												}
 												else
 												{
-													?><span class="title warn">Memory Limit</span>
+													?><tr><td class="title warn">Memory Limit</td>
+                                                    <td>
                                                     <a class="wide" href="http://php.net/manual/en/ini.core.php">PHP Core INI Settings</a>
-                                                    <ul class="desc">
+                                                    </td>
+                                                    <td class="desc">
+                                                    <ul>
                                                         <li>The system has detected that the set memory limit is NOT ENOUGH for the system to function properly.</li>
                                                         <li>This system requires a large amount of memory for encoding and converting files, some of the third party libraries are not memory efficient.</li>
                                                         <li>PHP reports that the set memory_limit is <?php echo $limit; ?>.</li>
                                                     </ul>
+                                                    </td></tr>
 													<?php
 												}
 												
@@ -875,23 +326,31 @@ h2 {
 													
 												if(!file_exists($ENCODE))
 												{
-													?><span class="title warn">Encoder Path</span>
+													?><tr><td class="title warn">Encoder Path</td>
+                                                    <td>
                                                     <input type="text" name="ENCODE" value="<?php echo $ENCODE; ?>" />
-                                                    <ul class="desc">
+                                                    </td>
+                                                    <td class="desc">
+                                                    <ul>
                                                         <li>The system needs some sort of file encoder that it can use to output files in different formats.</li>
                                                         <li>This encoder could be VLC or FFMPEG.</li>
                                                     </ul>
+                                                    </td></tr>
 													<?php
 												}
 												else
 												{
-													?><span class="title">Encoder Path</span>
+													?><tr><td class="title">Encoder Path</td>
+                                                    <td>
                                                     <input type="text" name="ENCODE" value="<?php echo $ENCODE; ?>" />
-                                                    <ul class="desc">
+                                                    </td>
+                                                    <td class="desc">
+                                                    <ul>
                                                         <li>An encoder has been set and detected, you may change this path to specify a new encoder.</li>
                                                         <li>The system needs some sort of file encoder that it can use to output files in different formats.</li>
                                                         <li>The encoder detected is "<?php echo basename($ENCODE); ?>".</li>
                                                     </ul>
+                                                    </td></tr>
 													<?php
 												}
 
@@ -905,25 +364,35 @@ h2 {
 													
 												if(!file_exists($CONVERT))
 												{
-													?><span class="title warn">Convert Path</span>
+													?><tr><td class="title warn">Convert Path</td>
+                                                    <td>
                                                     <input type="text" name="CONVERT" value="<?php echo $CONVERT; ?>" />
-                                                    <ul class="desc">
+                                                    </td>
+                                                    <td class="desc">
+                                                    <ul>
                                                         <li>The system needs some sort of image converter for creating thumbnails of images and outputting images as different file types.</li>
                                                         <li>This convert could be ImageMagik.</li>
                                                     </ul>
+                                                    </td></tr>
 													<?php
 												}
 												else
 												{
-													?><span class="title">Convert Path</span>
+													?><tr><td class="title">Convert Path</td>
+                                                    <td>
                                                     <input type="text" name="CONVERT" value="<?php echo $CONVERT; ?>" />
-                                                    <ul class="desc">
+                                                    </td>
+                                                    <td class="desc">
+                                                    <ul>
                                                         <li>A converter has been set and detected, you may change this path to specify a new converter.</li>
                                                         <li>The system needs some sort of image converter for creating thumbnails of images and outputting images as different file types.</li>
                                                         <li>The encoder detected is "<?php echo basename($CONVERT); ?>".</li>
                                                     </ul>
+                                                    </td></tr>
 													<?php
 												}
+												
+												?></table><?php
 												
 												}
 												
@@ -934,6 +403,8 @@ h2 {
                                                 
                                                 <h2>Path Information</h2>
                                                 <p>Before the site can't function properly, we must define some paths for templates and plugins to use.</p>
+                                                
+                                                <table border="0" cellpadding="0" cellspacing="0" bordercolor="#FFFFFF">
                                                 <?php
 												
 												// check for local root
@@ -941,48 +412,65 @@ h2 {
 													$LOCAL_ROOT = dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR;
 												if(file_exists($LOCAL_ROOT . 'include'))
 												{
-													?><span class="title">Local Root</span>
+													?><tr><td class="title">Local Root</td>
+                                                    <td>
                                                     <input type="text" name="LOCAL_ROOT" value="<?php echo $LOCAL_ROOT; ?>" />
-                                                    <ul class="desc">
+                                                    </td>
+                                                    <td class="desc">
+                                                    <ul>
                                                     	<li>This is the directory that the site lives in.</li>
                                                     	<li>This directory MUST end with a directory seperate such as / or \.</li>
                                                     </ul>
+                                                    </td></tr>
 													<?php
 												}
 												else
 												{
-													?><span class="title fail">Local Root</span>
+													?><tr><td class="title fail">Local Root</td>
+                                                    <td>
                                                     <input type="text" name="LOCAL_ROOT" value="<?php echo $LOCAL_ROOT; ?>" />
-                                                    <ul class="desc">
+                                                    </td>
+                                                    <td class="desc">
+                                                    <ul>
                                                     	<li>The system has detected that there is no "include" directory in the site root folder.  You must specify the root directory that the site lives in.</li>
                                                     	<li>This directory MUST end with a directory seperate such as / or \.</li>
                                                     </ul>
+                                                    </td></tr>
 													<?php
 												}
 												
 												// check for html domain
 												if(!isset($HTML_DOMAIN))
 													$HTML_DOMAIN = strtolower(substr($_SERVER['SERVER_PROTOCOL'], 0, strpos($_SERVER['SERVER_PROTOCOL'], '/'))) . '://' . $_SERVER['HTTP_HOST'] . (($_SERVER['SERVER_PORT'] != 80)?':' . $_SERVER['SERVER_PORT']:'');
-												?><span class="title">HTML Domain</span>
+												?><tr><td class="title">HTML Domain</td>
+                                                <td>
 												<input type="text" name="HTML_DOMAIN" value="<?php echo $HTML_DOMAIN; ?>/" />
-												<ul class="desc">
+                                                </td>
+                                                <td class="desc">
+												<ul>
                                                 	<li>This is the path that you would like to access the site.</li>
 													<li>This path is used when someone tries to view the from the wrong path, when this happens, the site can redirect the user to the right place.</li>
                                                 </ul>
+                                                </td></tr>
                                                 <?php
 												
 												// check for html root
 												if(!isset($HTML_ROOT))
 													$HTML_ROOT = ((substr($LOCAL_ROOT, 0, strlen($_SERVER['DOCUMENT_ROOT'])) == $_SERVER['DOCUMENT_ROOT'])?substr($LOCAL_ROOT, strlen($_SERVER['DOCUMENT_ROOT'])):'');
-												?><span class="title">HTML Root</span>
+												?><tr><td class="title">HTML Root</td>
+                                                <td>
 												<input type="text" name="HTML_ROOT" value="<?php echo $HTML_ROOT; ?>" />
-												<ul class="desc">
+                                                </td>
+                                                <td class="desc">
+												<ul>
 													<li>This is the directory that the site is accessed through.</li>
 													<li>This allows the site to run along site another website, in the specified directory.  This is needed so that templates can find the right path to images and styles.</li>
 													<li>This path must also end with the HTTP separator /.</li>
 													<li>The server reports the DOCUMENT ROOT is <?php echo $_SERVER['DOCUMENT_ROOT']; ?></li>
 												</ul>
-
+                                                </td></tr>
+                                                
+                                                </table>
 												<?php
 												
 												}
@@ -996,14 +484,16 @@ h2 {
 												?>
                                                 
                                                 <h2>Database Setup</h2>
-                                                <p>This site is largely based on database use; we will configure this now.</p>
+                                                <p>This site is largely based on database use; we will configure this now.  Although database use is optional, it is highly recommended for security and searching.  There will be no search options available without a database, only a flat file-structure will be shown.</p>
                                                 
+                                                <table border="0" cellpadding="0" cellspacing="0" bordercolor="#FFFFFF">
                                                 <?php
 												
 												// set up database type
 												if(!isset($DB_TYPE))
 													$DB_TYPE = 'mysql';
-												?><span class="title">Database Type</span>
+												?><tr><td class="title">Database Type</td>
+                                                <td>
 												<select name="DB_TYPE">
 												<?php
 													foreach($supported_databases as $db)
@@ -1012,33 +502,193 @@ h2 {
 													}
 												?>
 												</select>
-												<ul class="desc">
+                                                </td>
+                                                <td class="desc">
+												<ul>
 													<li>This site supports a variety of databases, select your database type.</li>
 												</ul>
+                                                </td></tr>
 												<?php
 												
 												// set up database server
 												if(!isset($DB_SERVER))
 													$DB_SERVER = 'localhost';
+												?><tr><td class="title warn">Database Server</td>
+                                                <td>
+												<input type="text" name="DB_SERVER" value="<?php echo $DB_SERVER; ?>" />
+                                                </td>
+                                                <td class="desc">
+												<ul>
+													<li>Please specify an address of the database server to connect to.</li>
+                                                    <li>WARNING: If this information is wrong, it could take up to 1 minute or more to detect these errors.</li>
+												</ul>
+                                                </td></tr>
+												<?php
+												
+												/*
+												if(!isset($DB_SERVER))
+													$DB_SERVER = 'localhost';
 												# or dsn 
-												$dsn = $DB_TYPE . '://user:pwd@' . $DB_SERVER; 
+												$dsn = $DB_TYPE . '://user:pwd@209.250.30.30/?ConnectionTimeout=0'; 
 												try { 
 													$conn = ADONewConnection($dsn);  # no need for Connect()
 												} catch (exception $e) { 
 													 var_dump($e); 
 													 adodb_backtrace($e->gettrace());
-												} 												
+												}
+												*/
+												
 												// set up database username and password
+												if(!isset($DB_USER))
+													$DB_USER = 'username';
+												?><tr><td class="title">Database User Name</td>
+                                                <td>
+												<input type="text" name="DB_USER" value="<?php echo $DB_USER; ?>" />
+                                                </td>
+                                                <td class="desc">
+												<ul>
+													<li>Please specify a username to log in to the database.</li>
+												</ul>
+                                                </td></tr>
+												<?php
+												if(!isset($DB_PASS))
+													$DB_PASS = 'password';
+												?><tr><td class="title">Database Password</td>
+                                                <td>
+												<input type="text" name="DB_PASS" value="<?php echo $DB_PASS; ?>" />
+                                                </td>
+                                                <td class="desc">
+												<ul>
+													<li>Please specify a password to log in to the database.</li>
+												</ul>
+                                                </td></tr>
+												<?php
+												
+												// set up database name
+												if(!isset($DB_NAME))
+													$DB_NAME = 'mediaserver';
+												?><tr><td class="title">Database Name</td>
+                                                <td>
+												<input type="text" name="DB_NAME" value="<?php echo $DB_NAME; ?>" />
+                                                </td>
+                                                <td class="desc">
+												<ul>
+													<li>Please specify the name of the database to use.</li>
+                                                    <li>This database will not be created for you, it must be created ahead of time with the proper permission settings.</li>
+												</ul>
+                                                </td></tr>
+                                                
+                                                </table>
+												<?php
+												
 												
 												}
-
+												
+												
 												if($_REQUEST['step'] == 4)
+												{
+													// include the modules
+													$tmp_modules = array();
+													if ($dh = @opendir($LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR))
+													{
+														while (($file = readdir($dh)) !== false)
+														{
+															// filter out only the modules for our USE_DATABASE setting
+															if ($file[0] != '.' && !is_dir($LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . $file))
+															{
+																// include all the modules
+																require_once $LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . $file;
+																$class_name = substr($file, 0, strrpos($file, '.'));
+																
+																// only use the module if it is properly defined
+																if(class_exists($class_name))
+																{
+																	if(substr($file, 0, 3) == 'db_')
+																		$tmp_modules[] = $class_name;
+																}
+															}
+														}
+														closedir($dh);
+													}
+													
+													$error_count = 0;
+													$new_modules = array();
+													
+													// reorganize modules to reflect heirarchy
+													while(count($tmp_modules) > 0 && $error_count < 1000)
+													{
+														foreach($tmp_modules as $i => $module)
+														{
+															$tmp_override = get_parent_class($module);
+															if(in_array($tmp_override, $new_modules) || $tmp_override == '')
+															{
+																$new_modules[] = $module;
+																unset($tmp_modules[$i]);
+															}
+														}
+														$error_count++;
+													}
+													
+													
+												?>
+                                                <h2>Select Modules</h2>
+                                                <p>Below is a list of available modules.  Modules can be added or removed at any time, but with large file-structures, inserting new modules could take a very long time.  Therefore, all modules are enabled by default, with the recommended modules marked as such.</p>
+                                                
+                                                
+                                                <table border="0" cellpadding="0" cellspacing="0" bordercolor="#FFFFFF">
+                                                <?php
+												
+												foreach($new_modules as $key => $module)
+												{
+													if(constant($module . '::INTERNAL') == true)
+														continue;
+													
+													$module_en = $module . '_ENABLED';
+													if(!isset($$module_en))
+														$$module_en = true;
+													?><tr><td class="title"><?php echo constant($module . '::NAME'); ?></td>
+													<td>
+                                                    <select name="<?php echo $module; ?>_ENABLED">
+                                                    	<option value="true" <?php echo ($$module_en == true)?'selected="selected"':''; ?>>Enabled (Recommended)</option>
+                                                    	<option value="false" <?php echo ($$module_en == false)?'selected="selected"':''; ?>>Disabled</option>
+                                                    </select>
+													</td>
+													<td class="desc">
+													<ul>
+														<li>Choose whether or not to select the <?php echo $module; ?> module.</li>
+													</ul>
+													</td></tr>
+													<?php
+													
+												}
+												
+												?></table><?php
+												
+												}
+												
+												// create database
+												if($_REQUEST['step'] == 5)
+												{
+													
+												?>
+                                                <h2>Install Database</h2>
+                                                <p>Before we go any further, the database should be installed.  Below, each table will be created, if there are any errors, you will be notified and given the option to return to the previous step.</p>
+                                                
+                                                
+                                                <?php
+												}
+												
+												
+												// set up templates
+												if($_REQUEST['step'] == 6)
 												{
 												
 												?>
                                                 
                                                 <h2>Template Settings</h2>
                                                 <p>This site supports multiple templates.  In order for users to have the best visual experience, we recommend you review these settings.</p>
+                                                
+                                                <table border="0" cellpadding="0" cellspacing="0" bordercolor="#FFFFFF">
                                                 <?php
 												
 												// check for base template
@@ -1046,35 +696,46 @@ h2 {
 													$LOCAL_BASE = 'templates' . DIRECTORY_SEPARATOR . 'plain' . DIRECTORY_SEPARATOR;
 												if(file_exists($LOCAL_ROOT . $LOCAL_BASE))
 												{
-													?><span class="title">Template Base</span>
+													?><tr><td class="title">Template Base</td>
+                                                    <td>
                                                     <input type="text" name="LOCAL_BASE" value="<?php echo $LOCAL_BASE; ?>" />
-                                                    <ul class="desc">
+                                                    </td>
+                                                    <td class="desc">
+                                                    <ul>
                                                     	<li>The template base provides a backup/default set of template files. This template supports all possible functionality, in the simplest way.</li>
                                                     	<li>Default functionality includes things like printing out an XML file, or an M3U playlist instead of a vieable HTML list of files.</li>
                                                     	<li>The server reports that <?php echo $LOCAL_ROOT . $LOCAL_BASE; ?> does, in fact, exist.</li>
                                                     </ul>
+                                                    </td></tr>
 													<?php
 												}
 												else
 												{
-													?><span class="title fail">Template Base</span>
+													?><tr><td class="title fail">Template Base</td>
+                                                    <td>
                                                     <input type="text" name="LOCAL_BASE" value="<?php echo $LOCAL_BASE; ?>" />
-                                                    <ul class="desc">
+                                                    </td>
+                                                    <td class="desc">
+                                                    <ul>
                                                     	<li>The system has detected that the local basic template files are not where they are expected to be.</li>
                                                     	<li>The template base provides a backup/default set of template files. This template supports all possible functionality, in the simplest way.</li>
                                                     	<li>Default functionality includes things like printing out an XML file, or an M3U playlist instead of a vieable HTML list of files.</li>
                                                     	<li>The server reports that <?php echo $LOCAL_ROOT . $LOCAL_BASE; ?> does NOT EXIST.</li>
                                                     </ul>
+                                                    </td></tr>
 													<?php
 												}
 												
 												// select default template
 												
+												?></table><?php
 												
 												}
 												?>
                                                 
-                                                <div style="height:30px; float:left; display:block; width:100%"> </div>
+                                                	<br />
+                                                    <br />
+                                                    <br />
                                                 	<input type="submit" name="reset" value="Reset to Defaults" class="button" />
                                                     <input type="submit" name="next" value="Save and Continue" style="float:right;" />
                                                     <input type="submit" name="save" value="Save" class="button" style="float:right;" />

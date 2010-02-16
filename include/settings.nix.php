@@ -107,6 +107,10 @@ define('DEBUG_MODE', 							true);
 //   don't use this when there are many complex files and the site has loaded thousands already
 define('RECURSIVE_GET', 				false);
 
+// this will redirect a google bot to the sitemap.php plugin or remove request options like search
+//   this is recommended because GoogleBots usually look for the wrong information and this will slow down the site A LOT
+define('NO_BOTS', 							true);
+
 // max amount to output when accessing a file
 define('BUFFER_SIZE', 	                         2*1024*8);
 
