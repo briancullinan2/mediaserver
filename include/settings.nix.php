@@ -11,6 +11,8 @@ define('DB_PASS',           '2Yq1MBsyqk0Q0jVx');
 define('DB_NAME',                'mediaserver');
 define('DB_TYPE',				       'mysql');
 
+define('DB_CONNECT',			DB_TYPE . '://' . DB_USER . ':' . DB_PASS . '@' . DB_SERVER . '/' . DB_NAME);
+
 // this secrect key is prepended to all passwords before encryption
 //   this is so if someone access the database, they still must know the secret key before they can get the passwords
 //   this key should be very random

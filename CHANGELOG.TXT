@@ -1,3 +1,9 @@
+2010-02-16
+Created nifty install.php script
+	Completely self contained, prints out style, and images that it needs
+Added ADOdb to the includes
+	This will be used by a database.php include that acts as a wrapper for ADOdb
+
 2010-02-14
 Created tools.php in the admin section that makes the functionality from reports.php modular
 	Made reports.php obsolete
