@@ -91,45 +91,7 @@ foreach($post as $key)
 
 $recommended = array('db_audio', 'db_image', 'db_video');
 
-$supported_databases = split("\n", 'access
-ado
-ado_access
-ado_mssql
-db2
-odbc_db2
-vfp
-fbsql
-ibase
-firebird
-borland_ibase
-informix
-informix72
-ldap
-mssql
-mssqlpo
-mysql
-mysqli
-mysqlt or maxsql
-oci8
-oci805
-oci8po
-odbc
-odbc_mssql
-odbc_oracle
-odbtp
-odbtp_unicode
-oracle
-netezza
-pdo
-postgres
-postgres64
-postgres7
-postgres8
-sapdb
-sqlanywhere
-sqlite
-sqlitepo
-sybase');
+$supported_databases = array('access','ado','ado_access','ado_mssql','db2','odbc_db2','vfp','fbsql','ibase','firebird','borland_ibase','informix','informix72','ldap','mssql','mssqlpo','mysql','mysqli','mysqlt','maxsql','oci8','oci805','oci8po','odbc','odbc_mssql','odbc_oracle','odbtp','odbtp_unicode','oracle','netezza','pdo','postgres','postgres64','postgres7','postgres8','sapdb','sqlanywhere','sqlite','sqlitepo','sybase');
 
 if(isset($_REQUEST['next']))
 {
@@ -512,8 +474,14 @@ h2 {
 <?php
 if(isset($_REQUEST['install']))
 {
+	include $LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'database.php';
 	
 	if(isset($_SESSION)) session_write_close();
+	
+	$DB_CONNECT = $DB_TYPE . '://' . $DB_USER . ':' . $DB_PASS . '@' . $DB_SERVER . '/' . $DB_NAME;
+	$DATABASE = new database(DB_CONNECT);
+	
+	$DATABASE->install();
 	
 	?>
 <body onload="top.document.getElementById('loading2').style.display = 'none'; top.document.getElementById('install').style.height=document.getElementById('table').clientHeight+'px';">
@@ -538,26 +506,22 @@ if(isset($_REQUEST['install']))
 }
 if(isset($_REQUEST['test']))
 {
+	include $LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb-errorpear.inc.php';
 	include $LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb.inc.php';
-	include $LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb-exceptions.inc.php';
 
 	if(isset($_SESSION)) session_write_close();
 
 	ob_start();
-	try {
-	
-		# or dsn 
-		$dsn = $DB_TYPE . '://' . $DB_USER . ':' . $DB_PASS . '@' . $DB_SERVER . '/' . $DB_NAME; 
-		$conn = ADONewConnection($dsn);  # no need for Connect()
-	
-	} catch (exception $e) {
-		
-	} 	
+
+	$dsn = $DB_TYPE . '://' . $DB_USER . ':' . $DB_PASS . '@' . $DB_SERVER . '/' . $DB_NAME; 
+	$conn = ADONewConnection($dsn);  # no need for Connect()
+
 	$result = ob_get_contents();
 	
 	ob_end_clean();
 	
-	if(isset($e))
+	$e = ADODB_Pear_Error();
+	if($e !== false)
 	{
 
 	?>
@@ -566,7 +530,7 @@ if(isset($_REQUEST['test']))
 	<tr>
     <td class="title fail">Access to Database</td>
     <td>
-    The connection manager reported the following error:<br /><?php echo $e->msg; ?>.
+    The connection manager reported the following error:<br /><?php echo $e->userinfo; ?>.
     <form action="<?php echo $_SERVER['PHP_SELF']; ?>?step=3" method="post" target="_top">
     <input type="submit" name="dberror" value="Return to Step 3" />
     </form>
@@ -970,9 +934,11 @@ if($_REQUEST['step'] == 3)
 // set up database type
 if(!isset($DB_TYPE))
     $DB_TYPE = 'mysql';
+var_dump($DB_TYPE);
 ?><tr><td class="title">Database Type</td>
 <td>
 <select name="DB_TYPE">
+<option value="">&lt;Select One&gt;</option>
 <?php
     foreach($supported_databases as $db)
     {

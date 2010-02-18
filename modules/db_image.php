@@ -1,22 +1,20 @@
 <?php
 
-$no_setup = true;
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
-
-require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'db_file.php';
-
-// include the id handler
-require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.php';
-
-// set up id3 reader incase any files need it
-$GLOBALS['getID3'] = new getID3();
-
 // music handler
 class db_image extends db_file
 {
 	const DATABASE = 'image';
 	
 	const NAME = 'Images from Database';
+
+	static function init()
+	{
+		// include the id handler
+		require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.php';
+		
+		// set up id3 reader incase any files need it
+		$GLOBALS['getID3'] = new getID3();
+	}
 
 	static function columns()
 	{
@@ -136,6 +134,9 @@ class db_image extends db_file
 
 	static function add($file, $image_id = NULL)
 	{
+		if(!isset($GLOBALS['getID3']))
+			self::init();
+		
 		$fileinfo = self::getInfo($file);
 	
 		if( $image_id == NULL )

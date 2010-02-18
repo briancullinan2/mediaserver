@@ -632,7 +632,7 @@ class db_file
 						else
 						{
 							// count the last query
-							$props = array('SELECT' => '(' . SQL::statement_builder($props, true) . ') AS db_to_count');
+							$props = array('SELECT' => '(' . DATABASE::statement_builder($props, true) . ') AS db_to_count');
 						}
 						$props['COLUMNS'] = 'count(*)';
 						

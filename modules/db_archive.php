@@ -1,16 +1,5 @@
 <?php
 
-$no_setup = true;
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
-
-require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'db_file.php';
-
-// include the id handler
-require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.php';
-require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'File' . DIRECTORY_SEPARATOR . 'Archive.php';
-
-// set up id3 reader incase any files need it
-$GLOBALS['getID3'] = new getID3();
 
 // music handler
 class db_archive extends db_file
@@ -108,6 +97,14 @@ class db_archive extends db_file
 			$this->internal_fp->skip($position);
 		}
     }
+	
+	static function init()
+	{
+		require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'db_file.php';
+		
+		// include the id handler
+		require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'File' . DIRECTORY_SEPARATOR . 'Archive.php';
+	}
 
 	static function columns()
 	{
@@ -191,6 +188,9 @@ class db_archive extends db_file
 
 	static function add($file, $archive_id = NULL)
 	{
+		if(!class_exists('File_Archive'))
+			self::init();
+		
 		// pull information from $info
 		parseInner($file, $last_path, $inside_path);
 		

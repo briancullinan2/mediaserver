@@ -2,14 +2,6 @@
 
 // just like with the way zip files should work, return the list of files that are in a playlist by parsing through their path
 //  maybe use aliases to parse any path leading to the same place?
-$no_setup = true;
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
-
-require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'fs_file.php';
-
-require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'db_file.php';
-require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'db_audio.php';
-require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'db_video.php';
 
 // music handler
 class db_playlist extends db_file

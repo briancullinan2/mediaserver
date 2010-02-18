@@ -1,5 +1,4 @@
 <?php
-
 define('DEBUG_PRIV', 				1);
 
 
@@ -20,11 +19,15 @@ define('VERSION_NAME', 			'Goliath');
 // require compatibility
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'compatibility.php';
 
+
 // require the settings
 if(realpath('/') == '/')
 	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.nix.php';
 else
 	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.win.php';
+	
+// require pear for error handling
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'PEAR.php';
 
 // classes that this function uses to set up stuff should use the $no_setup = true option
 if(!isset($no_setup) || !$no_setup == true)
@@ -100,17 +103,12 @@ function setup()
 		}
 	}
 	
-	if( USE_DATABASE ) require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'sql.php';
-	
-	// include the sql class so it can be used by any page
-	if( USE_DATABASE && DB_TYPE == 'mysql' )
-	{
-		include_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'mysql.php';
-	}
+	// include the database wrapper class so it can be used by any page
+	if( USE_DATABASE ) require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'database.php';
 		
 	// set up database to be used everywhere
 	if(USE_DATABASE)
-		$GLOBALS['database'] = new sql(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
+		$GLOBALS['database'] = new database(DB_CONNECT);
 	else
 		$GLOBALS['database'] = NULL;
 	

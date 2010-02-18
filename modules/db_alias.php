@@ -1,10 +1,5 @@
 <?php
 
-$no_setup = true;
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
-
-require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'db_file.php';
-
 // don't actually do anything in this class, this is just used for holding the database, and the get() method
 class db_alias extends db_file
 {

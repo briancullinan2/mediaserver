@@ -1,3 +1,9 @@
+2010-02-17
+Made modules more compatible with loading by requiring modules to INIT the includes they need before they use them, instead of when the module is loaded
+	This way a module's information can be loaded and read (later including descriptions) without worrying about the dependencies
+Worked on install.php script
+	Now more self contained and handles errors more elegantly
+
 2010-02-16
 Created nifty install.php script
 	Completely self contained, prints out style, and images that it needs

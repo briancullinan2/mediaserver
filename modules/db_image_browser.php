@@ -1,10 +1,5 @@
 <?php
 
-$no_setup = true;
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
-
-require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'db_image.php';
-
 // image wrapper for images that a browser can read
 class db_image_browser extends db_image
 {

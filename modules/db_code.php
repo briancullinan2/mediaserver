@@ -3,14 +3,6 @@
 // read in code files and cache the hilighted version
 //  use highlighting library from codepaster.com
 
-
-$no_setup = true;
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
-
-require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'db_file.php';
-
-require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'Text' . DIRECTORY_SEPARATOR . 'Highlighter.php';
-
 // music handler
 class db_code extends db_file
 {
@@ -62,6 +54,11 @@ class db_code extends db_file
 		$this->internal_pos = $position;
         return 0;
     }
+	
+	static function init()
+	{
+		require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'Text' . DIRECTORY_SEPARATOR . 'Highlighter.php';
+	}
 
 	static function columns()
 	{
@@ -233,6 +230,9 @@ class db_code extends db_file
 
 	static function add($file, $code_id = NULL)
 	{
+		if(!class_exists('Text_Highlighter'))
+			self::init();
+			
 		// pull information from $info
 		$fileinfo = self::getInfo($file);
 		$lines = $fileinfo['lines'];

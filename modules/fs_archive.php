@@ -3,16 +3,7 @@
 
 // just like with the way zip files should work, return the list of files that are in a playlist by parsing through their path
 //  maybe use aliases to parse any path leading to the same place?
-$no_setup = true;
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
 
-require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'fs_file.php';
-
-// include the id handler
-require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.php';
-
-// set up id3 reader incase any files need it
-$GLOBALS['getID3'] = new getID3();
 
 // music handler
 class fs_archive extends fs_file
@@ -21,6 +12,15 @@ class fs_archive extends fs_file
 	
 	// define if this module is internal so templates won't try to use it
 	const INTERNAL = false;
+
+	static function init()
+	{
+		// include the id handler
+		require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.php';
+		
+		// set up id3 reader incase any files need it
+		$GLOBALS['getID3'] = new getID3();
+	}
 
 	static function columns()
 	{
@@ -75,6 +75,9 @@ class fs_archive extends fs_file
 	
 	static function getInfo($filename)
 	{
+		if(!isset($GLOBALS['getID3']))
+			self::init();
+		
 		$filename = str_replace('\\', '/', $filename);
 		parseInner($filename, $last_path, $inside_path);
 		

@@ -5,23 +5,21 @@
 // search for the title of single video files, if it exists in a directory call movies
 //  use parseFilename to search with
 
-$no_setup = true;
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
-
-require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'db_file.php';
-
-// include the id handler
-require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.php';
-
-// set up id3 reader incase any files need it
-$GLOBALS['getID3'] = new getID3();
-
 // music handler
 class db_movies extends db_file
 {
 	const DATABASE = 'movies';
 	
 	const NAME = 'Movies from Database';
+
+	static function init()
+	{
+		// include the id handler
+		require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.php';
+		
+		// set up id3 reader incase any files need it
+		$GLOBALS['getID3'] = new getID3();
+	}
 
 	static function columns()
 	{
@@ -89,6 +87,9 @@ class db_movies extends db_file
 	
 	static function handle($file, $force = false)
 	{
+		if(!isset($GLOBALS['getID3']))
+			self::init();
+			
 		return false;
 	}
 	

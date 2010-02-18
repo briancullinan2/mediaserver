@@ -9,28 +9,25 @@
 define('AMAZON_DEV_KEY', '1D9T2665M4N4A7ACEZR2');
 define('AMAZON_SERVER', 'ecs.amazonaws.com');
 
-$no_setup = true;
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
-
-require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'db_file.php';
-require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'db_audio.php';
-require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'db_video.php';
-
-// include the id handler
-require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.php';
-
-// include snoopy to download pages
-require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'Snoopy.class.php';
-
-// set up id3 reader incase any files need it
-$GLOBALS['snoopy'] = new Snoopy();
-
 // music handler
 class db_amazon extends db_file
 {
 	const DATABASE = 'amazon';
 	
 	const NAME = 'Amazon from Database';
+
+	// initialize any extra tools this module needs
+	static function init()
+	{
+		// include the id handler
+		require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.php';
+		
+		// include snoopy to download pages
+		require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'Snoopy.class.php';
+		
+		// set up id3 reader incase any files need it
+		$GLOBALS['snoopy'] = new Snoopy();
+	}
 
 	static function columns()
 	{
@@ -147,6 +144,7 @@ class db_amazon extends db_file
 	
 	static function getMusicInfo($artist, $album)
 	{
+		
 		$fileinfo = array();
 		$fileinfo['Filepath'] = addslashes($artist . "\n" . $album);
 		$fileinfo['AmazonId'] = '';
@@ -320,6 +318,10 @@ class db_amazon extends db_file
 
 	static function add_music($artist, $album)
 	{
+		// check for required snoopy
+		if(!isset($GLOBALS['snoopy']))
+		self::init();
+		
 		// pull information from $info
 		$fileinfo = self::getMusicInfo($artist, $album);
 	
