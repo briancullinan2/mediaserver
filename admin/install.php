@@ -74,6 +74,8 @@ while(count($tmp_modules) > 0 && $error_count < 1000)
 	$error_count++;
 }
 
+$GLOBALS['modules'] = $new_modules;
+
 // set each valid post variable	
 foreach($post as $key)
 {
@@ -474,22 +476,49 @@ h2 {
 <?php
 if(isset($_REQUEST['install']))
 {
+	include $LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'PEAR.php';
 	include $LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'database.php';
 	
 	if(isset($_SESSION)) session_write_close();
 	
 	$DB_CONNECT = $DB_TYPE . '://' . $DB_USER . ':' . $DB_PASS . '@' . $DB_SERVER . '/' . $DB_NAME;
-	$DATABASE = new database(DB_CONNECT);
-	
-	$DATABASE->install();
-	
+	$DATABASE = new database($DB_CONNECT);
+?>
+<body onload="top.document.getElementById('loading2').style.display = 'none'; top.document.getElementById('install').style.height=document.getElementById('installtable').clientHeight+'px';">
+<table id="installtable" border="0" cellpadding="0" cellspacing="0">
+
+<?php
+function printEachStep($result, $table)
+{
+	$e = ADODB_Pear_Error();
+	if($e !== false)
+	{
+
 	?>
-<body onload="top.document.getElementById('loading2').style.display = 'none'; top.document.getElementById('install').style.height=document.getElementById('table').clientHeight+'px';">
-<table id="table" border="0" cellpadding="0" cellspacing="0">
 	<tr>
-    <td class="title">Install Tables</td>
+    <td class="title fail">Access to Database</td>
     <td>
-    <label>db_files</label>
+    The connection manager reported the following error:<br /><?php echo $e->userinfo; ?>.
+    <form action="<?php echo $_SERVER['PHP_SELF']; ?>?step=3" method="post" target="_top">
+    <input type="submit" name="dberror" value="Panic!" />
+    </form>
+    </td>
+    <td class="desc">
+    <ul>
+        <li>An error was encountered while installing the system.</li>
+    </ul>
+    </td>
+    </tr>
+    <?php
+	}
+	else
+	{
+		
+    ?>
+	<tr>
+    <td class="title">Install Table "<?php echo $table ?>"</td>
+    <td>
+    <label><?php echo $table ?> Installed</label>
     </td>
     <td class="desc">
     <ul>
@@ -497,17 +526,22 @@ if(isset($_REQUEST['install']))
     </ul>
     </td>
     </tr>
+    <?php
+	}
+}
+	$DATABASE->install('printEachStep');
+	?>
 </table>
 </body>
 </html>
     <?php
-	
+
 	exit;
 }
 if(isset($_REQUEST['test']))
 {
-	include $LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb-errorpear.inc.php';
-	include $LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb.inc.php';
+	include $LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'PEAR.php';
+	include $LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'database.php';
 
 	if(isset($_SESSION)) session_write_close();
 
@@ -525,8 +559,8 @@ if(isset($_REQUEST['test']))
 	{
 
 	?>
-<body onload="top.document.getElementById('loading1').style.display = 'none'; top.document.getElementById('test').style.height=document.getElementById('table').clientHeight+'px';">
-<table id="table" border="0" cellpadding="0" cellspacing="0">
+<body onload="top.document.getElementById('loading1').style.display = 'none'; top.document.getElementById('test').style.height=document.getElementById('testtable').clientHeight+'px';">
+<table id="testtable" border="0" cellpadding="0" cellspacing="0">
 	<tr>
     <td class="title fail">Access to Database</td>
     <td>
@@ -552,8 +586,8 @@ if(isset($_REQUEST['test']))
 	{
 		
     ?>
-<body onload="top.document.getElementById('loading1').style.display = 'none'; top.document.getElementById('test').style.height=document.getElementById('table').clientHeight+'px'; top.document.getElementById('loading2').style.display='inline'; top.document.getElementById('install').src='<?php echo $_SERVER['PHP_SELF']; ?>?step=5&install='">
-<table id="table" border="0" cellpadding="0" cellspacing="0">
+<body onload="top.document.getElementById('loading1').style.display = 'none'; top.document.getElementById('test').style.height=document.getElementById('testtable').clientHeight+'px'; top.document.getElementById('loading2').style.display='inline'; top.document.getElementById('install').src='<?php echo $_SERVER['PHP_SELF']; ?>?step=5&install='">
+<table id="testtable" border="0" cellpadding="0" cellspacing="0">
 	<tr>
     <td class="title">Access to Database</td>
     <td>

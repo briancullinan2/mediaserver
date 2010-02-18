@@ -1,5 +1,8 @@
 Speed testing with new User queries
 More compatibility testing with clients
+Test compatibility with PEAR_MIME modifications to common.php
+Test ADO complatibility, specifically the INSERT function is supposed to return the ID of the new row for some modules
+Convert all log_error to PEAR_ERROR and add to debugging template
 ------------- GENERAL TODO -------------
 Use ADOdb for all database activity?  Pear_MDB2?
 Use PEAR::Error_Stack for error handling?

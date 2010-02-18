@@ -4,6 +4,7 @@
 //$cmd = 'ffmpeg -i /home/share/Videos/john.adams.part2.hdtv-lol.avi -f mpeg -t 15 -ss 00:00:03 -sameq -y /home/share/Videos/out.mpeg';
 //exec($cmd, $out, $ret);
 //exit();
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'db_file.php';
 
 // music handler
 class db_video extends db_file

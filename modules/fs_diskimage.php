@@ -1,6 +1,7 @@
 <?php
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'fs_file.php';
 
-// music handler
+// ISO handler
 class fs_diskimage extends fs_file
 {
 	const NAME = 'Disk Images on Filesystem';

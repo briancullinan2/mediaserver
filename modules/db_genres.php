@@ -1,5 +1,6 @@
 <?php
 // provide an easy to access interface to all the unique genres
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'db_audio.php';
 
 // music handler
 class db_genres extends db_audio

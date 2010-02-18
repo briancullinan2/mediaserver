@@ -1,5 +1,6 @@
 <?php
 // provide an easy to access interface to all the unique albums
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'db_audio.php';
 
 // music handler
 class db_years extends db_audio

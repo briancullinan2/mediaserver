@@ -18,10 +18,6 @@ define('DB_CONNECT',			DB_TYPE . '://' . DB_USER . ':' . DB_PASS . '@' . DB_SERV
 //   this key should be very random
 define('DB_SECRET', 		'QyzoH2zqp%MGs1yD');
 
-// this prefix can be used to include completely different sets of files in the same database
-// don't be decieved though, some files use the db_<file type> where <file type> refers to a module!
-define('DB_PREFIX',				         'db_');
-
 // site constants these are used throughout the entire system
 define('LOCAL_ROOT',                dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR);
 

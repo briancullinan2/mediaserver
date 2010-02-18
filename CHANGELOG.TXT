@@ -3,6 +3,16 @@ Made modules more compatible with loading by requiring modules to INIT the inclu
 	This way a module's information can be loaded and read (later including descriptions) without worrying about the dependencies
 Worked on install.php script
 	Now more self contained and handles errors more elegantly
+	Finished database installation
+Changed sql.php to database.php
+	Created wrapper functions for ADOdb throughout script
+Adding optional callback to install() function in database.php
+Modules should not include_once their own module dependencies
+	All other includes should be place in an init() function and called when needed
+Created more setup functions in common.php for handling the reading of modules and tables
+Removed MIME functionality from common.php
+	Now fully relies on PEAR_MIME
+System is becoming more reliant of PEAR_ERROR and will support more advanced debugging soon
 
 2010-02-16
 Created nifty install.php script

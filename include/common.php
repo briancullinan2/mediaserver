@@ -1,6 +1,5 @@
 <?php
-define('DEBUG_PRIV', 				1);
-
+define('DEBUG_PRIV', 				0);
 
 // the most basic functions used a lot
 // things to consider:
@@ -13,7 +12,7 @@ if(!isset($no_setup) || !$no_setup == true)
 	session_start();
 
 // set version for stuff to reference
-define('VERSION', 			     '0.40.2');
+define('VERSION', 			     '0.50.0');
 define('VERSION_NAME', 			'Goliath');
 
 // require compatibility
@@ -28,6 +27,8 @@ else
 	
 // require pear for error handling
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'PEAR.php';
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'MIME' . DIRECTORY_SEPARATOR . 'Type.php';
+
 
 // classes that this function uses to set up stuff should use the $no_setup = true option
 if(!isset($no_setup) || !$no_setup == true)
@@ -111,64 +112,12 @@ function setup()
 		$GLOBALS['database'] = new database(DB_CONNECT);
 	else
 		$GLOBALS['database'] = NULL;
+		
+	// set up the list of modules
+	setupModules();
 	
-	// some modules depend on the mime-types in order to determine if it can handle that type of file
-	loadMime();
-	
-	// include the modules
-	$tmp_modules = array();
-	if ($dh = @opendir(LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR))
-	{
-		while (($file = readdir($dh)) !== false)
-		{
-			// filter out only the modules for our USE_DATABASE setting
-			if ($file[0] != '.' && !is_dir(LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . $file))
-			{
-				$class_name = substr($file, 0, strrpos($file, '.'));
-				if(!defined(strtoupper($class_name) . '_ENABLED') || constant(strtoupper($class_name) . '_ENABLED') != false)
-				{
-					// include all the modules
-					require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . $file;
-					
-					// only use the module if it is properly defined
-					if(class_exists($class_name))
-					{
-						if(substr($file, 0, 3) == (USE_DATABASE?'db_':'fs_'))
-							$tmp_modules[] = $class_name;
-					}
-				}
-			}
-		}
-		closedir($dh);
-	}
-	
-	$error_count = 0;
-	$new_modules = array();
-	
-	// reorganize modules to reflect heirarchy
-	while(count($tmp_modules) > 0 && $error_count < 1000)
-	{
-		foreach($tmp_modules as $i => $module)
-		{
-			$tmp_override = get_parent_class($module);
-			if(in_array($tmp_override, $new_modules) || $tmp_override == '')
-			{
-				$new_modules[] = $module;
-				unset($tmp_modules[$i]);
-			}
-		}
-		$error_count++;
-	}
-	$GLOBALS['modules'] = $new_modules;
-	
-	// loop through each module and compile a list of databases
-	$GLOBALS['tables'] = array();
-	foreach($GLOBALS['modules'] as $i => $module)
-	{
-		if(defined($module . '::DATABASE'))
-			$GLOBALS['tables'][] = constant($module . '::DATABASE');
-	}
-	$GLOBALS['tables'] = array_values(array_unique($GLOBALS['tables']));
+	// set up list of tables
+	setupTables();
 	
 	// get the aliases to use to replace parts of the filepath
 	$GLOBALS['paths_regexp'] = array();
@@ -370,6 +319,68 @@ function setup()
 		
 	}
 
+}
+
+function setupModules()
+{
+	
+	// include the modules
+	$tmp_modules = array();
+	if ($dh = @opendir(LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR))
+	{
+		while (($file = readdir($dh)) !== false)
+		{
+			// filter out only the modules for our USE_DATABASE setting
+			if ($file[0] != '.' && !is_dir(LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . $file))
+			{
+				$class_name = substr($file, 0, strrpos($file, '.'));
+				if(!defined(strtoupper($class_name) . '_ENABLED') || constant(strtoupper($class_name) . '_ENABLED') != false)
+				{
+					// include all the modules
+					require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . $file;
+					
+					// only use the module if it is properly defined
+					if(class_exists($class_name))
+					{
+						if(substr($file, 0, 3) == (USE_DATABASE?'db_':'fs_'))
+							$tmp_modules[] = $class_name;
+					}
+				}
+			}
+		}
+		closedir($dh);
+	}
+	
+	$error_count = 0;
+	$new_modules = array();
+	
+	// reorganize modules to reflect heirarchy
+	while(count($tmp_modules) > 0 && $error_count < 1000)
+	{
+		foreach($tmp_modules as $i => $module)
+		{
+			$tmp_override = get_parent_class($module);
+			if(in_array($tmp_override, $new_modules) || $tmp_override == '')
+			{
+				$new_modules[] = $module;
+				unset($tmp_modules[$i]);
+			}
+		}
+		$error_count++;
+	}
+	$GLOBALS['modules'] = $new_modules;
+}
+
+function setupTables()
+{
+	// loop through each module and compile a list of databases
+	$GLOBALS['tables'] = array();
+	foreach($GLOBALS['modules'] as $i => $module)
+	{
+		if(defined($module . '::DATABASE'))
+			$GLOBALS['tables'][] = constant($module . '::DATABASE');
+	}
+	$GLOBALS['tables'] = array_values(array_unique($GLOBALS['tables']));
 }
 
 // check if a module handles a certain type of files
@@ -720,39 +731,15 @@ function getExt($file)
 }
 
 // get mime type based on file extension
-function getMime($ext)
+function getMime($filename)
 {
-	if(strpos($ext, '.') !== false)
-	{
-		$ext = getExt($ext);
-	}
-	
-	if(isset($GLOBALS['ext_to_mime'][$ext]))
-	{
-		return $GLOBALS['ext_to_mime'][$ext];
-	}
-	else
-	{
-		return '';
-	}
+	return MIME_Type::autoDetect($filename);
 }
 
 // get the type which is the first part of a mime based on extension
-function getExtType($ext)
+function getExtType($filename)
 {
-	if(strpos($ext, '.') !== false)
-	{
-		$ext = getExt($ext);
-	}
-	
-	if(isset($GLOBALS['ext_to_type'][$ext]))
-	{
-		return $GLOBALS['ext_to_type'][$ext];
-	}
-	else
-	{
-		return strtoupper($ext);
-	}
+	return MIME_Type::getMedia(MIME_Type::autoDetect($filename));
 }
 
 // create the crc32 from a file, this uses a buffer size so it doesn't error out
@@ -900,60 +887,6 @@ function log_error($message)
 		flush();
 		@ob_flush();
 	}
-}
-
-// parse mime types from a mime.types file
-function loadMime()
-{
-	// this will load the mime-types from a linux dist mime.types file stored in includes
-	// this will organize the types for easy lookup
-	if(file_exists(LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'mime.types'))
-	{
-		$handle = fopen(LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'mime.types', 'r');
-		$mime_text = fread($handle, filesize(LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'mime.types'));
-		fclose($handle);
-		
-		$mimes = split("\n", $mime_text);
-		
-		$mime_to_ext = array();
-		$ext_to_mime = array();
-		$ext_to_type = array();
-		$type_to_ext = array();
-		foreach($mimes as $index => $mime)
-		{
-			$mime = preg_replace('/#.*?$/', '', $mime);
-			if($mime != '')
-			{
-				// mime to ext
-				$file_types = preg_split('/[\s,]+/', $mime);
-				$mime_type = $file_types[0];
-				// general type
-				$tmp_type = split('/', $mime_type);	
-				$type = $tmp_type[0];
-				// unset mime part to get all its filetypes
-				unset($file_types[0]);
-				
-				// ext to mime
-				foreach($file_types as $index => $ext)
-				{
-					$ext_to_mime[$ext] = $mime_type;
-					$ext_to_type[$ext] = $type;
-					$type_to_ext[$type][] = $ext;
-					$mime_to_ext[$mime_type][] = $ext;
-				}
-			}
-		}
-		
-		
-		// set global variables
-		$GLOBALS['ext_to_mime'] = $ext_to_mime;
-		$GLOBALS['mime_to_ext'] = $mime_to_ext;
-		$GLOBALS['ext_to_type'] = $ext_to_type;
-		$GLOBALS['type_to_ext'] = $type_to_ext;
-		
-
-	}
-	
 }
 
 ?>

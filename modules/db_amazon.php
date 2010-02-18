@@ -9,6 +9,8 @@
 define('AMAZON_DEV_KEY', '1D9T2665M4N4A7ACEZR2');
 define('AMAZON_SERVER', 'ecs.amazonaws.com');
 
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'db_file.php';
+
 // music handler
 class db_amazon extends db_file
 {

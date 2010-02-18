@@ -1,6 +1,7 @@
 <?php
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'db_file.php';
 
-// music handler
+// ISO handler
 class db_diskimage extends db_file
 {
 	const DATABASE = 'diskimage';

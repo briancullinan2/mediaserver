@@ -3,9 +3,9 @@
 
 // just like with the way zip files should work, return the list of files that are in a playlist by parsing through their path
 //  maybe use aliases to parse any path leading to the same place?
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'fs_file.php';
 
-
-// music handler
+// archive handler
 class fs_archive extends fs_file
 {
 	const NAME = 'Archives on Filesystem';

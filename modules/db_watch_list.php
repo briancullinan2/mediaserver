@@ -1,6 +1,7 @@
 <?php
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'db_audio.php';
 
-// music handler
+// watch list handler
 class db_watch_list extends db_watch
 {
 	const DATABASE = 'watch_list';

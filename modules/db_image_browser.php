@@ -1,4 +1,5 @@
 <?php
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'db_image.php';
 
 // image wrapper for images that a browser can read
 class db_image_browser extends db_image

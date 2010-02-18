@@ -1,4 +1,5 @@
 <?php
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'db_file.php';
 
 // id handler
 class db_ids extends db_file
@@ -14,8 +15,23 @@ class db_ids extends db_file
 		return array_keys(self::struct());
 	}
 	
+	static function setupTables()
+	{
+		// loop through each module and compile a list of databases
+		$GLOBALS['tables'] = array();
+		foreach($GLOBALS['modules'] as $i => $module)
+		{
+			if(defined($module . '::DATABASE'))
+				$GLOBALS['tables'][] = constant($module . '::DATABASE');
+		}
+		$GLOBALS['tables'] = array_values(array_unique($GLOBALS['tables']));
+	}
+	
 	static function struct()
 	{
+		if(!isset($GLOBALS['tables']))
+			self::setupTables();
+		
 		$struct = array(
 			'Filepath' 		=> 'TEXT',
 			'Hex'			=> 'TEXT',

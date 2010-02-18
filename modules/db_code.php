@@ -2,8 +2,9 @@
 
 // read in code files and cache the hilighted version
 //  use highlighting library from codepaster.com
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'db_file.php';
 
-// music handler
+// source code handler
 class db_code extends db_file
 {
 	const DATABASE = 'code';

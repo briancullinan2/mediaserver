@@ -1,6 +1,7 @@
 <?php
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'fs_file.php';
 
-// music handler
+// image handler
 class fs_image extends fs_file
 {
 	const NAME = 'Images on Filesystem';

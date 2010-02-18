@@ -1,6 +1,7 @@
 <?php
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'fs_image.php';
 
-// music handler
+// image handler
 class fs_image_browser extends fs_image
 {
 	const NAME = 'Browser Images on Filesystem';

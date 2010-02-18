@@ -1,4 +1,5 @@
 <?php
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'db_file.php';
 
 // music handler
 class db_audio extends db_file

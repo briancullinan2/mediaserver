@@ -1,9 +1,9 @@
 <?php
 
 //$no_setup = true;
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'common.php';
-include LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb-errorpear.inc.php';
-include LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb.inc.php';
+ini_set('include_path', ini_get('include_path') . ':' . dirname(__FILE__));
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb-errorpear.inc.php';
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb.inc.php';
 
 // control lower level handling of each database
 // things to consider:
@@ -36,16 +36,17 @@ class database
 	function database($connect_str)
 	{
 		$this->db_conn = ADONewConnection($connect_str);  # no need for Connect()
+		$this->db_conn->SetFetchMode(ADODB_FETCH_ASSOC);
 	}
 	
 	// install function
-	function install()
+	function install($callback = NULL)
 	{
 		// create module tables
 		$tables_created = array();
 		foreach($GLOBALS['modules'] as $i => $module)
 		{
-			$query = 'CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . constant($module . '::DATABASE') . ' (';
+			$query = 'CREATE TABLE IF NOT EXISTS ' . constant($module . '::DATABASE') . ' (';
 			$struct = call_user_func($module . '::struct');
 			if(is_array($struct) && !in_array(constant($module . '::DATABASE'), $tables_created))
 			{
@@ -63,7 +64,11 @@ class database
 				$query[strlen($query)-1] = ')';
 				
 				// query database
-				$this->db_query($query) or print_r(mysql_error());
+				$result = $this->db_conn->Execute($query);
+				if($callback !== NULL)
+				{
+					call_user_func_array($callback, array($result, constant($module . '::DATABASE')));
+				}
 			}
 		}
 		
@@ -77,7 +82,7 @@ class database
 		if( count($db_user) == 0 )
 		{
 			// create guest user
-			$this->query(array('INSERT' => 'users', 'VALUES' => array(
+			$result = $this->query(array('INSERT' => 'users', 'VALUES' => array(
 						'id' => -2,
 						'Username' => 'guest',
 						'Password' => '',
@@ -88,6 +93,10 @@ class database
 					)
 				)
 			, false);
+			if($callback !== NULL)
+			{
+				call_user_func_array($callback, array($result, 'guest user'));
+			}
 		}
 		
 		$db_user = $this->query(array(
@@ -111,6 +120,10 @@ class database
 					)
 				)
 			, false);
+			if($callback !== NULL)
+			{
+				call_user_func_array($callback, array($result, 'admin user'));
+			}
 		}
 	}
 	
@@ -135,16 +148,16 @@ class database
 					$columns = array_keys($files[0]);
 						
 					// find missing columns
-					$query = 'ALTER TABLE ' . DB_PREFIX . constant($module . '::DATABASE');
+					$query = 'ALTER TABLE ' . constant($module . '::DATABASE');
 					foreach($struct as $column => $type)
 					{
 						if(!in_array($column, $columns))
 						{
 							// alter the table
 							if(strpos($type, ' ') === false)
-								$this->query('ALTER TABLE ' . DB_PREFIX . constant($module . '::DATABASE') . ' ADD ' . $column . ' ' . $type . ' NOT NULL') or print_r(mysql_error());
+								$this->query('ALTER TABLE ' . constant($module . '::DATABASE') . ' ADD ' . $column . ' ' . $type . ' NOT NULL') or print_r(mysql_error());
 							else
-								$this->query('ALTER TABLE ' . DB_PREFIX . constant($module . '::DATABASE') . ' ADD ' . $column . ' ' . $type) or print_r(mysql_error());
+								$this->query('ALTER TABLE ' . constant($module . '::DATABASE') . ' ADD ' . $column . ' ' . $type) or print_r(mysql_error());
 						}
 						
 						if($column != 'id')
@@ -165,7 +178,7 @@ class database
 					{
 						if(!isset($struct[$key]))
 						{
-							$this->query('ALTER TABLE ' . DB_PREFIX . constant($module . '::DATABASE') . ' DROP ' . $key) or print_r(mysql_error());
+							$this->query('ALTER TABLE ' . constant($module . '::DATABASE') . ' DROP ' . $key) or print_r(mysql_error());
 						}
 					}
 				
@@ -319,7 +332,7 @@ class database
 			
 		if(isset($props['INSERT']))
 		{
-			$insert = 'INSERT INTO ' . (in_array($props['INSERT'], $GLOBALS['tables'])?(DB_PREFIX . $props['INSERT']):$props['INSERT']);
+			$insert = 'INSERT INTO ' . $props['INSERT'];
 			
 			if(!isset($props['COLUMNS']) && isset($props['VALUES']) && is_array($props['VALUES']))
 			{
@@ -345,13 +358,13 @@ class database
 			elseif(is_array($props['COLUMNS'])) $columns = join(', ', $props['COLUMNS']);
 			elseif(is_string($props['COLUMNS'])) $columns = $props['COLUMNS'];
 			
-			$select = 'SELECT ' . $columns . ' FROM ' . (in_array($props['SELECT'], $GLOBALS['tables'])?(DB_PREFIX . $props['SELECT']):$props['SELECT']);
+			$select = 'SELECT ' . $columns . ' FROM ' . $props['SELECT'];
 			
 			$statement = $select . ' ' . $where . ' ' . $group . ' ' . $having . ' ' . $order . ' ' . $limit;
 		}
 		elseif(isset($props['UPDATE']))
 		{
-			$update = 'UPDATE ' . (in_array($props['UPDATE'], $GLOBALS['tables'])?(DB_PREFIX . $props['UPDATE']):$props['UPDATE']) . ' SET';
+			$update = 'UPDATE ' . $props['UPDATE'] . ' SET';
 			
 			if(!isset($props['COLUMNS']) && isset($props['VALUES']) && is_array($props['VALUES']))
 			{
@@ -377,7 +390,7 @@ class database
 		}
 		elseif(isset($props['DELETE']))
 		{
-			$delete = 'DELETE FROM ' . (in_array($props['DELETE'], $GLOBALS['tables'])?(DB_PREFIX . $props['DELETE']):$props['DELETE']);
+			$delete = 'DELETE FROM ' . $props['DELETE'];
 
 			$statement = $delete . ' ' . $where . ' ' . $order . ' ' . $limit;
 		}
@@ -392,13 +405,13 @@ class database
 	{
 		$query = DATABASE::statement_builder($props, $require_permit);
 		
-		if(isset($_REQUEST['log_sql']) && $_REQUEST['log_sql'] == true)
+		/*if(isset($_REQUEST['log_sql']) && $_REQUEST['log_sql'] == true)
 		{
 			if(!isset($_REQUEST['full_sql']) || $_REQUEST['full_sql'] != true)
-				log_error('DATABASE: ' . substr($query, 0, 512));
+				PEAR::raiseError('DATABASE: ' . substr($query, 0, 512));
 			else
-				log_error('DATABASE: ' . $query);
-		}
+		}*/
+		PEAR::raiseError('DATABASE: ' . $query);
 		
 		if(isset($props['CALLBACK']))
 		{
@@ -406,19 +419,29 @@ class database
 		}
 		else
 		{
-			$result = $this->db_conn->GetAssoc($query);
+			$result = $this->db_conn->Execute($query);
 		}
 		
 		if($result !== false && is_array($props) && (isset($props['SELECT']) || isset($props['SHOW'])))
 		{
-			// this is used for queries too large for memory
-			if(isset($props['CALLBACK']))
+			$output = array();
+			while (!$result->EOF)
 			{
-				$this->result_callback($props['CALLBACK']['FUNCTION'], $props['CALLBACK']['ARGUMENTS']);
+				if(isset($props['CALLBACK']))
+				{
+					// this is used for queries too large for memory
+					call_user_func_array($props['CALLBACK']['FUNCTION'], array($result->fields, &$props['CALLBACK']['ARGUMENTS']));
+				}
+				else
+				{
+					$output[] = $result->fields;
+					$result->MoveNext();
+				}
 			}
-			else
+			
+			if(!isset($props['CALLBACK']))
 			{
-				return $this->result();
+				return $output;
 			}
 		}
 		elseif($result !== false && is_array($props) && (isset($props['INSERT']) || isset($props['UPDATE']) || isset($props['REPLACE']) || isset($props['DELETE'])))

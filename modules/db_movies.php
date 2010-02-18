@@ -4,6 +4,7 @@
 // cache useful information
 // search for the title of single video files, if it exists in a directory call movies
 //  use parseFilename to search with
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'db_file.php';
 
 // music handler
 class db_movies extends db_file

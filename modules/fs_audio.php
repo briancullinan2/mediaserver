@@ -1,7 +1,5 @@
 <?php
-
-// set up id3 reader incase any files need it
-$GLOBALS['getID3'] = new getID3();
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'fs_file.php';
 
 // music handler
 class fs_audio extends fs_file
