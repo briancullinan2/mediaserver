@@ -124,6 +124,26 @@ $recommended = array('db_audio', 'db_image', 'db_video');
 
 $supported_databases = array('access','ado','ado_access','ado_mssql','db2','odbc_db2','vfp','fbsql','ibase','firebird','borland_ibase','informix','informix72','ldap','mssql','mssqlpo','mysql','mysqli','mysqlt','maxsql','oci8','oci805','oci8po','odbc','odbc_mssql','odbc_oracle','odbtp','odbtp_unicode','oracle','netezza','pdo','postgres','postgres64','postgres7','postgres8','sapdb','sqlanywhere','sqlite','sqlitepo','sybase');
 
+
+if(isset($_REQUEST['drop']))
+{
+	include $LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'PEAR.php';
+	include $LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'database.php';
+	
+	$DB_CONNECT = $DB_TYPE . '://' . $DB_USER . ':' . $DB_PASS . '@' . $DB_SERVER . '/' . $DB_NAME;
+	$DATABASE = new database($DB_CONNECT);
+	
+	$DATABASE->dropAll();
+	
+	$e = ADODB_Pear_Error();
+	
+	if($e !== false)
+		$_SESSION['dberror'] = $e->userinfo;
+	else
+		$_SESSION['dberror'] = 'tables dropped';
+}
+
+
 if(isset($_REQUEST['next']))
 {
 	header('Location: ' . $_SERVER['PHP_SELF'] . '?step=' . ($_REQUEST['step'] + 1));
@@ -515,6 +535,15 @@ if(isset($_REQUEST['install']))
 	$DATABASE = new database($DB_CONNECT);
 ?>
 <body onload="top.document.getElementById('loading2').style.display = 'none'; top.document.getElementById('install').style.height=document.getElementById('installtable').clientHeight+'px';">
+<form action="<?php echo $_SERVER['PHP_SELF']; ?>?step=3" method="post" target="_top">
+<?php
+for($i = 0; $i < 11 + count($GLOBALS['modules']); $i++)
+{
+?>
+<input type="hidden" name="<?php echo $post[$i]; ?>" value="<?php echo $$post[$i]; ?>" />
+<?php
+}
+?>
 <table id="installtable" border="0" cellpadding="0" cellspacing="0">
 
 <?php
@@ -529,17 +558,8 @@ function printEachStep($result, $table)
     <td class="title fail">Access to Database</td>
     <td>
     The connection manager reported the following error:<br /><?php echo $e->userinfo; ?>.
-    <form action="<?php echo $_SERVER['PHP_SELF']; ?>?step=3" method="post" target="_top">
-	<?php
-    for($i = 0; $i < 11 + count($GLOBALS['modules']); $i++)
-    {
-        ?>
-    <input type="hidden" name="<?php echo $post[$i]; ?>" value="<?php echo $$post[$i]; ?>" />
-    <?php
-    }
-    ?>
+    <input type="hidden" name="dberror" value="<?php echo $e->userinfo; ?>" />
     <input type="submit" value="Panic!" />
-    </form>
     </td>
     <td class="desc">
     <ul>
@@ -570,6 +590,7 @@ function printEachStep($result, $table)
 	$DATABASE->install('printEachStep');
 	?>
 </table>
+</form>
 </body>
 </html>
     <?php
@@ -1041,7 +1062,7 @@ elseif($_REQUEST['step'] == 3)
 	{
 		$dberror = stripslashes($_SESSION['dberror']);
 	}
-    
+	
 ?>
 
 <h2>Database Setup</h2>
@@ -1137,9 +1158,40 @@ if(!isset($DB_NAME))
 </ul>
 </td></tr>
 
-</table>
 <?php
 
+// drop tables
+if($dberror !== false && strpos($dberror, 'already exists') !== false)
+{
+?><tr><td class="title fail">Tables Already Exist</td>
+<td>
+<input type="submit" name="drop" value="Drop Tables" />
+</td>
+<td class="desc">
+<ul>
+    <li>It seems there are already tables in this database with the same name.</li>
+    <li>If you drop these tables, it could cause an irreversable loss of database information.</li>
+</ul>
+</td></tr>
+<?
+}
+elseif($dberror == 'tables dropped')
+{
+?><tr><td class="title warn">Tables Dropped</td>
+<td>
+<label>Tables Dropped</label>
+</td>
+<td class="desc">
+<ul>
+    <li>The tables have been successfully dropped.  You may now return to the install page.</li>
+</ul>
+</td></tr>
+<?
+}
+
+?>
+</table>
+<?php
 
 }
 
@@ -1575,6 +1627,17 @@ $config = $LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'settings.php';
 $fh = @fopen($config, 'w');
 
 // run database::installFirstTimeUsers with new secret key
+include $LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'PEAR.php';
+include $LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'database.php';
+
+if(isset($_SESSION)) session_write_close();
+
+$DB_CONNECT = $DB_TYPE . '://' . $DB_USER . ':' . $DB_PASS . '@' . $DB_SERVER . '/' . $DB_NAME;
+$DATABASE = new database($DB_CONNECT);
+
+$DB_SECRET = md5(microtime());
+
+$pass_changed = $DATABASE->installFirstTimeUsers($DB_SECRET);
 
 if($fh !== false)
 {

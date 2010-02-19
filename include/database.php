@@ -39,6 +39,25 @@ class database
 		$this->db_conn->SetFetchMode(ADODB_FETCH_ASSOC);
 	}
 	
+	function dropAll()
+	{
+		// loop through each module and compile a list of databases
+		$GLOBALS['tables'] = array();
+		foreach($GLOBALS['modules'] as $i => $module)
+		{
+			if(defined($module . '::DATABASE'))
+				$GLOBALS['tables'][] = constant($module . '::DATABASE');
+		}
+		$GLOBALS['tables'] = array_values(array_unique($GLOBALS['tables']));
+		
+		// create module tables
+		foreach($GLOBALS['tables'] as $i => $table)
+		{
+			$query = 'DROP TABLE ' . $table;
+			$result = $this->db_conn->Execute($query);
+		}
+	}
+	
 	function installFirstTimeUsers($secret)
 	{
 		
@@ -63,37 +82,40 @@ class database
 					)
 				)
 			, false);
-			if($callback !== NULL)
-			{
-				call_user_func_array($callback, array($result, 'guest user'));
-			}
 		}
 		
 		$db_user = $this->query(array(
-				'SELECT' => 'users',
-				'WHERE' => 'Username = "admin"',
-				'LIMIT' => 1
-			)
+			'SELECT' => 'users',
+			'WHERE' => 'Username = "admin"',
+			'LIMIT' => 1
+		)
 		, false);
 		
 		if( count($db_user) == 0 )
 		{
 			// create default administrator
 			$this->query(array('INSERT' => 'users', 'VALUES' => array(
-						'id' => -1,
-						'Username' => 'admin',
-						'Password' => md5(secret . 'tmppass'),
-						'Email' => 'admin@bjcullinan.com',
-						'Settings' => serialize(array()),
-						'Privilage' => 10,
-						'PrivateKey' => md5(microtime())
-					)
+					'id' => -1,
+					'Username' => 'admin',
+					'Password' => md5($secret . 'tmppass'),
+					'Email' => 'admin@bjcullinan.com',
+					'Settings' => serialize(array()),
+					'Privilage' => 10,
+					'PrivateKey' => md5(microtime())
 				)
+			)
 			, false);
-			if($callback !== NULL)
-			{
-				call_user_func_array($callback, array($result, 'admin user'));
-			}
+		}
+		else
+		{
+			// update admin with new secret
+			$result = $this->query(array(
+				'UPDATE' => 'users',
+				'VALUES' => array(
+					'Password' => md5($secret . 'tmppass')
+				)
+			)
+			, false);
 		}
 	}
 	
@@ -104,7 +126,7 @@ class database
 		$tables_created = array();
 		foreach($GLOBALS['modules'] as $i => $module)
 		{
-			$query = 'CREATE TABLE IF NOT EXISTS ' . constant($module . '::DATABASE') . ' (';
+			$query = 'CREATE TABLE ' . constant($module . '::DATABASE') . ' (';
 			$struct = call_user_func($module . '::struct');
 			if(is_array($struct) && !in_array(constant($module . '::DATABASE'), $tables_created))
 			{
@@ -452,11 +474,13 @@ class database
 		{
 			if(isset($props['INSERT']))
 			{
-				return $this->getid();
+				$result = $this->db_conn->Execute('SELECT MAX(id) as id FROM ' . $props['INSERT'] . ' LIMIT 1');
+				return $result->fields['id'];
 			}
 			else
 			{
-				return $this->affected();
+				$result = $this->db_conn->Affected_Rows();
+				return $result;
 			}
 		}
 		else

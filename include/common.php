@@ -321,6 +321,12 @@ function setup()
 
 }
 
+// this is used to set up the input variables
+function setupInputVars()
+{
+}
+
+// this scans the modules directory
 function setupModules()
 {
 	
@@ -371,6 +377,8 @@ function setupModules()
 	$GLOBALS['modules'] = $new_modules;
 }
 
+
+// this is used to create the list of tables
 function setupTables()
 {
 	// loop through each module and compile a list of databases
