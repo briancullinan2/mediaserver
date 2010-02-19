@@ -1558,7 +1558,7 @@ if(!isset($USE_ALIAS))
 }
 
 // optional settings
-elseif($_REQUEST['step'] == 8)
+elseif($_REQUEST['step'] == 9)
 {
 
 ?>
@@ -1569,6 +1569,59 @@ elseif($_REQUEST['step'] == 8)
 <?php
 
 // save config
+$config = $LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'settings.php';
+
+// check for write permissions on the settings files
+$fh = @fopen($config, 'w');
+
+// run database::installFirstTimeUsers with new secret key
+
+if($fh !== false)
+{
+	?>
+    <table border="0" cellpadding="0" cellspacing="0">
+    <?php
+    
+    // save config
+    ?><tr><td class="title">Configuration Saved</td>
+    <td>
+    <a href="<?php echo $HTML_DOMAIN ?>">Click here to view your site.</a>
+    </td>
+    <td class="desc">
+    <ul>
+        <li>The configuration has been successfully save to <?php echo $config; ?>.</li>
+        <li>Your system should now be ready to use!</li>
+    </ul>
+    </td></tr>
+    </table>
+    <?php
+}
+else
+{
+	// print out config in a text box
+	?>
+    <table border="0" cellpadding="0" cellspacing="0">
+    <?php
+    
+    // save config
+    ?><tr><td class="title fail">Configuration</td>
+    <td>
+    <label>You must enable read/write access to <?php echo $config; ?></label>
+    </td>
+    <td class="desc">
+    <ul>
+        <li>The configuration could not be saved to <?php echo $config; ?>.</li>
+        <li>Copy the text below and paste put it in a file named "settings.php" in the &lt;site root&gt;/include/ directory.</li>
+    </ul>
+    </td></tr>
+    </table>
+	<textarea style="width:100%; height:400px;">
+    <code>
+    </code>
+    </textarea>
+	<?php
+}
+
 
 }
 
@@ -1578,7 +1631,13 @@ elseif($_REQUEST['step'] == 8)
     <br />
     <br />
     <?php
-	if($_REQUEST['step'] != 5)
+	if($_REQUEST['step'] == 9)
+	{
+	?>
+    <input type="submit" name="next" value="View Site!" class="button" style="float:right;" />
+	<?php
+	}
+	elseif($_REQUEST['step'] != 5)
 	{
 	?>
     <input type="submit" name="reset" value="Reset to Defaults" class="button" />

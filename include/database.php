@@ -39,38 +39,8 @@ class database
 		$this->db_conn->SetFetchMode(ADODB_FETCH_ASSOC);
 	}
 	
-	// install function
-	function install($callback = NULL)
+	function installFirstTimeUsers($secret)
 	{
-		// create module tables
-		$tables_created = array();
-		foreach($GLOBALS['modules'] as $i => $module)
-		{
-			$query = 'CREATE TABLE IF NOT EXISTS ' . constant($module . '::DATABASE') . ' (';
-			$struct = call_user_func($module . '::struct');
-			if(is_array($struct) && !in_array(constant($module . '::DATABASE'), $tables_created))
-			{
-				$tables_created[] = constant($module . '::DATABASE');
-				if(!isset($struct['id']))
-					$query .= 'id INT NOT NULL AUTO_INCREMENT, PRIMARY KEY (id),';
-				foreach($struct as $column => $type)
-				{
-					if(strpos($type, ' ') === false)
-						$query .= ' ' . $column . ' ' . $type . ' NOT NULL,';
-					else
-						$query .= ' ' . $column . ' ' . $type . ',';
-				}
-				// remove last comma
-				$query[strlen($query)-1] = ')';
-				
-				// query database
-				$result = $this->db_conn->Execute($query);
-				if($callback !== NULL)
-				{
-					call_user_func_array($callback, array($result, constant($module . '::DATABASE')));
-				}
-			}
-		}
 		
 		$db_user = $this->query(array(
 				'SELECT' => 'users',
@@ -112,7 +82,7 @@ class database
 			$this->query(array('INSERT' => 'users', 'VALUES' => array(
 						'id' => -1,
 						'Username' => 'admin',
-						'Password' => md5(DB_SECRET . 'tmppass'),
+						'Password' => md5(secret . 'tmppass'),
 						'Email' => 'admin@bjcullinan.com',
 						'Settings' => serialize(array()),
 						'Privilage' => 10,
@@ -123,6 +93,40 @@ class database
 			if($callback !== NULL)
 			{
 				call_user_func_array($callback, array($result, 'admin user'));
+			}
+		}
+	}
+	
+	// install function
+	function install($callback = NULL)
+	{
+		// create module tables
+		$tables_created = array();
+		foreach($GLOBALS['modules'] as $i => $module)
+		{
+			$query = 'CREATE TABLE IF NOT EXISTS ' . constant($module . '::DATABASE') . ' (';
+			$struct = call_user_func($module . '::struct');
+			if(is_array($struct) && !in_array(constant($module . '::DATABASE'), $tables_created))
+			{
+				$tables_created[] = constant($module . '::DATABASE');
+				if(!isset($struct['id']))
+					$query .= 'id INT NOT NULL AUTO_INCREMENT, PRIMARY KEY (id),';
+				foreach($struct as $column => $type)
+				{
+					if(strpos($type, ' ') === false)
+						$query .= ' ' . $column . ' ' . $type . ' NOT NULL,';
+					else
+						$query .= ' ' . $column . ' ' . $type . ',';
+				}
+				// remove last comma
+				$query[strlen($query)-1] = ')';
+				
+				// query database
+				$result = $this->db_conn->Execute($query);
+				if($callback !== NULL)
+				{
+					call_user_func_array($callback, array($result, constant($module . '::DATABASE')));
+				}
 			}
 		}
 	}
