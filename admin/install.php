@@ -12,6 +12,14 @@ $_REQUEST['log_sql'] = true;
 // display setting for specified step
 if(!isset($_REQUEST['step']) || !is_numeric($_REQUEST['step']))
 	$_REQUEST['step'] = 1;
+	
+// calculate buffer size
+if(isset($_REQUEST['BUFFER_SIZE']) && isset($_REQUEST['BUFFER_SIZE_MULTIPLIER']))
+	$_REQUEST['BUFFER_SIZE'] = $_REQUEST['BUFFER_SIZE'] * $_REQUEST['BUFFER_SIZE_MULTIPLIER'];
+if(isset($_REQUEST['DIRECTORY_SEEK_TIME']) && isset($_REQUEST['DIRECTORY_SEEK_TIME_MULTIPLIER']))
+	$_REQUEST['DIRECTORY_SEEK_TIME'] = $_REQUEST['DIRECTORY_SEEK_TIME'] * $_REQUEST['DIRECTORY_SEEK_TIME_MULTIPLIER'];
+if(isset($_REQUEST['FILE_SEEK_TIME']) && isset($_REQUEST['FILE_SEEK_TIME_MULTIPLIER']))
+	$_REQUEST['FILE_SEEK_TIME'] = $_REQUEST['FILE_SEEK_TIME'] * $_REQUEST['FILE_SEEK_TIME_MULTIPLIER'];
 
 // list of acceptable post variables
 $post = array('SYSTEM_TYPE', 'ENCODE', 'CONVERT', 'LOCAL_ROOT', 'HTML_DOMAIN', 'HTML_ROOT', 'DB_TYPE', 'DB_SERVER', 'DB_USER', 'DB_PASS', 'DB_NAME');
@@ -76,9 +84,31 @@ while(count($tmp_modules) > 0 && $error_count < 1000)
 
 $GLOBALS['modules'] = $new_modules;
 
+$post[] = 'LOCAL_BASE';
+$post[] = 'LOCAL_DEFAULT';
+$post[] = 'LOCAL_TEMPLATE';
+$post[] = 'DIRECTORY_SEEK_TIME';
+$post[] = 'FILE_SEEK_TIME';
+$post[] = 'DEBUG_MODE';
+$post[] = 'RECURSIVE_GET';
+$post[] = 'NO_BOTS';
+$post[] = 'TMP_DIR';
+$post[] = 'LOCAL_USERS';
+$post[] = 'BUFFER_SIZE';
+$post[] = 'USE_ALIAS';
+
+$required = array('DB_FILE_ENABLE', 'DB_IDS_ENABLE', 'DB_WATCH_ENABLE', 'DB_ALIAS_ENABLE', 'DB_USERS_ENABLE', 'DB_WATCH_LIST_ENABLE');
+
 // set each valid post variable	
 foreach($post as $key)
 {
+	if(in_array($key, $required))
+	{
+		$_SESSION[$key] = 'true';
+		$$key = 'true';
+		continue;
+	}
+	
 	if(isset($_REQUEST[$key]))
 	{
 		$_SESSION[$key] = $_REQUEST[$key];
@@ -89,7 +119,6 @@ foreach($post as $key)
 		$$key = $_SESSION[$key];
 	}
 }
-
 
 $recommended = array('db_audio', 'db_image', 'db_video');
 
@@ -102,6 +131,7 @@ if(isset($_REQUEST['next']))
 }
 if(isset($_POST) && count($_POST) > 0)
 {
+	if(isset($_POST['dberror'])) $_SESSION['dberror'] = $_POST['dberror'];
 	header('Location: ' . $_SERVER['PHP_SELF'] . '?step=' . ($_REQUEST['step']));
 	exit;
 }
@@ -500,7 +530,15 @@ function printEachStep($result, $table)
     <td>
     The connection manager reported the following error:<br /><?php echo $e->userinfo; ?>.
     <form action="<?php echo $_SERVER['PHP_SELF']; ?>?step=3" method="post" target="_top">
-    <input type="submit" name="dberror" value="Panic!" />
+	<?php
+    for($i = 0; $i < 11 + count($GLOBALS['modules']); $i++)
+    {
+        ?>
+    <input type="hidden" name="<?php echo $post[$i]; ?>" value="<?php echo $$post[$i]; ?>" />
+    <?php
+    }
+    ?>
+    <input type="submit" value="Panic!" />
     </form>
     </td>
     <td class="desc">
@@ -566,7 +604,16 @@ if(isset($_REQUEST['test']))
     <td>
     The connection manager reported the following error:<br /><?php echo $e->userinfo; ?>.
     <form action="<?php echo $_SERVER['PHP_SELF']; ?>?step=3" method="post" target="_top">
-    <input type="submit" name="dberror" value="Return to Step 3" />
+    <input type="hidden" name="dberror" value="<?php echo $e->userinfo; ?>" />
+	<?php
+    for($i = 0; $i < 11 + count($GLOBALS['modules']); $i++)
+    {
+        ?>
+    <input type="hidden" name="<?php echo $post[$i]; ?>" value="<?php echo $$post[$i]; ?>" />
+    <?php
+    }
+    ?>
+    <input type="submit" value="Return to Step 3" />
     </form>
     </td>
     <td class="desc">
@@ -662,7 +709,40 @@ The first step is to check for requirements and dependencies for the media serve
 <form action="" method="post">
 
 <?php
-    
+switch($_REQUEST['step'])
+{
+	case 1:
+	$count = 0;
+	case 2:
+	$count = 3;
+	break;
+	case 3:
+	$count = 6;
+	break;
+	case 4:
+	$count = 11;
+	break;
+	case 5:
+	case 6:
+	$count = 11 + count($GLOBALS['modules']);
+	break;
+	case 7:
+	$count = 11 + count($GLOBALS['modules']) + 3;
+	break;
+	case 8:
+	$count = 11 + count($GLOBALS['modules']) + 5;
+	break;
+	case 9:
+	$count = 11 + count($GLOBALS['modules']) + 12;
+	break;
+}
+for($i = 0; $i < $count; $i++)
+{
+	?>
+<input type="hidden" name="<?php echo $post[$i]; ?>" value="<?php echo $$post[$i]; ?>" />
+<?php
+}
+
 if($_REQUEST['step'] == 1)
 {
 
@@ -874,7 +954,7 @@ else
 
 }
 
-if($_REQUEST['step'] == 2)
+elseif($_REQUEST['step'] == 2)
 {
     
 ?>
@@ -954,8 +1034,13 @@ if(!isset($HTML_ROOT))
 }
                                                 
 // set up database
-if($_REQUEST['step'] == 3)
+elseif($_REQUEST['step'] == 3)
 {
+	$dberror = false;
+	if(isset($_SESSION['dberror']))
+	{
+		$dberror = stripslashes($_SESSION['dberror']);
+	}
     
 ?>
 
@@ -968,7 +1053,6 @@ if($_REQUEST['step'] == 3)
 // set up database type
 if(!isset($DB_TYPE))
     $DB_TYPE = 'mysql';
-var_dump($DB_TYPE);
 ?><tr><td class="title">Database Type</td>
 <td>
 <select name="DB_TYPE">
@@ -991,14 +1075,18 @@ var_dump($DB_TYPE);
 // set up database server
 if(!isset($DB_SERVER))
     $DB_SERVER = 'localhost';
-?><tr><td class="title warn">Database Server</td>
+?><tr><td class="title <?php echo ($dberror !== false && strpos($dberror, 'Can\'t connect') !== false)?'fail':(($dberror !== false && strpos($dberror, 'Access denied') !== false)?'':'warn'); ?>">Database Server</td>
 <td>
 <input type="text" name="DB_SERVER" value="<?php echo $DB_SERVER; ?>" />
 </td>
 <td class="desc">
 <ul>
     <li>Please specify an address of the database server to connect to.</li>
+    <?php if($dberror == false) { ?>
     <li>WARNING: If this information is wrong, it could take up to 1 minute or more to detect these errors.</li>
+    <?php } elseif($dberror !== false && strpos($dberror, 'Can\'t connect') !== false) { ?>
+    <li>The server reported an error with the connection to the database, please check to make sure the address entered is correct and accessible.</li>
+    <?php } ?>
 </ul>
 </td></tr>
 <?php
@@ -1006,25 +1094,31 @@ if(!isset($DB_SERVER))
 // set up database username and password
 if(!isset($DB_USER))
     $DB_USER = 'username';
-?><tr><td class="title">Database User Name</td>
+?><tr><td class="title<?php echo ($dberror !== false && strpos($dberror, 'Access denied') !== false)?' fail':''; ?>">Database User Name</td>
 <td>
 <input type="text" name="DB_USER" value="<?php echo $DB_USER; ?>" />
 </td>
 <td class="desc">
 <ul>
     <li>Please specify a username to log in to the database.</li>
+    <?php if($dberror !== false && strpos($dberror, 'Access denied') !== false) { ?>
+    <li>The server reported that there were problems with your login information.</li>
+    <?php } ?>
 </ul>
 </td></tr>
 <?php
 if(!isset($DB_PASS))
     $DB_PASS = 'password';
-?><tr><td class="title">Database Password</td>
+?><tr><td class="title<?php echo ($dberror !== false && strpos($dberror, 'Access denied') !== false)?' fail':''; ?>">Database Password</td>
 <td>
 <input type="text" name="DB_PASS" value="<?php echo $DB_PASS; ?>" />
 </td>
 <td class="desc">
 <ul>
     <li>Please specify a password to log in to the database.</li>
+    <?php if($dberror !== false && strpos($dberror, 'Access denied') !== false) { ?>
+    <li>The server reported that there were problems with your login information.</li>
+    <?php } ?>
 </ul>
 </td></tr>
 <?php
@@ -1050,7 +1144,7 @@ if(!isset($DB_NAME))
 }
 
 
-if($_REQUEST['step'] == 4)
+elseif($_REQUEST['step'] == 4)
 {
 ?>
 <h2>Select Modules</h2>
@@ -1083,7 +1177,7 @@ foreach($new_modules as $key => $module)
     else
     {
     ?>
-    <select name="<?php echo $module; ?>_ENABLED">
+    <select name="<?php echo strtoupper($module); ?>_ENABLE">
         	<option value="true" <?php echo ($$module_en == true)?'selected="selected"':''; ?>>Enabled <?php echo in_array($module, $recommended)?'(Recommended)':'(Optional)'; ?></option>
         	<option value="false" <?php echo ($$module_en == false)?'selected="selected"':''; ?>>Disabled</option>
     	</select>
@@ -1106,7 +1200,7 @@ foreach($new_modules as $key => $module)
 }
 
 // create database
-if($_REQUEST['step'] == 5)
+elseif($_REQUEST['step'] == 5)
 {
 
 ?>
@@ -1124,7 +1218,7 @@ if($_REQUEST['step'] == 5)
 
 
 // set up templates
-if($_REQUEST['step'] == 6)
+elseif($_REQUEST['step'] == 6)
 {
 
 ?>
@@ -1140,49 +1234,366 @@ if(!isset($LOCAL_BASE))
     $LOCAL_BASE = 'templates' . DIRECTORY_SEPARATOR . 'plain' . DIRECTORY_SEPARATOR;
 if(file_exists($LOCAL_ROOT . $LOCAL_BASE))
 {
-    ?><tr><td class="title">Template Base</td>
-    <td>
-    <input type="text" name="LOCAL_BASE" value="<?php echo $LOCAL_BASE; ?>" />
-    </td>
-    <td class="desc">
-    <ul>
-        <li>The template base provides a backup/default set of template files. This template supports all possible functionality, in the simplest way.</li>
-        <li>Default functionality includes things like printing out an XML file, or an M3U playlist instead of a vieable HTML list of files.</li>
-        <li>The server reports that <?php echo $LOCAL_ROOT . $LOCAL_BASE; ?> does, in fact, exist.</li>
-    </ul>
-    </td></tr>
-    <?php
+?><tr><td class="title">Template Base</td>
+<td>
+<input type="text" name="LOCAL_BASE" value="<?php echo $LOCAL_BASE; ?>" />
+</td>
+<td class="desc">
+<ul>
+	<li>The template base provides a backup/default set of template files. This template supports all possible functionality, in the simplest way.</li>
+	<li>Default functionality includes things like printing out an XML file, or an M3U playlist instead of a vieable HTML list of files.</li>
+	<li>The server reports that <?php echo $LOCAL_ROOT . $LOCAL_BASE; ?> does, in fact, exist.</li>
+</ul>
+</td></tr>
+<?php
 }
 else
 {
-    ?><tr><td class="title fail">Template Base</td>
-    <td>
-    <input type="text" name="LOCAL_BASE" value="<?php echo $LOCAL_BASE; ?>" />
-    </td>
-    <td class="desc">
-    <ul>
-        <li>The system has detected that the local basic template files are not where they are expected to be.</li>
-        <li>The template base provides a backup/default set of template files. This template supports all possible functionality, in the simplest way.</li>
-        <li>Default functionality includes things like printing out an XML file, or an M3U playlist instead of a vieable HTML list of files.</li>
-        <li>The server reports that <?php echo $LOCAL_ROOT . $LOCAL_BASE; ?> does NOT EXIST.</li>
-    </ul>
-    </td></tr>
-    <?php
+?><tr><td class="title fail">Template Base</td>
+<td>
+<input type="text" name="LOCAL_BASE" value="<?php echo $LOCAL_BASE; ?>" />
+</td>
+<td class="desc">
+<ul>
+	<li>The system has detected that the local basic template files are not where they are expected to be.</li>
+	<li>The template base provides a backup/default set of template files. This template supports all possible functionality, in the simplest way.</li>
+	<li>Default functionality includes things like printing out an XML file, or an M3U playlist instead of a vieable HTML list of files.</li>
+	<li>The server reports that <?php echo $LOCAL_ROOT . $LOCAL_BASE; ?> does NOT EXIST.</li>
+</ul>
+</td></tr>
+<?php
 }
 
 // select default template
 
+// get the list of templates
+$GLOBALS['templates'] = array();
+if ($dh = @opendir($LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR))
+{
+	while (($file = readdir($dh)) !== false)
+	{
+		// filter out only the modules for our USE_DATABASE setting
+		if ($file[0] != '.' && is_dir($LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR . $file))
+		{
+			$GLOBALS['templates'][] = 'templates' . DIRECTORY_SEPARATOR . $file . DIRECTORY_SEPARATOR;
+		}
+	}
+}
+
+if(!isset($LOCAL_DEFAULT))
+	$LOCAL_DEFAULT = 'templates' . DIRECTORY_SEPARATOR . 'live' . DIRECTORY_SEPARATOR;
+
+?><tr><td class="title">Default Template</td>
+<td>
+<select name="LOCAL_DEFAULT">
+<?php
+foreach($GLOBALS['templates'] as $template)
+{
+	?><option value="<?php echo $template; ?>" <?php echo ($LOCAL_DEFAULT == $template)?'selected="selected"':''; ?>><?php echo ucwords(basename($template)); ?></option><?php
+}
+?>
+</select>
+</td>
+<td class="desc">
+<ul>
+	<li>The default template is the template displayed to users until they select an alternative template.</li>
+</ul>
+</td></tr>
+<?php
+
+// select local template
+if(!isset($LOCAL_TEMPLATE))
+	$LOCAL_TEMPLATE = '';
+
+?><tr><td class="title">Local Template</td>
+<td>
+<select name="LOCAL_TEMPLATE">
+<option value="" <?php echo ($LOCAL_TEMPLATE == '')?'selected="selected"':''; ?>>&lt;Not Set&gt;</option>
+<?php
+foreach($GLOBALS['templates'] as $template)
+{
+	?><option value="<?php echo $template; ?>" <?php echo ($LOCAL_TEMPLATE == $template)?'selected="selected"':''; ?>><?php echo ucwords(basename($template)); ?></option><?php
+}
+?>
+</select>
+</td>
+<td class="desc">
+<ul>
+	<li>If this is set, this template will always be displayed to the users.  They will not be given the option to select their own template.</li>
+</ul>
+</td></tr>
+<?php
+
 ?></table><?php
 
 }
+
+// cron settings
+elseif($_REQUEST['step'] == 7)
+{
+
+?>
+
+<h2>Cron Settings</h2>
+<p>The site will perform indexing of files while it is not being used.  This provides fast searching and reads more detailed information such as Artist and Album for MP3s.</p>
+
+
+
+<table border="0" cellpadding="0" cellspacing="0">
+<?php
+
+// set up cron script
+?><tr><td class="title">Running the Cron</td>
+<td>
+On Unix and Linux:<br />
+<code>
+&nbsp;&nbsp;&nbsp;&nbsp;0 * * * * /usr/bin/php /&lt;site path&gt;/plugins/cron.php &gt;/dev/null 2&gt;&amp;1<br />
+&nbsp;&nbsp;&nbsp;&nbsp;30 * * * * /usr/bin/php /&lt;site path&gt;/plugins/cron.php &gt;/dev/null 2&gt;&amp;1<br /></code>
+<br />On Windows:<br />
+Run this command from the command line to install the cron script as a task:<br />
+</td>
+<td class="desc">
+<ul>
+	<li>In order for the cron script to run, it must be installed in the OS to run periodically throughout the day.</li>
+</ul>
+</td></tr>
+<?php
+
+// set up seek time
+if(!isset($DIRECTORY_SEEK_TIME))
+	$DIRECTORY_SEEK_TIME = 60;
+?><tr><td class="title">Directory Seek Time</td>
+<td>
+<select name="DIRECTORY_SEEK_TIME" style="width:100px; display:inline; margin-right:0px;">
+<?php
+for($i = 1; $i < 60; $i++)
+{
+	?><option value="<?php echo $i; ?>" <?php echo ($DIRECTORY_SEEK_TIME == $i || $DIRECTORY_SEEK_TIME / 60 == $i || $DIRECTORY_SEEK_TIME / 360 == $i)?'selected="selected"':''; ?>><?php echo $i; ?></option><?php
+}
+?>
+</select><select name="DIRECTORY_SEEK_TIME_MULTIPLIER" style="width:100px; display:inline; margin-right:0px;">
+<option value="1" <?php echo ($DIRECTORY_SEEK_TIME >= 1 && $DIRECTORY_SEEK_TIME < 60)?'selected="selected"':''; ?>>Seconds</option>
+<option value="60" <?php echo ($DIRECTORY_SEEK_TIME / 60 >= 1 && $DIRECTORY_SEEK_TIME / 60 < 60)?'selected="selected"':''; ?>>Minutes</option>
+<option value="360" <?php echo ($DIRECTORY_SEEK_TIME / 360 >= 1)?'selected="selected"':''; ?>>Hours</option>
+</select>
+</td>
+<td class="desc">
+<ul>
+	<li>This script allows you to specify an amount of time to spend on searching directories.  This is so the script only runs for a few minutes every hour or every half hour.</li>
+	<li>The directory seek time is the amount of time the script will spend searching directories for changed files.</li>
+</ul>
+</td></tr>
+<?php
+
+if(!isset($FILE_SEEK_TIME))
+	$FILE_SEEK_TIME = 60;
+?><tr><td class="title">File Seek Time</td>
+<td>
+<select name="FILE_SEEK_TIME" style="width:100px; display:inline; margin-right:0px;">
+<?php
+for($i = 1; $i < 60; $i++)
+{
+	?><option value="<?php echo $i; ?>" <?php echo ($FILE_SEEK_TIME == $i || $FILE_SEEK_TIME / 60 == $i || $FILE_SEEK_TIME / 360 == $i)?'selected="selected"':''; ?>><?php echo $i; ?></option><?php
+}
+?>
+</select><select name="FILE_SEEK_TIME_MULTIPLIER" style="width:100px; display:inline; margin-right:0px;">
+<option value="1" <?php echo ($FILE_SEEK_TIME >= 1 && $FILE_SEEK_TIME < 60)?'selected="selected"':''; ?>>Seconds</option>
+<option value="60" <?php echo ($FILE_SEEK_TIME / 60 >= 1 && $FILE_SEEK_TIME / 60 < 60)?'selected="selected"':''; ?>>Minutes</option>
+<option value="360" <?php echo ($FILE_SEEK_TIME / 360 >= 1)?'selected="selected"':''; ?>>Hours</option>
+</select>
+</td>
+<td class="desc">
+<ul>
+	<li>The file seek time is the amount of time the script will spend reading file information and putting it in to the database.</li>
+</ul>
+</td></tr>
+<?php
+
+?></table><?php
+
+}
+
+// optional settings
+elseif($_REQUEST['step'] == 8)
+{
+
+?>
+
+<h2>Optional Settings</h2>
+<p>There are a few optional settings that affect the behavior of the site.  We will review these now.</p>
+
+<table border="0" cellpadding="0" cellspacing="0">
+<?php
+
+// select debug mode
+if(!isset($DEBUG_MODE))
+	$DEBUG_MODE = false;
+?><tr><td class="title">Debug Mode</td>
+<td>
+<select name="DEBUG_MODE">
+<option value="true" <?php echo ($DEBUG_MODE == true)?'selected="selected"':''; ?>>Turn Debug Mode On</option>
+<option value="false" <?php echo ($DEBUG_MODE == false)?'selected="selected"':''; ?>>Do Not Use Debug Mode</option>
+</select>
+</td>
+<td class="desc">
+<ul>
+	<li>Debug mode is used by many templates to display debugging options on the page.</li>
+	<li>This is usefull for viewing information about file system and database problems and to test if the system is running properly.</li>
+</ul>
+</td></tr>
+<?php
+
+// select recursion option
+if(!isset($RECURSIVE_GET))
+	$RECURSIVE_GET = false;
+?><tr><td class="title">Deep Select</td>
+<td>
+<select name="RECURSIVE_GET">
+<option value="true" <?php echo ($RECURSIVE_GET == true)?'selected="selected"':''; ?>>Turn Deep Select On</option>
+<option value="false" <?php echo ($RECURSIVE_GET == false)?'selected="selected"':''; ?>>Do Not Use Deep Select</option>
+</select>
+</td>
+<td class="desc">
+<ul>
+	<li>This tells to system whether or not it should read directories on the fly and recursively.</li>
+	<li>If some files in a directory haven't been loaded, this will load them when the directory is accessed.</li>
+	<li>On large systems, this could cause page response to be VERY SLOW.  This option is not recommended for system where files change a lot.</li>
+</ul>
+</td></tr>
+<?php
+
+// disable robots
+if(!isset($NO_BOTS))
+	$NO_BOTS = true;
+?><tr><td class="title">Robots Handling</td>
+<td>
+<select name="NO_BOTS">
+<option value="true" <?php echo ($NO_BOTS == true)?'selected="selected"':''; ?>>Disable Robots</option>
+<option value="false" <?php echo ($NO_BOTS == false)?'selected="selected"':''; ?>>Allow Robots to Scan my Files</option>
+</select>
+</td>
+<td class="desc">
+<ul>
+	<li>Some services like Google like to scan websites.  This option will prevent robots from downloading and scanning files on your site.</li>
+	<li>This will also enable robots to view a customizable sitemap.php plugin that provides them with the information they deserve.</li>
+</ul>
+</td></tr>
+<?php
+
+// temporary directory
+if(!isset($TMP_DIR))
+{
+	$tmpfile = tempnam("dummy","");
+	$TMP_DIR = dirname($tmpfile) . DIRECTORY_SEPARATOR;
+	unlink($tmpfile);
+}
+?><tr><td class="title">Temporary Files</td>
+<td>
+<input type="text" name="TMP_DIR" value="<?php echo $TMP_DIR; ?>" />
+</td>
+<td class="desc">
+<ul>
+	<li>This directory will be used for uploaded files and storing temporary files like converted files and images.</li>
+</ul>
+</td></tr>
+<?php
+
+// user files
+if(!isset($LOCAL_USERS))
+	$LOCAL_USERS = $LOCAL_ROOT . 'users' . DIRECTORY_SEPARATOR;
+?><tr><td class="title">User Files</td>
+<td>
+<input type="text" name="LOCAL_USERS" value="<?php echo $LOCAL_USERS; ?>" />
+</td>
+<td class="desc">
+<ul>
+	<li>This directory will be used for uploaded user files.  This will also be included in the directories that are watched by the server.</li>
+</ul>
+</td></tr>
+<?php
+
+// buffer size
+if(!isset($BUFFER_SIZE))
+	$BUFFER_SIZE = 2*1024*8;
+?><tr><td class="title">Buffer Size</td>
+<td>
+<select name="BUFFER_SIZE" style="width:150px; display:inline; margin-right:0px;">
+<?php
+for($i = 0; $i < 10; $i++)
+{
+	?><option value="<?php echo pow(2, $i); ?>" <?php echo ($BUFFER_SIZE / 1024 == pow(2, $i) || $BUFFER_SIZE / 1048576 == pow(2, $i) || $BUFFER_SIZE / 1073741824 == pow(2, $i))?'selected="selected"':''; ?>><?php echo pow(2, $i); ?></option><?php
+}
+?>
+</select><select name="BUFFER_SIZE_MULTIPLIER" style="width:50px; display:inline; margin-right:0px;">
+	<option value="1024" <?php echo ($BUFFER_SIZE / 1024 >= 1 && $BUFFER_SIZE / 1024 < 1048576)?'selected="selected"':''; ?>>KB</option>
+	<option value="1048576" <?php echo ($BUFFER_SIZE / 1048576 >= 1 && $BUFFER_SIZE / 1048576 < 1073741824)?'selected="selected"':''; ?>>MB</option>
+	<option value="1073741824" <?php echo ($BUFFER_SIZE / 1073741824 >= 1)?'selected="selected"':''; ?>>GB</option>
+</select>
+</td>
+<td class="desc">
+<ul>
+	<li>Some plugins and modules require open file streams of a specific size.  This allows you to set what size these streams should try to remain below.</li>
+</ul>
+</td></tr>
+<?php
+
+// set up aliasing
+if(!isset($USE_ALIAS))
+	$USE_ALIAS = true;
+?><tr><td class="title">Aliasing</td>
+<td>
+<select name="USE_ALIAS">
+<option value="true" <?php echo ($USE_ALIAS == true)?'selected="selected"':''; ?>>Use Aliased Paths</option>
+<option value="false" <?php echo ($USE_ALIAS == false)?'selected="selected"':''; ?>>Display Actual Path to Users</option>
+</select>
+</td>
+<td class="desc">
+<ul>
+	<li>Path aliasing is used to disguise the location of files on your file system.  Aliases can be set up to convert a path such as /home/share/ to /Shared/.</li>
+</ul>
+</td></tr>
+<?php
+	
+?></table><?php
+}
+
+// optional settings
+elseif($_REQUEST['step'] == 8)
+{
+
+?>
+
+<h2>Save the Configuration</h2>
+<p>Almost done!  Saving the configuration is the last step, once this is complete the site will be up and ready to use.</p>
+
+<?php
+
+// save config
+
+}
+
 ?>
 
     <br />
     <br />
     <br />
+    <?php
+	if($_REQUEST['step'] != 5)
+	{
+	?>
     <input type="submit" name="reset" value="Reset to Defaults" class="button" />
     <input type="submit" name="next" value="Save and Continue" style="float:right;" />
     <input type="submit" name="save" value="Save" class="button" style="float:right;" />
+    <?php
+    }
+	else
+	{
+	?>
+    <input type="submit" name="next" value="Save and Continue" style="float:right;" />
+    <input type="submit" name="save" value="Try Again" class="button" style="float:right;" />
+    <?php
+	}
+	?>
 </form>
 
 
@@ -1248,3 +1659,4 @@ function print_image()
 }
 
 ?>
+
