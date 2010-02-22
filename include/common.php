@@ -20,10 +20,10 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'compatibility.php';
 
 
 // require the settings
-if(realpath('/') == '/')
-	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.nix.php';
-else
-	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.win.php';
+//if(realpath('/') == '/')
+//	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.nix.php';
+//else
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.php';
 	
 // require pear for error handling
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'PEAR.php';

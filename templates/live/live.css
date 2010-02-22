@@ -241,8 +241,7 @@ body {
 
 #container {
 	margin:auto;
-	max-width:900px;
-	width:100%;
+	width:900px;
 }
 
 #breadcrumb {
@@ -303,7 +302,6 @@ body {
 	overflow:hidden;
 	padding:1.25em;
 	position:relative;
-	width:auto;
 }
 
 .title {
@@ -378,6 +376,7 @@ body {
 	top:0;
 	float:left;
 	position:relative;
+	width:850px;
 }
 
 .file {

@@ -116,7 +116,11 @@ class database
 				)
 			)
 			, false);
+			
+			return true;
 		}
+		
+		return false;
 	}
 	
 	// install function

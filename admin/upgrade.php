@@ -147,8 +147,7 @@ body {
 
 #container {
 	margin:auto;
-	max-width:900px;
-	width:100%;
+	width:900px;
 }
 
 #breadcrumb {

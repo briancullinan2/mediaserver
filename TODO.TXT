@@ -1,15 +1,13 @@
 Speed testing with new User queries
 More compatibility testing with clients
 Test compatibility with PEAR_MIME modifications to common.php
-Test ADO complatibility, specifically the INSERT function is supposed to return the ID of the new row for some modules
-Convert all log_error to PEAR_ERROR and add to debugging template
 ------------- GENERAL TODO -------------
 Use ADOdb for all database activity?  Pear_MDB2?
-Use PEAR::Error_Stack for error handling?
+Implement PEAR::Error_Stack for error handling
+	Convert all log_error to PEAR_ERROR and add to debugging template
 Store the remote_address in the session, and if it doesn't match up with what is in the session then kill the session and die
 Create a unique id and insert it into forms, this is required when the form is submitted
 Make hard links and soft links, hard links are replaced when they are put in to the database, soft links are replaced when they are read from the database, this will allow us to do more network stuff
-Make a class for handling CSV as the database type, make sure all the queries can refer to the statement builder
 Interface with mediatomb and support UPnP protocol
 ------------- Plugin TODO -------------
 Finish users.php plugin
@@ -19,8 +17,8 @@ Work on settings.php plugin
 	Global settings such as default template to use for each devide logged in the to account
 	Template settings, must provide specification in template config, use database for storing fields?
 	Make display plugin obsolete by completing the settings plugins
-Work on reports.php plugin for admin
-	Provide useful information in reports section about missing songs (music.php tool?)
+Work on tools.php plugin for admin
+	Provide useful information in tools section about missing songs (music.php tool?)
 Make a sync plugin in admin section for syncing between two databases and pulling out differences
 	Use musicbrainz to sync music
 Fix bt.php plugin, using the stream methods won't work with md5

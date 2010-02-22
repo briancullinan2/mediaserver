@@ -1,3 +1,8 @@
+2010-02-22
+Finished install.php admin script
+	Now it saved the settings file, or prints it out in pretty colors
+Fixed sizing problems in Live template
+
 2010-02-17
 Made modules more compatible with loading by requiring modules to INIT the includes they need before they use them, instead of when the module is loaded
 	This way a module's information can be loaded and read (later including descriptions) without worrying about the dependencies
