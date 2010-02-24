@@ -25,9 +25,10 @@ function register_output_vars($name, $value)
 }
 
 // this function takes a request as input, and based on the .htaccess rules, converts it to a pretty url, or makes no changes if mod_rewrite is off
-function generate_href($request)
+function generate_href($request = array())
 {
-	
+	if(count($request) == 0)
+		return HTML_DOMAIN . HTML_ROOT;
 }
 
 function set_output_vars()
@@ -141,8 +142,9 @@ function validate_columns($request)
 
 function validate_plugin($request)
 {
-	if(in_array($request['plugin'], $GLOBALS['plugins']))
+	if(isset($request['plugin']) && isset($GLOBALS['plugins'][$request['plugin']]))
 		return $request['plugin'];
 	else
 		return 'select';
 }
+

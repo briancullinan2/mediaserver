@@ -2,79 +2,59 @@
 
 // a simple login script for the admin section
 
-// Variables Used:
-//  username
-// Shared Variables:
-$no_setup = true;
-
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
-
-session_start();
-
-// process post variables
-if(isset($_POST['password']))
+function register_login()
 {
-	$_SESSION['password'] = md5(DB_SECRET . $_POST['password']);
-}
-if(isset($_POST['username']))
-{
-	$_SESSION['username'] = $_POST['username'];
+	return array(
+		'name' => 'login',
+		'description' => 'Allows users to log in to the site and access user files and settings.',
+		'privilage' => 1,
+		'path' => __FILE__,
+		'session' => array('username')
+	);
 }
 
-// finally run setup since required session information for logging in a user is set up
-setup();
-
-$error = '';
-
-if( $_SESSION['loggedin'] == true )
+function validate_password($request)
 {
-	if( isset($_REQUEST['return']) && (!isset($_REQUEST['required_priv']) || $_SESSION['privilage'] >= $_REQUEST['required_priv']))
-	{
-		header('Location: ' . $_REQUEST['return']);
-		exit();
-	}
-	elseif(!isset($_REQUEST['required_priv']))
-	{
-		$error = 'Already logged in.';
-	}
-	elseif(intval($_REQUEST['required_priv']) > intval($_SESSION['privilage']))
-	{
-		$error = 'You do not have the required privilages to access this page.';
-	}
-}
-else
-{
-	$error = 'You must enter a username and password to access this section.';
+	return md5(DB_SECRET . $request['password']);
 }
 
-// assign variables for a smarty template to use
-if(isset($_REQUEST['username']))
-	$GLOBALS['smarty']->assign('username', $_REQUEST['username']);
-
-$GLOBALS['smarty']->assign('error', $error);
-
-// show login template
-if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
+function validate_username($request)
 {
-	// check to see if there is a template for the action
-	if(isset($GLOBALS['templates']['TEMPLATE_LOGIN']))
+	return $request['username'];
+}
+
+function validate_return($request)
+{
+	return $request['return'];
+}
+
+function validate_required_priv($request)
+{
+	if(is_numeric($request['required_priv']))
+		return $request['required_priv'];
+}
+
+function session_login($request)
+{
+	$save['username'] = $request['username'];
+	$save['password'] = @$request['password'];
+	
+	return $save;
+}
+
+function output_login($request)
+{
+	if( $_SESSION['loggedin'] == true )
 	{
-		$template = $GLOBALS['templates']['TEMPLATE_LOGIN'];
-	}
-	else
-	{
-		$template = $GLOBALS['templates']['TEMPLATE_USERS'];
+		if( isset($_REQUEST['return']) && (!isset($_REQUEST['required_priv']) || $_SESSION['privilage'] >= $_REQUEST['required_priv']))
+		{
+			header('Location: ' . $_REQUEST['return']);
+			exit();
+		}
 	}
 	
-	// if not use the default users template
-	if(getExt($template) == 'php')
-		@include $template;
+	if(isset($request['username']))
+		register_output_vars('username', $request['username']);
 	else
-	{
-		header('Content-Type: ' . getMime($template));
-		$GLOBALS['smarty']->display($template);
-	}
+		register_output_vars('username', '');
 }
-
-
-?>

@@ -1,3 +1,5 @@
+Fix HTML_ROOT usage to use generate_href instead (this is hard)
+Finish fixing up plugins to use new API
 Drupalish style coding
 	Plugins must register themselves just like the tools
 	Register directory structure so that only the top level plugin can be accessed for security

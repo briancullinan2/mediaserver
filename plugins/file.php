@@ -1,42 +1,34 @@
 <?php
-set_time_limit(0);
-define('FILE_PRIV', 				1);
 
-// thing to consider:
+// things to consider:
 // recognize category because that will determine what the id is refering to
 // if the type can be handled by a browser then output it, otherwise disposition it
 
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
-
-// make sure user in logged in
-if( $_SESSION['privilage'] < FILE_PRIV )
+function register_file()
 {
-	// redirect to login page
-	header('Location: ' . HTML_ROOT . 'plugins/login.php?return=' . $_SERVER['REQUEST_URI'] . '&required_priv=' . FILE_PRIV);
+	return array(
+		'name' => 'file',
+		'description' => 'Allow users to download files from the database.',
+		'privilage' => 1,
+		'path' => __FILE__
+	);
+}
+
+function output_file($request)
+{
+	set_time_limit(0);
 	
-	exit();
-}
-
-// if none of the following is defined, tokenize and search
-if(!isset($_REQUEST['id']) && !isset($_REQUEST['item']) && !isset($_REQUEST['on']) && !isset($_REQUEST['file']) && !isset($_REQUEST['search']))
-{
-	$request_tokens = tokenize(join('&', $_REQUEST));
-	$_REQUEST['search'] = join(' ', $request_tokens['All']);
-}
-
-// add category
-if(!isset($_REQUEST['cat']) || !in_array($_REQUEST['cat'], $GLOBALS['modules']) || constant($_REQUEST['cat'] . '::INTERNAL') == true)
-	$_REQUEST['cat'] = USE_DATABASE?'db_file':'fs_file';
-
-if(isset($_REQUEST))
-{
+	// set up request variables
+	$request['cat'] = validate_cat($request);
+	$request['id'] = validate_id($request);
+	
 	// get the file path from the database
-	$files = call_user_func_array($_REQUEST['cat'] . '::get', array($_REQUEST, &$count, &$error));
+	$files = call_user_func_array($request['cat'] . '::get', array($request, &$count, &$error));
 	
 	if(count($files) > 0)
 	{
 		// the ids module will do the replacement of the ids
-		$files = db_ids::get(array('cat' => $_REQUEST['cat']), $tmp_count, $tmp_error, $files);
+		$files = db_ids::get(array('cat' => $request['cat']), $tmp_count, $tmp_error, $files);
 	
 		$tmp_request = array();
 		$tmp_request['file'] = $files[0]['Filepath'];
@@ -47,7 +39,7 @@ if(isset($_REQUEST))
 		// get info from other handlers
 		foreach($GLOBALS['modules'] as $i => $module)
 		{
-			if($module != $_REQUEST['cat'] && constant($module . '::INTERNAL') == false && call_user_func_array($module . '::handles', array($files[0]['Filepath'])))
+			if($module != $request['cat'] && constant($module . '::INTERNAL') == false && call_user_func_array($module . '::handles', array($files[0]['Filepath'])))
 			{
 				$return = call_user_func_array($module . '::get', array($tmp_request, &$tmp_count, &$tmp_error));
 				if(isset($return[0])) $files[0] = array_merge($return[0], $files[0]);
@@ -63,7 +55,7 @@ if(isset($_REQUEST))
 		$op = fopen('php://output', 'wb');
 		
 		// get the input stream
-		$fp = call_user_func_array($_REQUEST['cat'] . '::out', array($files[0]['Filepath']));
+		$fp = call_user_func_array($request['cat'] . '::out', array($files[0]['Filepath']));
 		
 		//-------------------- THIS IS ALL RANAGES STUFF --------------------
 		
@@ -145,10 +137,6 @@ if(isset($_REQUEST))
 	}
 	else
 	{ print 'File not found!'; }
-}
-else
-{
-	print 'No Id';
+	
 }
 
-?>

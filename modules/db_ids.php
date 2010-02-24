@@ -72,7 +72,7 @@ class db_ids extends db_file
 			$fileinfo['Hex'] = bin2hex($file);
 			foreach($GLOBALS['tables'] as $i => $table)
 			{
-				if($table != db_ids::DATABASE && $table != db_watch_list::DATABASE && $table != db_alias::DATABASE && $table != db_watch::DATABASE)
+				if($table != db_ids::DATABASE && $table != db_watch_list::DATABASE && $table != db_alias::DATABASE && $table != db_watch::DATABASE && $table != db_users::DATABASE)
 				{
 					if(isset($ids[$table . '_id']))
 					{

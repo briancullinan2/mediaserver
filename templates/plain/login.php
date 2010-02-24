@@ -10,7 +10,7 @@ if( $error != '' )
 }
 ?>
 
-<form action="<?php echo HTML_ROOT . 'plugins/login.php?return=' . $_SERVER['REQUEST_URI']; ?>" method="post">
+<form action="<?php echo HTML_ROOT . '?plugin=login' . (isset($_REQUEST['return'])?('&return=' . $_REQUEST['return']):''); ?>" method="post">
 
 	Username: <input type="text" name="username" value="<?php echo (isset($_REQUEST['username'])?$_REQUEST['username']:"")?>" /><br />
 	Password: <input type="password" name="password" value="" /><br />

@@ -8,7 +8,8 @@ function register_select()
 		'name' => 'select',
 		'description' => 'Allows users to select files and saves the selected files in their session and profile.',
 		'privilage' => 1,
-		'path' => __FILE__
+		'path' => __FILE__,
+		'session' => array('item', 'on', 'off')
 	);
 }
 
@@ -46,6 +47,10 @@ function validate_selected($request)
 	$request['off'] = validate_off($request);
 	$selected = array_diff($selected, $request['off']);
 	
+	$request['id'] = validate_id($request);
+	if(isset($request['id']))
+		$selected = array($request['id']);
+	
 	return array_values($selected);
 }
 
@@ -56,11 +61,11 @@ function validate_item($request)
 	
 	$selected = array();
 	
-	if(is_string($request['item']))
+	if(isset($request['item']) && is_string($request['item']))
 	{
 		$selected = split(',', $request['item']);
 	}
-	elseif(is_array($request['item']))
+	elseif(isset($request['item']) && is_array($request['item']))
 	{
 		foreach($request['item'] as $id => $value)
 		{
@@ -76,6 +81,12 @@ function validate_item($request)
 	}
 	
 	return array_values($selected);
+}
+
+function validate_id($request)
+{
+	if(isset($request['id']) && is_numeric($request['id']))
+		return $request['id'];
 }
 
 function validate_on($request)
@@ -118,6 +129,17 @@ function validate_short($request)
 		return false;
 }
 
+function validate_dir($request)
+{
+	if(isset($request['dir']))
+	{
+		if(USE_ALIAS == true)
+			$request['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
+		if(is_dir(realpath($request['dir'])))
+			return $request['dir'];
+	}
+}
+
 // passes a validated request to the session select for processing and saving
 //  the array of settings returned from this is stored in $_SESSION[<name>] = session_select($request);
 function session_select($request)
@@ -126,6 +148,8 @@ function session_select($request)
 	$save['on'] = @$request['on'];
 	$save['off'] = @$request['off'];
 	$save['item'] = @$request['item'];
+	
+	return $save;
 }
 
 function output_select($request)
@@ -199,5 +223,3 @@ function output_select($request)
 	register_output_vars('total_count', $total_count);
 }
 
-
-?>

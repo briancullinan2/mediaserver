@@ -3,23 +3,12 @@
 // Variables Used:
 //  tools[], tool_names[], tool_paths[], tool_descs[], $error
 
-define('TOOLS_PRIV', 				10);
-
 // preffered order is a list for which order the tools should be arranged in, this is completely optional and makes the toolset a little more context aware
 $preffered_order = array('Site Information', 'Log Parser', 'Ascii File Names', 'Excessive Underscores and Periods');
 
 // each tool prints a very simple structure, the template loaded at the bottom is responsibile for 
 //    manipulating that structure as well as fitting it in to the rest of the template
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
-
-// check security level
-if( $_SESSION['privilage'] < TOOLS_PRIV )
-{
-	// redirect to login page
-	header('Location: ' . HTML_ROOT . 'plugins/login.php?return=' . $_SERVER['REQUEST_URI'] . '&required_priv=' . TOOLS_PRIV);
-	
-	exit();
-}
 
 // load each tool
 // get directory listing

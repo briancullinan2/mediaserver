@@ -187,6 +187,7 @@ class db_file
 			$request['start'] = validate_start($request);
 			$request['order_by'] = validate_order_by($request);
 			$request['direction'] = validate_direction($request);
+			$request['selected'] = validate_selected($request);
 			$props['LIMIT'] = $request['start'] . ',' . $request['limit'];
 			if(isset($request['group_by'])) $props['GROUP'] = $request['group_by'];
 			if(isset($request['order_trimmed']) && $request['order_trimmed'] == true)

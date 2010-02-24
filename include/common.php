@@ -5,7 +5,6 @@ define('DEBUG_PRIV', 				0);
 // things to consider:
 // get the extension for a file using getExt
 // get the file mime type
-// 
 
 //session_cache_limiter('public');
 if(!isset($no_setup) || !$no_setup == true)
@@ -56,15 +55,15 @@ function setup()
 	
 	// set up a list of plugins available to the system
 	setupPlugins();
-
-	// set up variables passed to the system in the request or post
-	setupInputVars();
 	
 	// set up list of tables
 	setupTables();
 	
 	// set up aliases for path replacement
 	setupAliases();
+
+	// set up variables passed to the system in the request or post
+	setupInputVars();
 	
 	// set up users for permission based access
 	setupUsers();
@@ -77,6 +76,7 @@ function setup()
 function setupPlugins()
 {
 	$GLOBALS['plugins'] = array();
+	$GLOBALS['triggers'] = array('session' => array(), 'settings' => array());
 	
 	// read plugin list and create a list of available plugins
 	$files = fs_file::get(array('dir' => LOCAL_ROOT . 'plugins' . DIRECTORY_SEPARATOR, 'limit' => 32000), $count, $error, true);
@@ -92,6 +92,15 @@ function setupPlugins()
 				
 				if(function_exists('register_' . $plugin))
 					$GLOBALS['plugins'][$plugin] = call_user_func_array('register_' . $plugin, array());
+				
+				// reorganize the session triggers for easy access
+				if(isset($GLOBALS['plugins'][$plugin]['session']))
+				{
+					foreach($GLOBALS['plugins'][$plugin]['session'] as $i => $var)
+					{
+						$GLOBALS['triggers']['session'][$var][] = $plugin;
+					}
+				}
 			}
 		}
 	}
@@ -183,20 +192,22 @@ function setupUsers()
 	if(!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] == false)
 	{
 		// check if user is logged in
-		if( isset($_SESSION['username']) && isset($_SESSION['password']) )
+		if( isset($_SESSION['login']['username']) && isset($_SESSION['login']['password']) )
 		{
 			// lookup username in table
 			$db_user = $GLOBALS['database']->query(array(
 					'SELECT' => 'users',
-					'WHERE' => 'Username = "' . addslashes($_SESSION['username']) . '"',
+					'WHERE' => 'Username = "' . addslashes($_SESSION['login']['username']) . '"',
 					'LIMIT' => 1
 				)
 			, false);
 			
 			if( count($db_user) > 0 )
 			{
-				if($_SESSION['password'] == $db_user[0]['Password'])
+				if($_SESSION['login']['password'] == $db_user[0]['Password'])
 				{
+					$_SESSION['username'] = $_SESSION['login']['username'];
+					
 					// set up user information in session
 					$_SESSION['loggedin'] = true;
 					
@@ -286,7 +297,8 @@ function setupInputVars()
 	// first fix the REQUEST_URI and pull out what is meant to be pretty dirs
 	$script = basename($_SERVER['SCRIPT_NAME']);
 	$script = substr($script, 0, strpos($script, '.'));
-	$_REQUEST['plugin'] = $script;
+	if(!isset($_REQUEST['plugin']))
+		$_REQUEST['plugin'] = $script;
 	if(isset($_SERVER['PATH_INFO']))
 	{
 		$dirs = split('/', $_SERVER['PATH_INFO']);
@@ -329,6 +341,22 @@ function setupInputVars()
 			unset($_REQUEST[$key]);
 	}
 	
+	// check plugins for vars and trigger a session save
+	foreach($_REQUEST as $key => $value)
+	{
+		if(isset($GLOBALS['triggers']['session'][$key]))
+		{
+			foreach($GLOBALS['triggers']['session'][$key] as $i => $plugin)
+			{
+				$_SESSION[$plugin] = call_user_func_array('session_' . $plugin, array($_REQUEST));
+			}
+		}
+	}
+	
+	// after this is done, it is safe to redirect
+	if(isset($_POST) && count($_POST) > 0)
+		header('Location: ' . $_SERVER['REQUEST_URI']);
+	
 	// do not let GoogleBot perform searches or file downloads
 	if(NO_BOTS)
 	{
@@ -339,7 +367,7 @@ function setupInputVars()
 				basename($_SERVER['SCRIPT_NAME']) != 'sitemap.php' &&
 				basename($_SERVER['SCRIPT_NAME']) != 'query.php')
 			{
-				header('Location: ' . HTML_ROOT . 'plugins/sitemap.php');
+				header('Location: ' . generate_href(array('plugin' => 'sitemap')));
 			}
 			else
 			{

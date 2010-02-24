@@ -15,6 +15,7 @@ class db_image_browser extends db_image
 				
 		// get file extension
 		$type = getExtType($file);
+		$ext = getExt(basename($file));
 		
 		if( $type == 'image' )
 		{
