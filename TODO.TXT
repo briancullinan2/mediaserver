@@ -1,3 +1,20 @@
+Drupalish style coding
+	Plugins must register themselves just like the tools
+	Register directory structure so that only the top level plugin can be accessed for security
+	Register a name and description so they can be disabled in the admin panel
+	Could use stream_wrapper_register() like PHP API
+	More strealined way of plugins outputting data to template (assuming that $files is being used is no good)
+	Parse_ini_file() can be used to read plugin information
+Request variables must also register themselves
+	The core requests will be defined in a core.php plugin
+	Must register a validate function or the variable is discarded completely
+	Plugins register request variables not modules
+Modules should be the only access to the database, no more custom code like ampache plugin
+	Using a callback might make it faster
+	Should be more streamlined to provide quicker access like ampache plugin
+	Review and fix option request variables (eg. should the db_file::get() function always require a limit?)
+Create a developer plugin that verifies plugins register themselves and don't use query() function
+Doxygen compliant
 Speed testing with new User queries
 More compatibility testing with clients
 Test compatibility with PEAR_MIME modifications to common.php

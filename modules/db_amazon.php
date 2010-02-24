@@ -350,7 +350,6 @@ class db_amazon extends db_file
 	
 	static function get($request, &$count, &$error)
 	{
-		$GLOBALS['database']->validate($request, $props, get_class());
 		
 		// modify the request
 		if(isset($request['file']))

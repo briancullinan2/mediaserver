@@ -100,9 +100,6 @@ class db_watch extends db_file
 		{
 			$props = array();
 			
-			// do validation! for the fields we use
-			$GLOBALS['database']->validate($request, $props, get_class());
-			
 			$props = array(
 				'SELECT' => self::DATABASE,
 				'WHERE' => 'Filepath REGEXP "' . substr($request['search_Filepath'], 1, strlen($request['search_Filepath']) - 2) . '"'

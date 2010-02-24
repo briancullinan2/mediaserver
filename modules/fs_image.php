@@ -33,8 +33,7 @@ class fs_image extends fs_file
 	{
 				
 		// get file extension
-		$ext = getExt(basename($file));
-		$type = getExtType($ext);
+		$type = getExtType($file);
 		
 		if( $type == 'image' )
 		{

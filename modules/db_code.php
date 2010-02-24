@@ -79,8 +79,11 @@ class db_code extends db_file
 	
 	static function handles($file)
 	{
+		$file = str_replace('\\', '/', $file);
+		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+		
 		$ext = getExt(basename($file));
-		$type = getExtType($ext);
+		$type = getExtType($file);
 		
 		return ( self::getLanguage($ext) || $type == 'text' );
 	}

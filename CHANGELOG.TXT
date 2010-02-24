@@ -1,3 +1,14 @@
+2010-02-23
+Started making API changes
+Plugins are now required to register themselves with the system
+Modules will soon be required to register a description
+Plugins now are required to validate input, and the returned value if not blank should be used as the default
+Plugins are required to have a register_<plugin name> as well as output_<plugin_name>
+Removed some unnessicary validation from common.php
+Removed validation from database.php, plugins now handle own validation
+Fixed validation for select and IDs in select.php
+Modules must re-validate only the request variables they depend on, if they are completely optional, no validation is needed
+
 2010-02-22
 Finished install.php admin script
 	Now it saved the settings file, or prints it out in pretty colors

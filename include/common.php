@@ -27,6 +27,8 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.php';
 	
 // require pear for error handling
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'PEAR.php';
+PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'error_callback');
+$GLOBALS['errors'] = array();
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'MIME' . DIRECTORY_SEPARATOR . 'Type.php';
 
 
@@ -39,71 +41,7 @@ function setup()
 	// this is where most of the initialization occurs, some global variables are set up for other pages and modules to use
 	//  first the variables are parsed out of the path, just incase mod_rewrite isn't enabled
 	//  in order of importance, the database is set up, the modules are loaded, the aliases and watch list are loaded, the template system is loaded
-	
-	// first fix the REQUEST_URI and pull out what is meant to be pretty dirs
-	if(isset($_SERVER['PATH_INFO']))
-	{
-		$dirs = split('/', $_SERVER['PATH_INFO']);
-		switch(count($dirs))
-		{
-			case 2:
-				$_REQUEST['search'] = '"' . $dirs[1] . '"';
-				break;
-			case 3:
-				$_REQUEST['cat'] = $dirs[1];
-				$_REQUEST['id'] = $dirs[2];
-				break;
-			case 4:
-				$_REQUEST['cat'] = $dirs[1];
-				$_REQUEST['id'] = $dirs[2];
-				$_REQUEST['filename'] = $dirs[3];
-				break;
-			case 5:
-				$_REQUEST['cat'] = $dirs[1];
-				$_REQUEST['id'] = $dirs[2];
-				$script = basename($_SERVER['SCRIPT_NAME']);
-				$script = substr($script, 0, strpos($script, '.'));
-				$_REQUEST[$script] = $dirs[3];
-				$_REQUEST['filename'] = $dirs[4];
-				break;
-			case 6:
-				$_REQUEST['cat'] = $dirs[1];
-				$_REQUEST['id'] = $dirs[2];
-				$script = basename($_SERVER['SCRIPT_NAME']);
-				$script = substr($script, 0, strpos($script, '.'));
-				$_REQUEST[$script] = $dirs[3];
-				$_REQUEST['extra'] = $dirs[4];
-				$_REQUEST['filename'] = $dirs[5];
-				break;
-		}
-	}
-	
-	// do not let GoogleBot perform searches or file downloads
-	if(NO_BOTS)
-	{
-		if(preg_match('/.*Googlebot.*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
-		{
-			if(basename($_SERVER['SCRIPT_NAME']) != 'select.php' && 
-				basename($_SERVER['SCRIPT_NAME']) != 'index.php' &&
-				basename($_SERVER['SCRIPT_NAME']) != 'sitemap.php' &&
-				basename($_SERVER['SCRIPT_NAME']) != 'query.php')
-			{
-				header('Location: ' . HTML_ROOT . 'plugins/sitemap.php');
-			}
-			else
-			{
-				// don't let google bots perform searches, this takes up a lot of resources
-				foreach($_REQUEST as $key => $value)
-				{
-					if(substr($key, 0, 6) == 'search')
-					{
-						unset($_REQUEST[$key]);
-					}
-				}
-			}
-		}
-	}
-	
+
 	// include the database wrapper class so it can be used by any page
 	if( USE_DATABASE ) require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'database.php';
 		
@@ -116,36 +54,131 @@ function setup()
 	// set up the list of modules
 	setupModules();
 	
+	// set up a list of plugins available to the system
+	setupPlugins();
+
+	// set up variables passed to the system in the request or post
+	setupInputVars();
+	
 	// set up list of tables
 	setupTables();
 	
-	// get the aliases to use to replace parts of the filepath
-	$GLOBALS['paths_regexp'] = array();
-	$GLOBALS['alias_regexp'] = array();
-	$GLOBALS['paths'] = array();
-	$GLOBALS['alias'] = array();
-	if(USE_ALIAS == true && USE_DATABASE == true)
+	// set up aliases for path replacement
+	setupAliases();
+	
+	// set up users for permission based access
+	setupUsers();
+	
+	// set up the template system for outputting
+	setupTemplate();
+
+}
+
+function setupPlugins()
+{
+	$GLOBALS['plugins'] = array();
+	
+	// read plugin list and create a list of available plugins
+	$files = fs_file::get(array('dir' => LOCAL_ROOT . 'plugins' . DIRECTORY_SEPARATOR, 'limit' => 32000), $count, $error, true);
+	if(is_array($files))
 	{
-		$aliases = $GLOBALS['database']->query(array('SELECT' => 'alias'), false);
-		
-		if($aliases !== false)
+		foreach($files as $i => $file)
 		{
-			foreach($aliases as $key => $alias_props)
+			if(is_file($file['Filepath']))
 			{
-				$GLOBALS['paths_regexp'][] = $alias_props['Paths_regexp'];
-				$GLOBALS['alias_regexp'][] = $alias_props['Alias_regexp'];
-				$GLOBALS['paths'][] = $alias_props['Filepath'];
-				$GLOBALS['alias'][] = $alias_props['Alias'];
+				include_once $file['Filepath'];
+				
+				$plugin = substr($file['Filename'], 0, strpos($file['Filename'], '.php'));
+				
+				if(function_exists('register_' . $plugin))
+					$GLOBALS['plugins'][$plugin] = call_user_func_array('register_' . $plugin, array());
 			}
 		}
 	}
+}
+
+function setupTemplate()
+{
+	// load templating system but only if we are using templates
+	if(defined('LOCAL_BASE'))
+	{
+		require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'Smarty' . DIRECTORY_SEPARATOR . 'Smarty.class.php';
 	
-	// get watched and ignored directories because they are used a lot
-	$GLOBALS['ignored'] = db_watch::get(array('search_Filepath' => '/^!/'), $count, $error);
-	$GLOBALS['watched'] = db_watch::get(array('search_Filepath' => '/^\\^/'), $count, $error);
-	// always add user local to watch list
-	$GLOBALS['watched'][] = array('id' => 0, 'Filepath' => str_replace('\\', '/', LOCAL_USERS));
-	
+		// get the list of templates
+		$GLOBALS['templates'] = array();
+		$files = fs_file::get(array('dir' => LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR, 'limit' => 32000), $count, $error, true);
+		if(is_array($files))
+		{
+			foreach($files as $i => $temp_file)
+			{
+				if(is_dir($temp_file['Filepath']))
+					$GLOBALS['templates'][] = $temp_file['Filename'];
+			}
+		}
+		
+		// don't use a template if they comment out this define, this enables the tiny remote version
+		if(!defined('LOCAL_TEMPLATE'))
+		{
+			// set the template if a permenent one isn't already set in the settings file
+			if(isset($_REQUEST['template']) && in_array($_REQUEST['template'], $GLOBALS['templates']))
+			{
+				if(substr($_REQUEST['template'], strlen($_REQUEST['template']) - 1, 1) != DIRECTORY_SEPARATOR)
+					$_REQUEST['template'] .= DIRECTORY_SEPARATOR;
+				define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . $_REQUEST['template']);
+				$_SESSION['template'] = $_REQUEST['template'];
+			}
+			elseif(isset($_SESSION['template']))
+			{
+				define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . $_SESSION['template']);
+			}
+			else
+			{
+				if(preg_match('/.*mobile.*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
+				{
+					$_SESSION['template'] = 'mobile' . DIRECTORY_SEPARATOR;
+					define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . $_SESSION['template']);
+				}
+				else
+				{
+					$_SESSION['template'] = basename(LOCAL_DEFAULT) . DIRECTORY_SEPARATOR;
+					define('LOCAL_TEMPLATE',            					 LOCAL_DEFAULT);
+				}
+			}
+		}
+		else
+		{
+			$_SESSION['template'] = basename(LOCAL_TEMPLATE) . DIRECTORY_SEPARATOR;
+		}
+		
+		// set the HTML_TEMPLATE for templates to refer to their own directory to provide resources
+		define('HTML_TEMPLATE', str_replace(DIRECTORY_SEPARATOR, '/', LOCAL_TEMPLATE));
+		
+		// include template constants
+		require_once LOCAL_ROOT . LOCAL_BASE . 'config.php';
+		
+		if(file_exists(LOCAL_ROOT . LOCAL_TEMPLATE . 'config.php'))
+			require_once LOCAL_ROOT . LOCAL_TEMPLATE . 'config.php';
+			
+		// start smarty global for plugins to use
+		$GLOBALS['smarty'] = new Smarty();
+		$GLOBALS['smarty']->compile_dir = LOCAL_ROOT . 'templates_c' . DIRECTORY_SEPARATOR;
+		$GLOBALS['smarty']->compile_check = true;
+		$GLOBALS['smarty']->debugging = false;
+		$GLOBALS['smarty']->caching = false;
+		$GLOBALS['smarty']->force_compile = true;
+		
+		// assign some shared variables
+		register_output_vars('tables', $GLOBALS['tables']);
+		register_output_vars('plugins', $GLOBALS['plugins']);
+		register_output_vars('modules', $GLOBALS['modules']);
+		register_output_vars('templates', $GLOBALS['templates']);
+		register_output_vars('columns', getAllColumns());
+		
+	}
+}
+
+function setupUsers()
+{
 	// set up user settings
 	if(!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] == false)
 	{
@@ -244,86 +277,108 @@ function setup()
 		
 		$_SESSION['settings']['keys_users'] = $return;
 	}
-	
-	// load templating system but only if we are using templates
-	if(defined('LOCAL_BASE'))
-	{
-		require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'Smarty' . DIRECTORY_SEPARATOR . 'Smarty.class.php';
-	
-		// get the list of templates
-		$GLOBALS['templates'] = array();
-		$files = fs_file::get(array('dir' => LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR, 'limit' => 32000), $count, $error, true);
-		if(is_array($files))
-		{
-			foreach($files as $i => $temp_file)
-			{
-				if(is_dir($temp_file['Filepath']))
-					$GLOBALS['templates'][] = $temp_file['Filename'];
-			}
-		}
-		
-		// don't use a template if they comment out this define, this enables the tiny remote version
-		if(!defined('LOCAL_TEMPLATE'))
-		{
-			// set the template if a permenent one isn't already set in the settings file
-			if(isset($_REQUEST['template']) && in_array($_REQUEST['template'], $GLOBALS['templates']))
-			{
-				if(substr($_REQUEST['template'], strlen($_REQUEST['template']) - 1, 1) != DIRECTORY_SEPARATOR)
-					$_REQUEST['template'] .= DIRECTORY_SEPARATOR;
-				define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . $_REQUEST['template']);
-				$_SESSION['template'] = $_REQUEST['template'];
-			}
-			elseif(isset($_SESSION['template']))
-			{
-				define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . $_SESSION['template']);
-			}
-			else
-			{
-				if(preg_match('/.*mobile.*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
-				{
-					$_SESSION['template'] = 'mobile' . DIRECTORY_SEPARATOR;
-					define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . $_SESSION['template']);
-				}
-				else
-				{
-					$_SESSION['template'] = basename(LOCAL_DEFAULT) . DIRECTORY_SEPARATOR;
-					define('LOCAL_TEMPLATE',            					 LOCAL_DEFAULT);
-				}
-			}
-		}
-		else
-		{
-			$_SESSION['template'] = basename(LOCAL_TEMPLATE) . DIRECTORY_SEPARATOR;
-		}
-		
-		// set the HTML_TEMPLATE for templates to refer to their own directory to provide resources
-		define('HTML_TEMPLATE', str_replace(DIRECTORY_SEPARATOR, '/', LOCAL_TEMPLATE));
-		
-		// include template constants
-		require_once LOCAL_ROOT . LOCAL_BASE . 'config.php';
-		
-		if(file_exists(LOCAL_ROOT . LOCAL_TEMPLATE . 'config.php'))
-			require_once LOCAL_ROOT . LOCAL_TEMPLATE . 'config.php';
-			
-		// start smarty global for plugins to use
-		$GLOBALS['smarty'] = new Smarty();
-		$GLOBALS['smarty']->compile_dir = LOCAL_ROOT . 'templates_c' . DIRECTORY_SEPARATOR;
-		$GLOBALS['smarty']->compile_check = true;
-		$GLOBALS['smarty']->debugging = false;
-		$GLOBALS['smarty']->caching = false;
-		$GLOBALS['smarty']->force_compile = true;
-		
-		// assign some shared variables
-		$GLOBALS['smarty']->assign('templates', $GLOBALS['templates']);
-		$GLOBALS['smarty']->assign('columns', getAllColumns());
-		
-	}
-
 }
 
 // this is used to set up the input variables
 function setupInputVars()
 {
+	
+	// first fix the REQUEST_URI and pull out what is meant to be pretty dirs
+	$script = basename($_SERVER['SCRIPT_NAME']);
+	$script = substr($script, 0, strpos($script, '.'));
+	$_REQUEST['plugin'] = $script;
+	if(isset($_SERVER['PATH_INFO']))
+	{
+		$dirs = split('/', $_SERVER['PATH_INFO']);
+		switch(count($dirs))
+		{
+			case 2:
+				$_REQUEST['search'] = '"' . $dirs[1] . '"';
+				break;
+			case 3:
+				$_REQUEST['cat'] = $dirs[1];
+				$_REQUEST['id'] = $dirs[2];
+				break;
+			case 4:
+				$_REQUEST['cat'] = $dirs[1];
+				$_REQUEST['id'] = $dirs[2];
+				$_REQUEST['filename'] = $dirs[3];
+				break;
+			case 5:
+				$_REQUEST['cat'] = $dirs[1];
+				$_REQUEST['id'] = $dirs[2];
+				$_REQUEST[$_REQUEST['plugin']] = $dirs[3];
+				$_REQUEST['filename'] = $dirs[4];
+				break;
+			case 6:
+				$_REQUEST['cat'] = $dirs[1];
+				$_REQUEST['id'] = $dirs[2];
+				$_REQUEST[$_REQUEST['plugin']] = $dirs[3];
+				$_REQUEST['extra'] = $dirs[4];
+				$_REQUEST['filename'] = $dirs[5];
+				break;
+		}
+	}
+	
+	// go through the rest of the request and validate all the variables with the plugins they are for
+	foreach($_REQUEST as $key => $value)
+	{
+		if(function_exists('validate_' . $key))
+			$_REQUEST[$key] = call_user_func_array('validate_' . $key, array($_REQUEST));
+		else
+			unset($_REQUEST[$key]);
+	}
+	
+	// do not let GoogleBot perform searches or file downloads
+	if(NO_BOTS)
+	{
+		if(preg_match('/.*Googlebot.*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
+		{
+			if(basename($_SERVER['SCRIPT_NAME']) != 'select.php' && 
+				basename($_SERVER['SCRIPT_NAME']) != 'index.php' &&
+				basename($_SERVER['SCRIPT_NAME']) != 'sitemap.php' &&
+				basename($_SERVER['SCRIPT_NAME']) != 'query.php')
+			{
+				header('Location: ' . HTML_ROOT . 'plugins/sitemap.php');
+			}
+			else
+			{
+				// don't let google bots perform searches, this takes up a lot of resources
+				foreach($_REQUEST as $key => $value)
+				{
+					if(substr($key, 0, 6) == 'search')
+					{
+						unset($_REQUEST[$key]);
+					}
+				}
+			}
+		}
+	}
+}
+
+function setupAliases()
+{
+	// get the aliases to use to replace parts of the filepath
+	$GLOBALS['paths_regexp'] = array();
+	$GLOBALS['alias_regexp'] = array();
+	$GLOBALS['paths'] = array();
+	$GLOBALS['alias'] = array();
+	if(USE_ALIAS == true && USE_DATABASE == true)
+	{
+		$aliases = $GLOBALS['database']->query(array('SELECT' => 'alias'), false);
+		
+		if($aliases !== false)
+		{
+			foreach($aliases as $key => $alias_props)
+			{
+				$GLOBALS['paths_regexp'][] = $alias_props['Paths_regexp'];
+				$GLOBALS['alias_regexp'][] = $alias_props['Alias_regexp'];
+				$GLOBALS['paths'][] = $alias_props['Filepath'];
+				$GLOBALS['alias'][] = $alias_props['Alias'];
+			}
+		}
+	}
+	
 }
 
 // this scans the modules directory
@@ -389,6 +444,12 @@ function setupTables()
 			$GLOBALS['tables'][] = constant($module . '::DATABASE');
 	}
 	$GLOBALS['tables'] = array_values(array_unique($GLOBALS['tables']));
+	
+	// get watched and ignored directories because they are used a lot
+	$GLOBALS['ignored'] = db_watch::get(array('search_Filepath' => '/^!/'), $count, $error);
+	$GLOBALS['watched'] = db_watch::get(array('search_Filepath' => '/^\\^/'), $count, $error);
+	// always add user local to watch list
+	$GLOBALS['watched'][] = array('id' => 0, 'Filepath' => str_replace('\\', '/', LOCAL_USERS));
 }
 
 // check if a module handles a certain type of files
@@ -541,65 +602,6 @@ function parseInner($file, &$last_path, &$inside_path)
 	
 	$inside_path = substr($file, strlen($last_path));
 	if($last_path[strlen($last_path)-1] == '/') $last_path = substr($last_path, 0, strlen($last_path)-1);
-}
-
-// combine and manipulate the IDs from a request
-//  this function looks for item, on, and off, variables in a request and generates a list of IDs
-function getIDsFromRequest($request, &$selected)
-{
-	if(!isset($selected))
-		$selected = array();
-	
-	if(isset($request['item']))
-	{
-		if(is_string($request['item']))
-		{
-			$selected = split(',', $request['item']);
-		}
-		elseif(is_array($request['item']))
-		{
-			foreach($request['item'] as $id => $value)
-			{
-				if(($value == 'on' || (isset($request['select']) && $request['select'] == 'All')) && !in_array($id, $selected))
-				{
-					$selected[] = $id;
-				}
-				elseif(($value == 'off' || (isset($request['select']) && $request['select'] == 'None')) && ($key = array_search($id, $selected)) !== false)
-				{
-					unset($selected[$key]);
-				}
-			}
-		}
-	}
-
-	if(isset($request['on']))
-	{
-		$request['on'] = split(',', $request['on']);
-		foreach($request['on'] as $i => $id)
-		{
-			if(!in_array($id, $selected) && $id != '')
-			{
-				$selected[] = $id;
-			}
-		}
-	}
-	
-	if(isset($request['off']))
-	{
-		$request['off'] = split(',', $request['off']);
-		foreach($request['off'] as $i => $id)
-		{
-			if(($key = array_search($id, $selected)) !== false)
-			{
-				unset($selected[$key]);
-			}
-		}
-	}
-	
-	// reset indices in this indexed array
-	$selected = array_values($selected);
-	
-	if(count($selected) == 0) unset($selected);
 }
 
 // get all columns from every modules
@@ -883,6 +885,10 @@ function kill9($command, $startpid, $limit = 2)
 	}
 }
 
+function error_callback($error)
+{
+	$GLOBALS['errors'][] = $error;
+}
 // simple function for displaying errors
 //  TODO: abstract this and make it more useful to templates
 function log_error($message)
@@ -897,4 +903,3 @@ function log_error($message)
 	}
 }
 
-?>

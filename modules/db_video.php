@@ -45,10 +45,11 @@ class db_video extends db_file
 	
 	static function handles($file)
 	{
+		$file = str_replace('\\', '/', $file);
+		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 				
 		// get file extension
-		$ext = getExt(basename($file));
-		$type = getExtType($ext);
+		$type = getExtType($file);
 		
 		if( $type == 'video' )
 		{

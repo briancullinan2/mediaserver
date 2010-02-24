@@ -38,7 +38,7 @@ class db_ids extends db_file
 		);
 		foreach($GLOBALS['tables'] as $i => $table)
 		{
-			if($table != db_ids::DATABASE && $table != db_watch_list::DATABASE && $table != db_alias::DATABASE && $table != db_watch::DATABASE)
+			if($table != db_ids::DATABASE && $table != db_watch_list::DATABASE && $table != db_alias::DATABASE && $table != db_watch::DATABASE && $table != db_users::DATABASE)
 				$struct[$table . '_id'] = 'INT';
 		}
 		
@@ -130,9 +130,8 @@ class db_ids extends db_file
 				}
 				$request['item'] = substr($request['item'], 0, strlen($request['item'])-1);
 			}
-			
-			// find id in database
-			$GLOBALS['database']->validate($request, $props, get_class());
+	
+			$request['selected'] = validate_selected($request);
 	
 			// select an array of ids!
 			if(isset($request['selected']) && count($request['selected']) > 0 )

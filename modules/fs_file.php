@@ -99,8 +99,6 @@ class fs_file
 				$request['limit'] = 15;
 			if( isset($request['id']) )
 				$request['item'] = $request['id'];
-				
-			getIDsFromRequest($request, $request['selected']);
 
 			if(isset($request['selected']) && count($request['selected']) > 0 )
 			{

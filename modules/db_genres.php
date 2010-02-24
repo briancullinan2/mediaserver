@@ -27,7 +27,6 @@ class db_genres extends db_audio
 	
 	static function get($request, &$count, &$error)
 	{
-		$GLOBALS['database']->validate($request, $props, get_class());
 			
 		// modify some request stuff
 		if(isset($request['dir']))

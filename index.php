@@ -11,38 +11,28 @@ if(substr(selfURL(), 0, strlen(HTML_DOMAIN)) != HTML_DOMAIN)
 	exit();
 }
 
-if(!isset($_SESSION['template']))
+// check if plugin exists
+if(isset($GLOBALS['plugins'][$_REQUEST['plugin']]))
 {
-	if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
+	// output plugin
+	call_user_func_array('output_' . $_REQUEST['plugin'], array($_REQUEST));
+	
+	// select template for the current plugin
+	if(getExt($GLOBALS['templates']['TEMPLATE_' . strtoupper($_REQUEST['plugin'])]) == 'php')
+		@include $GLOBALS['templates']['TEMPLATE_' . strtoupper($_REQUEST['plugin'])];
+	else
 	{
-		if(getExt($GLOBALS['templates']['TEMPLATE_INDEX']) == 'php')
-			@include $GLOBALS['templates']['TEMPLATE_INDEX'];
-		else
-			$GLOBALS['smarty']->display($GLOBALS['templates']['TEMPLATE_INDEX']);
+		set_output_vars();
+		$GLOBALS['smarty']->display($GLOBALS['templates']['TEMPLATE_' . strtoupper($_REQUEST['plugin'])]);
 	}
 }
-// this means they haven't overrides the index template
-// so instead just load query and show that template
-elseif($GLOBALS['templates']['TEMPLATE_INDEX'] == LOCAL_ROOT . LOCAL_BASE . 'index.html')
+
+?>
+Errors:<br />
+<?php
+foreach($GLOBALS['errors'] as $i => $error)
 {
-	include_once LOCAL_ROOT . 'plugins' . DIRECTORY_SEPARATOR . 'query.php';
-	if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
-	{
-		if(getExt($GLOBALS['templates']['TEMPLATE_QUERY']) == 'php')
-			@include $GLOBALS['templates']['TEMPLATE_QUERY'];
-		else
-			$GLOBALS['smarty']->display($GLOBALS['templates']['TEMPLATE_QUERY']);
-	}
-}
-else
-{
-	if(realpath($_SERVER['SCRIPT_FILENAME']) == __FILE__)
-	{
-		if(getExt($GLOBALS['templates']['TEMPLATE_INDEX']) == 'php')
-			@include $GLOBALS['templates']['TEMPLATE_INDEX'];
-		else
-			$GLOBALS['smarty']->display($GLOBALS['templates']['TEMPLATE_INDEX']);
-	}
+	?><a onclick="javascript:document.getElementById('error_<?php echo $i; ?>').style.display='block';"><?php echo $error->message; ?></a><br /><div id="error_<?php echo $i; ?>" style="display:none;"><code><pre><?php echo htmlspecialchars(print_r($error, true)); ?></pre></code></div><?php
 }
 
 ?>

@@ -40,8 +40,6 @@ class db_alias extends db_file
 	{
 		$request['order_by'] = 'id';
 		
-		$GLOBALS['database']->validate($request, $props, get_class());
-		
 		$props['SELECT'] = self::DATABASE;
 		
 		$files = $GLOBALS['database']->query($props, false);

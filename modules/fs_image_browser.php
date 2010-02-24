@@ -13,8 +13,7 @@ class fs_image_browser extends fs_image
 	{
 				
 		// get file extension
-		$ext = getExt($file);
-		$type = getExtType($ext);
+		$type = getExtType($file);
 		
 		if( $type == 'image' )
 		{

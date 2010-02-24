@@ -222,99 +222,6 @@ class database
 		}
 	}
 	
-	// variables that can be defined in the request are validated here
-	//   these are general SQL variables, ones specific to the module should be validated there
-	//   after validation they will be set in the passed in props which can be sent to the query function
-	static function validate(&$request, &$props, $module)
-	{
-		$columns = call_user_func($module . '::columns');
-		
-		if(!is_array($props)) $props = array();
-		
-		if( !isset($request['start']) || !is_numeric($request['start']) || $request['start'] < 0 )
-			$request['start'] = 0;
-		if( !isset($request['limit']) || !is_numeric($request['limit']) || $request['limit'] < 0 )
-			$request['limit'] = 15;
-		$order_not_set = false;
-		if( !isset($request['order_by']) || !in_array($request['order_by'], $columns) )
-		{
-			// make sure if it is a list that it is all valid columns
-			$columns = split(',', (isset($request['order_by'])?$request['order_by']:''));
-			foreach($columns as $i => $column)
-			{
-				if(!in_array($column, call_user_func($module . '::columns')))
-					unset($columns[$i]);
-			}
-			if(count($columns) == 0)
-				$request['order_by'] = 'Filepath';
-			else
-				$request['order_by'] = join(',', $columns);
-		}
-		if( !isset($request['direction']) || ($request['direction'] != 'ASC' && $request['direction'] != 'DESC') )
-			$request['direction'] = 'ASC';
-		if( isset($request['group_by']) && !in_array($request['group_by'], $columns) )
-		{
-			// make sure if it is a list that it is all valid columns
-			$columns = split(',', $request['group_by']);
-			foreach($columns as $i => $column)
-			{
-				if(!in_array($column, call_user_func($module . '::columns')))
-					unset($columns[$i]);
-			}
-			if(count($columns) == 0)
-				unset($request['group_by']);
-			else
-				$request['group_by'] = join(',', $columns);
-		}
-		
-		// which columns to search
-		if( isset($request['columns']) && !in_array($request['columns'], $columns) )
-		{
-			// make sure if it is a list that it is all valid columns
-			$columns = split(',', $request['columns']);
-			foreach($columns as $i => $column)
-			{
-				if(!in_array($column, call_user_func($module . '::columns')))
-					unset($columns[$i]);
-			}
-			if(count($columns) == 0)
-				unset($request['columns']);
-			else
-				$request['columns'] = join(',', $columns);
-		}
-		
-		// if an id is provided only find that id, discard items
-		if( isset($request['id']) )
-			$request['item'] = $request['id'];
-			
-		// validate ids
-		getIDsFromRequest($request, $request['selected']);
-		
-		// validate database ids
-		foreach($GLOBALS['tables'] as $i => $table)
-		{
-			if(isset($request[$table . '_id']) && ($request[$table . '_id'] == 0 || !is_numeric($request[$table . '_id'])))
-			{
-				unset($request[$table . '_id']);
-			}
-		}
-		
-		if(isset($request['group_by'])) $props['GROUP'] = $request['group_by'];
-		if(isset($request['order_trimmed']) && $request['order_trimmed'] == true)
-		{
-			$props['ORDER'] = 'TRIM(LEADING "a " FROM TRIM(LEADING "an " FROM TRIM(LEADING "the " FROM LOWER( ' . 
-								join(' )))), TRIM(LEADING "a " FROM TRIM(LEADING "an " FROM TRIM(LEADING "the " FROM LOWER( ', split(',', $request['order_by'])) . 
-								' ))))' . ' ' . $request['direction'];
-		}
-		else
-		{
-			$props['ORDER'] = $request['order_by'] . ' ' . $request['direction'];
-		}
-		if(!isset($_GET['order_by']) && !isset($_POST['order_by']) && isset($_REQUEST['search']))
-			$request['order_by'] = 'Relevance';
-		$props['LIMIT'] = $request['start'] . ',' . $request['limit'];
-	}
-	
 	
 	// compile the statmeent based on an abstract representation
 	static function statement_builder($props, $require_permit)
@@ -495,5 +402,3 @@ class database
 }
 
 
-
-?>

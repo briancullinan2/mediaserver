@@ -28,7 +28,6 @@ class db_artists extends db_audio
 	
 	static function get($request, &$count, &$error)
 	{
-		$GLOBALS['database']->validate($request, $props, get_class());
 		
 		if(isset($request['dir']) && ($request['dir'] == '' || $request['dir'] == '/'))
 		{

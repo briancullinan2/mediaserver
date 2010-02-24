@@ -180,12 +180,28 @@ class db_file
 		
 		if(USE_DATABASE)
 		{
-			// get columns to use in various places
-			$columns = call_user_func($module . '::columns');
+			// set up initial props
+			$props = array();
+			$request['cat'] = $module;
+			$request['limit'] = validate_limit($request);
+			$request['start'] = validate_start($request);
+			$request['order_by'] = validate_order_by($request);
+			$request['direction'] = validate_direction($request);
+			$props['LIMIT'] = $request['start'] . ',' . $request['limit'];
+			if(isset($request['group_by'])) $props['GROUP'] = $request['group_by'];
+			if(isset($request['order_trimmed']) && $request['order_trimmed'] == true)
+			{
+				$props['ORDER'] = 'TRIM(LEADING "a " FROM TRIM(LEADING "an " FROM TRIM(LEADING "the " FROM LOWER( ' . 
+									join(' )))), TRIM(LEADING "a " FROM TRIM(LEADING "an " FROM TRIM(LEADING "the " FROM LOWER( ', split(',', $request['order_by'])) . 
+									' ))))' . ' ' . $request['direction'];
+			}
+			else
+			{
+				$props['ORDER'] = $request['order_by'] . ' ' . $request['direction'];
+			}
 			
 //---------------------------------------- Selection ----------------------------------------\\
-			// do validation! for the fields we use
-			$GLOBALS['database']->validate($request, $props, $module);
+			$columns = call_user_func($module . '::columns');
 
 			// select an array of ids!
 			if(isset($request['selected']) && count($request['selected']) > 0 )
