@@ -61,7 +61,6 @@ function output_template($request)
 	$request['tfile'] = validate_tfile($request);
 
 	$file = LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR . $request['template'] . DIRECTORY_SEPARATOR . $request['tfile'];
-	print_r(getMime($file));
 
 	// set some general headers
 	header('Content-Transfer-Encoding: binary');

@@ -20,7 +20,7 @@ if(isset($GLOBALS['plugins'][$_REQUEST['plugin']]))
 	if( isset($GLOBALS['plugins'][$_REQUEST['plugin']]['privilage']) && $_SESSION['privilage'] < $GLOBALS['plugins'][$_REQUEST['plugin']]['privilage'] )
 	{
 		// redirect to login page
-		header('Location: ' . generate_href(array('plugin' => 'login', 'return' => $_REQUEST['plugin'], 'required_priv' =>$GLOBALS['plugins'][$_REQUEST['plugin']]['privilage'])));
+		header('Location: ' . generate_href(array('plugin' => 'login', 'return' => $_REQUEST['plugin'], 'required_priv' => $GLOBALS['plugins'][$_REQUEST['plugin']]['privilage'])));
 		
 		exit();
 	}
@@ -32,7 +32,9 @@ if(isset($GLOBALS['plugins'][$_REQUEST['plugin']]))
 	register_output_vars('errors', $GLOBALS['errors']);
 	
 	// only display a template for the current plugin if there is one
-	if(isset($GLOBALS['templates']['TEMPLATE_' . strtoupper($_REQUEST['plugin'])]))
+	if(isset($GLOBALS['templates']['TEMPLATE_' . strtoupper($_REQUEST['plugin'])]) && 
+		(!isset($GLOBALS['plugins'][$_REQUEST['plugin']]['notemplate']) || 
+			$GLOBALS['plugins'][$_REQUEST['plugin']]['notemplate'] == false))
 	{
 		// select template for the current plugin
 		if(getExt($GLOBALS['templates']['TEMPLATE_' . strtoupper($_REQUEST['plugin'])]) == 'php')

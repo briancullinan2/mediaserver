@@ -1,3 +1,12 @@
+2010-02-24
+Worked on template.php plugin that handles outputting template files
+	This is useful if in the future we want to support PHP code in CSS files
+Worked on generate_href() function for creating valid links
+	This will eventaully validate every parameter
+Added some parameters to the register_plugin() API
+	Plugins can now specify if they will handle their own template and output
+	Useful for file.php and template.php plugins
+
 2010-02-23
 Started making API changes
 Plugins are now required to register themselves with the system
