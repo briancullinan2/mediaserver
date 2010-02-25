@@ -143,7 +143,7 @@ class db_image extends db_file
 	
 		if( $image_id == NULL )
 		{
-			log_error('Adding image: ' . $file);
+			PEAR::raiseError('Adding image: ' . $file, E_DEBUG);
 			
 			// add to database
 			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
@@ -152,7 +152,7 @@ class db_image extends db_file
 		}
 		else
 		{
-			log_error('Modifying image: ' . $file);
+			PEAR::raiseError('Modifying image: ' . $file, E_DEBUG);
 			
 			// update database
 			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $image_id), false);
@@ -162,9 +162,9 @@ class db_image extends db_file
 			
 	}
 	
-	static function get($request, &$count, &$error)
+	static function get($request, &$count)
 	{
-		return parent::get($request, $count, $error, get_class());
+		return parent::get($request, $count, get_class());
 	}
 	
 	static function remove($file)

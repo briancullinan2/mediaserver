@@ -63,8 +63,29 @@ function output_template($request)
 	$file = LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR . $request['template'] . DIRECTORY_SEPARATOR . $request['tfile'];
 
 	// if it is a CSS file, redirect so it can use relative paths for images
+	//   does this cause any security flaws?
 	if(getMime($file) == 'text/css')
+	{
 		header('Location: ' . HTML_ROOT . 'templates/' . $request['template'] . '/' . $request['tfile']);
+		exit;
+	}
+	
+	if(!isset($request['tfile']))
+	{
+		// if the tfile isn't specified, display the template template
+		if(isset($GLOBALS['templates']['TEMPLATE_TEMPLATE']))
+		{
+			// select template for the current plugin
+			if(getExt($GLOBALS['templates']['TEMPLATE_TEMPLATE']) == 'php')
+				@include $GLOBALS['templates']['TEMPLATE_TEMPLATE'];
+			else
+			{
+				set_output_vars();
+				$GLOBALS['smarty']->display($GLOBALS['templates']['TEMPLATE_TEMPLATE']);
+			}
+		}
+	}
+	
 
 	// set some general headers
 	header('Content-Transfer-Encoding: binary');

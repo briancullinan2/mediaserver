@@ -137,6 +137,8 @@ function validate_dir($request)
 			$tmp = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
 		if(is_dir(realpath($tmp)))
 			return $request['dir'];
+		else
+			PEAR::raiseError('Directory does not exist!', E_USER);
 	}
 }
 
@@ -161,15 +163,15 @@ function output_select($request)
 	$request['direction'] = validate_direction($request);
 	
 	// make select call
-	$files = call_user_func_array($request['cat'] . '::get', array($request, &$total_count, &$error));
+	$files = call_user_func_array($request['cat'] . '::get', array($request, &$total_count));
 	
 	$order_keys_values = array();
 	
 	// the ids module will do the replacement of the ids
 	if(count($files) > 0)
 	{
-		$files = db_ids::get(array('cat' => $request['cat']), $tmp_count, $tmp_error, $files);
-		$files = db_users::get(array(), $tmp_count, $tmp_error, $files);
+		$files = db_ids::get(array('cat' => $request['cat']), $tmp_count, $files);
+		$files = db_users::get(array(), $tmp_count, $files);
 	}
 	
 	// get all the other information from other modules
@@ -189,7 +191,7 @@ function output_select($request)
 			{
 				if(USE_DATABASE == false || ($module != $request['cat'] && constant($module . '::INTERNAL') == false && call_user_func_array($module . '::handles', array($file['Filepath'], $file))))
 				{
-					$return = call_user_func_array($module . '::get', array($tmp_request, &$tmp_count, &$tmp_error));
+					$return = call_user_func_array($module . '::get', array($tmp_request, &$tmp_count));
 					if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
 				}
 			}

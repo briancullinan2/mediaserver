@@ -14,9 +14,13 @@ function register_convert()
 function validate_convert($request)
 {
 	// set the header first thing so browser doesn't stall or get tired of waiting for the process to start
-	if(isset($request['convert']) && ($request['convert'] == 'jpg' || $request['convert'] == 'gif' || $request['convert'] == 'png'))
+	if(isset($request['convert']))
 	{
-		return $request['convert'];
+		$request['convert'] = strtolower($request['convert']);
+		if($request['convert'] == 'jpg' || $request['convert'] == 'gif' || $request['convert'] == 'png')
+		{
+			return $request['convert'];
+		}
 	}
 	return 'jpg';
 }
@@ -39,6 +43,7 @@ function validate_cformat($request)
 				break;
 		}
 	}
+	
 	if(!in_array($request['cformat'], array('jpeg', 'gif', 'png')))
 		return 'jpeg';
 	else
@@ -71,8 +76,9 @@ function output_convert($request)
 	$request['cheight'] = validate_cheight($request);
 	$request['cwidth'] = validate_cwidth($request);
 	$request['cformat'] = validate_cwidth($request);
+	$request['cat'] = validate_cat($request);
 
-	switch(strtoupper($request['convert']))
+	switch($request['convert'])
 	{
 		case 'jpg':
 			header('Content-Type: image/jpg');
@@ -85,15 +91,13 @@ function output_convert($request)
 			break;
 	}
 
-	$request['cat'] = validate_cat($request);
-
 	// get the file path from the database
-	$files = call_user_func_array($_REQUEST['cat'] . '::get', array($_REQUEST, &$count, &$error));
+	$files = call_user_func_array($_REQUEST['cat'] . '::get', array($request, &$count));
 	
 	if(count($files) > 0)
 	{
 		// the ids module will do the replacement of the ids
-		$files = db_ids::get(array('cat' => $request['cat']), $tmp_count, $tmp_error, $files);
+		$files = db_ids::get(array('cat' => $request['cat']), $tmp_count, $files);
 		
 		$tmp_request = array();
 		$tmp_request['file'] = $files[0]['Filepath'];
@@ -106,7 +110,7 @@ function output_convert($request)
 		{
 			if($module != $request['cat'] && constant($module . '::INTERNAL') == false && call_user_func_array($module . '::handles', array($files[0]['Filepath'])))
 			{
-				$return = call_user_func_array($module . '::get', array($tmp_request, &$tmp_count, &$tmp_error));
+				$return = call_user_func_array($module . '::get', array($tmp_request, &$tmp_count));
 				if(isset($return[0])) $files[0] = array_merge($return[0], $files[0]);
 			}
 		}

@@ -24,12 +24,12 @@ function output_file($request)
 	$request['id'] = validate_id($request);
 	
 	// get the file path from the database
-	$files = call_user_func_array($request['cat'] . '::get', array($request, &$count, &$error));
+	$files = call_user_func_array($request['cat'] . '::get', array($request, &$count));
 	
 	if(count($files) > 0)
 	{
 		// the ids module will do the replacement of the ids
-		$files = db_ids::get(array('cat' => $request['cat']), $tmp_count, $tmp_error, $files);
+		$files = db_ids::get(array('cat' => $request['cat']), $tmp_count, $files);
 	
 		$tmp_request = array();
 		$tmp_request['file'] = $files[0]['Filepath'];
@@ -42,7 +42,7 @@ function output_file($request)
 		{
 			if($module != $request['cat'] && constant($module . '::INTERNAL') == false && call_user_func_array($module . '::handles', array($files[0]['Filepath'])))
 			{
-				$return = call_user_func_array($module . '::get', array($tmp_request, &$tmp_count, &$tmp_error));
+				$return = call_user_func_array($module . '::get', array($tmp_request, &$tmp_count));
 				if(isset($return[0])) $files[0] = array_merge($return[0], $files[0]);
 			}
 		}

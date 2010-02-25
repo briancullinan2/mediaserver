@@ -348,7 +348,7 @@ class database
 				PEAR::raiseError('DATABASE: ' . substr($query, 0, 512));
 			else
 		}*/
-		PEAR::raiseError('DATABASE: ' . $query);
+		PEAR::raiseError('DATABASE: ' . $query, E_DEBUG);
 		
 		if(isset($props['CALLBACK']))
 		{

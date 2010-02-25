@@ -79,7 +79,7 @@ class db_watch extends db_file
 		$fileinfo = array();
 		$fileinfo['Filepath'] = addslashes($file);
 	
-		log_error('Adding watch: ' . $file);
+		PEAR::raiseError('Adding watch: ' . $file, E_DEBUG);
 		
 		// add to database
 		$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
@@ -93,7 +93,7 @@ class db_watch extends db_file
 		
 	}
 	
-	static function get($request, &$count, &$error)
+	static function get($request, &$count)
 	{
 		$files = array();
 		if(USE_DATABASE)

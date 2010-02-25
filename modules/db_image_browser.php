@@ -49,10 +49,10 @@ class db_image_browser extends db_image
 		return false;
 	}
 	
-	static function get($request, &$count, &$error)
+	static function get($request, &$count)
 	{
 		if(isset($request['file'])) return array();
-		return parent::get($request, $count, $error);
+		return parent::get($request, $count);
 	}
 	
 	static function remove($file)

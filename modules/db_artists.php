@@ -26,7 +26,7 @@ class db_artists extends db_audio
 	}
 	
 	
-	static function get($request, &$count, &$error)
+	static function get($request, &$count)
 	{
 		
 		if(isset($request['dir']) && ($request['dir'] == '' || $request['dir'] == '/'))
@@ -51,7 +51,7 @@ class db_artists extends db_audio
 				unset($request['dir']);
 				
 				// set to db_file which will handle the request
-				$files = parent::get($request, $count, $error, 'db_audio');
+				$files = parent::get($request, $count, 'db_audio');
 			}
 			else
 			{
@@ -65,7 +65,7 @@ class db_artists extends db_audio
 				$request['search_Artist'] = '=' . $request['dir'] . '=';
 				unset($request['dir']);
 				
-				$files = parent::get($request, $count, $error, 'db_audio');
+				$files = parent::get($request, $count, 'db_audio');
 				
 				// make some changes
 				foreach($files as $i => $file)
@@ -94,7 +94,7 @@ class db_artists extends db_audio
 			$request['order_trimmed'] = true;
 			$request['group_by'] = 'Artist';
 			
-			$files = parent::get($request, $count, $error, 'db_audio');
+			$files = parent::get($request, $count, 'db_audio');
 			
 			// make some changes
 			foreach($files as $i => $file)

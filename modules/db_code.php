@@ -244,14 +244,14 @@ class db_code extends db_file
 	
 		if( $code_id == NULL )
 		{
-			log_error('Adding code: ' . $file);
+			PEAR::raiseError('Adding code: ' . $file, E_DEBUG);
 			
 			// add to database
 			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
 		}
 		else
 		{
-			log_error('Modifying code: ' . $file);
+			PEAR::raiseError('Modifying code: ' . $file, E_DEBUG);
 			
 			// update database
 			$return = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $code_id), false);
@@ -281,9 +281,9 @@ class db_code extends db_file
 		return @fopen(self::PROTOCOL . '://' . $file, 'rb');
 	}
 	
-	static function get($request, &$count, &$error)
+	static function get($request, &$count)
 	{
-		$files = parent::get($request, $count, $error, get_class());
+		$files = parent::get($request, $count, get_class());
 		
 		foreach($files as $i => $file)
 		{

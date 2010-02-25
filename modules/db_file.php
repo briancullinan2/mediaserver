@@ -87,7 +87,7 @@ class db_file
 				}
 				else
 				{
-					log_error('Skipping file: ' . $file);
+					PEAR::raiseError('Skipping file: ' . $file, E_DEBUG);
 				}
 				
 			}
@@ -122,7 +122,7 @@ class db_file
 		// if the id is set then we are updating and entry
 		if( $id == NULL )
 		{
-			log_error('Adding file: ' . $file);
+			PEAR::raiseError('Adding file: ' . $file, E_DEBUG);
 			
 			// add to database
 			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
@@ -130,7 +130,7 @@ class db_file
 		}
 		else
 		{
-			log_error('Modifying file: ' . $file);
+			PEAR::raiseError('Modifying file: ' . $file, E_DEBUG);
 			
 			// update database
 			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $id), false);
@@ -169,7 +169,7 @@ class db_file
 	// if the mysql is provided, then the file listings will be loaded from the database
 	// this is a very generalized module to provide a template for overriding, or for other modules to modify the $request and pass to this one
 	//  other modules are responsible for any validation of input that is not listed here, like making sure files exist on the filesystem
-	static function get($request, &$count, &$error, $module = NULL)
+	static function get($request, &$count, $module = NULL)
 	{
 		if( $module == NULL )
 		{
@@ -309,12 +309,8 @@ class db_file
 					}
 					else
 					{
-						$error = 'Directory does not exist!';
+						PEAR::raiseError('Directory does not exist!', E_USER);
 					}
-				}
-				else
-				{
-					$error = 'Directory does not exist!';
 				}
 			}
 			
@@ -354,7 +350,7 @@ class db_file
 					}
 					else
 					{
-						$error = 'File does not exist!';
+						PEAR::raiseError('File does not exist!', E_USER);
 					}
 				}
 				
@@ -695,7 +691,7 @@ class db_file
 		if($file[strlen($file)-1] != '/') $file_dir = $file . '/';
 		else $file_dir = $file;
 		
-		log_error('Removing ' . constant($module . '::NAME') . ': ' . $file);
+		PEAR::raiseError('Removing ' . constant($module . '::NAME') . ': ' . $file, E_DEBUG);
 	
 		// remove file(s) from database
 		$GLOBALS['database']->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($file) . '" OR LEFT(Filepath, ' . strlen($file_dir) . ') = "' . addslashes($file_dir) . '"'), false);	
@@ -808,12 +804,12 @@ class db_file
 		// remove first item from all duplicates
 		foreach($files as $i => $file)
 		{
-			log_error('Removing Duplicate ' . constant($module . '::NAME') . ': ' . $file['Filepath']);
+			PEAR::raiseError('Removing Duplicate ' . constant($module . '::NAME') . ': ' . $file['Filepath'], E_DEBUG);
 			
 			$GLOBALS['database']->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => 'id=' . $file['id']), false);
 		}
 		
-		log_error('Cleanup: for ' . constant($module . '::NAME') . ' complete.');
+		PEAR::raiseError('Cleanup: for ' . constant($module . '::NAME') . ' complete.', E_DEBUG);
 		
 	}
 	

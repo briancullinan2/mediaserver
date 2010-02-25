@@ -84,7 +84,7 @@ class db_watch_list extends db_watch
 							// return if count is different from database
 							if($count > $db_files[0]['count(*)'])
 							{
-								log_error('Directory count inconsitency: too few files in database!');
+								PEAR::raiseError('Directory count inconsitency: too few files in database!', E_DEBUG);
 								return true;
 							}
 						}
@@ -94,7 +94,7 @@ class db_watch_list extends db_watch
 					// if count if less then number of directories in database
 					if($count < $db_files[0]['count(*)'])
 					{
-						log_error('Directory count inconsitency: too many files in database!');
+						PEAR::raiseError('Directory count inconsitency: too many files in database!', E_DEBUG);
 						return true;
 					}
 				}
@@ -176,10 +176,10 @@ class db_watch_list extends db_watch
 	
 	static function scan_dir($dir)
 	{
-		log_error('Scanning directory: ' . $dir);
+		PEAR::raiseError('Scanning directory: ' . $dir, E_DEBUG);
 		
 		// search all the files in the directory
-		$files = fs_file::get(array('dir' => $dir, 'limit' => 32000), $count, $error, true);
+		$files = fs_file::get(array('dir' => $dir, 'limit' => 32000), $count, true);
 		
 		// send new/changed files to other modules
 		$paths = array();
@@ -207,7 +207,7 @@ class db_watch_list extends db_watch
 		{
 			if(!in_array($file['Filepath'], $paths))
 			{
-				log_error('Removing: ' . $file['Filepath']);
+				PEAR::raiseError('Removing: ' . $file['Filepath'], E_DEBUG);
 				
 				// remove file from each module
 				foreach($GLOBALS['modules'] as $i => $module)
@@ -244,9 +244,9 @@ class db_watch_list extends db_watch
 		
 		if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $dir)))
 		{
-			log_error('Looking for changes in: ' . $dir);
+			PEAR::raiseError('Looking for changes in: ' . $dir, E_DEBUG);
 		
-			$files = fs_file::get(array('dir' => $dir, 'limit' => 32000), $count, $error, true);
+			$files = fs_file::get(array('dir' => $dir, 'limit' => 32000), $count, true);
 					
 			if( isset($state) && is_array($state) ) $state_current = array_pop($state);
 			
@@ -352,7 +352,7 @@ class db_watch_list extends db_watch
 		$fileinfo = array();
 		$fileinfo['Filepath'] = addslashes($file);
 	
-		log_error('Queueing directory: ' . $file);
+		PEAR::raiseError('Queueing directory: ' . $file, E_DEBUG);
 		
 		// add to database
 		$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
@@ -360,12 +360,12 @@ class db_watch_list extends db_watch
 		return $id;
 	}
 	
-	static function get($request, &$count, &$error)
+	static function get($request, &$count)
 	{
 		if(isset($request['file']))
 			return array();
 		
-		return db_file::get($request, $count, $error, get_class());
+		return db_file::get($request, $count, get_class());
 	}
 		
 	static function remove($file)

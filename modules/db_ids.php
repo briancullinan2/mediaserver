@@ -100,7 +100,7 @@ class db_ids extends db_file
 			// add list of ids
 			if( count($db_ids) == 0 )
 			{
-				log_error('Adding id for file: ' . $file);
+				PEAR::raiseError('Adding id for file: ' . $file, E_DEBUG);
 				
 				// add to database
 				return $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
@@ -108,7 +108,7 @@ class db_ids extends db_file
 			// update ids
 			elseif($force)
 			{
-				log_error('Modifying id for file: ' . $file);
+				PEAR::raiseError('Modifying id for file: ' . $file, E_DEBUG);
 				
 				$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $db_ids[0]['id']), false);
 				return $db_ids[0]['id'];
@@ -117,7 +117,7 @@ class db_ids extends db_file
 		return false;
 	}
 	
-	static function get($request, &$count, &$error, $files = array())
+	static function get($request, &$count, $files = array())
 	{
 		if(USE_DATABASE)
 		{
@@ -169,7 +169,7 @@ class db_ids extends db_file
 						
 						if(count($tmp_id) == 0)
 						{
-							$error = 'There was an error getting the IDs.';
+							PEAR::raiseError('There was an error getting the IDs.', E_USER);
 							return array();
 						}
 						
@@ -213,14 +213,14 @@ class db_ids extends db_file
 					
 					if(count($files) == 0)
 					{
-						$error = 'There was an error getting the IDs.';
+						PEAR::raiseError('There was an error getting the IDs.', E_USER);
 						return array();
 					}
 				}
 			}
 			else
 			{
-				$files = parent::get($request, $count, $error, get_class());
+				$files = parent::get($request, $count, get_class());
 			}
 			
 		}

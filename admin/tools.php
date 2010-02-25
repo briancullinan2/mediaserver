@@ -12,7 +12,7 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATO
 
 // load each tool
 // get directory listing
-$files = fs_file::get(array('dir' => LOCAL_ROOT . 'admin' . DIRECTORY_SEPARATOR . 'tools' . DIRECTORY_SEPARATOR, 'limit' => 32000), $count, $error, true);
+$files = fs_file::get(array('dir' => LOCAL_ROOT . 'admin' . DIRECTORY_SEPARATOR . 'tools' . DIRECTORY_SEPARATOR, 'limit' => 32000), $count, true);
 if(!is_array($files))
 {
 	// report some error that there are no tools available

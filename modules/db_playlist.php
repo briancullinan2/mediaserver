@@ -76,7 +76,7 @@ class db_playlist extends db_file
 			// try to get music information
 			if( count($db_playlist) == 0 )
 			{
-				log_error('Adding playlist: ' . $file);
+				PEAR::raiseError('Adding playlist: ' . $file, E_DEBUG);
 				
 				// only get files if we have to
 				$paths = self::getFiles($file);
@@ -90,7 +90,7 @@ class db_playlist extends db_file
 			}
 			elseif($force)
 			{
-				log_error('Modifying playlist: ' . $file);
+				PEAR::raiseError('Modifying playlist: ' . $file, E_DEBUG);
 				
 				// only get files if we have to
 				$paths = self::getFiles($file);
@@ -206,7 +206,7 @@ class db_playlist extends db_file
 					unset($tmp_files[$i]);
 					
 				// search for file using terms
-				$result = db_audio::get(array('search' => join(' ', $valid_pieces), 'limit' => 1), $tmp_count, $tmp_error);
+				$result = db_audio::get(array('search' => join(' ', $valid_pieces), 'limit' => 1), $tmp_count);
 				if($tmp_count > 0)
 				{
 					$paths[] = array('id' => $result[0]['id'], 'Filepath' => $result[0]['Filepath']);
@@ -214,7 +214,7 @@ class db_playlist extends db_file
 				}
 
 				// search for file using terms
-				$result = db_video::get(array('search' => join(' ', $valid_pieces), 'limit' => 1), $tmp_count, $tmp_error);
+				$result = db_video::get(array('search' => join(' ', $valid_pieces), 'limit' => 1), $tmp_count);
 				if($tmp_count > 0)
 				{
 					$paths[] = array('id' => $result[0]['id'], 'Filepath' => $result[0]['Filepath']);
@@ -222,7 +222,7 @@ class db_playlist extends db_file
 				}
 				
 				// search for file using terms
-				$result = db_file::get(array('search' => join(' ', $valid_pieces), 'limit' => 1), $tmp_count, $tmp_error);
+				$result = db_file::get(array('search' => join(' ', $valid_pieces), 'limit' => 1), $tmp_count);
 				if($tmp_count > 0)
 				{
 					$paths[] = array('id' => $result[0]['id'], 'Filepath' => $result[0]['Filepath']);
@@ -230,7 +230,7 @@ class db_playlist extends db_file
 				}
 
 				// file can't be found
-				log_error('Error: Can\'t find file from playlist ' . $file);
+				PEAR::raiseError('Error: Can\'t find file from playlist ' . $file, E_DEBUG);
 			}
 		}
 		
@@ -240,13 +240,13 @@ class db_playlist extends db_file
 		return $paths;
 	}
 
-	static function get($request, &$count, &$error, $module = NULL)
+	static function get($request, &$count, $module = NULL)
 	{
 		$files = array();
 		
 		if(isset($request['dir']))
 		{
-			$playlist = parent::get($request, $tmp_count, $tmp_error, get_class());
+			$playlist = parent::get($request, $tmp_count, get_class());
 			
 			// get all the files from the playlist
 			if(count($playlist) > 0)
@@ -260,7 +260,7 @@ class db_playlist extends db_file
 		}
 		else
 		{
-			$files = parent::get($request, $count, $error, get_class());
+			$files = parent::get($request, $count, get_class());
 		}
 		
 		return $files;

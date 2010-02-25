@@ -1,36 +1,57 @@
 <?php
-set_time_limit(0);
 
-// Variables Used:
-//  files, error, error_code, auth, album_count, song_count, artist_count, genre_count, album_id, artist_id, genre_id
-// Shared Variables:
-
-// this script uses a lot of custom queries because we don't need all the information the module api would return
-//  we also want it to be pretty fast
-
-// include some common stuff
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
-
-// do some ampache compatibility stuff
-$fp = fopen('/tmp/test.txt', 'a');
-fwrite($fp, var_export($_SERVER, true));
-fclose($fp);
-
-$error = '';
-
-if(isset($_REQUEST['auth']) && !isset($_REQUEST['action']))
-	$_REQUEST['action'] = 'ping';
-
-// check for the action
-if(isset($_REQUEST['action']))
+function register_ampache()
 {
-	switch($_REQUEST['action'])
+	return array(
+		'name' => 'ampache',
+		'description' => 'Compatibility support for the Ampache XMLRPC protocol.',
+		'privilage' => 1,
+		'path' => __FILE__,
+		'notemplate' => true
+	);
+}
+
+function validate_auth($request)
+{
+	return $request['auth'];
+}
+
+function validate_action($request)
+{
+	if(isset($request['auth']) && !isset($request['action']))
+		return 'ping';
+	if(in_array($request['action'], array('handshake', 'artists', 'artist_albums', 'album_songs')))
+		return $request['action'];
+	else
+		return 'ping';
+}
+
+function validate_filter($request)
+{
+	$request['id'] = $request['filter'];
+	return validate_id($request);
+}
+
+function output_ampache($request)
+{
+	set_time_limit(0);
+	
+	// do some ampache compatibility stuff
+	$fp = fopen('/tmp/test.txt', 'a');
+	fwrite($fp, var_export($_SERVER, true));
+	fclose($fp);
+	
+	$request['action'] = validate_action($request);
+	$request['auth'] = validate_auth($request);
+	
+	// check for the action
+	switch($request['action'])
 	{
 		case 'ping':
 		// report the session has expired
-		if($_REQUEST['auth'] != session_id())
+		if($request['auth'] != session_id())
 		{
-			$error = 'Session Expired';
+			PEAR::raiseError('Session Expired', E_USER);
 			$error_code = '401';
 		}
 		
@@ -73,15 +94,15 @@ if(isset($_REQUEST['action']))
 		$genre_count = $result[0]['count(*)'];
 		
 		// set the variables in the template
-		$GLOBALS['smarty']->assign('auth', session_id());
+		register_output_vars('auth', session_id());
 		
-		$GLOBALS['smarty']->assign('song_count', $song_count);
+		register_output_vars('song_count', $song_count);
 		
-		$GLOBALS['smarty']->assign('album_count', $album_count);
+		register_output_vars('album_count', $album_count);
 		
-		$GLOBALS['smarty']->assign('artist_count', $artist_count);
+		register_output_vars('artist_count', $artist_count);
 
-		$GLOBALS['smarty']->assign('genre_count', $genre_count);
+		register_output_vars('genre_count', $genre_count);
 		
 		break;
 		case 'artists':
@@ -113,15 +134,17 @@ if(isset($_REQUEST['action']))
 		}
 		
 		// set the variables in the template		
-		$GLOBALS['smarty']->assign('files', $files);
+		$register_output_vars('files', $files);
 		
 		break;
 		case 'artist_albums':
+		$request['filter'] = validate_filter($request);
+		
 		// get a list of albums for a particular artist
 		// first look up song by supplied ID
 		$result = $GLOBALS['database']->query(array(
 			'SELECT' => 'audio',
-			'WHERE' => 'id = ' . intval($_REQUEST['filter'])
+			'WHERE' => 'id = ' . intval($request['filter'])
 		), true);
 		
 		// get the list of albums
@@ -133,7 +156,7 @@ if(isset($_REQUEST['action']))
 		), true);
 		
 		// set the variables in the template		
-		$GLOBALS['smarty']->assign('files', $files);
+		register_output_vars('files', $files);
 		
 		break;
 		case 'album_songs':
@@ -141,7 +164,7 @@ if(isset($_REQUEST['action']))
 		// first look up song by supplied ID
 		$artist_album = $GLOBALS['database']->query(array(
 			'SELECT' => 'audio',
-			'WHERE' => 'id = ' . intval($_REQUEST['filter'])
+			'WHERE' => 'id = ' . intval($request['filter'])
 		), true);
 		
 		// get the id for genre
@@ -168,28 +191,20 @@ if(isset($_REQUEST['action']))
 		
 		// the ids module will do the replacement of the ids
 		if(count($files) > 0)
-			$files = db_ids::get(array('cat' => 'db_audio'), $tmp_count, $tmp_error, $files);
+			$files = db_ids::get(array('cat' => 'db_audio'), $tmp_count, $files);
 				
 		// set the variables in the template		
-		$GLOBALS['smarty']->assign('files', $files);
+		register_output_vars('files', $files);
 		
-		$GLOBALS['smarty']->assign('genre_id', $genre_id);
+		register_output_vars('genre_id', $genre_id);
 		
-		$GLOBALS['smarty']->assign('artist_id', $artist_id);
+		register_output_vars('artist_id', $artist_id);
 		
 		break;
-		default:
-			$_REQUEST['action'] = 'ping';
 	}
+	
+	// display template
+	// this plugin will probably never use a smarty template
+	include $GLOBALS['templates']['TEMPLATE_AMPACHE'];
+
 }
-
-
-
-// display template
-// this plugin will probably never use a smarty template
-include $GLOBALS['templates']['TEMPLATE_AMPACHE'];
-
-
-
-
-?>

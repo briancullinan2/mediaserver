@@ -58,9 +58,9 @@ class fs_image extends fs_file
 		return $fileinfo;
 	}
 
-	static function get($request, &$count, &$error)
+	static function get($request, &$count)
 	{
-		return parent::get($request, $count, $error, get_class());
+		return parent::get($request, $count, get_class());
 	}
 
 }

@@ -94,7 +94,7 @@ class db_users extends db_file
 		return false;
 	}
 	
-	static function get($request, &$count, &$error, $files = array())
+	static function get($request, &$count, $files = array())
 	{
 		if(USE_DATABASE)
 		{
@@ -186,7 +186,7 @@ class db_users extends db_file
 				}
 				else
 				{
-					$files = parent::get($request, $count, $error, get_class());
+					$files = parent::get($request, $count, get_class());
 					
 					if(isset($file))
 						$GLOBALS['user_cache'][$file] = $files[0];

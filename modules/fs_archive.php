@@ -154,7 +154,7 @@ class fs_archive extends fs_file
 		return false;
 	}
 	
-	static function get($request, &$count, &$error)
+	static function get($request, &$count)
 	{
 		$files = array();
 		
@@ -185,7 +185,7 @@ class fs_archive extends fs_file
 				{
 					return array(0 => fs_archive::getInfo($request['file']));
 				}
-				else{ $error = 'Invalid ' . fs_archive::NAME . ' file!'; }
+				else{ PEAR::raiseError('Invalid ' . fs_archive::NAME . ' file!', E_USER); }
 			}
 			else
 			{
@@ -263,15 +263,15 @@ class fs_archive extends fs_file
 						}
 						else
 						{
-							$error = 'Cannot read this type of file!';
+							PEAR::raiseError('Cannot read this type of file!', E_USER);
 						}
 					}
 					else
 					{
-						$error = 'File does not exist!';
+						PEAR::raiseError('File does not exist!', E_USER);
 					}
 				}
-				else{ $error = 'Directory does not exist!'; }
+				else{ PEAR::raiseError('Directory does not exist!', E_USER); }
 			}
 		}
 			

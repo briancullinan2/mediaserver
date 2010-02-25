@@ -199,7 +199,7 @@ class db_archive extends db_file
 		// if the archive changes remove all it's inside files from the database
 		if( $archive_id != NULL )
 		{
-			log_error('Removing archive: ' . $file);
+			PEAR::raiseError('Removing archive: ' . $file, E_DEBUG);
 			self::remove($last_path . '/', get_class());
 		}
 		
@@ -215,8 +215,8 @@ class db_archive extends db_file
 		$total_size = 0;
 		if(PEAR::isError($source))
 		{
-			log_error('Error reading archive: ' . $last_path);
-			log_error($source);
+			PEAR::raiseError('Error reading archive: ' . $last_path, E_DEBUG);
+			PEAR::raiseError($source, E_DEBUG);
 		}
 		else
 		{
@@ -247,7 +247,7 @@ class db_archive extends db_file
 				
 				$total_size += $fileinfo['Filesize'];
 				
-				log_error('Adding file in archive: ' . stripslashes($fileinfo['Filepath']));
+				PEAR::raiseError('Adding file in archive: ' . stripslashes($fileinfo['Filepath']), E_DEBUG);
 				$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
 				$ids[self::DATABASE . '_id'] = $id;
 				db_ids::handle(stripslashes($fileinfo['Filepath']), true, $ids);
@@ -266,7 +266,7 @@ class db_archive extends db_file
 		
 		// add root file which is the filepath but with a / for compatibility
 		$fileinfo['Filepath'] = addslashes(str_replace('\\', '/', $last_path . '/'));
-		log_error('Adding file in archive: ' . stripslashes($fileinfo['Filepath']));
+		PEAR::raiseError('Adding file in archive: ' . stripslashes($fileinfo['Filepath']), E_DEBUG);
 		$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
 		$ids[self::DATABASE . '_id'] = $id;
 		db_ids::handle(stripslashes($fileinfo['Filepath']), true, $ids);
@@ -278,7 +278,7 @@ class db_archive extends db_file
 		// print status
 		if( $archive_id == NULL )
 		{
-			log_error('Adding archive: ' . $fileinfo['Filepath']);
+			PEAR::raiseError('Adding archive: ' . $fileinfo['Filepath'], E_DEBUG);
 			
 			// add to database
 			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
@@ -287,7 +287,7 @@ class db_archive extends db_file
 		}
 		else
 		{
-			log_error('Modifying archive: ' . $fileinfo['Filepath']);
+			PEAR::raiseError('Modifying archive: ' . $fileinfo['Filepath'], E_DEBUG);
 			
 			// update database
 			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $archive_id), false);
@@ -313,7 +313,7 @@ class db_archive extends db_file
 		return false;
 	}
 	
-	static function get($request, &$count, &$error)
+	static function get($request, &$count)
 	{
 		if(isset($request['dir']) && self::handles($request['dir']))
 		{
@@ -327,11 +327,11 @@ class db_archive extends db_file
 			if(!is_file(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
 			{
 				unset($request['dir']);
-				$error = 'Directory does not exist!';
+				PEAR::raiseError('Directory does not exist!', E_USER);
 			}
 		}
 		
-		$files = db_file::get($request, $count, $error, get_class());
+		$files = db_file::get($request, $count, get_class());
 		
 		return $files;
 	}

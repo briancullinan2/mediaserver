@@ -41,9 +41,9 @@ class fs_image_browser extends fs_image
 		return fs_file::out($file);
 	}
 	
-	static function get($request, &$count, &$error)
+	static function get($request, &$count)
 	{
-		return parent::get($request, $count, $error, get_class());
+		return parent::get($request, $count, get_class());
 	}
 }
 

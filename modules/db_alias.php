@@ -36,7 +36,7 @@ class db_alias extends db_file
 		return false;
 	}
 	
-	static function get($request, &$count, &$error)
+	static function get($request, &$count)
 	{
 		$request['order_by'] = 'id';
 		

@@ -39,7 +39,7 @@ function output_archive($request)
 	if(isset($request['%IF']))
 	{
 		// get the file path from the database
-		$files = call_user_func_array($request['cat'] . '::get', array(array('id' => $request['id']), &$count, &$error));
+		$files = call_user_func_array($request['cat'] . '::get', array(array('id' => $request['id']), &$count));
 		
 		if(count($files) > 0)
 		{

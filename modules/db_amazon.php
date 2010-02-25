@@ -240,7 +240,7 @@ class db_amazon extends db_file
 					}
 					
 					// track differences negatively affect the count
-					$tracks = db_audio::get(array('search_Artist' => '+' . join(' +', $artist_tokens['Few']), 'search_Album' => '+' . join(' +', $album_tokens['Few'])), $tmp_count, $tmp_error);
+					$tracks = db_audio::get(array('search_Artist' => '+' . join(' +', $artist_tokens['Few']), 'search_Album' => '+' . join(' +', $album_tokens['Few'])), $tmp_count);
 					
 					// track counts are only affected if there is matching audio
 					$track_count = 0;
@@ -295,7 +295,7 @@ class db_amazon extends db_file
 				$match = preg_match('/\<ASIN\>([a-z0-9]*)\<\/ASIN\>/i', $best, $matches);
 				if(!isset($matches[1]))
 				{
-					log_error('Error reading AmazonId: ' . htmlspecialchars($best));
+					PEAR::raiseError('Error reading AmazonId: ' . htmlspecialchars($best), E_DEBUG);
 				}
 				else
 				{
@@ -327,7 +327,7 @@ class db_amazon extends db_file
 		// pull information from $info
 		$fileinfo = self::getMusicInfo($artist, $album);
 	
-		log_error('Adding Amazon Music: ' . $artist . ' - ' . $album);
+		PEAR::raiseError('Adding Amazon Music: ' . $artist . ' - ' . $album, E_DEBUG);
 		
 		// add to database
 		$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
@@ -340,7 +340,7 @@ class db_amazon extends db_file
 		// pull information from $info
 		$fileinfo = self::getMovieInfo($title);
 
-		log_error('Adding Amazon Movie: ' . $title);
+		PEAR::raiseError('Adding Amazon Movie: ' . $title, E_DEBUG);
 		
 		// add to database
 		$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
@@ -348,7 +348,7 @@ class db_amazon extends db_file
 		return $id;
 	}
 	
-	static function get($request, &$count, &$error)
+	static function get($request, &$count)
 	{
 		
 		// modify the request
@@ -356,7 +356,7 @@ class db_amazon extends db_file
 		{
 			if(db_audio::handles($request['file']))
 			{
-				$audio = db_audio::get(array('file' => $request['file'], 'audio_id' => (isset($request['audio_id'])?$request['audio_id']:0)), $tmp_count, $error);
+				$audio = db_audio::get(array('file' => $request['file'], 'audio_id' => (isset($request['audio_id'])?$request['audio_id']:0)), $tmp_count);
 				if(count($audio) > 0)
 				{
 					$files = $GLOBALS['database']->query(array(
@@ -373,7 +373,7 @@ class db_amazon extends db_file
 			}
 			elseif(db_movies::handles($request['file']))
 			{
-				$movie = db_movies::get(array('file' => $request['file'], 'video_id' => (isset($request['video_id'])?$request['video_id']:0)), $tmp_count, $error);
+				$movie = db_movies::get(array('file' => $request['file'], 'video_id' => (isset($request['video_id'])?$request['video_id']:0)), $tmp_count);
 				if(count($movie) > 0)
 				{
 					$files = $GLOBALS['database']->query(array(
@@ -441,7 +441,7 @@ class db_amazon extends db_file
 						$title = split("\n", $title);
 						$request['search_Artist'] = '=' . $title[0] . '=';
 						$request['search_Album'] = '=' . $title[1] . '=';
-						$files = db_audio::get($request, $tmp_count, $error);
+						$files = db_audio::get($request, $tmp_count);
 						
 						if($amazon[0]['AmazonId'] != '')
 							$amazon[0]['AmazonLink'] = 'http://www.amazon.com/dp/' . $amazon[0]['AmazonId'] . '/?SubscriptionId=' . AMAZON_DEV_KEY;
@@ -467,7 +467,7 @@ class db_amazon extends db_file
 				if(!isset($request['search_AmazonId']))
 					$request['search_AmazonId'] = '/[a-z0-9]+/';
 				// get files
-				$files = parent::get($request, $count, $error, get_class());
+				$files = parent::get($request, $count, get_class());
 			}
 		}
 		

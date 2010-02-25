@@ -28,8 +28,23 @@ if(isset($GLOBALS['plugins'][$_REQUEST['plugin']]))
 	// output plugin
 	call_user_func_array('output_' . $_REQUEST['plugin'], array($_REQUEST));
 
-	// set errors
-	register_output_vars('errors', $GLOBALS['errors']);
+	// set debug errors
+	$debug = array();
+	foreach($GLOBALS['errors'] as $i => $error)
+	{
+		if($error->code == E_DEBUG || $error->code == E_USER)
+			$debug[] = $GLOBALS['errors'][$i];
+	}
+	register_output_vars('debug_errors', $GLOBALS['debug']);
+	
+	// filter out user errors for easy access by templates
+	$user = array();
+	foreach($GLOBALS['errors'] as $i => $error)
+	{
+		if($error->code == E_USER)
+			$user[] = $GLOBALS['errors'][$i];
+	}
+	register_output_vars('user_errors', $user);
 	
 	// only display a template for the current plugin if there is one
 	if(isset($GLOBALS['templates']['TEMPLATE_' . strtoupper($_REQUEST['plugin'])]) && 

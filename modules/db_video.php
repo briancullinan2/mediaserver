@@ -122,7 +122,7 @@ class db_video extends db_file
 	
 		if( $video_id != NULL )
 		{
-			log_error('Adding video: ' . $file);
+			PEAR::raiseError('Adding video: ' . $file, E_DEBUG);
 			
 			// add to database
 			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
@@ -131,7 +131,7 @@ class db_video extends db_file
 		}
 		else
 		{
-			log_error('Modifying video: ' . $file);
+			PEAR::raiseError('Modifying video: ' . $file, E_DEBUG);
 			
 			// update database
 			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $video_id), false);
@@ -141,9 +141,9 @@ class db_video extends db_file
 		
 	}
 	
-	static function get($request, &$count, &$error)
+	static function get($request, &$count)
 	{
-		return parent::get($request, $count, $error, get_class());
+		return parent::get($request, $count, get_class());
 	}
 	
 	static function remove($file)

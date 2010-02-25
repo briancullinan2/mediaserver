@@ -104,9 +104,9 @@ class db_movies extends db_file
 	{
 	}
 	
-	static function get($request, &$count, &$error)
+	static function get($request, &$count)
 	{
-		$files = db_file::get($request, $count, $error, get_class());
+		$files = db_file::get($request, $count, get_class());
 		
 		return $files;
 	}

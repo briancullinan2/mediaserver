@@ -19,12 +19,12 @@ function output_zip($request)
 	$request['cat'] = validate_cat($request['cat']);
 
 	// make select call
-	$files = call_user_func_array($_REQUEST['cat'] . '::get', array($request, &$count, &$error));
+	$files = call_user_func_array($request['cat'] . '::get', array($request, &$count));
 	$files_length = count($files);
 
 	// the ids module will do the replacement of the ids
 	if(count($files) > 0)
-		$files = db_ids::get(array('cat' => $request['cat']), $tmp_count, $tmp_error, $files);
+		$files = db_ids::get(array('cat' => $request['cat']), $tmp_count, $files);
 
 	// get all the other information from other modules
 	for($index = 0; $index < $files_length; $index++)
@@ -40,7 +40,7 @@ function output_zip($request)
 		if(count(array_intersect_key($file, getIDKeys())) == 0)
 		{
 			// use the module_id column to look up keys
-			$ids = db_ids::get(array('file' => $file['Filepath'], constant($request['cat'] . '::DATABASE') . '_id' => $file['id']), $tmp_count, $tmp_error);
+			$ids = db_ids::get(array('file' => $file['Filepath'], constant($request['cat'] . '::DATABASE') . '_id' => $file['id']), $tmp_count);
 			if(count($ids) > 0)
 			{
 				$files[$index] = array_merge($ids[0], $files[$index]);
@@ -52,9 +52,9 @@ function output_zip($request)
 		// merge all the other information to each file
 		foreach($GLOBALS['modules'] as $i => $module)
 		{
-			if($module != $_REQUEST['cat'] && constant($module . '::INTERNAL') == false && call_user_func_array($module . '::handles', array($file['Filepath'])))
+			if($module != $request['cat'] && constant($module . '::INTERNAL') == false && call_user_func_array($module . '::handles', array($file['Filepath'])))
 			{
-				$return = call_user_func_array($module . '::get', array($tmp_request, &$tmp_count, &$tmp_error));
+				$return = call_user_func_array($module . '::get', array($tmp_request, &$tmp_count));
 				if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
 			}
 		}
@@ -64,7 +64,7 @@ function output_zip($request)
 		{
 			// get all files in directory
 			$props = array('dir' => $file['Filepath']);
-			$sub_files = call_user_func_array((USE_DATABASE?'db_':'fs_') . 'file::get', array($props, &$tmp_count, &$tmp_error));
+			$sub_files = call_user_func_array((USE_DATABASE?'db_':'fs_') . 'file::get', array($props, &$tmp_count));
 		
 			// put these files on the end of the array so they also get processed
 			$files = array_merge($files, $sub_files);
@@ -138,7 +138,7 @@ function output_zip($request)
 	
 		// generate crc32 from stream
 		// "file data" segment
-		$fp = call_user_func_array($_REQUEST['cat'] . '::out', array($file['Filepath']));
+		$fp = call_user_func_array($request['cat'] . '::out', array($file['Filepath']));
 		$old_crc=false;
 		$buffer = '';
 		while (!feof($fp))

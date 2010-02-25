@@ -115,7 +115,7 @@ class db_audio extends db_file
 	
 		if( $audio_id == NULL )
 		{
-			log_error('Adding audio: ' . $file);
+			PEAR::raiseError('Adding audio: ' . $file, E_DEBUG);
 			
 			// add to database
 			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
@@ -124,7 +124,7 @@ class db_audio extends db_file
 		}
 		else
 		{
-			log_error('Modifying audio: ' . $file);
+			PEAR::raiseError('Modifying audio: ' . $file, E_DEBUG);
 			
 			// update database
 			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $audio_id), false);
@@ -135,9 +135,9 @@ class db_audio extends db_file
 	}
 	
 	
-	static function get($request, &$count, &$error)
+	static function get($request, &$count)
 	{
-		return parent::get($request, $count, $error, get_class());
+		return parent::get($request, $count, get_class());
 	}
 	
 	static function remove($file)

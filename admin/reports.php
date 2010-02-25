@@ -317,7 +317,7 @@ if(isset($_REQUEST['show3']) && $_REQUEST['show3'] == true)
 
 		if(count($files) > 0)
 		{
-			$files = db_ids::get(array('cat' => 'db_file'), $tmp_count, $tmp_error, $files);
+			$files = db_ids::get(array('cat' => 'db_file'), $tmp_count, $files);
 			
 			$directories = array();
 			$mv_files = array();
@@ -381,7 +381,7 @@ if(isset($_REQUEST['show3']) && $_REQUEST['show3'] == true)
 				}
 				
 				// delete directory if it is empty
-				$rm_files = fs_file::get(array('dir' => dirname($file['Filepath']) . '/', 'limit' => 32000), $count, $error, true);
+				$rm_files = fs_file::get(array('dir' => dirname($file['Filepath']) . '/', 'limit' => 32000), $count, true);
 				if($rm_files !== false && isset($_POST['remove_empty']) && $_POST['remove_empty'] == true)
 				{
 					if(count($rm_files) == 0)

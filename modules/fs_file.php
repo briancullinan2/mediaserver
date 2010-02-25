@@ -74,7 +74,7 @@ class fs_file
 	// the mysql can be left null to get the files from a directory, in which case a directory must be specified
 	// if the mysql is provided, then the file listings will be loaded from the database
 	// don't use $internals = true
-	static function get($request, &$count, &$error, $internals = false)
+	static function get($request, &$count, $internals = false)
 	{
 		$files = array();
 		
@@ -128,9 +128,9 @@ class fs_file
 					{
 						return array(0 => call_user_func($module . '::getInfo', $request['file']));
 					}
-					else{ $error = 'Invalid file!'; }
+					else{ PEAR::raiseError('Invalid file!', E_USER); }
 				}
-				else{ $error = 'File does not exist!'; }
+				else{ PEAR::raiseError('File does not exist!', E_USER); }
 			}
 			else
 			{
@@ -172,7 +172,7 @@ class fs_file
 					}
 					return $files;
 				}
-				else{ $error = 'Directory does not exist!'; return false; }
+				else{ PEAR::raiseError('Directory does not exist!', E_USER); return false; }
 			}
 		}
 			

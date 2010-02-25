@@ -181,7 +181,7 @@ class db_diskimage extends db_file
 		// if the image changes remove all it's inside files from the database
 		if( $image_id != NULL )
 		{
-			log_error('Removing disk image: ' . $file);
+			PEAR::raiseError('Removing disk image: ' . $file, E_DEBUG);
 			self::remove($last_path . '/', get_class());
 		}
 
@@ -216,7 +216,7 @@ class db_diskimage extends db_file
 						$fileinfo['Filemime'] = getMime($file['filename']);
 						$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['recording_timestamp']);
 						
-						log_error('Adding file in disk image: ' . stripslashes($fileinfo['Filepath']));
+						PEAR::raiseError('Adding file in disk image: ' . stripslashes($fileinfo['Filepath']), E_DEBUG);
 						$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
 						$ids[self::DATABASE . '_id'] = $id;
 						db_ids::handle(stripslashes($fileinfo['Filepath']), true, $ids);
@@ -238,7 +238,7 @@ class db_diskimage extends db_file
 		// print status
 		if( $image_id == NULL )
 		{
-			log_error('Adding Disk Image: ' . $last_path);
+			PEAR::raiseError('Adding Disk Image: ' . $last_path, E_DEBUG);
 			
 			// add to database
 			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
@@ -247,7 +247,7 @@ class db_diskimage extends db_file
 		}
 		else
 		{
-			log_error('Modifying Disk Image: ' . $last_path);
+			PEAR::raiseError('Modifying Disk Image: ' . $last_path, E_DEBUG);
 			
 			// update database
 			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $image_id), false);
@@ -273,7 +273,7 @@ class db_diskimage extends db_file
 		return false;
 	}
 	
-	static function get($request, &$count, &$error)
+	static function get($request, &$count)
 	{
 		if(isset($request['dir']) && self::handles($request['dir']))
 		{
@@ -287,11 +287,11 @@ class db_diskimage extends db_file
 			if(!is_file(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
 			{
 				unset($request['dir']);
-				$error = 'Directory does not exist!';
+				PEAR::raiseError('Directory does not exist!', E_USER);
 			}
 		}
 		
-		$files = db_file::get($request, $count, $error, get_class());
+		$files = db_file::get($request, $count, get_class());
 		
 		return $files;
 	}

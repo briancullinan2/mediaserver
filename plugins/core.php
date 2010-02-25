@@ -30,6 +30,8 @@ function generate_href($request = array(), $plugin = '', $cat = '', $dir = '', $
 	if(is_string($request))
 	{
 		$arr = explode('&', $request);
+		if(count($arr) == 1 && $arr[0] == '')
+			$arr = array();
 		$request = array();
 		if($plugin != '') $request['plugin'] = $plugin;
 		if($cat != '') $request['cat'] = $cat;

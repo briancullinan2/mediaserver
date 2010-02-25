@@ -25,7 +25,7 @@ class db_genres extends db_audio
 		return false;
 	}
 	
-	static function get($request, &$count, &$error)
+	static function get($request, &$count)
 	{
 			
 		// modify some request stuff
@@ -40,14 +40,14 @@ class db_genres extends db_audio
 			$request['columns'] = 'Genre';
 			unset($request['dir']);
 			
-			$files = parent::get($request, $count, $error, 'db_audio');
+			$files = parent::get($request, $count, 'db_audio');
 		}
 		else
 		{
 			$request['order_by'] = 'Genre';
 			$request['group_by'] = 'Genre';
 			
-			$files = parent::get($request, $count, $error, 'db_audio');
+			$files = parent::get($request, $count, 'db_audio');
 			
 			// make some changes
 			foreach($files as $i => $file)

@@ -1,6 +1,12 @@
 <?php
 define('DEBUG_PRIV', 				0);
 
+// define some error codes so we know which errors to print to the user and which to print to debug
+define('E_DEBUG',					1);
+define('E_USER',					2);
+define('E_WARN',					4);
+define('E_FATAL',					8);
+
 // the most basic functions used a lot
 // things to consider:
 // get the extension for a file using getExt
@@ -82,7 +88,7 @@ function setupPlugins()
 	$GLOBALS['triggers'] = array('session' => array(), 'settings' => array());
 	
 	// read plugin list and create a list of available plugins
-	$files = fs_file::get(array('dir' => LOCAL_ROOT . 'plugins' . DIRECTORY_SEPARATOR, 'limit' => 32000), $count, $error, true);
+	$files = fs_file::get(array('dir' => LOCAL_ROOT . 'plugins' . DIRECTORY_SEPARATOR, 'limit' => 32000), $count, true);
 	if(is_array($files))
 	{
 		foreach($files as $i => $file)
@@ -118,7 +124,7 @@ function setupTemplate()
 	
 		// get the list of templates
 		$GLOBALS['templates'] = array();
-		$files = fs_file::get(array('dir' => LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR, 'limit' => 32000), $count, $error, true);
+		$files = fs_file::get(array('dir' => LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR, 'limit' => 32000), $count, true);
 		if(is_array($files))
 		{
 			foreach($files as $i => $temp_file)

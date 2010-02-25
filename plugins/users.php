@@ -46,14 +46,14 @@ switch($_REQUEST['users'] == 'register')
 		
 		if( count($db_user) > 0 )
 		{
-			$error = 'User already exists.';
+			PEAR::raiseError('User already exists.', E_USER);
 		}
 	
 		// validate other fields
 		//  password
 		if(!isset($_REQUEST['password']) || strlen($_REQUEST['password']) < 4 || strlen($_REQUEST['password']) > 16)
 		{
-			$error = 'Password must be between 4 and 16 characters long.';
+			PEAR::raiseError('Password must be between 4 and 16 characters long.', E_USER);
 		}
 		
 		// create user folder
@@ -61,7 +61,7 @@ switch($_REQUEST['users'] == 'register')
 		
 		if($made == false)
 		{
-			$error = 'Cannot create user directory.';
+			PEAR::raiseError('Cannot create user directory.', E_USER);
 		}
 	
 		if( $error != '' )

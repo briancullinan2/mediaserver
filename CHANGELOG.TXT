@@ -1,3 +1,11 @@
+2010-02-25
+Plugins now use Drupalish API
+	They must register with a register_<plugin_name>() function
+	They must have an output_<plugin_name>($request) plugin for outputting their content
+	They must have valitade_<request_var>($request) functions and validate every request variable they depend on
+Site now uses PEAR::raiseError() extensively
+	Used for debugging/log information, as well as reporting error to users
+
 2010-02-24
 Worked on template.php plugin that handles outputting template files
 	This is useful if in the future we want to support PHP code in CSS files

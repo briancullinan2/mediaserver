@@ -35,18 +35,18 @@ if($lock_result === false)
 	if(!isset($_REQUEST['ignore']) || $_REQUEST['ignore'] != true)
 	{
 		fclose($log_fp);
-		log_error('Error: Log file locked, this usually means the script is already running, override with ?ignore=true in the request');
+		PEAR::raiseError('Error: Log file locked, this usually means the script is already running, override with ?ignore=true in the request', E_DEBUG);
 		exit;
 	}
 	else
 	{
-		log_error('Error: Log file locked, continuing');
+		PEAR::raiseError('Error: Log file locked, continuing', E_DEBUG);
 	}
 }
 
 $tm_start = array_sum(explode(' ', microtime()));
 
-log_error('Cron Script: ' . VERSION . '_' . VERSION_NAME);
+PEAR::raiseError('Cron Script: ' . VERSION . '_' . VERSION_NAME, E_DEBUG);
 
 // start the page with a pre to output messages that can be viewed in a browser
 ?><script language="javascript">var timer=null;var last_height=0;var same_count=0;function body_scroll() {timer=setTimeout('body_scroll()', 100);if(document.body.scrollHeight!=last_height) {same_count=0;last_height=document.body.scrollHeight;document.body.scrollTop = document.body.scrollHeight;} else {same_count++;}if(same_count == 1000) {clearTimeout(timer);}}timer=setTimeout('body_scroll()', 100)</script><code style="white-space:nowrap;">
@@ -60,8 +60,8 @@ if(USE_DATABASE == false || count($GLOBALS['watched']) == 0)
 }
 
 // get the watched directories
-log_error('Ignored: ' . serialize($GLOBALS['ignored']));
-log_error('Watched: ' . serialize($GLOBALS['watched']));
+PEAR::raiseError('Ignored: ' . serialize($GLOBALS['ignored']), E_DEBUG);
+PEAR::raiseError('Watched: ' . serialize($GLOBALS['watched']), E_DEBUG);
 
 // directories that have already been scanned used to prevent recursion
 $dirs = array();
@@ -93,18 +93,18 @@ if(count($state) > 0)
 	}
 }
 
-log_error('State: ' . serialize($state));
+PEAR::raiseError('State: ' . serialize($state), E_DEBUG);
 
 if($clean_count > CLEAN_UP_THREASHOLD)
 {
-	log_error("Clean Count: " . $clean_count . ', clean up will happen this time!');
+	PEAR::raiseError("Clean Count: " . $clean_count . ', clean up will happen this time!', E_DEBUG);
 	
 	$should_clean = true;
 	$clean_count = 0;
 }
 else
 {
-	log_error("Clean Count: " . $clean_count);
+	PEAR::raiseError("Clean Count: " . $clean_count, E_DEBUG);
 }
 	
 // check state information
@@ -125,7 +125,7 @@ elseif(isset($state_current))
 		$fp = @fopen(TMP_DIR . "state_dirs.txt", "w");
 	if($fp !== false)
 	{
-		log_error("State mismatch: State cleared");
+		PEAR::raiseError("State mismatch: State cleared", E_DEBUG);
 		$state = array();
 		array_push($state, array('clean_count' => $clean_count));
 		fwrite($fp, serialize($state));
@@ -143,14 +143,14 @@ if(!isset($_REQUEST['skip_scan']))
 	if(isset($_REQUEST['entry']) && is_numeric($_REQUEST['entry']) && $_REQUEST['entry'] < count($GLOBALS['watched']) && $_REQUEST['entry'] >= 0)
 		$i = $_REQUEST['entry'];
 	
-	log_error("Phase 1: Checking for modified Directories; Recursively");
+	PEAR::raiseError("Phase 1: Checking for modified Directories; Recursively", E_DEBUG);
 	
 	// loop through each watched folder and get a list of all the files
 	for($i; $i < count($GLOBALS['watched']); $i++)
 	{
 		if(!file_exists(str_replace('/', DIRECTORY_SEPARATOR, $GLOBALS['watched'][$i]['Filepath'])))
 		{
-			log_error("Error: Directory does not exist! " . $GLOBALS['watched'][$i]['Filepath'] . " is missing!");
+			PEAR::raiseError("Error: Directory does not exist! " . $GLOBALS['watched'][$i]['Filepath'] . " is missing!", E_DEBUG);
 			$should_clean = 0;
 			continue;
 		}
@@ -166,7 +166,7 @@ if(!isset($_REQUEST['skip_scan']))
 			array_push($state, array('clean_count' => $clean_count));
 			
 			// serialize and save
-			log_error("Ran out of Time: State saved");
+			PEAR::raiseError("Ran out of Time: State saved", E_DEBUG);
 			$fp = @fopen(LOCAL_ROOT . "state_dirs.txt", "w");
 			if($fp === false) // try tmp dir
 				$fp = @fopen(TMP_DIR . "state_dirs.txt", "w");
@@ -192,7 +192,7 @@ if(!isset($_REQUEST['skip_scan']))
 					$fp = @fopen(TMP_DIR . "state_dirs.txt", "w");
 				if($fp !== false)
 				{
-					log_error("Completed successfully: State cleared");
+					PEAR::raiseError("Completed successfully: State cleared", E_DEBUG);
 					$state = array();
 					array_push($state, array('clean_count' => $clean_count));
 					fwrite($fp, serialize($state));
@@ -209,7 +209,7 @@ if(!isset($_REQUEST['skip_scan']))
 		if(isset($_REQUEST['entry']) && is_numeric($_REQUEST['entry']) && $_REQUEST['entry'] < count($GLOBALS['watched']) && $_REQUEST['entry'] >= 0)
 			break;
 	}
-	log_error("Phase 1: Complete!");
+	PEAR::raiseError("Phase 1: Complete!", E_DEBUG);
 	
 	if(connection_status()!=0)
 	{
@@ -219,7 +219,7 @@ if(!isset($_REQUEST['skip_scan']))
 }
 else
 {
-	log_error("Phase 1: Skipped because of skip_scan argument.");
+	PEAR::raiseError("Phase 1: Skipped because of skip_scan argument.", E_DEBUG);
 }
 
 // clean up the watch_list and remove stuff that doesn't exist in watch anymore
@@ -229,12 +229,12 @@ if($should_clean !== 0)
 // now scan some files
 $tm_start = array_sum(explode(' ', microtime()));
 
-log_error("Phase 2: Checking modified directories for modified files");
+PEAR::raiseError("Phase 2: Checking modified directories for modified files", E_DEBUG);
 
 do
 {
 	// get 1 folder from the database to search the files for
-	$db_dirs = db_watch_list::get(array('limit' => 1, 'order_by' => 'id', 'direction' => 'ASC'), $count, $error);
+	$db_dirs = db_watch_list::get(array('limit' => 1, 'order_by' => 'id', 'direction' => 'ASC'), $count);
 	
 	if(count($db_dirs) > 0)
 	{
@@ -255,12 +255,12 @@ do
 	$secs_total = array_sum(explode(' ', microtime())) - $tm_start;
 	
 	if($secs_total > FILE_SEEK_TIME)
-		log_error("Ran out of Time: Changed directories still in database");
+		PEAR::raiseError("Ran out of Time: Changed directories still in database", E_DEBUG);
 	
 // if the connection is lost complete current directory then quit
 } while( $secs_total < FILE_SEEK_TIME && count($db_dirs) > 0 && connection_status()==0 );
 
-log_error("Phase 2: Complete!");
+PEAR::raiseError("Phase 2: Complete!", E_DEBUG);
 
 if(connection_status()!=0)
 {
@@ -272,19 +272,19 @@ if(connection_status()!=0)
 //  but only if we need it!
 if($should_clean === false)
 {
-	log_error("Phase 3: Skipping cleaning, count is " . $clean_count);
+	PEAR::raiseError("Phase 3: Skipping cleaning, count is " . $clean_count, E_DEBUG);
 	@fclose($log_fp);
 	exit;
 }
 elseif($should_clean === 0)
 {
-	log_error("Phase 3: Skipping cleaning because of error!");
+	PEAR::raiseError("Phase 3: Skipping cleaning because of error!", E_DEBUG);
 	@fclose($log_fp);
 	exit;
 }
 //exit;
 
-log_error("Phase 3: Cleaning up");
+PEAR::raiseError("Phase 3: Cleaning up", E_DEBUG);
 
 foreach($GLOBALS['modules'] as $i => $module)
 {
@@ -339,7 +339,7 @@ for($i = 0; $i < count($GLOBALS['watched']); $i++)
 	}
 }
 
-log_error("Phase 3: Complete!");
+PEAR::raiseError("Phase 3: Complete!", E_DEBUG);
 
 @fclose($log_fp);
 

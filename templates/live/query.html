@@ -71,8 +71,8 @@ $this->assign('newlineregexp', '/([^ ]{25})/i');
 {include file=$templates.TEMPLATE_PAGES}
 			<div class="titlePadding"></div>
 			<div class="files" id="files">
-{if isset($error) and $error != ''}
-					<span style="color:#C00"><b>{$error}</b></span>
+{if count($user_errors) > 0}
+					<span style="color:#C00">{foreach from=$user_errors item=error}<b>{$error->message}</b><br />{/foreach}</span>
 {elseif count($files) == 0}
 					<b>There are no files to display</b>
 {else}
