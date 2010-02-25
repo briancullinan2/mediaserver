@@ -28,7 +28,10 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.php';
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'PEAR.php';
 PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'error_callback');
 $GLOBALS['errors'] = array();
+
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'MIME' . DIRECTORY_SEPARATOR . 'Type.php';
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'MIME' . DIRECTORY_SEPARATOR . 'Type' . DIRECTORY_SEPARATOR . 'Extension.php';
+$GLOBALS['mte'] = new MIME_Type_Extension();
 
 
 // classes that this function uses to set up stuff should use the $no_setup = true option
@@ -61,15 +64,15 @@ function setup()
 	
 	// set up aliases for path replacement
 	setupAliases();
+	
+	// set up the template system for outputting
+	setupTemplate();
 
 	// set up variables passed to the system in the request or post
 	setupInputVars();
 	
 	// set up users for permission based access
 	setupUsers();
-	
-	// set up the template system for outputting
-	setupTemplate();
 
 }
 
@@ -120,43 +123,17 @@ function setupTemplate()
 		{
 			foreach($files as $i => $temp_file)
 			{
-				if(is_dir($temp_file['Filepath']))
+				if(is_dir($temp_file['Filepath']) && is_file($temp_file['Filepath'] . 'config.php'))
 					$GLOBALS['templates'][] = $temp_file['Filename'];
 			}
 		}
 		
+		$_REQUEST['template'] = validate_template($_REQUEST, isset($_SESSION['template'])?$_SESSION['template']:'');
+		
 		// don't use a template if they comment out this define, this enables the tiny remote version
 		if(!defined('LOCAL_TEMPLATE'))
 		{
-			// set the template if a permenent one isn't already set in the settings file
-			if(isset($_REQUEST['template']) && in_array($_REQUEST['template'], $GLOBALS['templates']))
-			{
-				if(substr($_REQUEST['template'], strlen($_REQUEST['template']) - 1, 1) != DIRECTORY_SEPARATOR)
-					$_REQUEST['template'] .= DIRECTORY_SEPARATOR;
-				define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . $_REQUEST['template']);
-				$_SESSION['template'] = $_REQUEST['template'];
-			}
-			elseif(isset($_SESSION['template']))
-			{
-				define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . $_SESSION['template']);
-			}
-			else
-			{
-				if(preg_match('/.*mobile.*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
-				{
-					$_SESSION['template'] = 'mobile' . DIRECTORY_SEPARATOR;
-					define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . $_SESSION['template']);
-				}
-				else
-				{
-					$_SESSION['template'] = basename(LOCAL_DEFAULT) . DIRECTORY_SEPARATOR;
-					define('LOCAL_TEMPLATE',            					 LOCAL_DEFAULT);
-				}
-			}
-		}
-		else
-		{
-			$_SESSION['template'] = basename(LOCAL_TEMPLATE) . DIRECTORY_SEPARATOR;
+			define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . $_REQUEST['template'] . DIRECTORY_SEPARATOR);
 		}
 		
 		// set the HTML_TEMPLATE for templates to refer to their own directory to provide resources
@@ -771,13 +748,13 @@ function getExt($file)
 // get mime type based on file extension
 function getMime($filename)
 {
-	return MIME_Type::autoDetect($filename);
+	return $GLOBALS['mte']->getMIMEType($filename);
 }
 
 // get the type which is the first part of a mime based on extension
 function getExtType($filename)
 {
-	return MIME_Type::getMedia(MIME_Type::autoDetect($filename));
+	return MIME_Type::getMedia($GLOBALS['mte']->getMIMEType($filename));
 }
 
 // create the crc32 from a file, this uses a buffer size so it doesn't error out

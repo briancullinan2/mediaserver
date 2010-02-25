@@ -134,8 +134,8 @@ function validate_dir($request)
 	if(isset($request['dir']))
 	{
 		if(USE_ALIAS == true)
-			$request['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
-		if(is_dir(realpath($request['dir'])))
+			$tmp = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
+		if(is_dir(realpath($tmp)))
 			return $request['dir'];
 	}
 }

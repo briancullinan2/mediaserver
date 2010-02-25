@@ -29,6 +29,9 @@ class db_movies extends db_file
 
 	static function handles($file)
 	{
+		if(!isset($GLOBALS['getID3']))
+			self::init();
+			
 		$file = str_replace('\\', '/', $file);
 		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 		
@@ -88,8 +91,6 @@ class db_movies extends db_file
 	
 	static function handle($file, $force = false)
 	{
-		if(!isset($GLOBALS['getID3']))
-			self::init();
 			
 		return false;
 	}

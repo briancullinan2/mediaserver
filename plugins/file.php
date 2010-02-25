@@ -10,7 +10,8 @@ function register_file()
 		'name' => 'file',
 		'description' => 'Allow users to download files from the database.',
 		'privilage' => 1,
-		'path' => __FILE__
+		'path' => __FILE__,
+		'notemplate' => true
 	);
 }
 

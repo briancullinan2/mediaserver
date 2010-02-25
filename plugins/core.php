@@ -25,10 +25,43 @@ function register_output_vars($name, $value)
 }
 
 // this function takes a request as input, and based on the .htaccess rules, converts it to a pretty url, or makes no changes if mod_rewrite is off
-function generate_href($request = array())
+function generate_href($request = array(), $plugin = '', $cat = '', $dir = '', $id = '', $extra = '', $filename = '', $not_special = false)
 {
-	if(count($request) == 0)
-		return HTML_DOMAIN . HTML_ROOT;
+	if(is_string($request))
+	{
+		$arr = explode('&', $request);
+		$request = array();
+		if($plugin != '') $request['plugin'] = $plugin;
+		if($cat != '') $request['cat'] = $cat;
+		if($dir != '') $request['dir'] = $dir;
+		if($extra != '') $request['extra'] = $extra;
+		if($filename != '') $request['filename'] = $filename;
+		foreach($arr as $i => $value)
+		{
+			$x = explode('=', $value);
+			$request[$x[0]] = $x[1];
+		}
+	}
+
+	$link = HTML_ROOT . '?';
+	foreach($request as $key => $value)
+	{
+		if($key == 'return')
+		{
+			if(isset($_REQUEST['return']))
+			{
+				$return = $_REQUEST['return'];
+				unset($_REQUEST['return']);
+			}
+			$value = urlencode(generate_href($_GET, '', '', '', '', '', '', true));
+			if(isset($return)) $_REQUEST['return'] = $return;
+		}
+		$link .= (($link[strlen($link)-1] != '?')?'&':'') . $key . '=' . $value;
+	}
+	if($not_special)
+		return $link;
+	else
+		return htmlspecialchars($link);
 }
 
 function set_output_vars()
@@ -41,6 +74,8 @@ function set_output_vars()
 
 function validate_cat($request)
 {
+	if(isset($request['cat']) && (substr($request['cat'], 0, 3) == 'db_' || substr($request['cat'], 0, 3)))
+		$request['cat'] = ((USE_DATABASE)?'db_':'fs_') . substr($request['cat'], 3);
 	if(!isset($request['cat']) || !in_array($request['cat'], $GLOBALS['modules']) || constant($request['cat'] . '::INTERNAL') == true)
 		return USE_DATABASE?'db_file':'fs_file';
 	return $request['cat'];

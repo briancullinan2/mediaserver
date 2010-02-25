@@ -98,7 +98,7 @@ define('DEBUG_MODE',                             true);
 // when a user tries to access a directory listing, this will load missing directories on the fly
 //   this is good when there are few files in a directory, but the site hasn't scanned them all
 //   don't use this when there are many complex files and the site has loaded thousands already
-define('RECURSIVE_GET',                 true);
+define('RECURSIVE_GET',                 false);
  
 // this will redirect a google bot to the sitemap.php plugin or remove request options like search
 //   this is recommended because GoogleBots usually look for the wrong information and this will slow down the site A LOT
