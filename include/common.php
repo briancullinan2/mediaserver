@@ -457,8 +457,8 @@ function setupTables()
 	$GLOBALS['tables'] = array_values(array_unique($GLOBALS['tables']));
 	
 	// get watched and ignored directories because they are used a lot
-	$GLOBALS['ignored'] = db_watch::get(array('search_Filepath' => '/^!/'), $count, $error);
-	$GLOBALS['watched'] = db_watch::get(array('search_Filepath' => '/^\\^/'), $count, $error);
+	$GLOBALS['ignored'] = db_watch::get(array('search_Filepath' => '/^!/'), $count);
+	$GLOBALS['watched'] = db_watch::get(array('search_Filepath' => '/^\\^/'), $count);
 	// always add user local to watch list
 	$GLOBALS['watched'][] = array('id' => 0, 'Filepath' => str_replace('\\', '/', LOCAL_USERS));
 }
@@ -900,17 +900,3 @@ function error_callback($error)
 {
 	$GLOBALS['errors'][] = $error;
 }
-// simple function for displaying errors
-//  TODO: abstract this and make it more useful to templates
-function log_error($message)
-{
-	if(realpath($_SERVER['SCRIPT_FILENAME']) == realpath(LOCAL_ROOT . 'plugins/cron.php') || ($_SESSION['privilage'] >= DEBUG_PRIV && isset($_REQUEST['debug']) && $_REQUEST['debug'] == true))
-	{
-		print date('[m/d/Y:H:i:s O] ');
-		print_r($message);
-		print "<br />\n";
-		flush();
-		@ob_flush();
-	}
-}
-

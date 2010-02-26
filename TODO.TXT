@@ -1,3 +1,4 @@
+Fix line 597 in db_file.php module and in similar places that check if there are any errors
 Create a packaging script that turns the site directory into a zip file without all the extra junk like EXT JS examples
 Re-upload entire site
 Fix HTML_ROOT usage to use generate_href instead (this is hard)

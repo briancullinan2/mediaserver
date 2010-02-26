@@ -594,7 +594,7 @@ class db_file
 			
 //---------------------------------------- Query ----------------------------------------\\
 			// finally check for error and start processing query
-			if($error == '')
+			if(true)
 			{
 				$props['SELECT'] = constant($module . '::DATABASE');
 				if(isset($props['GROUP'])) $props['COLUMNS'] = ',count(*)' . (isset($props['COLUMNS'])?$props['COLUMNS']:'');
