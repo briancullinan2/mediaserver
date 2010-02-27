@@ -9,9 +9,17 @@ echo '<?xml version="1.0" encoding="utf-8" ?>';
 <root><?php
 
 // if there is an error print that out and exit
-if($error != '')
+if(count($GLOBALS['user_errors']) > 0)
 {
-	?><error code="<?php echo $error_code; ?>"><![CDATA[<?php echo $error; ?>]]></error></root><?php
+	foreach($GLOBALS['user_errors'] as $i => $error)
+	{
+		if(strpos($error->message, ':') !== false)
+		{
+			$err = split(':', $error->message);
+			?><error code="<?php echo $err[0]; ?>"><![CDATA[<?php echo $err[1]; ?>]]></error><?php
+		}
+	}
+	?></root><?php
 	exit;
 }
 

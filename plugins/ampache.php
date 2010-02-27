@@ -13,6 +13,7 @@ function register_ampache()
 
 function validate_auth($request)
 {
+	if(isset($request['auth']))
 	return $request['auth'];
 }
 
@@ -20,7 +21,7 @@ function validate_action($request)
 {
 	if(isset($request['auth']) && !isset($request['action']))
 		return 'ping';
-	if(in_array($request['action'], array('handshake', 'artists', 'artist_albums', 'album_songs')))
+	if(isset($request['action']) && in_array($request['action'], array('handshake', 'artists', 'artist_albums', 'album_songs')))
 		return $request['action'];
 	else
 		return 'ping';
@@ -51,8 +52,7 @@ function output_ampache($request)
 		// report the session has expired
 		if($request['auth'] != session_id())
 		{
-			PEAR::raiseError('Session Expired', E_USER);
-			$error_code = '401';
+			PEAR::raiseError('401:Session Expired', E_USER);
 		}
 		
 		break;

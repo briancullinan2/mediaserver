@@ -34,6 +34,8 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.php';
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'PEAR.php';
 PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'error_callback');
 $GLOBALS['errors'] = array();
+$GLOBALS['user_errors'] = array();
+$GLOBALS['debug_errors'] = array();
 
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'MIME' . DIRECTORY_SEPARATOR . 'Type.php';
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'MIME' . DIRECTORY_SEPARATOR . 'Type' . DIRECTORY_SEPARATOR . 'Extension.php';
@@ -596,7 +598,7 @@ function termSort($a, $b)
 // parses the path inside of a file, useful to modules like archive and diskimage
 function parseInner($file, &$last_path, &$inside_path)
 {
-	$paths = split('/', $file);
+	$paths = split(DIRECTORY_SEPARATOR, $file);
 	$last_path = '';
 	foreach($paths as $i => $tmp_file)
 	{
@@ -898,5 +900,10 @@ function kill9($command, $startpid, $limit = 2)
 
 function error_callback($error)
 {
-	$GLOBALS['errors'][] = $error;
+	if($error->code == E_DEBUG)
+		$GLOBALS['debug_errors'][] = $error;
+	elseif($error->code == E_USER)
+		$GLOBALS['user_errors'][] = $error;
+	else
+		$GLOBALS['errors'][] = $error;
 }

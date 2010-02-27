@@ -310,6 +310,8 @@ class db_file
 					else
 					{
 						PEAR::raiseError('Directory does not exist!', E_USER);
+						// don't ever continue after this error
+						return array();
 					}
 				}
 			}
@@ -351,6 +353,7 @@ class db_file
 					else
 					{
 						PEAR::raiseError('File does not exist!', E_USER);
+						return array();
 					}
 				}
 				
@@ -593,84 +596,69 @@ class db_file
 			}
 			
 //---------------------------------------- Query ----------------------------------------\\
-			// finally check for error and start processing query
-			if(true)
+			// finally start processing query
+			$props['SELECT'] = constant($module . '::DATABASE');
+			if(isset($props['GROUP'])) $props['COLUMNS'] = ',count(*)' . (isset($props['COLUMNS'])?$props['COLUMNS']:'');
+			$props['COLUMNS'] = '*' . (isset($props['COLUMNS'])?$props['COLUMNS']:'');
+			
+			// get directory from database
+			$files = $GLOBALS['database']->query($props, true);
+			
+			if($files !== false)
 			{
-				$props['SELECT'] = constant($module . '::DATABASE');
-				if(isset($props['GROUP'])) $props['COLUMNS'] = ',count(*)' . (isset($props['COLUMNS'])?$props['COLUMNS']:'');
-				$props['COLUMNS'] = '*' . (isset($props['COLUMNS'])?$props['COLUMNS']:'');
-				
-				// get directory from database
-				$files = $GLOBALS['database']->query($props, true);
-				
-				if($files !== false)
+				// now make some changes
+				foreach($files as $index => $file)
 				{
-					// now make some changes
-					foreach($files as $index => $file)
+					// do alias replacement on every file path
+					if(USE_ALIAS == true)
 					{
-						// do alias replacement on every file path
-						if(USE_ALIAS == true)
+						if(isset($file['Filepath']))
+							$files[$index]['Filepath'] = preg_replace($GLOBALS['paths_regexp'], $GLOBALS['alias'], $file['Filepath']);
+						$alias_flipped = array_flip($GLOBALS['alias']);
+						// check if the replaced path was the entire alias path
+						// in this case we want to replace the filename with the alias name
+						if(isset($file['Filepath']) && isset($alias_flipped[$file['Filepath']]))
 						{
-							if(isset($file['Filepath']))
-								$files[$index]['Filepath'] = preg_replace($GLOBALS['paths_regexp'], $GLOBALS['alias'], $file['Filepath']);
-							$alias_flipped = array_flip($GLOBALS['alias']);
-							// check if the replaced path was the entire alias path
-							// in this case we want to replace the filename with the alias name
-							if(isset($file['Filepath']) && isset($alias_flipped[$file['Filepath']]))
-							{
-								$index = $alias_flipped[$file['Filepath']];
-								$files[$index]['Filename'] = substr($GLOBALS['alias'][$index], 1, strlen($GLOBALS['alias'][$index]) - 2);
-							}
+							$index = $alias_flipped[$file['Filepath']];
+							$files[$index]['Filename'] = substr($GLOBALS['alias'][$index], 1, strlen($GLOBALS['alias'][$index]) - 2);
 						}
 					}
-					
+				}
+				
 //---------------------------------------- Get Count ----------------------------------------\\
-					// only get count if the query is not limited by the limit field
-					//  get count if limit is not set, which is should always be because of validate()
-					//  get count if it is greater than or equal to the limit, even though it will always be equal to or less then limit
-					//  if it is less, only get count if start is set
-					if(!isset($request['limit']) || count($files) >= $request['limit'] || (isset($request['start']) && $request['start'] > 0))
+				// only get count if the query is not limited by the limit field
+				//  get count if limit is not set, which is should always be because of validate()
+				//  get count if it is greater than or equal to the limit, even though it will always be equal to or less then limit
+				//  if it is less, only get count if start is set
+				if(!isset($request['limit']) || count($files) >= $request['limit'] || (isset($request['start']) && $request['start'] > 0))
+				{
+					// this is how we get the count of all the items
+					//  unset the limit to count it
+					unset($props['LIMIT']);
+					unset($props['ORDER']);
+					$props['COLUMNS'] = '*';
+					
+					// if where is not set then there is no reason to count the entire database
+					if(!isset($props['WHERE']))
 					{
-						// this is how we get the count of all the items
-						//  unset the limit to count it
-						unset($props['LIMIT']);
-						unset($props['ORDER']);
-						$props['COLUMNS'] = '*';
-						
-						// if where is not set then there is no reason to count the entire database
-						if(!isset($props['WHERE']))
-						{
-							$props = array('SELECT' => constant($module . '::DATABASE'));
-						}
-						else
-						{
-							// count the last query
-							$props = array('SELECT' => '(' . DATABASE::statement_builder($props, true) . ') AS db_to_count');
-						}
-						$props['COLUMNS'] = 'count(*)';
-						
-						$result = $GLOBALS['database']->query($props, true);
-						
-						$count = intval($result[0]['count(*)']);
+						$props = array('SELECT' => constant($module . '::DATABASE'));
 					}
-					// set the count to whatever the number of files is
 					else
 					{
-						$count = count($files);
+						// count the last query
+						$props = array('SELECT' => '(' . DATABASE::statement_builder($props, true) . ') AS db_to_count');
 					}
+					$props['COLUMNS'] = 'count(*)';
+					
+					$result = $GLOBALS['database']->query($props, true);
+					
+					$count = intval($result[0]['count(*)']);
 				}
-				// there was an error from the query
+				// set the count to whatever the number of files is
 				else
 				{
-					$count = 0;
-					$files = array();
+					$count = count($files);
 				}
-			}
-			// there was and error in the request
-			else
-			{
-				$count = 0;
-				$files = array();
 			}
 		}
 			

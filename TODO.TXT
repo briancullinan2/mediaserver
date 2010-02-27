@@ -1,3 +1,4 @@
+The validate_dir() function in select.php isn't going to work on archives and disk images.  Maybe something more like the function in common for seperating out the inner directory would work better.
 Fix line 597 in db_file.php module and in similar places that check if there are any errors
 Create a packaging script that turns the site directory into a zip file without all the extra junk like EXT JS examples
 Re-upload entire site
@@ -20,9 +21,7 @@ Create a developer plugin that verifies plugins register themselves and don't us
 Doxygen compliant
 Speed testing with new User queries
 More compatibility testing with clients
-Test compatibility with PEAR_MIME modifications to common.php
 ------------- GENERAL TODO -------------
-Convert all log_error to PEAR_ERROR and add to debugging template
 Store the remote_address in the session, and if it doesn't match up with what is in the session then kill the session and die
 Create a unique id and insert it into forms, this is required when the form is submitted
 Make hard links and soft links, hard links are replaced when they are put in to the database, soft links are replaced when they are read from the database, this will allow us to do more network stuff
@@ -30,7 +29,6 @@ Interface with mediatomb and support UPnP protocol
 ------------- Plugin TODO -------------
 Finish users.php plugin
 Add user permissions to ampache.php plugin
-If they try to access a script other then cron in the tiny remote version, forward them to the HTML_SITE defined in the settings
 Work on settings.php plugin
 	Global settings such as default template to use for each devide logged in the to account
 	Template settings, must provide specification in template config, use database for storing fields?
