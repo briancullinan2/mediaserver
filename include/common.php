@@ -31,14 +31,14 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'compatibility.php';
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.php';
 	
 // require pear for error handling
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'PEAR.php';
+require_once 'PEAR.php';
 PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'error_callback');
 $GLOBALS['errors'] = array();
 $GLOBALS['user_errors'] = array();
 $GLOBALS['debug_errors'] = array();
 
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'MIME' . DIRECTORY_SEPARATOR . 'Type.php';
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'MIME' . DIRECTORY_SEPARATOR . 'Type' . DIRECTORY_SEPARATOR . 'Extension.php';
+require_once 'MIME' . DIRECTORY_SEPARATOR . 'Type.php';
+require_once 'MIME' . DIRECTORY_SEPARATOR . 'Type' . DIRECTORY_SEPARATOR . 'Extension.php';
 $GLOBALS['mte'] = new MIME_Type_Extension();
 
 
@@ -86,7 +86,13 @@ function setup()
 
 function setupPlugins()
 {
-	$GLOBALS['plugins'] = array();
+	$GLOBALS['plugins'] = array('index' => array(
+		'name' => 'index',
+		'description' => 'Show index files of templates.',
+		'privilage' => 1,
+		'path' => LOCAL_ROOT . 'index.php'
+		)
+	);
 	$GLOBALS['triggers'] = array('session' => array(), 'settings' => array());
 	
 	// read plugin list and create a list of available plugins

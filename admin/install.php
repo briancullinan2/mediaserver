@@ -1028,7 +1028,7 @@ elseif($_REQUEST['step'] == 2)
     
 ?>
 
-<h2>Path Information</h2>
+<h2>Local Resources and Libraries</h2>
 <p>Before the site can't function properly, we must define some paths for templates and plugins to use.</p>
 
 <table border="0" cellpadding="0" cellspacing="0">
@@ -1061,6 +1061,157 @@ else
     <ul>
         <li>The system has detected that there is no "include" directory in the site root folder.  You must specify the root directory that the site lives in.</li>
         <li>This directory MUST end with a directory seperate such as / or \.</li>
+    </ul>
+    </td></tr>
+    <?php
+}
+
+// check for libraries
+if(file_exists($LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb.inc.php'))
+{
+    ?><tr><td class="title">ADOdb Library</td>
+    <td>
+    <label>ADOdb Detected</label>
+    </td>
+    <td class="desc">
+    <ul>
+        <li>The system has detected that ADOdb is installed in the includes directory.</li>
+    </ul>
+    </td></tr>
+    <?php
+}
+else
+{
+    ?><tr><td class="title fail">ADOdb Library Missing</td>
+    <td>
+    <a href="http://adodb.sourceforge.net/">Get ADOdb</a>
+    </td>
+    <td class="desc">
+    <ul>
+        <li>The system has detected that ADOdb is NOT INSTALLED.</li>
+        <li>The root of the ADOdb Library must be placed in &lt;site root&gt;/include/adodb5</li>
+    </ul>
+    </td></tr>
+    <?php
+}
+
+$pear_libs = array('File/Archive.php' => 'File_Archive', 'MIME/Type.php' => 'MIME_Type', 'Text/Highlighter.php' => 'Text_Highlighter');
+$not_installed = array();
+foreach($pear_libs as $lib => $link)
+{
+	if((@include_once $lib) === false)
+		$not_installed[$lib] = $link;
+}
+
+// check for PEAR libraries
+if((@include_once 'PEAR.php') == true)
+{
+    ?><tr><td class="title<?php echo (count($not_installed) > 0)?' warn':''; ?>">PEAR Installed</td>
+    <td>
+    <label>PEAR Detected</label>
+    <?php
+	if(count($not_installed) > 0)
+	{
+		?><br />However, the following packages must be installed:<br /><?php
+		foreach($not_installed as $lib => $link)
+		{
+			?><a href="http://pear.php.net/package/<?php echo $link; ?>"><?php echo $link; ?></a><br /><?php
+		}
+	}
+	else
+	{
+		?><br />The following required packages are also installed:<br /><?php
+		foreach($pear_libs as $lib => $link)
+		{
+			?><a href="http://pear.php.net/package/<?php echo $link; ?>"><?php echo $link; ?></a><br /><?php
+		}
+	}
+	?>
+    </td>
+    <td class="desc">
+    <ul>
+        <li>The system has detected that PEAR is installed properly.</li>
+    </ul>
+    </td></tr>
+    <?php
+}
+else
+{
+    ?><tr><td class="title fail">PEAR Missing</td>
+    <td>
+    <a href="http://pear.php.net/">Get PEAR</a>
+    <?php
+	if(count($not_installed) > 0)
+	{
+		?><br />As well as the following libraries:<br /><?php
+		foreach($not_installed as $lib => $link)
+		{
+			?><a href="http://pear.php.net/package/<?php echo $link; ?>"><?php echo $link; ?></a><br /><?php
+		}
+	}
+	?>
+    </td>
+    <td class="desc">
+    <ul>
+        <li>The system has detected that PEAR is NOT INSTALLED.</li>
+    </ul>
+    </td></tr>
+    <?php
+}
+
+// check for smarty
+if(file_exists($LOCAL_ROOT . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'Smarty' . DIRECTORY_SEPARATOR . 'Smarty.class.php'))
+{
+    ?><tr><td class="title">Smarty Templates</td>
+    <td>
+    <label>Smarty Templating System detected</label>
+    </td>
+    <td class="desc">
+    <ul>
+        <li>The system has detected that Smarty system is installed in the includes directory.</li>
+    </ul>
+    </td></tr>
+    <?php
+}
+else
+{
+    ?><tr><td class="title fail">Smarty Templates Missing</td>
+    <td>
+    <a href="http://www.smarty.net/">Get Smarty</a>
+    </td>
+    <td class="desc">
+    <ul>
+        <li>The system has detected that Smarty Templates is NOT INSTALLED.</li>
+        <li>The root of the Smarty system (eg "Smarty-2.6/libs") must be placed in &lt;site root&gt;/include/Smarty/</li>
+    </ul>
+    </td></tr>
+    <?php
+}
+
+// check for getID3()
+if(file_exists($LOCAL_ROOT . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'Smarty' . DIRECTORY_SEPARATOR . 'Smarty.class.php'))
+{
+    ?><tr><td class="title">getID3() Library</td>
+    <td>
+    <label>getID3() Library detected</label>
+    </td>
+    <td class="desc">
+    <ul>
+        <li>The system has detected that getID3() library is installed in the includes directory.</li>
+    </ul>
+    </td></tr>
+    <?php
+}
+else
+{
+    ?><tr><td class="title fail">getID3() Library Missing</td>
+    <td>
+    <a href="http://www.smarty.net/">Get ID3()</a>
+    </td>
+    <td class="desc">
+    <ul>
+        <li>The system has detected that getID3() Library is NOT INSTALLED.</li>
+        <li>The root of the getID3() library must be placed in &lt;site root&gt;/include/getid3/</li>
     </ul>
     </td></tr>
     <?php

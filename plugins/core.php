@@ -182,6 +182,13 @@ function validate_plugin($request)
 	if(isset($request['plugin']) && isset($GLOBALS['plugins'][$request['plugin']]))
 		return $request['plugin'];
 	else
-		return 'select';
+		return 'index';
 }
 
+function output_index($request)
+{
+	// output any index like information
+	
+	// perform a select so files can show up on the index page
+	output_select($request);
+}

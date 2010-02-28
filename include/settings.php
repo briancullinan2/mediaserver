@@ -127,9 +127,5 @@ define('CLEAN_UP_BUFFER_TIME',                45);
 //  cleanup will also be fired when a directory change is detected, this may not always be accurate
 define('CLEAN_UP_THREASHOLD',                 10);
  
-ini_set('include_path', '.:/usr/share/php:/usr/share/pear:' . LOCAL_ROOT . 'include/');
- 
 // comment-out-able
 ini_set('error_reporting', E_ALL);
- 
-?>
