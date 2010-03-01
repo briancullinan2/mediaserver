@@ -189,7 +189,7 @@ class db_file
 			$request['direction'] = validate_direction($request);
 			$request['selected'] = validate_selected($request);
 			$props['LIMIT'] = $request['start'] . ',' . $request['limit'];
-			if(isset($request['group_by'])) $props['GROUP'] = $request['group_by'];
+			if(isset($request['group_by'])) $props['GROUP'] = validate_group_by($request);
 			if(isset($request['order_trimmed']) && $request['order_trimmed'] == true)
 			{
 				$props['ORDER'] = 'TRIM(LEADING "a " FROM TRIM(LEADING "an " FROM TRIM(LEADING "the " FROM LOWER( ' . 
@@ -639,7 +639,7 @@ class db_file
 					$props['COLUMNS'] = '*';
 					
 					// if where is not set then there is no reason to count the entire database
-					if(!isset($props['WHERE']))
+					if(!isset($props['WHERE']) && !isset($props['GROUP']))
 					{
 						$props = array('SELECT' => constant($module . '::DATABASE'));
 					}
@@ -650,7 +650,7 @@ class db_file
 					}
 					$props['COLUMNS'] = 'count(*)';
 					
-					$result = $GLOBALS['database']->query($props, true);
+					$result = $GLOBALS['database']->query($props, false);
 					
 					$count = intval($result[0]['count(*)']);
 				}

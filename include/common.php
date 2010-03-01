@@ -353,10 +353,9 @@ function setupInputVars()
 	{
 		if(preg_match('/.*Googlebot.*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
 		{
-			if(basename($_SERVER['SCRIPT_NAME']) != 'select.php' && 
-				basename($_SERVER['SCRIPT_NAME']) != 'index.php' &&
-				basename($_SERVER['SCRIPT_NAME']) != 'sitemap.php' &&
-				basename($_SERVER['SCRIPT_NAME']) != 'query.php')
+			if(basename($_REQUEST['plugin']) != 'select' && 
+				basename($_REQUEST['plugin']) != 'index' &&
+				basename($_REQUEST['plugin']) != 'sitemap')
 			{
 				header('Location: ' . generate_href(array('plugin' => 'sitemap')));
 			}

@@ -29,26 +29,26 @@ switch($_REQUEST['action'])
 	case 'ping':
 	break;
 	case 'handshake':
-		?>
-		<auth><![CDATA[<?php echo session_id(); ?>]]></auth>
-		<api><![CDATA[<?php echo intval(VERSION); ?>]]></api>
-		<songs><![CDATA[<?php echo $song_count; ?>]]></songs>
-		<albums><![CDATA[<?php echo $album_count; ?>]]></albums>
-		<artists><![CDATA[<?php echo $artist_count; ?>]]></artists>
-		<genres><![CDATA[<?php echo $genre_count; ?>]]></genres>
-		<playlists><![CDATA[0]]></playlists>
-		<?php
+?>
+<auth><![CDATA[<?php echo session_id(); ?>]]></auth>
+<api><![CDATA[<?php echo intval(VERSION); ?>]]></api>
+<songs><![CDATA[<?php echo $song_count; ?>]]></songs>
+<albums><![CDATA[<?php echo $album_count; ?>]]></albums>
+<artists><![CDATA[<?php echo $artist_count; ?>]]></artists>
+<genres><![CDATA[<?php echo $genre_count; ?>]]></genres>
+<playlists><![CDATA[0]]></playlists>
+<?php
 	break;
 	case 'artists':
 		foreach($files as $i => $artist)
 		{
-		?>
-		<artist id="<?php echo $artist['id'] ; ?>"> 
-		<name><![CDATA[<?php echo $artist['Artist']; ?>]]></name>
-		<albums><?php echo $artist['AlbumCount']; ?></albums>
-		<songs><?php echo $artist['SongCount']; ?></songs>
-		</artist>
-		<?php
+?>
+<artist id="<?php echo $artist['id'] ; ?>"> 
+<name><![CDATA[<?php echo $artist['Artist']; ?>]]></name>
+<albums><?php echo $artist['AlbumCount']; ?></albums>
+<songs><?php echo $artist['SongCount']; ?></songs>
+</artist>
+<?php
 		}
 	break;
 	case 'artist_albums':
@@ -64,16 +64,16 @@ switch($_REQUEST['action'])
 		
 		foreach($files as $i => $album)
 		{
-		?>
-		<album id="<?php echo $album['id']; ?>">
-		<name><![CDATA[<?php echo $album['Album']; ?>]]></name>
-		<artist id="<?php echo artist_id; ?>"><![CDATA[<?php echo $album['Artist']; ?>]]></artist>
-		<year><?php echo $album['Year']; ?></year>
-		<tracks><?php echo $album['SongCount']; ?></tracks>
-		<disk>0</disk>
-		<art><![CDATA[]]></art>
-		</album>
-		<?php
+?>
+<album id="<?php echo $album['id']; ?>">
+<name><![CDATA[<?php echo $album['Album']; ?>]]></name>
+<artist id="<?php echo $artist_id; ?>"><![CDATA[<?php echo $album['Artist']; ?>]]></artist>
+<year><?php echo $album['Year']; ?></year>
+<tracks><?php echo $album['SongCount']; ?></tracks>
+<disk>0</disk>
+<art><![CDATA[]]></art>
+</album>
+<?php
 		}
 	break;
 	case 'album_songs':
@@ -89,19 +89,19 @@ switch($_REQUEST['action'])
 	
 		foreach($files as $i => $song)
 		{
-		?>
-		<song id="<?php echo $song['id']; ?>">
-		<title><![CDATA[<?php echo $song['Title']; ?>]]></title>
-		<artist id="<?php echo $artist_id; ?>"><![CDATA[<?php echo $song['Artist']; ?>]]></artist>
-		<album id="<?php echo $album_id; ?>"><![CDATA[<?php echo $song['Album']; ?>]]></album>
-		<genre id="<?php echo $genre_id; ?>"><![CDATA[<?php echo $song['Genre']; ?>]]></genre>
-		<track><?php echo $song['Track']; ?></track>
-		<time><?php echo $song['Length']; ?></time>
-		<url><![CDATA[<?php echo HTML_DOMAIN . 'plugins/encode.php/db_audio/' . $song['id'] . '/MP3/' . basename($song['Filepath']) . '.mp3'; ?>]]></url>
-		<size><?php echo filesize($song['Filepath']); ?></size>
-		<art><![CDATA[]]></art>
-		</song>
-		<?php
+?>
+<song id="<?php echo $song['id']; ?>">
+<title><![CDATA[<?php echo $song['Title']; ?>]]></title>
+<artist id="<?php echo $artist_id; ?>"><![CDATA[<?php echo $song['Artist']; ?>]]></artist>
+<album id="<?php echo $album_id; ?>"><![CDATA[<?php echo $song['Album']; ?>]]></album>
+<genre id="<?php echo $genre_id; ?>"><![CDATA[<?php echo $song['Genre']; ?>]]></genre>
+<track><?php echo $song['Track']; ?></track>
+<time><?php echo $song['Length']; ?></time>
+<url><![CDATA[<?php echo HTML_DOMAIN . generate_href('encode=mp3&id=' . $song['id'] . '&cat=db_audio', 'encode', '', '', '', '', '', true); ?>]]></url>
+<size><?php echo filesize($song['Filepath']); ?></size>
+<art><![CDATA[]]></art>
+</song>
+<?php
 		}
 	break;
 }

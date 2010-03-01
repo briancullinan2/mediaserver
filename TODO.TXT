@@ -1,16 +1,11 @@
-The validate_dir() function in select.php isn't going to work on archives and disk images.  Maybe something more like the function in common for seperating out the inner directory would work better.
-Fix line 597 in db_file.php module and in similar places that check if there are any errors
-Create a packaging script that turns the site directory into a zip file without all the extra junk like EXT JS examples
+Fix ampache.php plugin, something must have changed in the handshake because it isn't making any more requests after that
 Re-upload entire site
 Fix HTML_ROOT usage to use generate_href instead (this is hard)
 Finish fixing up plugins to use new API
-	bt.php, admin section
+	bt.php, admin section, ampache.php
 	Go through plugins and fix error reporting
 		users.php plugin
 		login.php plugin
-		modules reporting errors, plugins should stop processing database queries if there is invalid information in the request
-			no more 'File does not exist' in the modules
-			This should be handled by validate_() functions
 		Add feedback removed when the plugins were converted to new API
 Drupalish style coding
 	More streamlined way of plugins outputting data to template (assuming that $files is being used is no good)

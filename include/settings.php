@@ -70,7 +70,7 @@ define('CONVERT_ARGS',                '"%IF" -resize "%TWx%TH" %FM:-'); // image
 %VB - Video Bitrate
 %AB - Audio Bitrate
 %SR - Sample Rate
-%SR - Scale
+%SC - Scale
 %CH - Number of Channels
 %MX - Muxer to use for encapsulating the streams
 %TO - Time Offset for resumable listening and moving time position

@@ -1,3 +1,10 @@
+2010-02-28
+Fixed error outputting in some plugins
+Fixed validate_dir() and validate_file()
+Created different $GLOBALS for holding user and debug errors so functions can abort if there are errors
+Fixed checking for total_count when group_by is specified in db_file.php module
+Fixed ampache.php plugin...  mostly
+
 2010-02-25
 Plugins now use Drupalish API
 	They must register with a register_<plugin_name>() function

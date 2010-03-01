@@ -68,9 +68,9 @@ function output_ampache($request)
 			'SELECT' => '(' . $GLOBALS['database']->statement_builder(array(
 				'SELECT' => 'audio',
 				'GROUP' => 'Album'
-			)) . ') as counter',
+			), true) . ') as counter',
 			'COLUMNS' => 'count(*)'
-		), true);
+		), false);
 		$album_count = $result[0]['count(*)'];
 		
 		// artist count
@@ -78,9 +78,9 @@ function output_ampache($request)
 			'SELECT' => '(' . $GLOBALS['database']->statement_builder(array(
 				'SELECT' => 'audio',
 				'GROUP' => 'Artist'
-			)) . ') as counter',
+			), true) . ') as counter',
 			'COLUMNS' => 'count(*)'
-		), true);
+		), false);
 		$artist_count = $result[0]['count(*)'];
 		
 		// genre count
@@ -88,9 +88,9 @@ function output_ampache($request)
 			'SELECT' => '(' . $GLOBALS['database']->statement_builder(array(
 				'SELECT' => 'audio',
 				'GROUP' => 'Genre'
-			)) . ') as counter',
+			), true) . ') as counter',
 			'COLUMNS' => 'count(*)'
-		), true);
+		), false);
 		$genre_count = $result[0]['count(*)'];
 		
 		// set the variables in the template
@@ -109,9 +109,20 @@ function output_ampache($request)
 		// get a simple list of all the artists
 		$result = $GLOBALS['database']->query(array(
 			'SELECT' => 'audio',
-			'GROUP' => 'Artist,Album',
+			'GROUP' => 'Artist',
 			'COLUMNS' => 'MIN(id) as id,Artist,count(*) as SongCount'
 		), true);
+		
+		// album counts
+		$album_count = $GLOBALS['database']->query(array(
+			'SELECT' => '(' . $GLOBALS['database']->statement_builder(array(
+				'SELECT' => 'audio',
+				'GROUP' => 'Artist,Album',
+				'COLUMNS' => 'Artist'
+			), true) . ') as counter',
+			'COLUMNS' => 'count(*) as AlbumCount',
+			'GROUP' => 'Artist'
+		), false);
 		
 		// go through and merge the artist album and counts
 		$files = array();
@@ -122,7 +133,7 @@ function output_ampache($request)
 				$files[$artist['Artist']] = array(
 					'Artist' => $artist['Artist'],
 					'SongCount' => $artist['SongCount'],
-					'AlbumCount' => 1,
+					'AlbumCount' => $album_count[$i]['AlbumCount'],
 					'id' => $artist['id']
 				);
 			}
@@ -134,7 +145,7 @@ function output_ampache($request)
 		}
 		
 		// set the variables in the template		
-		$register_output_vars('files', $files);
+		register_output_vars('files', $files);
 		
 		break;
 		case 'artist_albums':

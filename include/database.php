@@ -296,7 +296,7 @@ class database
 			elseif(is_string($props['COLUMNS'])) $columns = $props['COLUMNS'];
 			
 			$select = 'SELECT ' . $columns . ' FROM ' . $props['SELECT'];
-			
+
 			$statement = $select . ' ' . $where . ' ' . $group . ' ' . $having . ' ' . $order . ' ' . $limit;
 		}
 		elseif(isset($props['UPDATE']))

@@ -235,7 +235,7 @@ function output_encode($request)
 	fclose($fp);
 	
 	$request['encode'] = validate_encode($request);
-	$request['vcodec'] = validate_cvodec($request);
+	$request['vcodec'] = validate_vcodec($request);
 	$request['acodec'] = validate_acodec($request);
 	$request['vbitrate'] = validate_vbitrate($request);
 	$request['abitrate'] = validate_abitrate($request);
@@ -372,7 +372,18 @@ function output_encode($request)
 	
 	// replace the argument string with the contents of $_REQUEST
 	//  without validation this is VERY DANGEROUS!
-	$cmd = basename(ENCODE) . ' ' . str_replace(array_keys($_REQUEST), array_values($_REQUEST), ENCODE_ARGS);
+	$cmd = basename(ENCODE) . ' ' . str_replace(array('%IF', '%VC', '%AC', '%VB', '%AB', '%SR', '%SC', '%CH', '%MX', '%FS'), array(
+		$request['efile'],
+		$request['vcodec'],
+		$request['acodec'],
+		$request['vbitrate'],
+		$request['abitrate'],
+		$request['samplerate'],
+		$request['scalar'],
+		$request['channels'],
+		$request['muxer'],
+		$request['framerate']
+	), ENCODE_ARGS);
 	
 	$descriptorspec = array(
 	   0 => array("pipe", "r"),  // stdin is a pipe that the child will read from
