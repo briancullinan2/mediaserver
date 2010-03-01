@@ -232,13 +232,21 @@ class db_file
 				// get ids from centralized id database
 				$files = $GLOBALS['database']->query(array('WHERE' => $props['WHERE'], 'SELECT' => db_ids::DATABASE), true);
 				
-				// loop through ids and construct new where based on module
-				$props['WHERE'] = '';
-				foreach($files as $i => $file)
+				if(count($files) > 0)
 				{
-						$props['WHERE'] .= ' id = ' . $file[constant($module . '::DATABASE') . '_id'] . ' OR';
+					// loop through ids and construct new where based on module
+					$props['WHERE'] = '';
+					foreach($files as $i => $file)
+					{
+							$props['WHERE'] .= ' id = ' . $file[constant($module . '::DATABASE') . '_id'] . ' OR';
+					}
+					$props['WHERE'] = substr($props['WHERE'], 0, strlen($props['WHERE'])-2);
 				}
-				$props['WHERE'] = substr($props['WHERE'], 0, strlen($props['WHERE'])-2);
+				else
+				{
+					PEAR::raiseError('IDs not found!', E_USER);
+					return array();
+				}
 			}
 		
 //---------------------------------------- Directory ----------------------------------------\\

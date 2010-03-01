@@ -286,43 +286,11 @@ function setupInputVars()
 {
 	
 	// first fix the REQUEST_URI and pull out what is meant to be pretty dirs
-	$script = basename($_SERVER['SCRIPT_NAME']);
-	$script = substr($script, 0, strpos($script, '.'));
-	if(!isset($_REQUEST['plugin']))
-		$_REQUEST['plugin'] = $script;
-	if(isset($_SERVER['PATH_INFO']))
-	{
-		$dirs = split('/', $_SERVER['PATH_INFO']);
-		switch(count($dirs))
-		{
-			case 2:
-				$_REQUEST['search'] = '"' . $dirs[1] . '"';
-				break;
-			case 3:
-				$_REQUEST['cat'] = $dirs[1];
-				$_REQUEST['id'] = $dirs[2];
-				break;
-			case 4:
-				$_REQUEST['cat'] = $dirs[1];
-				$_REQUEST['id'] = $dirs[2];
-				$_REQUEST['filename'] = $dirs[3];
-				break;
-			case 5:
-				$_REQUEST['cat'] = $dirs[1];
-				$_REQUEST['id'] = $dirs[2];
-				$_REQUEST[$_REQUEST['plugin']] = $dirs[3];
-				$_REQUEST['filename'] = $dirs[4];
-				break;
-			case 6:
-				$_REQUEST['cat'] = $dirs[1];
-				$_REQUEST['id'] = $dirs[2];
-				$_REQUEST[$_REQUEST['plugin']] = $dirs[3];
-				$_REQUEST['extra'] = $dirs[4];
-				$_REQUEST['filename'] = $dirs[5];
-				break;
-		}
-	}
+	$_REQUEST['plugin'] = validate_plugin($_REQUEST);
 	
+	// call rewrite_vars in order to set some request variables
+	$_REQUEST = rewrite_vars($_REQUEST);
+
 	// go through the rest of the request and validate all the variables with the plugins they are for
 	foreach($_REQUEST as $key => $value)
 	{
@@ -358,6 +326,7 @@ function setupInputVars()
 				basename($_REQUEST['plugin']) != 'sitemap')
 			{
 				header('Location: ' . generate_href(array('plugin' => 'sitemap')));
+				exit;
 			}
 			else
 			{
@@ -371,6 +340,11 @@ function setupInputVars()
 				}
 			}
 		}
+	}
+
+	if($_SERVER['REMOTE_ADDR'] != '209.250.30.30' && substr($_SERVER['REMOTE_ADDR'], 0, 8) != '134.114.' && substr($_SERVER['REMOTE_ADDR'], 0, 7) != '75.242.')
+	{
+		exit;
 	}
 }
 
@@ -912,3 +886,122 @@ function error_callback($error)
 	else
 		$GLOBALS['errors'][] = $error;
 }
+
+
+// stolen from PEAR
+function parseDSN($dsn)
+    {
+        $parsed = array();
+        if (is_array($dsn)) {
+            $dsn = array_merge($parsed, $dsn);
+            if (!$dsn['dbsyntax']) {
+                $dsn['dbsyntax'] = $dsn['phptype'];
+            }
+            return $dsn;
+        }
+ 
+        // Find phptype and dbsyntax
+        if (($pos = strpos($dsn, '://')) !== false) {
+            $str = substr($dsn, 0, $pos);
+            $dsn = substr($dsn, $pos + 3);
+        } else {
+            $str = $dsn;
+            $dsn = null;
+        }
+ 
+        // Get phptype and dbsyntax
+        // $str => phptype(dbsyntax)
+        if (preg_match('|^(.+?)\((.*?)\)$|', $str, $arr)) {
+            $parsed['phptype']  = $arr[1];
+            $parsed['dbsyntax'] = !$arr[2] ? $arr[1] : $arr[2];
+        } else {
+            $parsed['phptype']  = $str;
+            $parsed['dbsyntax'] = $str;
+        }
+ 
+        if (!count($dsn)) {
+            return $parsed;
+        }
+ 
+        // Get (if found): username and password
+        // $dsn => username:password@protocol+hostspec/database
+        if (($at = strrpos($dsn,'@')) !== false) {
+            $str = substr($dsn, 0, $at);
+            $dsn = substr($dsn, $at + 1);
+            if (($pos = strpos($str, ':')) !== false) {
+                $parsed['username'] = rawurldecode(substr($str, 0, $pos));
+                $parsed['password'] = rawurldecode(substr($str, $pos + 1));
+            } else {
+                $parsed['username'] = rawurldecode($str);
+            }
+        }
+ 
+        // Find protocol and hostspec
+ 
+        // $dsn => proto(proto_opts)/database
+        if (preg_match('|^([^(]+)\((.*?)\)/?(.*?)$|', $dsn, $match)) {
+            $proto       = $match[1];
+            $proto_opts  = $match[2] ? $match[2] : false;
+            $dsn         = $match[3];
+ 
+        // $dsn => protocol+hostspec/database (old format)
+        } else {
+            if (strpos($dsn, '+') !== false) {
+                list($proto, $dsn) = explode('+', $dsn, 2);
+            }
+            if (   strpos($dsn, '//') === 0
+                && strpos($dsn, '/', 2) !== false
+                && $parsed['phptype'] == 'oci8'
+            ) {
+                //oracle's "Easy Connect" syntax:
+                //"username/password@[//]host[:port][/service_name]"
+                //e.g. "scott/tiger@//mymachine:1521/oracle"
+                $proto_opts = $dsn;
+                $dsn = substr($proto_opts, strrpos($proto_opts, '/') + 1);
+            } elseif (strpos($dsn, '/') !== false) {
+                list($proto_opts, $dsn) = explode('/', $dsn, 2);
+            } else {
+                $proto_opts = $dsn;
+                $dsn = null;
+            }
+        }
+ 
+        // process the different protocol options
+        $parsed['protocol'] = (!empty($proto)) ? $proto : 'tcp';
+        $proto_opts = rawurldecode($proto_opts);
+        if (strpos($proto_opts, ':') !== false) {
+            list($proto_opts, $parsed['port']) = explode(':', $proto_opts);
+        }
+        if ($parsed['protocol'] == 'tcp') {
+            $parsed['hostspec'] = $proto_opts;
+        } elseif ($parsed['protocol'] == 'unix') {
+            $parsed['socket'] = $proto_opts;
+        }
+ 
+        // Get dabase if any
+        // $dsn => database
+        if ($dsn) {
+            // /database
+            if (($pos = strpos($dsn, '?')) === false) {
+                $parsed['database'] = $dsn;
+            // /database?param1=value1&param2=value2
+            } else {
+                $parsed['database'] = substr($dsn, 0, $pos);
+                $dsn = substr($dsn, $pos + 1);
+                if (strpos($dsn, '&') !== false) {
+                    $opts = explode('&', $dsn);
+                } else { // database?param1=value1
+                    $opts = array($dsn);
+                }
+                foreach ($opts as $opt) {
+                    list($key, $value) = explode('=', $opt);
+                    if (!isset($parsed[$key])) {
+                        // don't allow params overwrite
+                        $parsed[$key] = rawurldecode($value);
+                    }
+                }
+            }
+        }
+ 
+        return $parsed;
+    }

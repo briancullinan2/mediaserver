@@ -31,7 +31,8 @@ switch($_REQUEST['action'])
 	case 'handshake':
 ?>
 <auth><![CDATA[<?php echo session_id(); ?>]]></auth>
-<api><![CDATA[<?php echo intval(VERSION); ?>]]></api>
+<api><![CDATA[350001]]></api>
+<update><![CDATA[<?php echo date('c'); ?>]]></update>
 <songs><![CDATA[<?php echo $song_count; ?>]]></songs>
 <albums><![CDATA[<?php echo $album_count; ?>]]></albums>
 <artists><![CDATA[<?php echo $artist_count; ?>]]></artists>

@@ -1,3 +1,11 @@
+2010-03-01
+Fixed Ampache.php plugin
+Made request.php pluin obsolete
+	Now handled in core.php under validate_plugin() which will check for other clues as to what they are trying to access if the plugin variable isn't set
+Common.php setupInputVars() also calls the rewrite_vars() function, which will move around variables for compatibility before the request is processed
+	This is also based on which plugin is selected
+Permissions for ampache were already in effect since it uses the database.php wrapper that adds to the $where query
+
 2010-02-28
 Fixed error outputting in some plugins
 Fixed validate_dir() and validate_file()

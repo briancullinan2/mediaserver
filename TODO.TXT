@@ -1,17 +1,16 @@
-Fix ampache.php plugin, something must have changed in the handshake because it isn't making any more requests after that
+Create an error template page for displaying errors
+Check for bt plugin in install.php script
+Add bttracker install script to admin/install.php to fully bootstrap the install process
 Re-upload entire site
 Fix HTML_ROOT usage to use generate_href instead (this is hard)
 Finish fixing up plugins to use new API
-	bt.php, admin section, ampache.php
+	admin section
 	Go through plugins and fix error reporting
 		users.php plugin
 		login.php plugin
 		Add feedback removed when the plugins were converted to new API
 Drupalish style coding
 	More streamlined way of plugins outputting data to template (assuming that $files is being used is no good)
-Modules should be the only access to the database, no more custom code like ampache plugin
-	Using a callback might make it faster
-	Should be more streamlined to provide quicker access like ampache plugin
 Create a developer plugin that verifies plugins register themselves and don't use query() function
 Doxygen compliant
 Speed testing with new User queries
@@ -23,7 +22,6 @@ Make hard links and soft links, hard links are replaced when they are put in to 
 Interface with mediatomb and support UPnP protocol
 ------------- Plugin TODO -------------
 Finish users.php plugin
-Add user permissions to ampache.php plugin
 Work on settings.php plugin
 	Global settings such as default template to use for each devide logged in the to account
 	Template settings, must provide specification in template config, use database for storing fields?
@@ -32,9 +30,7 @@ Work on tools.php plugin for admin
 	Provide useful information in tools section about missing songs (music.php tool?)
 Make a sync plugin in admin section for syncing between two databases and pulling out differences
 	Use musicbrainz to sync music
-Fix bt.php plugin, using the stream methods won't work with md5
-	maybe it should only handle files on disk because the ctorrent seeder won't be able to read files out of a zip anyways
-	FIX bt.php plugin to work with command line torrent seeder on windows
+FIX bt.php plugin to work with command line torrent seeder on windows
 Set up conditions for when the streams are used based on if %OF and %IF are used in the command arguments
 Get ranges working in encode plugin
 	only allow the option if the argument can read from stdin and read the input from the module and write it to the input stream

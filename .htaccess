@@ -18,7 +18,7 @@ RewriteRule ^admin/install\.php$													admin/install.php?modrewrite=true [
 #plugin not found, try the request plugin
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule .? index.php?plugin=request [QSA,L]
+RewriteRule .? index.php?plugin=notfound [QSA,L]
 
 
 </IfModule>

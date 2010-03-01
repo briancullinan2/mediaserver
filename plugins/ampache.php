@@ -27,12 +27,6 @@ function validate_action($request)
 		return 'ping';
 }
 
-function validate_filter($request)
-{
-	$request['id'] = $request['filter'];
-	return validate_id($request);
-}
-
 function output_ampache($request)
 {
 	set_time_limit(0);
@@ -44,6 +38,8 @@ function output_ampache($request)
 	
 	$request['action'] = validate_action($request);
 	$request['auth'] = validate_auth($request);
+	$request['start'] = validate_start($request);
+	$request['limit'] = validate_limit($request);
 	
 	// check for the action
 	switch($request['action'])
@@ -110,7 +106,8 @@ function output_ampache($request)
 		$result = $GLOBALS['database']->query(array(
 			'SELECT' => 'audio',
 			'GROUP' => 'Artist',
-			'COLUMNS' => 'MIN(id) as id,Artist,count(*) as SongCount'
+			'COLUMNS' => 'MIN(id) as id,Artist,count(*) as SongCount',
+			'LIMIT' => $request['start'] . ',' . $request['limit']
 		), true);
 		
 		// album counts
@@ -121,7 +118,8 @@ function output_ampache($request)
 				'COLUMNS' => 'Artist'
 			), true) . ') as counter',
 			'COLUMNS' => 'count(*) as AlbumCount',
-			'GROUP' => 'Artist'
+			'GROUP' => 'Artist',
+			'LIMIT' => $request['start'] . ',' . $request['limit']
 		), false);
 		
 		// go through and merge the artist album and counts
@@ -149,13 +147,13 @@ function output_ampache($request)
 		
 		break;
 		case 'artist_albums':
-		$request['filter'] = validate_filter($request);
+		$request['id'] = validate_id($request);
 		
 		// get a list of albums for a particular artist
 		// first look up song by supplied ID
 		$result = $GLOBALS['database']->query(array(
 			'SELECT' => 'audio',
-			'WHERE' => 'id = ' . intval($request['filter'])
+			'WHERE' => 'id = ' . intval($request['id'])
 		), true);
 		
 		// get the list of albums
@@ -171,11 +169,13 @@ function output_ampache($request)
 		
 		break;
 		case 'album_songs':
+		$request['id'] = validate_id($request);
+
 		// get a list of songs for a particular album
 		// first look up song by supplied ID
 		$artist_album = $GLOBALS['database']->query(array(
 			'SELECT' => 'audio',
-			'WHERE' => 'id = ' . intval($request['filter'])
+			'WHERE' => 'id = ' . intval($request['id'])
 		), true);
 		
 		// get the id for genre

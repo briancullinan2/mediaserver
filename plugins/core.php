@@ -177,12 +177,78 @@ function validate_columns($request)
 	return $request['columns'];
 }
 
+// Redirect unknown file and folder requests to recognized protocols and other plugins.
 function validate_plugin($request)
 {
+
 	if(isset($request['plugin']) && isset($GLOBALS['plugins'][$request['plugin']]))
+	{
 		return $request['plugin'];
+	}
+	// check for ampache compitibility
+	elseif(strpos($_SERVER['REQUEST_URI'], '/server/xml.server.php?') !== false)
+	{
+		return 'ampache';
+	}
 	else
-		return 'index';
+	{
+		$script = basename($_SERVER['SCRIPT_NAME']);
+		$script = substr($script, 0, strpos($script, '.'));
+		if(isset($GLOBALS['plugins'][$script]))
+			return $script;
+		else
+			return 'index';
+	}
+}
+
+function rewrite_vars($request)
+{
+	if(isset($_SERVER['PATH_INFO']))
+	{
+		$dirs = split('/', $_SERVER['PATH_INFO']);
+		switch(count($dirs))
+		{
+			case 2:
+				$request['search'] = '"' . $dirs[1] . '"';
+				break;
+			case 3:
+				$request['cat'] = $dirs[1];
+				$request['id'] = $dirs[2];
+				break;
+			case 4:
+				$request['cat'] = $dirs[1];
+				$request['id'] = $dirs[2];
+				$request['filename'] = $dirs[3];
+				break;
+			case 5:
+				$request['cat'] = $dirs[1];
+				$request['id'] = $dirs[2];
+				$request[$request['plugin']] = $dirs[3];
+				$request['filename'] = $dirs[4];
+				break;
+			case 6:
+				$request['cat'] = $dirs[1];
+				$request['id'] = $dirs[2];
+				$request[$request['plugin']] = $dirs[3];
+				$request['extra'] = $dirs[4];
+				$request['filename'] = $dirs[5];
+				break;
+		}
+	}
+
+	if($request['plugin'] == 'bt')
+	{
+		// save the whole request to be used later
+		$request['bt_request'] = $_REQUEST;
+	}
+	if($request['plugin'] == 'ampache')
+	{
+		// rewrite some variables
+		if(isset($request['offset'])) $request['start'] = $request['offset'];
+		if(isset($request['filter'])) $request['id'] = $request['filter'];
+	}
+
+	return $request;
 }
 
 function output_index($request)
