@@ -13,8 +13,19 @@ define('E_FATAL',					8);
 // get the file mime type
 
 //session_cache_limiter('public');
-if(!isset($no_setup) || !$no_setup == true)
-	session_start();
+session_start();
+	
+if(isset($_POST) && count($_POST) > 0)
+{
+	$_SESSION['last_request'] = $_REQUEST;
+	header('Location: ' . $_SERVER['REQUEST_URI']);
+	exit;
+}
+if(isset($_SESSION['last_request']))
+{
+	$_REQUEST = $_SESSION['last_request'];
+	unset($_SESSION['last_request']);
+}
 
 // set version for stuff to reference
 define('VERSION', 			     '0.50.0');
@@ -43,8 +54,7 @@ $GLOBALS['mte'] = new MIME_Type_Extension();
 
 
 // classes that this function uses to set up stuff should use the $no_setup = true option
-if(!isset($no_setup) || !$no_setup == true)
-	setup();
+setup();
 
 function setup()
 {
@@ -121,6 +131,10 @@ function setupPlugins()
 			}
 		}
 	}
+	
+	include_once LOCAL_ROOT . 'admin' . DIRECTORY_SEPARATOR . 'watch.php';
+	$GLOBALS['plugins']['watch'] = call_user_func_array('register_watch', array());
+	
 }
 
 function setupTemplate()
@@ -215,6 +229,14 @@ function setupUsers()
 					
 					$_SESSION['user'] = $db_user[0];
 				}
+				else
+				{
+					PEAR::raiseError('Invalid password.', E_USER);
+				}
+			}
+			else
+			{
+				PEAR::raiseError('Invalid username.', E_USER);
 			}
 		}
 		// use guest information
@@ -279,6 +301,8 @@ function setupUsers()
 		
 		$_SESSION['settings']['keys_users'] = $return;
 	}
+	
+	register_output_vars('loggedin', $_SESSION['loggedin']);
 }
 
 // this is used to set up the input variables
@@ -295,7 +319,9 @@ function setupInputVars()
 	foreach($_REQUEST as $key => $value)
 	{
 		if(function_exists('validate_' . $key))
+		{
 			$_REQUEST[$key] = call_user_func_array('validate_' . $key, array($_REQUEST));
+		}
 		else
 			unset($_REQUEST[$key]);
 	}
@@ -311,10 +337,6 @@ function setupInputVars()
 			}
 		}
 	}
-	
-	// after this is done, it is safe to redirect
-	if(isset($_POST) && count($_POST) > 0)
-		header('Location: ' . $_SERVER['REQUEST_URI']);
 	
 	// do not let GoogleBot perform searches or file downloads
 	if(NO_BOTS)
@@ -342,7 +364,7 @@ function setupInputVars()
 		}
 	}
 
-	if($_SERVER['REMOTE_ADDR'] != '209.250.30.30' && substr($_SERVER['REMOTE_ADDR'], 0, 8) != '134.114.' && substr($_SERVER['REMOTE_ADDR'], 0, 7) != '75.242.')
+	if($_SERVER['REMOTE_ADDR'] != '209.250.30.30' && substr($_SERVER['REMOTE_ADDR'], 0, 8) != '134.114.' && substr($_SERVER['REMOTE_ADDR'], 0, 8) != '192.168.' && substr($_SERVER['REMOTE_ADDR'], 0, 7) != '75.242.')
 	{
 		exit;
 	}

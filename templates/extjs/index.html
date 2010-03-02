@@ -53,7 +53,7 @@
 		<div class="loading-indicator">Media Server<br /><span id="loading-msg" class="loading-msg">Loading styles and images...</span></div>
 	</div>
     <!-- include everything after the loading indicator -->
-    <link rel="stylesheet" type="text/css" href="{'template='|cat:$smarty.const.HTML_TEMPLATE|cat:'&file=extjs/resources/css/ext-all.css'|generate_href:'template'}" />
+    <link rel="stylesheet" type="text/css" href="{'template='|cat:$smarty.const.LOCAL_BASE|cat:'&file=extjs/resources/css/ext-all.css'|generate_href:'template'}" />
     <link rel="stylesheet" type="text/css" href="{'template='|cat:$smarty.const.HTML_TEMPLATE|cat:'&file=css/Filetypes.css'|generate_href:'template'}" />
     <link rel="stylesheet" type="text/css" href="{'template='|cat:$smarty.const.HTML_TEMPLATE|cat:'&file=css/Desktop.css'|generate_href:'template'}" />
     <link rel="stylesheet" type="text/css" href="{'template='|cat:$smarty.const.HTML_TEMPLATE|cat:'&file=css/Portal.css'|generate_href:'template'}" />
@@ -67,43 +67,43 @@
     <!-- GC -->
  	<!-- LIBS -->
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading Core API...';</script>
- 	<script type="text/javascript" src="{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}extjs/adapter/ext/ext-base.js"></script>
+ 	<script type="text/javascript" src="{'file=extjs/adapter/ext/ext-base.js&template='|cat:$smarty.const.LOCAL_BASE|generate_href:'template'}"></script>
 
  	<!-- ENDLIBS -->
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading UI Components... (Core Components)';</script>
-    <script type="text/javascript" src="{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}extjs/ext-all-debug.js"></script>
+    <script type="text/javascript" src="{'file=extjs/ext-all-debug.js&template='|cat:$smarty.const.LOCAL_BASE|generate_href:'template'}"></script>
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading UI Components... (Library Mods)';</script>
- 	<script type="text/javascript" src="{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}js/Library.js"></script>
+ 	<script type="text/javascript" src="{'file=js/Library.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading UI Components... (Buffered Components)';</script>
-	<script type="text/javascript" src="{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}livegrid/src/GridPanel.js"></script>
-	<script type="text/javascript" src="{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}livegrid/src/GridView.js"></script>
-	<script type="text/javascript" src="{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}livegrid/src/RowSelectionModel.js"></script>
-	<script type="text/javascript" src="{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}livegrid/src/Store.js"></script>
-	<script type="text/javascript" src="{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}livegrid/src/Toolbar.js"></script>
+	<script type="text/javascript" src="{'file=livegrid/src/GridPanel.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
+	<script type="text/javascript" src="{'file=livegrid/src/GridView.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
+	<script type="text/javascript" src="{'file=livegrid/src/RowSelectionModel.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
+	<script type="text/javascript" src="{'file=livegrid/src/Store.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
+	<script type="text/javascript" src="{'file=livegrid/src/Toolbar.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading UI Components... (Media Components)';</script>
-	<script type="text/javascript" src="{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}js/XMLTreeNode.js"></script>
-	<script type="text/javascript" src="{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}js/FolderView.js"></script>
- 	<script type="text/javascript" src="{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}js/Address.js"></script>
+	<script type="text/javascript" src="{'file=js/XMLTreeNode.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
+	<script type="text/javascript" src="{'file=js/FolderView.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
+ 	<script type="text/javascript" src="{'file=js/Address.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading UI Components... (Extra Components)';</script>
-	<script type="text/javascript" src="{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}ux/mediapanel.js"></script>
-	<script type="text/javascript" src="{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}js/GMapPanel.js"></script>
+	<script type="text/javascript" src="{'file=ux/mediapanel.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
+	<script type="text/javascript" src="{'file=js/GMapPanel.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
 
     <!-- DESKTOP -->
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Initializing Desktop...';</script>
-    <script type="text/javascript" src="{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}js/StartMenu.js"></script>
-    <script type="text/javascript" src="{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}js/TaskBar.js"></script>
-    <script type="text/javascript" src="{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}js/Desktop.js"></script>
+    <script type="text/javascript" src="{'file=js/StartMenu.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
+    <script type="text/javascript" src="{'file=js/TaskBar.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
+    <script type="text/javascript" src="{'file=js/Desktop.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
 	
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading Applications...';</script>
-    <script type="text/javascript" src="{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}js/App.js"></script>
+    <script type="text/javascript" src="{'file=js/App.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading Applications... (Module)';</script>
-    <script type="text/javascript" src="{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}js/Module.js"></script>
+    <script type="text/javascript" src="{'file=js/Module.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading Applications... (Portal)';</script>
-    <script type="text/javascript" src="{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}js/Portal.js"></script>
+    <script type="text/javascript" src="{'file=js/Portal.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading Applications... (Downloads)';</script>
-    <script type="text/javascript" src="{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}js/Downloads.js"></script>
+    <script type="text/javascript" src="{'file=js/Downloads.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading Applications... (Player)';</script>
-    <script type="text/javascript" src="{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}js/Player.js"></script>
+    <script type="text/javascript" src="{'file=js/Player.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
 
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading Personal Settings...';</script>
 	<div id="x-desktop">
@@ -129,8 +129,8 @@
 		<div class="x-clear"></div>
 	</div>
 	
-    <script type="text/javascript" src="{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}js/Config.js"></script>
-    <!--<script type="text/javascript" src="{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}js/examples.js"></script>-->
+    <script type="text/javascript" src="{'file=js/Config.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
+    <!--<script type="text/javascript" src="{'file=js/examples.js&template='|cat:$smarty.const.LOCAL_BASE|generate_href:'template'}"></script>-->
 	
 	{literal}
 	<script type="text/javascript">

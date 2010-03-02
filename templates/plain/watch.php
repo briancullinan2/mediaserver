@@ -9,24 +9,24 @@
 
 This is a list of folders on the server to watch for media files:<br />
 <?php
-if( $error != '' )
+if( count($GLOBALS['templates']['vars']['user_errors']) > 0 )
 {
 ?>
-	<span style="color:#990000; font-weight:bold;"><?php echo $error?></span><br />
+	<span style="color:#990000; font-weight:bold;"><?php foreach($GLOBALS['templates']['vars']['user_errors'] as $i => $error) { echo $error->message . '<br />'; } ?></span><br />
 <?php
 }
 ?>
 	<form action="" method="post">
-		<select name="watch" size="10">
+		<select name="wremove" size="10">
 		
 		<?php
-			foreach($GLOBALS['ignored'] as $i => $watch)
+			foreach($GLOBALS['templates']['vars']['ignored'] as $i => $watch)
 			{
 			?>
 				<option value="<?php echo $watch['id']; ?>">ignore: <?php echo $watch['Filepath']; ?></option>
 			<?php
 			}
-			foreach($GLOBALS['watched'] as $i => $watch)
+			foreach($GLOBALS['templates']['vars']['watched'] as $i => $watch)
 			{
 			?>
 				<option value="<?php echo $watch['id']; ?>">watch: <?php echo $watch['Filepath']; ?></option>
@@ -35,11 +35,11 @@ if( $error != '' )
 		?>
 		</select>
 		<br />
-		<input type="submit" value="Remove" name="remove" />
+		<input type="submit" value="Remove" />
 	</form>
 	<form action="" method="post">
-		<input type="text" name="addpath" size="50" value="<?php echo (isset($_REQUEST['addpath'])?$_REQUEST['addpath']:"")?>" />
-		<input type="submit" value="Add" name="add" />
+		<input type="text" name="waddpath" size="50" value="<?php echo (isset($GLOBALS['templates']['vars']['waddpath'])?$GLOBALS['templates']['vars']['waddpath']:"")?>" />
+		<input type="submit" value="Add" />
 		<br />
 	</form>
 </body>

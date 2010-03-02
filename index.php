@@ -20,7 +20,7 @@ if(isset($GLOBALS['plugins'][$_REQUEST['plugin']]))
 	if( isset($GLOBALS['plugins'][$_REQUEST['plugin']]['privilage']) && $_SESSION['privilage'] < $GLOBALS['plugins'][$_REQUEST['plugin']]['privilage'] )
 	{
 		// redirect to login page
-		header('Location: ' . generate_href(array('plugin' => 'login', 'return' => $_REQUEST['plugin'], 'required_priv' => $GLOBALS['plugins'][$_REQUEST['plugin']]['privilage'])));
+		header('Location: ' . generate_href(array('plugin' => 'login', 'return' => $_REQUEST['plugin'], 'required_priv' => $GLOBALS['plugins'][$_REQUEST['plugin']]['privilage']), '', '', '', '', '', true));
 		
 		exit();
 	}
@@ -39,13 +39,17 @@ if(isset($GLOBALS['plugins'][$_REQUEST['plugin']]))
 		(!isset($GLOBALS['plugins'][$_REQUEST['plugin']]['notemplate']) || 
 			$GLOBALS['plugins'][$_REQUEST['plugin']]['notemplate'] == false))
 	{
+		$template = $GLOBALS['templates']['TEMPLATE_' . strtoupper($_REQUEST['plugin'])];
 		// select template for the current plugin
-		if(getExt($GLOBALS['templates']['TEMPLATE_' . strtoupper($_REQUEST['plugin'])]) == 'php')
-			@include $GLOBALS['templates']['TEMPLATE_' . strtoupper($_REQUEST['plugin'])];
+		if(getExt($template) == 'php')
+		{
+			set_output_vars(false);
+			@include $template;
+		}
 		else
 		{
-			set_output_vars();
-			$GLOBALS['smarty']->display($GLOBALS['templates']['TEMPLATE_' . strtoupper($_REQUEST['plugin'])]);
+			set_output_vars(true);
+			$GLOBALS['smarty']->display($template);
 		}
 	}
 }

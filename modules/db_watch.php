@@ -102,7 +102,7 @@ class db_watch extends db_file
 			
 			$props = array(
 				'SELECT' => self::DATABASE,
-				'WHERE' => 'Filepath REGEXP "' . substr($request['search_Filepath'], 1, strlen($request['search_Filepath']) - 2) . '"'
+				'WHERE' => 'Filepath REGEXP "' . addslashes(substr($request['search_Filepath'], 1, strlen($request['search_Filepath']) - 2)) . '"'
 			);
 			
 			// get directory from database

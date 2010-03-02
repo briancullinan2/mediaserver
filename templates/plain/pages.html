@@ -1,4 +1,4 @@
-{assign var=page_count value=$smarty.request.limit}
+{assign var=page_count value=$limit}
 {assign var=page_str value=''}
 {foreach from=$smarty.get key=k item=v}
 {assign var=v value=$v|htmlspecialchars}

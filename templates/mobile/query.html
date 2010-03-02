@@ -27,7 +27,7 @@ a.big.selected {
 }
 </style>
 <script language="javascript">
-var my_link = '{/literal}{$smarty.const.HTML_ROOT}plugins/query.php?cat={$smarty.request.cat}&select={literal}';
+var my_link = '{/literal}{''|generate_href:'select':$smarty.request.cat}&select={literal}';
 function select(id)
 {
 	items[id] = !items[id];

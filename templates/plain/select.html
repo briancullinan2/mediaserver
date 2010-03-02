@@ -30,6 +30,9 @@ $this->assign('parts', $parts);
 	{assign var=page value=$smarty.request.start|intval}
 	{assign var=item_count value=$files|@count}
 	Displaying items {$smarty.request.start} to {$page+$item_count}.
+{if count($user_errors) > 0}
+<br /><span style="color:#C00">{foreach from=$user_errors item=error}<b>{$error->message}</b><br />{/foreach}</span>
+{/if}
 	<form name="select" action="" method="post">
 		<input type="submit" name="select" value="All" /><input type="submit" name="select" value="None" /><br />
 		<p style="white-space:nowrap">
@@ -50,32 +53,32 @@ $this->assign('parts', $parts);
 				($files[file].Filepath|@handles:'playlist' && $smarty.request.cat != $prefix|cat:'playlist') || 
 				($files[file].Filepath|@handles:'diskimage' && $smarty.request.cat != $prefix|cat:'diskimage')
 			}<a href="?dir={$files[file].Filepath|urlencode|htmlspecialchars}{if $files[file].Filepath|@handles:'archive'}&cat={$prefix}archive{elseif $files[file].Filepath|@handles:'diskimage'}&cat={$prefix}diskimage{elseif $files[file].Filepath|@handles:'playlist'}&cat={$prefix}playlist{else}&cat={$smarty.request.cat}{/if}">{$parts|@preg_replace:'<b>$0</b>':$files[file].Filepath}</a>
-			{elseif $files[file].Filepath|@handles:'archive'}<a href="{$smarty.const.HTML_ROOT}plugins/archive.php/{$smarty.request.cat}/{$files[file].id}/OUT/{$files[file].Filename}">{$parts|@preg_replace:'<b>$0</b>':$files[file].Filepath}</a>
-			{elseif $files[file].Filepath|@handles:'diskimage'}<a href="{$smarty.const.HTML_ROOT}plugins/file.php/{$prefix}diskimage/{$files[file].id}/{$files[file].Filename}">{$parts|@preg_replace:'<b>$0</b>':$files[file].Filepath}</a>
-			{elseif $files[file].Filepath|@handles:'image_browser'}<a href="{$smarty.const.HTML_ROOT}plugins/file.php/{$prefix}image_browser/{$files[file].id}/{$files[file].Filename}">{$parts|@preg_replace:'<b>$0</b>':$files[file].Filepath}</a>
-			{else}<a href="{$smarty.const.HTML_ROOT}plugins/file.php/{$smarty.request.cat}/{$files[file].id}/{$files[file].Filename}">{$parts|@preg_replace:'<b>$0</b>':$files[file].Filepath}</a>{/if}
+			{elseif $files[file].Filepath|@handles:'archive'}<a href="{''|generate_href:'archive':'':$smarty.request.cat:$files[file].id:'':$files[file].Filename}">{$parts|@preg_replace:'<b>$0</b>':$files[file].Filepath}</a>
+			{elseif $files[file].Filepath|@handles:'diskimage'}<a href="{''|generate_href:'file':'diskimage':'':$files[file].id:'':$files[file].Filename}">{$parts|@preg_replace:'<b>$0</b>':$files[file].Filepath}</a>
+			{elseif $files[file].Filepath|@handles:'image_browser'}<a href="{''|generate_href:'file':'image_browser':'':$files[file].id:'':$files[file].Filename}">{$parts|@preg_replace:'<b>$0</b>':$files[file].Filepath}</a>
+			{else}<a href="{''|generate_href:'file':$smarty.request.cat:'':$files[file].id:'':$files[file].Filename}">{$parts|@preg_replace:'<b>$0</b>':$files[file].Filepath}</a>{/if}
 			{foreach from=$smarty.session.columns item=column_value}
 				{if isset($files[file].$column_value)}
 					- {$files[file].$column_value}
 				{/if}
 			{/foreach}
             - Download:
-            	<a href="{$smarty.const.HTML_ROOT}plugins/zip.php/{$smarty.request.cat}/{$files[file].id}/Files.zip">zip</a> :
-                <a href="{$smarty.const.HTML_ROOT}plugins/bt.php/{$smarty.request.cat}/{$files[file].id}/Files.torrent">torrent</a>
+            	<a href="{''|generate_href:'zip':$smarty.request.cat:'':$files[file].id:'':'Files.zip'}">zip</a> :
+                <a href="{''|generate_href:'bt':$smarty.request.cat:'':$files[file].id:'':'Files.torrent'}">torrent</a>
                 {if $files[file].Filepath|@handles:'video'}
-                : <a href="{$smarty.const.HTML_ROOT}plugins/encode.php/{$smarty.request.cat}/{$files[file].id}/MP4/{$files[file].Filename}.mp4">mp4</a>
-                : <a href="{$smarty.const.HTML_ROOT}plugins/encode.php/{$smarty.request.cat}/{$files[file].id}/MPG/{$files[file].Filename}.mpeg">mpg</a>
-                : <a href="{$smarty.const.HTML_ROOT}plugins/encode.php/{$smarty.request.cat}/{$files[file].id}/WMV/{$files[file].Filename}.wmv">wmv</a>
+                : <a href="{''|generate_href:'encode':$smarty.request.cat:'':$files[file].id:'mp4':$files[file].Filename}.mp4">mp4</a>
+                : <a href="{''|generate_href:'encode':$smarty.request.cat:'':$files[file].id:'mpg':$files[file].Filename}.mpeg">mpg</a>
+                : <a href="{''|generate_href:'encode':$smarty.request.cat:'':$files[file].id:'wmv':$files[file].Filename}.wmv">wmv</a>
                 {elseif $files[file].Filepath|@handles:'audio'}
-                : <a href="{$smarty.const.HTML_ROOT}plugins/encode.php/{$smarty.request.cat}/{$files[file].id}/MP4A/{$files[file].Filename}.mp4">mp4</a>
-                : <a href="{$smarty.const.HTML_ROOT}plugins/encode.php/{$smarty.request.cat}/{$files[file].id}/MP3/{$files[file].Filename}.mp3">mp3</a>
-                : <a href="{$smarty.const.HTML_ROOT}plugins/encode.php/{$smarty.request.cat}/{$files[file].id}/WMA/{$files[file].Filename}.wma">wma</a>
+                : <a href="{''|generate_href:'encode':$smarty.request.cat:'':$files[file].id:'mp4a':$files[file].Filename}.mp4">mp4</a>
+                : <a href="{''|generate_href:'encode':$smarty.request.cat:'':$files[file].id:'mp3':$files[file].Filename}.mp3">mp3</a>
+                : <a href="{''|generate_href:'encode':$smarty.request.cat:'':$files[file].id:'wma':$files[file].Filename}.wma">wma</a>
                 {elseif $files[file].Filepath|@handles:'image'}
-                : <a href="{$smarty.const.HTML_ROOT}plugins/convert.php/{$smarty.request.cat}/{$files[file].id}/JPG/{$files[file].Filename}.jpg">jpg</a>
-                : <a href="{$smarty.const.HTML_ROOT}plugins/convert.php/{$smarty.request.cat}/{$files[file].id}/GIF/{$files[file].Filename}.gif">gif</a>
-                : <a href="{$smarty.const.HTML_ROOT}plugins/convert.php/{$smarty.request.cat}/{$files[file].id}/PNG/{$files[file].Filename}.png">png</a>
+                : <a href="{''|generate_href:'convert':$smarty.request.cat:'':$files[file].id:'jpg':$files[file].Filename}.jpg">jpg</a>
+                : <a href="{''|generate_href:'convert':$smarty.request.cat:'':$files[file].id:'gif':$files[file].Filename}.gif">gif</a>
+                : <a href="{''|generate_href:'convert':$smarty.request.cat:'':$files[file].id:'png':$files[file].Filename}.png">png</a>
                 {elseif $files[file].Filepath|@handles:'code'}
-                : <a href="{$smarty.const.HTML_ROOT}plugins/file.php/{$prefix}code/{$files[file].id}/{$files[file].Filename}.html">view</a>
+                : <a href="{''|generate_href:'file':'code':'':$files[file].id:'':$files[file].Filename}.html">view</a>
               {/if}
 			<br />
 		{/section}
@@ -130,7 +133,7 @@ $this->assign('parts', $parts);
 					<span class="column">{$files[file].$column_value|string_format:$format_str}</span>
 				{/if}
 			{/foreach}
-			<span class="column"><a href="{$smarty.const.HTML_ROOT}plugins/zip.php/{$smarty.request.cat}/{$files[file].id}/Files.zip">zip</a>:<a href="{$smarty.const.HTML_ROOT}{$smarty.const.HTML_PLUGINS}bt.php/{$smarty.request.cat}/{$files[file].id}/Files.torrent">torrent</a></span>
+			<span class="column"><a href="{''|generate_href:'zip':$smarty.request.cat:'':$files[file].id:'':'Files.zip'}">zip</a>:<a href="{''|generate_href:'bt':$smarty.request.cat:'':$files[file].id:'':'Files.torrent'}">torrent</a></span>
 			<span style="display:block; float:left; clear:both;"></span><br />
 		{/section}
 		</p>
@@ -169,7 +172,7 @@ $this->assign('parts', $parts);
 {foreach from=$smarty.session.columns item=column_value}
 				<td>{if isset($files[file].$column_value)}{$files[file].$column_value}{/if}</td>
 {/foreach}
-				<td><a href="{$smarty.const.HTML_ROOT}plugins/zip.php/{$smarty.request.cat}/{$files[file].id}/Files.zip">zip</a>:<a href="{$smarty.const.HTML_ROOT}plugins/bt.php/{$smarty.request.cat}/{$files[file].id}/Files.torrent">torrent</a></td>
+				<td><a href="{''|generate_href:'zip':$smarty.request.cat:'':$files[file].id:'':'Files.zip'}">zip</a>:<a href="{''|generate_href:'bt':$smarty.request.cat:'':$files[file].id:'':'Files.torrent'}">torrent</a></td>
 			</tr>
 {/section}
 		</table>

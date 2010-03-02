@@ -6,6 +6,7 @@ if(!isset($_REQUEST['limit']))
 	$_REQUEST['limit'] = 50;
 
 $GLOBALS['templates']['TEMPLATE_INDEX'] = LOCAL_ROOT . LOCAL_TEMPLATE . 'index.html';
+$GLOBALS['templates']['TEMPLATE_SELECT'] = LOCAL_ROOT . LOCAL_TEMPLATE . 'index.html';
 $GLOBALS['templates']['TEMPLATE_SEARCH'] = LOCAL_ROOT . LOCAL_TEMPLATE . 'search.html';
 $GLOBALS['templates']['TEMPLATE_PAGES'] = LOCAL_ROOT . LOCAL_TEMPLATE . 'pages.html';
 $GLOBALS['templates']['TEMPLATE_HEADER'] = LOCAL_ROOT . LOCAL_TEMPLATE . 'header.html';

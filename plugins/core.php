@@ -36,12 +36,17 @@ function generate_href($request = array(), $plugin = '', $cat = '', $dir = '', $
 		if($plugin != '') $request['plugin'] = $plugin;
 		if($cat != '') $request['cat'] = $cat;
 		if($dir != '') $request['dir'] = $dir;
-		if($extra != '') $request['extra'] = $extra;
+		if($id != '') $request['id'] = $id;
 		if($filename != '') $request['filename'] = $filename;
 		foreach($arr as $i => $value)
 		{
 			$x = explode('=', $value);
 			$request[$x[0]] = $x[1];
+		}
+		if($extra != '')
+		{
+			if(isset($request['plugin'])) $request[$request['plugin']] = $extra;
+			else $request['extra'] = $extra;
 		}
 	}
 
@@ -66,12 +71,35 @@ function generate_href($request = array(), $plugin = '', $cat = '', $dir = '', $
 		return htmlspecialchars($link);
 }
 
-function set_output_vars()
+function set_output_vars($smarty)
 {
-	foreach($GLOBALS['output'] as $name => $value)
+	// remove everything else so templates can't violate the security
+	//   there is no going back from here
+	if(isset($_SESSION)) session_write_close();
+	
+	$dont_remove = array('GLOBALS', 'templates', 'smarty', 'output', 'template', 'alias', 'alias_regexp', 'paths', 'paths_regexp', 'mte');
+	foreach($GLOBALS as $key => $value)
 	{
-		$GLOBALS['smarty']->assign($name, $value);
+		if(in_array($key, $dont_remove) === false)
+			unset($GLOBALS[$key]);
 	}
+	
+	if($smarty)
+	{
+		foreach($GLOBALS['output'] as $name => $value)
+		{
+			$GLOBALS['smarty']->assign($name, $value);
+		}
+	}
+	else
+	{
+		foreach($GLOBALS['output'] as $name => $value)
+		{
+			$GLOBALS['templates']['vars'][$name] = $value;
+		}
+	}
+	
+	unset($GLOBALS['output']);
 }
 
 function validate_cat($request)
@@ -249,6 +277,12 @@ function rewrite_vars($request)
 	}
 
 	return $request;
+}
+
+function validate_extra($request)
+{
+	if(isset($request['extra']))
+		return $request['extra'];
 }
 
 function output_index($request)

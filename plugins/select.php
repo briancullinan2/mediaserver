@@ -178,6 +178,7 @@ function output_select($request)
 	// set up required request variables
 	$request['cat'] = validate_cat($request);
 	$request['start'] = validate_start($request);
+	$request['limit'] = validate_limit($request);
 	$request['order_by'] = validate_order_by($request);
 	$request['direction'] = validate_direction($request);
 	
@@ -242,5 +243,10 @@ function output_select($request)
 	register_output_vars('files', $files);
 	
 	register_output_vars('total_count', $total_count);
+	
+	// support paging
+	register_output_vars('start', $request['start']);
+	register_output_vars('limit', $request['limit']);
+	if(isset($request['dir'])) register_output_vars('dir', $request['dir']);
 }
 

@@ -34,9 +34,9 @@ function validate_template($request, $session = '')
 	// check if it is a valid template specified
 	if(isset($request['template']))
 	{
-		if(substr($request['template'], 0, 10) == 'templates/')
+		if(substr($request['template'], 0, 10) == 'templates/' || substr($request['template'], 0, 10) == 'templates\\')
 			$request['template'] = substr($request['template'], 10);
-		if($request['template'][strlen($request['template'])-1] == '/')
+		if($request['template'][strlen($request['template'])-1] == '/' || $request['template'][strlen($request['template'])-1] == '\\')
 			$request['template'] = substr($request['template'], 0, -1);
 		if(in_array($request['template'], $GLOBALS['templates']))
 		{

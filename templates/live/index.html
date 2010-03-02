@@ -132,7 +132,7 @@ $this->assign('newlineregexp', '/([^ ]{25})/i');
 				<td>
 					<table cellpadding="0" cellspacing="0" border="0" class="fileThumb">
 						<tr>
-							<td><div class="thumb file_ext_{$files[file].Filetype} file_type_{'/'|str_replace:' file_type_':$files[file].Filemime}"><img src="{$smarty.const.HTML_ROOT}{$smarty.const.HTML_TEMPLATE}images/s.gif" height="48" width="48"></div></td>
+							<td><div class="thumb file_ext_{$files[file].Filetype} file_type_{'/'|str_replace:' file_type_':$files[file].Filemime}"><img src="{'file=images/s.gif&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}" height="48" width="48"></div></td>
 							<td class="infoCell">
 								<span class="title">{if isset($parts)}{$parts|@preg_replace:'<b style="background-color:#990">$0</b>':$itemvalue}{else}{$itemvalue}{/if}</span><br />
 								<span>{$files[file].Filetype}</span>

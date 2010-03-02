@@ -1,3 +1,7 @@
+Test modifications to extjs and wmp template script and link includes
+Work on cron.php script
+Add check for Snoopy library in install.php
+Review all use of smarty variables
 Create an error template page for displaying errors
 Check for bt plugin in install.php script
 Add bttracker install script to admin/install.php to fully bootstrap the install process

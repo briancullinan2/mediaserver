@@ -46,15 +46,17 @@ function output_login($request)
 {
 	if( $_SESSION['loggedin'] == true )
 	{
-		if( isset($_REQUEST['return']) && (!isset($_REQUEST['required_priv']) || $_SESSION['privilage'] >= $_REQUEST['required_priv']))
+		if( isset($request['return']) && (!isset($request['required_priv']) || $_SESSION['privilage'] >= $request['required_priv']))
 		{
-			header('Location: ' . $_REQUEST['return']);
+			header('Location: ' . $request['return']);
 			exit();
 		}
 	}
 	
-	if(isset($request['username']))
-		register_output_vars('username', $request['username']);
+	if(isset($_SESSION['login']['username']))
+		register_output_vars('username', $_SESSION['login']['username']);
 	else
 		register_output_vars('username', '');
+		
+	if(isset($request['return'])) register_output_vars('return', $request['return']);
 }
