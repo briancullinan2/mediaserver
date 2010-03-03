@@ -98,7 +98,7 @@ switch($_REQUEST['action'])
 <genre id="<?php echo $genre_id; ?>"><![CDATA[<?php echo $song['Genre']; ?>]]></genre>
 <track><?php echo $song['Track']; ?></track>
 <time><?php echo $song['Length']; ?></time>
-<url><![CDATA[<?php echo HTML_DOMAIN . generate_href('encode=mp3&id=' . $song['id'] . '&cat=db_audio', 'encode', '', '', '', '', '', true); ?>]]></url>
+<url><![CDATA[<?php echo generate_href('encode=mp3&id=' . $song['id'] . '&cat=db_audio&plugin=encode', true, true); ?>]]></url>
 <size><?php echo filesize($song['Filepath']); ?></size>
 <art><![CDATA[]]></art>
 </song>

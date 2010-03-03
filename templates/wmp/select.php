@@ -83,9 +83,9 @@ else
 		
 		?>
 		<name><?php echo htmlspecialchars(utf8_encode($file['Filename'])); ?></name>
-		<icon><?php echo HTML_DOMAIN . HTML_ROOT . 'plugins/convert.php?file=' . htmlspecialchars(urlencode(utf8_encode(dirname($file['Filepath']) . '/folder.jpg'))) . '&amp;convert=jpg&amp;%TH=100&amp;%TW=100'; ?></icon>
+		<icon><?php echo generate_href('plugin=convert&id=' . dirname($file['id']) . '&filename=folder.jpg' . '&convert=jpg&theight=100&twidth=100', false, true); ?></icon>
 		<path><?php echo htmlspecialchars(utf8_encode($file['Filepath'])); ?></path>
-		<link><?php echo HTML_DOMAIN . HTML_ROOT . 'plugins/file.php/' . $_REQUEST['cat'] . '/' . $file['id'] . '/' . htmlspecialchars(urlencode(utf8_encode(basename($file['Filepath'])))); ?></link>
+		<link><?php echo generate_href('file/' . $_REQUEST['cat'] . '/' . $file['id'] . '/' . basename($file['Filepath']), false, true); ?></link>
 		<short><?php echo htmlspecialchars(utf8_encode(substr($file['Filename'], 0, 13))) . '...'; ?></short>
 		<?php
 			if(handles($file['Filepath'], 'archive'))

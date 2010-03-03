@@ -1,12 +1,11 @@
-Test modifications to extjs and wmp template script and link includes
 Work on cron.php script
 Add check for Snoopy library in install.php
 Review all use of smarty variables
+	$smarty.get, $smarty.request.search, $smarty.server.PHP_SELF, $smarty.session
 Create an error template page for displaying errors
 Check for bt plugin in install.php script
 Add bttracker install script to admin/install.php to fully bootstrap the install process
 Re-upload entire site
-Fix HTML_ROOT usage to use generate_href instead (this is hard)
 Finish fixing up plugins to use new API
 	admin section
 	Go through plugins and fix error reporting
@@ -52,11 +51,11 @@ Work on db_movies, use cUrl to download movie information from imdb, use the vol
 	Look up movies on amazon, and see if that will help with searching IMDb
 	Research the video_ts.ifo file, there must be a way of getting the full name from a DVD image, windows media center projects can do it, so can we
 ------------- All Template TODO -------------
+Figure out how template_path and plugins_path is used in the javascript in the WMP and EXT JS templates
+Test modifications to extjs and wmp template script and link includes
 Finish mobile template.
-Go through all templates and check for XSS, that's the only vulnerability found so far
-	Check for places that need htmlspecialchars()
 Convert some templates to php instead of smarty because it would look nicer to developers
-Add Ampache XML API template
+Finish Ampache XML API template
 Work on finishing EXT JS template, and add more templates from Ampache, Jinzora, Subsonic, and WinAmp Remote
 ------------- DEFAULT -------------
 Add podcast list template

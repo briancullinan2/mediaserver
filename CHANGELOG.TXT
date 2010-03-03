@@ -1,3 +1,10 @@
+2010-03-02
+Deleted repository copy of extjs
+Went through $smarty.request usages and fixed them since all global variables are removed
+Changed the API for generate_href
+	Now only a request string or path_info is accepted as input
+	Optional "notspecial" does not invoke the htmlspecialchars() procedure on the link, also "include_domain" which adds the HTML_DOMAIN
+
 2010-03-01
 Fixed Ampache.php plugin
 Made request.php pluin obsolete

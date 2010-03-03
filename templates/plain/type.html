@@ -1,8 +1,8 @@
 <div id="type">
 	Get the list:
 	<br />
-	<form action="{$smarty.const.HTML_ROOT}plugins/list.php" method="get">
-		<input type="hidden" name="cat" value="{$smarty.request.cat}" />
+	<form action="{'plugin=list'|generate_href}" method="get">
+		<input type="hidden" name="cat" value="{$cat}" />
 		Type <select name="list">
 			{foreach from=$types item=type key=name}
 			<option value="{$name}">{$type.name}</option>

@@ -308,9 +308,9 @@ function setupUsers()
 // this is used to set up the input variables
 function setupInputVars()
 {
-	
 	// first fix the REQUEST_URI and pull out what is meant to be pretty dirs
-	$_REQUEST['plugin'] = validate_plugin($_REQUEST);
+	if(isset($_SERVER['PATH_INFO']))
+		$_REQUEST['path_info'] = $_SERVER['PATH_INFO'];
 	
 	// call rewrite_vars in order to set some request variables
 	$_REQUEST = rewrite_vars($_REQUEST);

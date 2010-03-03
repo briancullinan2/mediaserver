@@ -53,57 +53,57 @@
 		<div class="loading-indicator">Media Server<br /><span id="loading-msg" class="loading-msg">Loading styles and images...</span></div>
 	</div>
     <!-- include everything after the loading indicator -->
-    <link rel="stylesheet" type="text/css" href="{'template='|cat:$smarty.const.LOCAL_BASE|cat:'&file=extjs/resources/css/ext-all.css'|generate_href:'template'}" />
-    <link rel="stylesheet" type="text/css" href="{'template='|cat:$smarty.const.HTML_TEMPLATE|cat:'&file=css/Filetypes.css'|generate_href:'template'}" />
-    <link rel="stylesheet" type="text/css" href="{'template='|cat:$smarty.const.HTML_TEMPLATE|cat:'&file=css/Desktop.css'|generate_href:'template'}" />
-    <link rel="stylesheet" type="text/css" href="{'template='|cat:$smarty.const.HTML_TEMPLATE|cat:'&file=css/Portal.css'|generate_href:'template'}" />
-    <link rel="stylesheet" type="text/css" href="{'template='|cat:$smarty.const.HTML_TEMPLATE|cat:'&file=css/Downloads.css'|generate_href:'template'}" />
-    <link rel="stylesheet" type="text/css" href="{'template='|cat:$smarty.const.HTML_TEMPLATE|cat:'&file=css/Player.css'|generate_href:'template'}" />
-    <link rel="stylesheet" type="text/css" href="{'template='|cat:$smarty.const.HTML_TEMPLATE|cat:'&file=css/Global.css'|generate_href:'template'}" />
-    <link rel="stylesheet" type="text/css" href="{'template='|cat:$smarty.const.HTML_TEMPLATE|cat:'&file=css/examples.css'|generate_href:'template'}" />
-    <link rel="stylesheet" type="text/css" href="{'template='|cat:$smarty.const.HTML_TEMPLATE|cat:'&file=css/examples.css'|generate_href:'template'}" />
-    <link rel="stylesheet" type="text/css" href="{'template='|cat:$smarty.const.HTML_TEMPLATE|cat:'&file=livegrid/src/resources/css/ext-ux-livegrid.css'|generate_href:'template'}" />
+    <link rel="stylesheet" type="text/css" href="{'plugin=template&file=extjs/resources/css/ext-all.css&template='|cat:$smarty.const.LOCAL_BASE|generate_href}" />
+    <link rel="stylesheet" type="text/css" href="{'plugin=template&file=css/Filetypes.css&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}" />
+    <link rel="stylesheet" type="text/css" href="{'plugin=template&file=css/Desktop.css&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}" />
+    <link rel="stylesheet" type="text/css" href="{'plugin=template&file=css/Portal.css&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}" />
+    <link rel="stylesheet" type="text/css" href="{'plugin=template&file=css/Downloads.css&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}" />
+    <link rel="stylesheet" type="text/css" href="{'plugin=template&file=css/Player.css&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}" />
+    <link rel="stylesheet" type="text/css" href="{'plugin=template&file=css/Global.css&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}" />
+    <link rel="stylesheet" type="text/css" href="{'plugin=template&file=css/examples.css&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}" />
+    <link rel="stylesheet" type="text/css" href="{'plugin=template&file=css/examples.css&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}" />
+    <link rel="stylesheet" type="text/css" href="{'plugin=template&file=livegrid/src/resources/css/ext-ux-livegrid.css&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}" />
 
     <!-- GC -->
  	<!-- LIBS -->
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading Core API...';</script>
- 	<script type="text/javascript" src="{'file=extjs/adapter/ext/ext-base.js&template='|cat:$smarty.const.LOCAL_BASE|generate_href:'template'}"></script>
+ 	<script type="text/javascript" src="{'plugin=template&file=extjs/adapter/ext/ext-base.js&template='|cat:$smarty.const.LOCAL_BASE|generate_href}"></script>
 
  	<!-- ENDLIBS -->
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading UI Components... (Core Components)';</script>
-    <script type="text/javascript" src="{'file=extjs/ext-all-debug.js&template='|cat:$smarty.const.LOCAL_BASE|generate_href:'template'}"></script>
+    <script type="text/javascript" src="{'plugin=template&file=extjs/ext-all-debug.js&template='|cat:$smarty.const.LOCAL_BASE|generate_href}"></script>
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading UI Components... (Library Mods)';</script>
- 	<script type="text/javascript" src="{'file=js/Library.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
+ 	<script type="text/javascript" src="{'plugin=template&file=js/Library.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}"></script>
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading UI Components... (Buffered Components)';</script>
-	<script type="text/javascript" src="{'file=livegrid/src/GridPanel.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
-	<script type="text/javascript" src="{'file=livegrid/src/GridView.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
-	<script type="text/javascript" src="{'file=livegrid/src/RowSelectionModel.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
-	<script type="text/javascript" src="{'file=livegrid/src/Store.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
-	<script type="text/javascript" src="{'file=livegrid/src/Toolbar.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
+	<script type="text/javascript" src="{'plugin=template&file=livegrid/src/GridPanel.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}"></script>
+	<script type="text/javascript" src="{'plugin=template&file=livegrid/src/GridView.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}"></script>
+	<script type="text/javascript" src="{'plugin=template&file=livegrid/src/RowSelectionModel.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}"></script>
+	<script type="text/javascript" src="{'plugin=template&file=livegrid/src/Store.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}"></script>
+	<script type="text/javascript" src="{'plugin=template&file=livegrid/src/Toolbar.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}"></script>
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading UI Components... (Media Components)';</script>
-	<script type="text/javascript" src="{'file=js/XMLTreeNode.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
-	<script type="text/javascript" src="{'file=js/FolderView.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
- 	<script type="text/javascript" src="{'file=js/Address.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
+	<script type="text/javascript" src="{'plugin=template&file=js/XMLTreeNode.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}"></script>
+	<script type="text/javascript" src="{'plugin=template&file=js/FolderView.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}"></script>
+ 	<script type="text/javascript" src="{'plugin=template&file=js/Address.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}"></script>
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading UI Components... (Extra Components)';</script>
-	<script type="text/javascript" src="{'file=ux/mediapanel.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
-	<script type="text/javascript" src="{'file=js/GMapPanel.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
+	<script type="text/javascript" src="{'plugin=template&file=ux/mediapanel.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}"></script>
+	<script type="text/javascript" src="{'plugin=template&file=js/GMapPanel.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}"></script>
 
     <!-- DESKTOP -->
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Initializing Desktop...';</script>
-    <script type="text/javascript" src="{'file=js/StartMenu.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
-    <script type="text/javascript" src="{'file=js/TaskBar.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
-    <script type="text/javascript" src="{'file=js/Desktop.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
+    <script type="text/javascript" src="{'plugin=template&file=js/StartMenu.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}"></script>
+    <script type="text/javascript" src="{'plugin=template&file=js/TaskBar.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}"></script>
+    <script type="text/javascript" src="{'plugin=template&file=js/Desktop.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}"></script>
 	
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading Applications...';</script>
-    <script type="text/javascript" src="{'file=js/App.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
+    <script type="text/javascript" src="{'plugin=template&file=js/App.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}"></script>
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading Applications... (Module)';</script>
-    <script type="text/javascript" src="{'file=js/Module.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
+    <script type="text/javascript" src="{'plugin=template&file=js/Module.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}"></script>
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading Applications... (Portal)';</script>
-    <script type="text/javascript" src="{'file=js/Portal.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
+    <script type="text/javascript" src="{'plugin=template&file=js/Portal.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}"></script>
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading Applications... (Downloads)';</script>
-    <script type="text/javascript" src="{'file=js/Downloads.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
+    <script type="text/javascript" src="{'plugin=template&file=js/Downloads.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}"></script>
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading Applications... (Player)';</script>
-    <script type="text/javascript" src="{'file=js/Player.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
+    <script type="text/javascript" src="{'plugin=template&file=js/Player.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}"></script>
 
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading Personal Settings...';</script>
 	<div id="x-desktop">
@@ -129,7 +129,7 @@
 		<div class="x-clear"></div>
 	</div>
 	
-    <script type="text/javascript" src="{'file=js/Config.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href:'template'}"></script>
+    <script type="text/javascript" src="{'plugin=template&file=js/Config.js&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}"></script>
     <!--<script type="text/javascript" src="{'file=js/examples.js&template='|cat:$smarty.const.LOCAL_BASE|generate_href:'template'}"></script>-->
 	
 	{literal}

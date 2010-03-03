@@ -37,7 +37,7 @@
     }
     </style>
 	<script type="text/javascript">
-		site_path = '<?php echo HTML_ROOT; ?>';
+		site_path = '<?php echo generate_href(''); ?>';
 		template_path = '<?php echo HTML_ROOT . HTML_TEMPLATE; ?>';
 		plugins_path = '<?php echo HTML_ROOT . 'plugins/'; ?>';
 		dir_sep = "\<?php echo DIRECTORY_SEPARATOR; ?>";
@@ -52,28 +52,28 @@
 		<div class="loading-indicator">Media Server<br /><span id="loading-msg" class="loading-msg">Loading styles and images...</span></div>
 	</div>
     <!-- include everything after the loading indicator -->
-    <link rel="stylesheet" type="text/css" href="<?php echo generate_href('file=extjs/resources/css/ext-all.css&template=' . LOCAL_BASE, 'template'); ?>" />
-    <link rel="stylesheet" type="text/css" href="<?php echo generate_href('file=extjs/ux/livegrid/build/resources/css/ext-ux-livegrid.css&template=' . LOCAL_BASE, 'template'); ?>" />
-    <link rel="stylesheet" type="text/css" href="<?php echo generate_href('file=types.css&template=' . HTML_TEMPLATE, 'template'); ?>" />
-    <link rel="stylesheet" type="text/css" href="<?php echo generate_href('file=styles.css&template=' . HTML_TEMPLATE, 'template'); ?>" />
+    <link rel="stylesheet" type="text/css" href="<?php echo generate_href('plugin=template&file=extjs/resources/css/ext-all.css&template=' . LOCAL_BASE); ?>" />
+    <link rel="stylesheet" type="text/css" href="<?php echo generate_href('plugin=template&file=extjs/ux/livegrid/build/resources/css/ext-ux-livegrid.css&template=' . LOCAL_BASE); ?>" />
+    <link rel="stylesheet" type="text/css" href="<?php echo generate_href('plugin=template&file=types.css&template=' . HTML_TEMPLATE); ?>" />
+    <link rel="stylesheet" type="text/css" href="<?php echo generate_href('plugin=template&file=styles.css&template=' . HTML_TEMPLATE); ?>" />
 
     <!-- GC -->
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading Core API...';</script>
- 	<script type="text/javascript" src="<?php echo generate_href('file=extjs/adapter/ext/ext-base.js&template=' . LOCAL_BASE, 'template'); ?>"></script>
+ 	<script type="text/javascript" src="<?php echo generate_href('plugin=template&file=extjs/adapter/ext/ext-base.js&template=' . LOCAL_BASE); ?>"></script>
 
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading UI Components... (Core Components)';</script>
- 	<script type="text/javascript" src="<?php echo generate_href('file=extjs/ext-all-debug.js&template=' . LOCAL_BASE, 'template'); ?>"></script>
- 	<script type="text/javascript" src="<?php echo generate_href('file=extjs/adapter/ext/ext-base.js&template=' . LOCAL_BASE, 'template'); ?>"></script>
- 	<script type="text/javascript" src="<?php echo generate_href('file=extjs/ux/livegrid/build/livegrid-all-debug.js&template=' . LOCAL_BASE, 'template'); ?>"></script>
- 	<script type="text/javascript" src="<?php echo generate_href('file=extjs/ux/XmlTreeLoader.js&template=' . LOCAL_BASE, 'template'); ?>"></script>
- 	<script type="text/javascript" src="<?php echo generate_href('file=extjs/ux/XMLTreeNode.js&template=' . LOCAL_BASE, 'template'); ?>"></script>
- 	<script type="text/javascript" src="<?php echo generate_href('file=extjs/ux/BufferView.js&template=' . LOCAL_BASE, 'template'); ?>"></script>
+ 	<script type="text/javascript" src="<?php echo generate_href('plugin=template&file=extjs/ext-all-debug.js&template=' . LOCAL_BASE); ?>"></script>
+ 	<script type="text/javascript" src="<?php echo generate_href('plugin=template&file=extjs/adapter/ext/ext-base.js&template=' . LOCAL_BASE); ?>"></script>
+ 	<script type="text/javascript" src="<?php echo generate_href('plugin=template&file=extjs/ux/livegrid/build/livegrid-all-debug.js&template=' . LOCAL_BASE); ?>"></script>
+ 	<script type="text/javascript" src="<?php echo generate_href('plugin=template&file=extjs/ux/XmlTreeLoader.js&template=' . LOCAL_BASE); ?>"></script>
+ 	<script type="text/javascript" src="<?php echo generate_href('plugin=template&file=extjs/ux/XMLTreeNode.js&template=' . LOCAL_BASE); ?>"></script>
+ 	<script type="text/javascript" src="<?php echo generate_href('plugin=template&file=extjs/ux/BufferView.js&template=' . LOCAL_BASE); ?>"></script>
 	
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading UI Components... (Library Mods)';</script>
- 	<script type="text/javascript" src="<?php echo generate_href('file=Library.js&template=' . HTML_TEMPLATE, 'template'); ?>"></script>
+ 	<script type="text/javascript" src="<?php echo generate_href('plugin=template&file=Library.js&template=' . HTML_TEMPLATE); ?>"></script>
 	
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Loading UI Components... (Media Components)';</script>
- 	<script type="text/javascript" src="<?php echo generate_href('file=main.js&template=' . HTML_TEMPLATE, 'template'); ?>"></script>
+ 	<script type="text/javascript" src="<?php echo generate_href('plugin=template&file=main.js&template=' . HTML_TEMPLATE); ?>"></script>
 
     <!-- PLAYER -->
 	<script type="text/javascript">document.getElementById('loading-msg').innerHTML = 'Initializing Player...';</script>
@@ -87,7 +87,7 @@
 		Ext.get('loading-mask').fadeOut({remove:true});
 	}, 300);
 	
-	Ext.BLANK_IMAGE_URL = '<?php echo generate_href('file=extjs/resources/images/default/s.gif&template=' . LOCAL_BASE, 'template'); ?>';
+	Ext.BLANK_IMAGE_URL = '<?php echo generate_href('plugin=template&file=extjs/resources/images/default/s.gif&template=' . LOCAL_BASE); ?>';
 	
 	</script>
 	

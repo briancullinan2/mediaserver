@@ -4,7 +4,7 @@
 	<meta http-equiv="Pragma" content="no-cache">
 	<meta http-equiv="Expires" content="-1">
 	<title><?php echo HTML_NAME?>: Tools</title>
-    <link rel="stylesheet" href="<?php echo HTML_ROOT . LOCAL_BASE; ?>css/tools.css" type="text/css"/>
+    <link rel="stylesheet" href="<?php echo generate_href('plugin=template&tfile=css/tools.css&template=' . LOCAL_BASE); ?>" type="text/css"/>
 </head>
 <body>
 	<p>View different types of reports by selecting the link and following the instructions.</p>
@@ -12,7 +12,7 @@
 	foreach($tool_names as $i => $name)
 	{
 		$tool = $tools[$name];
-		?><div class="section"><a href="<?php echo HTML_ROOT; ?>admin/tools.php?tool=<?php echo htmlspecialchars($name); ?>">[view]</a> <span><?php echo $tool_names[$i]; ?>: </span><br /><?php echo $tool_descs[$i];
+		?><div class="section"><a href="<?php echo generate_href('plugin=tools&tool=' . $name); ?>">[view]</a> <span><?php echo $tool_names[$i]; ?>: </span><br /><?php echo $tool_descs[$i];
 
 		$tool = preg_replace('/\<warning label="([^"]*)"\>/i', '<div class="warning"><span>$1: </span>', $tool);
 		$tool = preg_replace('/\<\/warning\>/i', '</div>', $tool);

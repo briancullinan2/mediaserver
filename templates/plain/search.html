@@ -10,7 +10,7 @@
             {/foreach}
 			<select name="cat">
 			{foreach item=name key=module from=$modules}
-				<option value="{$module}" {if isset($smarty.request.cat) && $smarty.request.cat eq $module}selected{/if}>{$name}</option>
+				<option value="{$module}" {if isset($cat) && $cat eq $module}selected{/if}>{$name}</option>
 			{/foreach}
 			</select>
 			<br />

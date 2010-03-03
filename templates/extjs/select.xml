@@ -17,7 +17,7 @@ $this->assign('type_icons', $type_icons);
 	<count>{$total_count}</count>
 {section name=file loop=$files}
 	<file>
-		{assign var=index value=$smarty.section.file.index+$smarty.request.start}
+		{assign var=index value=$smarty.section.file.index+$start}
 		<index>{$index}</index>
 		<id>{$files[file].id}</id>
 		<name>{$files[file].Filename|utf8_encode|htmlspecialchars}</name>
@@ -29,7 +29,7 @@ $this->assign('type_icons', $type_icons);
 		<ext>{$ext|htmlspecialchars}</ext>
 		<tip>{foreach from=$columns item=column_value}{if isset($files[file].$column_value)}{$column_value}: {$files[file].$column_value|utf8_encode|htmlspecialchars}&lt;br /&gt;{/if}{/foreach}</tip>
 		<path>{$files[file].Filepath|utf8_encode|htmlspecialchars}</path>
-		<link>{$smarty.const.HTML_DOMAIN}{''|generate_href:'file':$smarty.request.cat:'':$files[file].id:'':$files[file].Filename}</link>
+		<link>{'plugin=file&cat='|cat:$cat|cat:'id='|cat:$files[file].id|cat:'&filename='|cat:$files[file].Filename|generate_href:false:true}</link>
 		<short>{$files[file].Filename|truncate:13:"...":true|utf8_encode|htmlspecialchars}</short>
 {if $files[file].Filepath|@handles:'archive'}<cat>{$prefix}archive</cat>
 {elseif $files[file].Filepath|@handles:'diskimage'}<cat>{$prefix}diskimage</cat>

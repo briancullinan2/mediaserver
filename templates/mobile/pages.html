@@ -1,6 +1,6 @@
-{assign var=page value=$smarty.request.start|intval}
+{assign var=page value=$start|intval}
 {assign var=item_count value=$files|@count}
-{assign var=page_count value=$smarty.request.limit}
+{assign var=page_count value=$limit}
 {assign var=page_str value=''}
 {foreach from=$smarty.get key=k item=v}
 {if $page_str != ''}{assign var=page_str value=$page_str|cat:'&amp;'}{/if}

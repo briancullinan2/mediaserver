@@ -27,9 +27,9 @@ $this->assign('parts', $parts);
 {/php}
 {if isset($smarty.session.settings.template.view) eq false or $smarty.session.settings.template.view eq "dash"}
 	There are {$total_count} result(s).<br />
-	{assign var=page value=$smarty.request.start|intval}
+	{assign var=page value=$start|intval}
 	{assign var=item_count value=$files|@count}
-	Displaying items {$smarty.request.start} to {$page+$item_count}.
+	Displaying items {$start} to {$page+$item_count}.
 {if count($user_errors) > 0}
 <br /><span style="color:#C00">{foreach from=$user_errors item=error}<b>{$error->message}</b><br />{/foreach}</span>
 {/if}
@@ -49,36 +49,36 @@ $this->assign('parts', $parts);
 			<input type="radio" name="item[{$files[file].id}]" value="on" {if $item_selected}checked="checked"{/if} />
 			<input type="radio" name="item[{$files[file].id}]" value="off" {if !$item_selected}checked="checked"{/if} />
 			{if $files[file].Filetype=="FOLDER" || 
-				($files[file].Filepath|@handles:'archive' && $smarty.request.cat != $prefix|cat:'archive') || 
-				($files[file].Filepath|@handles:'playlist' && $smarty.request.cat != $prefix|cat:'playlist') || 
-				($files[file].Filepath|@handles:'diskimage' && $smarty.request.cat != $prefix|cat:'diskimage')
-			}<a href="?dir={$files[file].Filepath|urlencode|htmlspecialchars}{if $files[file].Filepath|@handles:'archive'}&cat={$prefix}archive{elseif $files[file].Filepath|@handles:'diskimage'}&cat={$prefix}diskimage{elseif $files[file].Filepath|@handles:'playlist'}&cat={$prefix}playlist{else}&cat={$smarty.request.cat}{/if}">{$parts|@preg_replace:'<b>$0</b>':$files[file].Filepath}</a>
-			{elseif $files[file].Filepath|@handles:'archive'}<a href="{''|generate_href:'archive':'':$smarty.request.cat:$files[file].id:'':$files[file].Filename}">{$parts|@preg_replace:'<b>$0</b>':$files[file].Filepath}</a>
-			{elseif $files[file].Filepath|@handles:'diskimage'}<a href="{''|generate_href:'file':'diskimage':'':$files[file].id:'':$files[file].Filename}">{$parts|@preg_replace:'<b>$0</b>':$files[file].Filepath}</a>
-			{elseif $files[file].Filepath|@handles:'image_browser'}<a href="{''|generate_href:'file':'image_browser':'':$files[file].id:'':$files[file].Filename}">{$parts|@preg_replace:'<b>$0</b>':$files[file].Filepath}</a>
-			{else}<a href="{''|generate_href:'file':$smarty.request.cat:'':$files[file].id:'':$files[file].Filename}">{$parts|@preg_replace:'<b>$0</b>':$files[file].Filepath}</a>{/if}
+				($files[file].Filepath|@handles:'archive' && $cat != $prefix|cat:'archive') || 
+				($files[file].Filepath|@handles:'playlist' && $cat != $prefix|cat:'playlist') || 
+				($files[file].Filepath|@handles:'diskimage' && $cat != $prefix|cat:'diskimage')
+			}<a href="?dir={$files[file].Filepath|urlencode|htmlspecialchars}{if $files[file].Filepath|@handles:'archive'}&cat={$prefix}archive{elseif $files[file].Filepath|@handles:'diskimage'}&cat={$prefix}diskimage{elseif $files[file].Filepath|@handles:'playlist'}&cat={$prefix}playlist{else}&cat={$cat}{/if}">{$parts|@preg_replace:'<b>$0</b>':$files[file].Filepath}</a>
+			{elseif $files[file].Filepath|@handles:'archive'}<a href="{'file/archive/'|cat:$files[file].id|cat:'/'|cat:$files[file].Filename|generate_href}">{$parts|@preg_replace:'<b>$0</b>':$files[file].Filepath}</a>
+			{elseif $files[file].Filepath|@handles:'diskimage'}<a href="{'file/diskimage/'|cat:$files[file].id|cat:'/'|cat:$files[file].Filename|generate_href}">{$parts|@preg_replace:'<b>$0</b>':$files[file].Filepath}</a>
+			{elseif $files[file].Filepath|@handles:'image_browser'}<a href="{'file/image_browser/'|cat:$files[file].id|cat:'/'|cat:$files[file].Filename|generate_href}">{$parts|@preg_replace:'<b>$0</b>':$files[file].Filepath}</a>
+			{else}<a href="{'file/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/'|cat:$files[file].Filename|generate_href}">{$parts|@preg_replace:'<b>$0</b>':$files[file].Filepath}</a>{/if}
 			{foreach from=$smarty.session.columns item=column_value}
 				{if isset($files[file].$column_value)}
 					- {$files[file].$column_value}
 				{/if}
 			{/foreach}
             - Download:
-            	<a href="{''|generate_href:'zip':$smarty.request.cat:'':$files[file].id:'':'Files.zip'}">zip</a> :
-                <a href="{''|generate_href:'bt':$smarty.request.cat:'':$files[file].id:'':'Files.torrent'}">torrent</a>
+            	<a href="{'zip/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/'|cat:'Files.zip'|generate_href}">zip</a> :
+                <a href="{'bt/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/'|cat:'Files.torrent'|generate_href}">torrent</a>
                 {if $files[file].Filepath|@handles:'video'}
-                : <a href="{''|generate_href:'encode':$smarty.request.cat:'':$files[file].id:'mp4':$files[file].Filename}.mp4">mp4</a>
-                : <a href="{''|generate_href:'encode':$smarty.request.cat:'':$files[file].id:'mpg':$files[file].Filename}.mpeg">mpg</a>
-                : <a href="{''|generate_href:'encode':$smarty.request.cat:'':$files[file].id:'wmv':$files[file].Filename}.wmv">wmv</a>
+                : <a href="{'encode/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/mp4/'|cat:$files[file].Filename|generate_href}.mp4">mp4</a>
+                : <a href="{'encode/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/mpg/'|cat:$files[file].Filename|generate_href}.mpeg">mpg</a>
+                : <a href="{'encode/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/wmv/'|cat:$files[file].Filename|generate_href}.wmv">wmv</a>
                 {elseif $files[file].Filepath|@handles:'audio'}
-                : <a href="{''|generate_href:'encode':$smarty.request.cat:'':$files[file].id:'mp4a':$files[file].Filename}.mp4">mp4</a>
-                : <a href="{''|generate_href:'encode':$smarty.request.cat:'':$files[file].id:'mp3':$files[file].Filename}.mp3">mp3</a>
-                : <a href="{''|generate_href:'encode':$smarty.request.cat:'':$files[file].id:'wma':$files[file].Filename}.wma">wma</a>
+                : <a href="{'encode/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/mp4a/'|cat:$files[file].Filename|generate_href}.mp4">mp4</a>
+                : <a href="{'encode/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/mp3/'|cat:$files[file].Filename|generate_href}.mp3">mp3</a>
+                : <a href="{'encode/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/wma/'|cat:$files[file].Filename|generate_href}.wma">wma</a>
                 {elseif $files[file].Filepath|@handles:'image'}
-                : <a href="{''|generate_href:'convert':$smarty.request.cat:'':$files[file].id:'jpg':$files[file].Filename}.jpg">jpg</a>
-                : <a href="{''|generate_href:'convert':$smarty.request.cat:'':$files[file].id:'gif':$files[file].Filename}.gif">gif</a>
-                : <a href="{''|generate_href:'convert':$smarty.request.cat:'':$files[file].id:'png':$files[file].Filename}.png">png</a>
+                : <a href="{'convert/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/jpg/'|cat:$files[file].Filename|generate_href}.jpg">jpg</a>
+                : <a href="{'convert/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/gif/'|cat:$files[file].Filename|generate_href}.gif">gif</a>
+                : <a href="{'convert/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/png/'|cat:$files[file].Filename|generate_href}.png">png</a>
                 {elseif $files[file].Filepath|@handles:'code'}
-                : <a href="{''|generate_href:'file':'code':'':$files[file].id:'':$files[file].Filename}.html">view</a>
+                : <a href="{'code/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/'|cat:$files[file].Filename|generate_href}.html">view</a>
               {/if}
 			<br />
 		{/section}
@@ -88,9 +88,9 @@ $this->assign('parts', $parts);
 	{include file=$templates.TEMPLATE_PAGES}<br />
 {elseif $smarty.session.settings.template.view eq "mono"}
 	There are {$total_count} result(s).<br />
-	{assign var=page value=$smarty.request.start|intval}
+	{assign var=page value=$start|intval}
 	{assign var=item_count value=$files|@count}
-	Displaying items {$smarty.request.start} to {$page+$item_count}.
+	Displaying items {$start} to {$page+$item_count}.
 	<form name="select" action="" method="post">
 		<input type="submit" name="select" value="All" /><input type="submit" name="select" value="None" /><br />
 		<p style="white-space:nowrap">
@@ -133,7 +133,7 @@ $this->assign('parts', $parts);
 					<span class="column">{$files[file].$column_value|string_format:$format_str}</span>
 				{/if}
 			{/foreach}
-			<span class="column"><a href="{''|generate_href:'zip':$smarty.request.cat:'':$files[file].id:'':'Files.zip'}">zip</a>:<a href="{''|generate_href:'bt':$smarty.request.cat:'':$files[file].id:'':'Files.torrent'}">torrent</a></span>
+			<span class="column"><a href="{'zip/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/'|cat:'Files.zip'|generate_href}">zip</a>:<a href="{''|generate_href:'bt':$cat:'':$files[file].id:'':'Files.torrent'}">torrent</a></span>
 			<span style="display:block; float:left; clear:both;"></span><br />
 		{/section}
 		</p>
@@ -142,9 +142,9 @@ $this->assign('parts', $parts);
 	{include file=$templates.TEMPLATE_PAGES}<br />
 {elseif $smarty.session.settings.template.view eq "table"}
 	There are {$total_count} result(s).<br />
-	{assign var=page value=$smarty.request.start|intval}
+	{assign var=page value=$start|intval}
 	{assign var=item_count value=$files|@count}
-	Displaying items {$smarty.request.start} to {$page+$item_count}.
+	Displaying items {$start} to {$page+$item_count}.
 	<form name="select" action="" method="post">
 		<input type="submit" name="select" value="All" /><input type="submit" name="select" value="None" /><br />
 		<table class="select_list">
@@ -172,7 +172,7 @@ $this->assign('parts', $parts);
 {foreach from=$smarty.session.columns item=column_value}
 				<td>{if isset($files[file].$column_value)}{$files[file].$column_value}{/if}</td>
 {/foreach}
-				<td><a href="{''|generate_href:'zip':$smarty.request.cat:'':$files[file].id:'':'Files.zip'}">zip</a>:<a href="{''|generate_href:'bt':$smarty.request.cat:'':$files[file].id:'':'Files.torrent'}">torrent</a></td>
+				<td><a href="{'zip/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/'|cat:'Files.zip'|generate_href}">zip</a>:<a href="{''|generate_href:'bt':$cat:'':$files[file].id:'':'Files.torrent'}">torrent</a></td>
 			</tr>
 {/section}
 		</table>

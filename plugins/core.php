@@ -25,42 +25,47 @@ function register_output_vars($name, $value)
 }
 
 // this function takes a request as input, and based on the .htaccess rules, converts it to a pretty url, or makes no changes if mod_rewrite is off
-function generate_href($request = array(), $plugin = '', $cat = '', $dir = '', $id = '', $extra = '', $filename = '', $not_special = false)
+function generate_href($request = array(), $notspecial = false, $include_domain = false)
 {
 	if(is_string($request))
 	{
+		if(strpos($request, '?') !== false)
+		{
+			$request = explode('?', $request);
+			$dirs = split('/', $request[0]);
+			
+			$request = $request[1];
+		}
+		
 		$arr = explode('&', $request);
 		if(count($arr) == 1 && $arr[0] == '')
 			$arr = array();
 		$request = array();
-		if($plugin != '') $request['plugin'] = $plugin;
-		if($cat != '') $request['cat'] = $cat;
-		if($dir != '') $request['dir'] = $dir;
-		if($id != '') $request['id'] = $id;
-		if($filename != '') $request['filename'] = $filename;
 		foreach($arr as $i => $value)
 		{
 			$x = explode('=', $value);
 			$request[$x[0]] = $x[1];
 		}
-		if($extra != '')
-		{
-			if(isset($request['plugin'])) $request[$request['plugin']] = $extra;
-			else $request['extra'] = $extra;
-		}
 	}
-
-	$link = HTML_ROOT . '?';
+	
+	if(isset($dirs))
+	{
+		$request = array_merge($request, rewrite_vars(array('path_info' => $dirs)));
+	}
+	
+	// rebuild link
+	$link = (($include_domain)?HTML_DOMAIN:'') . HTML_ROOT . '?';
 	foreach($request as $key => $value)
 	{
 		if($key == 'return')
 		{
+			// remove return in order to create a valid url
 			if(isset($_REQUEST['return']))
 			{
 				$return = $_REQUEST['return'];
 				unset($_REQUEST['return']);
 			}
-			$value = urlencode(generate_href($_GET, '', '', '', '', '', '', true));
+			$value = urlencode(generate_href($_GET, true));
 			if(isset($return)) $_REQUEST['return'] = $return;
 		}
 		$link .= (($link[strlen($link)-1] != '?')?'&':'') . $key . '=' . $value;
@@ -73,6 +78,23 @@ function generate_href($request = array(), $plugin = '', $cat = '', $dir = '', $
 
 function set_output_vars($smarty)
 {
+	// set a couple more that are used a lot
+
+	// set debug errors
+	register_output_vars('debug_errors', $GLOBALS['debug_errors']);
+	
+	// filter out user errors for easy access by templates
+	register_output_vars('user_errors', $GLOBALS['user_errors']);
+	
+	// most template pieces use the category variable, so set that
+	register_output_vars('cat', $_REQUEST['cat']);
+	
+	// some templates refer to the dir to determine their own location
+	if(isset($_REQUEST['dir')) register_output_vars('cat', $_REQUEST['dir']);
+	
+	// this is just a helper variable for templates to use that only need to save 1 setting
+	if(isset($_REQUEST['extra')) register_output_vars('extra', $_REQUEST['extra']);
+	
 	// remove everything else so templates can't violate the security
 	//   there is no going back from here
 	if(isset($_SESSION)) session_write_close();
@@ -208,7 +230,10 @@ function validate_columns($request)
 // Redirect unknown file and folder requests to recognized protocols and other plugins.
 function validate_plugin($request)
 {
-
+	// remove .php extension
+	if(isset($request['plugin']) && substr($request['plugin'], -4) == '.php')
+		$request['plugin'] = substr($request['plugin'], 0, -4);
+	
 	if(isset($request['plugin']) && isset($GLOBALS['plugins'][$request['plugin']]))
 	{
 		return $request['plugin'];
@@ -231,9 +256,15 @@ function validate_plugin($request)
 
 function rewrite_vars($request)
 {
-	if(isset($_SERVER['PATH_INFO']))
+	$request['plugin'] = validate_plugin($request);
+	
+	if(isset($request['path_info']))
 	{
-		$dirs = split('/', $_SERVER['PATH_INFO']);
+		if(!is_array($request['path_info']))
+			$dirs = split('/', $request['path_info']);
+		else
+			$dirs = $request['path_info'];
+		$request['plugin'] = validate_plugin(array('plugin' => $dirs[0]));
 		switch(count($dirs))
 		{
 			case 2:
@@ -263,6 +294,9 @@ function rewrite_vars($request)
 				break;
 		}
 	}
+	
+	// just about everything uses the cat variable so always validate and add this
+	$request['cat'] = validate_cat($request);
 
 	if($request['plugin'] == 'bt')
 	{
