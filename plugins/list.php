@@ -63,6 +63,7 @@ function setup_list()
 
 function validate_list($request)
 {
+	if(!isset($GLOBALS['lists'])) setup_list();
 	if(isset($request['list']) && in_array($request['list'], $GLOBALS['lists']))
 		return $request['list'];
 }

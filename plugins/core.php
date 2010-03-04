@@ -21,11 +21,15 @@ function register_core()
 // this makes all the variables available for output
 function register_output_vars($name, $value)
 {
+	if(isset($GLOBALS['output'][$name]))
+	{
+		PEAR::raiseError('Variable "' . $name . '" already set!', E_DEBUG);
+	}
 	$GLOBALS['output'][$name] = $value;
 }
 
 // this function takes a request as input, and based on the .htaccess rules, converts it to a pretty url, or makes no changes if mod_rewrite is off
-function generate_href($request = array(), $notspecial = false, $include_domain = false)
+function generate_href($request = array(), $not_special = false, $include_domain = false)
 {
 	if(is_string($request))
 	{
@@ -50,24 +54,13 @@ function generate_href($request = array(), $notspecial = false, $include_domain 
 	
 	if(isset($dirs))
 	{
-		$request = array_merge($request, rewrite_vars(array('path_info' => $dirs)));
+		$request = array_merge($request, parse_path_info($dirs));
 	}
 	
 	// rebuild link
 	$link = (($include_domain)?HTML_DOMAIN:'') . HTML_ROOT . '?';
 	foreach($request as $key => $value)
 	{
-		if($key == 'return')
-		{
-			// remove return in order to create a valid url
-			if(isset($_REQUEST['return']))
-			{
-				$return = $_REQUEST['return'];
-				unset($_REQUEST['return']);
-			}
-			$value = urlencode(generate_href($_GET, true));
-			if(isset($return)) $_REQUEST['return'] = $return;
-		}
 		$link .= (($link[strlen($link)-1] != '?')?'&':'') . $key . '=' . $value;
 	}
 	if($not_special)
@@ -90,10 +83,13 @@ function set_output_vars($smarty)
 	register_output_vars('cat', $_REQUEST['cat']);
 	
 	// some templates refer to the dir to determine their own location
-	if(isset($_REQUEST['dir')) register_output_vars('cat', $_REQUEST['dir']);
+	if(isset($_REQUEST['dir'])) register_output_vars('cat', $_REQUEST['dir']);
 	
 	// this is just a helper variable for templates to use that only need to save 1 setting
-	if(isset($_REQUEST['extra')) register_output_vars('extra', $_REQUEST['extra']);
+	if(isset($_REQUEST['extra'])) register_output_vars('extra', $_REQUEST['extra']);
+	
+	// some templates would like to submit to their own page, generate a string based on the current get variable
+	register_output_vars('get', generate_href($_GET, true));
 	
 	// remove everything else so templates can't violate the security
 	//   there is no going back from here
@@ -254,47 +250,64 @@ function validate_plugin($request)
 	}
 }
 
+function parse_path_info($path_info)
+{
+	$request = array();
+
+	if(!is_array($path_info))
+		$dirs = split('/', $path_info);
+	else
+		$dirs = $path_info;
+	
+	// remove empty dirs
+	foreach($dirs as $i => $value)
+	{
+		if($value == '')
+			unset($dirs[$i]);
+	}
+	$dirs = array_values($dirs);
+	
+	// get plugin from path info
+	$request['plugin'] = validate_plugin(array('plugin' => $dirs[0]));
+	switch(count($dirs))
+	{
+		case 2:
+			$request['search'] = '"' . $dirs[1] . '"';
+			break;
+		case 3:
+			$request['cat'] = $dirs[1];
+			$request['id'] = $dirs[2];
+			break;
+		case 4:
+			$request['cat'] = $dirs[1];
+			$request['id'] = $dirs[2];
+			$request['filename'] = $dirs[3];
+			break;
+		case 5:
+			$request['cat'] = $dirs[1];
+			$request['id'] = $dirs[2];
+			$request[$request['plugin']] = $dirs[3];
+			$request['filename'] = $dirs[4];
+			break;
+		case 6:
+			$request['cat'] = $dirs[1];
+			$request['id'] = $dirs[2];
+			$request[$request['plugin']] = $dirs[3];
+			$request['extra'] = $dirs[4];
+			$request['filename'] = $dirs[5];
+			break;
+	}
+	
+	return $request;
+}
+
 function rewrite_vars($request)
 {
 	$request['plugin'] = validate_plugin($request);
 	
 	if(isset($request['path_info']))
-	{
-		if(!is_array($request['path_info']))
-			$dirs = split('/', $request['path_info']);
-		else
-			$dirs = $request['path_info'];
-		$request['plugin'] = validate_plugin(array('plugin' => $dirs[0]));
-		switch(count($dirs))
-		{
-			case 2:
-				$request['search'] = '"' . $dirs[1] . '"';
-				break;
-			case 3:
-				$request['cat'] = $dirs[1];
-				$request['id'] = $dirs[2];
-				break;
-			case 4:
-				$request['cat'] = $dirs[1];
-				$request['id'] = $dirs[2];
-				$request['filename'] = $dirs[3];
-				break;
-			case 5:
-				$request['cat'] = $dirs[1];
-				$request['id'] = $dirs[2];
-				$request[$request['plugin']] = $dirs[3];
-				$request['filename'] = $dirs[4];
-				break;
-			case 6:
-				$request['cat'] = $dirs[1];
-				$request['id'] = $dirs[2];
-				$request[$request['plugin']] = $dirs[3];
-				$request['extra'] = $dirs[4];
-				$request['filename'] = $dirs[5];
-				break;
-		}
-	}
-	
+		$request = array_merge($request, parse_path_info($request['path_info']));
+		
 	// just about everything uses the cat variable so always validate and add this
 	$request['cat'] = validate_cat($request);
 

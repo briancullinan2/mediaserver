@@ -69,6 +69,11 @@ function validate_item($request)
 	{
 		foreach($request['item'] as $id => $value)
 		{
+			if(is_numeric($value))
+			{
+				$id = $value;
+				$value = 'on';
+			}
 			if(($value == 'on' || (isset($select) && $select == 'All')) && !in_array($id, $selected))
 			{
 				$selected[] = $id;
@@ -169,6 +174,7 @@ function session_select($request)
 	$save['on'] = @$request['on'];
 	$save['off'] = @$request['off'];
 	$save['item'] = @$request['item'];
+	$save['selected'] = validate_selected($request);
 	
 	return $save;
 }
@@ -181,6 +187,12 @@ function output_select($request)
 	$request['limit'] = validate_limit($request);
 	$request['order_by'] = validate_order_by($request);
 	$request['direction'] = validate_direction($request);
+	
+	// discard selected stuff here, we want to show a full list, the selected stuff is just for saving in the session
+	//   in order to list the selected stuff only, one should use the list.php plugin
+	if(isset($request['selected'])) unset($request['selected']);
+	if(isset($request['item'])) unset($request['item']);
+	if(isset($request['id'])) unset($request['id']);
 	
 	// make select call
 	$files = call_user_func_array($request['cat'] . '::get', array($request, &$total_count));
@@ -247,6 +259,9 @@ function output_select($request)
 	// support paging
 	register_output_vars('start', $request['start']);
 	register_output_vars('limit', $request['limit']);
-	if(isset($request['dir'])) register_output_vars('dir', $request['dir']);
+	
+	// register selected files for templates to use
+	if(isset($_SESSION['select']['selected'])) register_output_vars('selected', $_SESSION['select']['selected']);
 }
+
 

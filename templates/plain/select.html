@@ -33,7 +33,7 @@ $this->assign('parts', $parts);
 {if count($user_errors) > 0}
 <br /><span style="color:#C00">{foreach from=$user_errors item=error}<b>{$error->message}</b><br />{/foreach}</span>
 {/if}
-	<form name="select" action="" method="post">
+	<form name="select" action="{$get}" method="post">
 		<input type="submit" name="select" value="All" /><input type="submit" name="select" value="None" /><br />
 		<p style="white-space:nowrap">
 		Select<br />
@@ -41,8 +41,8 @@ $this->assign('parts', $parts);
 		{section name=file loop=$files}
             {assign var=type_arr value='/'|@split:$files[file].Filemime}
             {assign var=type value=$type_arr.0}
-			{if isset($smarty.session.selected)}
-				{assign var=item_selected value=$files[file].id|in_array:$smarty.session.selected}
+			{if isset($selected)}
+				{assign var=item_selected value=$files[file].id|in_array:$selected}
 			{else}
 				{assign var=item_selected value=false}
 			{/if}
@@ -83,7 +83,7 @@ $this->assign('parts', $parts);
 			<br />
 		{/section}
 		</p>
-		<input name="select" type="submit" value="Save" /><input type="reset" value="Reset" /><br />
+		<input type="submit" value="Save" /><input type="reset" value="Reset" /><br />
 	</form>
 	{include file=$templates.TEMPLATE_PAGES}<br />
 {elseif $smarty.session.settings.template.view eq "mono"}
@@ -137,7 +137,7 @@ $this->assign('parts', $parts);
 			<span style="display:block; float:left; clear:both;"></span><br />
 		{/section}
 		</p>
-		<input name="select" type="submit" value="Save" /><input type="reset" value="Reset" /><br />
+		<input type="submit" value="Save" /><input type="reset" value="Reset" /><br />
 	</form>
 	{include file=$templates.TEMPLATE_PAGES}<br />
 {elseif $smarty.session.settings.template.view eq "table"}
@@ -167,7 +167,7 @@ $this->assign('parts', $parts);
 			</thead>
 {section name=file loop=$files}
 			<tr style="white-space:nowrap">
-{if isset($smarty.session.selected)}{assign var=item_selected value=$files[file].id|in_array:$smarty.session.selected}
+{if isset($selected)}{assign var=item_selected value=$files[file].id|in_array:$selected}
 {else}{assign var=item_selected value=false}{/if}
 {foreach from=$smarty.session.columns item=column_value}
 				<td>{if isset($files[file].$column_value)}{$files[file].$column_value}{/if}</td>
@@ -176,7 +176,7 @@ $this->assign('parts', $parts);
 			</tr>
 {/section}
 		</table>
-		<input name="select" type="submit" value="Save" /><input type="reset" value="Reset" /><br />
+		<input type="submit" value="Save" /><input type="reset" value="Reset" /><br />
 	</form>
 	{include file=$templates.TEMPLATE_PAGES}<br />
 {/if}

@@ -1,19 +1,11 @@
 {assign var=page_count value=$limit}
-{assign var=page_str value=''}
-{foreach from=$smarty.get key=k item=v}
-{assign var=v value=$v|htmlspecialchars}
-{if $k != "start"}
-{if $page_str != ''}{assign var=page_str value=$page_str|cat:'&amp;'}{/if}
-{assign var=page_str value=$page_str|cat:$k|cat:'='|cat:$v}
-{/if}
-{/foreach}
-{assign var=page_str value=$smarty.server.PHP_SELF|htmlspecialchars|cat:'?'|cat:$page_str}
+{assign var=prev_page value=$page-$page_count}
 Page {if $page > 0}
 		{if $page > $page_count}
-			<a href="{$page_str}&start=0">First</a>
-			<a href="{$page_str}&start={$page-$page_count}">Prev</a>
+			<a href="{$get|cat:'&start=0'|generate_href}">First</a>
+			<a href="{$get|cat:'&start='|cat:$prev_page|generate_href}">Prev</a>
 		{else}
-			<a href="{$page_str}&start=0">First</a>
+			<a href="{$get|cat:'&start=0'|generate_href}">First</a>
 		{/if}
 		|
 	{/if}
@@ -26,19 +18,22 @@ Page {if $page > 0}
 {if $upper > $pages}{assign var=upper value=$pages}{assign var=lower value=$pages-$page_count-1}{/if}
 {if $lower < 0}{assign var=lower value=0}{/if}
 {section name=page_select start=$lower loop=$upper+1 step=1}
+    {assign var=curr_page value=$smarty.section.page_select.index*$page_count}
 	{if $smarty.section.page_select.index == $page_int}
 	<b>{$page_int+1}</b>
 	{else}
-	<a href="{$page_str}&start={$smarty.section.page_select.index*$page_count}">{$smarty.section.page_select.index+1}</a>
+	<a href="{$get|cat:'&start='|cat:$curr_page|generate_href}">{$smarty.section.page_select.index+1}</a>
 	{/if}
 {/section}
 {if $page <= $total_count-$page_count}
 	|
 	{assign var=last_page value=$total_count/$page_count|floor}
+    {assign var=last_page value=$last_page*$page_count}
+    {assign var=next_page value=$page+$page_count}
 	{if $page < $total_count-$page_count-$page_count}
-		<a href="{$page_str}&start={$page+$page_count}">Next</a>
-		<a href="{$page_str}&start={$last_page*$page_count}">Last</a>
+		<a href="{$get|cat:'&start='|cat:$next_page|generate_href}">Next</a>
+		<a href="{$get|cat:'&start='|cat:$last_page|generate_href}">Last</a>
 	{else}
-		<a href="{$page_str}&start={$last_page*$page_count}">Last</a>
+		<a href="{$get|cat:'&start='|cat:$last_page|generate_href}">Last</a>
 	{/if}
 {/if}

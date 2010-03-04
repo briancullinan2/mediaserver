@@ -1,9 +1,5 @@
 <?php
 
-//set the detail for the template
-if( !isset($_REQUEST['detail']) || !is_numeric($_REQUEST['detail']) )
-	$_REQUEST['detail'] = 0;
-
 $tmp_columns = getAllColumns();
 $columns = array();
 foreach($tmp_columns as $i => $column)
