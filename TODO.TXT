@@ -1,5 +1,4 @@
 Work on cron.php script
-Add check for Snoopy library in install.php
 Review all use of smarty variables
 	$smarty.get, $smarty.request.search, $smarty.server.PHP_SELF, $smarty.session
 Create an error template page for displaying errors

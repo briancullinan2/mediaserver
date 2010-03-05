@@ -135,6 +135,8 @@ function setupPlugins()
 	include_once LOCAL_ROOT . 'admin' . DIRECTORY_SEPARATOR . 'watch.php';
 	$GLOBALS['plugins']['watch'] = call_user_func_array('register_watch', array());
 	
+	include_once LOCAL_ROOT . 'admin' . DIRECTORY_SEPARATOR . 'install.php';
+	$GLOBALS['plugins']['install'] = call_user_func_array('register_install', array());
 }
 
 function setupTemplate()

@@ -25,15 +25,18 @@ if(isset($GLOBALS['plugins'][$_REQUEST['plugin']]))
 		exit();
 	}
 	
+	$plugin = $_REQUEST['plugin'];
+	
 	// output plugin
 	call_user_func_array('output_' . $_REQUEST['plugin'], array($_REQUEST));
-	
+
 	// only display a template for the current plugin if there is one
-	if(isset($GLOBALS['templates']['TEMPLATE_' . strtoupper($_REQUEST['plugin'])]) && 
-		(!isset($GLOBALS['plugins'][$_REQUEST['plugin']]['notemplate']) || 
-			$GLOBALS['plugins'][$_REQUEST['plugin']]['notemplate'] == false))
+	if(isset($GLOBALS['templates']['TEMPLATE_' . strtoupper($plugin)]) && 
+			(!isset($GLOBALS['plugins'][$plugin]['notemplate']) || 
+			$GLOBALS['plugins'][$plugin]['notemplate'] == false)
+		)
 	{
-		$template = $GLOBALS['templates']['TEMPLATE_' . strtoupper($_REQUEST['plugin'])];
+		$template = $GLOBALS['templates']['TEMPLATE_' . strtoupper($plugin)];
 		// select template for the current plugin
 		if(getExt($template) == 'php')
 		{

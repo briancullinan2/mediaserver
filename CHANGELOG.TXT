@@ -1,3 +1,8 @@
+2010-03-04
+Replaced some uses of $smarty.request and $smarty.get and $smarty.session
+Fixed $smarty.session.selected to use $selected and the way the select.php plugin uses it
+Added detection for Snoopy, EXT, bttracker JS to install.php plugin
+
 2010-03-02
 Deleted repository copy of extjs
 Went through $smarty.request usages and fixed them since all global variables are removed

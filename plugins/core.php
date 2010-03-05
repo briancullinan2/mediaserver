@@ -95,7 +95,7 @@ function set_output_vars($smarty)
 	//   there is no going back from here
 	if(isset($_SESSION)) session_write_close();
 	
-	$dont_remove = array('GLOBALS', 'templates', 'smarty', 'output', 'template', 'alias', 'alias_regexp', 'paths', 'paths_regexp', 'mte');
+	$dont_remove = array('GLOBALS', 'templates', 'smarty', 'output', 'template', 'alias', 'alias_regexp', 'paths', 'paths_regexp', 'mte', 'plugin', 'plugins');
 	foreach($GLOBALS as $key => $value)
 	{
 		if(in_array($key, $dont_remove) === false)
