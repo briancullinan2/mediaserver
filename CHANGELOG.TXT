@@ -1,3 +1,11 @@
+2010-03-05
+Working on install.php
+Fine tuning API
+Added a method of creating validate_<> functions and setting them as GLOBAL variables
+	This is useful when the search.php plugin is implemented since there is no define set of fields
+Fixed recognition of 'true' values from request variables
+	is_bool doesn't work if a string 'true' or 'false' is passed in
+
 2010-03-04
 Replaced some uses of $smarty.request and $smarty.get and $smarty.session
 Fixed $smarty.session.selected to use $selected and the way the select.php plugin uses it

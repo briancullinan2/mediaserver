@@ -128,10 +128,14 @@ function validate_off($request)
 
 function validate_short($request)
 {
-	if(isset($request['short']) && is_bool($request['short']))
-		return $request['short'];
-	else
-		return false;
+	if(isset($request['short']))
+	{
+		if($request['short'] === true || $request['short'] === 'true')
+			return true;
+		elseif($request['short'] === false || $request['short'] === 'false')
+			return false;
+	}
+	return false;
 }
 
 function validate_dir($request)

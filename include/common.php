@@ -107,6 +107,8 @@ function setupPlugins()
 	
 	// read plugin list and create a list of available plugins
 	$files = fs_file::get(array('dir' => LOCAL_ROOT . 'plugins' . DIRECTORY_SEPARATOR, 'limit' => 32000), $count, true);
+	$files[] = array('Filepath' => LOCAL_ROOT . 'admin' . DIRECTORY_SEPARATOR . 'watch.php', 'Filename' => 'watch.php');
+	$files[] = array('Filepath' => LOCAL_ROOT . 'admin' . DIRECTORY_SEPARATOR . 'install.php', 'Filename' => 'install.php');
 	if(is_array($files))
 	{
 		foreach($files as $i => $file)
@@ -131,12 +133,6 @@ function setupPlugins()
 			}
 		}
 	}
-	
-	include_once LOCAL_ROOT . 'admin' . DIRECTORY_SEPARATOR . 'watch.php';
-	$GLOBALS['plugins']['watch'] = call_user_func_array('register_watch', array());
-	
-	include_once LOCAL_ROOT . 'admin' . DIRECTORY_SEPARATOR . 'install.php';
-	$GLOBALS['plugins']['install'] = call_user_func_array('register_install', array());
 }
 
 function setupTemplate()
@@ -316,14 +312,14 @@ function setupInputVars()
 	
 	// call rewrite_vars in order to set some request variables
 	$_REQUEST = rewrite_vars($_REQUEST);
-
+	
 	// go through the rest of the request and validate all the variables with the plugins they are for
 	foreach($_REQUEST as $key => $value)
 	{
 		if(function_exists('validate_' . $key))
-		{
 			$_REQUEST[$key] = call_user_func_array('validate_' . $key, array($_REQUEST));
-		}
+		elseif(isset($GLOBALS['validate_' . $key]) && is_callable($GLOBALS['validate_' . $key]))
+			$_REQUEST[$key] = $GLOBALS['validate_' . $key]($_REQUEST);
 		else
 			unset($_REQUEST[$key]);
 	}

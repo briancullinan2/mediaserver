@@ -1,3 +1,4 @@
+Remove smarty from the entire system because it sucks
 Work on cron.php script
 Review all use of smarty variables
 	$smarty.get, $smarty.request.search, $smarty.server.PHP_SELF, $smarty.session

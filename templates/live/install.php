@@ -5,162 +5,9 @@
 <title>Media Server Installer</title>
 <link rel="stylesheet" href="/?plugin=install&install_image=style" type="text/css"/>
 </head>
-
-<?php
-
-if(isset($GLOBALS['templates']['vars']['request']['install_db']) && $GLOBALS['templates']['vars']['request']['install_db'] == 'install')
+<?
+if(!is_float($GLOBALS['templates']['vars']['install_step']))
 {
-	include 'PEAR.php';
-	include $LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'database.php';
-	
-	if(isset($_SESSION)) session_write_close();
-	
-	$DB_CONNECT = $DB_TYPE . '://' . $DB_USER . ':' . $DB_PASS . '@' . $DB_SERVER . '/' . $DB_NAME;
-	$DATABASE = new database($DB_CONNECT);
-?>
-<body onload="top.document.getElementById('loading2').style.display = 'none'; top.document.getElementById('install').style.height=document.getElementById('installtable').clientHeight+'px';">
-<form action="<?php echo $_SERVER['PHP_SELF']; ?>?step=3" method="post" target="_top">
-<?php
-for($i = 0; $i < 11 + count($GLOBALS['modules']); $i++)
-{
-?>
-<input type="hidden" name="<?php echo $post[$i]; ?>" value="<?php echo $$post[$i]; ?>" />
-<?php
-}
-?>
-<table id="installtable" border="0" cellpadding="0" cellspacing="0">
-
-<?php
-function printEachStep($result, $table)
-{
-	$e = ADODB_Pear_Error();
-	if($e !== false)
-	{
-
-	?>
-	<tr>
-    <td class="title fail">Access to Database</td>
-    <td>
-    The connection manager reported the following error:<br /><?php echo $e->userinfo; ?>.
-    <input type="hidden" name="dberror" value="<?php echo $e->userinfo; ?>" />
-    <input type="submit" value="Panic!" />
-    </td>
-    <td class="desc">
-    <ul>
-        <li>An error was encountered while installing the system.</li>
-    </ul>
-    </td>
-    </tr>
-    <?php
-	}
-	else
-	{
-		
-    ?>
-	<tr>
-    <td class="title">Install Table "<?php echo $table ?>"</td>
-    <td>
-    <label><?php echo $table ?> Installed</label>
-    </td>
-    <td class="desc">
-    <ul>
-        <li>This table has been successfully installed!</li>
-    </ul>
-    </td>
-    </tr>
-    <?php
-	}
-}
-	$DATABASE->install('printEachStep');
-	?>
-</table>
-</form>
-</body>
-</html>
-    <?php
-
-	exit;
-}
-if(isset($GLOBALS['templates']['vars']['request']['install_db']) && $GLOBALS['templates']['vars']['request']['install_db'] == 'test')
-{
-	include 'PEAR.php';
-	include $LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'database.php';
-
-	if(isset($_SESSION)) session_write_close();
-
-	ob_start();
-
-	$dsn = $DB_TYPE . '://' . $DB_USER . ':' . $DB_PASS . '@' . $DB_SERVER . '/' . $DB_NAME; 
-	$conn = ADONewConnection($dsn);  # no need for Connect()
-
-	$result = ob_get_contents();
-	
-	ob_end_clean();
-	
-	$e = ADODB_Pear_Error();
-	if($e !== false)
-	{
-
-	?>
-<body onload="top.document.getElementById('loading1').style.display = 'none'; top.document.getElementById('test').style.height=document.getElementById('testtable').clientHeight+'px';">
-<table id="testtable" border="0" cellpadding="0" cellspacing="0">
-	<tr>
-    <td class="title fail">Access to Database</td>
-    <td>
-    The connection manager reported the following error:<br /><?php echo $e->userinfo; ?>.
-    <form action="<?php echo $_SERVER['PHP_SELF']; ?>?step=3" method="post" target="_top">
-    <input type="hidden" name="dberror" value="<?php echo $e->userinfo; ?>" />
-	<?php
-    for($i = 0; $i < 11 + count($GLOBALS['modules']); $i++)
-    {
-        ?>
-    <input type="hidden" name="<?php echo $post[$i]; ?>" value="<?php echo $$post[$i]; ?>" />
-    <?php
-    }
-    ?>
-    <input type="submit" value="Return to Step 3" />
-    </form>
-    </td>
-    <td class="desc">
-    <ul>
-        <li>The system has failed to connect to the database.  Please go back to the Database Setup page (Step 3) to correct this error.</li>
-        <li>If you are unsure what the reported error means, please contact your server administrator for more information.</li>
-    </ul>
-    </td>
-    </tr>
-</table>
-</body>
-</html>
-    <?php
-	
-	}
-	else
-	{
-		
-    ?>
-<body onload="top.document.getElementById('loading1').style.display = 'none'; top.document.getElementById('test').style.height=document.getElementById('testtable').clientHeight+'px'; top.document.getElementById('loading2').style.display='inline'; top.document.getElementById('install').src='<?php echo $_SERVER['PHP_SELF']; ?>?step=5&install='">
-<table id="testtable" border="0" cellpadding="0" cellspacing="0">
-	<tr>
-    <td class="title">Access to Database</td>
-    <td>
-    	<label>Connection successful, tables will now be created.</label>
-    </td>
-    <td class="desc">
-    <ul>
-        <li>You have connected to the database successfully!</li>
-    </ul>
-    </td>
-    </tr>
-</table>
-</body>
-</html>
-    <?php
-	
-	}
-	
-	exit;
-}
-
 ?>
 <body>
 <div id="bodydiv">
@@ -213,6 +60,7 @@ The first step is to check for requirements and dependencies for the media serve
 
 
 <?php
+}
 
 // print the fields that came before the current page, just incase the session runs out
 function print_fields()
@@ -221,6 +69,7 @@ function print_fields()
 	{
 		case 1:
 		$count = 0;
+		break;
 		case 2:
 		$count = 3;
 		break;
@@ -246,8 +95,9 @@ function print_fields()
 	}
 	for($i = 0; $i < $count; $i++)
 	{
+		$post = $GLOBALS['templates']['vars']['post'][$i];
 		?>
-        <input type="hidden" name="<?php echo $post[$i]; ?>" value="<?php echo $$post[$i]; ?>" />
+        <input type="hidden" name="<?php echo $post; ?>" value="<?php echo $GLOBALS['templates']['vars']['request'][$post]; ?>" />
         <?php
 	}
 }
@@ -365,12 +215,22 @@ function output_tests($install_step)
 		break;
 		case 4:
 		$output = array(
-			'enable_modules' => array('modules' => $GLOBALS['templates']['vars']['modules'], 'enables' => $GLOBALS['templates']['vars']['module_enables']),
+			'enable_modules' => '',
 		);
 		break;
 		case 5:
 		$output = array(
+			'db_check' => ''
+		);
+		break;
+		case 5.1:
+		$output = array(
 			'db_test' => ''
+		);
+		break;
+		case 5.2:
+		$output = array(
+			'db_install' => ''
 		);
 		break;
 		case 6:
@@ -415,6 +275,157 @@ function output_tests($install_step)
 	}
 }
 
+function printEachStep($result, $table)
+{
+	$e = ADODB_Pear_Error();
+	if($e !== false)
+	{
+
+	?>
+	<tr>
+	<td class="title fail">Access to Database</td>
+	<td>
+	The connection manager reported the following error:<br /><?php echo $e->userinfo; ?>.
+	<input type="hidden" name="dberror" value="<?php echo $e->userinfo; ?>" />
+	<input type="submit" value="Panic!" />
+	</td>
+	<td class="desc">
+	<ul>
+		<li>An error was encountered while installing the system.</li>
+	</ul>
+	</td>
+	</tr>
+	<?php
+	}
+	else
+	{
+		
+	?>
+	<tr>
+	<td class="title">Install Table "<?php echo $table ?>"</td>
+	<td>
+	<label><?php echo $table ?> Installed</label>
+	</td>
+	<td class="desc">
+	<ul>
+		<li>This table has been successfully installed!</li>
+	</ul>
+	</td>
+	</tr>
+	<?php
+	}
+}
+
+function output_test_db_install($result, $variable)
+{
+	include 'PEAR.php';
+	include $LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'database.php';
+	
+	if(isset($_SESSION)) session_write_close();
+	
+	$DB_CONNECT = $DB_TYPE . '://' . $DB_USER . ':' . $DB_PASS . '@' . $DB_SERVER . '/' . $DB_NAME;
+	$DATABASE = new database($DB_CONNECT);
+	?>
+	<body onload="top.document.getElementById('loading2').style.display = 'none'; top.document.getElementById('install').style.height=document.getElementById('installtable').clientHeight+'px';">
+	<form action="<?php echo $_SERVER['PHP_SELF']; ?>?step=3" method="post" target="_top">
+	<?php
+	for($i = 0; $i < 11 + count($GLOBALS['modules']); $i++)
+	{
+	?>
+	<input type="hidden" name="<?php echo $post[$i]; ?>" value="<?php echo $$post[$i]; ?>" />
+	<?php
+	}
+	?>
+	<table id="installtable" border="0" cellpadding="0" cellspacing="0">
+	<?php
+	$DATABASE->install('printEachStep');
+	?>
+	</table>
+	</form>
+	</body>
+	</html>
+	<?php
+}
+
+function output_test_db_test($result, $variable)
+{
+	include 'PEAR.php';
+	include $LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'database.php';
+
+	if(isset($_SESSION)) session_write_close();
+
+	ob_start();
+
+	$dsn = $DB_TYPE . '://' . $DB_USER . ':' . $DB_PASS . '@' . $DB_SERVER . '/' . $DB_NAME; 
+	$conn = ADONewConnection($dsn);  # no need for Connect()
+
+	$result = ob_get_contents();
+	
+	ob_end_clean();
+	
+	$e = ADODB_Pear_Error();
+	if($e !== false)
+	{
+
+	?>
+<body onload="top.document.getElementById('loading1').style.display = 'none'; top.document.getElementById('test').style.height=document.getElementById('testtable').clientHeight+'px';">
+<table id="testtable" border="0" cellpadding="0" cellspacing="0">
+	<tr>
+    <td class="title fail">Access to Database</td>
+    <td>
+    The connection manager reported the following error:<br /><?php echo $e->userinfo; ?>.
+    <form action="<?php echo $_SERVER['PHP_SELF']; ?>?step=3" method="post" target="_top">
+    <input type="hidden" name="dberror" value="<?php echo $e->userinfo; ?>" />
+	<?php
+    for($i = 0; $i < 11 + count($GLOBALS['modules']); $i++)
+    {
+        ?>
+    <input type="hidden" name="<?php echo $post[$i]; ?>" value="<?php echo $$post[$i]; ?>" />
+    <?php
+    }
+    ?>
+    <input type="submit" value="Return to Step 3" />
+    </form>
+    </td>
+    <td class="desc">
+    <ul>
+        <li>The system has failed to connect to the database.  Please go back to the Database Setup page (Step 3) to correct this error.</li>
+        <li>If you are unsure what the reported error means, please contact your server administrator for more information.</li>
+    </ul>
+    </td>
+    </tr>
+</table>
+</body>
+</html>
+    <?php
+	
+	}
+	else
+	{
+		
+    ?>
+<body onload="top.document.getElementById('loading1').style.display = 'none'; top.document.getElementById('test').style.height=document.getElementById('testtable').clientHeight+'px'; top.document.getElementById('loading2').style.display='inline'; top.document.getElementById('install').src='<?php echo $_SERVER['PHP_SELF']; ?>?step=5&install='">
+<table id="testtable" border="0" cellpadding="0" cellspacing="0">
+	<tr>
+    <td class="title">Access to Database</td>
+    <td>
+    	<label>Connection successful, tables will now be created.</label>
+    </td>
+    <td class="desc">
+    <ul>
+        <li>You have connected to the database successfully!</li>
+    </ul>
+    </td>
+    </tr>
+</table>
+</body>
+</html>
+    <?php
+	
+	}
+	
+}
+
 function output_test_system_type($result, $variable)
 {
 	// check for permission to settings file
@@ -436,14 +447,14 @@ function output_test_system_type($result, $variable)
 	
 }
 
-function output_test_settings_perm($result)
+function output_test_settings_perm($result, $variable)
 {
 	// check for file permissions
 	if($result)
 	{
 		?><tr><td class="title fail">Access to Settings</td>
 		<td>
-		<input type="text" disabled="disabled" value="<?php echo $settings; ?>" />
+		<input type="text" disabled="disabled" value="<?php echo $variable; ?>" />
 		</td>
 		<td class="desc">
 		<ul>
@@ -456,7 +467,7 @@ function output_test_settings_perm($result)
 	{
 		?><tr><td class="title fail">Access to Settings</td>
 		<td>
-		<input type="text" disabled="disabled" value="<?php echo $settings; ?>" />
+		<input type="text" disabled="disabled" value="<?php echo $variable; ?>" />
 		</td>
 		<td class="desc">
 		<ul>
@@ -544,7 +555,7 @@ function output_test_encode($result, $variable)
 	{
 		?><tr><td class="title">Encoder Path</td>
 		<td>
-		<input type="text" name="ENCODE" value="<?php echo $variable; ?>" />
+		<input type="text" name="ENCODE_PATH" value="<?php echo $variable; ?>" />
 		</td>
 		<td class="desc">
 		<ul>
@@ -559,7 +570,7 @@ function output_test_encode($result, $variable)
 	{
 		?><tr><td class="title warn">Encoder Path</td>
 		<td>
-		<input type="text" name="ENCODE" value="<?php echo $variable; ?>" />
+		<input type="text" name="ENCODE_PATH" value="<?php echo $variable; ?>" />
 		</td>
 		<td class="desc">
 		<ul>
@@ -578,7 +589,7 @@ function output_test_convert($result, $variable)
 	{
 		?><tr><td class="title">Convert Path</td>
 		<td>
-		<input type="text" name="CONVERT" value="<?php echo $variable; ?>" />
+		<input type="text" name="CONVERT_PATH" value="<?php echo $variable; ?>" />
 		</td>
 		<td class="desc">
 		<ul>
@@ -593,7 +604,7 @@ function output_test_convert($result, $variable)
 	{
 		?><tr><td class="title warn">Convert Path</td>
 		<td>
-		<input type="text" name="CONVERT" value="<?php echo $variable; ?>" />
+		<input type="text" name="CONVERT_PATH" value="<?php echo $variable; ?>" />
 		</td>
 		<td class="desc">
 		<ul>
@@ -922,7 +933,7 @@ function output_test_db_type($result, $variable)
 	<select name="DB_TYPE">
 	<option value="">&lt;Select One&gt;</option>
 	<?php
-		foreach($supported_databases as $db)
+		foreach($GLOBALS['templates']['vars']['supported_databases'] as $db)
 		{
 		?><option value="<?php echo $db; ?>" <?php echo ($variable == $db)?'selected="selected"':''; ?>><?php echo $db; ?></option><?php
 		}
@@ -939,6 +950,7 @@ function output_test_db_type($result, $variable)
 
 function output_test_db_server($result, $variable)
 {
+	$dberror = $GLOBALS['templates']['vars']['dberror'];
 	// set up database server
 	?><tr><td class="title <?php echo ($dberror !== false && strpos($dberror, 'Can\'t connect') !== false)?'fail':(($dberror !== false && strpos($dberror, 'Access denied') !== false)?'':'warn'); ?>">Database Server</td>
 	<td>
@@ -959,6 +971,7 @@ function output_test_db_server($result, $variable)
 
 function output_test_db_user($result, $variable)
 {
+	$dberror = $GLOBALS['templates']['vars']['dberror'];
 	// set up database username and password
 	?><tr><td class="title<?php echo ($dberror !== false && strpos($dberror, 'Access denied') !== false)?' fail':''; ?>">Database User Name</td>
 	<td>
@@ -977,6 +990,7 @@ function output_test_db_user($result, $variable)
 
 function output_test_db_pass($result, $variable)
 {
+	$dberror = $GLOBALS['templates']['vars']['dberror'];
 	?><tr><td class="title<?php echo ($dberror !== false && strpos($dberror, 'Access denied') !== false)?' fail':''; ?>">Database Password</td>
 	<td>
 	<input type="text" name="DB_PASS" value="<?php echo $variable; ?>" />
@@ -1011,8 +1025,9 @@ function output_test_db_name($result, $variable)
 
 function output_test_drop_tables($result, $variable)
 {
+	$dberror = $GLOBALS['templates']['vars']['dberror'];
 	// drop tables
-	if($dberror !== false && strpos($dberror, 'already exists') !== false)
+	if($dberror !== false && $result)
 	{
 		?><tr><td class="title fail">Tables Already Exist</td>
 		<td>
@@ -1053,14 +1068,13 @@ function output_test_drop_tables($result, $variable)
 
 function output_test_enable_modules($result, $variable)
 {
-	foreach($variable['modules'] as $key => $module)
+	$recommended = $GLOBALS['templates']['vars']['recommended'];
+	foreach($GLOBALS['templates']['vars']['modules'] as $key => $module)
 	{
 		if(constant($module . '::INTERNAL') == true)
 			continue;
 		
-		$module_en = $module . '_ENABLED';
-		if(!isset($$module_en))
-			$$module_en = true;
+		$module_en = $GLOBALS['templates']['vars']['request'][strtoupper($module) . '_ENABLE'];
 		?><tr>
 		<td class="title"><?php echo constant($module . '::NAME'); ?></td>
 		<td>
@@ -1077,8 +1091,8 @@ function output_test_enable_modules($result, $variable)
 		{
 		?>
 		<select name="<?php echo strtoupper($module); ?>_ENABLE">
-				<option value="true" <?php echo ($$module_en == true)?'selected="selected"':''; ?>>Enabled <?php echo in_array($module, $recommended)?'(Recommended)':'(Optional)'; ?></option>
-				<option value="false" <?php echo ($$module_en == false)?'selected="selected"':''; ?>>Disabled</option>
+				<option value="true" <?php echo ($module_en == true)?'selected="selected"':''; ?>>Enabled <?php echo in_array($module, $recommended)?'(Recommended)':'(Optional)'; ?></option>
+				<option value="false" <?php echo ($module_en == false)?'selected="selected"':''; ?>>Disabled</option>
 			</select>
 		<?php
 		}
@@ -1095,12 +1109,12 @@ function output_test_enable_modules($result, $variable)
 	}
 }
 
-function output_test_db_test()
+function output_test_db_check()
 {
 	?>
-	<div id="loading1"><img src="./install.php?image=loading" alt="" /> Testing...</div>
-	<iframe name="test" id="test" frameborder="0" width="100%" src="<?php echo $_SERVER['PHP_SELF']; ?>?step=5&test="></iframe>
-	<div id="loading2" style="display:none;"><img src="./install.php?image=loading" alt="" /> Installing...</div>
+	<div id="loading1"><img src="/?plugin=install&install_image=loading" alt="" /> Testing...</div>
+	<iframe name="test" id="test" frameborder="0" width="100%" src="<?php echo generate_href('plugin=install&install_step=5.1'); ?>"></iframe>
+	<div id="loading2" style="display:none;"><img src="/?plugin=install&install_image=loading" alt="" /> Installing...</div>
 	<iframe name="test" id="install" frameborder="0" width="100%" src=""></iframe>
 	</script>
 	<?php
@@ -1694,22 +1708,22 @@ function output_buttons($install_step)
 	if($install_step == 9)
 	{
 		?>
-		<input type="submit" name="next" value="View Site!" class="button" style="float:right;" />
+		<input type="submit" name="install_next" value="View Site!" class="button" style="float:right;" />
 		<?php
 	}
 	elseif($install_step == 5)
 	{
 		?>
-		<input type="submit" name="next" value="Save and Continue" style="float:right;" />
-		<input type="submit" name="save" value="Try Again" class="button" style="float:right;" />
+		<input type="submit" name="install_next" value="Save and Continue" style="float:right;" />
+		<input type="submit" name="install_save" value="Try Again" class="button" style="float:right;" />
 		<?php
     }
 	else
 	{
 		?>
-		<input type="submit" name="reset" value="Reset to Defaults" class="button" />
-		<input type="submit" name="next" value="Save and Continue" style="float:right;" />
-		<input type="submit" name="save" value="Save" class="button" style="float:right;" />
+		<input type="submit" name="install_reset" value="Reset to Defaults" class="button" />
+		<input type="submit" name="install_next" value="Save and Continue" style="float:right;" />
+		<input type="submit" name="install_save" value="Save" class="button" style="float:right;" />
 		<?php
 	}
 

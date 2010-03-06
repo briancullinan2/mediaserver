@@ -2,13 +2,52 @@
 
 function register_install()
 {
+	// create additional functions
+	foreach($GLOBALS['modules'] as $i => $module)
+	{
+		$GLOBALS['validate_' . strtoupper($module) . '_ENABLE'] = create_function('$request', 'return validate__ENABLE($request, \'' . $module . '\');');
+	}
+	
 	return array(
 		'name' => 'install',
 		'description' => 'Install the system.',
 		'privilage' => 0,
 		'path' => __FILE__,
-		'notemplate' => true
+		'notemplate' => true,
+		'session' => array('install_next', 'install_save')
 	);
+}
+
+function validate__ENABLE($request, $module)
+{
+	if(isset($request[strtoupper($module) . '_ENABLE']))
+	{
+		if($request[strtoupper($module) . '_ENABLE'] === false || $request[strtoupper($module) . '_ENABLE'] === 'false')
+			return false;
+		elseif($request[strtoupper($module) . '_ENABLE'] === true || $request[strtoupper($module) . '_ENABLE'] === 'true')
+			return true;
+	}
+	return true;
+}
+
+function validate_install_dberror($request)
+{
+	if(isset($request['install_dberror']))
+		return $request['install_dberror'];
+	else
+		return false;
+}
+
+function validate_install_next($request)
+{
+	if(isset($request['install_next']))
+		return $request['install_next'];
+}
+
+function validate_install_save($request)
+{
+	if(isset($request['install_save']))
+		return $request['install_save'];
 }
 
 function validate_install_image($request)
@@ -31,7 +70,7 @@ function validate_install_step($request)
 	if(!isset($request['install_step']) || !is_numeric($request['install_step']))
 		return 1;
 	else
-		return $request['install_step'];
+		return 1*$request['install_step'];
 }
 
 function setup_misc_vars()
@@ -44,75 +83,6 @@ function setup_misc_vars()
 	$supported_databases = array('access','ado','ado_access','ado_mssql','db2','odbc_db2','vfp','fbsql','ibase','firebird','borland_ibase','informix','informix72','ldap','mssql','mssqlpo','mysql','mysqli','mysqlt','maxsql','oci8','oci805','oci8po','odbc','odbc_mssql','odbc_oracle','odbtp','odbtp_unicode','oracle','netezza','pdo','postgres','postgres64','postgres7','postgres8','sapdb','sqlanywhere','sqlite','sqlitepo','sybase');
 }
 
-function setup_templates($request)
-{
-	$request['LOCAL_ROOT'] = validate_LOCAL_ROOT($request);
-	
-	$GLOBALS['templates'] = array();
-	if ($dh = @opendir($request['LOCAL_ROOT'] . 'templates' . DIRECTORY_SEPARATOR))
-	{
-		while (($file = readdir($dh)) !== false)
-		{
-			// filter out only the modules for our USE_DATABASE setting
-			if ($file[0] != '.' && is_dir($request['LOCAL_ROOT'] . 'templates' . DIRECTORY_SEPARATOR . $file))
-			{
-				$GLOBALS['templates'][] = 'templates' . DIRECTORY_SEPARATOR . $file . DIRECTORY_SEPARATOR;
-			}
-		}
-	}
-}
-
-function setup_modules($request)
-{
-	global $post;
-	
-	$request['LOCAL_ROOT'] = validate_LOCAL_ROOT($request);
-	
-	// include the modules
-	$tmp_modules = array();
-	if ($dh = @opendir($request['LOCAL_ROOT'] . 'modules' . DIRECTORY_SEPARATOR))
-	{
-		while (($file = readdir($dh)) !== false)
-		{
-			// filter out only the modules for our USE_DATABASE setting
-			if ($file[0] != '.' && !is_dir($request['LOCAL_ROOT'] . 'modules' . DIRECTORY_SEPARATOR . $file))
-			{
-				// include all the modules
-				require_once $request['LOCAL_ROOT'] . 'modules' . DIRECTORY_SEPARATOR . $file;
-				$class_name = substr($file, 0, strrpos($file, '.'));
-				
-				// only use the module if it is properly defined
-				if(class_exists($class_name))
-				{
-					if(substr($file, 0, 3) == 'db_')
-						$tmp_modules[] = $class_name;
-				}
-			}
-		}
-		closedir($dh);
-	}
-	
-	$error_count = 0;
-	$new_modules = array();
-	
-	// reorganize modules to reflect heirarchy
-	while(count($tmp_modules) > 0 && $error_count < 1000)
-	{
-		foreach($tmp_modules as $i => $module)
-		{
-			$tmp_override = get_parent_class($module);
-			if(in_array($tmp_override, $new_modules) || $tmp_override == '')
-			{
-				$new_modules[] = $module;
-				unset($tmp_modules[$i]);
-			}
-		}
-		$error_count++;
-	}
-	
-	$GLOBALS['modules'] = $new_modules;
-}
-
 function setup_post_vars($request)
 {
 	global $post;
@@ -120,14 +90,10 @@ function setup_post_vars($request)
 	// list of acceptable post variables
 	$post = array('SYSTEM_TYPE', 'ENCODE_PATH', 'CONVERT_PATH', 'LOCAL_ROOT', 'HTML_DOMAIN', 'HTML_ROOT', 'DB_TYPE', 'DB_SERVER', 'DB_USER', 'DB_PASS', 'DB_NAME');
 	
-	// set up the list of modules
-	setup_modules($request);
-	
-	// set up the list of templates
-	//setup_templates($request);
-	
 	foreach($GLOBALS['modules'] as $i => $module)
+	{
 		$post[] = strtoupper($module . '_ENABLE');
+	}
 
 	$post[] = 'HTML_NAME';
 	$post[] = 'LOCAL_BASE';
@@ -164,6 +130,7 @@ function validate_SYSTEM_TYPE($request)
 		else
 			$SYSTEM_TYPE = 'win';
 	}
+	return $SYSTEM_TYPE;
 }
 
 function validate_ENCODE_PATH($request)
@@ -227,6 +194,8 @@ function validate_HTML_ROOT($request)
 // ---------------------------------- step 3 ---------------------------------
 function validate_DB_TYPE($request)
 {
+	if(!isset($GLOBALS['supported_databases']))
+		setup_misc_vars();
 	if(isset($request['DB_TYPE']) && in_array($request['DB_TYPE'], $GLOBALS['supported_databases']))
 		return $request['DB_TYPE'];
 	else
@@ -321,26 +290,38 @@ function validate_FILE_SEEK_TIME($request)
 // ---------------------------------- step 8 ---------------------------------
 function validate_DEBUG_MODE($request)
 {
-	if(isset($request['DEBUG_MODE']) && is_bool($request['DEBUG_MODE']))
-		return $request['DEBUG_MODE'];
-	else
-		return false;
+	if(isset($request['DEBUG_MODE']))
+	{
+		if($request['DEBUG_MODE'] === true || $request['DEBUG_MODE'] === 'true')
+			return true;
+		elseif($request['DEBUG_MODE'] === false || $request['DEBUG_MODE'] === 'false')
+			return false;
+	}
+	return false;
 }
 
 function validate_RECURSIVE_GET($request)
 {
-	if(isset($request['RECURSIVE_GET']) && is_bool($request['RECURSIVE_GET']))
-		return $request['RECURSIVE_GET'];
-	else
-		return false;
+	if(isset($request['RECURSIVE_GET']))
+	{
+		if($request['RECURSIVE_GET'] === true || $request['RECURSIVE_GET'] === 'true')
+			return true;
+		elseif($request['RECURSIVE_GET'] === false || $request['RECURSIVE_GET'] === 'false')
+			return false;
+	}
+	return false;
 }
 
 function validate_NO_BOTS($request)
 {
-	if(isset($request['NO_BOTS']) && is_bool($request['NO_BOTS']))
-		return $request['NO_BOTS'];
-	else
-		return true;
+	if(isset($request['NO_BOTS']))
+	{
+		if($request['NO_BOTS'] === true || $request['NO_BOTS'] === 'true')
+			return true;
+		elseif($request['NO_BOTS'] === false || $request['NO_BOTS'] === 'false')
+			return false;
+	}
+	return true;
 }
 
 function validate_TMP_DIR($request)
@@ -375,10 +356,14 @@ function validate_BUFFER_SIZE($request)
 
 function validate_USE_ALIAS($request)
 {
-	if(isset($request['USE_ALIAS']) && is_bool($request['USE_ALIAS']))
-		return $request['USE_ALIAS'];
-	else
-		return true;
+	if(isset($request['USE_ALIAS']))
+	{
+		if($request['USE_ALIAS'] === true || $request['USE_ALIAS'] === 'true')
+			return true;
+		elseif($request['USE_ALIAS'] === false || $request['USE_ALIAS'] === 'false')
+			return false;
+	}
+	return true;
 }
 
 function validate_drop_tables($request)
@@ -403,19 +388,11 @@ function validate_drop_tables($request)
 	}
 }
 
-function validate_next_step($request)
-{
-	if(isset($request['next_step']) && is_numeric($request['next_step']))
-	{
-		header('Location: ' . $_SERVER['PHP_SELF'] . '?install_step=' . ($request['install_step'] + 1));
-		exit;
-	}
-}
-
 function perform_tests($request, $start = 0, $stop = NULL)
 {
 	$tests = array();
 	// step 1
+	$tests['system_type'] = 'return true;'; // return true because we don't want to show this if they choose the quick install
 	$tests['settings_perm'] = <<<EOF
 		\$settings = dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'settings.php';
 		return (@fopen(\$settings, 'w') !== false);
@@ -484,7 +461,18 @@ EOF;
 		\$request['LOCAL_ROOT'] = validate_LOCAL_ROOT(\$request);
 		return file_exists(\$request['LOCAL_ROOT'] . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.lib.php');
 EOF;
-	
+	$tests['html_domain'] = 'return true;';
+	$tests['html_root'] = 'return true;';
+	$tests['db_type'] = 'return true;';
+	$tests['db_server'] = 'return false;'; // return false so the user always sees this option
+	$tests['db_user'] = 'return false;';
+	$tests['db_pass'] = 'return false;';
+	$tests['db_name'] = 'return false;';
+	$tests['drop_tables'] = <<<EOF
+		\$request['install_dberror'] = validate_install_dberror(\$request);
+		return (strpos(\$request['install_dberror'], 'already exists') !== false);
+EOF;
+	$tests['enable_modules'] = 'return true;';
 	
 	if($stop == NULL)
 		$stop = count($tests);
@@ -501,19 +489,32 @@ EOF;
 	return $tests;
 }
 
+function session_install($request)
+{
+	// save the entire request in the session, except the install state
+	unset($request['install_step']);
+	unset($request['install_next']);
+	unset($request['install_save']);
+	unset($request['plugin']);
+
+	return $request;
+}
+
 function output_install($request)
 {
-	global $post;
+	global $post, $required, $recommended, $supported_databases;
 	
 	$request['install_step'] = validate_install_step($request);
 	
-	// validate the request
-	foreach($request as $key => $value)
+	if(!isset($_SESSION)) session_start();
+	// get all the settings in the session
+	if(isset($_SESSION['install']))
 	{
-		if(function_exists('validate_' . $key))
-			$request[$key] = call_user_func_array('validate_' . $key, array($request));
-		else
-			unset($request[$key]);
+		foreach($_SESSION['install'] as $key => $value)
+		{
+			if(!isset($request[$key]))
+				$request[$key] = $value;
+		}
 	}
 	
 	// at the bottom because it takes up a lot of room
@@ -526,28 +527,49 @@ function output_install($request)
 	setup_misc_vars();
 	
 	setup_post_vars($request);
-	
+
 	// validate all other post variables, this will set them to the default if they haven't been request
 	foreach($post as $i => $key)
 	{
 		if(function_exists('validate_' . $key))
 			$request[$key] = call_user_func_array('validate_' . $key, array($request));
+		elseif(isset($GLOBALS['validate_' . $key]) && is_callable($GLOBALS['validate_' . $key]))
+			$request[$key] = $GLOBALS['validate_' . $key]($request);
 	}
 	
-	if(!isset($_SESSION)) session_start();
-	
+	if(isset($request['install_next']))
+	{
+		header('Location: ' . generate_href('plugin=install&install_step=' . ($request['install_step'] + 1), true));
+		exit;
+	}
+
 	if(isset($_POST) && count($_POST) > 0)
 	{
 		if(isset($_POST['dberror'])) $_SESSION['dberror'] = $_POST['dberror'];
-		header('Location: ' . $_SERVER['PHP_SELF'] . '?install_step=' . ($request['install_step']));
+		header('Location: ' . generate_href('plugin=install&install_step=' . $request['install_step'], true));
 		exit;
 	}
+	
+	register_output_vars('post', $post);
 	
 	register_output_vars('install_step', $request['install_step']);
 
 	register_output_vars('tests', perform_tests($request));
 	
 	register_output_vars('request', $request);
+	
+	register_output_vars('settings', dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'settings.php');
+	
+	register_output_vars('memory_limit', ini_get('memory_limit'));
+	
+	$request['install_dberror'] = validate_install_dberror($request);
+	register_output_vars('dberror', $request['install_dberror']);
+	
+	register_output_vars('supported_databases', $supported_databases);
+	register_output_vars('required', $required);
+	register_output_vars('recommended', $recommended);
+	
+	register_output_vars('modules', $GLOBALS['modules']);
 
 	$template = $GLOBALS['templates']['TEMPLATE_' . strtoupper($request['plugin'])];
 	set_output_vars(false);
