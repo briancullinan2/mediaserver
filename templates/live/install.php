@@ -31,7 +31,7 @@ if(!is_float($GLOBALS['templates']['vars']['install_step']))
 									{
 									?>
 									<li><img src="/?plugin=install&install_image=carat" class="crumbsep" alt="&gt;" /></li>
-                                    <li><a href="?install_step=<?php echo $i; ?>">Step <?php echo $i; ?></a></li>
+                                    <li><a href="<?php echo generate_href('plugin=install&install_step=' . $i); ?>">Step <?php echo $i; ?></a></li>
                                     <?php
 									}
 									?>
@@ -80,17 +80,19 @@ function print_fields()
 		$count = 11;
 		break;
 		case 5:
+		case 5.1:
+		case 5.2:
 		case 6:
-		$count = 11 + count($GLOBALS['modules']);
+		$count = 11 + count($GLOBALS['templates']['vars']['modules']);
 		break;
 		case 7:
-		$count = 11 + count($GLOBALS['modules']) + 4;
+		$count = 11 + count($GLOBALS['templates']['vars']['modules']) + 4;
 		break;
 		case 8:
-		$count = 11 + count($GLOBALS['modules']) + 6;
+		$count = 11 + count($GLOBALS['templates']['vars']['modules']) + 6;
 		break;
 		case 9:
-		$count = 11 + count($GLOBALS['modules']) + 13;
+		$count = 11 + count($GLOBALS['templates']['vars']['modules']) + 13;
 		break;
 	}
 	for($i = 0; $i < $count; $i++)
@@ -169,11 +171,13 @@ function output_heading($install_step)
 	?><table border="0" cellpadding="0" cellspacing="0"><?php
 }
 
-output_heading($GLOBALS['templates']['vars']['install_step']);
+if(!is_float($GLOBALS['templates']['vars']['install_step']))
+	output_heading($GLOBALS['templates']['vars']['install_step']);
 
 output_tests($GLOBALS['templates']['vars']['install_step']);
 
-output_buttons($GLOBALS['templates']['vars']['install_step']);
+if(!is_float($GLOBALS['templates']['vars']['install_step']))
+	output_buttons($GLOBALS['templates']['vars']['install_step']);
 
 function output_tests($install_step)
 {
@@ -318,23 +322,22 @@ function printEachStep($result, $table)
 
 function output_test_db_install($result, $variable)
 {
-	include 'PEAR.php';
-	include $LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'database.php';
+	include_once 'PEAR.php';
+	include_once $GLOBALS['templates']['vars']['request']['LOCAL_ROOT'] . 'include' . DIRECTORY_SEPARATOR . 'database.php';
 	
 	if(isset($_SESSION)) session_write_close();
 	
-	$DB_CONNECT = $DB_TYPE . '://' . $DB_USER . ':' . $DB_PASS . '@' . $DB_SERVER . '/' . $DB_NAME;
+	$dsn = $GLOBALS['templates']['vars']['request']['DB_TYPE'] . '://' . 
+		$GLOBALS['templates']['vars']['request']['DB_USER'] . ':' . 
+		$GLOBALS['templates']['vars']['request']['DB_PASS'] . '@' . 
+		$GLOBALS['templates']['vars']['request']['DB_SERVER'] . '/' . 
+		$GLOBALS['templates']['vars']['request']['DB_NAME']; 
 	$DATABASE = new database($DB_CONNECT);
 	?>
 	<body onload="top.document.getElementById('loading2').style.display = 'none'; top.document.getElementById('install').style.height=document.getElementById('installtable').clientHeight+'px';">
 	<form action="<?php echo $_SERVER['PHP_SELF']; ?>?step=3" method="post" target="_top">
 	<?php
-	for($i = 0; $i < 11 + count($GLOBALS['modules']); $i++)
-	{
-	?>
-	<input type="hidden" name="<?php echo $post[$i]; ?>" value="<?php echo $$post[$i]; ?>" />
-	<?php
-	}
+	print_fields();
 	?>
 	<table id="installtable" border="0" cellpadding="0" cellspacing="0">
 	<?php
@@ -349,22 +352,25 @@ function output_test_db_install($result, $variable)
 
 function output_test_db_test($result, $variable)
 {
-	include 'PEAR.php';
-	include $LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'database.php';
+	include_once 'PEAR.php';
+	include_once $GLOBALS['templates']['vars']['request']['LOCAL_ROOT'] . 'include' . DIRECTORY_SEPARATOR . 'database.php';
 
 	if(isset($_SESSION)) session_write_close();
 
 	ob_start();
 
-	$dsn = $DB_TYPE . '://' . $DB_USER . ':' . $DB_PASS . '@' . $DB_SERVER . '/' . $DB_NAME; 
+	$dsn = $GLOBALS['templates']['vars']['request']['DB_TYPE'] . '://' . 
+		$GLOBALS['templates']['vars']['request']['DB_USER'] . ':' . 
+		$GLOBALS['templates']['vars']['request']['DB_PASS'] . '@' . 
+		$GLOBALS['templates']['vars']['request']['DB_SERVER'] . '/' . 
+		$GLOBALS['templates']['vars']['request']['DB_NAME']; 
 	$conn = ADONewConnection($dsn);  # no need for Connect()
 
 	$result = ob_get_contents();
 	
 	ob_end_clean();
-	
 	$e = ADODB_Pear_Error();
-	if($e !== false)
+	if(isset($e) && $e !== false)
 	{
 
 	?>
@@ -374,15 +380,10 @@ function output_test_db_test($result, $variable)
     <td class="title fail">Access to Database</td>
     <td>
     The connection manager reported the following error:<br /><?php echo $e->userinfo; ?>.
-    <form action="<?php echo $_SERVER['PHP_SELF']; ?>?step=3" method="post" target="_top">
-    <input type="hidden" name="dberror" value="<?php echo $e->userinfo; ?>" />
+    <form action="<?php echo generate_href('plugin=install&install_step=3'); ?>" method="post" target="_top">
+    <input type="hidden" name="install_dberror" value="<?php echo $e->userinfo; ?>" />
 	<?php
-    for($i = 0; $i < 11 + count($GLOBALS['modules']); $i++)
-    {
-        ?>
-    <input type="hidden" name="<?php echo $post[$i]; ?>" value="<?php echo $$post[$i]; ?>" />
-    <?php
-    }
+	print_fields();
     ?>
     <input type="submit" value="Return to Step 3" />
     </form>
@@ -404,7 +405,7 @@ function output_test_db_test($result, $variable)
 	{
 		
     ?>
-<body onload="top.document.getElementById('loading1').style.display = 'none'; top.document.getElementById('test').style.height=document.getElementById('testtable').clientHeight+'px'; top.document.getElementById('loading2').style.display='inline'; top.document.getElementById('install').src='<?php echo $_SERVER['PHP_SELF']; ?>?step=5&install='">
+<body onload="top.document.getElementById('loading1').style.display = 'none'; top.document.getElementById('test').style.height=document.getElementById('testtable').clientHeight+'px'; top.document.getElementById('loading2').style.display='inline'; top.document.getElementById('install').src='<?php echo generate_href('plugin=install&install_step=5'); ?>'">
 <table id="testtable" border="0" cellpadding="0" cellspacing="0">
 	<tr>
     <td class="title">Access to Database</td>
@@ -952,7 +953,7 @@ function output_test_db_server($result, $variable)
 {
 	$dberror = $GLOBALS['templates']['vars']['dberror'];
 	// set up database server
-	?><tr><td class="title <?php echo ($dberror !== false && strpos($dberror, 'Can\'t connect') !== false)?'fail':(($dberror !== false && strpos($dberror, 'Access denied') !== false)?'':'warn'); ?>">Database Server</td>
+	?><tr><td class="title <?php echo ($dberror !== false && (strpos($dberror, 'Can\'t connect') !== false || strpos($dberror, 'Connection error') !== false))?'fail':(($dberror !== false && strpos($dberror, 'Access denied') !== false)?'':'warn'); ?>">Database Server</td>
 	<td>
 	<input type="text" name="DB_SERVER" value="<?php echo $variable; ?>" />
 	</td>
@@ -1732,6 +1733,8 @@ function output_buttons($install_step)
     <?php
 }
 
+if(!is_float($GLOBALS['templates']['vars']['install_step']))
+{
 ?>
 
                                             </div>
@@ -1757,3 +1760,6 @@ function output_buttons($install_step)
 </div>
 </body>
 </html>
+<?php
+}
+?>

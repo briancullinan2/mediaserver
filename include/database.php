@@ -1,7 +1,7 @@
 <?php
 
 //$no_setup = true;
-ini_set('include_path', ini_get('include_path') . ':' . dirname(__FILE__));
+//ini_set('include_path', ini_get('include_path') . ':' . dirname(__FILE__));
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb-errorpear.inc.php';
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb.inc.php';
 

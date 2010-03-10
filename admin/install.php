@@ -440,27 +440,6 @@ EOF;
 		\$request['LOCAL_ROOT'] = validate_LOCAL_ROOT(\$request);
 		return file_exists(\$request['LOCAL_ROOT'] . DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR . 'plain' . DIRECTORY_SEPARATOR . 'extjs' . DIRECTORY_SEPARATOR . 'ext-all.js');
 EOF;
-	$tests['check_getid3'] = <<<EOF
-		\$request['LOCAL_ROOT'] = validate_LOCAL_ROOT(\$request);
-		\$request['LOCAL_BASE'] = validate_LOCAL_BASE(\$request);
-		return is_dir(\$request['LOCAL_ROOT'] . \$request['LOCAL_BASE']);
-EOF;
-	$tests['check_getid3'] = <<<EOF
-		\$request['LOCAL_ROOT'] = validate_LOCAL_ROOT(\$request);
-		return file_exists(\$request['LOCAL_ROOT'] . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.lib.php');
-EOF;
-	$tests['check_getid3'] = <<<EOF
-		\$request['LOCAL_ROOT'] = validate_LOCAL_ROOT(\$request);
-		return file_exists(\$request['LOCAL_ROOT'] . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.lib.php');
-EOF;
-	$tests['check_getid3'] = <<<EOF
-		\$request['LOCAL_ROOT'] = validate_LOCAL_ROOT(\$request);
-		return file_exists(\$request['LOCAL_ROOT'] . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.lib.php');
-EOF;
-	$tests['check_getid3'] = <<<EOF
-		\$request['LOCAL_ROOT'] = validate_LOCAL_ROOT(\$request);
-		return file_exists(\$request['LOCAL_ROOT'] . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.lib.php');
-EOF;
 	$tests['html_domain'] = 'return true;';
 	$tests['html_root'] = 'return true;';
 	$tests['db_type'] = 'return true;';
@@ -473,6 +452,9 @@ EOF;
 		return (strpos(\$request['install_dberror'], 'already exists') !== false);
 EOF;
 	$tests['enable_modules'] = 'return true;';
+	$tests['db_check'] = 'return false;'; // return false so it always runs the database checking
+	$tests['db_test'] = 'return false;'; // always test the database before installing
+	$tests['db_install'] = 'return false;'; // always install the database
 	
 	if($stop == NULL)
 		$stop = count($tests);
