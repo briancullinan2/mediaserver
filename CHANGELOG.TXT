@@ -1,3 +1,9 @@
+2010-03-12
+Fixed encode.php plugin, time offset (%TO) wasn't being replaced since new API changed
+Added lots more actions to ampache.php plugin
+	Now supports albums, songs, search_songs, etc.
+Converted search.php plugin over to use new API
+
 2010-03-05
 Working on install.php
 Fine tuning API

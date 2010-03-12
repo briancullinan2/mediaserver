@@ -7,7 +7,7 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEP
 
 if(substr(selfURL(), 0, strlen(HTML_DOMAIN)) != HTML_DOMAIN)
 {
-	header('Location: ' . generate_href(array()));
+	header('Location: ' . generate_href($_GET, true, true));
 	exit();
 }
 

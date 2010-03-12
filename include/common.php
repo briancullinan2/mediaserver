@@ -321,7 +321,13 @@ function setupInputVars()
 		elseif(isset($GLOBALS['validate_' . $key]) && is_callable($GLOBALS['validate_' . $key]))
 			$_REQUEST[$key] = $GLOBALS['validate_' . $key]($_REQUEST);
 		else
+		{
 			unset($_REQUEST[$key]);
+			if(isset($_GET[$key])) unset($_GET[$key]);
+		}
+			
+		// set the get variable also, so that when generate_href($_GET) is used it is an accurate representation of the current page
+		if(isset($_GET[$key])) $_GET[$key] = $_REQUEST[$key];
 	}
 	
 	// check plugins for vars and trigger a session save
@@ -360,11 +366,6 @@ function setupInputVars()
 				}
 			}
 		}
-	}
-
-	if($_SERVER['REMOTE_ADDR'] != '209.250.30.30' && substr($_SERVER['REMOTE_ADDR'], 0, 8) != '134.114.' && substr($_SERVER['REMOTE_ADDR'], 0, 8) != '192.168.' && substr($_SERVER['REMOTE_ADDR'], 0, 7) != '75.242.')
-	{
-		exit;
 	}
 }
 

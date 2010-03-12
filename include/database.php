@@ -342,12 +342,6 @@ class database
 	{
 		$query = DATABASE::statement_builder($props, $require_permit);
 		
-		/*if(isset($_REQUEST['log_sql']) && $_REQUEST['log_sql'] == true)
-		{
-			if(!isset($_REQUEST['full_sql']) || $_REQUEST['full_sql'] != true)
-				PEAR::raiseError('DATABASE: ' . substr($query, 0, 512));
-			else
-		}*/
 		PEAR::raiseError('DATABASE: ' . $query, E_DEBUG);
 		
 		if(isset($props['CALLBACK']))

@@ -52,23 +52,25 @@ switch($_REQUEST['action'])
 <?php
 		}
 	break;
+	case 'album':
+	case 'albums':
 	case 'artist_albums':
-		// get lowest id
-		$artist_id = 0;
-		foreach($files as $i => $album)
-		{
-			if($artist_id == 0 || $album['id'] < $artist_id)
-			{
-				$artist_id = $album['id'];
-			}
-		}
 		
 		foreach($files as $i => $album)
 		{
 ?>
 <album id="<?php echo $album['id']; ?>">
 <name><![CDATA[<?php echo $album['Album']; ?>]]></name>
-<artist id="<?php echo $artist_id; ?>"><![CDATA[<?php echo $album['Artist']; ?>]]></artist>
+<?php
+if($album['ArtistCount'] != 1)
+{
+	?><artist id="0"><![CDATA[Various]]></artist><?php
+}
+else
+{
+	?><artist id="<?php echo $album['id'] ; ?>"><![CDATA[<?php echo $album['Artist'] ; ?>]]></artist><?php
+}
+?>
 <year><?php echo $album['Year']; ?></year>
 <tracks><?php echo $album['SongCount']; ?></tracks>
 <disk>0</disk>
@@ -77,25 +79,20 @@ switch($_REQUEST['action'])
 <?php
 		}
 	break;
+	case 'song':
+	case 'songs':
+	case 'artist_songs':
 	case 'album_songs':
-		// get album id
-		$album_id = 0;
-		foreach($files as $i => $song)
-		{
-			if($album_id == 0 || $song['id'] < $album_id)
-			{
-				$album_id = $song['id'];
-			}
-		}
+	case 'search_songs':
 	
 		foreach($files as $i => $song)
 		{
 ?>
 <song id="<?php echo $song['id']; ?>">
 <title><![CDATA[<?php echo $song['Title']; ?>]]></title>
-<artist id="<?php echo $artist_id; ?>"><![CDATA[<?php echo $song['Artist']; ?>]]></artist>
-<album id="<?php echo $album_id; ?>"><![CDATA[<?php echo $song['Album']; ?>]]></album>
-<genre id="<?php echo $genre_id; ?>"><![CDATA[<?php echo $song['Genre']; ?>]]></genre>
+<artist id="<?php echo $song['id']; ?>"><![CDATA[<?php echo $song['Artist']; ?>]]></artist>
+<album id="<?php echo $song['id']; ?>"><![CDATA[<?php echo $song['Album']; ?>]]></album>
+<genre id="<?php echo $song['id']; ?>"><![CDATA[<?php echo $song['Genre']; ?>]]></genre>
 <track><?php echo $song['Track']; ?></track>
 <time><?php echo $song['Length']; ?></time>
 <url><![CDATA[<?php echo generate_href('encode=mp3&id=' . $song['id'] . '&cat=db_audio&plugin=encode', true, true); ?>]]></url>

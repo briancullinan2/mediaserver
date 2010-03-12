@@ -318,9 +318,11 @@ function rewrite_vars($request)
 	}
 	if($request['plugin'] == 'ampache')
 	{
+		$request['action'] = validate_action($request);
 		// rewrite some variables
 		if(isset($request['offset'])) $request['start'] = $request['offset'];
-		if(isset($request['filter'])) $request['id'] = $request['filter'];
+		if(isset($request['filter']) && $request['action'] != 'search_songs') $request['id'] = $request['filter'];
+		elseif(isset($request['filter'])) $request['search'] = $request['filter'];
 	}
 
 	return $request;

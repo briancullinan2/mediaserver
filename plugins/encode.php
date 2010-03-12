@@ -223,6 +223,14 @@ function validate_framerate($request)
 	return $request['framerate'];
 }
 
+function validate_timeoffset($request)
+{
+	if(isset($request['timeoffset']) && is_numeric($request['timeoffset']))
+		return $request['timeoffset'];
+	else
+		return 0;
+}
+
 function output_encode($request)
 {
 	
@@ -244,6 +252,7 @@ function output_encode($request)
 	$request['channels'] = validate_channels($request);
 	$request['muxer'] = validate_muxer($request);
 	$request['framerate'] = validate_framerate($request);
+	$request['timeoffset'] = validate_timeoffset($request);
 	$request['cat'] = validate_cat($request);
 
 	// get the file path from the database
@@ -372,7 +381,7 @@ function output_encode($request)
 	
 	// replace the argument string with the contents of $_REQUEST
 	//  without validation this is VERY DANGEROUS!
-	$cmd = basename(ENCODE) . ' ' . str_replace(array('%IF', '%VC', '%AC', '%VB', '%AB', '%SR', '%SC', '%CH', '%MX', '%FS'), array(
+	$cmd = basename(ENCODE) . ' ' . str_replace(array('%IF', '%VC', '%AC', '%VB', '%AB', '%SR', '%SC', '%CH', '%MX', '%FS', '%TO'), array(
 		$request['efile'],
 		$request['vcodec'],
 		$request['acodec'],
@@ -382,7 +391,8 @@ function output_encode($request)
 		$request['scalar'],
 		$request['channels'],
 		$request['muxer'],
-		$request['framerate']
+		$request['framerate'],
+		$request['timeoffset']
 	), ENCODE_ARGS);
 	
 	$descriptorspec = array(

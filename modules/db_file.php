@@ -190,15 +190,21 @@ class db_file
 			$request['selected'] = validate_selected($request);
 			$props['LIMIT'] = $request['start'] . ',' . $request['limit'];
 			if(isset($request['group_by'])) $props['GROUP'] = validate_group_by($request);
-			if(isset($request['order_trimmed']) && $request['order_trimmed'] == true)
-			{
-				$props['ORDER'] = 'TRIM(LEADING "a " FROM TRIM(LEADING "an " FROM TRIM(LEADING "the " FROM LOWER( ' . 
-									join(' )))), TRIM(LEADING "a " FROM TRIM(LEADING "an " FROM TRIM(LEADING "the " FROM LOWER( ', split(',', $request['order_by'])) . 
-									' ))))' . ' ' . $request['direction'];
-			}
+			// relevance is handled below
+			if($request['order_by'] == 'Relevance')
+				$props['ORDER'] = 'Filepath DESC';
 			else
 			{
-				$props['ORDER'] = $request['order_by'] . ' ' . $request['direction'];
+				if(isset($request['order_trimmed']) && $request['order_trimmed'] == true)
+				{
+					$props['ORDER'] = 'TRIM(LEADING "a " FROM TRIM(LEADING "an " FROM TRIM(LEADING "the " FROM LOWER( ' . 
+										join(' )))), TRIM(LEADING "a " FROM TRIM(LEADING "an " FROM TRIM(LEADING "the " FROM LOWER( ', split(',', $request['order_by'])) . 
+										' ))))' . ' ' . $request['direction'];
+				}
+				else
+				{
+					$props['ORDER'] = $request['order_by'] . ' ' . $request['direction'];
+				}
 			}
 			
 //---------------------------------------- Selection ----------------------------------------\\
