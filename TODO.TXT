@@ -1,4 +1,4 @@
-Finish ampache.php plugin to support videos, and playlists
+Finish ampache.php plugin to support genres, videos, and playlists
 Remove smarty from the entire system because it sucks
 Work on cron.php script
 Review all use of smarty variables
