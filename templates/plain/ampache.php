@@ -27,6 +27,11 @@ if(count($GLOBALS['user_errors']) > 0)
 switch($_REQUEST['action'])
 {
 	case 'ping':
+?>
+<server><![CDATA[<?php echo VERSION; ?>]]></server>
+<version><![CDATA[350001]]></version>
+<compatible><![CDATA[350001]]></compatible>
+<?php
 	break;
 	case 'handshake':
 ?>

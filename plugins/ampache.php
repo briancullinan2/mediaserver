@@ -19,8 +19,6 @@ function validate_auth($request)
 
 function validate_action($request)
 {
-	if(isset($request['auth']) && !isset($request['action']))
-		return 'ping';
 	if(isset($request['action']) && in_array($request['action'], array(
 		'handshake',
 		'artists',
@@ -31,11 +29,12 @@ function validate_action($request)
 		'artist_songs',
 		'songs',
 		'song',
-		'search_songs'
+		'search_songs',
+		'ping'
 	)))
 		return $request['action'];
 	else
-		return 'ping';
+		PEAR::raiseError('405:Invalid Request', E_USER);
 }
 
 function output_ampache($request)
@@ -62,8 +61,8 @@ function output_ampache($request)
 				PEAR::raiseError('401:Session Expired', E_USER);
 			}
 			
-			break;
-			case 'handshake':
+		break;
+		case 'handshake':
 			// send out the ssid information
 			// send out some counts instead of running select
 			// song count

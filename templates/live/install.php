@@ -83,16 +83,16 @@ function print_fields()
 		case 5.1:
 		case 5.2:
 		case 6:
-		$count = 11 + count($GLOBALS['templates']['vars']['modules']);
+		$count = 11 + count($GLOBALS['modules']);
 		break;
 		case 7:
-		$count = 11 + count($GLOBALS['templates']['vars']['modules']) + 4;
+		$count = 11 + count($GLOBALS['modules']) + 4;
 		break;
 		case 8:
-		$count = 11 + count($GLOBALS['templates']['vars']['modules']) + 6;
+		$count = 11 + count($GLOBALS['modules']) + 6;
 		break;
 		case 9:
-		$count = 11 + count($GLOBALS['templates']['vars']['modules']) + 13;
+		$count = 11 + count($GLOBALS['modules']) + 13;
 		break;
 	}
 	for($i = 0; $i < $count; $i++)
@@ -290,7 +290,7 @@ function printEachStep($result, $table)
 	<td class="title fail">Access to Database</td>
 	<td>
 	The connection manager reported the following error:<br /><?php echo $e->userinfo; ?>.
-	<input type="hidden" name="dberror" value="<?php echo $e->userinfo; ?>" />
+	<input type="hidden" name="install_dberror" value="<?php echo $e->userinfo; ?>" />
 	<input type="submit" value="Panic!" />
 	</td>
 	<td class="desc">
@@ -332,10 +332,11 @@ function output_test_db_install($result, $variable)
 		$GLOBALS['templates']['vars']['request']['DB_PASS'] . '@' . 
 		$GLOBALS['templates']['vars']['request']['DB_SERVER'] . '/' . 
 		$GLOBALS['templates']['vars']['request']['DB_NAME']; 
-	$DATABASE = new database($DB_CONNECT);
+		
+	$DATABASE = new database($dsn);
 	?>
 	<body onload="top.document.getElementById('loading2').style.display = 'none'; top.document.getElementById('install').style.height=document.getElementById('installtable').clientHeight+'px';">
-	<form action="<?php echo $_SERVER['PHP_SELF']; ?>?step=3" method="post" target="_top">
+	<form action="<?php echo generate_href('plugin=install&install_step=3'); ?>" method="post" target="_top">
 	<?php
 	print_fields();
 	?>
@@ -405,7 +406,7 @@ function output_test_db_test($result, $variable)
 	{
 		
     ?>
-<body onload="top.document.getElementById('loading1').style.display = 'none'; top.document.getElementById('test').style.height=document.getElementById('testtable').clientHeight+'px'; top.document.getElementById('loading2').style.display='inline'; top.document.getElementById('install').src='<?php echo generate_href('plugin=install&install_step=5'); ?>'">
+<body onload="top.document.getElementById('loading1').style.display = 'none'; top.document.getElementById('test').style.height=document.getElementById('testtable').clientHeight+'px'; top.document.getElementById('loading2').style.display='inline'; top.document.getElementById('install').src='<?php echo generate_href('plugin=install&install_step=5.2'); ?>'">
 <table id="testtable" border="0" cellpadding="0" cellspacing="0">
 	<tr>
     <td class="title">Access to Database</td>
@@ -1070,7 +1071,7 @@ function output_test_drop_tables($result, $variable)
 function output_test_enable_modules($result, $variable)
 {
 	$recommended = $GLOBALS['templates']['vars']['recommended'];
-	foreach($GLOBALS['templates']['vars']['modules'] as $key => $module)
+	foreach($GLOBALS['modules'] as $key => $module)
 	{
 		if(constant($module . '::INTERNAL') == true)
 			continue;
@@ -1149,7 +1150,7 @@ function output_test_local_base($result, $variable)
 		<ul>
 			<li>The template base provides a backup/default set of template files. This template supports all possible functionality, in the simplest way.</li>
 			<li>Default functionality includes things like printing out an XML file, or an M3U playlist instead of a vieable HTML list of files.</li>
-			<li>The server reports that <?php echo $GLOBALS['templates']['vars']['request']['LOCAL_ROOT'] . $LOCAL_BASE; ?> does, in fact, exist.</li>
+			<li>The server reports that <?php echo $GLOBALS['templates']['vars']['request']['LOCAL_ROOT'] . $variable; ?> does, in fact, exist.</li>
 		</ul>
 		</td></tr>
 		<?php
@@ -1351,31 +1352,65 @@ function output_test_robots($result, $variable)
 function output_test_tmp_files($result, $variable)
 {
 	// temporary directory
-	?><tr><td class="title">Temporary Files</td>
-	<td>
-	<input type="text" name="TMP_DIR" value="<?php echo $variable; ?>" />
-	</td>
-	<td class="desc">
-	<ul>
-		<li>This directory will be used for uploaded files and storing temporary files like converted files and images.</li>
-	</ul>
-	</td></tr>
-	<?php
+	if($result)
+	{
+		?><tr><td class="title">Temporary Files</td>
+		<td>
+		<input type="text" name="TMP_DIR" value="<?php echo $variable; ?>" />
+		</td>
+		<td class="desc">
+		<ul>
+			<li>This directory will be used for uploaded files and storing temporary files like converted files and images.</li>
+		</ul>
+		</td></tr>
+		<?php
+	}
+	else
+	{
+		?><tr><td class="title fail">Temporary Files</td>
+		<td>
+		<input type="text" name="TMP_DIR" value="<?php echo $variable; ?>" />
+		</td>
+		<td class="desc">
+		<ul>
+			<li>The system has detected that this directory does not exist or is not writable.</li>
+            <li>Please correct this error by entering a directory path that exists and is writable by the web server</li>
+		</ul>
+		</td></tr>
+		<?php
+	}
 }
 
 function output_test_user_files($result, $variable)
 {
-	// user files
-	?><tr><td class="title">User Files</td>
-	<td>
-	<input type="text" name="LOCAL_USERS" value="<?php echo $variable; ?>" />
-	</td>
-	<td class="desc">
-	<ul>
-		<li>This directory will be used for uploaded user files.  This will also be included in the directories that are watched by the server.</li>
-	</ul>
-	</td></tr>
-	<?php
+	if($result)
+	{
+		// user files
+		?><tr><td class="title">User Files</td>
+		<td>
+		<input type="text" name="LOCAL_USERS" value="<?php echo $variable; ?>" />
+		</td>
+		<td class="desc">
+		<ul>
+			<li>This directory will be used for uploaded user files.  This will also be included in the directories that are watched by the server.</li>
+		</ul>
+		</td></tr>
+		<?php
+	}
+	else
+	{
+		?><tr><td class="title fail">Temporary Files</td>
+		<td>
+		<input type="text" name="TMP_DIR" value="<?php echo $variable; ?>" />
+		</td>
+		<td class="desc">
+		<ul>
+			<li>The system has detected that this directory does not exist or is not writable.</li>
+            <li>Please correct this error by entering a directory path that exists and is writable by the web server</li>
+		</ul>
+		</td></tr>
+		<?php
+	}
 }
 
 function output_test_buffer_size($result, $variable)
@@ -1422,7 +1457,7 @@ function output_test_aliasing($result, $variable)
 	<?php
 }
 
-function output_test_pass_changed($result)
+function output_pass_changed($result)
 {
 	if($result)
 	{
@@ -1469,33 +1504,35 @@ function output_test_save($result, $variable)
 {
 	
 	// save config
-	$config = $LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'settings.php';
+	$config = $GLOBALS['templates']['vars']['request']['LOCAL_ROOT'] . 'include' . DIRECTORY_SEPARATOR . 'settings.php';
 	
 	// check for write permissions on the settings files
 	$fh = @fopen($config, 'w');
 	
 	// run database::installFirstTimeUsers with new secret key
-	include $LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'PEAR.php';
-	include $LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'database.php';
+	include_once 'PEAR.php';
+	include_once $GLOBALS['templates']['vars']['request']['LOCAL_ROOT'] . 'include' . DIRECTORY_SEPARATOR . 'database.php';
 	
 	if(isset($_SESSION)) session_write_close();
 	
-	$DB_CONNECT = $DB_TYPE . '://' . $DB_USER . ':' . $DB_PASS . '@' . $DB_SERVER . '/' . $DB_NAME;
+	$DB_CONNECT = $GLOBALS['templates']['vars']['request']['DB_TYPE'] . '://' . 
+		$GLOBALS['templates']['vars']['request']['DB_USER'] . ':' . 
+		$GLOBALS['templates']['vars']['request']['DB_PASS'] . '@' . 
+		$GLOBALS['templates']['vars']['request']['DB_SERVER'] . '/' . 
+		$GLOBALS['templates']['vars']['request']['DB_NAME']; 
 	$DATABASE = new database($DB_CONNECT);
 	
 	$DB_SECRET = md5(microtime());
 	
 	$pass_changed = $DATABASE->installFirstTimeUsers($DB_SECRET);
 	
-	$DB_CONNECT = addslashes($DB_TYPE . '://' . $DB_USER . ':' . $DB_PASS . '@' . $DB_SERVER . '/' . $DB_NAME);
+	// add slashes to all the variables used below
+	foreach($GLOBALS['templates']['vars']['post'] as $key)
+	{
+		$$key = addslashes($GLOBALS['templates']['vars']['request'][$key]);
+	}
 	
 	$NO_TEMPLATE = ($LOCAL_TEMPLATE == '')?'#':'';
-	
-	// add slashes to all the variables used below
-	foreach($post as $key)
-	{
-		$$key = addslashes($$key);
-	}
 	
 	$settings = <<<EOF
 
@@ -1558,7 +1595,7 @@ define('HTML_NAME',			                                   '$HTML_NAME'); // name 
 %OF - Output file if necissary
 */
 // More options can be added but you will have to do some scripting in the convert.php plugin
-define('CONVERT', 				   '$CONVERT'); // image magick's convert program
+define('CONVERT', 				   '$CONVERT_PATH'); // image magick's convert program
 define('CONVERT_ARGS', 			   '"%IF" -resize "%TWx%TH" %FM:-'); // image magick's convert program
 
 // the arguments to use with encode are as follows
@@ -1578,7 +1615,7 @@ define('CONVERT_ARGS', 			   '"%IF" -resize "%TWx%TH" %FM:-'); // image magick's
 */
 // More options can be added but you will have to do some scripting in the encode.php plugin
 // remember ffmpeg uses generally the same codec names as the default vlc, however custom commands may be needed to convert to each type
-define('ENCODE', 				       '$ENCODE'); // a program that can convert video and audio streams
+define('ENCODE', 				       '$ENCODE_PATH'); // a program that can convert video and audio streams
 define('ENCODE_ARGS',                  '-I dummy - --start-time=%TO :sout=\'#transcode{vcodec=%VC,acodec=%AC,vb=%VB,ab=%AB,samplerate=%SR,channels=%CH,audio-sync,scale=%SC,fps=%FS}:std{mux=%MX,access=file,dst=-}\' vlc://quit'); // a program that can convert video and audio streams
 
 // the arguments to use with archive are as follows
@@ -1681,7 +1718,7 @@ EOF;
 		<code>
 		<?php
 			
-		include_once $LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'Text' . DIRECTORY_SEPARATOR . 'Highlighter.php';
+		include_once 'Text/Highlighter.php';
 		$highlighter = Text_Highlighter::factory('php');
 		$settings = $highlighter->highlight('<?php
 		' . $settings . '

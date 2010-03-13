@@ -366,14 +366,14 @@ function output_encode($request)
 			//header('HTTP/1.1 206 Partial Content');
 		}
 	
-		//header('Accept-Ranges: bytes');
-		//header('Content-Range: bytes ' . $seek_start . '-' . $seek_end . '/' . $files[0]['Filesize']);
+		header('Accept-Ranges: bytes');
+		header('Content-Range: bytes ' . $seek_start . '-' . $seek_end . '/' . $files[0]['Filesize']);
 	
-		//headers for IE Bugs (is this necessary?)
-		//header("Cache-Control: no-cache, must-revalidate");  
-		//header("Pragma: public");
+		// headers for IE Bugs (is this necessary?)
+		header("Cache-Control: no-cache, must-revalidate");  
+		header("Pragma: public");
 	
-		//header('Content-Length: ' . ($seek_end - $seek_start + 1));
+		header('Content-Length: ' . ($seek_end - $seek_start + 1));
 	}
 		
 	// close session so the client can continue browsing the site
@@ -398,6 +398,7 @@ function output_encode($request)
 	$descriptorspec = array(
 	   0 => array("pipe", "r"),  // stdin is a pipe that the child will read from
 	   1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
+	   2 => array("pipe", "w"),  // stderr is a pipe that the child will write to
 	);
 	
 	// start process
@@ -405,6 +406,7 @@ function output_encode($request)
 	
 	stream_set_blocking($pipes[0], 0);
 	stream_set_blocking($pipes[1], 0);
+	stream_set_blocking($pipes[2], 0);
 	
 	$fp = call_user_func_array($request['cat'] . '::out', array($request['efile']));
 	//$fp = fopen($_REQUEST['%IF'], 'rb');

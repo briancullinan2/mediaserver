@@ -426,19 +426,19 @@ EOF;
 EOF;
 	$tests['check_smarty'] = <<<EOF
 		\$request['LOCAL_ROOT'] = validate_LOCAL_ROOT(\$request);
-		return file_exists(\$request['LOCAL_ROOT'] . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'Smarty' . DIRECTORY_SEPARATOR . 'Smarty.class.php');
+		return file_exists(\$request['LOCAL_ROOT'] . 'include' . DIRECTORY_SEPARATOR . 'Smarty' . DIRECTORY_SEPARATOR . 'Smarty.class.php');
 EOF;
 	$tests['check_getid3'] = <<<EOF
 		\$request['LOCAL_ROOT'] = validate_LOCAL_ROOT(\$request);
-		return file_exists(\$request['LOCAL_ROOT'] . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.lib.php');
+		return file_exists(\$request['LOCAL_ROOT'] . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.lib.php');
 EOF;
 	$tests['check_snoopy'] = <<<EOF
 		\$request['LOCAL_ROOT'] = validate_LOCAL_ROOT(\$request);
-		return file_exists(\$request['LOCAL_ROOT'] . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'Snoopy.class.php');
+		return file_exists(\$request['LOCAL_ROOT'] . 'include' . DIRECTORY_SEPARATOR . 'Snoopy.class.php');
 EOF;
 	$tests['check_extjs'] = <<<EOF
 		\$request['LOCAL_ROOT'] = validate_LOCAL_ROOT(\$request);
-		return file_exists(\$request['LOCAL_ROOT'] . DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR . 'plain' . DIRECTORY_SEPARATOR . 'extjs' . DIRECTORY_SEPARATOR . 'ext-all.js');
+		return file_exists(\$request['LOCAL_ROOT'] . 'templates' . DIRECTORY_SEPARATOR . 'plain' . DIRECTORY_SEPARATOR . 'extjs' . DIRECTORY_SEPARATOR . 'ext-all.js');
 EOF;
 	$tests['html_domain'] = 'return true;';
 	$tests['html_root'] = 'return true;';
@@ -455,7 +455,35 @@ EOF;
 	$tests['db_check'] = 'return false;'; // return false so it always runs the database checking
 	$tests['db_test'] = 'return false;'; // always test the database before installing
 	$tests['db_install'] = 'return false;'; // always install the database
-	
+	$tests['site_name'] = 'return false;'; // always ask to set site name
+	$tests['local_base'] = <<<EOF
+		\$request['LOCAL_ROOT'] = validate_LOCAL_ROOT(\$request);
+		\$request['LOCAL_BASE'] = validate_LOCAL_BASE(\$request);
+		return file_exists(\$request['LOCAL_ROOT'] . \$request['LOCAL_BASE']);
+EOF;
+	$tests['local_default'] = 'return true;'; // don't ask just use live
+	$tests['local_template'] = 'return true;';
+	$tests['cron'] = 'return false;'; // always inform user they need to install cron
+	$tests['dir_seek_time'] = 'return true;';
+	$tests['file_seek_time'] = 'return true;';
+	$tests['debug_mode'] = 'return true;';
+	$tests['deep_select'] = 'return true;';
+	$tests['robots'] = 'return true;';
+	$tests['tmp_files'] = <<<EOF
+		\$request['TMP_DIR'] = validate_TMP_DIR(\$request);
+		return (is_writable(\$request['TMP_DIR']));
+EOF;
+	$tests['user_files'] = <<<EOF
+		\$request['LOCAL_USERS'] = validate_LOCAL_USERS(\$request);
+		return (is_writable(\$request['LOCAL_USERS']));
+EOF;
+	$tests['buffer_size'] = 'return true;';
+	$tests['aliasing'] = 'return true;';
+	$tests['save'] = <<<EOF
+		\$settings = dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'settings.php';
+		return (@fopen(\$settings, 'w') !== false);
+EOF;
+
 	if($stop == NULL)
 		$stop = count($tests);
 	$keys = array_keys($tests);

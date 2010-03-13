@@ -63,20 +63,20 @@ $this->assign('parts', $parts);
 				{/if}
 			{/foreach}
             - Download:
-            	<a href="{'zip/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/'|cat:'Files.zip'|generate_href}">zip</a> :
-                <a href="{'bt/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/'|cat:'Files.torrent'|generate_href}">torrent</a>
+            	<a href="{'zip/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/'|cat:'Files.zip'|cat:'?'|generate_href}">zip</a> :
+                <a href="{'bt/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/'|cat:'Files.torrent'|cat:'?'|generate_href}">torrent</a>
                 {if $files[file].Filepath|@handles:'video'}
-                : <a href="{'encode/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/mp4/'|cat:$files[file].Filename|generate_href}.mp4">mp4</a>
-                : <a href="{'encode/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/mpg/'|cat:$files[file].Filename|generate_href}.mpeg">mpg</a>
-                : <a href="{'encode/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/wmv/'|cat:$files[file].Filename|generate_href}.wmv">wmv</a>
+                : <a href="{'encode/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/mp4/'|cat:$files[file].Filename|cat:'?'|generate_href}.mp4">mp4</a>
+                : <a href="{'encode/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/mpg/'|cat:$files[file].Filename|cat:'?'|generate_href}.mpeg">mpg</a>
+                : <a href="{'encode/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/wmv/'|cat:$files[file].Filename|cat:'?'|generate_href}.wmv">wmv</a>
                 {elseif $files[file].Filepath|@handles:'audio'}
-                : <a href="{'encode/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/mp4a/'|cat:$files[file].Filename|generate_href}.mp4">mp4</a>
-                : <a href="{'encode/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/mp3/'|cat:$files[file].Filename|generate_href}.mp3">mp3</a>
-                : <a href="{'encode/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/wma/'|cat:$files[file].Filename|generate_href}.wma">wma</a>
+                : <a href="{'encode/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/mp4a/'|cat:$files[file].Filename|cat:'?'|generate_href}.mp4">mp4</a>
+                : <a href="{'encode/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/mp3/'|cat:$files[file].Filename|cat:'?'|generate_href}.mp3">mp3</a>
+                : <a href="{'encode/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/wma/'|cat:$files[file].Filename|cat:'?'|generate_href}.wma">wma</a>
                 {elseif $files[file].Filepath|@handles:'image'}
-                : <a href="{'convert/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/jpg/'|cat:$files[file].Filename|generate_href}.jpg">jpg</a>
-                : <a href="{'convert/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/gif/'|cat:$files[file].Filename|generate_href}.gif">gif</a>
-                : <a href="{'convert/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/png/'|cat:$files[file].Filename|generate_href}.png">png</a>
+                : <a href="{'convert/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/jpg/'|cat:$files[file].Filename|cat:'?'|generate_href}.jpg">jpg</a>
+                : <a href="{'convert/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/gif/'|cat:$files[file].Filename|cat:'?'|generate_href}.gif">gif</a>
+                : <a href="{'convert/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/png/'|cat:$files[file].Filename|cat:'?'|generate_href}.png">png</a>
                 {elseif $files[file].Filepath|@handles:'code'}
                 : <a href="{'code/'|cat:$cat|cat:'/'|cat:$files[file].id|cat:'/'|cat:$files[file].Filename|generate_href}.html">view</a>
               {/if}

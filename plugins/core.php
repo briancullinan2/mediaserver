@@ -37,7 +37,6 @@ function generate_href($request = array(), $not_special = false, $include_domain
 		{
 			$request = explode('?', $request);
 			$dirs = split('/', $request[0]);
-			
 			$request = $request[1];
 		}
 		
@@ -51,7 +50,6 @@ function generate_href($request = array(), $not_special = false, $include_domain
 			$request[$x[0]] = $x[1];
 		}
 	}
-	
 	if(isset($dirs))
 	{
 		$request = array_merge($request, parse_path_info($dirs));
@@ -83,7 +81,7 @@ function set_output_vars($smarty)
 	register_output_vars('cat', $_REQUEST['cat']);
 	
 	// some templates refer to the dir to determine their own location
-	if(isset($_REQUEST['dir'])) register_output_vars('cat', $_REQUEST['dir']);
+	if(isset($_REQUEST['dir'])) register_output_vars('dir', $_REQUEST['dir']);
 	
 	// this is just a helper variable for templates to use that only need to save 1 setting
 	if(isset($_REQUEST['extra'])) register_output_vars('extra', $_REQUEST['extra']);
@@ -95,7 +93,25 @@ function set_output_vars($smarty)
 	//   there is no going back from here
 	if(isset($_SESSION)) session_write_close();
 	
-	$dont_remove = array('GLOBALS', 'templates', 'smarty', 'output', 'template', 'alias', 'alias_regexp', 'paths', 'paths_regexp', 'mte', 'plugin', 'plugins');
+	$dont_remove = array(
+		'GLOBALS',
+		'templates',
+		'smarty',
+		'output',
+		'template',
+		'alias',
+		'alias_regexp',
+		'paths',
+		'paths_regexp',
+		'mte',
+		'plugin',
+		'plugins',
+		'_PEAR_default_error_mode',
+		'_PEAR_default_error_options',
+		'modules',
+		'tables'
+	);
+	
 	foreach($GLOBALS as $key => $value)
 	{
 		if(in_array($key, $dont_remove) === false)

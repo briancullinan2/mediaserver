@@ -1,8 +1,13 @@
 2010-03-12
 Fixed encode.php plugin, time offset (%TO) wasn't being replaced since new API changed
+Also enabled the HTTP-RANGES headers to make it work on AmDroid
 Added lots more actions to ampache.php plugin
 	Now supports albums, songs, search_songs, etc.
 Converted search.php plugin over to use new API
+
+2010-03-10
+Finished install.php plugin
+	Now fully funtional under the new API
 
 2010-03-05
 Working on install.php
