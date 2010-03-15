@@ -3,7 +3,7 @@
 function register_convert()
 {
 	return array(
-		'name' => 'convert',
+		'name' => 'Image Converter',
 		'description' => 'Convert images to different formats.',
 		'privilage' => 1,
 		'path' => __FILE__,

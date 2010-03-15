@@ -12,7 +12,7 @@ function register_search()
 	}
 	
 	return array(
-		'name' => 'search',
+		'name' => 'Database Search',
 		'description' => 'Search for files.',
 		'privilage' => 1,
 		'path' => __FILE__,

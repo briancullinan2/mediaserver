@@ -4,7 +4,7 @@
 function register_bt()
 {
 	return array(
-		'name' => 'bt',
+		'name' => 'BitTorrent Creator',
 		'description' => 'Bittorrent plugin that creates torrents for files or directories so users can share downloads with each other.',
 		'privilage' => 1,
 		'path' => __FILE__,

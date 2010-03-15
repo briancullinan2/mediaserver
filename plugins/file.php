@@ -7,8 +7,8 @@
 function register_file()
 {
 	return array(
-		'name' => 'file',
-		'description' => 'Allow users to download files from the database.',
+		'name' => 'File Output',
+		'description' => 'Allow users to download files from the database, this module supports HTTP-Ranges.',
 		'privilage' => 1,
 		'path' => __FILE__,
 		'notemplate' => true

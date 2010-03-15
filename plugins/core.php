@@ -12,7 +12,7 @@ function register_core()
 	
 	// this plugin has no output
 	return array(
-		'name' => 'core',
+		'name' => 'Core Functions',
 		'description' => 'Adds core functionality to site that other common plugins depend on.',
 		'path' => __FILE__
 	);
@@ -109,7 +109,8 @@ function set_output_vars($smarty)
 		'_PEAR_default_error_mode',
 		'_PEAR_default_error_options',
 		'modules',
-		'tables'
+		'tables',
+		'ext_to_mime'
 	);
 	
 	foreach($GLOBALS as $key => $value)
@@ -245,7 +246,11 @@ function validate_plugin($request)
 	// remove .php extension
 	if(isset($request['plugin']) && substr($request['plugin'], -4) == '.php')
 		$request['plugin'] = substr($request['plugin'], 0, -4);
+		
+	// replace slashes
+	if(isset($request['plugin'])) $request['plugin'] = str_replace(array('/', '\\'), '_', $request['plugin']);
 	
+	// if the plugin is set then return right away
 	if(isset($request['plugin']) && isset($GLOBALS['plugins'][$request['plugin']]))
 	{
 		return $request['plugin'];
@@ -283,41 +288,55 @@ function parse_path_info($path_info)
 	}
 	$dirs = array_values($dirs);
 	
-	// get plugin from path info
-	$request['plugin'] = validate_plugin(array('plugin' => $dirs[0]));
-	switch(count($dirs))
+	if(count($dirs) > 0)
 	{
-		case 2:
-			$request['search'] = '"' . $dirs[1] . '"';
-			break;
-		case 3:
-			$request['cat'] = $dirs[1];
-			$request['id'] = $dirs[2];
-			break;
-		case 4:
-			$request['cat'] = $dirs[1];
-			$request['id'] = $dirs[2];
-			$request['filename'] = $dirs[3];
-			break;
-		case 5:
-			$request['cat'] = $dirs[1];
-			$request['id'] = $dirs[2];
-			$request[$request['plugin']] = $dirs[3];
-			$request['filename'] = $dirs[4];
-			break;
-		case 6:
-			$request['cat'] = $dirs[1];
-			$request['id'] = $dirs[2];
-			$request[$request['plugin']] = $dirs[3];
-			$request['extra'] = $dirs[4];
-			$request['filename'] = $dirs[5];
-			break;
+		// get plugin from path info
+		$request['plugin'] = validate_plugin(array('plugin' => $dirs[0]));
+		switch(count($dirs))
+		{
+			case 2:
+				$request['search'] = '"' . $dirs[1] . '"';
+				break;
+			case 3:
+				$request['cat'] = $dirs[1];
+				$request['id'] = $dirs[2];
+				break;
+			case 4:
+				$request['cat'] = $dirs[1];
+				$request['id'] = $dirs[2];
+				$request['filename'] = $dirs[3];
+				break;
+			case 5:
+				$request['cat'] = $dirs[1];
+				$request['id'] = $dirs[2];
+				$request[$request['plugin']] = $dirs[3];
+				$request['filename'] = $dirs[4];
+				break;
+			case 6:
+				$request['cat'] = $dirs[1];
+				$request['id'] = $dirs[2];
+				$request[$request['plugin']] = $dirs[3];
+				$request['extra'] = $dirs[4];
+				$request['filename'] = $dirs[5];
+				break;
+		}
 	}
 	
 	return $request;
 }
 
-function rewrite_vars($request)
+function rewrite($old_var, $new_var, &$request, &$get, &$post)
+{
+	if(isset($request[$old_var])) $request[$new_var] = $request[$old_var];
+	if(isset($get[$old_var])) $get[$new_var] = $get[$old_var];
+	if(isset($post[$old_var])) $post[$new_var] = $post[$old_var];
+	
+	unset($request[$old_var]);
+	unset($get[$old_var]);
+	unset($post[$old_var]);
+}
+
+function rewrite_vars(&$request, &$get, &$post)
 {
 	$request['plugin'] = validate_plugin($request);
 	
@@ -327,21 +346,22 @@ function rewrite_vars($request)
 	// just about everything uses the cat variable so always validate and add this
 	$request['cat'] = validate_cat($request);
 
+	// do some modifications to specific plugins being used
 	if($request['plugin'] == 'bt')
 	{
 		// save the whole request to be used later
-		$request['bt_request'] = $_REQUEST;
+		$request['bt_request'] = $request;
 	}
 	if($request['plugin'] == 'ampache')
 	{
+		// a valid action is required for this plugin
 		$request['action'] = validate_action($request);
+		
 		// rewrite some variables
-		if(isset($request['offset'])) $request['start'] = $request['offset'];
-		if(isset($request['filter']) && $request['action'] != 'search_songs') $request['id'] = $request['filter'];
-		elseif(isset($request['filter'])) $request['search'] = $request['filter'];
+		if(isset($request['offset'])) rewrite('offset', 'start', $request, $get, $post);
+		if(isset($request['filter']) && $request['action'] != 'search_songs') rewrite('filter', 'id', $request, $get, $post);
+		elseif(isset($request['filter']))  rewrite('filter', 'search', $request, $get, $post);
 	}
-
-	return $request;
 }
 
 function validate_extra($request)

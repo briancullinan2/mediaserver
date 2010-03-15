@@ -6,7 +6,7 @@
 function register_template()
 {
 	return array(
-		'name' => 'template',
+		'name' => 'Template Output',
 		'description' => 'Display files from the templates directory. Allows for templating CSS and JS files.',
 		'privilage' => 1,
 		'path' => __FILE__,

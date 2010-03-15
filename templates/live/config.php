@@ -12,5 +12,6 @@ $GLOBALS['templates']['TEMPLATE_PAGES'] = LOCAL_ROOT . LOCAL_TEMPLATE . 'pages.h
 $GLOBALS['templates']['TEMPLATE_HEADER'] = LOCAL_ROOT . LOCAL_TEMPLATE . 'header.html';
 $GLOBALS['templates']['TEMPLATE_FOOTER'] = LOCAL_ROOT . LOCAL_TEMPLATE . 'footer.html';
 $GLOBALS['templates']['TEMPLATE_INSTALL'] = LOCAL_ROOT . LOCAL_TEMPLATE . 'install.php';
+$GLOBALS['templates']['TEMPLATE_ADMIN_PLUGINS'] = LOCAL_ROOT . LOCAL_TEMPLATE . 'plugins.php';
 
 ?>

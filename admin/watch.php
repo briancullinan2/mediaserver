@@ -2,10 +2,10 @@
 
 // handles the watch tables
 
-function register_watch()
+function register_admin_watch()
 {
 	return array(
-		'name' => 'watch',
+		'name' => 'Watch List',
 		'description' => 'Handles the watch table and what directories the website scans.',
 		'privilage' => 10,
 		'path' => __FILE__
@@ -26,7 +26,7 @@ function validate_wremove($request)
 		return $request['wremove'];
 }
 
-function output_watch($request)
+function output_admin_watch($request)
 {
 	$request['waddpath'] = validate_waddpath($request);
 	$request['wremove'] = validate_wremove($request);

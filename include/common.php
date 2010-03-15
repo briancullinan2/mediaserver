@@ -49,8 +49,6 @@ $GLOBALS['user_errors'] = array();
 $GLOBALS['debug_errors'] = array();
 
 require_once 'MIME' . DIRECTORY_SEPARATOR . 'Type.php';
-require_once 'MIME' . DIRECTORY_SEPARATOR . 'Type' . DIRECTORY_SEPARATOR . 'Extension.php';
-$GLOBALS['mte'] = new MIME_Type_Extension();
 
 
 // classes that this function uses to set up stuff should use the $no_setup = true option
@@ -70,7 +68,10 @@ function setup()
 		$GLOBALS['database'] = new database(DB_CONNECT);
 	else
 		$GLOBALS['database'] = NULL;
-		
+	
+	// set up mime types because PEAR MIME_Type is retarded
+	setupMime();
+	
 	// set up the list of modules
 	setupModules();
 	
@@ -97,18 +98,28 @@ function setup()
 function setupPlugins()
 {
 	$GLOBALS['plugins'] = array('index' => array(
-		'name' => 'index',
-		'description' => 'Show index files of templates.',
+		'name' => 'Index',
+		'description' => 'Load a plugin\'s output variables and display the template.',
 		'privilage' => 1,
 		'path' => LOCAL_ROOT . 'index.php'
 		)
 	);
 	$GLOBALS['triggers'] = array('session' => array(), 'settings' => array());
 	
+	// list all the relative paths that plugins can be loaded from, including templates
+	$paths = array(
+		'plugins' . DIRECTORY_SEPARATOR,
+		'admin' . DIRECTORY_SEPARATOR,
+		'admin' . DIRECTORY_SEPARATOR . 'tools' . DIRECTORY_SEPARATOR,
+	);
+	
 	// read plugin list and create a list of available plugins
-	$files = fs_file::get(array('dir' => LOCAL_ROOT . 'plugins' . DIRECTORY_SEPARATOR, 'limit' => 32000), $count, true);
-	$files[] = array('Filepath' => LOCAL_ROOT . 'admin' . DIRECTORY_SEPARATOR . 'watch.php', 'Filename' => 'watch.php');
-	$files[] = array('Filepath' => LOCAL_ROOT . 'admin' . DIRECTORY_SEPARATOR . 'install.php', 'Filename' => 'install.php');
+	$files = array();
+	foreach($paths as $path)
+	{
+		$files = array_merge($files, fs_file::get(array('dir' => LOCAL_ROOT . $path, 'limit' => 32000), $count, true));
+	}
+
 	if(is_array($files))
 	{
 		foreach($files as $i => $file)
@@ -117,8 +128,20 @@ function setupPlugins()
 			{
 				include_once $file['Filepath'];
 				
-				$plugin = substr($file['Filename'], 0, strpos($file['Filename'], '.php'));
+				// determin plugin based on path
+				$plugin = substr($file['Filepath'], strlen(LOCAL_ROOT));
 				
+				// remove default directory from plugin name
+				if(substr($plugin, 0, 8) == 'plugins/')
+					$plugin = substr($plugin, 8);
+				
+				// remove extension from plugin name
+				$plugin = substr($plugin, 0, strrpos($plugin, '.'));
+				
+				// remove slashes and replace with underscores
+				$plugin = str_replace(array('/', '\\'), '_', $plugin);
+				
+				// call register function
 				if(function_exists('register_' . $plugin))
 					$GLOBALS['plugins'][$plugin] = call_user_func_array('register_' . $plugin, array());
 				
@@ -133,6 +156,7 @@ function setupPlugins()
 			}
 		}
 	}
+	PEAR::raiseError(print_r($GLOBALS['plugins'], true), E_DEBUG);
 }
 
 function setupTemplate()
@@ -311,7 +335,7 @@ function setupInputVars()
 		$_REQUEST['path_info'] = $_SERVER['PATH_INFO'];
 	
 	// call rewrite_vars in order to set some request variables
-	$_REQUEST = rewrite_vars($_REQUEST);
+	rewrite_vars($_REQUEST, $_GET, $_POST);
 	
 	// go through the rest of the request and validate all the variables with the plugins they are for
 	foreach($_REQUEST as $key => $value)
@@ -754,15 +778,26 @@ function getExt($file)
 }
 
 // get mime type based on file extension
-function getMime($filename)
+function getMime($ext)
 {
-	return $GLOBALS['mte']->getMIMEType($filename);
+	if(strpos($ext, '.') !== false)
+	{
+		$ext = getExt($ext);
+	}
+	
+	if(isset($GLOBALS['ext_to_mime'][$ext]))
+	{
+		return $GLOBALS['ext_to_mime'][$ext];
+	}
+	else
+	{
+		return '';
+	}
 }
-
 // get the type which is the first part of a mime based on extension
 function getExtType($filename)
 {
-	return MIME_Type::getMedia($GLOBALS['mte']->getMIMEType($filename));
+	return MIME_Type::getMedia(getMime($filename));
 }
 
 // create the crc32 from a file, this uses a buffer size so it doesn't error out
@@ -911,118 +946,160 @@ function error_callback($error)
 
 // stolen from PEAR
 function parseDSN($dsn)
-    {
-        $parsed = array();
-        if (is_array($dsn)) {
-            $dsn = array_merge($parsed, $dsn);
-            if (!$dsn['dbsyntax']) {
-                $dsn['dbsyntax'] = $dsn['phptype'];
-            }
-            return $dsn;
-        }
- 
-        // Find phptype and dbsyntax
-        if (($pos = strpos($dsn, '://')) !== false) {
-            $str = substr($dsn, 0, $pos);
-            $dsn = substr($dsn, $pos + 3);
-        } else {
-            $str = $dsn;
-            $dsn = null;
-        }
- 
-        // Get phptype and dbsyntax
-        // $str => phptype(dbsyntax)
-        if (preg_match('|^(.+?)\((.*?)\)$|', $str, $arr)) {
-            $parsed['phptype']  = $arr[1];
-            $parsed['dbsyntax'] = !$arr[2] ? $arr[1] : $arr[2];
-        } else {
-            $parsed['phptype']  = $str;
-            $parsed['dbsyntax'] = $str;
-        }
- 
-        if (!count($dsn)) {
-            return $parsed;
-        }
- 
-        // Get (if found): username and password
-        // $dsn => username:password@protocol+hostspec/database
-        if (($at = strrpos($dsn,'@')) !== false) {
-            $str = substr($dsn, 0, $at);
-            $dsn = substr($dsn, $at + 1);
-            if (($pos = strpos($str, ':')) !== false) {
-                $parsed['username'] = rawurldecode(substr($str, 0, $pos));
-                $parsed['password'] = rawurldecode(substr($str, $pos + 1));
-            } else {
-                $parsed['username'] = rawurldecode($str);
-            }
-        }
- 
-        // Find protocol and hostspec
- 
-        // $dsn => proto(proto_opts)/database
-        if (preg_match('|^([^(]+)\((.*?)\)/?(.*?)$|', $dsn, $match)) {
-            $proto       = $match[1];
-            $proto_opts  = $match[2] ? $match[2] : false;
-            $dsn         = $match[3];
- 
-        // $dsn => protocol+hostspec/database (old format)
-        } else {
-            if (strpos($dsn, '+') !== false) {
-                list($proto, $dsn) = explode('+', $dsn, 2);
-            }
-            if (   strpos($dsn, '//') === 0
-                && strpos($dsn, '/', 2) !== false
-                && $parsed['phptype'] == 'oci8'
-            ) {
-                //oracle's "Easy Connect" syntax:
-                //"username/password@[//]host[:port][/service_name]"
-                //e.g. "scott/tiger@//mymachine:1521/oracle"
-                $proto_opts = $dsn;
-                $dsn = substr($proto_opts, strrpos($proto_opts, '/') + 1);
-            } elseif (strpos($dsn, '/') !== false) {
-                list($proto_opts, $dsn) = explode('/', $dsn, 2);
-            } else {
-                $proto_opts = $dsn;
-                $dsn = null;
-            }
-        }
- 
-        // process the different protocol options
-        $parsed['protocol'] = (!empty($proto)) ? $proto : 'tcp';
-        $proto_opts = rawurldecode($proto_opts);
-        if (strpos($proto_opts, ':') !== false) {
-            list($proto_opts, $parsed['port']) = explode(':', $proto_opts);
-        }
-        if ($parsed['protocol'] == 'tcp') {
-            $parsed['hostspec'] = $proto_opts;
-        } elseif ($parsed['protocol'] == 'unix') {
-            $parsed['socket'] = $proto_opts;
-        }
- 
-        // Get dabase if any
-        // $dsn => database
-        if ($dsn) {
-            // /database
-            if (($pos = strpos($dsn, '?')) === false) {
-                $parsed['database'] = $dsn;
-            // /database?param1=value1&param2=value2
-            } else {
-                $parsed['database'] = substr($dsn, 0, $pos);
-                $dsn = substr($dsn, $pos + 1);
-                if (strpos($dsn, '&') !== false) {
-                    $opts = explode('&', $dsn);
-                } else { // database?param1=value1
-                    $opts = array($dsn);
-                }
-                foreach ($opts as $opt) {
-                    list($key, $value) = explode('=', $opt);
-                    if (!isset($parsed[$key])) {
-                        // don't allow params overwrite
-                        $parsed[$key] = rawurldecode($value);
-                    }
-                }
-            }
-        }
- 
-        return $parsed;
-    }
+{
+	$parsed = array();
+	if (is_array($dsn)) {
+		$dsn = array_merge($parsed, $dsn);
+		if (!$dsn['dbsyntax']) {
+			$dsn['dbsyntax'] = $dsn['phptype'];
+		}
+		return $dsn;
+	}
+
+	// Find phptype and dbsyntax
+	if (($pos = strpos($dsn, '://')) !== false) {
+		$str = substr($dsn, 0, $pos);
+		$dsn = substr($dsn, $pos + 3);
+	} else {
+		$str = $dsn;
+		$dsn = null;
+	}
+
+	// Get phptype and dbsyntax
+	// $str => phptype(dbsyntax)
+	if (preg_match('|^(.+?)\((.*?)\)$|', $str, $arr)) {
+		$parsed['phptype']  = $arr[1];
+		$parsed['dbsyntax'] = !$arr[2] ? $arr[1] : $arr[2];
+	} else {
+		$parsed['phptype']  = $str;
+		$parsed['dbsyntax'] = $str;
+	}
+
+	if (!count($dsn)) {
+		return $parsed;
+	}
+
+	// Get (if found): username and password
+	// $dsn => username:password@protocol+hostspec/database
+	if (($at = strrpos($dsn,'@')) !== false) {
+		$str = substr($dsn, 0, $at);
+		$dsn = substr($dsn, $at + 1);
+		if (($pos = strpos($str, ':')) !== false) {
+			$parsed['username'] = rawurldecode(substr($str, 0, $pos));
+			$parsed['password'] = rawurldecode(substr($str, $pos + 1));
+		} else {
+			$parsed['username'] = rawurldecode($str);
+		}
+	}
+
+	// Find protocol and hostspec
+
+	// $dsn => proto(proto_opts)/database
+	if (preg_match('|^([^(]+)\((.*?)\)/?(.*?)$|', $dsn, $match)) {
+		$proto       = $match[1];
+		$proto_opts  = $match[2] ? $match[2] : false;
+		$dsn         = $match[3];
+
+	// $dsn => protocol+hostspec/database (old format)
+	} else {
+		if (strpos($dsn, '+') !== false) {
+			list($proto, $dsn) = explode('+', $dsn, 2);
+		}
+		if (   strpos($dsn, '//') === 0
+			&& strpos($dsn, '/', 2) !== false
+			&& $parsed['phptype'] == 'oci8'
+		) {
+			//oracle's "Easy Connect" syntax:
+			//"username/password@[//]host[:port][/service_name]"
+			//e.g. "scott/tiger@//mymachine:1521/oracle"
+			$proto_opts = $dsn;
+			$dsn = substr($proto_opts, strrpos($proto_opts, '/') + 1);
+		} elseif (strpos($dsn, '/') !== false) {
+			list($proto_opts, $dsn) = explode('/', $dsn, 2);
+		} else {
+			$proto_opts = $dsn;
+			$dsn = null;
+		}
+	}
+
+	// process the different protocol options
+	$parsed['protocol'] = (!empty($proto)) ? $proto : 'tcp';
+	$proto_opts = rawurldecode($proto_opts);
+	if (strpos($proto_opts, ':') !== false) {
+		list($proto_opts, $parsed['port']) = explode(':', $proto_opts);
+	}
+	if ($parsed['protocol'] == 'tcp') {
+		$parsed['hostspec'] = $proto_opts;
+	} elseif ($parsed['protocol'] == 'unix') {
+		$parsed['socket'] = $proto_opts;
+	}
+
+	// Get dabase if any
+	// $dsn => database
+	if ($dsn) {
+		// /database
+		if (($pos = strpos($dsn, '?')) === false) {
+			$parsed['database'] = $dsn;
+		// /database?param1=value1&param2=value2
+		} else {
+			$parsed['database'] = substr($dsn, 0, $pos);
+			$dsn = substr($dsn, $pos + 1);
+			if (strpos($dsn, '&') !== false) {
+				$opts = explode('&', $dsn);
+			} else { // database?param1=value1
+				$opts = array($dsn);
+			}
+			foreach ($opts as $opt) {
+				list($key, $value) = explode('=', $opt);
+				if (!isset($parsed[$key])) {
+					// don't allow params overwrite
+					$parsed[$key] = rawurldecode($value);
+				}
+			}
+		}
+	}
+
+	return $parsed;
+}
+
+// parse mime types from a mime.types file
+function setupMime()
+{
+	// this will load the mime-types from a linux dist mime.types file stored in includes
+	// this will organize the types for easy lookup
+	if(file_exists(LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'mime.types'))
+	{
+		$handle = fopen(LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'mime.types', 'r');
+		$mime_text = fread($handle, filesize(LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'mime.types'));
+		fclose($handle);
+		
+		$mimes = split("\n", $mime_text);
+		
+		$ext_to_mime = array();
+		foreach($mimes as $index => $mime)
+		{
+			$mime = preg_replace('/#.*?$/', '', $mime);
+			if($mime != '')
+			{
+				// mime to ext
+				$file_types = preg_split('/[\s,]+/', $mime);
+				$mime_type = $file_types[0];
+				// general type
+				$tmp_type = split('/', $mime_type);	
+				$type = $tmp_type[0];
+				// unset mime part to get all its filetypes
+				unset($file_types[0]);
+				
+				// ext to mime
+				foreach($file_types as $index => $ext)
+				{
+					$ext_to_mime[$ext] = $mime_type;
+				}
+			}
+		}
+		
+		
+		// set global variables
+		$GLOBALS['ext_to_mime'] = $ext_to_mime;
+	}
+}

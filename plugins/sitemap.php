@@ -3,7 +3,7 @@
 function register_sitemap()
 {
 	return array(
-		'name' => 'sitemap',
+		'name' => 'Site Map',
 		'description' => 'Prints out a list of pages that Bots like Google should access.',
 		'privilage' => 1,
 		'path' => __FILE__,

@@ -5,7 +5,7 @@
 function register_login()
 {
 	return array(
-		'name' => 'login',
+		'name' => 'User Login',
 		'description' => 'Allows users to log in to the site and access user files and settings.',
 		'privilage' => 1,
 		'path' => __FILE__,

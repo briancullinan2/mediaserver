@@ -3,7 +3,7 @@
 function register_zip()
 {
 	return array(
-		'name' => 'zip',
+		'name' => 'Zip Creator',
 		'description' => 'Support downloading of zip packages.',
 		'privilage' => 1,
 		'path' => __FILE__

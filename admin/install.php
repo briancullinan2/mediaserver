@@ -1,6 +1,6 @@
 <?php
 
-function register_install()
+function register_admin_install()
 {
 	// create additional functions
 	foreach($GLOBALS['modules'] as $i => $module)
@@ -9,7 +9,7 @@ function register_install()
 	}
 	
 	return array(
-		'name' => 'install',
+		'name' => 'Install Setup',
 		'description' => 'Install the system.',
 		'privilage' => 0,
 		'path' => __FILE__,
@@ -499,7 +499,7 @@ EOF;
 	return $tests;
 }
 
-function session_install($request)
+function session_admin_install($request)
 {
 	// save the entire request in the session, except the install state
 	unset($request['install_step']);
@@ -510,7 +510,7 @@ function session_install($request)
 	return $request;
 }
 
-function output_install($request)
+function output_admin_install($request)
 {
 	global $post, $required, $recommended, $supported_databases;
 	

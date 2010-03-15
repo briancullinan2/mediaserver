@@ -3,11 +3,10 @@
 function register_ampache()
 {
 	return array(
-		'name' => 'ampache',
+		'name' => 'Ampache Compatibility',
 		'description' => 'Compatibility support for the Ampache XMLRPC protocol.',
 		'privilage' => 1,
-		'path' => __FILE__,
-		'notemplate' => true
+		'path' => __FILE__
 	);
 }
 
@@ -50,6 +49,8 @@ function output_ampache($request)
 	$request['auth'] = validate_auth($request);
 	$request['start'] = validate_start($request);
 	$request['limit'] = validate_limit($request);
+	
+	register_output_vars('action', $request['action']);
 	
 	// check for the action
 	switch($request['action'])
@@ -395,8 +396,4 @@ function output_ampache($request)
 		break;
 	}
 	
-	// display template
-	// this plugin will probably never use a smarty template
-	include $GLOBALS['templates']['TEMPLATE_AMPACHE'];
-
 }

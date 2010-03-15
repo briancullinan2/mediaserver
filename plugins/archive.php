@@ -3,7 +3,7 @@
 function register_archive()
 {
 	return array(
-		'name' => 'archive',
+		'name' => 'Archive Generator',
 		'description' => 'Convert sets of files to an archive using a command line program.',
 		'privilage' => 1,
 		'path' => __FILE__

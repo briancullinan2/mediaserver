@@ -24,7 +24,7 @@ if(count($GLOBALS['user_errors']) > 0)
 }
 
 // do different stuff based on action
-switch($_REQUEST['action'])
+switch($GLOBALS['templates']['vars']['action'])
 {
 	case 'ping':
 ?>
@@ -35,18 +35,18 @@ switch($_REQUEST['action'])
 	break;
 	case 'handshake':
 ?>
-<auth><![CDATA[<?php echo session_id(); ?>]]></auth>
+<auth><![CDATA[<?php echo $GLOBALS['templates']['vars']['auth']; ?>]]></auth>
 <api><![CDATA[350001]]></api>
 <update><![CDATA[<?php echo date('c'); ?>]]></update>
-<songs><![CDATA[<?php echo $song_count; ?>]]></songs>
-<albums><![CDATA[<?php echo $album_count; ?>]]></albums>
-<artists><![CDATA[<?php echo $artist_count; ?>]]></artists>
-<genres><![CDATA[<?php echo $genre_count; ?>]]></genres>
+<songs><![CDATA[<?php echo $GLOBALS['templates']['vars']['song_count']; ?>]]></songs>
+<albums><![CDATA[<?php echo $GLOBALS['templates']['vars']['album_count']; ?>]]></albums>
+<artists><![CDATA[<?php echo $GLOBALS['templates']['vars']['artist_count']; ?>]]></artists>
+<genres><![CDATA[<?php echo $GLOBALS['templates']['vars']['genre_count']; ?>]]></genres>
 <playlists><![CDATA[0]]></playlists>
 <?php
 	break;
 	case 'artists':
-		foreach($files as $i => $artist)
+		foreach($GLOBALS['templates']['vars']['files'] as $i => $artist)
 		{
 ?>
 <artist id="<?php echo $artist['id'] ; ?>"> 
@@ -61,7 +61,7 @@ switch($_REQUEST['action'])
 	case 'albums':
 	case 'artist_albums':
 		
-		foreach($files as $i => $album)
+		foreach($GLOBALS['templates']['vars']['files'] as $i => $album)
 		{
 ?>
 <album id="<?php echo $album['id']; ?>">
@@ -90,7 +90,7 @@ else
 	case 'album_songs':
 	case 'search_songs':
 	
-		foreach($files as $i => $song)
+		foreach($GLOBALS['templates']['vars']['files'] as $i => $song)
 		{
 ?>
 <song id="<?php echo $song['id']; ?>">

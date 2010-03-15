@@ -4,7 +4,7 @@
 function register_list()
 {
 	return array(
-		'name' => 'list',
+		'name' => 'Playlist',
 		'description' => 'Allow users to download different types of lists of files they have selected, such as RSS, XML, and M3U.',
 		'privilage' => 1,
 		'path' => __FILE__,

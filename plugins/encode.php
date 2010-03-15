@@ -3,7 +3,7 @@
 function register_encode()
 {
 	return array(
-		'name' => 'encode',
+		'name' => 'Audio/Video Transcoder',
 		'description' => 'Encode video files to the selected output.',
 		'privilage' => 1,
 		'path' => __FILE__,
@@ -323,8 +323,9 @@ function output_encode($request)
 	// make up some header to takes the length of the media into consideration
 	if(isset($files[0]['Length']))
 	{
-		$files[0]['Filesize'] = ($files[0]['Length'] * ($request['vbitrate'] * 128 + $request['abitrate'] * 128)) + 1024;
+		$files[0]['Filesize'] = ceil($files[0]['Length'] * $request['vbitrate'] * 128 + $files[0]['Length'] * $request['abitrate'] * 128);
 	}
+	
 	if(isset($files[0]['Filesize']))
 	{				
 		// check for range request
@@ -363,7 +364,7 @@ function output_encode($request)
 		// Only send partial content header if downloading a piece of the file (IE workaround)
 		if ($seek_start > 0 || $seek_end < ($files[0]['Filesize'] - 1))
 		{
-			//header('HTTP/1.1 206 Partial Content');
+			header('HTTP/1.1 206 Partial Content');
 		}
 	
 		header('Accept-Ranges: bytes');

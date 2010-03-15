@@ -5,7 +5,7 @@
 function register_select()
 {
 	return array(
-		'name' => 'select',
+		'name' => 'File Selector',
 		'description' => 'Allows users to select files and saves the selected files in their session and profile.',
 		'privilage' => 1,
 		'path' => __FILE__,
