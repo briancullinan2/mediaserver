@@ -20,7 +20,7 @@ if(isset($GLOBALS['plugins'][$_REQUEST['plugin']]))
 	if( isset($GLOBALS['plugins'][$_REQUEST['plugin']]['privilage']) && $_SESSION['privilage'] < $GLOBALS['plugins'][$_REQUEST['plugin']]['privilage'] )
 	{
 		// redirect to login page
-		header('Location: ' . generate_href(array('plugin' => 'login', 'return' => $_REQUEST['plugin'], 'required_priv' => $GLOBALS['plugins'][$_REQUEST['plugin']]['privilage']), '', '', '', '', '', true));
+		header('Location: ' . generate_href(array('plugin' => 'login', 'return' => urlencode(generate_href($_GET, true)), 'required_priv' => $GLOBALS['plugins'][$_REQUEST['plugin']]['privilage']), true));
 		
 		exit();
 	}

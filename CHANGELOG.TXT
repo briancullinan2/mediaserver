@@ -1,3 +1,17 @@
+2010-03-16
+Fixed a problem with the return in the login.php script
+parse_path_info() in core.php no longer validates the plugin or any variables in that function
+	Validation is done afterwards in the setupInputVars() functions, parse_path_info() is called by rewrite_vars()
+
+2010-03-14
+Renamed lots of plugins in the register_() functions
+Converted tools.php to use new API
+Re-Added mime functionality to common.php because PEAR MIME_Type sucks ass
+Common.php check many different paths for plugins easily now
+Fixed $_GET being transfered to another path in core.php
+	Rewrite now works on $_REQUEST, $_GET, and $_POST
+Started converting smarty templates to normal PHP
+
 2010-03-12
 Fixed encode.php plugin, time offset (%TO) wasn't being replaced since new API changed
 Also enabled the HTTP-RANGES headers to make it work on AmDroid

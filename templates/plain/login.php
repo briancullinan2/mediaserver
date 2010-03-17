@@ -9,7 +9,7 @@ if( count($GLOBALS['templates']['vars']['user_errors']) > 0 )
 }
 ?>
 
-<form action="<?php echo generate_href('plugin=login' . (isset($GLOBALS['templates']['vars']['return'])?('&return=' . $GLOBALS['templates']['vars']['return']):'')); ?>" method="post">
+<form action="<?php echo generate_href('plugin=login' . (isset($GLOBALS['templates']['vars']['return'])?('&return=' . urlencode($GLOBALS['templates']['vars']['return'])):'')); ?>" method="post">
 
 	Username: <input type="text" name="username" value="<?php echo $GLOBALS['templates']['vars']['username']; ?>" /><br />
 	Password: <input type="password" name="password" value="" /><br />

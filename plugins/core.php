@@ -291,7 +291,7 @@ function parse_path_info($path_info)
 	if(count($dirs) > 0)
 	{
 		// get plugin from path info
-		$request['plugin'] = validate_plugin(array('plugin' => $dirs[0]));
+		$request['plugin'] = $dirs[0];
 		switch(count($dirs))
 		{
 			case 2:
