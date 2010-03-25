@@ -1,5 +1,13 @@
 <?php
-define('DEBUG_PRIV', 				0);
+
+// the most basic functions used a lot
+// things to consider:
+// get the extension for a file using getExt
+// get the file mime type
+
+// set version for stuff to reference
+define('VERSION', 			     '0.50.0');
+define('VERSION_NAME', 			'Goliath');
 
 // define some error codes so we know which errors to print to the user and which to print to debug
 define('E_DEBUG',					1);
@@ -7,14 +15,27 @@ define('E_USER',					2);
 define('E_WARN',					4);
 define('E_FATAL',					8);
 
-// the most basic functions used a lot
-// things to consider:
-// get the extension for a file using getExt
-// get the file mime type
+// require the settings
+//if(realpath('/') == '/')
+//	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.nix.php';
+//else
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.php';
+
+// require compatibility
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'compatibility.php';
+	
+// require pear for error handling
+require_once 'PEAR.php';
+PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'error_callback');
+$GLOBALS['errors'] = array();
+$GLOBALS['user_errors'] = array();
+$GLOBALS['debug_errors'] = array();
+
+set_error_handler('php_to_PEAR_Error');
 
 //session_cache_limiter('public');
 session_start();
-	
+
 if(isset($_POST) && count($_POST) > 0)
 {
 	$_SESSION['last_request'] = $_REQUEST;
@@ -27,29 +48,7 @@ if(isset($_SESSION['last_request']))
 	unset($_SESSION['last_request']);
 }
 
-// set version for stuff to reference
-define('VERSION', 			     '0.50.0');
-define('VERSION_NAME', 			'Goliath');
-
-// require compatibility
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'compatibility.php';
-
-
-// require the settings
-//if(realpath('/') == '/')
-//	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.nix.php';
-//else
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.php';
-	
-// require pear for error handling
-require_once 'PEAR.php';
-PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'error_callback');
-$GLOBALS['errors'] = array();
-$GLOBALS['user_errors'] = array();
-$GLOBALS['debug_errors'] = array();
-
 require_once 'MIME' . DIRECTORY_SEPARATOR . 'Type.php';
-
 
 // classes that this function uses to set up stuff should use the $no_setup = true option
 setup();
@@ -931,6 +930,13 @@ function kill9($command, $startpid, $limit = 2)
 			}
 		}
 	}
+}
+
+function php_to_PEAR_Error($error_code, $error_str, $error_file, $error_line)
+{
+	PEAR::raiseError($error_str, $error_code);
+	
+	return true;
 }
 
 function error_callback($error)
