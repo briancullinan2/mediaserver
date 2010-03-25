@@ -1,4 +1,4 @@
-This site uses a modal, view, controller paradigm.
+This site uses a model, view, controller paradigm.
 The Modules control access to data, they handle files and read off of the filesystem and store the cached information in the database.
 The Plugins control user input, this is the controller, it reads and manipulates the data and interacts with the user from the back-end.
 The Templates control the view, this is how the information is displayed to the user, buttons and forms can then be submitted to the controller.

@@ -1,1 +1,0 @@
-*/30 * * * * /usr/bin/php /var/www/mediaserver/plugins/cron.php >/dev/null 2>&1
