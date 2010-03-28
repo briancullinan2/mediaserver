@@ -70,7 +70,7 @@ function theme_live_debug_block()
 		foreach($GLOBALS['debug_errors'] as $i => $error)
 		{
 			?>
-			<a onclick="toggleDiv('error_<?php print $i; ?>')"><?php print $error->message; ?></a><br />
+			<a onClick="toggleDiv('error_<?php print $i; ?>')"><?php print $error->message; ?></a><br />
 			<div id="error_<?php print $i; ?>" style="display:none;">
 				<code>
 					<pre>
@@ -97,26 +97,37 @@ function theme_live_debug_block()
 
 }
 
-function theme_live_breadcrumbs($crumbs)
+function theme_live_breadcrumbs($dir)
 {
-	foreach($crumbs as $i => $crumb)
+	$crumbs = split('/', $GLOBALS['templates']['vars']['dir']);
+	if($crumbs[count($crumbs)-1] == '')
+		unset($crumbs[count($crumbs)-1]);
+	$path = '';
+	$count = 0;
+	foreach($crumbs as $i => $text)
 	{
-		if($i == 0)
+		$path .= $text;
+		if($count == 0)
 		{
-			?><li><a href="<?php print href('plugin=select&cat=file&dir=/'); ?>"><?php print HTML_NAME; ?></a></li><?php
-			?><li><img src="<?php print href('plugin=template&tfile=images/carat.gif&template=' . HTML_TEMPLATE); ?>" class="crumbsep"></li><?php
+			?>
+			<li><a href="<?php print href('plugin=select&cat=' . $GLOBALS['templates']['vars']['cat'] . '&dir=' . urlencode('/')); ?>"><?php print HTML_NAME; ?></a></li>
+			<li><img src="<?php print href('plugin=template&tfile=images/carat.gif&template=' . HTML_TEMPLATE); ?>" class="crumbsep"></li>
+			<?php
 		}
-		elseif($i == count($crumbs)-1)
+		elseif($count == count($crumbs)-1)
 		{
-			?><li>{$dir|@htmlspecialchars}</li><?php
+			?><li><?php print $text; ?></li><?php
 		}
 		else
 		{
 			?>
-			<li><a href="{'plugin=select&cat='|cat:$cat|cat:'&dir='|cat:$path|generate_href}">{$dir|@htmlspecialchars}</a></li>
-			<li><img src="{'plugin=template&tfile=images/carat.gif&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}" class="crumbsep"></li>
+			<li><a href="<?php print href('plugin=select&cat=' . $GLOBALS['templates']['vars']['cat'] . '&dir=' . urlencode('/' . $path . '/')); ?>"><?php print $text; ?></a></li>
+			<li><img src="<?php print href('plugin=template&tfile=images/carat.gif&template=' . HTML_TEMPLATE); ?>" class="crumbsep"></li>
 			<?php
 		}
+		$path .= '/';
+		
+		$count++;
 	}
 }
 
@@ -141,7 +152,7 @@ function theme_live_body()
 		$theme = 'files';
 		
 ?>
-<body onload="init();" onmousemove="setSelector()" onmousedown="return startDrag(event);" onmouseup="endDrag();return false;">
+<body onLoad="init();" onmousemove="setSelector()" onmousedown="return startDrag(event);" onmouseup="endDrag();return false;">
 <div id="bodydiv">
 	<div id="sizer">
 		<div id="expander">
@@ -169,17 +180,9 @@ function theme_live_body()
 						<td>
 							<div id="breadcrumb">
 								<ul>
-
 <?php
-/*
-{assign var=dirlen value=$dir|strlen}
-{assign var=dirlen value=$dirlen-1}
-{if $dir|substr:$dirlen:1 eq '/'}{assign var=dir value=$dir|substr:0:$dirlen}{else}{assign var=dir value=$dir}{/if}
-{assign var=crumbs value='/'|split:$dir}
-{assign var=crumbcount value=$crumbs|@count}
-{assign var=crumbcount value=$crumbcount-1}
-{assign var=path value='/'}
-
+theme('breadcrumbs', $GLOBALS['templates']['vars']['dir']);
+?>
 								</ul>
 							</div>
 						</td>
@@ -203,108 +206,8 @@ function theme_live_body()
 							<td id="mainColumn">
 								<table id="mainTable" cellpadding="0" cellspacing="0">
 									<tr>
+
 										<td>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>Media Server Installer</title>
-<link rel="stylesheet" href="<?php echo l('plugin=template&template=live&tfile=live.css'); ?>
-" type="text/css"/>
-<link rel="stylesheet" href="<?php echo l('plugin=template&template=live&tfile=types.css'); ?>" type="text/css"/>
-<style>
-
-td {
-	padding-left:20px;
+<?php
 }
 
-td.title {
-	width:175px;
-	padding-left:20px;
-	font-weight:bold;
-	font-size:10pt;
-	background-color:#6F9;
-}
-
-input {
-	width:194px;
-	margin-right:50px;
-}
-
-select, a.wide, label {
-	width: 200px;
-	margin-right:50px;
-	display:block;
-}
-
-td.desc {
-	width:300px;
-	border-left:1px solid #999;
-	border-bottom:1px solid #999;
-	padding-left:10px;
-}
-
-input.button {
-	width:150px;
-}
-
-.title.fail {
-	background-color:#F66;
-}
-
-.title.warn {
-	background-color:#FC3;
-}
-
-h2 {
-	font-size:12pt;
-}
-</style>
-</head>
-<body>
-<div id="bodydiv">
-<div id="sizer">
-<div id="expander">
-<table id="header" cellpadding="0" cellspacing="0" style="background-color:#06A;">
-	<tr>
-		<td id="siteTitle"><?php echo HTML_NAME . (isset($GLOBALS['templates']['vars']['title'])?(' : ' . $GLOBALS['templates']['vars']['title']):''); ?></td>
-	</tr>
-</table>
-<div id="container">
-<table width="100%" cellpadding="5" cellspacing="0">
-	<tr>
-		<td><div id="breadcrumb">
-				<ul>
-					<li><?php echo HTML_NAME; ?></li>
-					<li><img src="<?php echo generate_href('plugin=template&template=live&tfile=images/carat.gif'); ?>" class="crumbsep" alt="&gt;" /></li>
-				</ul>
-			</div></td>
-	</tr>
-</table>
-<div id="content" onmousedown="return selector_off;">
-<div class="menuShadow" id="shadow"></div>
-<table id="main" cellpadding="0" cellspacing="0">
-<tr>
-	<td class="sideColumn"></td>
-	<td id="mainColumn"><table id="mainTable" cellpadding="0" cellspacing="0">
-		<tr>
-			<td><div class="contentSpacing">
-				<h1 class="title"><?php echo (isset($GLOBALS['templates']['vars']['title'])?($GLOBALS['templates']['vars']['title']):''); ?></h1>
-				<?php
-if(isset($GLOBALS['templates']['vars']['subtext']))
-{
-?>
-				<span class="subText">
-				<?php
-	if(is_array($GLOBALS['templates']['vars']['subtext']))
-		echo join('<br />', $GLOBALS['templates']['vars']['subtext']);
-	else
-		echo $GLOBALS['templates']['vars']['subtext'];
-?>
-				</span>
-				<?php
-}
-?>
-				*/
-				
-				}
