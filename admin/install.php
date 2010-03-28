@@ -549,14 +549,14 @@ function output_admin_install($request)
 	
 	if(isset($request['install_next']))
 	{
-		header('Location: ' . generate_href('plugin=install&install_step=' . ($request['install_step'] + 1), true));
+		header('Location: ' . generate_href('plugin=admin_install&install_step=' . ($request['install_step'] + 1), true));
 		exit;
 	}
 
 	if(isset($_POST) && count($_POST) > 0)
 	{
 		if(isset($_POST['dberror'])) $_SESSION['dberror'] = $_POST['dberror'];
-		header('Location: ' . generate_href('plugin=install&install_step=' . $request['install_step'], true));
+		header('Location: ' . generate_href('plugin=admin_install&install_step=' . $request['install_step'], true));
 		exit;
 	}
 	
@@ -683,7 +683,7 @@ body {
 	font-weight:normal;
 	line-height:normal;
 	width:100%;
-	background:url(/?plugin=install&install_image=gradient) repeat scroll center top;
+	background:url(/?plugin=admin_install&install_image=gradient) repeat scroll center top;
 	height:39px;
 	text-align:left;
 }
@@ -782,7 +782,7 @@ body {
 }
 
 .sideColumn.right {
-	background-image:url(/?plugin=install&install_image=shadow);
+	background-image:url(/?plugin=admin_install&install_image=shadow);
 	background-position:0 0;
 	background-repeat:no-repeat;
 }

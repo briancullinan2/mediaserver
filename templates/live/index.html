@@ -53,7 +53,9 @@ $this->assign('newlineregexp', '/([^ ]{25})/i');
 {if $info_count > $biggest}{assign var=biggest value=$info_count}{/if}
 {/section}
 
-{include file=$templates.TEMPLATE_HEADER}
+{php}
+theme('header');
+{/php}
 		<div class="contentSpacing">
 {assign var=dirlen value=$dir|strlen}
 {assign var=dirlen value=$dirlen-1}

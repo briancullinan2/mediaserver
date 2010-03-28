@@ -210,6 +210,12 @@ function output_select($request)
 		$files = db_users::get(array(), $tmp_count, $files);
 	}
 	
+	// count a few types of media for templates to use
+	$files_count = 0;
+	$image_count = 0;
+	$video_count = 0;
+	$audio_count = 0;
+	
 	// get all the other information from other modules
 	foreach($files as $index => $file)
 	{
@@ -229,6 +235,14 @@ function output_select($request)
 				{
 					$return = call_user_func_array($module . '::get', array($tmp_request, &$tmp_count));
 					if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
+					if($module == 'db_audio' || $module == 'fs_audio' || $module == 'db_video' || $module == 'fs_video' || $module == 'db_image' || $module == 'fs_image')
+					{
+						if($module == 'db_audio' || $module == 'fs_audio') $audio_count++;
+						if($module == 'db_video' || $module == 'fs_video') $video_count++;
+						if($module == 'db_image' || $module == 'fs_image') $image_count++;
+					}
+					else
+						$files_count++;
 				}
 			}
 		}
@@ -258,7 +272,12 @@ function output_select($request)
 	
 	register_output_vars('files', $files);
 	
+	// set counts
 	register_output_vars('total_count', $total_count);
+	register_output_vars('audio_count', $audio_count);
+	register_output_vars('video_count', $video_count);
+	register_output_vars('image_count', $image_count);
+	register_output_vars('files_count', $files_count);
 	
 	// support paging
 	register_output_vars('start', $request['start']);

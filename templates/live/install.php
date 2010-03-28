@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>Media Server Installer</title>
-<link rel="stylesheet" href="/?plugin=install&install_image=style" type="text/css"/>
+<link rel="stylesheet" href="/?plugin=admin_install&install_image=style" type="text/css"/>
 </head>
 <?
 if(!is_float($GLOBALS['templates']['vars']['install_step']))
@@ -30,8 +30,8 @@ if(!is_float($GLOBALS['templates']['vars']['install_step']))
 									for($i = 1; $i <= $GLOBALS['templates']['vars']['install_step']; $i++)
 									{
 									?>
-									<li><img src="/?plugin=install&install_image=carat" class="crumbsep" alt="&gt;" /></li>
-                                    <li><a href="<?php echo generate_href('plugin=install&install_step=' . $i); ?>">Step <?php echo $i; ?></a></li>
+									<li><img src="/?plugin=admin_install&install_image=carat" class="crumbsep" alt="&gt;" /></li>
+                                    <li><a href="<?php echo generate_href('plugin=admin_install&install_step=' . $i); ?>">Step <?php echo $i; ?></a></li>
                                     <?php
 									}
 									?>
@@ -336,7 +336,7 @@ function output_test_db_install($result, $variable)
 	$DATABASE = new database($dsn);
 	?>
 	<body onload="top.document.getElementById('loading2').style.display = 'none'; top.document.getElementById('install').style.height=document.getElementById('installtable').clientHeight+'px';">
-	<form action="<?php echo generate_href('plugin=install&install_step=3'); ?>" method="post" target="_top">
+	<form action="<?php echo generate_href('plugin=admin_install&install_step=3'); ?>" method="post" target="_top">
 	<?php
 	print_fields();
 	?>
@@ -381,7 +381,7 @@ function output_test_db_test($result, $variable)
     <td class="title fail">Access to Database</td>
     <td>
     The connection manager reported the following error:<br /><?php echo $e->userinfo; ?>.
-    <form action="<?php echo generate_href('plugin=install&install_step=3'); ?>" method="post" target="_top">
+    <form action="<?php echo generate_href('plugin=admin_install&install_step=3'); ?>" method="post" target="_top">
     <input type="hidden" name="install_dberror" value="<?php echo $e->userinfo; ?>" />
 	<?php
 	print_fields();
@@ -406,7 +406,7 @@ function output_test_db_test($result, $variable)
 	{
 		
     ?>
-<body onload="top.document.getElementById('loading1').style.display = 'none'; top.document.getElementById('test').style.height=document.getElementById('testtable').clientHeight+'px'; top.document.getElementById('loading2').style.display='inline'; top.document.getElementById('install').src='<?php echo generate_href('plugin=install&install_step=5.2'); ?>'">
+<body onload="top.document.getElementById('loading1').style.display = 'none'; top.document.getElementById('test').style.height=document.getElementById('testtable').clientHeight+'px'; top.document.getElementById('loading2').style.display='inline'; top.document.getElementById('install').src='<?php echo generate_href('plugin=admin_install&install_step=5.2'); ?>'">
 <table id="testtable" border="0" cellpadding="0" cellspacing="0">
 	<tr>
     <td class="title">Access to Database</td>
@@ -1114,9 +1114,9 @@ function output_test_enable_modules($result, $variable)
 function output_test_db_check()
 {
 	?>
-	<div id="loading1"><img src="/?plugin=install&install_image=loading" alt="" /> Testing...</div>
-	<iframe name="test" id="test" frameborder="0" width="100%" src="<?php echo generate_href('plugin=install&install_step=5.1'); ?>"></iframe>
-	<div id="loading2" style="display:none;"><img src="/?plugin=install&install_image=loading" alt="" /> Installing...</div>
+	<div id="loading1"><img src="/?plugin=admin_install&install_image=loading" alt="" /> Testing...</div>
+	<iframe name="test" id="test" frameborder="0" width="100%" src="<?php echo generate_href('plugin=admin_install&install_step=5.1'); ?>"></iframe>
+	<div id="loading2" style="display:none;"><img src="/?plugin=admin_install&install_image=loading" alt="" /> Installing...</div>
 	<iframe name="test" id="install" frameborder="0" width="100%" src=""></iframe>
 	</script>
 	<?php

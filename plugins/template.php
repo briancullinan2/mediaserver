@@ -22,6 +22,8 @@ function validate_tfile($request)
 		$request['template'] = validate_template($request);
 		if(is_file(LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR . $request['template'] . DIRECTORY_SEPARATOR . $request['tfile']))
 			return $request['tfile'];
+		else
+			PEAR::raiseError('Template file requested but could not be found!', E_WARN);
 	}
 }
 
@@ -34,10 +36,15 @@ function validate_template($request, $session = '')
 	// check if it is a valid template specified
 	if(isset($request['template']))
 	{
+		// remove template directory from beginning of input
 		if(substr($request['template'], 0, 10) == 'templates/' || substr($request['template'], 0, 10) == 'templates\\')
 			$request['template'] = substr($request['template'], 10);
+			
+		// remove leading slash if there is one
 		if($request['template'][strlen($request['template'])-1] == '/' || $request['template'][strlen($request['template'])-1] == '\\')
 			$request['template'] = substr($request['template'], 0, -1);
+		
+		// check to make sure template is valid
 		if(in_array($request['template'], $GLOBALS['templates']))
 		{
 			return $request['template'];
@@ -53,6 +60,96 @@ function validate_template($request, $session = '')
 function session_template($request)
 {
 	return $request['template'];
+}
+
+function register_style($request)
+{
+	// convert the request string to an array
+	if(!is_array($request))
+		$request = href($request, true, false, true);
+		
+	// validate the 2 inputs needed
+	$request['template'] = validate_template($request);
+	$request['tfile'] = validate_tfile($request);
+
+	// only continue if bath properties are set
+	if(isset($request['template']) && isset($request['tfile']))
+	{
+		register_output_vars('styles', 'plugin=template&template=' . $request['template'] . '&tfile=' . $request['tfile'], true);
+		return true;
+	}
+	else
+		PEAR::raiseError('Style could not be set because of missing arguments.', E_WARN);
+	return false;
+}
+
+function register_script($request)
+{
+	// convert the request string to an array
+	if(!is_array($request))
+		$request = href($request, true, false, true);
+		
+	// validate the 2 inputs needed
+	$request['template'] = validate_template($request);
+	$request['tfile'] = validate_template($request);
+	
+	// only continue if bath properties are set
+	if(isset($request['template']) && isset($request['tfile']))
+	{
+		register_output_vars('scripts', 'plugin=template&template=' . $request['template'] . '&tfile=' . $request['tfile'], true);
+		return true;
+	}
+	else
+		PEAR::raiseError('Script could not be set because of missing arguments.', E_WARN);
+		
+	return false;
+}
+
+function theme($request)
+{
+	$args = func_get_args();
+	unset($args[0]);
+	$args = array_values($args);
+	if(is_array($piece))
+	{
+		$request['template'] = validate_template($request);
+		$request['tfile'] = validate_template($request);
+		if(!function_exists('theme_' . $request['template'] . '_' . $request['tfile']))
+			$request['template'] = validate_template(array('template' => LOCAL_BASE));
+		if(function_exists('theme_' . $request['template'] . '_' . $request['tfile']))
+		{
+			// call the function and be done with it
+			call_user_func_array('theme_' . $request['template'] . '_' . $request['tfile'], $args);
+			return true;
+		}
+		else
+			PEAR::raiseError('Theme function \'theme_' . $request['template'] . '_' . $request['tfile'] . '\' was not found.', E_WARN);
+	}
+	elseif(is_string($request))
+	{
+		if(function_exists('theme_' . validate_template(array('template' => HTML_TEMPLATE)) . '_' . $request))
+		{
+			call_user_func_array('theme_' . validate_template(array('template' => HTML_TEMPLATE)) . '_' . $request, $args);
+			return true;
+		}
+		elseif(function_exists('theme_' . validate_template(array('template' => LOCAL_BASE)) . '_' . $request))
+		{
+			call_user_func_array('theme_' . validate_template(array('template' => LOCAL_BASE)) . '_' . $request, $args);
+			return true;
+		}
+		// it is possible the whole request
+		else
+		{
+			$request = href($request, true, false, true);
+			$result = theme((array)$request);
+			if($result == false)
+				PEAR::raiseError('Theme function could not be handled because of an unrecognized argument.', E_WARN);
+			return $result;
+		}
+	}
+	else
+		PEAR::raiseError('Theme function could not be handled because of an unrecognized argument.', E_WARN);
+	return false;
 }
 
 function output_template($request)

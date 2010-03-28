@@ -19,17 +19,29 @@ function register_core()
 }
 
 // this makes all the variables available for output
-function register_output_vars($name, $value)
+function register_output_vars($name, $value, $append = false)
 {
-	if(isset($GLOBALS['output'][$name]))
+	if(isset($GLOBALS['output'][$name]) && $append == false)
 	{
 		PEAR::raiseError('Variable "' . $name . '" already set!', E_DEBUG);
 	}
-	$GLOBALS['output'][$name] = $value;
+	if($append == false)
+		$GLOBALS['output'][$name] = $value;
+	elseif(!isset($GLOBALS['output'][$name]))
+		$GLOBALS['output'][$name] = $value;
+	elseif(is_string($GLOBALS['output'][$name]))
+		$GLOBALS['output'][$name] = array($GLOBALS['output'][$name], $value);
+	elseif(is_array($GLOBALS['output'][$name]))
+		$GLOBALS['output'][$name][] = $value;
+}
+
+function href($request = array(), $not_special = false, $include_domain = false, $return_array = false)
+{
+	return generate_href($request, $not_special, $include_domain, $return_array);
 }
 
 // this function takes a request as input, and based on the .htaccess rules, converts it to a pretty url, or makes no changes if mod_rewrite is off
-function generate_href($request = array(), $not_special = false, $include_domain = false)
+function generate_href($request = array(), $not_special = false, $include_domain = false, $return_array = false)
 {
 	if(is_string($request))
 	{
@@ -54,6 +66,8 @@ function generate_href($request = array(), $not_special = false, $include_domain
 	{
 		$request = array_merge($request, parse_path_info($dirs));
 	}
+	if($return_array)
+		return $request;
 	
 	// rebuild link
 	$link = (($include_domain)?HTML_DOMAIN:'') . HTML_ROOT . '?';
@@ -70,12 +84,6 @@ function generate_href($request = array(), $not_special = false, $include_domain
 function set_output_vars($smarty)
 {
 	// set a couple more that are used a lot
-
-	// set debug errors
-	register_output_vars('debug_errors', $GLOBALS['debug_errors']);
-	
-	// filter out user errors for easy access by templates
-	register_output_vars('user_errors', $GLOBALS['user_errors']);
 	
 	// most template pieces use the category variable, so set that
 	register_output_vars('cat', $_REQUEST['cat']);
@@ -96,6 +104,8 @@ function set_output_vars($smarty)
 	$dont_remove = array(
 		'GLOBALS',
 		'templates',
+		'debug_errors',
+		'user_errors',
 		'smarty',
 		'output',
 		'template',
@@ -126,12 +136,10 @@ function set_output_vars($smarty)
 			$GLOBALS['smarty']->assign($name, $value);
 		}
 	}
-	else
+
+	foreach($GLOBALS['output'] as $name => $value)
 	{
-		foreach($GLOBALS['output'] as $name => $value)
-		{
-			$GLOBALS['templates']['vars'][$name] = $value;
-		}
+		$GLOBALS['templates']['vars'][$name] = $value;
 	}
 	
 	unset($GLOBALS['output']);

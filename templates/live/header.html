@@ -12,66 +12,92 @@
 var loaded = false;
 </script>
 </head>
-
 <body onload="init();" onmousemove="setSelector()" onmousedown="return startDrag(event);" onmouseup="endDrag();return false;">
 <div id="bodydiv">
-	<div id="sizer">
-		<div id="expander">
-			<table id="header" cellpadding="0" cellspacing="0" style="background-color:{if $audio_count > $image_count && $audio_count > $video_count && $audio_count > $files_count}#900{elseif $image_count > $files_count && $image_count > $video_count && $image_count > $audio_count}#990{elseif $video_count > $files_count && $video_count > $image_count && $video_count > $audio_count}#093{else}#06A{/if};">
+<div id="sizer">
+<div id="expander">
+<table id="header" cellpadding="0" cellspacing="0" style="background-color:{if $audio_count > $image_count && $audio_count > $video_count && $audio_count > $files_count}#900{elseif $image_count > $files_count && $image_count > $video_count && $image_count > $audio_count}#990{elseif $video_count > $files_count && $video_count > $image_count && $video_count > $audio_count}#093{else}#06A{/if};">
+	<tr>
+		<td id="siteTitle"><a href="{''|generate_href:false:true}">{$smarty.const.HTML_NAME|@htmlspecialchars}</a></td>
+		<td><table cellpadding="0" cellspacing="0" id="middleArea">
 				<tr>
-					<td id="siteTitle"><a href="{''|generate_href:false:true}">{$smarty.const.HTML_NAME|@htmlspecialchars}</a></td>
-					<td><table cellpadding="0" cellspacing="0" id="middleArea"><tr><td class="searchParent">{if isset($cat) and $cat ne 'db_file'}{assign var=category value=$cat}{' from Database'|@str_replace:'':$modules.$category} Search: {/if}<form action="{'plugin=select'|generate_href}" method="get" id="search"><span class="searchBorder" style="border-color:{if $audio_count > $image_count && $audio_count > $video_count && $audio_count > $files_count}#BB8888 #AA6666 #995555{elseif $image_count > $files_count && $image_count > $video_count && $image_count > $audio_count}#BBBBAA #AAAACC #9999BB{elseif $video_count > $files_count && $video_count > $image_count && $video_count > $audio_count}#88DDBB #66CCAA #55BB99{else}#88BBDD #66AACC #5599BB{/if};"><span class="innerSearchBorder" style="border-color:{if $audio_count > $image_count && $audio_count > $video_count && $audio_count > $files_count}#883333 #883322 #772211{elseif $image_count > $files_count && $image_count > $video_count && $image_count > $audio_count}#888844 #888833 #777722{elseif $video_count > $files_count && $video_count > $image_count && $video_count > $audio_count}#668866 #448844 #447744{else}#446688 #335588 #115577{/if};"><input type="text" name="search" value="{if isset($smarty.request.search)}{$smarty.request.search|htmlspecialchars}{/if}" id="searchInput" /><span class="buttonBorder"><input type="submit" value="Search" id="searchButton" /></span></span></span>&nbsp;&nbsp;<a id="advancedSearch" href="{'plugin=search&dir='|cat:$dir|generate_href}">Advanced Search</a></form></td></tr></table></td>
-					<td id="templates">{include file=$templates.TEMPLATE_TEMPLATE}</td>
+					<td class="searchParent">{if isset($cat) and $cat ne 'db_file'}{assign var=category value=$cat}{' from Database'|@str_replace:'':$modules.$category} Search: {/if}
+						<form action="{'plugin=select'|generate_href}" method="get" id="search">
+							<span class="searchBorder" style="border-color:{if $audio_count > $image_count && $audio_count > $video_count && $audio_count > $files_count}#BB8888 #AA6666 #995555{elseif $image_count > $files_count && $image_count > $video_count && $image_count > $audio_count}#BBBBAA #AAAACC #9999BB{elseif $video_count > $files_count && $video_count > $image_count && $video_count > $audio_count}#88DDBB #66CCAA #55BB99{else}#88BBDD #66AACC #5599BB{/if};"><span class="innerSearchBorder" style="border-color:{if $audio_count > $image_count && $audio_count > $video_count && $audio_count > $files_count}#883333 #883322 #772211{elseif $image_count > $files_count && $image_count > $video_count && $image_count > $audio_count}#888844 #888833 #777722{elseif $video_count > $files_count && $video_count > $image_count && $video_count > $audio_count}#668866 #448844 #447744{else}#446688 #335588 #115577{/if};">
+							<input type="text" name="search" value="{if isset($smarty.request.search)}{$smarty.request.search|htmlspecialchars}{/if}" id="searchInput" />
+							<span class="buttonBorder">
+							<input type="submit" value="Search" id="searchButton" />
+							</span></span></span>&nbsp;&nbsp;<a id="advancedSearch" href="{'plugin=search&dir='|cat:$dir|generate_href}">Advanced Search</a>
+						</form></td>
 				</tr>
-			</table>
-{if $smarty.const.DEBUG_MODE eq true}{literal}<script type="application/javascript" language="javascript">function toggleDiv(id) {if(document.getElementById(id).style.display == 'none') { document.getElementById(id).style.display = 'block';} else {document.getElementById(id).style.display = 'none';}}</script>{/literal}<div id="debug" class="debug">{if $loggedin eq true}{assign var=count value=0}{foreach from=$debug_errors item=error}<a onclick="toggleDiv('error_{$count}')">{$error->message}</a><br /><div id="error_{$count}" style="display:none;"><code><pre>{$error|print_r:true}</pre></code></div>{assign var=count value=$count+1}{/foreach}{else}{assign var=login_return value=$get|urlencode}<form action="{'plugin=login&return='|cat:$login_return|generate_href}" method="post">Administrators: Log in to select debug options. Username: <input type="text" name="username" value="" /> Password: <input type="password" name="password" value="" /><input type="submit" value="Login" /><input type="reset" value="Reset" /></form>{/if}</div>{/if}
-			<div id="container">
-				<table width="100%" cellpadding="5" cellspacing="0">
-					<tr>
-						<td>
-							<div id="breadcrumb">
-								<ul>
-{assign var=dirlen value=$dir|strlen}
-{assign var=dirlen value=$dirlen-1}
-{if $dir|substr:$dirlen:1 eq '/'}{assign var=dir value=$dir|substr:0:$dirlen}{else}{assign var=dir value=$dir}{/if}
-{assign var=crumbs value='/'|split:$dir}
-{assign var=crumbcount value=$crumbs|@count}
-{assign var=crumbcount value=$crumbcount-1}
-{assign var=path value='/'}
-{foreach from=$crumbs item=dir key=i}
-{if $i eq 0}
-									<li><a href="{'plugin=select&cat=file&dir=/'|generate_href}">{$smarty.const.HTML_NAME|@htmlspecialchars}</a></li>
-									<li><img src="{'plugin=template&file=images/carat.gif&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}" class="crumbsep"></li>
-{elseif $i eq $crumbcount}{assign var=current value=$dir}
-{assign var=path value=$path|cat:$dir|cat:'/'}
-									<li>{$dir|@htmlspecialchars}</li>
-{else}
-{assign var=path value=$path|cat:$dir|cat:'/'}
-									<li><a href="{'plugin=select&cat='|cat:$cat|cat:'&dir='|cat:$path|generate_href}">{$dir|@htmlspecialchars}</a></li>
-									<li><img src="{'plugin=template&file=images/carat.gif&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}" class="crumbsep"></li>
+			</table></td>
+		<td id="templates">{include file=$templates.TEMPLATE_TEMPLATE}</td>
+	</tr>
+</table>
+{if $smarty.const.DEBUG_MODE eq true}{literal}
+<script type="application/javascript" language="javascript">function toggleDiv(id) {if(document.getElementById(id).style.display == 'none') { document.getElementById(id).style.display = 'block';} else {document.getElementById(id).style.display = 'none';}}</script>
+{/literal}
+<div id="debug" class="debug">{if $loggedin eq true}{assign var=count value=0}{foreach from=$debug_errors item=error}<a onclick="toggleDiv('error_{$count}')">{$error->message}</a><br />
+	<div id="error_{$count}" style="display:none;"><code>
+		<pre>{$error|print_r:true}</pre>
+		</code></div>
+	{assign var=count value=$count+1}{/foreach}{else}{assign var=login_return value=$get|urlencode}
+	<form action="{'plugin=login&return='|cat:$login_return|generate_href}" method="post">
+		Administrators: Log in to select debug options. Username:
+		<input type="text" name="username" value="" />
+		Password:
+		<input type="password" name="password" value="" />
+		<input type="submit" value="Login" />
+		<input type="reset" value="Reset" />
+	</form>
+	{/if}</div>
 {/if}
-{/foreach}
-								</ul>
-							</div>
-						</td>
-					</tr>
-				</table>
-				<div id="content" onmousedown="return selector_off;">
-					<div id="selector" style="display:none;"></div>
-					<ul class="menu" id="menu">
-						<li id="option_download"><a href="#" onmouseout="this.className = '';" onmouseover="this.className = 'itemSelect';"><b>Download File</b></a></li>
-						<li id="option_open"><a href="#" onmouseout="this.className = '';" onmouseover="this.className = 'itemSelect';"><b>Open</b></a></li>
-						<li><a href="#" onmouseout="this.className = '';" onmouseover="this.className = 'itemSelect';">Play Now</a></li>
-						<li><div class="sep"></div></li>
-						<li><a href="#" onmouseout="this.className = '';" onmouseover="this.className = 'itemSelect';">Download Zip</a></li>
-						<li><a href="#" onmouseout="this.className = '';" onmouseover="this.className = 'itemSelect';">Download Torrent</a></li>
-						<li><a href="#" onmouseout="this.className = '';" onmouseover="this.className = 'itemSelect';">Add to Queue</a></li>
-					</ul>
-					<div class="menuShadow" id="shadow"></div>
-					<table id="main" cellpadding="0" cellspacing="0">
-						<tr>
-							<td class="sideColumn"></td>
-							<td id="mainColumn">
-								<table id="mainTable" cellpadding="0" cellspacing="0">
-									<tr>
-										<td>
+<div id="container">
+<table width="100%" cellpadding="5" cellspacing="0">
+	<tr>
+		<td><div id="breadcrumb">
+				<ul>
+					{assign var=dirlen value=$dir|strlen}
+					{assign var=dirlen value=$dirlen-1}
+					{if $dir|substr:$dirlen:1 eq '/'}{assign var=dir value=$dir|substr:0:$dirlen}{else}{assign var=dir value=$dir}{/if}
+					{assign var=crumbs value='/'|split:$dir}
+					{assign var=crumbcount value=$crumbs|@count}
+					{assign var=crumbcount value=$crumbcount-1}
+					{assign var=path value='/'}
+					{foreach from=$crumbs item=dir key=i}
+					{if $i eq 0}
+					<li><a href="{'plugin=select&cat=file&dir=/'|generate_href}">{$smarty.const.HTML_NAME|@htmlspecialchars}</a></li>
+					<li><img src="{'plugin=template&tfile=images/carat.gif&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}" class="crumbsep"></li>
+					{elseif $i eq $crumbcount}{assign var=current value=$dir}
+					{assign var=path value=$path|cat:$dir|cat:'/'}
+					<li>{$dir|@htmlspecialchars}</li>
+					{else}
+					{assign var=path value=$path|cat:$dir|cat:'/'}
+					<li><a href="{'plugin=select&cat='|cat:$cat|cat:'&dir='|cat:$path|generate_href}">{$dir|@htmlspecialchars}</a></li>
+					<li><img src="{'plugin=template&tfile=images/carat.gif&template='|cat:$smarty.const.HTML_TEMPLATE|generate_href}" class="crumbsep"></li>
+					{/if}
+					{/foreach}
+				</ul>
+			</div></td>
+	</tr>
+</table>
+<div id="content" onmousedown="return selector_off;">
+<div id="selector" style="display:none;"></div>
+<ul class="menu" id="menu">
+	<li id="option_download"><a href="#" onmouseout="this.className = '';" onmouseover="this.className = 'itemSelect';"><b>Download File</b></a></li>
+	<li id="option_open"><a href="#" onmouseout="this.className = '';" onmouseover="this.className = 'itemSelect';"><b>Open</b></a></li>
+	<li><a href="#" onmouseout="this.className = '';" onmouseover="this.className = 'itemSelect';">Play Now</a></li>
+	<li>
+		<div class="sep"></div>
+	</li>
+	<li><a href="#" onmouseout="this.className = '';" onmouseover="this.className = 'itemSelect';">Download Zip</a></li>
+	<li><a href="#" onmouseout="this.className = '';" onmouseover="this.className = 'itemSelect';">Download Torrent</a></li>
+	<li><a href="#" onmouseout="this.className = '';" onmouseover="this.className = 'itemSelect';">Add to Queue</a></li>
+</ul>
+<div class="menuShadow" id="shadow"></div>
+<table id="main" cellpadding="0" cellspacing="0">
+<tr>
+	<td class="sideColumn"></td>
+	<td id="mainColumn"><table id="mainTable" cellpadding="0" cellspacing="0">
+		<tr>
+			<td>

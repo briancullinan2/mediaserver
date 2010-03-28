@@ -82,12 +82,12 @@ function setup()
 	
 	// set up aliases for path replacement
 	setupAliases();
-	
-	// set up the template system for outputting
-	setupTemplate();
 
 	// set up variables passed to the system in the request or post
 	setupInputVars();
+	
+	// set up the template system for outputting
+	setupTemplate();
 	
 	// set up users for permission based access
 	setupUsers();
@@ -193,7 +193,7 @@ function setupTemplate()
 		
 		if(file_exists(LOCAL_ROOT . LOCAL_TEMPLATE . 'config.php'))
 			require_once LOCAL_ROOT . LOCAL_TEMPLATE . 'config.php';
-			
+
 		// start smarty global for plugins to use
 		$GLOBALS['smarty'] = new Smarty();
 		$GLOBALS['smarty']->compile_dir = LOCAL_ROOT . 'templates_c' . DIRECTORY_SEPARATOR;
