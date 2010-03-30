@@ -14,6 +14,7 @@ define('E_DEBUG',					1);
 define('E_USER',					2);
 define('E_WARN',					4);
 define('E_FATAL',					8);
+define('E_NOTE',					16);
 
 // require the settings
 //if(realpath('/') == '/')
@@ -31,7 +32,7 @@ $GLOBALS['errors'] = array();
 $GLOBALS['user_errors'] = array();
 $GLOBALS['debug_errors'] = array();
 
-//set_error_handler('php_to_PEAR_Error');
+set_error_handler('php_to_PEAR_Error');
 
 //session_cache_limiter('public');
 session_start();
@@ -170,10 +171,34 @@ function setupTemplate()
 		$files = fs_file::get(array('dir' => LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR, 'limit' => 32000), $count, true);
 		if(is_array($files))
 		{
-			foreach($files as $i => $temp_file)
+			foreach($files as $i => $file)
 			{
-				if(is_dir($temp_file['Filepath']) && is_file($temp_file['Filepath'] . 'config.php'))
-					$GLOBALS['templates'][] = $temp_file['Filename'];
+				if(is_dir($file['Filepath']) && is_file($file['Filepath'] . 'config.php'))
+				{
+					include_once $file['Filepath'] . 'config.php';
+					
+					// determin template based on path
+					$template = substr($file['Filepath'], strlen(LOCAL_ROOT));
+					
+					// remove default directory from plugin name
+					if(substr($template, 0, 10) == 'templates/')
+						$template = substr($template, 10);
+					
+					// remove trailing slash
+					if(substr($template, -1) == '/' || substr($template, -1) == '\\')
+						$template = substr($template, 0, strlen($template) - 1);
+					
+					// call register functions
+					if(function_exists('register_' . $template))
+						$GLOBALS['templates'][$template] = call_user_func_array('register_' . $template, array());
+					
+					// call the request alter
+					if(isset($GLOBALS['templates'][$template]['alter request']) && $GLOBALS['templates'][$template]['alter request'] == true)
+						$_REQUEST = call_user_func_array('alter_request_' . $template, array($_REQUEST));
+						
+					// register template files
+					register_template_files($GLOBALS['templates'][$template]);
+				}
 			}
 		}
 		
@@ -187,20 +212,6 @@ function setupTemplate()
 		
 		// set the HTML_TEMPLATE for templates to refer to their own directory to provide resources
 		define('HTML_TEMPLATE', str_replace(DIRECTORY_SEPARATOR, '/', LOCAL_TEMPLATE));
-		
-		// include template constants
-		require_once LOCAL_ROOT . LOCAL_BASE . 'config.php';
-		
-		if(file_exists(LOCAL_ROOT . LOCAL_TEMPLATE . 'config.php'))
-			require_once LOCAL_ROOT . LOCAL_TEMPLATE . 'config.php';
-
-		// start smarty global for plugins to use
-		$GLOBALS['smarty'] = new Smarty();
-		$GLOBALS['smarty']->compile_dir = LOCAL_ROOT . 'templates_c' . DIRECTORY_SEPARATOR;
-		$GLOBALS['smarty']->compile_check = true;
-		$GLOBALS['smarty']->debugging = false;
-		$GLOBALS['smarty']->caching = false;
-		$GLOBALS['smarty']->force_compile = true;
 		
 		// assign some shared variables
 		register_output_vars('tables', $GLOBALS['tables']);
@@ -934,19 +945,45 @@ function kill9($command, $startpid, $limit = 2)
 
 function php_to_PEAR_Error($error_code, $error_str, $error_file, $error_line)
 {
-	PEAR::raiseError($error_str . ' in ' . $error_file . ' on line ' . $error_line, $error_code);
+	if($error_code & E_WARNING || $error_code & E_NOTICE)
+		$error_code = E_WARN;
+		
+	PEAR::raiseError($error_str, $error_code);
 	
 	return true;
 }
 
 function error_callback($error)
 {
-	if($error->code == E_DEBUG)
+	// add special error handling based on the origin of the error
+	foreach($error->backtrace as $i => $stack)
+	{
+		if($stack['function'] == 'raiseError')
+			break;
+	}
+	$i++;
+	if(isset($error->backtrace[$i]['file']))
+	{
+		if(dirname($error->backtrace[$i]['file']) == 'plugins' && basename($error->backtrace[$i]['file']) == 'template.php')
+		{
+			for($i = $i; $i < count($error->backtrace); $i++)
+			{
+				if(dirname($error->backtrace[$i]['file']) != 'plugins' || basename($error->backtrace[$i]['file']) != 'template.php')
+					break;
+			}
+		}
+	
+		$error->message .= ' in ' . $error->backtrace[$i]['file'] . ' on line ' . $error->backtrace[$i]['line'];
+	}
+	
+	if($error->code & E_DEBUG)
 		$GLOBALS['debug_errors'][] = $error;
-	elseif($error->code == E_USER)
+	if($error->code & E_USER)
 		$GLOBALS['user_errors'][] = $error;
-	else
-		$GLOBALS['errors'][] = $error;
+	if($error->code & E_WARN)
+		$GLOBALS['warn_errors'][] = $error;
+	
+	$GLOBALS['errors'][] = $error;
 }
 
 

@@ -135,6 +135,19 @@ function theme_live_breadcrumbs($dir)
 	}
 }
 
+function theme_live_template_block()
+{
+	?><div class="template_box"><?php
+	foreach($GLOBALS['templates']['vars']['templates'] as $i => $template)
+	{
+		if(is_numeric($i))
+		{
+			?><a href="<?php print href('template=' . $template, false, true); ?>"><?php print $GLOBALS['templates'][$template]['name']; ?></a><?php
+		}
+	}
+	?></div><?php
+}
+
 function live_get_theme_color()
 {
 	if($GLOBALS['templates']['vars']['audio_count'] > $GLOBALS['templates']['vars']['image_count'] &&

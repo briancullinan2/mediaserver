@@ -29,27 +29,15 @@ if(isset($GLOBALS['plugins'][$_REQUEST['plugin']]))
 	
 	// output plugin
 	call_user_func_array('output_' . $_REQUEST['plugin'], array($_REQUEST));
-
+	
 	// only display a template for the current plugin if there is one
-	if(isset($GLOBALS['templates']['TEMPLATE_' . strtoupper($plugin)]) && 
-			(!isset($GLOBALS['plugins'][$plugin]['notemplate']) || 
-			$GLOBALS['plugins'][$plugin]['notemplate'] == false)
+	if(!isset($GLOBALS['plugins'][$plugin]['notemplate']) || 
+			$GLOBALS['plugins'][$plugin]['notemplate'] == false
 		)
 	{
-		$template = $GLOBALS['templates']['TEMPLATE_' . strtoupper($plugin)];
-		// select template for the current plugin
-		if(getExt($template) == 'php')
-		{
-			set_output_vars(false);
+		set_output_vars();
 			
-			theme($plugin);
-			//include $template;
-		}
-		else
-		{
-			set_output_vars(true);
-			$GLOBALS['smarty']->display($template);
-		}
+		call_user_func_array('output_' . $_REQUEST['template'], array($_REQUEST));
 	}
 }
 

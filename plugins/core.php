@@ -81,7 +81,7 @@ function generate_href($request = array(), $not_special = false, $include_domain
 		return htmlspecialchars($link);
 }
 
-function set_output_vars($smarty)
+function set_output_vars()
 {
 	// set a couple more that are used a lot
 	
@@ -103,6 +103,7 @@ function set_output_vars($smarty)
 	
 	$dont_remove = array(
 		'GLOBALS',
+		'_REQUEST', // allow this because it has been fully validated
 		'templates',
 		'debug_errors',
 		'user_errors',
@@ -127,14 +128,6 @@ function set_output_vars($smarty)
 	{
 		if(in_array($key, $dont_remove) === false)
 			unset($GLOBALS[$key]);
-	}
-	
-	if($smarty)
-	{
-		foreach($GLOBALS['output'] as $name => $value)
-		{
-			$GLOBALS['smarty']->assign($name, $value);
-		}
 	}
 
 	foreach($GLOBALS['output'] as $name => $value)

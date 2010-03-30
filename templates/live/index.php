@@ -146,32 +146,39 @@ function theme_live_pages()
 
 function theme_live_files()
 {
-	?><div class="files" id="files"><?php
-	foreach($GLOBALS['templates']['vars']['files'] as $file)
+	if(count($GLOBALS['templates']['vars']['files']) == 0)
 	{
-		if(handles($file['Filepath'], 'archive') && $GLOBALS['templates']['vars']['cat'] != 'archive') $new_cat = 'archive';
-		elseif(handles($file['Filepath'], 'playlist') && $GLOBALS['templates']['vars']['cat'] != 'archive') $new_cat = 'playlist';
-		elseif(handles($file['Filepath'], 'diskimage') && $GLOBALS['templates']['vars']['cat'] != 'archive') $new_cat = 'diskimage';
-		elseif($file['Filetype'] == 'FOLDER') $new_cat = $GLOBALS['templates']['vars']['cat'];
-		
-		$link = isset($new_cat)?href('plugin=select&cat=' . $new_cat . '&dir=' . urlencode($file['Filepath'])):href('file/' . $GLOBALS['templates']['vars']['cat'] . '/' . $file['id'] . '/' . $file['Filename']);
-		
-		?>
-		<div class="file <?php print $file['Filetype']; ?>" onmousedown="deselectAll(event);fileSelect(this, true, event);return false;" oncontextmenu="showMenu(this);return false;" id="<?php print $file['id']; ?>"><div class="notselected"></div>
-			<table class="itemTable" cellpadding="0" cellspacing="0" onclick="location.href = '<?php print $link; ?>';">
-				<tr>
-					<td>
-						<div class="thumb file_ext_<?php print $file['Filetype']; ?> file_type_<?php print str_replace('/', ' file_type_', $file['Filemime']); ?>">
-							<img src="<?php print href('plugin=template&tfile=images/s.gif&template=' . HTML_TEMPLATE); ?>" alt="<?php print $file['Filetype']; ?>" height="48" width="48">
-						</div>
-					</td>
-				</tr>
-			</table>
-			<a class="itemLink" href="<?php print $link; ?>" onmouseout="this.parentNode.firstChild.className = 'notselected'; if(!loaded){return false;} document.getElementById('info_<?php print $file['id']; ?>').style.display = 'none';document.getElementById('info_<?php print $file['id']; ?>').style.visibility = 'hidden';" onmouseover="this.parentNode.firstChild.className = 'selected'; if(!loaded){return false;} document.getElementById('info_<?php print $file['id']; ?>').style.display = '';document.getElementById('info_<?php print $file['id']; ?>').style.visibility = 'visible';"><span><?php print isset($GLOBALS['templates']['vars']['parts'])?preg_replace($GLOBALS['templates']['vars']['parts'], '<b style="background-color:#990">$0</b>', $file['Filename']):$file['Filename']; ?></span></a>
-		</div>
-		<?php
+		?><b>There are no files to display</b><?php
 	}
-	?></div><?php
+	else
+	{
+		?><div class="files" id="files"><?php
+		foreach($GLOBALS['templates']['vars']['files'] as $file)
+		{
+			if(handles($file['Filepath'], 'archive') && $GLOBALS['templates']['vars']['cat'] != 'archive') $new_cat = 'archive';
+			elseif(handles($file['Filepath'], 'playlist') && $GLOBALS['templates']['vars']['cat'] != 'archive') $new_cat = 'playlist';
+			elseif(handles($file['Filepath'], 'diskimage') && $GLOBALS['templates']['vars']['cat'] != 'archive') $new_cat = 'diskimage';
+			elseif($file['Filetype'] == 'FOLDER') $new_cat = $GLOBALS['templates']['vars']['cat'];
+			
+			$link = isset($new_cat)?href('plugin=select&cat=' . $new_cat . '&dir=' . urlencode($file['Filepath'])):href('file/' . $GLOBALS['templates']['vars']['cat'] . '/' . $file['id'] . '/' . $file['Filename']);
+			
+			?>
+			<div class="file <?php print $file['Filetype']; ?>" onmousedown="deselectAll(event);fileSelect(this, true, event);return false;" oncontextmenu="showMenu(this);return false;" id="<?php print $file['id']; ?>"><div class="notselected"></div>
+				<table class="itemTable" cellpadding="0" cellspacing="0" onclick="location.href = '<?php print $link; ?>';">
+					<tr>
+						<td>
+							<div class="thumb file_ext_<?php print $file['Filetype']; ?> file_type_<?php print str_replace('/', ' file_type_', $file['Filemime']); ?>">
+								<img src="<?php print href('plugin=template&tfile=images/s.gif&template=' . HTML_TEMPLATE); ?>" alt="<?php print $file['Filetype']; ?>" height="48" width="48">
+							</div>
+						</td>
+					</tr>
+				</table>
+				<a class="itemLink" href="<?php print $link; ?>" onmouseout="this.parentNode.firstChild.className = 'notselected'; if(!loaded){return false;} document.getElementById('info_<?php print $file['id']; ?>').style.display = 'none';document.getElementById('info_<?php print $file['id']; ?>').style.visibility = 'hidden';" onmouseover="this.parentNode.firstChild.className = 'selected'; if(!loaded){return false;} document.getElementById('info_<?php print $file['id']; ?>').style.display = '';document.getElementById('info_<?php print $file['id']; ?>').style.visibility = 'visible';"><span><?php print isset($GLOBALS['templates']['vars']['parts'])?preg_replace($GLOBALS['templates']['vars']['parts'], '<b style="background-color:#990">$0</b>', $file['Filename']):$file['Filename']; ?></span></a>
+			</div>
+			<?php
+		}
+		?></div><?php
+	}
 }
 
 function theme_live_info()
@@ -280,9 +287,27 @@ function theme_live_info()
 	}
 }
 
-function theme_live_select()
+function theme_live_errors()
 {
-	theme_live_index();
+	if(count($GLOBALS['warn_errors']) > 0)
+	{
+		?><div style="border:2px solid #CC0; background-color:#FF9;"><?php
+		foreach($GLOBALS['warn_errors'] as $error)
+		{
+			?><b><?php print $error->message; ?></b><br /><?php
+		}
+		?></div><?php
+	}
+	
+	if(count($GLOBALS['user_errors']) > 0)
+	{
+		?><div style="border:2px solid #C00; background-color:#F99;"><?php
+		foreach($GLOBALS['user_errors'] as $error)
+		{
+			?><b><?php print $error->message; ?></b><br /><?php
+		}
+		?></div><?php
+	}
 }
 
 function theme_live_index()
@@ -307,28 +332,15 @@ function theme_live_index()
 		<?php
 	}
 	
+	theme('errors');
+	
 	theme('pages');
 	
 	?>
 	<div class="titlePadding"></div>
 	<?php
-	if(count($GLOBALS['user_errors']) > 0)
-	{
-		?><span style="color:#C00"><?php
-		foreach($GLOBALS['user_errors'] as $error)
-		{
-			?><b><?php print $error->message; ?></b><br /><?php
-		}
-		?></span><?php
-	}
-	elseif(count($GLOBALS['templates']['vars']['files']) == 0)
-	{
-		?><b>There are no files to display</b><?php
-	}
-	else
-	{
-		theme('files', $GLOBALS['templates']['vars']['files']);
-	}
+	
+	theme('files');
 	?>
 	<div class="titlePadding"></div>
 	</div>

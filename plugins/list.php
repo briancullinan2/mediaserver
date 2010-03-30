@@ -90,6 +90,10 @@ function output_list($request)
 		header('Content-Type: ' . getMime($types[$_REQUEST['list']]['file']));
 	}
 	
+	// set some output variables
+	register_output_vars('list', $request['list']);
+	if(isset($_SESSION['select']['selected'])) register_output_vars('selected', $_SESSION['select']['selected']);
+	
 	// use the select.php plugin file selector to generate a list from the request
 	//   should be the same list, and it will register the files output
 	output_select();

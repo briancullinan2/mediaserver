@@ -23,10 +23,46 @@ function validate_tfile($request)
 		if(is_file(LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR . $request['template'] . DIRECTORY_SEPARATOR . $request['tfile']))
 			return $request['tfile'];
 		else
-			PEAR::raiseError('Template file requested but could not be found!', E_WARN);
+			PEAR::raiseError('Template file requested but could not be found!', E_DEBUG|E_WARN);
 	}
 }
 
+function register_template_files($template_config)
+{
+	$template_name = basename(dirname($template_config['path']));
+	if(isset($template_config['files']))
+	{
+		foreach($template_config['files'] as $file)
+		{
+			include LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR . $template_name . DIRECTORY_SEPARATOR . $file . '.php';
+			if(function_exists('register_' . $template_name . '_' . $file))
+			{
+				$template = call_user_func_array('register_' . $template_name . '_' . $file, array());
+				if(isset($template['scripts']))
+				{
+					if(is_array($template['scripts']))
+					{
+						foreach($template['scripts'] as $script)
+							register_script($script);
+					}
+					elseif(is_string($template['scripts']))
+						register_script($template['scripts']);
+				}
+				
+				if(isset($template['styles']))
+				{
+					if(is_array($template['styles']))
+					{
+						foreach($template['styles'] as $style)
+							register_style($style);
+					}
+					elseif(is_string($template['styles']))
+						register_style($template['styles']);
+				}
+			}
+		}
+	}
+}
 
 function validate_template($request, $session = '')
 {
@@ -45,7 +81,7 @@ function validate_template($request, $session = '')
 			$request['template'] = substr($request['template'], 0, -1);
 		
 		// check to make sure template is valid
-		if(in_array($request['template'], $GLOBALS['templates']))
+		if(in_array($request['template'], array_keys($GLOBALS['templates'])))
 		{
 			return $request['template'];
 		}
@@ -79,7 +115,7 @@ function register_style($request)
 		return true;
 	}
 	else
-		PEAR::raiseError('Style could not be set because of missing arguments.', E_WARN);
+		PEAR::raiseError('Style could not be set because of missing arguments.', E_DEBUG|E_WARN);
 	return false;
 }
 
@@ -100,7 +136,7 @@ function register_script($request)
 		return true;
 	}
 	else
-		PEAR::raiseError('Script could not be set because of missing arguments.', E_WARN);
+		PEAR::raiseError('Script could not be set because of missing arguments.', E_DEBUG|E_WARN);
 		
 	return false;
 }
@@ -123,7 +159,7 @@ function theme($request)
 			return true;
 		}
 		else
-			PEAR::raiseError('Theme function \'theme_' . $request['template'] . '_' . $request['tfile'] . '\' was not found.', E_WARN);
+			PEAR::raiseError('Theme function \'theme_' . $request['template'] . '_' . $request['tfile'] . '\' was not found.', E_DEBUG|E_WARN);
 	}
 	elseif(is_string($request))
 	{
@@ -143,12 +179,12 @@ function theme($request)
 			$request = href($request, true, false, true);
 			$result = theme((array)$request);
 			if($result == false)
-				PEAR::raiseError('Theme function could not be handled because of an unrecognized argument.', E_WARN);
+				PEAR::raiseError('Theme function could not be handled because of an unrecognized argument.', E_DEBUG|E_WARN);
 			return $result;
 		}
 	}
 	else
-		PEAR::raiseError('Theme function could not be handled because of an unrecognized argument.', E_WARN);
+		PEAR::raiseError('Theme function could not be handled because of an unrecognized argument.', E_DEBUG|E_WARN);
 	return false;
 }
 
