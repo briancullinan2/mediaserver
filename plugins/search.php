@@ -50,6 +50,39 @@ function output_search($request)
 {
 	if(isset($_SESSION['search']))
 		register_output_vars('search', $_SESSION['search']);
+		
+	$parts = array();
+	$search = validate_search($request);
+	if($search[0] != '"' && $search[strlen($search)-1] != '"' && $search[0] != '/' && $search[strlen($search)-1] != '/' && $search[0] != '=' && $search[strlen($search)-1] != '=')
+	{
+		if(isset($search))
+		{
+			$tmp_parts = array_unique(split(' ', stripslashes($search)));
+			foreach($tmp_parts as $i => $part)
+			{
+				if($part != '')
+				{
+					if($part[0] == '+') $part = substr($part, 1);
+					$parts[] = '/' . preg_quote(htmlspecialchars($part)) . '/i';
+				}
+			}
+		}
+	}
+	elseif($search[0] == '"' && $search[strlen($search)-1] == '"')
+	{
+		$parts = array(0 => '/' . preg_quote(substr($search, 1, strlen($search)-2)) . '/i');
+	}
+	elseif($search[0] == '/' && $search[strlen($search)-1] == '/')
+	{
+		$parts = array(0 => $search . 'i');
+	}
+	elseif($search[0] == '=' && $search[strlen($search)-1] == '=')
+	{
+		$parts = array(0 => '/^' . preg_quote(substr($search, 1, strlen($search)-2)) . '$/i');
+	}
+	
+	if(count($parts) != 0)
+		register_output_vars('parts', $parts);
 }
 
 ?>

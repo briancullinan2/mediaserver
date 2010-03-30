@@ -31,7 +31,7 @@ $GLOBALS['errors'] = array();
 $GLOBALS['user_errors'] = array();
 $GLOBALS['debug_errors'] = array();
 
-set_error_handler('php_to_PEAR_Error');
+//set_error_handler('php_to_PEAR_Error');
 
 //session_cache_limiter('public');
 session_start();
@@ -82,12 +82,12 @@ function setup()
 	
 	// set up aliases for path replacement
 	setupAliases();
-
-	// set up variables passed to the system in the request or post
-	setupInputVars();
 	
 	// set up the template system for outputting
 	setupTemplate();
+
+	// set up variables passed to the system in the request or post
+	setupInputVars();
 	
 	// set up users for permission based access
 	setupUsers();
@@ -934,7 +934,7 @@ function kill9($command, $startpid, $limit = 2)
 
 function php_to_PEAR_Error($error_code, $error_str, $error_file, $error_line)
 {
-	PEAR::raiseError($error_str, $error_code);
+	PEAR::raiseError($error_str . ' in ' . $error_file . ' on line ' . $error_line, $error_code);
 	
 	return true;
 }

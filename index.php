@@ -41,7 +41,9 @@ if(isset($GLOBALS['plugins'][$_REQUEST['plugin']]))
 		if(getExt($template) == 'php')
 		{
 			set_output_vars(false);
-			include $template;
+			
+			theme($plugin);
+			//include $template;
 		}
 		else
 		{

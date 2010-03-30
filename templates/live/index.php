@@ -1,0 +1,393 @@
+<?php
+
+function register_live_index()
+{
+	return array(
+		'name' => 'Live Index',
+	);
+}
+
+function live_get_info_count()
+{
+	$biggest = 0;
+	foreach($GLOBALS['templates']['vars']['files'] as $file)
+	{
+		$info_count = 0;
+		foreach($GLOBALS['templates']['vars']['columns'] as $column)
+		{
+			if(isset($file[$column]) && $file[$column] != '' && strlen($file[$column]) <= 200 &&
+				substr($column, -3) != '_id' && $column != 'id' && $column != 'Hex' && $column != 'Filename' && $column != 'Filetype')
+			$info_count++;
+		}
+		
+		$info_count = ceil($info_count/2);
+		if($info_count > $biggest) $biggest = $info_count;
+	}
+	
+	return $biggest;
+}
+
+function theme_live_pages()
+{
+	?>
+	<table cellpadding="0" cellspacing="0" class="pageTable">
+		<tr>
+			<td align="center">
+				<table cellpadding="0" cellspacing="0">
+					<tr>
+						<td>
+	<?php
+	$item_count = count($GLOBALS['templates']['vars']['files']);
+	$page_int = $GLOBALS['templates']['vars']['start'] / $GLOBALS['templates']['vars']['limit'];
+	$lower = $page_int - 8;
+	$upper = $page_int + 8;
+	$GLOBALS['templates']['vars']['total_count']--;
+	$pages = floor($GLOBALS['templates']['vars']['total_count'] / $GLOBALS['templates']['vars']['limit']);
+	$prev_page = $GLOBALS['templates']['vars']['start'] - $GLOBALS['templates']['vars']['limit'];
+	if($pages > 0)
+	{
+		if($lower < 0)
+		{
+			$upper = $upper - $lower;
+			$lower = 0;
+		}
+		if($upper > $pages)
+		{
+			$lower -= $upper - $pages;
+			$upper = $pages;
+		}
+		
+		if($lower < 0)
+			$lower = 0;
+		
+		if($GLOBALS['templates']['vars']['start'] > 0)
+		{
+			if($GLOBALS['templates']['vars']['start'] > $GLOBALS['templates']['vars']['limit'])
+			{
+			?>
+			<div class="pageW">
+				<div class="pageHighlightW" style="visibility:hidden"></div>
+				<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=0'); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden';" onmouseover="this.parentNode.firstChild.style.visibility = 'visible';">First</a>
+			</div>
+			<div class="pageW">
+				<div class="pageHighlightW" style="visibility:hidden"></div>
+				<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=' . $prev_page); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden';" onmouseover="this.parentNode.firstChild.style.visibility = 'visible';">Prev</a>
+			</div>
+			<?php
+			}
+			else
+			{
+			?>
+			<div class="pageW">
+				<div class="pageHighlightW" style="visibility:hidden"></div>
+				<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=0'); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden';" onmouseover="this.parentNode.firstChild.style.visibility = 'visible';">First</a>
+			</div>
+			<?php
+			}
+			?><div class="page">|</div><?php
+		}
+		
+		for($i = $lower; $i < $upper + 1; $i++)
+		{
+			if($i == $page_int)
+			{
+				?><div class="page<?php print (strlen($i) > 2)?'W':''; ?>"><b><?php print $page_int + 1; ?></b></div><?
+			}
+			else
+			{
+				?>
+				<div class="page<?php print (strlen($i) > 2)?'W':''; ?>">
+					<div class="pageHighlight<?php print (strlen($i) > 2)?'W':''; ?>" style="visibility:hidden"></div>
+					<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=' . ($i * $GLOBALS['templates']['vars']['limit'])); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden';" onmouseover="this.parentNode.firstChild.style.visibility = 'visible';"><?php print $i + 1; ?></a>
+				</div>
+				<?php
+			}
+		}
+		
+		if($GLOBALS['templates']['vars']['start'] <= $GLOBALS['templates']['vars']['total_count'] - $GLOBALS['templates']['vars']['limit'])
+		{
+			?><div class="page">|</div><?php
+			$last_page = floor($GLOBALS['templates']['vars']['total_count'] / $GLOBALS['templates']['vars']['limit']) * $GLOBALS['templates']['vars']['limit'];
+			$next_page = $GLOBALS['templates']['vars']['start'] + $GLOBALS['templates']['vars']['limit'];
+			if($GLOBALS['templates']['vars']['start'] < $GLOBALS['templates']['vars']['total_count'] - 2 * $GLOBALS['templates']['vars']['limit'])
+			{
+				?>
+				<div class="pageW">
+					<div class="pageHighlightW" style="visibility:hidden"></div>
+					<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=' . $next_page); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden';" onmouseover="this.parentNode.firstChild.style.visibility = 'visible';">Next</a>
+				</div>
+				<div class="pageW">
+					<div class="pageHighlightW" style="visibility:hidden"></div>
+					<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=' . $last_page); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden';" onmouseover="this.parentNode.firstChild.style.visibility = 'visible';">Last</a>
+				</div>
+				<?php
+			}
+			else
+			{
+				?>
+				<div class="pageW">
+					<div class="pageHighlightW" style="visibility:hidden"></div>
+					<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=' . $last_page); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden';" onmouseover="this.parentNode.firstChild.style.visibility = 'visible';">Last</a>
+				</div>
+				<?php
+			}
+		}
+	}
+	?>
+	
+					</td>
+				</tr>
+			</table>
+		</td>
+	</tr>
+</table>
+ <?php
+}
+
+function theme_live_files()
+{
+	?><div class="files" id="files"><?php
+	foreach($GLOBALS['templates']['vars']['files'] as $file)
+	{
+		if(handles($file['Filepath'], 'archive') && $GLOBALS['templates']['vars']['cat'] != 'archive') $new_cat = 'archive';
+		elseif(handles($file['Filepath'], 'playlist') && $GLOBALS['templates']['vars']['cat'] != 'archive') $new_cat = 'playlist';
+		elseif(handles($file['Filepath'], 'diskimage') && $GLOBALS['templates']['vars']['cat'] != 'archive') $new_cat = 'diskimage';
+		elseif($file['Filetype'] == 'FOLDER') $new_cat = $GLOBALS['templates']['vars']['cat'];
+		
+		$link = isset($new_cat)?href('plugin=select&cat=' . $new_cat . '&dir=' . urlencode($file['Filepath'])):href('file/' . $GLOBALS['templates']['vars']['cat'] . '/' . $file['id'] . '/' . $file['Filename']);
+		
+		?>
+		<div class="file <?php print $file['Filetype']; ?>" onmousedown="deselectAll(event);fileSelect(this, true, event);return false;" oncontextmenu="showMenu(this);return false;" id="<?php print $file['id']; ?>"><div class="notselected"></div>
+			<table class="itemTable" cellpadding="0" cellspacing="0" onclick="location.href = '<?php print $link; ?>';">
+				<tr>
+					<td>
+						<div class="thumb file_ext_<?php print $file['Filetype']; ?> file_type_<?php print str_replace('/', ' file_type_', $file['Filemime']); ?>">
+							<img src="<?php print href('plugin=template&tfile=images/s.gif&template=' . HTML_TEMPLATE); ?>" alt="<?php print $file['Filetype']; ?>" height="48" width="48">
+						</div>
+					</td>
+				</tr>
+			</table>
+			<a class="itemLink" href="<?php print $link; ?>" onmouseout="this.parentNode.firstChild.className = 'notselected'; if(!loaded){return false;} document.getElementById('info_<?php print $file['id']; ?>').style.display = 'none';document.getElementById('info_<?php print $file['id']; ?>').style.visibility = 'hidden';" onmouseover="this.parentNode.firstChild.className = 'selected'; if(!loaded){return false;} document.getElementById('info_<?php print $file['id']; ?>').style.display = '';document.getElementById('info_<?php print $file['id']; ?>').style.visibility = 'visible';"><span><?php print isset($GLOBALS['templates']['vars']['parts'])?preg_replace($GLOBALS['templates']['vars']['parts'], '<b style="background-color:#990">$0</b>', $file['Filename']):$file['Filename']; ?></span></a>
+		</div>
+		<?php
+	}
+	?></div><?php
+}
+
+function theme_live_info()
+{
+	$theme = live_get_theme_color();
+
+	$biggest = live_get_info_count();
+	
+	// hack header to add new row
+	?>
+	</td>
+</tr>
+<tr>
+	<td id="infoBar" style="background-color:<?php print ($theme == 'audio')?'#900':(($theme == 'image')?'#990':(($theme == 'video')?'#093':'#06A')); ?>; height:{$biggest+3|max:7}em;">
+	<?php
+	foreach($GLOBALS['templates']['vars']['files'] as $i => $file)
+	{
+		$info_count = 0;
+		foreach($GLOBALS['templates']['vars']['columns'] as $i => $column)
+		{
+			if(isset($file[$column]) && $file[$column] != '' && strlen($file[$column]) <= 200 &&
+				substr($column, -3) != '_id' && $column != 'id' && $column != 'Hex' && $column != 'Filepath' && 
+				$column != 'Filename' && $column != 'Filetype'
+			)
+			$info_count++;
+		}
+		
+		$info_count = ceil($info_count / 2);
+		// {if $info_count > $biggest}{assign var=biggest value=$info_count}{/if}
+		
+		//
+		$itemvalue = preg_replace('/([^ ]{25})/i', '$1<br />', $file['Filename']);
+		?>
+		<table cellpadding="0" cellspacing="0" border="0" class="fileInfo" id="info_<?php print $file['id']; ?>" style="display:none; visibility:hidden;">
+			<tr>
+				<td>
+					<table cellpadding="0" cellspacing="0" border="0" class="fileThumb">
+						<tr>
+							<td>
+								<div class="thumb file_ext_<?php print $file['Filetype']; ?> file_type_<?php print str_replace('/', ' file_type_', $file['Filemime']); ?>">
+									<img src="<?php print href('plugin=template&file=images/s.gif&template=' . HTML_TEMPLATE); ?>" height="48" width="48">
+								</div>
+							</td>
+							<td class="infoCell">
+								<span class="title"><?php print isset($parts)? preg_replace($parts, '<b style="background-color:#990">$0</b>', $itemvalue):$itemvalue; ?></span><br />
+								<span><?php print $file['Filetype']; ?></span>
+							</td>
+						</tr>
+					</table>
+				</td>
+				<td>
+				<?php
+				$count = 0;
+				foreach($GLOBALS['templates']['vars']['columns'] as $i => $column)
+				{
+					if(isset($file[$column]) && $file[$column] != '' && strlen($file[$column]) <= 200 &&
+						substr($column, -3) != '_id' && $column != 'id' && $column != 'Hex' && $column != 'Filepath' && 
+						$column != 'Filename' && $column != 'Filetype'
+					)
+					{
+						$itemvalue = isset($GLOBALS['templates']['vars']['parts'])?preg_replace('/([^ ]{25})/i', '<b style="background-color:#990">$0</b>', $file[$column]):$file[$column];
+						$count++;
+						?>
+						<span class="label" style="color:<?php print ($theme == 'audio')?'#F66':(($theme == 'image')?'#FFA':(($theme == 'video')?'#6FA':'#6CF')); ?>;"><?php print $column; ?>:</span>
+						<?php
+						
+						if($column == 'Filepath')
+						{
+							if(dirname(dirname($file['Filepath'])) != '/')
+								print '../../' . basename(dirname($file['Filepath'])) . '/' . basename($file['Filepath']);
+							else
+								print $file['Filepath'];
+						}
+						elseif($column == 'Filesize')
+							print roundFileSize($file['Filesize']);
+						elseif($column == 'Compressed')
+							print roundFileSize($file['Compressed']);
+						elseif($column == 'Bitrate')
+							print round($file['Bitrate'] / 1000, 1) . ' kbs';
+						elseif($column == 'Length')
+							print floor($file['Length'] / 60) . ' minutes ' . floor($file['Length'] % 60) . ' seconds';
+						else
+							print $file[$column];
+						?>
+						<br />
+						<?php
+						if($count == $info_count && $info_count >= 3)
+						{
+							?>
+							</td>
+							<td>
+							<?php
+						}
+					}
+				}
+				
+				if($count < $info_count || $info_count < 3)
+				{
+					?></td><td>&nbsp;<?php
+				}
+				?>
+				</td>
+			</tr>
+		</table>
+		<?php
+	}
+}
+
+function theme_live_select()
+{
+	theme_live_index();
+}
+
+function theme_live_index()
+{
+	theme('header');
+	
+	$current = basename($GLOBALS['templates']['vars']['dir']);
+	
+	?>
+	<div class="contentSpacing">
+			<h1 class="title"><?php print ($current == '')?HTML_NAME:$current; ?></h1>
+			<span class="subText">Click to browse files. Drag to select files, and right click for download options.</span>
+	<?php
+	if (count($GLOBALS['user_errors']) == 0 && count($GLOBALS['templates']['vars']['files']) > 0)
+	{
+		?>
+		<span class="subText">Displaying items
+			<?php print $GLOBALS['templates']['vars']['start']+1; ?>
+			through <?php print $GLOBALS['templates']['vars']['start'] + $GLOBALS['templates']['vars']['limit']; ?>
+			<?php print ($GLOBALS['templates']['vars']['total_count'] > $GLOBALS['templates']['vars']['limit'])?(' out of ' . $GLOBALS['templates']['vars']['total_count']):' file(s)'; ?>.
+		</span>
+		<?php
+	}
+	
+	theme('pages');
+	
+	?>
+	<div class="titlePadding"></div>
+	<?php
+	if(count($GLOBALS['user_errors']) > 0)
+	{
+		?><span style="color:#C00"><?php
+		foreach($GLOBALS['user_errors'] as $error)
+		{
+			?><b><?php print $error->message; ?></b><br /><?php
+		}
+		?></span><?php
+	}
+	elseif(count($GLOBALS['templates']['vars']['files']) == 0)
+	{
+		?><b>There are no files to display</b><?php
+	}
+	else
+	{
+		theme('files', $GLOBALS['templates']['vars']['files']);
+	}
+	?>
+	<div class="titlePadding"></div>
+	</div>
+	<?php
+
+	theme('pages');
+	
+	theme('info');
+
+	?>
+<script language="javascript">
+loaded = true;
+if(document.getElementById("debug")) {
+	header_height = document.getElementById("header").clientHeight + document.getElementById("debug").clientHeight;
+} else {
+	header_height = document.getElementById("header").clientHeight;}
+</script>
+<?php
+	theme('footer');
+}
+
+function theme_live_footer()
+{
+	?>
+											</td>
+										</tr>
+									</table>
+								</td>
+								<td class="sideColumn right"></td>
+							</tr>
+						</table>
+					</div>
+					<div id="footer">
+						<table id="footerCtr">
+							<tr>
+								<td>
+									<ul>
+									<?php
+									foreach($GLOBALS['modules'] as $module)
+									{
+										if(constant($module . '::INTERNAL'))
+											continue;
+											
+										$name = str_replace(' from Database', '', constant($module . '::NAME'));
+									?>
+										<li class="last"><a href="<?php echo generate_href('plugin=select&cat=' . $module); ?>"><?php echo $name; ?></a></li>
+									<?php
+									}
+									?>
+									</ul>
+								</td>
+							</tr>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	</body>
+	</html>
+	<?php
+}

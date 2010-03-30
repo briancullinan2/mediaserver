@@ -14,6 +14,8 @@ function register_live_header()
 
 function theme_live_styles($styles)
 {
+	if(is_string($styles)) $styles = array($styles);
+	
 	foreach($styles as $link)
 	{
 		?>
@@ -24,6 +26,8 @@ function theme_live_styles($styles)
 
 function theme_live_scripts($scripts)
 {
+	if(is_string($scripts)) $scripts = array($scripts);
+	
 	foreach($scripts as $link)
 	{
 		?>
@@ -39,7 +43,7 @@ function theme_live_header()
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title><?php print $GLOBALS['templates']['vars']['title']; ?></title>
+<title><?php print isset($GLOBALS['templates']['vars']['title'])?$GLOBALS['templates']['vars']['title']:HTML_NAME; ?></title>
 <meta name="google-site-verification" content="K3Em8a7JMI3_1ry5CNVKIHIWofDt-2C3ohovDq3N2cQ" />
 <?php theme('styles', $GLOBALS['templates']['vars']['styles']); ?>
 <?php theme('scripts', $GLOBALS['templates']['vars']['scripts']); ?>
@@ -131,7 +135,7 @@ function theme_live_breadcrumbs($dir)
 	}
 }
 
-function theme_live_body()
+function live_get_theme_color()
 {
 	if($GLOBALS['templates']['vars']['audio_count'] > $GLOBALS['templates']['vars']['image_count'] &&
 		$GLOBALS['templates']['vars']['audio_count'] > $GLOBALS['templates']['vars']['video_count'] &&
@@ -151,6 +155,12 @@ function theme_live_body()
 	else
 		$theme = 'files';
 		
+	return $theme;
+}
+
+function theme_live_body()
+{
+	$theme = live_get_theme_color();
 ?>
 <body onLoad="init();" onmousemove="setSelector()" onmousedown="return startDrag(event);" onmouseup="endDrag();return false;">
 <div id="bodydiv">
@@ -164,7 +174,7 @@ function theme_live_body()
 							<tr>
 								<td class="searchParent"><?php print str_replace(' from Database', '', constant($GLOBALS['templates']['vars']['cat'] . '::NAME')); ?> Search:
 									<form action="<?php print $GLOBALS['templates']['vars']['get']; ?>" method="get" id="search">
-										<span class="searchBorder" style="border-color:<?php print ($theme == 'audio')?'#BB8888 #AA6666 #995555':(($theme == 'image')?'#BBBBAA #AAAACC #9999BB':(($theme == 'video')?'#88DDBB #66CCAA #55BB99':'#88BBDD #66AACC #5599BB')); ?>;"><span class="innerSearchBorder" style="border-color:<?php print ($theme == 'audio')?'#883333 #883322 #772211':(($theme == 'image')?'#888844 #888833 #777722':(($theme == 'video')?'#668866 #448844 #447744':'#446688 #335588 #115577')); ?>;"><input type="text" name="search" value="<?php print $GLOBALS['templates']['vars']['search']; ?>" id="searchInput" /><span class="buttonBorder"><input type="submit" value="Search" id="searchButton" /></span></span></span>&nbsp;&nbsp; <a id="advancedSearch" href="<?php echo href('plugin=search&dir=' . $GLOBALS['templates']['vars']['dir']); ?>">Advanced Search</a>
+										<span class="searchBorder" style="border-color:<?php print ($theme == 'audio')?'#BB8888 #AA6666 #995555':(($theme == 'image')?'#BBBBAA #AAAACC #9999BB':(($theme == 'video')?'#88DDBB #66CCAA #55BB99':'#88BBDD #66AACC #5599BB')); ?>;"><span class="innerSearchBorder" style="border-color:<?php print ($theme == 'audio')?'#883333 #883322 #772211':(($theme == 'image')?'#888844 #888833 #777722':(($theme == 'video')?'#668866 #448844 #447744':'#446688 #335588 #115577')); ?>;"><input type="text" name="search" value="<?php print isset($GLOBALS['templates']['vars']['search'])?$GLOBALS['templates']['vars']['search']:''; ?>" id="searchInput" /><span class="buttonBorder"><input type="submit" value="Search" id="searchButton" /></span></span></span>&nbsp;&nbsp; <a id="advancedSearch" href="<?php echo href('plugin=search&dir=' . $GLOBALS['templates']['vars']['dir']); ?>">Advanced Search</a>
 									</form>
 								</td>
 							</tr>
@@ -191,13 +201,13 @@ theme('breadcrumbs', $GLOBALS['templates']['vars']['dir']);
 				<div id="content" onmousedown="return selector_off;">
 					<div id="selector" style="display:none;"></div>
 					<ul class="menu" id="menu">
-						<li id="option_download"><a href="#" onmouseout="this.className = '';" onmouseover="this.className = 'itemSelect';"><b>Download File</b></a></li>
-						<li id="option_open"><a href="#" onmouseout="this.className = '';" onmouseover="this.className = 'itemSelect';"><b>Open</b></a></li>
-						<li><a href="#" onmouseout="this.className = '';" onmouseover="this.className = 'itemSelect';">Play Now</a></li>
+						<li id="option_download"><a href="#" onMouseOut="this.className = '';" onMouseOver="this.className = 'itemSelect';"><b>Download File</b></a></li>
+						<li id="option_open"><a href="#" onMouseOut="this.className = '';" onMouseOver="this.className = 'itemSelect';"><b>Open</b></a></li>
+						<li><a href="#" onMouseOut="this.className = '';" onMouseOver="this.className = 'itemSelect';">Play Now</a></li>
 						<li><div class="sep"></div></li>
-						<li><a href="#" onmouseout="this.className = '';" onmouseover="this.className = 'itemSelect';">Download Zip</a></li>
-						<li><a href="#" onmouseout="this.className = '';" onmouseover="this.className = 'itemSelect';">Download Torrent</a></li>
-						<li><a href="#" onmouseout="this.className = '';" onmouseover="this.className = 'itemSelect';">Add to Queue</a></li>
+						<li><a href="#" onMouseOut="this.className = '';" onMouseOver="this.className = 'itemSelect';">Download Zip</a></li>
+						<li><a href="#" onMouseOut="this.className = '';" onMouseOver="this.className = 'itemSelect';">Download Torrent</a></li>
+						<li><a href="#" onMouseOut="this.className = '';" onMouseOver="this.className = 'itemSelect';">Add to Queue</a></li>
 					</ul>
 					<div class="menuShadow" id="shadow"></div>
 					<table id="main" cellpadding="0" cellspacing="0">
@@ -206,7 +216,6 @@ theme('breadcrumbs', $GLOBALS['templates']['vars']['dir']);
 							<td id="mainColumn">
 								<table id="mainTable" cellpadding="0" cellspacing="0">
 									<tr>
-
 										<td>
 <?php
 }

@@ -1,3 +1,13 @@
+2010-03-30
+Finished converting my first template to the new API
+Templates will now have a general function for beginning output
+	and will be responsible for displaying all information from there
+Templates can call some more output_plugin() functions if they need to, in the theme_live_preload() function
+	After that function, the only variables that should be available to the templates is $GLOBALS['templates']['vars']
+Added some output variables to search
+Fixed core.php general_href and validate doesn't work after template is outputted
+Index now uses theme() function, getting rid of smarty
+
 2010-03-16
 Fixed a problem with the return in the login.php script
 parse_path_info() in core.php no longer validates the plugin or any variables in that function

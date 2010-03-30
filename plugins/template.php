@@ -50,7 +50,7 @@ function validate_template($request, $session = '')
 			return $request['template'];
 		}
 	}
-	elseif(preg_match('/.*mobile.*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
+	elseif(isset($_SERVER['HTTP_USER_AGENT']) && preg_match('/.*mobile.*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
 	{
 		return 'mobile';
 	}
@@ -91,7 +91,7 @@ function register_script($request)
 		
 	// validate the 2 inputs needed
 	$request['template'] = validate_template($request);
-	$request['tfile'] = validate_template($request);
+	$request['tfile'] = validate_tfile($request);
 	
 	// only continue if bath properties are set
 	if(isset($request['template']) && isset($request['tfile']))
@@ -110,10 +110,10 @@ function theme($request)
 	$args = func_get_args();
 	unset($args[0]);
 	$args = array_values($args);
-	if(is_array($piece))
+	if(is_array($request))
 	{
 		$request['template'] = validate_template($request);
-		$request['tfile'] = validate_template($request);
+		$request['tfile'] = validate_tfile($request);
 		if(!function_exists('theme_' . $request['template'] . '_' . $request['tfile']))
 			$request['template'] = validate_template(array('template' => LOCAL_BASE));
 		if(function_exists('theme_' . $request['template'] . '_' . $request['tfile']))
@@ -166,7 +166,7 @@ function output_template($request)
 		header('Location: ' . HTML_ROOT . 'templates/' . $request['template'] . '/' . $request['tfile']);
 		exit;
 	}
-	
+
 	if(!isset($request['tfile']))
 	{
 		// if the tfile isn't specified, display the template template
@@ -177,13 +177,13 @@ function output_template($request)
 				@include $GLOBALS['templates']['TEMPLATE_TEMPLATE'];
 			else
 			{
-				set_output_vars();
+				set_output_vars(false);
 				$GLOBALS['smarty']->display($GLOBALS['templates']['TEMPLATE_TEMPLATE']);
 			}
 		}
+		return;
 	}
 	
-
 	// set some general headers
 	header('Content-Transfer-Encoding: binary');
 	header('Content-Type: ' . getMime($file));

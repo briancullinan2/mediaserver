@@ -59,7 +59,7 @@ function generate_href($request = array(), $not_special = false, $include_domain
 		foreach($arr as $i => $value)
 		{
 			$x = explode('=', $value);
-			$request[$x[0]] = $x[1];
+			$request[$x[0]] = isset($x[1])?$x[1]:'';
 		}
 	}
 	if(isset($dirs))
