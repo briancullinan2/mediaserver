@@ -31,4 +31,17 @@ function register_plain()
 	);
 }
 
+function output_plain()
+{
+	switch($GLOBALS['templates']['vars']['plugin'])
+	{
+		case 'ampache':
+			theme('ampache');
+		break;
+		case 'list':
+			
+		break;
+	}
+}
+
 ?>

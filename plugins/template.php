@@ -6,65 +6,61 @@
 function setup_template()
 {
 	// load templating system but only if we are using templates
-	if(defined('LOCAL_BASE'))
+
+	// get the list of templates
+	$GLOBALS['templates'] = array();
+	$files = fs_file::get(array('dir' => LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR, 'limit' => 32000), $count, true);
+	if(is_array($files))
 	{
-		require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'Smarty' . DIRECTORY_SEPARATOR . 'Smarty.class.php';
-	
-		// get the list of templates
-		$GLOBALS['templates'] = array();
-		$files = fs_file::get(array('dir' => LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR, 'limit' => 32000), $count, true);
-		if(is_array($files))
+		foreach($files as $i => $file)
 		{
-			foreach($files as $i => $file)
+			if(is_dir($file['Filepath']) && is_file($file['Filepath'] . 'config.php'))
 			{
-				if(is_dir($file['Filepath']) && is_file($file['Filepath'] . 'config.php'))
-				{
-					include_once $file['Filepath'] . 'config.php';
+				include_once $file['Filepath'] . 'config.php';
+				
+				// determin template based on path
+				$template = substr($file['Filepath'], strlen(LOCAL_ROOT));
+				
+				// remove default directory from plugin name
+				if(substr($template, 0, 10) == 'templates/')
+					$template = substr($template, 10);
+				
+				// remove trailing slash
+				if(substr($template, -1) == '/' || substr($template, -1) == '\\')
+					$template = substr($template, 0, strlen($template) - 1);
+				
+				// call register functions
+				if(function_exists('register_' . $template))
+					$GLOBALS['templates'][$template] = call_user_func_array('register_' . $template, array());
+				
+				// call the request alter
+				if(isset($GLOBALS['templates'][$template]['alter request']) && $GLOBALS['templates'][$template]['alter request'] == true)
+					$_REQUEST = call_user_func_array('alter_request_' . $template, array($_REQUEST));
 					
-					// determin template based on path
-					$template = substr($file['Filepath'], strlen(LOCAL_ROOT));
-					
-					// remove default directory from plugin name
-					if(substr($template, 0, 10) == 'templates/')
-						$template = substr($template, 10);
-					
-					// remove trailing slash
-					if(substr($template, -1) == '/' || substr($template, -1) == '\\')
-						$template = substr($template, 0, strlen($template) - 1);
-					
-					// call register functions
-					if(function_exists('register_' . $template))
-						$GLOBALS['templates'][$template] = call_user_func_array('register_' . $template, array());
-					
-					// call the request alter
-					if(isset($GLOBALS['templates'][$template]['alter request']) && $GLOBALS['templates'][$template]['alter request'] == true)
-						$_REQUEST = call_user_func_array('alter_request_' . $template, array($_REQUEST));
-						
-					// register template files
-					register_template_files($GLOBALS['templates'][$template]);
-				}
+				// register template files
+				register_template_files($GLOBALS['templates'][$template]);
 			}
 		}
-		
-		$_REQUEST['template'] = validate_template($_REQUEST, isset($_SESSION['template'])?$_SESSION['template']:'');
-		
-		// don't use a template if they comment out this define, this enables the tiny remote version
-		if(!defined('LOCAL_TEMPLATE'))
-		{
-			define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . $_REQUEST['template'] . DIRECTORY_SEPARATOR);
-		}
-		
-		// set the HTML_TEMPLATE for templates to refer to their own directory to provide resources
-		define('HTML_TEMPLATE', str_replace(DIRECTORY_SEPARATOR, '/', LOCAL_TEMPLATE));
-		
-		// assign some shared variables
-		register_output_vars('tables', $GLOBALS['tables']);
-		register_output_vars('plugins', $GLOBALS['plugins']);
-		register_output_vars('modules', $GLOBALS['modules']);
-		register_output_vars('templates', $GLOBALS['templates']);
-		register_output_vars('columns', getAllColumns());
-		
 	}
+	
+	$_REQUEST['template'] = validate_template($_REQUEST, isset($_SESSION['template'])?$_SESSION['template']:'');
+	
+	// don't use a template if they comment out this define, this enables the tiny remote version
+	if(!defined('LOCAL_TEMPLATE'))
+	{
+		define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . $_REQUEST['template'] . DIRECTORY_SEPARATOR);
+	}
+	
+	// set the HTML_TEMPLATE for templates to refer to their own directory to provide resources
+	define('HTML_TEMPLATE', str_replace(DIRECTORY_SEPARATOR, '/', LOCAL_TEMPLATE));
+	
+	// assign some shared variables
+	register_output_vars('tables', $GLOBALS['tables']);
+	register_output_vars('plugins', $GLOBALS['plugins']);
+	register_output_vars('modules', $GLOBALS['modules']);
+	register_output_vars('templates', $GLOBALS['templates']);
+	register_output_vars('columns', getAllColumns());
+	
 }
 
 function register_template()

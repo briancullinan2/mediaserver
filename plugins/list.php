@@ -14,51 +14,25 @@ function register_list()
 
 function setup_list()
 {
-	// get all the possible types for a list from templates directory
-	$type_files = array();
-	$files = fs_file::get(array('dir' => LOCAL_ROOT . LOCAL_BASE, 'limit' => 32000), $count, true);
-	if(is_array($files))
-	{
-		foreach($files as $i => $type_file)
-		{
-			if (!is_dir(str_replace('/', DIRECTORY_SEPARATOR, $files[$i]['Filepath'])))
-				$type_files[] = $files[$i]['Filepath'];
-		}
-	}
+	$GLOBALS['lists'] = array();
 	
-	if(LOCAL_TEMPLATE != LOCAL_BASE)
+	// get all the possible types for a list from templates directory
+	foreach($GLOBALS['templates'] as $name => $template)
 	{
-		$files = fs_file::get(array('dir' => LOCAL_ROOT . LOCAL_TEMPLATE, 'limit' => 32000), $count, true);
-		if(is_array($files))
+		if(isset($template['lists']))
 		{
-			foreach($files as $i => $type_file)
+			foreach($template['lists'] as $i => $list)
 			{
-				if (!is_dir(str_replace('/', DIRECTORY_SEPARATOR, $files[$i]['Filepath'])))
-					$type_files[] = $files[$i]['Filepath'];
+				if(file_exists(LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . $list . '.php'))
+				{
+					include_once LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . $list . '.php';
+					
+					if(function_exists('register_' . $name . '_' . $list))
+						$GLOBALS['lists'][$list] = call_user_func_array('register_' . $name . '_' . $list, array());
+				}
 			}
 		}
 	}
-	
-	$types = array();
-	foreach($type_files as $i => $type_file)
-	{
-		// read first line of file to check if it is a list tag
-		$fp = @fopen($type_file, 'r');
-		$line = fgets($fp, BUFFER_SIZE); // unlikely that it will ever be longer then this
-		fclose($fp);
-		
-		// check if it is LIST tag
-		$result = preg_match('/\{\*\s+LIST\s+(.*)\s+\*\}.*/', $line, $matches);
-		
-		if($result == true)
-		{
-			$args = parseCommandArgs($matches[1]);
-			// get filename without extension
-			$type = substr(basename($type_file), 0, strrpos(basename($type_file), '.'));
-			$types[$type] = array('file' => $type_file, 'encoding' => $args[0], 'name' => $args[1]);
-		}
-	}
-	$GLOBALS['lists'] = $types;
 }
 
 function validate_list($request)
