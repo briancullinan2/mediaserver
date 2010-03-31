@@ -10,13 +10,13 @@ function theme_plain_list()
     <div id="type">
         Get the list:
         <br />
-        <form action="{'plugin=list'|generate_href}" method="get">
+        <form action="<?php print href('plugin=list'); ?>" method="get">
             <input type="hidden" name="cat" value="{$cat}" />
             Type <select name="list">
             	<?php
-				foreach($GLOBALS['types'] as $i => $type)
+				foreach($GLOBALS['lists'] as $type => $type)
 				{
-					?><option value="{$name}">{$type.name}</option><?php
+					?><option value="<?php print $type['name']; ?>">{$type.name}</option><?php
 				}
 				?>
             </select>
