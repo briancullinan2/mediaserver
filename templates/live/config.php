@@ -8,7 +8,7 @@ function register_live()
 		'privilage' => 1,
 		'path' => __FILE__,
 		'alter request' => true,
-		'files' => array('header', 'index')
+		'files' => array('header', 'index', 'search')
 	);
 }
 
@@ -23,10 +23,15 @@ function alter_request_live($request)
 	return $request;
 }
 
-function output_live($request)
+function output_live()
 {
-	if($request['plugin'] == 'index' || $request['plugin'] == 'select')
+	switch($GLOBALS['templates']['vars']['plugin'])
 	{
-		theme('index');
+		case 'index':
+		case 'select':
+			theme('index');
+		break;
+		case 'search':
+			theme('search');
 	}
 }

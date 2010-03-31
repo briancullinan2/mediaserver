@@ -22,7 +22,7 @@ function register_search()
 
 function validate_search($request, $column = 'ALL')
 {
-	if($column = 'ALL')
+	if($column = 'ALL' && isset($request['search']))
 		return $request['search'];
 	if(isset($request['search_' . $column]))
 	{
@@ -38,10 +38,15 @@ function session_search($request)
 
 	// store this query in the session
 	$save = array();
-	$save['cat'] = @$_REQUEST['cat'];
-	$save['search'] = @$_REQUEST['search'];
-	$save['dir'] = @$_REQUEST['dir'];
-	$save['order_by'] = @$_REQUEST['order_by'];
+	if(isset($request['cat'])) $save['cat'] = $request['cat'];
+	if(isset($request['search'])) $save['search'] = $request['search'];
+	foreach($request as $key => $value)
+	{
+		if(substr($key, 0, 7) == 'search_')
+			$save[$key] = $value;
+	}
+	if(isset($request['dir'])) $save['dir'] = $request['dir'];
+	if(isset($request['order_by'])) $save['order_by'] = $request['order_by'];
 
 	return $save;
 }

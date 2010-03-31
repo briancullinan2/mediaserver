@@ -35,9 +35,11 @@ if(isset($GLOBALS['plugins'][$_REQUEST['plugin']]))
 			$GLOBALS['plugins'][$plugin]['notemplate'] == false
 		)
 	{
+		$template = $_REQUEST['template'];
+		
 		set_output_vars();
-			
-		call_user_func_array('output_' . $_REQUEST['template'], array($_REQUEST));
+		
+		call_user_func_array('output_' . $template, array());
 	}
 }
 

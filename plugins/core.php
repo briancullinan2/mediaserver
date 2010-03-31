@@ -4,6 +4,136 @@
 //   since many plugins are related to getting information from the database
 //   this plugin will register all the common functions for handling request variables, so the other plugins don't have to
 
+function setup_plugins()
+{
+	$GLOBALS['plugins'] = array('index' => array(
+		'name' => 'Index',
+		'description' => 'Load a plugin\'s output variables and display the template.',
+		'privilage' => 1,
+		'path' => LOCAL_ROOT . 'index.php'
+		)
+	);
+	$GLOBALS['triggers'] = array('session' => array(), 'settings' => array());
+	
+	// list all the relative paths that plugins can be loaded from, including templates
+	$paths = array(
+		'plugins' . DIRECTORY_SEPARATOR,
+		'admin' . DIRECTORY_SEPARATOR,
+		'admin' . DIRECTORY_SEPARATOR . 'tools' . DIRECTORY_SEPARATOR,
+	);
+	
+	// read plugin list and create a list of available plugins
+	$files = array();
+	foreach($paths as $path)
+	{
+		$files = array_merge($files, fs_file::get(array('dir' => LOCAL_ROOT . $path, 'limit' => 32000), $count, true));
+	}
+
+	if(is_array($files))
+	{
+		foreach($files as $i => $file)
+		{
+			if(is_file($file['Filepath']))
+			{
+				include_once $file['Filepath'];
+				
+				// determin plugin based on path
+				$plugin = substr($file['Filepath'], strlen(LOCAL_ROOT));
+				
+				// remove default directory from plugin name
+				if(substr($plugin, 0, 8) == 'plugins/')
+					$plugin = substr($plugin, 8);
+				
+				// remove extension from plugin name
+				$plugin = substr($plugin, 0, strrpos($plugin, '.'));
+				
+				// remove slashes and replace with underscores
+				$plugin = str_replace(array('/', '\\'), '_', $plugin);
+				
+				// call register function
+				if(function_exists('register_' . $plugin))
+					$GLOBALS['plugins'][$plugin] = call_user_func_array('register_' . $plugin, array());
+				
+				// reorganize the session triggers for easy access
+				if(isset($GLOBALS['plugins'][$plugin]['session']))
+				{
+					foreach($GLOBALS['plugins'][$plugin]['session'] as $i => $var)
+					{
+						$GLOBALS['triggers']['session'][$var][] = $plugin;
+					}
+				}
+			}
+		}
+	}
+	PEAR::raiseError(print_r($GLOBALS['plugins'], true), E_DEBUG);
+}
+
+// this is used to set up the input variables
+function setup_input()
+{
+	// first fix the REQUEST_URI and pull out what is meant to be pretty dirs
+	if(isset($_SERVER['PATH_INFO']))
+		$_REQUEST['path_info'] = $_SERVER['PATH_INFO'];
+	
+	// call rewrite_vars in order to set some request variables
+	rewrite_vars($_REQUEST, $_GET, $_POST);
+	
+	// go through the rest of the request and validate all the variables with the plugins they are for
+	foreach($_REQUEST as $key => $value)
+	{
+		if(function_exists('validate_' . $key))
+			$_REQUEST[$key] = call_user_func_array('validate_' . $key, array($_REQUEST));
+		elseif(isset($GLOBALS['validate_' . $key]) && is_callable($GLOBALS['validate_' . $key]))
+			$_REQUEST[$key] = $GLOBALS['validate_' . $key]($_REQUEST);
+		else
+		{
+			unset($_REQUEST[$key]);
+			if(isset($_GET[$key])) unset($_GET[$key]);
+		}
+			
+		// set the get variable also, so that when generate_href($_GET) is used it is an accurate representation of the current page
+		if(isset($_GET[$key])) $_GET[$key] = $_REQUEST[$key];
+	}
+	
+	// check plugins for vars and trigger a session save
+	foreach($_REQUEST as $key => $value)
+	{
+		if(isset($GLOBALS['triggers']['session'][$key]))
+		{
+			foreach($GLOBALS['triggers']['session'][$key] as $i => $plugin)
+			{
+				$_SESSION[$plugin] = call_user_func_array('session_' . $plugin, array($_REQUEST));
+			}
+		}
+	}
+	
+	// do not let GoogleBot perform searches or file downloads
+	if(NO_BOTS)
+	{
+		if(preg_match('/.*Googlebot.*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
+		{
+			if(basename($_REQUEST['plugin']) != 'select' && 
+				basename($_REQUEST['plugin']) != 'index' &&
+				basename($_REQUEST['plugin']) != 'sitemap')
+			{
+				header('Location: ' . generate_href(array('plugin' => 'sitemap')));
+				exit;
+			}
+			else
+			{
+				// don't let google bots perform searches, this takes up a lot of resources
+				foreach($_REQUEST as $key => $value)
+				{
+					if(substr($key, 0, 6) == 'search')
+					{
+						unset($_REQUEST[$key]);
+					}
+				}
+			}
+		}
+	}
+}
+
 function register_core()
 {
 	// register permission requirements
@@ -85,6 +215,9 @@ function set_output_vars()
 {
 	// set a couple more that are used a lot
 	
+	// the entire site depends on this
+	register_output_vars('plugin', $_REQUEST['plugin']);
+	
 	// most template pieces use the category variable, so set that
 	register_output_vars('cat', $_REQUEST['cat']);
 	
@@ -103,11 +236,11 @@ function set_output_vars()
 	
 	$dont_remove = array(
 		'GLOBALS',
-		'_REQUEST', // allow this because it has been fully validated
+		//'_REQUEST', // allow this because it has been fully validated
 		'templates',
 		'debug_errors',
 		'user_errors',
-		'smarty',
+		'warn_errors',
 		'output',
 		'template',
 		'alias',
@@ -133,9 +266,27 @@ function set_output_vars()
 	foreach($GLOBALS['output'] as $name => $value)
 	{
 		$GLOBALS['templates']['vars'][$name] = $value;
+		
+		$GLOBALS['templates']['html'][$name] = traverse_array($value);
 	}
 	
 	unset($GLOBALS['output']);
+}
+
+function traverse_array($input)
+{
+	if(is_string($input))
+		return htmlspecialchars($input);
+	elseif(is_array($input))
+	{
+		foreach($input as $key => $value)
+		{
+			$input[$key] = traverse_array($value);
+		}
+		return $input;
+	}
+	else
+		return htmlspecialchars((string)$input);
 }
 
 function validate_cat($request)

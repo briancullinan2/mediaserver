@@ -7,6 +7,7 @@ Templates can call some more output_plugin() functions if they need to, in the t
 Added some output variables to search
 Fixed core.php general_href and validate doesn't work after template is outputted
 Index now uses theme() function, getting rid of smarty
+Made some fixes to users.php plugin
 
 2010-03-16
 Fixed a problem with the return in the login.php script

@@ -150,6 +150,8 @@ function theme_live_template_block()
 
 function live_get_theme_color()
 {
+	if(!isset($GLOBALS['templates']['vars']['files_count']))
+		return 'files';
 	if($GLOBALS['templates']['vars']['audio_count'] > $GLOBALS['templates']['vars']['image_count'] &&
 		$GLOBALS['templates']['vars']['audio_count'] > $GLOBALS['templates']['vars']['video_count'] &&
 		$GLOBALS['templates']['vars']['audio_count'] > $GLOBALS['templates']['vars']['files_count']

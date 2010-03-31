@@ -192,7 +192,7 @@ function theme_live_info()
 	</td>
 </tr>
 <tr>
-	<td id="infoBar" style="background-color:<?php print ($theme == 'audio')?'#900':(($theme == 'image')?'#990':(($theme == 'video')?'#093':'#06A')); ?>; height:{$biggest+3|max:7}em;">
+	<td id="infoBar" style="background-color:<?php print ($theme == 'audio')?'#900':(($theme == 'image')?'#990':(($theme == 'video')?'#093':'#06A')); ?>; height:<?php print max($biggest+3, 7); ?>em;">
 	<?php
 	foreach($GLOBALS['templates']['vars']['files'] as $i => $file)
 	{
@@ -308,13 +308,14 @@ function theme_live_errors()
 		}
 		?></div><?php
 	}
+	restore_error_handler();
 }
 
 function theme_live_index()
 {
 	theme('header');
 	
-	$current = basename($GLOBALS['templates']['vars']['dir']);
+	$current = basename($GLOBALS['templates']['html']['dir']);
 	
 	?>
 	<div class="contentSpacing">
@@ -325,9 +326,9 @@ function theme_live_index()
 	{
 		?>
 		<span class="subText">Displaying items
-			<?php print $GLOBALS['templates']['vars']['start']+1; ?>
+			<?php print $GLOBALS['templates']['html']['start']+1; ?>
 			through <?php print $GLOBALS['templates']['vars']['start'] + $GLOBALS['templates']['vars']['limit']; ?>
-			<?php print ($GLOBALS['templates']['vars']['total_count'] > $GLOBALS['templates']['vars']['limit'])?(' out of ' . $GLOBALS['templates']['vars']['total_count']):' file(s)'; ?>.
+			<?php print ($GLOBALS['templates']['vars']['total_count'] > $GLOBALS['templates']['vars']['limit'])?(' out of ' . $GLOBALS['templates']['html']['total_count']):' file(s)'; ?>.
 		</span>
 		<?php
 	}

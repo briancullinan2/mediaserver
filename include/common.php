@@ -28,11 +28,11 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'compatibility.php';
 // require pear for error handling
 require_once 'PEAR.php';
 PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'error_callback');
+set_error_handler('php_to_PEAR_Error');
 $GLOBALS['errors'] = array();
 $GLOBALS['user_errors'] = array();
+$GLOBALS['warn_errors'] = array();
 $GLOBALS['debug_errors'] = array();
-
-set_error_handler('php_to_PEAR_Error');
 
 //session_cache_limiter('public');
 session_start();
@@ -76,7 +76,8 @@ function setup()
 	setupModules();
 	
 	// set up a list of plugins available to the system
-	setupPlugins();
+	include_once LOCAL_ROOT . 'plugins' . DIRECTORY_SEPARATOR . 'core.php';
+	setup_plugins();
 	
 	// set up list of tables
 	setupTables();
@@ -85,322 +86,14 @@ function setup()
 	setupAliases();
 	
 	// set up the template system for outputting
-	setupTemplate();
+	setup_template();
 
 	// set up variables passed to the system in the request or post
-	setupInputVars();
+	setup_input();
 	
 	// set up users for permission based access
-	setupUsers();
+	setup_users();
 
-}
-
-function setupPlugins()
-{
-	$GLOBALS['plugins'] = array('index' => array(
-		'name' => 'Index',
-		'description' => 'Load a plugin\'s output variables and display the template.',
-		'privilage' => 1,
-		'path' => LOCAL_ROOT . 'index.php'
-		)
-	);
-	$GLOBALS['triggers'] = array('session' => array(), 'settings' => array());
-	
-	// list all the relative paths that plugins can be loaded from, including templates
-	$paths = array(
-		'plugins' . DIRECTORY_SEPARATOR,
-		'admin' . DIRECTORY_SEPARATOR,
-		'admin' . DIRECTORY_SEPARATOR . 'tools' . DIRECTORY_SEPARATOR,
-	);
-	
-	// read plugin list and create a list of available plugins
-	$files = array();
-	foreach($paths as $path)
-	{
-		$files = array_merge($files, fs_file::get(array('dir' => LOCAL_ROOT . $path, 'limit' => 32000), $count, true));
-	}
-
-	if(is_array($files))
-	{
-		foreach($files as $i => $file)
-		{
-			if(is_file($file['Filepath']))
-			{
-				include_once $file['Filepath'];
-				
-				// determin plugin based on path
-				$plugin = substr($file['Filepath'], strlen(LOCAL_ROOT));
-				
-				// remove default directory from plugin name
-				if(substr($plugin, 0, 8) == 'plugins/')
-					$plugin = substr($plugin, 8);
-				
-				// remove extension from plugin name
-				$plugin = substr($plugin, 0, strrpos($plugin, '.'));
-				
-				// remove slashes and replace with underscores
-				$plugin = str_replace(array('/', '\\'), '_', $plugin);
-				
-				// call register function
-				if(function_exists('register_' . $plugin))
-					$GLOBALS['plugins'][$plugin] = call_user_func_array('register_' . $plugin, array());
-				
-				// reorganize the session triggers for easy access
-				if(isset($GLOBALS['plugins'][$plugin]['session']))
-				{
-					foreach($GLOBALS['plugins'][$plugin]['session'] as $i => $var)
-					{
-						$GLOBALS['triggers']['session'][$var][] = $plugin;
-					}
-				}
-			}
-		}
-	}
-	PEAR::raiseError(print_r($GLOBALS['plugins'], true), E_DEBUG);
-}
-
-function setupTemplate()
-{
-	// load templating system but only if we are using templates
-	if(defined('LOCAL_BASE'))
-	{
-		require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'Smarty' . DIRECTORY_SEPARATOR . 'Smarty.class.php';
-	
-		// get the list of templates
-		$GLOBALS['templates'] = array();
-		$files = fs_file::get(array('dir' => LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR, 'limit' => 32000), $count, true);
-		if(is_array($files))
-		{
-			foreach($files as $i => $file)
-			{
-				if(is_dir($file['Filepath']) && is_file($file['Filepath'] . 'config.php'))
-				{
-					include_once $file['Filepath'] . 'config.php';
-					
-					// determin template based on path
-					$template = substr($file['Filepath'], strlen(LOCAL_ROOT));
-					
-					// remove default directory from plugin name
-					if(substr($template, 0, 10) == 'templates/')
-						$template = substr($template, 10);
-					
-					// remove trailing slash
-					if(substr($template, -1) == '/' || substr($template, -1) == '\\')
-						$template = substr($template, 0, strlen($template) - 1);
-					
-					// call register functions
-					if(function_exists('register_' . $template))
-						$GLOBALS['templates'][$template] = call_user_func_array('register_' . $template, array());
-					
-					// call the request alter
-					if(isset($GLOBALS['templates'][$template]['alter request']) && $GLOBALS['templates'][$template]['alter request'] == true)
-						$_REQUEST = call_user_func_array('alter_request_' . $template, array($_REQUEST));
-						
-					// register template files
-					register_template_files($GLOBALS['templates'][$template]);
-				}
-			}
-		}
-		
-		$_REQUEST['template'] = validate_template($_REQUEST, isset($_SESSION['template'])?$_SESSION['template']:'');
-		
-		// don't use a template if they comment out this define, this enables the tiny remote version
-		if(!defined('LOCAL_TEMPLATE'))
-		{
-			define('LOCAL_TEMPLATE',            					 'templates' . DIRECTORY_SEPARATOR . $_REQUEST['template'] . DIRECTORY_SEPARATOR);
-		}
-		
-		// set the HTML_TEMPLATE for templates to refer to their own directory to provide resources
-		define('HTML_TEMPLATE', str_replace(DIRECTORY_SEPARATOR, '/', LOCAL_TEMPLATE));
-		
-		// assign some shared variables
-		register_output_vars('tables', $GLOBALS['tables']);
-		register_output_vars('plugins', $GLOBALS['plugins']);
-		register_output_vars('modules', $GLOBALS['modules']);
-		register_output_vars('templates', $GLOBALS['templates']);
-		register_output_vars('columns', getAllColumns());
-		
-	}
-}
-
-function setupUsers()
-{
-	// set up user settings
-	if(!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] == false)
-	{
-		// check if user is logged in
-		if( isset($_SESSION['login']['username']) && isset($_SESSION['login']['password']) )
-		{
-			// lookup username in table
-			$db_user = $GLOBALS['database']->query(array(
-					'SELECT' => 'users',
-					'WHERE' => 'Username = "' . addslashes($_SESSION['login']['username']) . '"',
-					'LIMIT' => 1
-				)
-			, false);
-			
-			if( count($db_user) > 0 )
-			{
-				if($_SESSION['login']['password'] == $db_user[0]['Password'])
-				{
-					$_SESSION['username'] = $_SESSION['login']['username'];
-					
-					// set up user information in session
-					$_SESSION['loggedin'] = true;
-					
-					// the security level is the most important property
-					$_SESSION['privilage'] = $db_user[0]['Privilage'];
-					
-					// the settings are also very important
-					$_SESSION['settings'] = unserialize($db_user[0]['Settings']);
-					
-					// just incase a template wants to access the rest of the information; include the user
-					unset($db_user[0]['Password']);
-					unset($db_user[0]['Settings']);
-					unset($db_user[0]['Privilage']);
-					
-					$_SESSION['user'] = $db_user[0];
-				}
-				else
-				{
-					PEAR::raiseError('Invalid password.', E_USER);
-				}
-			}
-			else
-			{
-				PEAR::raiseError('Invalid username.', E_USER);
-			}
-		}
-		// use guest information
-		elseif(USE_DATABASE == true)
-		{
-			$_SESSION['loggedin'] = false;
-			
-			$db_user = $GLOBALS['database']->query(array(
-					'SELECT' => 'users',
-					'WHERE' => 'id = -2',
-					'LIMIT' => 1
-				)
-			, false);
-			
-			if(is_array($db_user) && count($db_user) > 0)
-			{
-				$_SESSION['username'] = $db_user[0]['Username'];
-		
-				// the security level is the most important property
-				$_SESSION['privilage'] = $db_user[0]['Privilage'];
-				
-				// the settings are also very important
-				$_SESSION['settings'] = unserialize($db_user[0]['Settings']);
-				//$_SESSION['settings']['keys'] = array('5a277c44344eaf04e1d92085eabfda02');
-				
-				// just incase a template wants to access the rest of the information; include the user
-				unset($db_user[0]['Password']);
-				unset($db_user[0]['Settings']);
-				unset($db_user[0]['Privilage']);
-				
-				$_SESSION['user'] = $db_user[0];
-			}
-		}
-		else
-		{
-			$_SESSION['username'] = 'guest';
-			$_SESSION['privilage'] = 1;
-			
-		}
-	}
-	
-	// this will hold a cached list of the users that were looked up
-	$GLOBALS['user_cache'] = array();
-	
-	// get users associated with the keys
-	if(isset($_SESSION['settings']['keys']))
-	{
-		$return = $GLOBALS['database']->query(array(
-				'SELECT' => db_users::DATABASE,
-				'WHERE' => 'PrivateKey = "' . join('" OR PrivateKey = "', $_SESSION['settings']['keys']) . '"',
-				'LIMIT' => count($_SESSION['settings']['keys'])
-			)
-		, false);
-		
-		$_SESSION['settings']['keys_usernames'] = array();
-		foreach($return as $index => $user)
-		{
-			$_SESSION['settings']['keys_usernames'][] = $user['Username'];
-			
-			unset($return[$index]['Password']);
-		}
-		
-		$_SESSION['settings']['keys_users'] = $return;
-	}
-	
-	register_output_vars('loggedin', $_SESSION['loggedin']);
-}
-
-// this is used to set up the input variables
-function setupInputVars()
-{
-	// first fix the REQUEST_URI and pull out what is meant to be pretty dirs
-	if(isset($_SERVER['PATH_INFO']))
-		$_REQUEST['path_info'] = $_SERVER['PATH_INFO'];
-	
-	// call rewrite_vars in order to set some request variables
-	rewrite_vars($_REQUEST, $_GET, $_POST);
-	
-	// go through the rest of the request and validate all the variables with the plugins they are for
-	foreach($_REQUEST as $key => $value)
-	{
-		if(function_exists('validate_' . $key))
-			$_REQUEST[$key] = call_user_func_array('validate_' . $key, array($_REQUEST));
-		elseif(isset($GLOBALS['validate_' . $key]) && is_callable($GLOBALS['validate_' . $key]))
-			$_REQUEST[$key] = $GLOBALS['validate_' . $key]($_REQUEST);
-		else
-		{
-			unset($_REQUEST[$key]);
-			if(isset($_GET[$key])) unset($_GET[$key]);
-		}
-			
-		// set the get variable also, so that when generate_href($_GET) is used it is an accurate representation of the current page
-		if(isset($_GET[$key])) $_GET[$key] = $_REQUEST[$key];
-	}
-	
-	// check plugins for vars and trigger a session save
-	foreach($_REQUEST as $key => $value)
-	{
-		if(isset($GLOBALS['triggers']['session'][$key]))
-		{
-			foreach($GLOBALS['triggers']['session'][$key] as $i => $plugin)
-			{
-				$_SESSION[$plugin] = call_user_func_array('session_' . $plugin, array($_REQUEST));
-			}
-		}
-	}
-	
-	// do not let GoogleBot perform searches or file downloads
-	if(NO_BOTS)
-	{
-		if(preg_match('/.*Googlebot.*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
-		{
-			if(basename($_REQUEST['plugin']) != 'select' && 
-				basename($_REQUEST['plugin']) != 'index' &&
-				basename($_REQUEST['plugin']) != 'sitemap')
-			{
-				header('Location: ' . generate_href(array('plugin' => 'sitemap')));
-				exit;
-			}
-			else
-			{
-				// don't let google bots perform searches, this takes up a lot of resources
-				foreach($_REQUEST as $key => $value)
-				{
-					if(substr($key, 0, 6) == 'search')
-					{
-						unset($_REQUEST[$key]);
-					}
-				}
-			}
-		}
-	}
 }
 
 function setupAliases()
