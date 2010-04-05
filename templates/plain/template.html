@@ -1,7 +1,0 @@
-<div class="template_box">
-{foreach item=name key=key from=$templates}
-{if is_numeric($key)}
-<a href="{'template='|cat:$name|generate_href:false:true}">{$name|substr:0:1|strtoupper}{$name|substr:1}</a>
-{/if}
-{/foreach}
-</div>
