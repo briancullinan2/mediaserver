@@ -1,3 +1,24 @@
+2010-04-04
+Worked on Admin section
+	Added admin.php plugin for loading all of the admin scripts
+Worked on tools admin plugin
+	Now dynamically loads tool set
+Worked on many templates
+	wpl playlist, xml info list in the base template, tools, admin section
+Worked on users
+Worked on list plugins, now has a pretty display in the live template
+
+2010-04-03
+Worked on converting templates to PHP
+	Login, m3u, rss, search, plain
+Worked on cron.php
+	Made simpler by getting rid of state and just using a single directory path to resume
+Watch module now detects if folder is in watch list for sub directories also!
+	Using LEFT("<some watched subfolder>", LENGTH(Filepath)) = Filepath;
+Fixed plugins and install templates
+Worked on users.php plugin
+	Registration now supported, merged with login.php plugin (deprecated)
+
 2010-03-30
 Finished converting my first template to the new API
 Templates will now have a general function for beginning output

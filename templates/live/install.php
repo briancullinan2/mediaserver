@@ -1,65 +1,101 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>Media Server Installer</title>
-<link rel="stylesheet" href="/?plugin=admin_install&install_image=style" type="text/css"/>
-</head>
-<?
-if(!is_float($GLOBALS['templates']['vars']['install_step']))
-{
-?>
-<body>
-<div id="bodydiv">
-	<div id="sizer">
-		<div id="expander">
-			<table id="header" cellpadding="0" cellspacing="0" style="background-color:#06A;">
-				<tr>
-					<td id="siteTitle">Media Server Installer</td>
-				</tr>
-			</table>
-			<div id="container">
-				<table width="100%" cellpadding="5" cellspacing="0">
-					<tr>
-						<td>
-							<div id="breadcrumb">
-								<ul>
-									<li>Media Server Installer</li>
-                                    <?php
-									
-									for($i = 1; $i <= $GLOBALS['templates']['vars']['install_step']; $i++)
-									{
-									?>
-									<li><img src="/?plugin=admin_install&install_image=carat" class="crumbsep" alt="&gt;" /></li>
-                                    <li><a href="<?php echo generate_href('plugin=admin_install&install_step=' . $i); ?>">Step <?php echo $i; ?></a></li>
-                                    <?php
-									}
-									?>
-								</ul>
-							</div>
-						</td>
-					</tr>
-				</table>
-				<div id="content" onmousedown="return selector_off;">
-					<div class="menuShadow" id="shadow"></div>
-					<table id="main" cellpadding="0" cellspacing="0">
-						<tr>
-							<td class="sideColumn"></td>
-							<td id="mainColumn">
-								<table id="mainTable" cellpadding="0" cellspacing="0">
-									<tr>
-										<td>
-                                            <div class="contentSpacing">
-
-
-
-
-<h1 class="title">Media Server Installer - Step <?php echo $GLOBALS['templates']['vars']['install_step']; ?></h1>
-<span class="subText">This script will help you install the media server.<br />
-The first step is to check for requirements and dependencies for the media server.</span>
-
-
 <?php
+
+function register_live_install()
+{
+	return array(
+		'name' => 'Live Install',
+	);
+}
+
+function theme_live_install()
+{
+	?>
+	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+	<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<title><?php print isset($GLOBALS['templates']['vars']['title'])?$GLOBALS['templates']['vars']['title']:HTML_NAME; ?></title>
+	<meta name="google-site-verification" content="K3Em8a7JMI3_1ry5CNVKIHIWofDt-2C3ohovDq3N2cQ" />
+	<link rel="stylesheet" href="<?php print href('plugin=admin_install&install_image=style'); ?>" type="text/css"/>
+	<script language="javascript">
+	var loaded = false;
+	</script>
+	</head>
+	<?php
+	
+	if(!is_float($GLOBALS['templates']['vars']['install_step']))
+	{
+		?>
+		<body>
+		<div id="bodydiv">
+			<div id="sizer">
+				<div id="expander">
+					<table id="header" cellpadding="0" cellspacing="0" style="background-color:#06A;">
+						<tr>
+							<td id="siteTitle">Media Server Installer</td>
+						</tr>
+					</table>
+					<div id="container">
+						<table width="100%" cellpadding="5" cellspacing="0">
+							<tr>
+								<td>
+									<div id="breadcrumb">
+										<ul>
+											<li>Media Server Installer</li>
+											<?php
+											
+											for($i = 1; $i <= $GLOBALS['templates']['vars']['install_step']; $i++)
+											{
+											?>
+											<li><img src="/?plugin=admin_install&install_image=carat" class="crumbsep" alt="&gt;" /></li>
+											<li><a href="<?php echo generate_href('plugin=admin_install&install_step=' . $i); ?>">Step <?php echo $i; ?></a></li>
+											<?php
+											}
+											?>
+										</ul>
+									</div>
+								</td>
+							</tr>
+						</table>
+						<div id="content" onmousedown="return selector_off;">
+							<div class="menuShadow" id="shadow"></div>
+							<table id="main" cellpadding="0" cellspacing="0">
+								<tr>
+									<td class="sideColumn"></td>
+									<td id="mainColumn">
+										<table id="mainTable" cellpadding="0" cellspacing="0">
+											<tr>
+												<td>
+													<div class="contentSpacing">
+		
+		
+		
+		
+		<h1 class="title">Media Server Installer - Step <?php echo $GLOBALS['templates']['vars']['install_step']; ?></h1>
+		<span class="subText">This script will help you install the media server.<br />
+		The first step is to check for requirements and dependencies for the media server.</span>
+		
+		
+		<?php
+		
+		theme('errors');
+	}
+
+	if(!is_float($GLOBALS['templates']['vars']['install_step']))
+		output_heading($GLOBALS['templates']['vars']['install_step']);
+	
+	output_tests($GLOBALS['templates']['vars']['install_step']);
+	
+	if(!is_float($GLOBALS['templates']['vars']['install_step']))
+		output_buttons($GLOBALS['templates']['vars']['install_step']);
+
+	if(!is_float($GLOBALS['templates']['vars']['install_step']))
+	{
+		?>
+			</div>
+		<?php
+		theme('footer');
+	}
 }
 
 // print the fields that came before the current page, just incase the session runs out
@@ -170,14 +206,6 @@ function output_heading($install_step)
 	
 	?><table border="0" cellpadding="0" cellspacing="0"><?php
 }
-
-if(!is_float($GLOBALS['templates']['vars']['install_step']))
-	output_heading($GLOBALS['templates']['vars']['install_step']);
-
-output_tests($GLOBALS['templates']['vars']['install_step']);
-
-if(!is_float($GLOBALS['templates']['vars']['install_step']))
-	output_buttons($GLOBALS['templates']['vars']['install_step']);
 
 function output_tests($install_step)
 {
@@ -375,7 +403,7 @@ function output_test_db_test($result, $variable)
 	{
 
 	?>
-<body onload="top.document.getElementById('loading1').style.display = 'none'; top.document.getElementById('test').style.height=document.getElementById('testtable').clientHeight+'px';">
+<body onLoad="top.document.getElementById('loading1').style.display = 'none'; top.document.getElementById('test').style.height=document.getElementById('testtable').clientHeight+'px';">
 <table id="testtable" border="0" cellpadding="0" cellspacing="0">
 	<tr>
     <td class="title fail">Access to Database</td>
@@ -406,7 +434,7 @@ function output_test_db_test($result, $variable)
 	{
 		
     ?>
-<body onload="top.document.getElementById('loading1').style.display = 'none'; top.document.getElementById('test').style.height=document.getElementById('testtable').clientHeight+'px'; top.document.getElementById('loading2').style.display='inline'; top.document.getElementById('install').src='<?php echo generate_href('plugin=admin_install&install_step=5.2'); ?>'">
+<body onLoad="top.document.getElementById('loading1').style.display = 'none'; top.document.getElementById('test').style.height=document.getElementById('testtable').clientHeight+'px'; top.document.getElementById('loading2').style.display='inline'; top.document.getElementById('install').src='<?php echo generate_href('plugin=admin_install&install_step=5.2'); ?>'">
 <table id="testtable" border="0" cellpadding="0" cellspacing="0">
 	<tr>
     <td class="title">Access to Database</td>
@@ -1502,7 +1530,6 @@ function output_pass_changed($result)
 
 function output_test_save($result, $variable)
 {
-	
 	// save config
 	$config = $GLOBALS['templates']['vars']['request']['LOCAL_ROOT'] . 'include' . DIRECTORY_SEPARATOR . 'settings.php';
 	
@@ -1769,34 +1796,3 @@ function output_buttons($install_step)
 	</form>
     <?php
 }
-
-if(!is_float($GLOBALS['templates']['vars']['install_step']))
-{
-?>
-
-                                            </div>
-										</td>
-									</tr>
-								</table>
-							</td>
-							<td class="sideColumn right"></td>
-						</tr>
-					</table>
-				</div>
-				<div id="footer">
-					<table id="footerCtr">
-						<tr>
-							<td>
-							</td>
-						</tr>
-					</table>
-				</div>
-			</div>
-		</div>
-	</div>
-</div>
-</body>
-</html>
-<?php
-}
-?>

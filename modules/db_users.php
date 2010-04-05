@@ -11,7 +11,7 @@ class db_users extends db_file
 	const INTERNAL = true;
 	
 	// this expression is used to filter out usernames
-	const USER_REG = '/[a-z0-9]{4}[a-z0-9]*/i';
+	const USER_REG = '/[a-z][a-z0-9]{4}[a-z0-9]*/i';
 
 	static function columns()
 	{
@@ -27,7 +27,7 @@ class db_users extends db_file
 			'Email' 		=> 'TEXT',
 			'Settings' 		=> 'TEXT',
 			'Privilage'		=> 'INT',
-			'PrivateKey'		=> 'TEXT',
+			'PrivateKey'	=> 'TEXT',
 			'LastLogin'		=> 'DATETIME'
 		);
 	}
@@ -64,13 +64,13 @@ class db_users extends db_file
 		return false;
 	}
 
-	static function handle($path, $force = false)
+	static function handle($file, $force = false)
 	{
 		$file = str_replace('\\', '/', $file);
 		
 		if(self::handles($file))
 		{
-			$username = basename($path);
+			$username = basename($file);
 			
 			// check if it is in the database
 			$db_user = $GLOBALS['database']->query(array(
@@ -84,6 +84,16 @@ class db_users extends db_file
 			{
 				// just set up the user with default information
 				//   if they don't use the plugin, this creates a system user
+				return $GLOBALS['database']->query(array('INSERT' => 'users', 'VALUES' => array(
+							'Username' => addslashes($username),
+							'Password' => '',
+							'Email' => '',
+							'Settings' => serialize(array()),
+							'Privilage' => 1,
+							'PrivateKey' => md5(microtime())
+						)
+					)
+				, false);
 			}
 			elseif($force)
 			{

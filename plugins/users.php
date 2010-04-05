@@ -8,88 +8,65 @@
 
 function setup_users()
 {
-	// set up user settings
-	if(!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] == false)
+	// check if user is logged in
+	if( isset($_SESSION['users']['username']) && isset($_SESSION['users']['password']) )
 	{
-		// check if user is logged in
-		if( isset($_SESSION['login']['username']) && isset($_SESSION['login']['password']) )
+		// lookup username in table
+		$db_user = $GLOBALS['database']->query(array(
+				'SELECT' => 'users',
+				'WHERE' => 'Username = "' . addslashes($_SESSION['users']['username']) . '"',
+				'LIMIT' => 1
+			)
+		, false);
+		
+		if( count($db_user) > 0 )
 		{
-			// lookup username in table
-			$db_user = $GLOBALS['database']->query(array(
-					'SELECT' => 'users',
-					'WHERE' => 'Username = "' . addslashes($_SESSION['login']['username']) . '"',
-					'LIMIT' => 1
-				)
-			, false);
-			
-			if( count($db_user) > 0 )
+			if($_SESSION['users']['password'] == $db_user[0]['Password'])
 			{
-				if($_SESSION['login']['password'] == $db_user[0]['Password'])
-				{
-					$_SESSION['username'] = $_SESSION['login']['username'];
-					
-					// set up user information in session
-					$_SESSION['loggedin'] = true;
-					
-					// the security level is the most important property
-					$_SESSION['privilage'] = $db_user[0]['Privilage'];
-					
-					// the settings are also very important
-					$_SESSION['settings'] = unserialize($db_user[0]['Settings']);
-					
-					// just incase a template wants to access the rest of the information; include the user
-					unset($db_user[0]['Password']);
-					unset($db_user[0]['Settings']);
-					unset($db_user[0]['Privilage']);
-					
-					$_SESSION['user'] = $db_user[0];
-				}
-				else
-				{
-					PEAR::raiseError('Invalid password.', E_USER);
-				}
+				// just incase a template wants to access the rest of the information; include the user
+				unset($db_user[0]['Password']);
+				
+				$_SESSION['user'] = $db_user[0];
+				
+				// deserialize settings
+				$_SESSION['user']['Settings'] = unserialize($_SESSION['user']['Settings']);
 			}
 			else
 			{
-				PEAR::raiseError('Invalid username.', E_USER);
-			}
-		}
-		// use guest information
-		elseif(USE_DATABASE == true)
-		{
-			$_SESSION['loggedin'] = false;
-			
-			$db_user = $GLOBALS['database']->query(array(
-					'SELECT' => 'users',
-					'WHERE' => 'id = -2',
-					'LIMIT' => 1
-				)
-			, false);
-			
-			if(is_array($db_user) && count($db_user) > 0)
-			{
-				$_SESSION['username'] = $db_user[0]['Username'];
-		
-				// the security level is the most important property
-				$_SESSION['privilage'] = $db_user[0]['Privilage'];
-				
-				// the settings are also very important
-				$_SESSION['settings'] = unserialize($db_user[0]['Settings']);
-				//$_SESSION['settings']['keys'] = array('5a277c44344eaf04e1d92085eabfda02');
-				
-				// just incase a template wants to access the rest of the information; include the user
-				unset($db_user[0]['Password']);
-				unset($db_user[0]['Settings']);
-				unset($db_user[0]['Privilage']);
-				
-				$_SESSION['user'] = $db_user[0];
+				unset($_SESSION['users']);
+				PEAR::raiseError('Invalid password.', E_USER);
 			}
 		}
 		else
 		{
-			$_SESSION['username'] = 'guest';
-			$_SESSION['privilage'] = 1;
+			unset($_SESSION['users']);
+			PEAR::raiseError('Invalid username.', E_USER);
+		}
+	}
+	// use guest information
+	elseif(USE_DATABASE == true)
+	{
+		$db_user = $GLOBALS['database']->query(array(
+				'SELECT' => 'users',
+				'WHERE' => 'id = -2',
+				'LIMIT' => 1
+			)
+		, false);
+		
+		if(is_array($db_user) && count($db_user) > 0)
+		{
+			// just incase a template wants to access the rest of the information; include the user
+			unset($db_user[0]['Password']);
 			
+			$_SESSION['user'] = $db_user[0];
+			$_SESSION['user']['Settings'] = unserialize($_SESSION['user']['Settings']);
+		}
+		else
+		{
+			$_SESSION['user'] = array(
+				'Username' => 'guest',
+				'Privilage' => 1
+			);
 		}
 	}
 	
@@ -97,27 +74,25 @@ function setup_users()
 	$GLOBALS['user_cache'] = array();
 	
 	// get users associated with the keys
-	if(isset($_SESSION['settings']['keys']))
+	if(isset($_SESSION['user']['Settings']['keys']))
 	{
 		$return = $GLOBALS['database']->query(array(
 				'SELECT' => db_users::DATABASE,
-				'WHERE' => 'PrivateKey = "' . join('" OR PrivateKey = "', $_SESSION['settings']['keys']) . '"',
-				'LIMIT' => count($_SESSION['settings']['keys'])
+				'WHERE' => 'PrivateKey = "' . join('" OR PrivateKey = "', $_SESSION['user']['Settings']['keys']) . '"',
+				'LIMIT' => count($_SESSION['user']['Settings']['keys'])
 			)
 		, false);
 		
-		$_SESSION['settings']['keys_usernames'] = array();
+		$_SESSION['user']['Settings']['keys_usernames'] = array();
 		foreach($return as $index => $user)
 		{
-			$_SESSION['settings']['keys_usernames'][] = $user['Username'];
+			$_SESSION['user']['Settings']['keys_usernames'][] = $user['Username'];
 			
 			unset($return[$index]['Password']);
 		}
 		
-		$_SESSION['settings']['keys_users'] = $return;
+		$_SESSION['user']['Settings']['keys_users'] = $return;
 	}
-	
-	register_output_vars('loggedin', $_SESSION['loggedin']);
 }
 
 function register_users()
@@ -126,7 +101,8 @@ function register_users()
 		'name' => 'Users',
 		'description' => 'Allows for managing and displaying users.',
 		'privilage' => 1,
-		'path' => __FILE__
+		'path' => __FILE__,
+		'session' => array('username')
 	);
 }
 
@@ -135,23 +111,32 @@ function validate_users($request)
 	if(!isset($request['users']) || !in_array($request['users'], array('register', 'remove', 'modify', 'login', 'logout', 'list', 'view')))
 		return 'login';
 	else
-		return $request['list'];
+		return $request['users'];
 	
 }
 
 function validate_password($request)
 {
-	return md5(DB_SECRET . $request['password']);
+	if(isset($request['password']))
+		return md5(DB_SECRET . $request['password']);
+}
+
+function validate_email($request)
+{
+	if(isset($request['email']))
+		return $request['email'];
 }
 
 function validate_username($request)
 {
-	return $request['username'];
+	if(isset($request['username']))
+		return $request['username'];
 }
 
 function validate_return($request)
 {
-	return $request['return'];
+	if(isset($request['return']))
+		return $request['return'];
 }
 
 function validate_required_priv($request)
@@ -160,10 +145,17 @@ function validate_required_priv($request)
 		return $request['required_priv'];
 }
 
-function session_login($request)
+function session_users($request)
 {
-	$save['username'] = $request['username'];
-	$save['password'] = @$request['password'];
+	$save = array();
+	
+	// only save it to the session if the user is logging in
+	$request['users'] = validate_users($request);
+	if($request['users'] == 'login')
+	{
+		$save['username'] = $request['username'];
+		$save['password'] = @$request['password'];
+	}
 	
 	return $save;
 }
@@ -172,19 +164,24 @@ function output_users($request)
 {
 	// check for what action we should do
 	$request['users'] = validate_users($request);
+	$request['username'] = validate_username($request);
+	$request['email'] = validate_email($request);
+	$request['password'] = validate_password($request);
+	$request['return'] = validate_return($request);
 	
 	// validate and display regtistration information
 	//  also send out registration e-mail here
 	switch($request['users'])
 	{
 		case 'register':
+			
 			// validate input
-			if(db_users::handles(LOCAL_USERS . $_REQUEST['username']))
+			if(db_users::handles(LOCAL_USERS . $request['username']))
 			{
 				// make sure the user doesn't already exist
 				$db_user = $GLOBALS['database']->query(array(
-						'SELECT' => self::DATABASE,
-						'WHERE' => 'Username = "' . addslashes($_REQUEST['username']) . '"',
+						'SELECT' => db_users::DATABASE,
+						'WHERE' => 'Username = "' . addslashes($request['username']) . '"',
 						'LIMIT' => 1
 					)
 				, false);
@@ -195,30 +192,49 @@ function output_users($request)
 				}
 			
 				// validate other fields
-				//  password
-				if(!isset($_REQUEST['password']) || strlen($_REQUEST['password']) < 4 || strlen($_REQUEST['password']) > 16)
+				// validate email
+				if(!isset($request['email']) || preg_match('/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b/', $request['email']) === false)
 				{
-					PEAR::raiseError('Password must be between 4 and 16 characters long.', E_USER);
+					PEAR::raiseError('Invalid E-mail address.', E_USER);
 				}
 				
-				// create user folder
-				$made = mkdir(LOCAL_USERS . $_REQUEST['username']);
-				
-				if($made == false)
+				// create user folders
+				if(!file_exists(LOCAL_USERS . $request['username']))
 				{
-					PEAR::raiseError('Cannot create user directory.', E_USER);
+					$made = @mkdir(LOCAL_USERS . $request['username']);
+				
+					if($made == false)
+					{
+						PEAR::raiseError('Cannot create user directory.', E_USER);
+					}
 				}
 			
-				if( $error != '' )
+				@mkdir(LOCAL_USERS . $request['username'] . DIRECTORY_SEPARATOR . 'public');
+				@mkdir(LOCAL_USERS . $request['username'] . DIRECTORY_SEPARATOR . 'private');
+			
+				if( count($GLOBALS['user_errors']) == 0 )
 				{
-						
 					// create database entry
-					$user_id = db_users::handle(LOCAL_USERS . $_REQUEST['username']);
+					$user_id = db_users::handle(LOCAL_USERS . $request['username']);
 					
 					// add password and profile information
-					
+					$result = $GLOBALS['database']->query(array(
+						'UPDATE' => 'users',
+						'VALUES' => array(
+							'Password' => addslashes($request['password']),
+							'Email' => $request['email']
+						),
+						'WHERE' => 'id=' . $user_id
+					), false);
 					
 					// send out confirmation email
+					set_output_vars();
+					ob_start();
+					theme('confirmation');
+					$confirmation = ob_get_contents();
+					ob_end_clean();
+					
+					mail($request['email'], 'E-Mail Confirmation for ' . HTML_NAME, $confirmation);
 				}
 			}
 		break;
@@ -234,27 +250,25 @@ function output_users($request)
 		break;
 		// cache a users login information so they may access the site
 		case 'login':
-			if( $_SESSION['loggedin'] == true )
+			
+			if( $_SESSION['user']['Username'] != 'guest' )
 			{
-				if( isset($request['return']) && (!isset($request['required_priv']) || $_SESSION['privilage'] >= $request['required_priv']))
+				if( isset($request['return']) && (!isset($request['required_priv']) || $_SESSION['user']['Privilage'] >= $request['required_priv']))
 				{
 					header('Location: ' . $request['return']);
 					exit();
 				}
 			}
-			
-			if(isset($_SESSION['login']['username']))
-				register_output_vars('username', $_SESSION['login']['username']);
-			else
-				register_output_vars('username', '');
-	
-			if(isset($request['return'])) register_output_vars('return', $request['return']);
 		break;
 		// remove all cookies and session information
 		case 'logout':
 			// delete current session
+			session_destroy();
+			
 			// login cookies become irrelevant
+			
 			// create new session
+			session_start();
 		break;
 		// show a list of users, this may have different administrator requirements
 		case 'list':
@@ -265,7 +279,11 @@ function output_users($request)
 			// allow users to view their profile
 		break;
 	}
-		
+	
+	register_output_vars('users', $request['users']);
+	if(isset($request['username'])) register_output_vars('username', $request['username']);
+	if(isset($request['email'])) register_output_vars('email', $request['email']);
+	if(isset($request['return'])) register_output_vars('return', $request['return']);
 }
 
 ?>

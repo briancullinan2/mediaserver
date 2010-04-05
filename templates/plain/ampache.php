@@ -112,8 +112,6 @@ function theme_plain_ampache()
 	}
 	
 	
-	
-	
 	?>
 	</root>
 <?php

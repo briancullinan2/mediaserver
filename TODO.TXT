@@ -1,19 +1,13 @@
+Change tools to output a list like the select plugin, a list of info objects used for outputting
+Cache all loaded plugin files in settings database (possibly storing in admin settings and deserializing would be efficient?)
 Check all requires to make sure they can't be substituted for an include (abstract them to allow for better error handling)
 Finish ampache.php plugin to support genres, videos, and playlists
 Remove smarty from the entire system because it sucks
-Work on cron.php script
-Review all use of smarty variables
-	$smarty.get, $smarty.request.search, $smarty.server.PHP_SELF, $smarty.session
-Create an error template page for displaying errors
 Check for bt plugin in install.php script
 Add bttracker install script to admin/install.php to fully bootstrap the install process
 Re-upload entire site
 Finish fixing up plugins to use new API
 	admin section
-	Go through plugins and fix error reporting
-		users.php plugin
-		login.php plugin
-		Add feedback removed when the plugins were converted to new API
 Drupalish style coding
 	More streamlined way of plugins outputting data to template (assuming that $files is being used is no good)
 Create a developer plugin that verifies plugins register themselves and don't use query() function

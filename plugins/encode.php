@@ -47,7 +47,7 @@ function validate_encode($request)
 
 function validate_vcodec($request)
 {
-	if(!isset($request['vcodec']) || !in_array($request['vcodec'], array('mp4v', 'mp1v', 'WMV2', 'DIV3','dummy')))
+	if(!isset($request['vcodec']) || !in_array($request['vcodec'], array('mp4v', 'mpgv', 'WMV2', 'DIV3','dummy')))
 	{
 		$request['encode'] = validate_encode($request);
 		switch($request['encode'])
@@ -241,6 +241,15 @@ function output_encode($request)
 	$fp = fopen('/tmp/test.txt', 'a');
 	fwrite($fp, var_export($_SERVER, true));
 	fclose($fp);
+	
+	if(!isset($request['encode']))
+	{
+		set_output_vars();
+		
+		theme('encode');
+		
+		exit;
+	}
 	
 	$request['encode'] = validate_encode($request);
 	$request['vcodec'] = validate_vcodec($request);

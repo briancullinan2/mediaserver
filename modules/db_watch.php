@@ -21,7 +21,7 @@ class db_watch extends db_file
 		return array(
 			'Filepath' 	=> 'TEXT',
 			// add a space to the end so that it can be NULL in the database
-			'Lastwatch' => 'DATETIME '
+			'Lastwatch' => 'DATETIME'
 		);
 	}
 	
@@ -47,14 +47,13 @@ class db_watch extends db_file
 			
 		if(self::handles($file))
 		{
-			
 			// add ending backslash
 			if( substr($file, strlen($file)-1) != '/' ) $file .= '/';
 			
 			$db_watch = $GLOBALS['database']->query(array(
 					'SELECT' => self::DATABASE,
 					'COLUMNS' => array('id'),
-					'WHERE' => 'Filepath = "' . addslashes($file) . '"',
+					'WHERE' => 'LEFT("' . addslashes($file) . '", LENGTH(Filepath)) = Filepath',
 					'LIMIT' => 1
 				)
 			, false);

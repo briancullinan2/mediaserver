@@ -1,3 +1,15 @@
+<?php
+
+function register_plain_watch()
+{
+	return array(
+		'name' => 'Plain Watch'
+	);
+}
+
+function theme_plain_watch()
+{
+	?>
 <html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
@@ -9,7 +21,7 @@
 
 This is a list of folders on the server to watch for media files:<br />
 <?php
-if( count($GLOBALS['templates']['vars']['user_errors']) > 0 )
+if( count($GLOBALS['user_errors']) > 0 )
 {
 ?>
 	<span style="color:#990000; font-weight:bold;"><?php foreach($GLOBALS['templates']['vars']['user_errors'] as $i => $error) { echo $error->message . '<br />'; } ?></span><br />
@@ -44,3 +56,6 @@ if( count($GLOBALS['templates']['vars']['user_errors']) > 0 )
 	</form>
 </body>
 </html>
+<?php
+
+}

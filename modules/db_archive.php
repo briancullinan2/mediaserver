@@ -104,7 +104,7 @@ class db_archive extends db_file
 		require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'db_file.php';
 		
 		// include the id handler
-		require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'File' . DIRECTORY_SEPARATOR . 'Archive.php';
+		require_once 'File' . DIRECTORY_SEPARATOR . 'Archive.php';
 	}
 
 	static function columns()
@@ -202,6 +202,33 @@ class db_archive extends db_file
 			PEAR::raiseError('Removing archive: ' . $file, E_DEBUG);
 			self::remove($last_path . '/', get_class());
 		}
+
+		// Add archive first so if it fails then it won't try to read it again
+		$fileinfo = array();
+		$fileinfo['Filename'] = basename($last_path);
+		$fileinfo['Compressed'] = filesize($last_path);
+		$fileinfo['Filetype'] = getFileType($last_path);
+		$fileinfo['Filesize'] = 0;
+		$fileinfo['Filemime'] = getMime($last_path);
+		$fileinfo['Filedate'] = date("Y-m-d h:i:s", filemtime($last_path));
+		$fileinfo['Filepath'] = addslashes(str_replace('\\', '/', $last_path));
+		
+		// print status
+		if( $archive_id == NULL )
+		{
+			PEAR::raiseError('Adding archive: ' . $fileinfo['Filepath'], E_DEBUG);
+			
+			// add to database
+			$archive_id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
+		}
+		else
+		{
+			PEAR::raiseError('Modifying archive: ' . $fileinfo['Filepath'], E_DEBUG);
+			
+			// update database
+			$archive_id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $archive_id), false);
+		}
+		
 		
 		// set up empty ids array since we know archive_id will be the only entry
 		$ids = array();
@@ -263,38 +290,20 @@ class db_archive extends db_file
 		$fileinfo['Filesize'] = $total_size;
 		$fileinfo['Filemime'] = getMime($last_path);
 		$fileinfo['Filedate'] = date("Y-m-d h:i:s", filemtime($last_path));
+		$fileinfo['Filepath'] = addslashes(str_replace('\\', '/', $last_path . '/'));
 		
 		// add root file which is the filepath but with a / for compatibility
-		$fileinfo['Filepath'] = addslashes(str_replace('\\', '/', $last_path . '/'));
 		PEAR::raiseError('Adding file in archive: ' . stripslashes($fileinfo['Filepath']), E_DEBUG);
 		$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
+		
+		// add ID for root file
 		$ids[self::DATABASE . '_id'] = $id;
 		db_ids::handle(stripslashes($fileinfo['Filepath']), true, $ids);
-
-		// use same information for actual file, but change these back
-		$fileinfo['Filepath'] = addslashes(str_replace('\\', '/', $last_path));
-		$fileinfo['Filetype'] = getFileType($last_path);
 		
-		// print status
-		if( $archive_id == NULL )
-		{
-			PEAR::raiseError('Adding archive: ' . $fileinfo['Filepath'], E_DEBUG);
-			
-			// add to database
-			$id = $GLOBALS['database']->query(array('INSERT' => self::DATABASE, 'VALUES' => $fileinfo), false);
-			
-			return $id;
-		}
-		else
-		{
-			PEAR::raiseError('Modifying archive: ' . $fileinfo['Filepath'], E_DEBUG);
-			
-			// update database
-			$id = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $archive_id), false);
+		// update total size
+		$return = $GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => array('Filesize' => $total_size), 'WHERE' => 'id=' . $archive_id), false);
 		
-			return $archive_id;
-		}
-		
+		return $archive_id;
 	}
 
 	static function out($file)

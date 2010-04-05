@@ -1,20 +1,28 @@
 <?php
 
-function register_statistics()
+function register_admin_tools_statistics()
 {
-	$tools = array();
-	$tools[0] = array(
-		'name' => 'Log Parser',
-		'description' => 'Parse log files and view useful information about recent cron.php script executions.',
+	$tools = array(
+		'name' => 'Statistics',
+		'description' => 'View important site information and status.',
 		'privilage' => 10,
-		'path' => __FILE__
+		'path' => __FILE__,
+		'subtools' => array(
+			array(
+				'name' => 'Log Parser',
+				'description' => 'Parse log files and view useful information about recent cron.php script executions.',
+				'privilage' => 10,
+				'path' => __FILE__
+			),
+			array(
+				'name' => 'Site Information',
+				'description' => 'General information about the site, and statistics on loaded files, such as, disk usage, file counts, etc.',
+				'privilage' => 10,
+				'path' => __FILE__
+			)
+		)
 	);
-	$tools[1] = array(
-		'name' => 'Site Information',
-		'description' => 'General information about the site, and statistics on loaded files, such as, disk usage, file counts, etc.',
-		'privilage' => 10,
-		'path' => __FILE__
-	);
+
 	return $tools;
 }
 
@@ -26,7 +34,7 @@ function validate_tools_logs($request)
 			return preg_split('/[\n\r;]/i', $request['logs']);
 }
 
-function output_statistics($request)
+function output_admin_tools_statistics($request)
 {
 	$request['plugin'] = validate_plugin($request);
 	

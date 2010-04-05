@@ -65,22 +65,19 @@ function theme_live_pages()
 			if($GLOBALS['templates']['vars']['start'] > $GLOBALS['templates']['vars']['limit'])
 			{
 			?>
-			<div class="pageW">
-				<div class="pageHighlightW" style="visibility:hidden"></div>
-				<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=0'); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden';" onmouseover="this.parentNode.firstChild.style.visibility = 'visible';">First</a>
+			<div class="pageW"><div class="pageHighlightW" style="visibility:hidden"></div>
+				<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=0'); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.style.visibility = 'visible'; return true;">First</a>
 			</div>
-			<div class="pageW">
-				<div class="pageHighlightW" style="visibility:hidden"></div>
-				<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=' . $prev_page); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden';" onmouseover="this.parentNode.firstChild.style.visibility = 'visible';">Prev</a>
+			<div class="pageW"><div class="pageHighlightW" style="visibility:hidden"></div>
+				<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=' . $prev_page); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.style.visibility = 'visible'; return true;">Prev</a>
 			</div>
 			<?php
 			}
 			else
 			{
 			?>
-			<div class="pageW">
-				<div class="pageHighlightW" style="visibility:hidden"></div>
-				<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=0'); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden';" onmouseover="this.parentNode.firstChild.style.visibility = 'visible';">First</a>
+			<div class="pageW"><div class="pageHighlightW" style="visibility:hidden"></div>
+				<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=0'); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.style.visibility = 'visible'; return true;">First</a>
 			</div>
 			<?php
 			}
@@ -96,9 +93,8 @@ function theme_live_pages()
 			else
 			{
 				?>
-				<div class="page<?php print (strlen($i) > 2)?'W':''; ?>">
-					<div class="pageHighlight<?php print (strlen($i) > 2)?'W':''; ?>" style="visibility:hidden"></div>
-					<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=' . ($i * $GLOBALS['templates']['vars']['limit'])); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden';" onmouseover="this.parentNode.firstChild.style.visibility = 'visible';"><?php print $i + 1; ?></a>
+				<div class="page<?php print (strlen($i) > 2)?'W':''; ?>"><div class="pageHighlight<?php print (strlen($i) > 2)?'W':''; ?>" style="visibility:hidden"></div>
+					<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=' . ($i * $GLOBALS['templates']['vars']['limit'])); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.style.visibility = 'visible'; return true;"><?php print $i + 1; ?></a>
 				</div>
 				<?php
 			}
@@ -112,22 +108,19 @@ function theme_live_pages()
 			if($GLOBALS['templates']['vars']['start'] < $GLOBALS['templates']['vars']['total_count'] - 2 * $GLOBALS['templates']['vars']['limit'])
 			{
 				?>
-				<div class="pageW">
-					<div class="pageHighlightW" style="visibility:hidden"></div>
-					<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=' . $next_page); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden';" onmouseover="this.parentNode.firstChild.style.visibility = 'visible';">Next</a>
+				<div class="pageW"><div class="pageHighlightW" style="visibility:hidden"></div>
+					<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=' . $next_page); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.style.visibility = 'visible'; return true;">Next</a>
 				</div>
-				<div class="pageW">
-					<div class="pageHighlightW" style="visibility:hidden"></div>
-					<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=' . $last_page); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden';" onmouseover="this.parentNode.firstChild.style.visibility = 'visible';">Last</a>
+				<div class="pageW"><div class="pageHighlightW" style="visibility:hidden"></div>
+					<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=' . $last_page); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.style.visibility = 'visible'; return true;">Last</a>
 				</div>
 				<?php
 			}
 			else
 			{
 				?>
-				<div class="pageW">
-					<div class="pageHighlightW" style="visibility:hidden"></div>
-					<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=' . $last_page); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden';" onmouseover="this.parentNode.firstChild.style.visibility = 'visible';">Last</a>
+				<div class="pageW"><div class="pageHighlightW" style="visibility:hidden"></div>
+					<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=' . $last_page); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.style.visibility = 'visible'; return true;">Last</a>
 				</div>
 				<?php
 			}
@@ -153,14 +146,19 @@ function theme_live_files()
 	else
 	{
 		?><div class="files" id="files"><?php
-		foreach($GLOBALS['templates']['vars']['files'] as $file)
+		foreach($GLOBALS['templates']['vars']['files'] as $i => $file)
 		{
-			if(handles($file['Filepath'], 'archive') && $GLOBALS['templates']['vars']['cat'] != 'archive') $new_cat = 'archive';
-			elseif(handles($file['Filepath'], 'playlist') && $GLOBALS['templates']['vars']['cat'] != 'archive') $new_cat = 'playlist';
-			elseif(handles($file['Filepath'], 'diskimage') && $GLOBALS['templates']['vars']['cat'] != 'archive') $new_cat = 'diskimage';
-			elseif($file['Filetype'] == 'FOLDER') $new_cat = $GLOBALS['templates']['vars']['cat'];
+			$GLOBALS['templates']['html']['files'][$i] = live_alter_file($file);
 			
-			$link = isset($new_cat)?href('plugin=select&cat=' . $new_cat . '&dir=' . urlencode($file['Filepath'])):href('file/' . $GLOBALS['templates']['vars']['cat'] . '/' . $file['id'] . '/' . $file['Filename']);
+			// make links browsable
+			if(handles($file['Filepath'], 'archive')) $cat = 'archive';
+			elseif(handles($file['Filepath'], 'playlist')) $cat = 'playlist';
+			elseif(handles($file['Filepath'], 'diskimage')) $cat = 'diskimage';
+			else $cat = $GLOBALS['templates']['vars']['cat'];
+			
+			if($GLOBALS['templates']['vars']['cat'] != $cat || $file['Filetype'] == 'FOLDER') $new_cat = $cat;
+			
+			$link = isset($new_cat)?href('plugin=select&cat=' . $new_cat . '&dir=' . urlencode($file['Filepath'])):href('file/' . $cat . '/' . $file['id'] . '/' . $file['Filename']);
 			
 			?>
 			<div class="file <?php print $file['Filetype']; ?>" onmousedown="deselectAll(event);fileSelect(this, true, event);return false;" oncontextmenu="showMenu(this);return false;" id="<?php print $file['id']; ?>"><div class="notselected"></div>
@@ -173,12 +171,24 @@ function theme_live_files()
 						</td>
 					</tr>
 				</table>
-				<a class="itemLink" href="<?php print $link; ?>" onmouseout="this.parentNode.firstChild.className = 'notselected'; if(!loaded){return false;} document.getElementById('info_<?php print $file['id']; ?>').style.display = 'none';document.getElementById('info_<?php print $file['id']; ?>').style.visibility = 'hidden';" onmouseover="this.parentNode.firstChild.className = 'selected'; if(!loaded){return false;} document.getElementById('info_<?php print $file['id']; ?>').style.display = '';document.getElementById('info_<?php print $file['id']; ?>').style.visibility = 'visible';"><span><?php print isset($GLOBALS['templates']['vars']['parts'])?preg_replace($GLOBALS['templates']['vars']['parts'], '<b style="background-color:#990">$0</b>', $file['Filename']):$file['Filename']; ?></span></a>
+				<a class="itemLink" href="<?php print $link; ?>" onmouseout="this.parentNode.firstChild.className = 'notselected'; if(!loaded){return false;} document.getElementById('info_<?php print $file['id']; ?>').style.display = 'none';document.getElementById('info_<?php print $file['id']; ?>').style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.className = 'selected'; if(!loaded){return false;} document.getElementById('info_<?php print $file['id']; ?>').style.display = '';document.getElementById('info_<?php print $file['id']; ?>').style.visibility = 'visible'; return true;"><span><?php print $GLOBALS['templates']['html']['files'][$i]['Filename']; ?></span></a>
 			</div>
 			<?php
 		}
 		?></div><?php
 	}
+}
+
+function live_alter_file($file)
+{
+	foreach($file as $column => $value)
+	{
+		if(isset($GLOBALS['templates']['vars']['search_regexp']) && 
+			isset($GLOBALS['templates']['vars']['search_regexp'][$column]))
+			$file[$column] = preg_replace($GLOBALS['templates']['vars']['search_regexp'][$column], '\'<strong style="background-color:#990;">\' . htmlspecialchars(\'$0\') . \'</strong>\'', $file[$column]);
+		//$file[$column] = preg_replace('/([^ ]{25})/i', '$1<br />', $file[$column]);
+	}
+	return $file;
 }
 
 function theme_live_info()
@@ -197,7 +207,7 @@ function theme_live_info()
 	foreach($GLOBALS['templates']['vars']['files'] as $i => $file)
 	{
 		$info_count = 0;
-		foreach($GLOBALS['templates']['vars']['columns'] as $i => $column)
+		foreach($GLOBALS['templates']['vars']['columns'] as $j => $column)
 		{
 			if(isset($file[$column]) && $file[$column] != '' && strlen($file[$column]) <= 200 &&
 				substr($column, -3) != '_id' && $column != 'id' && $column != 'Hex' && $column != 'Filepath' && 
@@ -210,7 +220,6 @@ function theme_live_info()
 		// {if $info_count > $biggest}{assign var=biggest value=$info_count}{/if}
 		
 		//
-		$itemvalue = preg_replace('/([^ ]{25})/i', '$1<br />', $file['Filename']);
 		?>
 		<table cellpadding="0" cellspacing="0" border="0" class="fileInfo" id="info_<?php print $file['id']; ?>" style="display:none; visibility:hidden;">
 			<tr>
@@ -223,8 +232,8 @@ function theme_live_info()
 								</div>
 							</td>
 							<td class="infoCell">
-								<span class="title"><?php print isset($parts)? preg_replace($parts, '<b style="background-color:#990">$0</b>', $itemvalue):$itemvalue; ?></span><br />
-								<span><?php print $file['Filetype']; ?></span>
+								<span class="title"><?php print $GLOBALS['templates']['html']['files'][$i]['Filename']; ?></span><br />
+								<span><?php print $GLOBALS['templates']['html']['files'][$i]['Filetype']; ?></span>
 							</td>
 						</tr>
 					</table>
@@ -232,14 +241,13 @@ function theme_live_info()
 				<td>
 				<?php
 				$count = 0;
-				foreach($GLOBALS['templates']['vars']['columns'] as $i => $column)
+				foreach($GLOBALS['templates']['vars']['columns'] as $j => $column)
 				{
 					if(isset($file[$column]) && $file[$column] != '' && strlen($file[$column]) <= 200 &&
-						substr($column, -3) != '_id' && $column != 'id' && $column != 'Hex' && $column != 'Filepath' && 
+						substr($column, -3) != '_id' && $column != 'id' && $column != 'Hex' && 
 						$column != 'Filename' && $column != 'Filetype'
 					)
 					{
-						$itemvalue = isset($GLOBALS['templates']['vars']['parts'])?preg_replace('/([^ ]{25})/i', '<b style="background-color:#990">$0</b>', $file[$column]):$file[$column];
 						$count++;
 						?>
 						<span class="label" style="color:<?php print ($theme == 'audio')?'#F66':(($theme == 'image')?'#FFA':(($theme == 'video')?'#6FA':'#6CF')); ?>;"><?php print $column; ?>:</span>
@@ -250,7 +258,7 @@ function theme_live_info()
 							if(dirname(dirname($file['Filepath'])) != '/')
 								print '../../' . basename(dirname($file['Filepath'])) . '/' . basename($file['Filepath']);
 							else
-								print $file['Filepath'];
+								print $GLOBALS['templates']['html']['files'][$i]['Filepath'];
 						}
 						elseif($column == 'Filesize')
 							print roundFileSize($file['Filesize']);
@@ -261,7 +269,7 @@ function theme_live_info()
 						elseif($column == 'Length')
 							print floor($file['Length'] / 60) . ' minutes ' . floor($file['Length'] % 60) . ' seconds';
 						else
-							print $file[$column];
+							print $GLOBALS['templates']['html']['files'][$i][$column];
 						?>
 						<br />
 						<?php
@@ -342,10 +350,6 @@ function theme_live_index()
 	<?php
 	
 	theme('files');
-	?>
-	<div class="titlePadding"></div>
-	</div>
-	<?php
 
 	theme('pages');
 	
@@ -363,44 +367,3 @@ if(document.getElementById("debug")) {
 	theme('footer');
 }
 
-function theme_live_footer()
-{
-	?>
-											</td>
-										</tr>
-									</table>
-								</td>
-								<td class="sideColumn right"></td>
-							</tr>
-						</table>
-					</div>
-					<div id="footer">
-						<table id="footerCtr">
-							<tr>
-								<td>
-									<ul>
-									<?php
-									foreach($GLOBALS['modules'] as $module)
-									{
-										if(constant($module . '::INTERNAL'))
-											continue;
-											
-										$name = str_replace(' from Database', '', constant($module . '::NAME'));
-									?>
-										<li class="last"><a href="<?php echo generate_href('plugin=select&cat=' . $module); ?>"><?php echo $name; ?></a></li>
-									<?php
-									}
-									?>
-									</ul>
-								</td>
-							</tr>
-						</table>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-	</body>
-	</html>
-	<?php
-}

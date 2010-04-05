@@ -14,20 +14,24 @@ function register_plain()
 		'description' => 'Default plain text template with base files.',
 		'privilage' => 1,
 		'path' => __FILE__,
-		'files' => array('ampache', 'login', 'm3u'),
+		'files' => array('ampache', 'index', 'm3u', 'users', 'watch'),
 		'settings' => array(
 			'view' => array(
 				'type' => 'radio',
-				'values' => array('mono' => 'Monospace',
-								  'table' => 'Table',
-								  'dash' => 'Dash delimited')
+				'values' => array(
+					'mono' => 'Monospace',
+					'table' => 'Table',
+					'dash' => 'Dash delimited'
+				),
+				'default' => 'mono'
 			),
 			'columns' => array(
 				'type' => 'checkbox',
-				'values' => $columns
+				'values' => $columns,
+				'default' => array('Filename', 'Filesize')
 			)
 		),
-		'lists' => array('m3u', 'rss')
+		'lists' => array('m3u', 'rss', 'xml', 'wpl')
 	);
 }
 
@@ -39,7 +43,13 @@ function output_plain()
 			theme('ampache');
 		break;
 		case 'list':
-			
+			theme('list');
+		break;
+		case 'select':
+		case 'index':
+			theme('index');
+		break;
+		case 'login':
 		break;
 	}
 }

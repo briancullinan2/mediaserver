@@ -16,11 +16,11 @@ if(isset($GLOBALS['plugins'][$_REQUEST['plugin']]))
 {
 	// check if the current user has access to the plugin
 
-	// make sure user in logged in
-	if( isset($GLOBALS['plugins'][$_REQUEST['plugin']]['privilage']) && $_SESSION['privilage'] < $GLOBALS['plugins'][$_REQUEST['plugin']]['privilage'] )
+	// make sure user is logged in
+	if( isset($GLOBALS['plugins'][$_REQUEST['plugin']]['privilage']) && $_SESSION['user']['Privilage'] < $GLOBALS['plugins'][$_REQUEST['plugin']]['privilage'] )
 	{
 		// redirect to login page
-		header('Location: ' . generate_href(array('plugin' => 'login', 'return' => urlencode(generate_href($_GET, true)), 'required_priv' => $GLOBALS['plugins'][$_REQUEST['plugin']]['privilage']), true));
+		header('Location: ' . generate_href(array('plugin' => 'users', 'users' => 'login', 'return' => urlencode(generate_href($_GET, true)), 'required_priv' => $GLOBALS['plugins'][$_REQUEST['plugin']]['privilage']), true));
 		
 		exit();
 	}
@@ -40,6 +40,8 @@ if(isset($GLOBALS['plugins'][$_REQUEST['plugin']]))
 		set_output_vars();
 		
 		call_user_func_array('output_' . $template, array());
+		
+		theme('errors');
 	}
 }
 

@@ -15,19 +15,15 @@ function setup_plugins()
 	);
 	$GLOBALS['triggers'] = array('session' => array(), 'settings' => array());
 	
-	// list all the relative paths that plugins can be loaded from, including templates
-	$paths = array(
-		'plugins' . DIRECTORY_SEPARATOR,
-		'admin' . DIRECTORY_SEPARATOR,
-		'admin' . DIRECTORY_SEPARATOR . 'tools' . DIRECTORY_SEPARATOR,
-	);
+	// read plugin list and create a list of available plugins	
+	load_plugins('plugins' . DIRECTORY_SEPARATOR);
+}
+
+function load_plugins($path)
+{
+	$files = fs_file::get(array('dir' => LOCAL_ROOT . $path, 'limit' => 32000), $count, true);
 	
-	// read plugin list and create a list of available plugins
-	$files = array();
-	foreach($paths as $path)
-	{
-		$files = array_merge($files, fs_file::get(array('dir' => LOCAL_ROOT . $path, 'limit' => 32000), $count, true));
-	}
+	$plugins = array();
 
 	if(is_array($files))
 	{
@@ -38,34 +34,40 @@ function setup_plugins()
 				include_once $file['Filepath'];
 				
 				// determin plugin based on path
-				$plugin = substr($file['Filepath'], strlen(LOCAL_ROOT));
+				$plugin = basename($file['Filepath']);
 				
-				// remove default directory from plugin name
-				if(substr($plugin, 0, 8) == 'plugins/')
-					$plugin = substr($plugin, 8);
+				// functional prefix so there can be multiple plugins with the same name
+				$prefix = substr($file['Filepath'], strlen(LOCAL_ROOT), -strlen($plugin));
+				
+				// remove slashes and replace with underscores
+				$prefix = str_replace(array('/', '\\'), '_', $prefix);
+				
+				// remove plugins_ prefix so as not to be redundant
+				if($prefix == 'plugins_') $prefix = '';
 				
 				// remove extension from plugin name
 				$plugin = substr($plugin, 0, strrpos($plugin, '.'));
 				
-				// remove slashes and replace with underscores
-				$plugin = str_replace(array('/', '\\'), '_', $plugin);
-				
 				// call register function
-				if(function_exists('register_' . $plugin))
-					$GLOBALS['plugins'][$plugin] = call_user_func_array('register_' . $plugin, array());
+				if(function_exists('register_' . $prefix . $plugin))
+				{
+					$plugins[$plugin] = call_user_func_array('register_' . $prefix . $plugin, array());
+					$GLOBALS['plugins'][$prefix . $plugin] = &$plugins[$plugin];
+				}
 				
 				// reorganize the session triggers for easy access
-				if(isset($GLOBALS['plugins'][$plugin]['session']))
+				if(isset($plugins[$plugin]['session']))
 				{
-					foreach($GLOBALS['plugins'][$plugin]['session'] as $i => $var)
+					foreach($plugins[$plugin]['session'] as $i => $var)
 					{
-						$GLOBALS['triggers']['session'][$var][] = $plugin;
+						$GLOBALS['triggers']['session'][$var][] = $prefix . $plugin;
 					}
 				}
 			}
 		}
 	}
-	PEAR::raiseError(print_r($GLOBALS['plugins'], true), E_DEBUG);
+	
+	return $plugins;
 }
 
 // this is used to set up the input variables
@@ -144,7 +146,8 @@ function register_core()
 	return array(
 		'name' => 'Core Functions',
 		'description' => 'Adds core functionality to site that other common plugins depend on.',
-		'path' => __FILE__
+		'path' => __FILE__,
+		'privilage' => 1
 	);
 }
 
@@ -215,6 +218,12 @@ function set_output_vars()
 {
 	// set a couple more that are used a lot
 	
+	// if the search is set, then alway output because any plugin that uses a get will also use search
+	if(isset($_REQUEST['search']))
+	{
+		output_search($_REQUEST);
+	}
+	
 	// the entire site depends on this
 	register_output_vars('plugin', $_REQUEST['plugin']);
 	
@@ -230,6 +239,24 @@ function set_output_vars()
 	// some templates would like to submit to their own page, generate a string based on the current get variable
 	register_output_vars('get', generate_href($_GET, true));
 	
+	// output user information
+	register_output_vars('user', $_SESSION['user']);
+	
+	// register user settings for this template
+	if(isset($_SESSION['user']['settings']['templates'][$_REQUEST['template']]))
+		register_output_vars('settings', $_SESSION['user']['settings']['templates'][$_REQUEST['template']]);
+	// go through and set the defaults
+	elseif(isset($GLOBALS['templates'][$_REQUEST['template']]['settings']))
+	{
+		$settings = array();
+		foreach($GLOBALS['templates'][$_REQUEST['template']]['settings'] as $key => $setting)
+		{
+			if(isset($setting['default']))
+				$settings[$key] = $setting['default'];
+		}
+		register_output_vars('settings', $settings);
+	}
+	
 	// remove everything else so templates can't violate the security
 	//   there is no going back from here
 	if(isset($_SESSION)) session_write_close();
@@ -238,6 +265,7 @@ function set_output_vars()
 		'GLOBALS',
 		//'_REQUEST', // allow this because it has been fully validated
 		'templates',
+		'errors',
 		'debug_errors',
 		'user_errors',
 		'warn_errors',
@@ -254,7 +282,8 @@ function set_output_vars()
 		'_PEAR_default_error_options',
 		'modules',
 		'tables',
-		'ext_to_mime'
+		'ext_to_mime',
+		'lists'
 	);
 	
 	foreach($GLOBALS as $key => $value)

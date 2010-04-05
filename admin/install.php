@@ -395,7 +395,7 @@ function perform_tests($request, $start = 0, $stop = NULL)
 	$tests['system_type'] = 'return true;'; // return true because we don't want to show this if they choose the quick install
 	$tests['settings_perm'] = <<<EOF
 		\$settings = dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'settings.php';
-		return (@fopen(\$settings, 'w') !== false);
+		return (is_writable(\$settings));
 EOF;
 	$tests['mod_rewrite'] = <<<EOF
 		return (isset(\$_REQUEST['modrewrite']) && \$_REQUEST['modrewrite'] == true);
@@ -481,7 +481,7 @@ EOF;
 	$tests['aliasing'] = 'return true;';
 	$tests['save'] = <<<EOF
 		\$settings = dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'settings.php';
-		return (@fopen(\$settings, 'w') !== false);
+		return (is_writable(\$settings));
 EOF;
 
 	if($stop == NULL)
@@ -581,9 +581,9 @@ function output_admin_install($request)
 	
 	register_output_vars('modules', $GLOBALS['modules']);
 
-	$template = $GLOBALS['templates']['TEMPLATE_' . strtoupper($request['plugin'])];
 	set_output_vars(false);
-	include $template;
+	
+	theme('install');
 }
 
 function print_image($install_image)

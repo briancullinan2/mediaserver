@@ -5,27 +5,27 @@
 	background-repeat:no-repeat;
 }
 .thumb, .thumb.file_ext_ {
-	background-image:url(images/filetypes/file_48x48.png);
+	background-image:url(?plugin=template&template=live&tfile=images/filetypes/file_48x48.png);
 }
 .thumb.file_ext_FOLDER {
-	background-image:url(images/filetypes/folder_48x48.png);
+	background-image:url(?plugin=template&template=live&tfile=images/filetypes/folder_48x48.png);
 }
 .thumb.file_type_audio {
-	background-image:url(images/filetypes/audio_48x48.png);
+	background-image:url(?plugin=template&template=live&tfile=images/filetypes/audio_48x48.png);
 }
 .thumb.file_ext_ISO {
-	background-image:url(images/filetypes/iso_48x48.png);
+	background-image:url(?plugin=template&template=live&tfile=images/filetypes/iso_48x48.png);
 }
 .thumb.file_type_text {
-	background-image:url(images/filetypes/text_48x48.png);
+	background-image:url(?plugin=template&template=live&tfile=images/filetypes/text_48x48.png);
 }
 .thumb.file_type_video {
-	background-image:url(images/filetypes/video_48x48.png);
+	background-image:url(?plugin=template&template=live&tfile=images/filetypes/video_48x48.png);
 }
 .thumb.file_type_image {
-	background-image:url(images/filetypes/image_48x48.png);
+	background-image:url(?plugin=template&template=live&tfile=images/filetypes/image_48x48.png);
 }
 
 .thumb.file_ext_ZIP, .thumb.file_ext_RAR, .thumb.file_ext_TGZ, .thumb.file_ext_BZ2, .thumb.file_ext_TBZ, .thumb.file_ext_ARK, .thumb.file_ext_DEB, .thumb.file_ext_7Z, .thumb.file_ext_TAR, .thumb.file_ext_GZ, .thumb.file_ext_SZIP {
-	background-image:url(images/filetypes/archive_48x48.png);
+	background-image:url(?plugin=template&template=live&tfile=images/filetypes/archive_48x48.png);
 }

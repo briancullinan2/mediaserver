@@ -3,7 +3,7 @@
 function register_admin_plugins()
 {
 	return array(
-		'name' => 'Plugins',
+		'name' => 'Admin Plugins',
 		'description' => 'Display a list of plugins and allow for enabling and disabling.',
 		'privilage' => 10,
 		'path' => __FILE__

@@ -28,7 +28,7 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'compatibility.php';
 // require pear for error handling
 require_once 'PEAR.php';
 PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'error_callback');
-set_error_handler('php_to_PEAR_Error');
+//set_error_handler('php_to_PEAR_Error');
 $GLOBALS['errors'] = array();
 $GLOBALS['user_errors'] = array();
 $GLOBALS['warn_errors'] = array();

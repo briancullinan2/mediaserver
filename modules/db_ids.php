@@ -240,7 +240,7 @@ class db_ids extends db_file
 			else $file_dir = $file;
 			
 			// all the removing will be done by other modules
-			$GLOBALS['database']->query(array('UPDATE' => constant($module . '::DATABASE'), 'VALUES' => array(constant($module . '::DATABASE') . '_id' => 0), 'WHERE' => 'Filepath = "' . addslashes($file) . '" OR LEFT(Filepath, ' . strlen($file_dir) . ') = "' . addslashes($file_dir) . '"'), false);	
+			$GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => array(constant($module . '::DATABASE') . '_id' => 0), 'WHERE' => 'Filepath = "' . addslashes($file) . '" OR LEFT(Filepath, ' . strlen($file_dir) . ') = "' . addslashes($file_dir) . '"'), false);	
 		}
 	}
 	

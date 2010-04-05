@@ -1,16 +1,13 @@
 <?php
 
-define('UPLOAD_PRIV', 				5);
-
-// allow uploading of files into user directories
-
-// make sure user in logged in
-if( $_SESSION['privilage'] < UPLOAD_PRIV )
+function register_upload()
 {
-	// redirect to login page
-	header('Location: ' . HTML_ROOT . 'plugins/login.php?return=' . $_SERVER['REQUEST_URI'] . '&required_priv=' . UPLOAD_PRIV);
-	
-	exit();
+	return array(
+		'name' => 'Upload',
+		'description' => 'Handle the uploading of files.',
+		'privilage' => 1,
+		'path' => __FILE__
+	);	
 }
 
 ?>

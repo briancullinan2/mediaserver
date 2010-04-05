@@ -32,10 +32,6 @@ function setup_template()
 				// call register functions
 				if(function_exists('register_' . $template))
 					$GLOBALS['templates'][$template] = call_user_func_array('register_' . $template, array());
-				
-				// call the request alter
-				if(isset($GLOBALS['templates'][$template]['alter request']) && $GLOBALS['templates'][$template]['alter request'] == true)
-					$_REQUEST = call_user_func_array('alter_request_' . $template, array($_REQUEST));
 					
 				// register template files
 				register_template_files($GLOBALS['templates'][$template]);
@@ -53,6 +49,10 @@ function setup_template()
 	
 	// set the HTML_TEMPLATE for templates to refer to their own directory to provide resources
 	define('HTML_TEMPLATE', str_replace(DIRECTORY_SEPARATOR, '/', LOCAL_TEMPLATE));
+	
+	// call the request alter
+	if(isset($GLOBALS['templates'][$_REQUEST['template']]['alter request']) && $GLOBALS['templates'][$_REQUEST['template']]['alter request'] == true)
+		$_REQUEST = call_user_func_array('alter_request_' . $_REQUEST['template'], array($_REQUEST));
 	
 	// assign some shared variables
 	register_output_vars('tables', $GLOBALS['tables']);
@@ -254,14 +254,6 @@ function output_template($request)
 	$request['tfile'] = validate_tfile($request);
 
 	$file = LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR . $request['template'] . DIRECTORY_SEPARATOR . $request['tfile'];
-
-	// if it is a CSS file, redirect so it can use relative paths for images
-	//   does this cause any security flaws?
-	if(getMime($file) == 'text/css')
-	{
-		header('Location: ' . HTML_ROOT . 'templates/' . $request['template'] . '/' . $request['tfile']);
-		exit;
-	}
 
 	if(!isset($request['tfile']))
 	{

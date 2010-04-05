@@ -8,4 +8,19 @@
 //   define the setting name and type in a key array
 //   types will be specified in the documentation (aligns with form types), text, int, radio, checkbox)
 
+function register_settings()
+{
+	return array(
+		'name' => 'Settings',
+		'description' => 'This allows users to save theme settings.',
+		'privilage' => 1,
+		'path' => __FILE__
+	);
+}
+
+function output_settings($request)
+{
+	
+}
+
 ?>

@@ -27,6 +27,9 @@ function setup_list()
 				{
 					include_once LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . $list . '.php';
 					
+					if(isset($GLOBALS['lists'][$list]))
+						PEAR::raiseError('List already defined!', E_DEBUG|E_WARN);
+					
 					if(function_exists('register_' . $name . '_' . $list))
 						$GLOBALS['lists'][$list] = call_user_func_array('register_' . $name . '_' . $list, array());
 				}
@@ -51,6 +54,8 @@ function output_list($request)
 	// if there isn't a list specified show the list template
 	if(!isset($request['list']))
 	{
+		set_output_vars();
+		
 		theme('list');
 	}	
 	else

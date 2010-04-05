@@ -53,41 +53,62 @@ function session_search($request)
 
 function output_search($request)
 {
+	// output search information
 	if(isset($_SESSION['search']))
 		register_output_vars('search', $_SESSION['search']);
-		
-	$parts = array();
-	$search = validate_search($request);
-	if($search[0] != '"' && $search[strlen($search)-1] != '"' && $search[0] != '/' && $search[strlen($search)-1] != '/' && $search[0] != '=' && $search[strlen($search)-1] != '=')
+
+	// replace search results with highlight
+	$search_regexp = array();
+
+	// get columns being searched
+	$columns = call_user_func($request['cat'] . '::columns');
+	
+	$all_columns = getAllColumns();
+	
+	// replace each column with search match
+	foreach($all_columns as $i => $column)
 	{
-		if(isset($search))
+		if(in_array($column, $columns))
 		{
-			$tmp_parts = array_unique(split(' ', stripslashes($search)));
-			foreach($tmp_parts as $i => $part)
+			// select input for individual columns
+			if(isset($GLOBALS['output']['search']['search_' . $column]))
+				$query = $GLOBALS['output']['search']['search_' . $column];
+			else
+				$query = $GLOBALS['output']['search']['search'];
+				
+			// replace with search
+			if(substr($query, 0, 1) == '/' && substr($query, -1) == '/')
 			{
-				if($part != '')
+				$search_regexp[$column] = $query . 'ie';
+			}
+			elseif(substr($query, 0, 1) == '"' && substr($query, -1) == '"')
+			{
+				$search_regexp[$column] = '/' . substr($query, 1, strlen($query) - 2) . '/ie';
+			}
+			elseif(substr($query, 0, 1) == '=' && substr($query, -1) == '=')
+			{
+				$search_regexp[$column] = '/^' . substr($query, 1, strlen($query) - 2) . '$/ie';
+			}
+			else
+			{
+				$tmp_parts = array_unique(split(' ', stripslashes($query)));
+				$search_regexp[$column] = array();
+				foreach($tmp_parts as $i => $part)
 				{
-					if($part[0] == '+') $part = substr($part, 1);
-					$parts[] = '/' . preg_quote(htmlspecialchars($part)) . '/i';
+					if($part != '')
+					{
+						if($part[0] == '+') $part = substr($part, 1);
+						$search_regexp[$column][] = '/' . preg_quote($part) . '/ie';
+					}
 				}
 			}
 		}
+		else
+		{
+			$search_regexp[$column] = '//e';
+		}
 	}
-	elseif($search[0] == '"' && $search[strlen($search)-1] == '"')
-	{
-		$parts = array(0 => '/' . preg_quote(substr($search, 1, strlen($search)-2)) . '/i');
-	}
-	elseif($search[0] == '/' && $search[strlen($search)-1] == '/')
-	{
-		$parts = array(0 => $search . 'i');
-	}
-	elseif($search[0] == '=' && $search[strlen($search)-1] == '=')
-	{
-		$parts = array(0 => '/^' . preg_quote(substr($search, 1, strlen($search)-2)) . '$/i');
-	}
-	
-	if(count($parts) != 0)
-		register_output_vars('parts', $parts);
+	register_output_vars('search_regexp', $search_regexp);
 }
 
 ?>

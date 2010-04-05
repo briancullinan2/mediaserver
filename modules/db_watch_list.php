@@ -48,12 +48,15 @@ class db_watch_list extends db_watch
 					}
 				}
 				
+				// doesn't exist in files database, but is watched should definitely be scanned
+				//   definitely scan it if the directory change time is different from the database
 				if( !isset($file) || date("Y-m-d h:i:s", filemtime($dir)) != $file['Filedate'] )
 				{
 					return true;
 				}
 				else
 				{
+					// compare the count of files in the database to the file system
 					$db_files = $GLOBALS['database']->query(array(
 							'SELECT' => db_file::DATABASE,
 							'COLUMNS' => array('count(*)'),
@@ -133,7 +136,7 @@ class db_watch_list extends db_watch
 		return false;
 	}
 
-	static function handle($dir, $force = false)
+	static function handle($dir)
 	{
 		$dir = str_replace('\\', '/', $dir);
 		
@@ -149,31 +152,23 @@ class db_watch_list extends db_watch
 			
 			if( count($db_watch_list) == 0 )
 			{
+				// add directory to scan queue
 				$id = self::add($dir);
 				
-				return self::handle_dir($dir);
-			}
-			else
-			{
-				return self::scan_dir($dir);
 			}
 		}
+		
 		// check directories recursively
-		else
+		if(self::is_watched($dir))
 		{
-			// yes we are checking it twice but it is better to be safe then sorry
-			if(self::is_watched($dir))
-			{
-				// search recursively
-				$status = self::handle_dir($dir);
-				
-				return $status;
-			}
+			// search recursively
+			return self::handle_dir($dir);
 		}
 		
 		return true;
 	}
 	
+	// scan for changed files
 	static function scan_dir($dir)
 	{
 		PEAR::raiseError('Scanning directory: ' . $dir, E_DEBUG);
@@ -233,68 +228,91 @@ class db_watch_list extends db_watch
 				self::add($path);
 			}
 		}
+		
+		return false;
 	}
 	
-	static function handle_dir($dir)
+	// look for changed directories
+	//   different from scan dir, which looks for changed and new files
+	static function handle_dir($dir, $current = '')
 	{
-		global $tm_start, $secs_total, $state, $dirs;
-		
-		if(!isset($dirs))
-			$dirs = array();
-		
-		if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $dir)))
+		// prevent recursion from symbolic links and add the resolved path to this list
+		if(!isset($GLOBALS['scan_dirs']))
+			$GLOBALS['scan_dirs'] = array();
+			
+		// get current if it is not already set
+		if($current == '')
 		{
-			PEAR::raiseError('Looking for changes in: ' . $dir, E_DEBUG);
-		
-			$files = fs_file::get(array('dir' => $dir, 'limit' => 32000), $count, true);
-					
-			if( isset($state) && is_array($state) ) $state_current = array_pop($state);
-			
-			$i = 0;
-			// check state for starting index
-			if( isset($state_current) && isset($files[$state_current['index']]) && $files[$state_current['index']]['Filepath'] == $state_current['file'] )
+			foreach($GLOBALS['watched'] as $i => $watch)
 			{
-				$i = $state_current['index'];
-			}
-			elseif(isset($state_current))
-			{
-				// put it back on because it doesn't match
-				array_push($state, $state_current);
-			}
-			
-			$max = count($files);
-			// keep going until all files in directory have been read
-			for($i; $i < $max; $i++)
-			{				
-				$file = $files[$i];
-				
-				if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $file['Filepath'])) && !in_array(realpath($file['Filepath']), $dirs))
+				if(substr($dir, 0, strlen($watch['Filepath'])) == $watch['Filepath'])
 				{
-					$dirs[] = realpath($file['Filepath']);
+					$current = $watch['Filepath'];
+					break;
+				}
+			}
+		}
+		
+		if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $current)))
+		{
+			PEAR::raiseError('Looking for changes in: ' . $current, E_DEBUG);
+		
+			$files = fs_file::get(array('dir' => $current, 'limit' => 32000), $count, true);
+			$has_resumed = false;
+			// keep going until all files in directory have been read
+			foreach($files as $i => $file)
+			{
+				if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $file['Filepath'])) && !in_array(realpath($file['Filepath']), $GLOBALS['scan_dirs']))
+				{
+					$GLOBALS['scan_dirs'][] = realpath($file['Filepath']);
+					
+					// check to see if $dir is above the current directory
+					if(substr($current, 0, strlen($dir)) != $dir && $has_resumed == false)
+					{
+						if(substr($dir, 0, strlen($file['Filepath'])) != $file['Filepath'])
+							continue;
+						PEAR::raiseError('Resuming looking for changes in: ' . $file['Filepath'], E_DEBUG);
+						$has_resumed = true;
+					}
 					
 					// check if execution time is too long
-					$secs_total = array_sum(explode(' ', microtime())) - $tm_start;
+					$secs_total = array_sum(explode(' ', microtime())) - $GLOBALS['tm_start'];
 					
 					if( $secs_total > DIRECTORY_SEEK_TIME )
 					{
-						// reset previous state when time runs out
-						$state = array();
-					
-						// save some state information
-						array_push($state, array('index' => $i, 'file' => $file['Filepath']));
-						
-						return false;
+						// return the path to be saved in the state
+						return $file['Filepath'];
 					}
 				
 					// keep processing files
-					$status = self::handle($file['Filepath']);
+					$file['Filepath'] = str_replace('\\', '/', $file['Filepath']);
 					
-					if( $status === false || connection_status() != 0)
+					$current_dir = true;
+					if(self::handles($file['Filepath']))
 					{
-						array_push($state, array('index' => $i, 'file' => $file['Filepath']));
+						$db_watch_list = $GLOBALS['database']->query(array(
+								'SELECT' => self::DATABASE,
+								'COLUMNS' => array('id'),
+								'WHERE' => 'Filepath = "' . addslashes($file['Filepath']) . '"',
+								'LIMIT' => 1
+							)
+						, false);
 						
-						return false;
+						$current_dir = self::handle_dir($dir, $file['Filepath']);
+						
+						if( count($db_watch_list) == 0 )
+						{
+							$id = self::add($file['Filepath']);
+						}
 					}
+					
+					if( $current_dir !== true || connection_status() != 0)
+					{
+						return $current_dir;
+					}
+					
+					if($has_resumed == true)
+						$dir = dirname($file['Filepath']) . '/';
 				}
 				
 				// don't put too much load on the system
@@ -302,6 +320,7 @@ class db_watch_list extends db_watch
 			}
 		}
 		
+		// directory as been completed
 		return true;
 	}
 	

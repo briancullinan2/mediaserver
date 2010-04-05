@@ -198,7 +198,7 @@ class db_code extends db_file
 			unset($words[0]);
 			
 			$fileinfo['LineCount'] = count($lines);
-			$fileinfo['Words'] = join(' ', $words);
+			$fileinfo['Words'] = addslashes(join(' ', $words));
 				
 			$fileinfo['lines'] = join("\n", $lines);
 			
