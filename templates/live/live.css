@@ -581,8 +581,101 @@ body {
 	background: url(?plugin=template&template=live&tfile=images/browse_select_bg.png) repeat-x scroll center bottom #F7FBFF;
 }
 
+.hover.red {
+	display:block;
+	border:1px solid #FAF0D8;
+	margin:5px 0px 5px 0px;
+	background: url(?plugin=template&template=live&tfile=images/browse_select_bg_red.png) repeat-x scroll center bottom #F7FBFF;
+}
+
 .nothover {
 	display:block;
 	border:1px solid #FFF;
 	margin:5px 0px 5px 0px;
+}
+
+.disablebtn {
+	display:block;
+	position:relative;
+	top:24px;
+	right:24px;
+	float:right;
+	height:48px;
+	width:48px;
+	background-image:url(?plugin=template&template=live&tfile=images/button_cancel.png);
+}
+
+td.title {
+	width:175px;
+	font-weight:bold;
+	font-size:10pt;
+	background-color:#6F9;
+}
+
+.title.fail {
+	background-color:#F66;
+}
+
+.title.warn {
+	background-color:#FC3;
+}
+
+table.install td.desc {
+	width:360px;
+	border-left:1px solid #999;
+	border-bottom:1px solid #999;
+	text-align:left;
+}
+
+table.install {
+	width:100%;
+}
+
+table.install td {
+	text-align:center;
+}
+
+.list_block {
+	color:white;
+	-x-system-font:none;
+	font-family:Verdana,Arial,sans-serif;
+	font-size:100%;
+	font-size-adjust:none;
+	font-stretch:normal;
+	font-style:normal;
+	font-variant:normal;
+	font-weight:normal;
+	line-height:normal;
+	background:url(?plugin=template&template=live&tfile=images/headerBG_24_~HeaderGradientImageType~.png) repeat scroll center top;
+	height:39px;
+	text-align:left;
+	position:absolute;
+	bottom:0px;
+	left:0px;
+	background-color:#06A;
+	z-index:1000;
+}
+
+.list_block form {
+	margin:5px 5px 5px 5px;
+	overflow:hidden;
+	height:26px;
+}
+
+#username, #password {
+	width:154px;
+	position:relative;
+	color:#666;
+	display:block;
+	top:-24px;
+	height:24px;
+}
+
+#password {
+	top:-48px;
+	left:160px;
+}
+
+input.stndsize {
+	width:150px;
 }

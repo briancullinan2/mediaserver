@@ -1,12 +1,27 @@
 <?php
-// other stuff can be used here
 
-$GLOBALS['templates']['TEMPLATE_SELECT'] = LOCAL_ROOT . LOCAL_TEMPLATE . 'select.php';
-$GLOBALS['templates']['TEMPLATE_DISPLAY'] = LOCAL_ROOT . LOCAL_TEMPLATE . 'display.xml';
-$GLOBALS['templates']['TEMPLATE_INDEX'] = LOCAL_ROOT . LOCAL_TEMPLATE . 'index.php';
-//$GLOBALS['templates']['TEMPLATE_SEARCH'] = LOCAL_ROOT . LOCAL_TEMPLATE . 'search.html';
-//$GLOBALS['templates']['TEMPLATE_PAGES'] = LOCAL_ROOT . LOCAL_TEMPLATE . 'pages.html';
-//$GLOBALS['templates']['TEMPLATE_HEADER'] = LOCAL_ROOT . LOCAL_TEMPLATE . 'header.html';
-//$GLOBALS['templates']['TEMPLATE_FOOTER'] = LOCAL_ROOT . LOCAL_TEMPLATE . 'footer.html';
 
-?>
+function register_wmp()
+{
+	return array(
+		'name' => 'WMP',
+		'description' => 'A Windows Media Player style interface built on qooXdoo.',
+		'privilage' => 1,
+		'path' => __FILE__,
+		'files' => array()
+	);
+}
+
+
+function output_wmp()
+{
+	theme('index');
+}
+
+function theme_frame()
+{
+	// ?><script>
+	var win = new qx.ui.window.Window("<?php print HTML_NAME;?>");
+	
+	<?php
+}

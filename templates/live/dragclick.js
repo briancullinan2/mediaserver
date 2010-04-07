@@ -32,8 +32,6 @@ var file_width;
 
 var selected = new Array();
 
-var selector_off = false;
-
 function pauseInit()
 {
 	clearTimeout(tmp_timer);

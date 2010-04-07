@@ -244,11 +244,18 @@ function output_encode($request)
 	
 	if(!isset($request['encode']))
 	{
-		set_output_vars();
+		// set file
+		if(isset($request['id'])) register_output_vars('id', $request['id']);
+		if(isset($request['filename'])) register_output_vars('filename', $request['filename']);
 		
+		// since we usually have to make a call to find the file, 
+		//   just call output_select so we can display a file selector
+		output_select($request);
+		
+		// show template for manually setting encoding options
 		theme('encode');
 		
-		exit;
+		return;
 	}
 	
 	$request['encode'] = validate_encode($request);

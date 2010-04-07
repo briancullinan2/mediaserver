@@ -237,7 +237,7 @@ function set_output_vars()
 	if(isset($_REQUEST['extra'])) register_output_vars('extra', $_REQUEST['extra']);
 	
 	// some templates would like to submit to their own page, generate a string based on the current get variable
-	register_output_vars('get', generate_href($_GET, true));
+	register_output_vars('get', href($_GET, true));
 	
 	// output user information
 	register_output_vars('user', $_SESSION['user']);
@@ -270,7 +270,6 @@ function set_output_vars()
 		'user_errors',
 		'warn_errors',
 		'output',
-		'template',
 		'alias',
 		'alias_regexp',
 		'paths',
@@ -407,16 +406,16 @@ function validate_columns($request)
 	if( isset($request['columns']) && !in_array($request['columns'], $columns) )
 	{
 		// make sure if it is a list that it is all valid columns
-		$columns = split(',', $request['columns']);
-		foreach($columns as $i => $column)
+		if(!is_array($request['columns'])) $request['columns'] = split(',', $request['columns']);
+		foreach($request['columns'] as $i => $column)
 		{
 			if(!in_array($column, call_user_func($module . '::columns')))
 				unset($columns[$i]);
 		}
-		if(count($columns) == 0)
+		if(count($request['columns']) == 0)
 			return;
 		else
-			return join(',', $columns);
+			return join(',', $request['columns']);
 	}
 	return $request['columns'];
 }
@@ -549,6 +548,13 @@ function validate_extra($request)
 {
 	if(isset($request['extra']))
 		return $request['extra'];
+}
+
+function validate_filename($request)
+{
+	// just return the same, this is only used for pretty dirs and compatibility
+	if(isset($request['filename']))
+		return $request['filename'];
 }
 
 function output_index($request)

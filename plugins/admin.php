@@ -13,9 +13,4 @@ function register_admin()
 
 function output_admin($request)
 {
-	$request['admin'] = validate_admin($request);
-
-	// check for install status?
-	if(isset($request['admin']))
-		register_output_vars('admin', $request['admin']);
 }

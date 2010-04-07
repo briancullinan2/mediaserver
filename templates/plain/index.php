@@ -33,7 +33,8 @@ function plain_alter_file($file, $column_lengths = NULL)
 {
 	foreach($file as $column => $value)
 	{
-		$file[$column] = sprintf('%-' . ($column_lengths[$column]+2) . 's', $value);
+		if(isset($column_lengths[$column]))
+			$file[$column] = sprintf('%-' . ($column_lengths[$column]+2) . 's', $value);
 		if(isset($GLOBALS['templates']['vars']['search_regexp']) && 
 			isset($GLOBALS['templates']['vars']['search_regexp'][$column]))
 			$file[$column] = preg_replace($GLOBALS['templates']['vars']['search_regexp'][$column], '\'<strong style="background-color:#990;">\' . str_replace(\' \', \'&nbsp;\', htmlspecialchars(\'$0\')) . \'</strong>\'', $file[$column]);
@@ -133,6 +134,11 @@ function theme_plain_template_block()
 	}
 }
 
+function theme_plain_template()
+{
+	theme('template_block');
+}
+
 function theme_plain_files()
 {
 	if(count($GLOBALS['templates']['vars']['files']) == 0)
@@ -141,9 +147,9 @@ function theme_plain_files()
 	}
 	else
 	{
+		$column_lengths = array();
 		if($GLOBALS['templates']['vars']['settings']['view'] == 'mono')
 		{
-			$column_lengths = array();
 			// go through files ahead of time and make them monospaced
 			foreach($GLOBALS['templates']['vars']['files'] as $i => $file)
 			{
@@ -164,6 +170,10 @@ function theme_plain_files()
 			}
 			?> | Download<br /><?php
 		}
+		elseif($GLOBALS['templates']['vars']['settings']['view'] == 'table')
+		{
+			?><table cellpadding="10" cellspacing="0" border="1"><tr><td><?php
+		}
 		
 		foreach($GLOBALS['templates']['html']['files'] as $i => $file)
 		{
@@ -178,16 +188,17 @@ function theme_plain_files()
 			if($GLOBALS['templates']['vars']['cat'] != $cat || $GLOBALS['templates']['vars']['files'][$i]['Filetype'] == 'FOLDER') $new_cat = $cat;
 			
 			$link = isset($new_cat)?href('plugin=select&cat=' . $new_cat . '&dir=' . urlencode($GLOBALS['templates']['vars']['files'][$i]['Filepath'])):href('plugin=file&cat=' . $cat . '&id=' . $file['id'] . '&filename=' . urlencode($GLOBALS['templates']['vars']['files'][$i]['Filename']));
-			
 			?>
 			<input type="checkbox" name="item[]" value="<?php print $file['id']; ?>" <?php print isset($GLOBALS['templates']['vars']['selected'])?(in_array($GLOBALS['templates']['vars']['files'][$i]['id'], $GLOBALS['templates']['vars']['selected'])?'checked="checked"':''):''; ?> />
 			<a href="<?php print $link; ?>"><?php print trim($file['Filepath'], '&nbsp;'); ?></a><?php print substr($file['Filepath'], strlen(trim($file['Filepath'], '&nbsp;'))); ?>
 			<?php
 			
-			foreach($GLOBALS['templates']['vars']['settings']['columns'] as $i => $column)
+			foreach($GLOBALS['templates']['vars']['settings']['columns'] as $j => $column)
 			{
 				if($GLOBALS['templates']['vars']['settings']['view'] == 'mono')
 					print ' | ';
+				elseif($GLOBALS['templates']['vars']['settings']['view'] == 'table')
+					print '</td><td>';
 				else
 					print ' - ';
 				
@@ -197,13 +208,17 @@ function theme_plain_files()
 				}
 			}
 			
-			if($GLOBALS['templates']['vars']['settings']['view'] != 'mono')
+			if($GLOBALS['templates']['vars']['settings']['view'] == 'mono')
 			{
-				?> - Download: <?php
+				print ' | ';
+			}
+			elseif($GLOBALS['templates']['vars']['settings']['view'] == 'table')
+			{
+				print '</td><td>';
 			}
 			else
 			{
-				print ' | ';
+				?> - Download: <?php
 			}
 			?>
 			<a href="<?php print href(array(
@@ -260,11 +275,25 @@ function theme_plain_files()
 				<?php
 			}
 			
-			?><br /><?php
+			if($GLOBALS['templates']['vars']['settings']['view'] == 'table')
+			{
+				if($i < count($GLOBALS['templates']['vars']['files']) - 1)
+				{
+					?></td></tr><tr><td><?php
+				}
+			}
+			else
+			{
+				?><br /><?php
+			}
 		}
 		if($GLOBALS['templates']['vars']['settings']['view'] == 'mono')
 		{
 			?></code><?php
+		}
+		if($GLOBALS['templates']['vars']['settings']['view'] == 'table')
+		{
+			?></td></tr></table><?php
 		}
 	}
 }

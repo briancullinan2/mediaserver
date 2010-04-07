@@ -54,9 +54,9 @@ function output_list($request)
 	// if there isn't a list specified show the list template
 	if(!isset($request['list']))
 	{
-		set_output_vars();
-		
 		theme('list');
+		
+		return;
 	}	
 	else
 	{

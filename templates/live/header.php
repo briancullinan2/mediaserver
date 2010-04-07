@@ -43,12 +43,22 @@ function theme_live_head()
 	<html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<title><?php print isset($GLOBALS['templates']['vars']['title'])?$GLOBALS['templates']['vars']['title']:HTML_NAME; ?></title>
+	<title><?php print isset($GLOBALS['templates']['vars']['title'])?$GLOBALS['templates']['vars']['title']:HTML_NAME; ?> : <?php print $GLOBALS['plugins'][$GLOBALS['templates']['vars']['plugin']]['name'];?></title>
 	<meta name="google-site-verification" content="K3Em8a7JMI3_1ry5CNVKIHIWofDt-2C3ohovDq3N2cQ" />
 	<?php theme('styles', $GLOBALS['templates']['vars']['styles']); ?>
 	<?php theme('scripts', $GLOBALS['templates']['vars']['scripts']); ?>
 	<script language="javascript">
 	var loaded = false;
+	<?php
+	if(isset($GLOBALS['templates']['vars']['selector']) && $GLOBALS['templates']['vars']['selector'] == false)
+	{
+		?>var selector_off = true;<?php
+	}
+	else
+	{
+		?>var selector_off = false;<?php
+	}
+	?>
 	</script>
 	</head>
 	<?php
@@ -208,6 +218,7 @@ function theme_live_body()
 	$theme = live_get_theme_color();
 ?>
 <body onLoad="init();" onmousemove="setSelector()" onmousedown="return startDrag(event);" onmouseup="endDrag();return false;">
+<?php theme('list_block'); ?>
 <div id="bodydiv">
 	<div id="sizer">
 		<div id="expander">

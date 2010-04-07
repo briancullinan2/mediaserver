@@ -6,7 +6,7 @@ function register_plain()
 	$columns = array();
 	foreach($tmp_columns as $i => $column)
 	{
-		$columns[$column] = $column;
+		$columns[] = $column;
 	}
 	
 	return array(
@@ -17,15 +17,17 @@ function register_plain()
 		'files' => array('ampache', 'index', 'm3u', 'users', 'watch'),
 		'settings' => array(
 			'view' => array(
+				'name' => 'View Options',
 				'type' => 'radio',
 				'values' => array(
 					'mono' => 'Monospace',
 					'table' => 'Table',
 					'dash' => 'Dash delimited'
 				),
-				'default' => 'mono'
+				'default' => 'table'
 			),
 			'columns' => array(
+				'name' => 'Visible Columns',
 				'type' => 'checkbox',
 				'values' => $columns,
 				'default' => array('Filename', 'Filesize')

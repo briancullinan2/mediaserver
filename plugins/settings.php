@@ -20,7 +20,7 @@ function register_settings()
 
 function output_settings($request)
 {
-	
+	//if(isset($_SESSION['user']['Settings']))
 }
 
 ?>

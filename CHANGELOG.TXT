@@ -1,3 +1,15 @@
+2010-04-06
+Removed defaulting functionality from theme() in template.php plugin
+	All templates must now implement everything they need by themselves
+Started WMP qooXdoo template
+Worked on Live theme
+Worked on plain theme
+
+2010-04-05
+Removed all unnessicary template files
+Worked on displaying admin section
+	Converted install and plugins to use default admin header
+
 2010-04-04
 Worked on Admin section
 	Added admin.php plugin for loading all of the admin scripts

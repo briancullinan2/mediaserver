@@ -130,7 +130,7 @@ function validate_template($request, $session = '')
 		$request['template'] = $session;
 		
 	// check if it is a valid template specified
-	if(isset($request['template']))
+	if(isset($request['template']) && $request['template'] != '')
 	{
 		// remove template directory from beginning of input
 		if(substr($request['template'], 0, 10) == 'templates/' || substr($request['template'], 0, 10) == 'templates\\')
@@ -201,17 +201,37 @@ function register_script($request)
 	return false;
 }
 
-function theme($request)
+function theme($request = '')
 {
+	// if the theme function is just being called without any input
+	//   then call the default theme function
+	if($request == '' && isset($_REQUEST['template']))
+	{
+		$template = $_REQUEST['template'];
+		set_output_vars();
+		call_user_func_array('output_' . $template, array());
+		return;
+	}
+	
+	// if the theme function is being called then the output vars better be set
+	if(!isset($GLOBALS['templates']['vars']))
+		set_output_vars();
+	
+	// get the arguments to pass on to theme_ functions
 	$args = func_get_args();
+	
+	// do not pass original theme call argument
 	unset($args[0]);
 	$args = array_values($args);
+	
+	// if the request is an array, assume they are setting the template and theme call
 	if(is_array($request))
 	{
+		// the tfile paramet can be used to call the theme_ function
 		$request['template'] = validate_template($request);
 		$request['tfile'] = validate_tfile($request);
-		if(!function_exists('theme_' . $request['template'] . '_' . $request['tfile']))
-			$request['template'] = validate_template(array('template' => LOCAL_BASE));
+		
+		// if the function exists call the theme_ implementation
 		if(function_exists('theme_' . $request['template'] . '_' . $request['tfile']))
 		{
 			// call the function and be done with it
@@ -221,22 +241,22 @@ function theme($request)
 		else
 			PEAR::raiseError('Theme function \'theme_' . $request['template'] . '_' . $request['tfile'] . '\' was not found.', E_DEBUG|E_WARN);
 	}
+	// the request is a string, this is most common
 	elseif(is_string($request))
 	{
+		// check if function exists in current theme
 		if(function_exists('theme_' . validate_template(array('template' => HTML_TEMPLATE)) . '_' . $request))
 		{
 			call_user_func_array('theme_' . validate_template(array('template' => HTML_TEMPLATE)) . '_' . $request, $args);
 			return true;
 		}
-		elseif(function_exists('theme_' . validate_template(array('template' => LOCAL_BASE)) . '_' . $request))
-		{
-			call_user_func_array('theme_' . validate_template(array('template' => LOCAL_BASE)) . '_' . $request, $args);
-			return true;
-		}
 		// it is possible the whole request
 		else
 		{
+			// parse out the request into an array
 			$request = href($request, true, false, true);
+			
+			// call the theme again
 			$result = theme((array)$request);
 			if($result == false)
 				PEAR::raiseError('Theme function could not be handled because of an unrecognized argument.', E_DEBUG|E_WARN);
@@ -258,17 +278,8 @@ function output_template($request)
 	if(!isset($request['tfile']))
 	{
 		// if the tfile isn't specified, display the template template
-		if(isset($GLOBALS['templates']['TEMPLATE_TEMPLATE']))
-		{
-			// select template for the current plugin
-			if(getExt($GLOBALS['templates']['TEMPLATE_TEMPLATE']) == 'php')
-				@include $GLOBALS['templates']['TEMPLATE_TEMPLATE'];
-			else
-			{
-				set_output_vars(false);
-				$GLOBALS['smarty']->display($GLOBALS['templates']['TEMPLATE_TEMPLATE']);
-			}
-		}
+		theme('template');
+		
 		return;
 	}
 	

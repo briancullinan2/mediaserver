@@ -228,7 +228,6 @@ function output_users($request)
 					), false);
 					
 					// send out confirmation email
-					set_output_vars();
 					ob_start();
 					theme('confirmation');
 					$confirmation = ob_get_contents();
@@ -258,6 +257,8 @@ function output_users($request)
 					header('Location: ' . $request['return']);
 					exit();
 				}
+				else
+					PEAR::raiseError('Already logged in!', E_USER);
 			}
 		break;
 		// remove all cookies and session information

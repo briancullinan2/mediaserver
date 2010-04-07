@@ -8,7 +8,7 @@ function register_live()
 		'privilage' => 1,
 		'path' => __FILE__,
 		'alter request' => true,
-		'files' => array('admin', 'encode', 'footer', 'header', 'index', 'install', 'list', 'plugins', 'search', 'tools', 'users')
+		'files' => array('admin', 'encode', 'footer', 'header', 'index', 'install', 'list', 'plugins', 'search', 'select', 'settings', 'tools', 'users')
 	);
 }
 
@@ -40,11 +40,17 @@ function output_live()
 		case 'search':
 			theme('search');
 		break;
+		case 'settings':
+			theme('settings');
+		break;
 		case 'users':
 			theme('users');
 		break;
 		case 'admin':
 			theme('admin');
+		break;
+		case 'admin_alias':
+			theme('alias');
 		break;
 		case 'admin_watch':
 			theme('watch');
@@ -52,11 +58,33 @@ function output_live()
 		case 'admin_plugins':
 			theme('plugins');
 		break;
+		case 'admin_template':
+			theme('template');
+		break;
 		case 'admin_tools':
 			theme('tools');
 		break;
 		case 'admin_tools_filetools':
 			theme('tools_filetools');
 		break;
+		default:
+			theme('default');
 	}
+}
+
+function theme_live_default()
+{
+	theme('header');
+	
+	?>
+	<div class="contentSpacing">
+			<h1 class="title">Plugin: <?php print $GLOBALS['plugins'][$GLOBALS['templates']['vars']['plugin']]['name']; ?></h1>
+			<span class="subText">This page requires special parameters that have not been set.  This default page is a placeholder.</span>
+	<?php
+	
+	theme('errors');
+
+	?></div><?php
+
+	theme('footer');
 }

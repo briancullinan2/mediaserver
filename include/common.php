@@ -6,7 +6,7 @@
 // get the file mime type
 
 // set version for stuff to reference
-define('VERSION', 			     '0.50.0');
+define('VERSION', 			     '0.60.0');
 define('VERSION_NAME', 			'Goliath');
 
 // define some error codes so we know which errors to print to the user and which to print to debug

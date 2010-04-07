@@ -9,6 +9,8 @@ function register_live_encode()
 
 function theme_live_encode()
 {
+	$GLOBALS['templates']['vars']['selector'] = false;
+	
 	theme('header');
 	
 	?>
@@ -36,6 +38,26 @@ function theme_live_encode()
 	}
 	</script>
 	<form name="encode_form" action="<?php print $GLOBALS['templates']['vars']['get']; ?>" method="get">
+		<?php
+		if(!isset($GLOBALS['templates']['vars']['id']))
+		{
+			?>Select a File:<br /><?php
+			
+			theme('select_block');
+		}
+		else
+		{
+			?>
+			<input type="hidden" value="<?php print $GLOBALS['templates']['html']['id']; ?>" name="id" />
+			Selected file: [<?php print $GLOBALS['templates']['html']['id']; ?>]<br />
+			<?php
+			
+			if(isset($GLOBALS['templates']['html']['filename']))
+				print $GLOBALS['templates']['html']['filename'];
+			?><br /><a href="<?php print href('plugin=encode'); ?>">Select a different file</a><?php
+		}
+		
+		?><br />
 		Presets: <select name="encode">
 		<?php
 		foreach(array('mp4', 'mpg', 'wmv', 'mp4a', 'mp3', 'wma') as $i => $encode)

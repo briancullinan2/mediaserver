@@ -9,23 +9,10 @@ function register_live_plugins()
 
 function theme_live_plugins()
 {
-	$GLOBALS['templates']['vars']['title'] = 'Plugins';
-	$GLOBALS['templates']['vars']['subtext'] = $GLOBALS['plugins']['admin_plugins']['description'];
+	$recommended = array('select', 'list', 'search');
+	$required = array('core', 'index', 'login');
 	
-	?>
-	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-	<html xmlns="http://www.w3.org/1999/xhtml">
-	<head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<title><?php print isset($GLOBALS['templates']['vars']['title'])?$GLOBALS['templates']['vars']['title']:HTML_NAME; ?></title>
-	<meta name="google-site-verification" content="K3Em8a7JMI3_1ry5CNVKIHIWofDt-2C3ohovDq3N2cQ" />
-	<?php theme('styles', $GLOBALS['templates']['vars']['styles']); ?>
-	<?php theme('scripts', $GLOBALS['templates']['vars']['scripts']); ?>
-	<link rel="stylesheet" href="<?php print href('plugin=admin_install&install_image=style'); ?>" type="text/css"/>
-	</head>
-	<?php
-	
-	theme('body');
+	theme('header');
 	
 	?>
 	<div class="contentSpacing">
@@ -38,14 +25,9 @@ function theme_live_plugins()
 	?>
 	<div class="titlePadding"></div>
 	<form action="" method="post">
-		<table border="0" cellpadding="0" cellspacing="0">
+		<table border="0" cellpadding="0" cellspacing="0" class="install">
 	<?php
 
-	
-	?><div class="titlePadding"></div><?php
-	
-	$recommended = array('select', 'list', 'search');
-	$required = array('core', 'index', 'login');
 	foreach($GLOBALS['plugins'] as $key => $plugin)
 	{
 		?>
@@ -76,7 +58,7 @@ function theme_live_plugins()
 			<td class="desc">
 			<ul>
 				<li><?php print $GLOBALS['plugins'][$key]['description']; ?></li>
-				<li>Choose whether or not to select the <?php print $GLOBALS['plugins'][$key]['name']; ?> plugin.</li>
+				<li>Choose whether or not to enable the <?php print $GLOBALS['plugins'][$key]['name']; ?> plugin.</li>
 			</ul>
 			</td>
 		</tr>

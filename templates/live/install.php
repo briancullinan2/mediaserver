@@ -9,19 +9,7 @@ function register_live_install()
 
 function theme_live_install()
 {
-	?>
-	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-	<html xmlns="http://www.w3.org/1999/xhtml">
-	<head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<title><?php print isset($GLOBALS['templates']['vars']['title'])?$GLOBALS['templates']['vars']['title']:HTML_NAME; ?></title>
-	<meta name="google-site-verification" content="K3Em8a7JMI3_1ry5CNVKIHIWofDt-2C3ohovDq3N2cQ" />
-	<link rel="stylesheet" href="<?php print href('plugin=admin_install&install_image=style'); ?>" type="text/css"/>
-	<script language="javascript">
-	var loaded = false;
-	</script>
-	</head>
-	<?php
+	theme('head');
 	
 	if(!is_float($GLOBALS['templates']['vars']['install_step']))
 	{
@@ -204,7 +192,7 @@ function output_heading($install_step)
 	
 	print_fields();
 	
-	?><table border="0" cellpadding="0" cellspacing="0"><?php
+	?><table border="0" cellpadding="0" cellspacing="0" class="install"><?php
 }
 
 function output_tests($install_step)
