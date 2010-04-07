@@ -7,7 +7,7 @@
 define('USE_DATABASE', 	                  true); // set to false to make modules load information about every file on the fly
 define('DB_SERVER',                'localhost');
 define('DB_USER',                    'tmpuser');
-define('DB_PASS',           '2Yq1MBsyqk0Q0jVx');
+define('DB_PASS',                    'tmppass');
 define('DB_NAME',                'mediaserver');
 define('DB_TYPE',				       'mysql');
 
