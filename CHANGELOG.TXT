@@ -1,3 +1,6 @@
+2010-04-07
+Worked on monolithicmedia.org website.
+
 2010-04-06
 Removed defaulting functionality from theme() in template.php plugin
 	All templates must now implement everything they need by themselves
