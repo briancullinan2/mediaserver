@@ -1,3 +1,9 @@
+2010-04-12
+Worked on documentation site
+Worked on monolithicmedia site
+Added functions for a plugin to alter the mysql query with input from it's variables
+	This allows for abstracting certain parts of the db_file::get() API
+
 2010-04-07
 Worked on monolithicmedia.org website.
 

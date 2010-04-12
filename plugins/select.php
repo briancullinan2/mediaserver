@@ -9,7 +9,8 @@ function register_select()
 		'description' => 'Allows users to select files and saves the selected files in their session and profile.',
 		'privilage' => 1,
 		'path' => __FILE__,
-		'session' => array('item', 'on', 'off')
+		'session' => array('item', 'on', 'off'),
+		'alter query' => array('selected')
 	);
 }
 
@@ -138,38 +139,6 @@ function validate_short($request)
 	return false;
 }
 
-function validate_dir($request)
-{
-	// if this is not validated completely it is OK because it will be fixed in the db_file module when it is looked up
-	//   this shouldn't cause any security risks
-	if(isset($request['dir']))
-	{
-		$request['cat'] = validate_cat($request);
-		if(USE_ALIAS == true)
-			$tmp = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
-		if(is_dir(realpath($tmp)) || call_user_func_array($request['cat'] . '::handles', array($request['dir'])) == true)
-			return $request['dir'];
-		else
-			PEAR::raiseError('Directory does not exist!', E_USER);
-	}
-}
-
-function validate_file($request)
-{
-	// if this is not validated completely it is OK because it will be fixed in the db_file module when it is looked up
-	//   this shouldn't cause any security risks
-	if(isset($request['file']))
-	{
-		$request['cat'] = validate_cat($request);
-		if(USE_ALIAS == true)
-			$tmp = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']);
-		if(is_file(realpath($tmp)) || call_user_func_array($request['cat'] . '::handles', array($request['file'])) == true)
-			return $request['file'];
-		else
-			PEAR::raiseError('File does not exist!', E_USER);
-	}
-}
-
 // passes a validated request to the session select for processing and saving
 //  the array of settings returned from this is stored in $_SESSION[<name>] = session_select($request);
 function session_select($request)
@@ -200,6 +169,13 @@ function output_select($request)
 	
 	// make select call
 	$files = call_user_func_array($request['cat'] . '::get', array($request, &$total_count));
+	
+	if(!is_array($files))
+	{
+		PEAR::raiseError('There was an error with the query.', E_USER);
+		register_output_vars('files', array());
+		return;
+	}
 	
 	$order_keys_values = array();
 	

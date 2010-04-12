@@ -1,42 +1,71 @@
 <?php
-
-// the most basic functions used a lot
-// things to consider:
-// get the extension for a file using getExt
-// get the file mime type
-
-// set version for stuff to reference
+/**
+ * the most basic functions used a lot<br />
+ * things to consider:
+ * - get the extension for a file using getExt
+ * - get the file mime type
+ */
+ 
+/**
+ * @name Version Information
+ * DO NOT CHANGE!
+ * @{ 
+ * @enum VERSION set version for stuff to reference
+ * @enum VERSION_NAME set the name for a text representation of the version
+ */
 define('VERSION', 			     '0.60.0');
 define('VERSION_NAME', 			'Goliath');
+/** @} */
 
-// define some error codes so we know which errors to print to the user and which to print to debug
+/**
+ * @name Error Levels
+ * Error codes so we know which errors to print to the user and which to print to debug
+ */
+//@{
+/** @enum E_DEBUG the DEBUG level error used for displaying errors in the debug template block */
 define('E_DEBUG',					1);
+/** @enum E_USER USER level errors are printed to the user by the templates */
 define('E_USER',					2);
+/** @enum E_WARN the WARN level error prints a different color in the error block, this is
+ * used by parts of the site that cause problems that may not be intentional */
 define('E_WARN',					4);
+/** @enum E_FATAL the FATAL errors are ones that cause the script to end at an unexpected point */
 define('E_FATAL',					8);
+/** @enum E_NOTE the NOTE error level is used for displaying positive information to users such as
+ * "account has been created" */
 define('E_NOTE',					16);
+//@}
 
-// require the settings
 //if(realpath('/') == '/')
 //	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.nix.php';
 //else
+/** require the settings */
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.php';
 
-// require compatibility
+/** require compatibility */
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'compatibility.php';
 	
-// require pear for error handling
+/** require pear for error handling */
 require_once 'PEAR.php';
+/** Set the error handler to use our custom function for storing errors */
 PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'error_callback');
 //set_error_handler('php_to_PEAR_Error');
+/** stores a list of all errors */
 $GLOBALS['errors'] = array();
+/** stores a list of all user errors */
 $GLOBALS['user_errors'] = array();
+/** stores a list of all warnings */
 $GLOBALS['warn_errors'] = array();
+/** stores a list of all debug information */
 $GLOBALS['debug_errors'] = array();
 
 //session_cache_limiter('public');
+/** always begin the session */
 session_start();
 
+/** Remove annoying POST error message with the page is refreshed 
+ * @{
+ */
 if(isset($_POST) && count($_POST) > 0)
 {
 	$_SESSION['last_request'] = $_REQUEST;
@@ -48,12 +77,18 @@ if(isset($_SESSION['last_request']))
 	$_REQUEST = $_SESSION['last_request'];
 	unset($_SESSION['last_request']);
 }
+/**
+ * @}
+ */
 
 require_once 'MIME' . DIRECTORY_SEPARATOR . 'Type.php';
 
-// classes that this function uses to set up stuff should use the $no_setup = true option
+/** set up all the GLOBAL variables needed throughout the site */
 setup();
 
+/**
+ * Setup all the GLOBAL variables used throughout the site
+ */
 function setup()
 {
 	// this is where most of the initialization occurs, some global variables are set up for other pages and modules to use
@@ -96,6 +131,9 @@ function setup()
 
 }
 
+/**
+ * Set up the list of aliases from the database
+ */
 function setupAliases()
 {
 	// get the aliases to use to replace parts of the filepath
@@ -121,7 +159,9 @@ function setupAliases()
 	
 }
 
-// this scans the modules directory
+/**
+ * Scan modules directory and load all of the modules that handle files
+ */
 function setupModules()
 {
 	
@@ -173,7 +213,9 @@ function setupModules()
 }
 
 
-// this is used to create the list of tables
+/**
+ * Create a GLOBAL list of tables used by all the modules
+ */
 function setupTables()
 {
 	// loop through each module and compile a list of databases
@@ -192,8 +234,13 @@ function setupTables()
 	$GLOBALS['watched'][] = array('id' => 0, 'Filepath' => str_replace('\\', '/', LOCAL_USERS));
 }
 
-// check if a module handles a certain type of files
-//  this is a useful call for templates to use because it provides short syntax
+/**
+ * Check if a module handles a certain type of files
+ * this is a useful call for templates to use because it provides short syntax
+ * @param file The file to test if it is handled
+ * @param module The module to check if it handles the specified file
+ * @return true if the specified module handles the specified file, false if the module does not handle that file
+ */
 function handles($file, $module)
 {
 	if(class_exists((USE_DATABASE?'db_':'fs_') . $module))
@@ -204,6 +251,9 @@ function handles($file, $module)
 	return false;
 }
 
+/**
+ * Get the url of the server
+ */
 function selfURL()
 {
 	$s = empty($_SERVER["HTTPS"]) ? '' : ($_SERVER["HTTPS"] == "on") ? "s" : "";
@@ -212,9 +262,12 @@ function selfURL()
 	return $protocol."://".$_SERVER['SERVER_NAME'].$port.$_SERVER['REQUEST_URI'];
 }
 
-// check a list of files for access by comparing session keys and user information to each file
-//  return the modified list of files with items removed
-//  leave keys alone so plugin can profile more feedback
+/**
+ * check a list of files for access by comparing session keys and user information to each file
+ * @param file associative array from a module::get() call
+ * @return the modified list of files with items removed
+ * leave keys alone so plugin can profile more feedback
+ */
 function checkAccess($file)
 {
 	// user can access files not handled by user module
@@ -252,7 +305,12 @@ function checkAccess($file)
 	return false;
 }
 
-// tokenize a string, assumed to be a filepath, in various different ways
+/**
+ * tokenize a string, assumed to be a filepath, in various different ways
+ * remove useless words like 'and' and 'a' and 'of'
+ * @param string the string to tokenize
+ * @return An assosiative array with each variation of removed terms
+ */
 function tokenize($string)
 {
 	$return = array();
@@ -300,7 +358,12 @@ function tokenize($string)
 	return $return;
 }
 
-// sorting function for terms in a keyword search
+/**
+ * sorting function for terms in a keyword search
+ * @param a the first item to compare
+ * @param b the second item to compare
+ * @return 1 for comes after, -1 for comes before, 0 for equal
+ */
 function termSort($a, $b)
 {
 	if(($a[0] == '+' && $a[0] == $b[0]) || ($a[0] == '-' && $a[0] == $b[0]) || ($a[0] != '+' && $a[0] != '-' && $b[0] != '+' && $b[0] != '-'))
@@ -322,7 +385,13 @@ function termSort($a, $b)
 	}
 }
 
-// parses the path inside of a file, useful to modules like archive and diskimage
+/**
+ * parses the path inside of a file, useful to modules like archive and diskimage
+ * @param file The filepath to search for the inside part of
+ * @param last_path The part of the path that exists on disk
+ * @param inside_path The inner part of the path that exists within the directory
+ * return none
+ */
 function parseInner($file, &$last_path, &$inside_path)
 {
 	$paths = split(DIRECTORY_SEPARATOR, $file);
@@ -344,7 +413,10 @@ function parseInner($file, &$last_path, &$inside_path)
 	if($last_path[strlen($last_path)-1] == '/') $last_path = substr($last_path, 0, strlen($last_path)-1);
 }
 
-// get all columns from every modules
+/**
+ * get all columns from every modules
+ * @return a list of all the columns combined from every module installed
+ */
 function getAllColumns()
 {
 	$columns = array();
@@ -359,51 +431,22 @@ function getAllColumns()
 	return $columns;
 }
 
-// string together everything in the request
-function getRequestString($request)
-{
-	$request_str = '';
-	foreach($request as $key => $value) $request_str .= '&amp;' . $key . '=' . $value;
-	return substr($request_str, 5, strlen($request_str) - 5);
-}
-
-// simple parser for command line like arguments
-function parseCommandArgs($string)
-{
-	$args = array();
-	$current = '';
-	$quote_switch = false;
-	for($i = 0; $i < strlen($string); $i++)
-	{
-		if(substr($string, $i, 1) == ' ' && $quote_switch == false)
-		{
-			$args[] = $current;
-			$current = '';
-		}
-		elseif(substr($string, $i, 1) == '"')
-		{
-			$quote_switch = !$quote_switch;
-		}
-		else
-		{
-			$current .= substr($string, $i, 1);
-		}
-	}
-	if($current != '')
-		$args[] = $current;
-		
-	return $args;
-}
-
-// rounds the filesize and adds the extension
+/**
+ * rounds the filesize and adds the extension
+ * @param dirsize the number to round
+ * @return a rounded number with a GB/MB/KB suffix
+ */
 function roundFileSize($dirsize)
 {
 	$dirsize = ( $dirsize < 1024 ) ? ($dirsize . " B") : (( $dirsize < 1048576 ) ? (round($dirsize / 1024, 2) . " KB") : (( $dirsize < 1073741824 ) ? (round($dirsize / 1048576, 2) . " MB") : (( $dirsize < 1099511627776 ) ? (round($dirsize / 1073741824, 2) . " GB") : (round($dirsize / 1099511627776, 2) . " TB") ) ) );
 	return $dirsize;
 }
 
-// just a function for getting the names keys used in the db_ids module
-//  this is used is most plugins for simplifying database access by looking up the key first
+/**
+ * just a function for getting the names keys used in the db_ids module
+ * this is used is most plugins for simplifying database access by looking up the key first
+ * @return all the id_ columns from db_ids module
+ */
 function getIDKeys()
 {
 	$id_keys = array_flip(db_ids::columns());
@@ -414,7 +457,11 @@ function getIDKeys()
 	return $id_keys;
 }
 
-// notify of ascii problems when reading data
+/**
+ * notify of ascii problems when reading data
+ * @param str the input string to test for ascii only character codes
+ * @return true if there is a match, false if no matches are found
+ */
 function utf8_is_ascii($str) {
 	
 	if ( strlen($str) > 0 )
@@ -430,7 +477,13 @@ function utf8_is_ascii($str) {
 	
 }
 
-// get our file types, stuff the website can handle
+/**
+ * get our file types, stuff the website can handle
+ * @param file The file to get the type of
+ * @return 'FOLDER' if the input file is a directory, 
+ * the extension of the file in uppercase format, 
+ * 'FILE' if there is no extension
+ */
 function getFileType($file)
 {
 	if( file_exists( str_replace('/', DIRECTORY_SEPARATOR, $file) ) )
@@ -458,7 +511,11 @@ function getFileType($file)
 	}
 }
 
-// get the file extension
+/**
+ * get the file extension
+ * @param file The file to get the extention of
+ * @return FALSE if there is no extension or anything after the last period in the file name
+ */
 function getExt($file)
 {
 	if( is_dir($file) )
@@ -480,7 +537,11 @@ function getExt($file)
 	}
 }
 
-// get mime type based on file extension
+/**
+ * get mime type based on file extension
+ * @param ext the extension or filename to get the mime type of
+ * @return a mime type based on the UNIX mime.types file
+ */
 function getMime($ext)
 {
 	if(strpos($ext, '.') !== false)
@@ -497,13 +558,22 @@ function getMime($ext)
 		return '';
 	}
 }
-// get the type which is the first part of a mime based on extension
+
+/**
+ * get the type which is the first part of a mime based on extension
+ * @param filename the file to get the mime type of
+ * @return the first part of a mime type such as 'audio' or 'text'
+ */
 function getExtType($filename)
 {
 	return MIME_Type::getMedia(getMime($filename));
 }
 
-// create the crc32 from a file, this uses a buffer size so it doesn't error out
+/**
+ * create the crc32 from a file, this uses a buffer size so it doesn't error out
+ * @param filename the file to get the crc hash code of
+ * @return the crc code
+ */
 function crc32_file($filename)
 {
     $fp = @fopen($filename, "rb");
@@ -532,6 +602,13 @@ function crc32_file($filename)
     return $crc32;
 }
 
+/**
+ * a helper function for crc32_file
+ * @param crc1 the first part of the crc code being generated
+ * @param crc2 the second part of the crc code being generated
+ * @param len2 the length of the current crc code
+ * @return the new crc1 code
+ */
 function crc32_combine($crc1, $crc2, $len2)
 {
     $odd[0]=0xedb88320;
@@ -570,6 +647,9 @@ function crc32_combine($crc1, $crc2, $len2)
     return $crc1;
 }
 
+/**
+ * helper function for crc32_combine
+ */
 function gf2_matrix_square(&$square, &$mat)
 {
     for ($n=0;$n<32;$n++) {
@@ -577,6 +657,9 @@ function gf2_matrix_square(&$square, &$mat)
     }
 }
 
+/**
+ * helper function for crc32_combine
+ */
 function gf2_matrix_times($mat, $vec)
 {
     $sum=0;
@@ -592,6 +675,11 @@ function gf2_matrix_times($mat, $vec)
     return $sum;
 }
 
+/**
+ * Converts unix formatted timestamps to DOS timestamps
+ * @param unixtime the unix timestamp to convert
+ * @return the converted DOS time stamp
+ */
 function unix2DosTime($unixtime = 0)
 {
 	$timearray = ($unixtime == 0) ? getdate() : getdate($unixtime);
@@ -609,7 +697,12 @@ function unix2DosTime($unixtime = 0)
 			($timearray['hours'] << 11) | ($timearray['minutes'] << 5) | ($timearray['seconds'] >> 1);
 } // end of the 'unix2DosTime()' method
 
-// kill a process on linux, for some reason closing the streams isn't working
+/**
+ * kill a process on linux, for some reason closing the streams isn't working
+ * @param command the command to be killed
+ * @param startpid the estimate PID of the process to kill
+ * @param limit the limit for how many process back to kill 
+ */
 function kill9($command, $startpid, $limit = 2)
 {
 	$ps = `ps -u www-data --sort=pid -o comm= -o pid=`;
@@ -636,6 +729,14 @@ function kill9($command, $startpid, $limit = 2)
 	}
 }
 
+/**
+ * Converts PHP errors into PEAR errors
+ * @param error_code the PHP code for the error
+ * @param error_str the error text
+ * @param error_file the file the error occured in
+ * @param error_line the line the error was triggered from
+ * @return true so the backend error handle knows the error has been processed
+ */
 function php_to_PEAR_Error($error_code, $error_str, $error_file, $error_line)
 {
 	if($error_code & E_WARNING || $error_code & E_NOTICE)
@@ -646,6 +747,10 @@ function php_to_PEAR_Error($error_code, $error_str, $error_file, $error_line)
 	return true;
 }
 
+/**
+ * The callback function for the PEAR error handler to use
+ * @param error the pear error object to add to the error stack
+ */
 function error_callback($error)
 {
 	// add special error handling based on the origin of the error
@@ -680,7 +785,11 @@ function error_callback($error)
 }
 
 
-// stolen from PEAR
+/**
+ * stolen from PEAR, 
+ * DSN parser for use internally
+ * @return an associative array of parsed DSN information
+ */
 function parseDSN($dsn)
 {
 	$parsed = array();
@@ -798,7 +907,10 @@ function parseDSN($dsn)
 	return $parsed;
 }
 
-// parse mime types from a mime.types file
+/** 
+ * parse mime types from a mime.types file, 
+ * This functionality sucks less then the PEAR mime type library
+ */
 function setupMime()
 {
 	// this will load the mime-types from a linux dist mime.types file stored in includes

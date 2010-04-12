@@ -92,7 +92,7 @@ function theme_live_files()
 				<table class="itemTable" cellpadding="0" cellspacing="0" onclick="location.href = '<?php print $link; ?>';">
 					<tr>
 						<td>
-							<div class="thumb file_ext_<?php print $file['Filetype']; ?> file_type_<?php print str_replace('/', ' file_type_', $file['Filemime']); ?>">
+							<div class="thumb file_ext_<?php print $file['Filetype']; ?> file_type_<?php print isset($file['Filemime'])?str_replace('/', ' file_type_', $file['Filemime']):''; ?>">
 								<img src="<?php print href('plugin=template&tfile=images/s.gif&template=' . HTML_TEMPLATE); ?>" alt="<?php print $file['Filetype']; ?>" height="48" width="48">
 							</div>
 						</td>
@@ -143,8 +143,8 @@ function theme_live_info()
 					<table cellpadding="0" cellspacing="0" border="0" class="fileThumb">
 						<tr>
 							<td>
-								<div class="thumb file_ext_<?php print $file['Filetype']; ?> file_type_<?php print str_replace('/', ' file_type_', $file['Filemime']); ?>">
-									<img src="<?php print href('plugin=template&file=images/s.gif&template=' . HTML_TEMPLATE); ?>" height="48" width="48">
+								<div class="thumb file_ext_<?php print $file['Filetype']; ?> file_type_<?php print isset($file['Filemime'])?str_replace('/', ' file_type_', $file['Filemime']):''; ?>">
+									<img src="<?php print href('plugin=template&tfile=images/s.gif&template=' . HTML_TEMPLATE); ?>" height="48" width="48">
 								</div>
 							</td>
 							<td class="infoCell">

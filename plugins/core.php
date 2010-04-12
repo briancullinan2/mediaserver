@@ -10,7 +10,8 @@ function setup_plugins()
 		'name' => 'Index',
 		'description' => 'Load a plugin\'s output variables and display the template.',
 		'privilage' => 1,
-		'path' => LOCAL_ROOT . 'index.php'
+		'path' => LOCAL_ROOT . 'index.php',
+		'alter query' => array('limit', 'start', 'direction', 'order_by', 'group_by')
 		)
 	);
 	$GLOBALS['triggers'] = array('session' => array(), 'settings' => array());
@@ -61,6 +62,15 @@ function load_plugins($path)
 					foreach($plugins[$plugin]['session'] as $i => $var)
 					{
 						$GLOBALS['triggers']['session'][$var][] = $prefix . $plugin;
+					}
+				}
+				
+				// reorganize alter query triggers
+				if(isset($plugins[$plugin]['alter query']))
+				{
+					foreach($plugins[$plugin]['alter query'] as $i => $var)
+					{
+						$GLOBALS['triggers']['alter query'][$var][] = $prefix . $plugin;
 					}
 				}
 			}
@@ -136,6 +146,16 @@ function setup_input()
 	}
 }
 
+/**
+ * @defgroup register Register Functions
+ * All functions that register plugins and templates
+ * @return an associative array that describes the plugins functionality
+ * @{
+ */
+ 
+/** 
+ * Implementation of register_plugin
+ */
 function register_core()
 {
 	// register permission requirements
@@ -150,6 +170,9 @@ function register_core()
 		'privilage' => 1
 	);
 }
+/**
+ * @}
+ */
 
 // this makes all the variables available for output
 function register_output_vars($name, $value, $append = false)
@@ -550,14 +573,40 @@ function validate_extra($request)
 		return $request['extra'];
 }
 
-function validate_filename($request)
+function alter_query_core($request, $props)
 {
-	// just return the same, this is only used for pretty dirs and compatibility
-	if(isset($request['filename']))
-		return $request['filename'];
+	$request['limit'] = validate_limit($request);
+	$request['start'] = validate_start($request);
+	$props['LIMIT'] = $request['start'] . ',' . $request['limit'];
+	
+	if(isset($request['group_by'])) $props['GROUP'] = validate_group_by($request);
+
+	// relevance is handled below
+	if($request['order_by'] == 'Relevance')
+		$props['ORDER'] = 'Filepath DESC';
+	else
+	{
+		if(isset($request['order_trimmed']) && $request['order_trimmed'] == true)
+		{
+			$props['ORDER'] = 'TRIM(LEADING "a " FROM TRIM(LEADING "an " FROM TRIM(LEADING "the " FROM LOWER( ' . 
+								join(' )))), TRIM(LEADING "a " FROM TRIM(LEADING "an " FROM TRIM(LEADING "the " FROM LOWER( ', split(',', $request['order_by'])) . 
+								' ))))' . ' ' . $request['direction'];
+		}
+		else
+		{
+			$props['ORDER'] = $request['order_by'] . ' ' . $request['direction'];
+		}
+	}
+	
+	return $props;
 }
 
 function output_index($request)
+{
+	output_core($request);
+}
+
+function output_core($request)
 {
 	// output any index like information
 	

@@ -43,7 +43,7 @@ function theme_live_head()
 	<html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<title><?php print isset($GLOBALS['templates']['vars']['title'])?$GLOBALS['templates']['vars']['title']:HTML_NAME; ?> : <?php print $GLOBALS['plugins'][$GLOBALS['templates']['vars']['plugin']]['name'];?></title>
+	<title><?php print HTML_NAME; ?> : <?php print $GLOBALS['plugins'][$GLOBALS['templates']['vars']['plugin']]['name'];?></title>
 	<meta name="google-site-verification" content="K3Em8a7JMI3_1ry5CNVKIHIWofDt-2C3ohovDq3N2cQ" />
 	<?php theme('styles', $GLOBALS['templates']['vars']['styles']); ?>
 	<?php theme('scripts', $GLOBALS['templates']['vars']['scripts']); ?>
@@ -142,7 +142,7 @@ function theme_live_breadcrumbs()
 	}
 	else
 	{
-		$crumbs = split('/', $GLOBALS['templates']['vars']['dir']);
+		$crumbs = isset($GLOBALS['templates']['vars']['dir'])?split('/', $GLOBALS['templates']['vars']['dir']):array('');
 		if($crumbs[count($crumbs)-1] == '')
 			unset($crumbs[count($crumbs)-1]);
 		$path = '';

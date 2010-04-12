@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * @ingroup register
+ * Implementation of register_plugin
+ */
 function register_admin_alias()
 {
 	return array(
@@ -10,6 +14,11 @@ function register_admin_alias()
 	);
 }
 
+/**
+ * Implementation of output_plugin
+ * @param request The request passed in from the GLOBAL validated request
+ * @return nothing, just prepare the variables needed to use in the template
+ */
 function output_admin_alias($request)
 {
 	// nothing to do here yet

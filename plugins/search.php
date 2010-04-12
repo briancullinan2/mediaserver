@@ -16,7 +16,8 @@ function register_search()
 		'description' => 'Search for files.',
 		'privilage' => 1,
 		'path' => __FILE__,
-		'session' => array('search')
+		'session' => array('search'),
+		'alter query' => array('search')
 	);
 }
 
@@ -29,6 +30,12 @@ function validate_search($request, $column = 'ALL')
 		// validated in modules when used
 		return $request['search_' . $column];
 	}
+}
+
+function validate_search_operator($request)
+{
+	if(isset($request['search_operator']) && ($request['search_operator'] == 'AND' || $request['search_operator'] == 'OR'))
+		return $request['search_operator'];
 }
 
 function session_search($request)
@@ -49,6 +56,166 @@ function session_search($request)
 	if(isset($request['order_by'])) $save['order_by'] = $request['order_by'];
 
 	return $save;
+}
+
+function search_get_type($search)
+{
+	if(strlen($search) > 1 && $search[0] == '"' && $search[strlen($search)-1] == '"')
+		return 'literal';
+	elseif(strlen($search) > 1 && $search[0] == '=' && $search[strlen($search)-1] == '=')
+		return 'equal';
+	elseif(strlen($search) > 1 && $search[0] == '/' && $search[strlen($search)-1] == '/')
+		return 'regular';
+	else
+		return 'normal';
+}
+
+function search_get_pieces($search)
+{
+	// loop through search terms and construct query
+	$pieces = split(' ', $request['search']);
+	$pieces = array_unique($pieces);
+	$empty = array_search('', $pieces, true);
+	if($empty !== false) unset($pieces[$empty]);
+	$pieces = array_values($pieces);
+	
+	// sort items by inclusive, exclusive, and string size
+	// rearrange pieces, but keep track of index so we can sort them correctly
+	uasort($pieces, 'termSort');
+	$length = strlen(join(' ', $pieces));
+	
+	// these are the 3 types of terms we can have
+	$required = array();
+	$excluded = array();
+	$includes = array();
+
+	foreach($pieces as $j => $piece)
+	{
+		if($piece[0] == '+')
+			$required[$j] = substr($piece, 1);
+		elseif($piece[0] == '-')
+			$excluded[$j] = substr($piece, 1);
+		else
+			$includes[$j] = $piece;
+	}
+	
+	return array(
+		'length' => $length,
+		'count' => count($pieces),
+		'required' => $required,
+		'excluded' => $excluded,
+		'includes' => $includes
+	);
+}
+
+function search_get_pieces_query($pieces)
+{
+	$props = array();
+	
+	$required = '';
+	$excluded = '';
+	$includes = '';
+	
+	foreach($pieces['required'] as $j => $piece)
+	{
+		if($required != '') $required .= ' AND';
+		$required .= ' LOCATE("' . addslashes($piece) . '", {column}) > 0';
+		$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',(LOCATE("' . addslashes($piece) . '", {column}) > 0) AS result{column_index}' . $j;
+		$props['ORDER'] = 'result{column_index}' . ($pieces['count'] - $j - 1) . ' DESC,' . (isset($props['ORDER'])?$props['ORDER']:'');
+	}
+	
+	foreach($pieces['excluded'] as $j => $piece)
+	{
+		if($excluded != '') $excluded .= ' AND';
+		$excluded .= ' LOCATE("' . addslashes($piece) . '", {column}) = 0';
+		$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',(LOCATE("' . addslashes($piece) . '", {column}) = 0) AS result{column_index}' . $j;
+		$props['ORDER'] = 'result{column_index}' . ($pieces['count'] - $j - 1) . ' DESC,' . (isset($props['ORDER'])?$props['ORDER']:'');
+	}
+	
+	foreach($pieces['includes'] as $i => $piece)
+	{
+		if($includes != '') $includes .= ' OR';
+		$includes .= ' LOCATE("' . addslashes($piece) . '", {column}) > 0';
+		$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',(LOCATE("' . addslashes($piece) . '", {column}) > 0) AS result{column_index}' . $j;
+		$props['ORDER'] = 'result{column_index}' . ($pieces['count'] - $j - 1) . ' DESC,' . (isset($props['ORDER'])?$props['ORDER']:'');
+	}
+	
+	$part = '';
+	$part .= (($required != '')?(($part != '')?' AND':'') . $required:'');
+	$part .= (($excluded != '')?(($part != '')?' AND':'') . $excluded:'');
+	$part .= (($includes != '')?(($part != '')?' AND':'') . $includes:'');
+	
+	return $props;
+}
+
+// this function is called to alter a database queries when the search variable is set in the request
+function alter_query_search($request, $props)
+{
+	if($request['search'] != '')
+	{
+		$type = search_get_type($request['search']);
+		
+		// remove characters on either side of input
+		if($type != 'normal')
+			$request['search'] = substr($request['search'], 1, -1);
+		
+		// incase an aliased path is being searched for replace it here too!
+		if(USE_ALIAS == true)
+			$request['search'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['search']);
+		
+		// they can specify multiple columns to search for the same string
+		if(isset($request['columns']))
+		{
+			$columns = split(',', $request['columns']);
+		}
+		// search every column for the same string
+		else
+		{
+			$columns = call_user_func($module . '::columns');
+		}
+		
+		if($type == 'normal')
+		{
+			$pieces = search_get_pieces($request['search']);
+			$query = search_get_pieces_query($pieces);
+			print $query;
+			exit;
+		}
+		
+		// array for each column
+		$parts = array();
+		foreach($columns as $i => $column)
+		{
+			if(isset($request['search_' . $column]) || $column == 'id')
+				continue;
+			
+			// tokenize input
+			if($type == 'normal')
+			{
+				if($request['order_by'] == 'Relevance')
+					$props['ORDER'] = 'r_count' . $i . ' ASC,' . (isset($props['ORDER'])?$props['ORDER']:'');
+					
+				$parts[] = str_replace(array('{column}', '{column_index}'), array($column, $i), $query);
+				
+				$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',ABS(LENGTH(' . $column . ') - ' . $length . ') as r_count' . $i;
+			}
+			elseif($type == 'equal')
+			{
+				$parts[] = $column . ' = "' . addslashes($request['search']) . '"';
+			}
+			elseif($type == 'regular')
+			{
+				$parts[] = $column . ' REGEXP "' . addslashes($request['search']) . '"';
+			}
+			elseif($type == 'literal')
+			{
+				$parts[] = ' LOCATE("' . addslashes($request['search']) . '", ' . $column . ')';
+			}
+		}
+		$props['WHERE'][] = join((isset($request['search_operator'])?(' ' . $request['search_operator'] . ' '):' OR '), $parts);
+	}
+	
+	return $props;
 }
 
 function output_search($request)

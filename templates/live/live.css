@@ -649,7 +649,7 @@ table.install td {
 	background:url(?plugin=template&template=live&tfile=images/headerBG_24_~HeaderGradientImageType~.png) repeat scroll center top;
 	height:39px;
 	text-align:left;
-	position:absolute;
+	position:fixed;
 	bottom:0px;
 	left:0px;
 	background-color:#06A;

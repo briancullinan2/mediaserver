@@ -250,7 +250,14 @@ function output_encode($request)
 		
 		// since we usually have to make a call to find the file, 
 		//   just call output_select so we can display a file selector
-		output_select($request);
+		output_select(array(
+			'dir' => validate_dir($request),
+			'search_Filemime' => '/audio\/|video\//',
+			'search_operator' => 'OR',
+			'search_Filetype' => 'FOLDER',
+			'start' => validate_start($request),
+			'limit' => validate_limit($request)
+		));
 		
 		// show template for manually setting encoding options
 		theme('encode');
