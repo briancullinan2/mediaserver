@@ -25,12 +25,12 @@ function theme_live_tools()
 	{
 		?>
 		<div class="nothover" onMouseOver="this.className='hover';" onMouseOut="this.className='nothover';">
-			<a href="<?php print generate_href('plugin=admin_tools_' . $name); ?>" style="font-size:14px;"><?php print $tool['name']; ?></a><br />
+			<a href="<?php print generate_url('plugin=admin_tools_' . $name); ?>" style="font-size:14px;"><?php print $tool['name']; ?></a><br />
 			Description: <?php print $tool['description']; ?><br /><br />
 			<?php
 			foreach($tool['subtools'] as $i => $subtool)
 			{
-				?><a href="<?php print href('plugin=admin_tools_' . $name . '&subtool=' . $i); ?>" style="margin:5px;"><?php print $subtool['name']; ?></a><?php
+				?><a href="<?php print url('plugin=admin_tools_' . $name . '&subtool=' . $i); ?>" style="margin:5px;"><?php print $subtool['name']; ?></a><?php
 			}
 			?>
 			<br /><br />
@@ -83,7 +83,7 @@ function theme_live_tools_filetools()
 				
 			?>
 			<div class="nothover" onMouseOver="this.className='hover';" onMouseOut="this.className='nothover';">
-				<a href="<?php print href('plugin=admin_tools_filetools&subtool=' . $i); ?>" style="font-size:14px;"><?php print $subtool['name']; ?></a><br /><br />
+				<a href="<?php print url('plugin=admin_tools_filetools&subtool=' . $i); ?>" style="font-size:14px;"><?php print $subtool['name']; ?></a><br /><br />
 				Description: <?php print $subtool['description']; ?>
 				<br /><br />
 			</div>

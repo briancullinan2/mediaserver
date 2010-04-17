@@ -73,7 +73,7 @@ function search_get_type($search)
 function search_get_pieces($search)
 {
 	// loop through search terms and construct query
-	$pieces = split(' ', $request['search']);
+	$pieces = split(' ', $search);
 	$pieces = array_unique($pieces);
 	$empty = array_search('', $pieces, true);
 	if($empty !== false) unset($pieces[$empty]);
@@ -111,6 +111,8 @@ function search_get_pieces($search)
 function search_get_pieces_query($pieces)
 {
 	$props = array();
+	$props['COLUMNS'] = '';
+	$props['ORDER'] = '';
 	
 	$required = '';
 	$excluded = '';
@@ -120,30 +122,31 @@ function search_get_pieces_query($pieces)
 	{
 		if($required != '') $required .= ' AND';
 		$required .= ' LOCATE("' . addslashes($piece) . '", {column}) > 0';
-		$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',(LOCATE("' . addslashes($piece) . '", {column}) > 0) AS result{column_index}' . $j;
-		$props['ORDER'] = 'result{column_index}' . ($pieces['count'] - $j - 1) . ' DESC,' . (isset($props['ORDER'])?$props['ORDER']:'');
+		$props['COLUMNS'] .= (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',(LOCATE("' . addslashes($piece) . '", {column}) > 0) AS result{column_index}' . $j;
+		$props['ORDER'] .= 'result{column_index}' . ($pieces['count'] - $j - 1) . ' DESC,' . (isset($props['ORDER'])?$props['ORDER']:'');
 	}
 	
 	foreach($pieces['excluded'] as $j => $piece)
 	{
 		if($excluded != '') $excluded .= ' AND';
 		$excluded .= ' LOCATE("' . addslashes($piece) . '", {column}) = 0';
-		$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',(LOCATE("' . addslashes($piece) . '", {column}) = 0) AS result{column_index}' . $j;
-		$props['ORDER'] = 'result{column_index}' . ($pieces['count'] - $j - 1) . ' DESC,' . (isset($props['ORDER'])?$props['ORDER']:'');
+		$props['COLUMNS'] .= (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',(LOCATE("' . addslashes($piece) . '", {column}) = 0) AS result{column_index}' . $j;
+		$props['ORDER'] .= 'result{column_index}' . ($pieces['count'] - $j - 1) . ' DESC,' . (isset($props['ORDER'])?$props['ORDER']:'');
 	}
 	
-	foreach($pieces['includes'] as $i => $piece)
+	foreach($pieces['includes'] as $j => $piece)
 	{
 		if($includes != '') $includes .= ' OR';
 		$includes .= ' LOCATE("' . addslashes($piece) . '", {column}) > 0';
-		$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',(LOCATE("' . addslashes($piece) . '", {column}) > 0) AS result{column_index}' . $j;
-		$props['ORDER'] = 'result{column_index}' . ($pieces['count'] - $j - 1) . ' DESC,' . (isset($props['ORDER'])?$props['ORDER']:'');
+		$props['COLUMNS'] .= (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',(LOCATE("' . addslashes($piece) . '", {column}) > 0) AS result{column_index}' . $j;
+		$props['ORDER'] .= 'result{column_index}' . ($pieces['count'] - $j - 1) . ' DESC,' . (isset($props['ORDER'])?$props['ORDER']:'');
 	}
 	
 	$part = '';
 	$part .= (($required != '')?(($part != '')?' AND':'') . $required:'');
 	$part .= (($excluded != '')?(($part != '')?' AND':'') . $excluded:'');
 	$part .= (($includes != '')?(($part != '')?' AND':'') . $includes:'');
+	$props['WHERE'] = $part;
 	
 	return $props;
 }
@@ -151,70 +154,77 @@ function search_get_pieces_query($pieces)
 // this function is called to alter a database queries when the search variable is set in the request
 function alter_query_search($request, $props)
 {
-	if($request['search'] != '')
+	// they can specify multiple columns to search for the same string
+	if(isset($request['columns']))
 	{
-		$type = search_get_type($request['search']);
+		$columns = split(',', $request['columns']);
+	}
+	// search every column for the same string
+	else
+	{
+		$columns = call_user_func($request['cat'] . '::columns');
+	}
+		
+	// array for each column
+	$parts = array();
+		
+	foreach($columns as $i => $column)
+	{
+		if(isset($request['search_' . $column]))
+			$search = $request['search_' . $column];
+		elseif(isset($request['search']))
+			$search = $request['search'];
+		else
+			continue;
+
+		$type = search_get_type($search);
 		
 		// remove characters on either side of input
 		if($type != 'normal')
-			$request['search'] = substr($request['search'], 1, -1);
+			$search = substr($search, 1, -1);
 		
 		// incase an aliased path is being searched for replace it here too!
 		if(USE_ALIAS == true)
-			$request['search'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['search']);
-		
-		// they can specify multiple columns to search for the same string
-		if(isset($request['columns']))
-		{
-			$columns = split(',', $request['columns']);
-		}
-		// search every column for the same string
-		else
-		{
-			$columns = call_user_func($module . '::columns');
-		}
+			$search = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $search);
 		
 		if($type == 'normal')
 		{
-			$pieces = search_get_pieces($request['search']);
+			$pieces = search_get_pieces($search);
 			$query = search_get_pieces_query($pieces);
-			print $query;
-			exit;
 		}
 		
-		// array for each column
-		$parts = array();
-		foreach($columns as $i => $column)
+		// tokenize input
+		if($type == 'normal')
 		{
-			if(isset($request['search_' . $column]) || $column == 'id')
-				continue;
-			
-			// tokenize input
-			if($type == 'normal')
-			{
-				if($request['order_by'] == 'Relevance')
-					$props['ORDER'] = 'r_count' . $i . ' ASC,' . (isset($props['ORDER'])?$props['ORDER']:'');
-					
-				$parts[] = str_replace(array('{column}', '{column_index}'), array($column, $i), $query);
+			if($request['order_by'] == 'Relevance')
+				$props['ORDER'] = 'r_count' . $i . ' ASC,' . (isset($props['ORDER'])?$props['ORDER']:'');
 				
-				$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',ABS(LENGTH(' . $column . ') - ' . $length . ') as r_count' . $i;
-			}
-			elseif($type == 'equal')
-			{
-				$parts[] = $column . ' = "' . addslashes($request['search']) . '"';
-			}
-			elseif($type == 'regular')
-			{
-				$parts[] = $column . ' REGEXP "' . addslashes($request['search']) . '"';
-			}
-			elseif($type == 'literal')
-			{
-				$parts[] = ' LOCATE("' . addslashes($request['search']) . '", ' . $column . ')';
-			}
+			$replaced = str_replace(array('{column}', '{column_index}'), array($column, $i), $query);
+			$parts[] = $replaced['WHERE'];
+			$props['COLUMNS'] = $replaced['COLUMNS'] . (isset($props['COLUMNS'])?$props['COLUMNS']:'');
+			$props['ORDER'] = $replaced['ORDER'] . (isset($props['ORDER'])?$props['ORDER']:'');
+			
+			$props['COLUMNS'] = (isset($props['COLUMNS'])?$props['COLUMNS']:'') . ',ABS(LENGTH(' . $column . ') - ' . $pieces['length'] . ') as r_count' . $i;
 		}
-		$props['WHERE'][] = join((isset($request['search_operator'])?(' ' . $request['search_operator'] . ' '):' OR '), $parts);
+		elseif($type == 'equal')
+		{
+			$parts[] = $column . ' = "' . addslashes($search) . '"';
+		}
+		elseif($type == 'regular')
+		{
+			$parts[] = $column . ' REGEXP "' . addslashes($search) . '"';
+		}
+		elseif($type == 'literal')
+		{
+			$parts[] = ' LOCATE("' . addslashes($search) . '", ' . $column . ')';
+		}
 	}
-	
+	if(is_string($props['WHERE']))
+		$props['WHERE'] = array($props['WHERE']);
+		
+	if(count($parts) > 0)
+		$props['WHERE'][] = join((isset($request['search_operator'])?(' ' . $request['search_operator'] . ' '):' OR '), $parts);
+
 	return $props;
 }
 
@@ -241,7 +251,7 @@ function output_search($request)
 			if(isset($GLOBALS['output']['search']['search_' . $column]))
 				$query = $GLOBALS['output']['search']['search_' . $column];
 			else
-				$query = $GLOBALS['output']['search']['search'];
+				$query = isset($GLOBALS['output']['search']['search'])?$GLOBALS['output']['search']['search']:'';
 				
 			// replace with search
 			if(substr($query, 0, 1) == '/' && substr($query, -1) == '/')

@@ -19,7 +19,7 @@ function theme_live_styles($styles)
 	foreach($styles as $link)
 	{
 		?>
-		<link rel="stylesheet" href="<?php print href($link); ?>" type="text/css"/>
+		<link rel="stylesheet" href="<?php print url($link); ?>" type="text/css"/>
 		<?php
 	}
 }
@@ -31,7 +31,7 @@ function theme_live_scripts($scripts)
 	foreach($scripts as $link)
 	{
 		?>
-		<script language="javascript" type="text/javascript" src="<?php print href($link); ?>"></script>
+		<script language="javascript" type="text/javascript" src="<?php print url($link); ?>"></script>
 		<?php
 	}
 }
@@ -104,7 +104,7 @@ function theme_live_debug_block()
 	else
 	{
 		?>
-		<form action="<?php print href('plugin=users&users=login&return=' . urlencode($GLOBALS['templates']['vars']['get'])); ?>" method="post">
+		<form action="<?php print url('plugin=users&users=login&return=' . urlencode($GLOBALS['templates']['vars']['get'])); ?>" method="post">
 			Administrators: Log in to select debug options. Username: <input type="text" name="username" value="" />
 			Password: <input type="password" name="password" value="" />
 			<input type="submit" value="Login" />
@@ -122,14 +122,14 @@ function theme_live_breadcrumbs()
 	if($GLOBALS['templates']['vars']['plugin'] != 'select' && $GLOBALS['templates']['vars']['plugin'] != 'index')
 	{
 		?>
-		<li><a href="<?php print href('plugin=select&cat=' . $GLOBALS['templates']['vars']['cat'] . '&dir=' . urlencode('/')); ?>"><?php print HTML_NAME; ?></a></li>
-		<li><img src="<?php print href('plugin=template&tfile=images/carat.gif&template=' . HTML_TEMPLATE); ?>" class="crumbsep"></li>
+		<li><a href="<?php print url('plugin=select&cat=' . $GLOBALS['templates']['vars']['cat'] . '&dir=' . urlencode('/')); ?>"><?php print HTML_NAME; ?></a></li>
+		<li><img src="<?php print url('plugin=template&tfile=images/carat.gif&template=' . HTML_TEMPLATE); ?>" class="crumbsep"></li>
 		<?php
 		if(isset($GLOBALS['templates']['vars']['admin']))
 		{
 			?>
-			<li><a href="<?php print href('plugin=admin'); ?>"><?php print $GLOBALS['plugins']['admin']['name']; ?></a></li>
-			<li><img src="<?php print href('plugin=template&tfile=images/carat.gif&template=' . HTML_TEMPLATE); ?>" class="crumbsep"></li>
+			<li><a href="<?php print url('plugin=admin'); ?>"><?php print $GLOBALS['plugins']['admin']['name']; ?></a></li>
+			<li><img src="<?php print url('plugin=template&tfile=images/carat.gif&template=' . HTML_TEMPLATE); ?>" class="crumbsep"></li>
 			<li><?php print $GLOBALS['plugins']['admin']['plugins'][$GLOBALS['templates']['vars']['admin']]['name']; ?></li>
 			<?php
 		}
@@ -153,8 +153,8 @@ function theme_live_breadcrumbs()
 			if($count == 0)
 			{
 				?>
-				<li><a href="<?php print href('plugin=select&cat=' . $GLOBALS['templates']['vars']['cat'] . '&dir=' . urlencode('/')); ?>"><?php print HTML_NAME; ?></a></li>
-				<li><img src="<?php print href('plugin=template&tfile=images/carat.gif&template=' . HTML_TEMPLATE); ?>" class="crumbsep"></li>
+				<li><a href="<?php print url('plugin=select&cat=' . $GLOBALS['templates']['vars']['cat'] . '&dir=' . urlencode('/')); ?>"><?php print HTML_NAME; ?></a></li>
+				<li><img src="<?php print url('plugin=template&tfile=images/carat.gif&template=' . HTML_TEMPLATE); ?>" class="crumbsep"></li>
 				<?php
 			}
 			elseif($count == count($crumbs)-1)
@@ -164,8 +164,8 @@ function theme_live_breadcrumbs()
 			else
 			{
 				?>
-				<li><a href="<?php print href('plugin=select&cat=' . $GLOBALS['templates']['vars']['cat'] . '&dir=' . urlencode($path . '/')); ?>"><?php print $text; ?></a></li>
-				<li><img src="<?php print href('plugin=template&tfile=images/carat.gif&template=' . HTML_TEMPLATE); ?>" class="crumbsep"></li>
+				<li><a href="<?php print url('plugin=select&cat=' . $GLOBALS['templates']['vars']['cat'] . '&dir=' . urlencode($path . '/')); ?>"><?php print $text; ?></a></li>
+				<li><img src="<?php print url('plugin=template&tfile=images/carat.gif&template=' . HTML_TEMPLATE); ?>" class="crumbsep"></li>
 				<?php
 			}
 			$path .= '/';
@@ -182,7 +182,7 @@ function theme_live_template_block()
 	{
 		if(isset($template['name']))
 		{
-			?><a href="<?php print href('template=' . $name, false, true); ?>"><?php print $template['name']; ?></a><?php
+			?><a href="<?php print url('template=' . $name, false, true); ?>"><?php print $template['name']; ?></a><?php
 		}
 	}
 	?></div><?php
@@ -224,7 +224,7 @@ function theme_live_body()
 		<div id="expander">
 			<table id="header" cellpadding="0" cellspacing="0" style="background-color:<?php print ($theme == 'audio')?'#900':(($theme == 'image')?'#990':(($theme == 'video')?'#093':'#06A')); ?>;">
 				<tr>
-					<td id="siteTitle"><a href="<?php print href(''); ?>"><?php print HTML_NAME; ?></a></td>
+					<td id="siteTitle"><a href="<?php print url(''); ?>"><?php print HTML_NAME; ?></a></td>
 					<td>
 						<?php theme('search_block'); ?>
 					</td>

@@ -103,7 +103,7 @@ function setup_input()
 			if(isset($_GET[$key])) unset($_GET[$key]);
 		}
 			
-		// set the get variable also, so that when generate_href($_GET) is used it is an accurate representation of the current page
+		// set the get variable also, so that when url($_GET) is used it is an accurate representation of the current page
 		if(isset($_GET[$key])) $_GET[$key] = $_REQUEST[$key];
 	}
 	
@@ -128,7 +128,7 @@ function setup_input()
 				basename($_REQUEST['plugin']) != 'index' &&
 				basename($_REQUEST['plugin']) != 'sitemap')
 			{
-				header('Location: ' . generate_href(array('plugin' => 'sitemap')));
+				header('Location: ' . url('plugin=sitemap'));
 				exit;
 			}
 			else
@@ -191,13 +191,8 @@ function register_output_vars($name, $value, $append = false)
 		$GLOBALS['output'][$name][] = $value;
 }
 
-function href($request = array(), $not_special = false, $include_domain = false, $return_array = false)
-{
-	return generate_href($request, $not_special, $include_domain, $return_array);
-}
-
 // this function takes a request as input, and based on the .htaccess rules, converts it to a pretty url, or makes no changes if mod_rewrite is off
-function generate_href($request = array(), $not_special = false, $include_domain = false, $return_array = false)
+function url($request = array(), $not_special = false, $include_domain = false, $return_array = false)
 {
 	if(is_string($request))
 	{
@@ -226,10 +221,17 @@ function generate_href($request = array(), $not_special = false, $include_domain
 		return $request;
 	
 	// rebuild link
-	$link = (($include_domain)?HTML_DOMAIN:'') . HTML_ROOT . '?';
-	foreach($request as $key => $value)
+	if(!isset($request['plugin']))
+		$request['plugin'] = $GLOBALS['plugin'];
+	$path_info = create_path_info($request);
+	$link = (($include_domain)?HTML_DOMAIN:'') . HTML_ROOT . $path_info;
+	if(count($request) > 0)
 	{
-		$link .= (($link[strlen($link)-1] != '?')?'&':'') . $key . '=' . $value;
+		$link .= '?';
+		foreach($request as $key => $value)
+		{
+			$link .= (($link[strlen($link)-1] != '?')?'&':'') . $key . '=' . $value;
+		}
 	}
 	if($not_special)
 		return $link;
@@ -260,7 +262,7 @@ function set_output_vars()
 	if(isset($_REQUEST['extra'])) register_output_vars('extra', $_REQUEST['extra']);
 	
 	// some templates would like to submit to their own page, generate a string based on the current get variable
-	register_output_vars('get', href($_GET, true));
+	register_output_vars('get', url($_GET, true));
 	
 	// output user information
 	register_output_vars('user', $_SESSION['user']);
@@ -474,6 +476,57 @@ function validate_plugin($request)
 	}
 }
 
+function create_path_info(&$request)
+{
+	// use the same algorithm to rebuild the path info
+	$path = $request['plugin'] . '/';
+	if(isset($request['cat']) && isset($request['id']) &&
+		isset($request[$request['plugin']]) &&
+		isset($request['extra']) && isset($request['filename']))
+	{
+		$path .= $request['cat'] . '/' . $request['id'] . '/' . 
+				$request[$request['plugin']] . '/' . $request['extra'] . '/' . 
+				$request['filename'];
+		unset($request['cat']);
+		unset($request['id']);
+		unset($request[$request['plugin']]);
+		unset($request['extra']);
+		unset($request['filename']);
+	}
+	elseif(isset($request['cat']) && isset($request['id']) &&
+			isset($request[$request['plugin']]) &&
+			isset($request['filename']))
+	{
+		$path .= $request['cat'] . '/' . $request['id'] . '/' . 
+				$request[$request['plugin']] . '/' . $request['filename'];
+		unset($request['cat']);
+		unset($request['id']);
+		unset($request[$request['plugin']]);
+		unset($request['filename']);
+	}
+	elseif(isset($request['cat']) && isset($request['id']) &&
+			isset($request['filename']))
+	{
+		$path .= $request['cat'] . '/' . $request['id'] . '/' . $request['filename'];
+		unset($request['cat']);
+		unset($request['id']);
+		unset($request['filename']);
+	}
+	elseif(isset($request['cat']) && isset($request['id']))
+	{
+		$path .= $request['cat'] . '/' . $request['id']; 
+		unset($request['cat']);
+		unset($request['id']);
+	}
+	elseif(isset($request['search']))
+	{
+		$path .= $request['search']; 
+		unset($request['search']);
+	}
+	unset($request['plugin']);
+	return $path;
+}
+
 function parse_path_info($path_info)
 {
 	$request = array();
@@ -490,41 +543,56 @@ function parse_path_info($path_info)
 			unset($dirs[$i]);
 	}
 	$dirs = array_values($dirs);
-	
 	if(count($dirs) > 0)
 	{
 		// get plugin from path info
-		$request['plugin'] = $dirs[0];
+		//   match the plugin until it doesn't make any more, then apply the rules below
+		// remove default plugin directory just like when the plugins are loaded and set up
+		if($dirs[0] == 'plugins')
+			unset($dirs[0]);
+		$plugin = '';
+		foreach($dirs as $i => $dir)
+		{
+			$plugin .= (($plugin != '')?'_':'') . $dir;
+			if(isset($GLOBALS['plugins'][$plugin]))
+			{
+				$request['plugin'] = $plugin;
+				unset($dirs[$i]);
+			}
+			else
+				break;
+		}
+		$dirs = array_values($dirs);
 		switch(count($dirs))
 		{
+			case 1:
+				$request['search'] = '"' . $dirs[0] . '"';
+				break;
 			case 2:
-				$request['search'] = '"' . $dirs[1] . '"';
+				$request['cat'] = $dirs[0];
+				$request['id'] = $dirs[1];
 				break;
 			case 3:
-				$request['cat'] = $dirs[1];
-				$request['id'] = $dirs[2];
+				$request['cat'] = $dirs[0];
+				$request['id'] = $dirs[1];
+				$request['filename'] = $dirs[2];
 				break;
 			case 4:
-				$request['cat'] = $dirs[1];
-				$request['id'] = $dirs[2];
+				$request['cat'] = $dirs[0];
+				$request['id'] = $dirs[1];
+				$request[$request['plugin']] = $dirs[2];
 				$request['filename'] = $dirs[3];
 				break;
 			case 5:
-				$request['cat'] = $dirs[1];
-				$request['id'] = $dirs[2];
-				$request[$request['plugin']] = $dirs[3];
+				$request['cat'] = $dirs[0];
+				$request['id'] = $dirs[1];
+				$request[$request['plugin']] = $dirs[2];
+				$request['extra'] = $dirs[3];
 				$request['filename'] = $dirs[4];
-				break;
-			case 6:
-				$request['cat'] = $dirs[1];
-				$request['id'] = $dirs[2];
-				$request[$request['plugin']] = $dirs[3];
-				$request['extra'] = $dirs[4];
-				$request['filename'] = $dirs[5];
 				break;
 		}
 	}
-	
+
 	return $request;
 }
 

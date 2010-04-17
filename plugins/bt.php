@@ -180,7 +180,7 @@ function output_bt($request)
 			}
 			$torrent['info']['pieces'] = $output;
 			
-			$torrent['announce'] = generate_href('bt=announce&plugin=bt', true, true);
+			$torrent['announce'] = url('bt=announce&plugin=bt', true, true);
 			$torrent['creation date'] = time();
 			$torrent['comment'] = HTML_NAME;
 			$torrent['created by'] = HTML_NAME;

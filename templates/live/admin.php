@@ -28,7 +28,7 @@ function theme_live_admin()
 			
 		?>
 		<div class="nothover" onMouseOver="this.className='hover';" onMouseOut="this.className='nothover';">
-			<a href="<?php print href('plugin=admin_' . $name); ?>" style="font-size:14px;"><?php print $plugin['name']; ?></a><br /><br />
+			<a href="<?php print url('plugin=admin_' . $name); ?>" style="font-size:14px;"><?php print $plugin['name']; ?></a><br /><br />
 			Description: <?php print $plugin['description']; ?>
 			<br /><br />
 		</div>
@@ -87,7 +87,7 @@ function theme_live_template()
 				?><a href="" class="disablebtn" onmouseover="this.parentNode.className='hover red';" onmouseout="this.parentNode.className='hover'">&nbsp;</a><?php
 			}
 			?>
-			<a href="<?php print href('template=' . $key); ?>" style="font-size:14px;"><?php print $template['name']; ?></a><?php print in_array($key, $required)?' (Required)':(in_array($key, $recommended)?' (Recommended)':''); ?><br /><br />
+			<a href="<?php print url('template=' . $key); ?>" style="font-size:14px;"><?php print $template['name']; ?></a><?php print in_array($key, $required)?' (Required)':(in_array($key, $recommended)?' (Recommended)':''); ?><br /><br />
 			Description: <?php print $template['description']; ?><br />
 			Other Files:<br />
 			<?php

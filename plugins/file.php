@@ -148,18 +148,18 @@ function alter_query_file($request, $props)
 			$request['file'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']);
 		
 		// if the id is available then use that instead
-		if(isset($request[constant($module . '::DATABASE') . '_id']) && $request[constant($module . '::DATABASE') . '_id'] != 0)
+		if(isset($request[constant($request['cat'] . '::DATABASE') . '_id']) && $request[constant($request['cat'] . '::DATABASE') . '_id'] != 0)
 		{
 			if(!isset($props['WHERE'])) $props['WHERE'] = '';
 			elseif($props['WHERE'] != '') $props['WHERE'] .= ' AND ';
 			
 			// add single id to where
-			$props['WHERE'] .= ' id = ' . $request[constant($module . '::DATABASE') . '_id'];					
+			$props['WHERE'] .= ' id = ' . $request[constant($request['cat'] . '::DATABASE') . '_id'];					
 		}
 		else
 		{
 			// make sure file exists if we are using the file module
-			if($module != 'db_file' || file_exists(realpath($request['file'])) !== false)
+			if($request['cat'] != 'db_file' || file_exists(realpath($request['file'])) !== false)
 			{					
 				if(!isset($props['WHERE'])) $props['WHERE'] = '';
 				elseif($props['WHERE'] != '') $props['WHERE'] .= ' AND ';
@@ -187,7 +187,7 @@ function alter_query_file($request, $props)
 function output_file($request)
 {
 	set_time_limit(0);
-	
+
 	// set up request variables
 	$request['cat'] = validate_cat($request);
 	$request['id'] = validate_id($request);
@@ -198,7 +198,7 @@ function output_file($request)
 		theme();
 		return;
 	}
-	
+
 	// get the file path from the database
 	$files = call_user_func_array($request['cat'] . '::get', array($request, &$count));
 	

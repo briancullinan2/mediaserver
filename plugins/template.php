@@ -162,7 +162,7 @@ function register_style($request)
 {
 	// convert the request string to an array
 	if(!is_array($request))
-		$request = href($request, true, false, true);
+		$request = url($request, true, false, true);
 		
 	// validate the 2 inputs needed
 	$request['template'] = validate_template($request);
@@ -183,7 +183,7 @@ function register_script($request)
 {
 	// convert the request string to an array
 	if(!is_array($request))
-		$request = href($request, true, false, true);
+		$request = url($request, true, false, true);
 		
 	// validate the 2 inputs needed
 	$request['template'] = validate_template($request);
@@ -254,7 +254,7 @@ function theme($request = '')
 		else
 		{
 			// parse out the request into an array
-			$request = href($request, true, false, true);
+			$request = url($request, true, false, true);
 			
 			// call the theme again
 			$result = theme((array)$request);

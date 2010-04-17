@@ -29,6 +29,14 @@ function live_get_info_count()
 
 function theme_live_pages()
 {
+	// set some variables if they are missing so we can avoid errors
+	if(!isset($GLOBALS['templates']['vars']['start']))
+		$GLOBALS['templates']['vars']['start'] = 0;
+	if(!isset($GLOBALS['templates']['vars']['total_count']))
+		$GLOBALS['templates']['vars']['total_count'] = 0;
+	if(!isset($GLOBALS['templates']['vars']['limit']))
+		$GLOBALS['templates']['vars']['limit'] = 50;
+
 	?>
 	<table cellpadding="0" cellspacing="0" class="pageTable">
 		<tr>
@@ -66,10 +74,10 @@ function theme_live_pages()
 			{
 			?>
 			<div class="pageW"><div class="pageHighlightW" style="visibility:hidden"></div>
-				<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=0'); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.style.visibility = 'visible'; return true;">First</a>
+				<a class="pageLink" href="<?php print url($GLOBALS['templates']['vars']['get'] . '&start=0'); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.style.visibility = 'visible'; return true;">First</a>
 			</div>
 			<div class="pageW"><div class="pageHighlightW" style="visibility:hidden"></div>
-				<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=' . $prev_page); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.style.visibility = 'visible'; return true;">Prev</a>
+				<a class="pageLink" href="<?php print url($GLOBALS['templates']['vars']['get'] . '&start=' . $prev_page); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.style.visibility = 'visible'; return true;">Prev</a>
 			</div>
 			<?php
 			}
@@ -77,7 +85,7 @@ function theme_live_pages()
 			{
 			?>
 			<div class="pageW"><div class="pageHighlightW" style="visibility:hidden"></div>
-				<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=0'); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.style.visibility = 'visible'; return true;">First</a>
+				<a class="pageLink" href="<?php print url($GLOBALS['templates']['vars']['get'] . '&start=0'); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.style.visibility = 'visible'; return true;">First</a>
 			</div>
 			<?php
 			}
@@ -94,7 +102,7 @@ function theme_live_pages()
 			{
 				?>
 				<div class="page<?php print (strlen($i) > 2)?'W':''; ?>"><div class="pageHighlight<?php print (strlen($i) > 2)?'W':''; ?>" style="visibility:hidden"></div>
-					<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=' . ($i * $GLOBALS['templates']['vars']['limit'])); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.style.visibility = 'visible'; return true;"><?php print $i + 1; ?></a>
+					<a class="pageLink" href="<?php print url($GLOBALS['templates']['vars']['get'] . '&start=' . ($i * $GLOBALS['templates']['vars']['limit'])); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.style.visibility = 'visible'; return true;"><?php print $i + 1; ?></a>
 				</div>
 				<?php
 			}
@@ -109,10 +117,10 @@ function theme_live_pages()
 			{
 				?>
 				<div class="pageW"><div class="pageHighlightW" style="visibility:hidden"></div>
-					<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=' . $next_page); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.style.visibility = 'visible'; return true;">Next</a>
+					<a class="pageLink" href="<?php print url($GLOBALS['templates']['vars']['get'] . '&start=' . $next_page); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.style.visibility = 'visible'; return true;">Next</a>
 				</div>
 				<div class="pageW"><div class="pageHighlightW" style="visibility:hidden"></div>
-					<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=' . $last_page); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.style.visibility = 'visible'; return true;">Last</a>
+					<a class="pageLink" href="<?php print url($GLOBALS['templates']['vars']['get'] . '&start=' . $last_page); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.style.visibility = 'visible'; return true;">Last</a>
 				</div>
 				<?php
 			}
@@ -120,7 +128,7 @@ function theme_live_pages()
 			{
 				?>
 				<div class="pageW"><div class="pageHighlightW" style="visibility:hidden"></div>
-					<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=' . $last_page); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.style.visibility = 'visible'; return true;">Last</a>
+					<a class="pageLink" href="<?php print url($GLOBALS['templates']['vars']['get'] . '&start=' . $last_page); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.style.visibility = 'visible'; return true;">Last</a>
 				</div>
 				<?php
 			}
@@ -177,7 +185,7 @@ function theme_live_index()
 {
 	theme('header');
 	
-	$current = basename($GLOBALS['templates']['html']['dir']);
+	$current = isset($GLOBALS['template']['html']['dir'])?basename($GLOBALS['templates']['html']['dir']):'';
 	
 	?>
 	<div class="contentSpacing">

@@ -13,7 +13,7 @@ function theme_plain_list()
     <div id="type">
         Get the list:
         <br />
-        <form action="<?php print href('plugin=list'); ?>" method="get">
+        <form action="<?php print url('plugin=list'); ?>" method="get">
             <input type="hidden" name="cat" value="<?php print $GLOBALS['templates']['html']['cat']; ?>" />
             Type <select name="list">
             	<?php
@@ -74,14 +74,14 @@ function theme_plain_pages()
 			if($GLOBALS['templates']['vars']['start'] > $GLOBALS['templates']['vars']['limit'])
 			{
 			?>
-			<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=0'); ?>">First</a>
-			<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=' . $prev_page); ?>">Prev</a>
+			<a class="pageLink" href="<?php print url($GLOBALS['templates']['vars']['get'] . '&start=0'); ?>">First</a>
+			<a class="pageLink" href="<?php print url($GLOBALS['templates']['vars']['get'] . '&start=' . $prev_page); ?>">Prev</a>
 			<?php
 			}
 			else
 			{
 			?>
-			<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=0'); ?>">First</a>
+			<a class="pageLink" href="<?php print url($GLOBALS['templates']['vars']['get'] . '&start=0'); ?>">First</a>
 			<?php
 			}
 			?> | <?php
@@ -96,7 +96,7 @@ function theme_plain_pages()
 			else
 			{
 				?>
-				<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=' . ($i * $GLOBALS['templates']['vars']['limit'])); ?>"><?php print $i + 1; ?></a>
+				<a class="pageLink" href="<?php print url($GLOBALS['templates']['vars']['get'] . '&start=' . ($i * $GLOBALS['templates']['vars']['limit'])); ?>"><?php print $i + 1; ?></a>
 				<?php
 			}
 		}
@@ -109,14 +109,14 @@ function theme_plain_pages()
 			if($GLOBALS['templates']['vars']['start'] < $GLOBALS['templates']['vars']['total_count'] - 2 * $GLOBALS['templates']['vars']['limit'])
 			{
 				?>
-				<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=' . $next_page); ?>">Next</a>
-				<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=' . $last_page); ?>">Last</a>
+				<a class="pageLink" href="<?php print url($GLOBALS['templates']['vars']['get'] . '&start=' . $next_page); ?>">Next</a>
+				<a class="pageLink" href="<?php print url($GLOBALS['templates']['vars']['get'] . '&start=' . $last_page); ?>">Last</a>
 				<?php
 			}
 			else
 			{
 				?>
-				<a class="pageLink" href="<?php print href($GLOBALS['templates']['vars']['get'] . '&start=' . $last_page); ?>">Last</a>
+				<a class="pageLink" href="<?php print url($GLOBALS['templates']['vars']['get'] . '&start=' . $last_page); ?>">Last</a>
 				<?php
 			}
 		}
@@ -129,7 +129,7 @@ function theme_plain_template_block()
 	{
 		if(isset($template['name']))
 		{
-			?><a href="<?php print href('template=' . $name, false, true); ?>"><?php print $template['name']; ?></a><br /><?php
+			?><a href="<?php print url('template=' . $name, false, true); ?>"><?php print $template['name']; ?></a><br /><?php
 		}
 	}
 }
@@ -187,7 +187,7 @@ function theme_plain_files()
 			
 			if($GLOBALS['templates']['vars']['cat'] != $cat || $GLOBALS['templates']['vars']['files'][$i]['Filetype'] == 'FOLDER') $new_cat = $cat;
 			
-			$link = isset($new_cat)?href('plugin=select&cat=' . $new_cat . '&dir=' . urlencode($GLOBALS['templates']['vars']['files'][$i]['Filepath'])):href('plugin=file&cat=' . $cat . '&id=' . $file['id'] . '&filename=' . urlencode($GLOBALS['templates']['vars']['files'][$i]['Filename']));
+			$link = isset($new_cat)?url('plugin=select&cat=' . $new_cat . '&dir=' . urlencode($GLOBALS['templates']['vars']['files'][$i]['Filepath'])):url('plugin=file&cat=' . $cat . '&id=' . $file['id'] . '&filename=' . urlencode($GLOBALS['templates']['vars']['files'][$i]['Filename']));
 			?>
 			<input type="checkbox" name="item[]" value="<?php print $file['id']; ?>" <?php print isset($GLOBALS['templates']['vars']['selected'])?(in_array($GLOBALS['templates']['vars']['files'][$i]['id'], $GLOBALS['templates']['vars']['selected'])?'checked="checked"':''):''; ?> />
 			<a href="<?php print $link; ?>"><?php print trim($file['Filepath'], '&nbsp;'); ?></a><?php print substr($file['Filepath'], strlen(trim($file['Filepath'], '&nbsp;'))); ?>
@@ -221,13 +221,13 @@ function theme_plain_files()
 				?> - Download: <?php
 			}
 			?>
-			<a href="<?php print href(array(
+			<a href="<?php print url(array(
 							'plugin' => 'zip',
 							'cat' => $GLOBALS['templates']['vars']['cat'],
 							'id' => $file['id'],
 							'filename' => 'Files.zip'
 						)); ?>">zip</a> :
-			<a href="<?php print href(array(
+			<a href="<?php print url(array(
 							'plugin' => 'torrent',
 							'cat' => $GLOBALS['templates']['vars']['cat'],
 							'id' => $file['id'],
@@ -237,40 +237,40 @@ function theme_plain_files()
 			if(handles($GLOBALS['templates']['vars']['files'][$i]['Filepath'], 'video'))
 			{
 				?>
-				: <a href="<?php print href(array('plugin' => 'encode', 'encode' => 'mp4', 'cat' => $GLOBALS['templates']['vars']['cat'],
+				: <a href="<?php print url(array('plugin' => 'encode', 'encode' => 'mp4', 'cat' => $GLOBALS['templates']['vars']['cat'],
 								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">MP4</a>
-				: <a href="<?php print href(array('plugin' => 'encode', 'encode' => 'mpg', 'cat' => $GLOBALS['templates']['vars']['cat'],
+				: <a href="<?php print url(array('plugin' => 'encode', 'encode' => 'mpg', 'cat' => $GLOBALS['templates']['vars']['cat'],
 								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">MPG</a>
-				: <a href="<?php print href(array('plugin' => 'encode', 'encode' => 'wmv', 'cat' => $GLOBALS['templates']['vars']['cat'],
+				: <a href="<?php print url(array('plugin' => 'encode', 'encode' => 'wmv', 'cat' => $GLOBALS['templates']['vars']['cat'],
 								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">WMV</a>
 				<?php
 			}
 			if(handles($GLOBALS['templates']['vars']['files'][$i]['Filepath'], 'audio'))
 			{
 				?>
-				: <a href="<?php print href(array('plugin' => 'encode', 'encode' => 'mp4a', 'cat' => $GLOBALS['templates']['vars']['cat'],
+				: <a href="<?php print url(array('plugin' => 'encode', 'encode' => 'mp4a', 'cat' => $GLOBALS['templates']['vars']['cat'],
 								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">MP4</a>
-				: <a href="<?php print href(array('plugin' => 'encode', 'encode' => 'mp3', 'cat' => $GLOBALS['templates']['vars']['cat'],
+				: <a href="<?php print url(array('plugin' => 'encode', 'encode' => 'mp3', 'cat' => $GLOBALS['templates']['vars']['cat'],
 								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">MP3</a>
-				: <a href="<?php print href(array('plugin' => 'encode', 'encode' => 'wma', 'cat' => $GLOBALS['templates']['vars']['cat'],
+				: <a href="<?php print url(array('plugin' => 'encode', 'encode' => 'wma', 'cat' => $GLOBALS['templates']['vars']['cat'],
 								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">WMA</a>
 				<?php
 			}
 			if(handles($GLOBALS['templates']['vars']['files'][$i]['Filepath'], 'image'))
 			{
 				?>
-				: <a href="<?php print href(array('plugin' => 'encode', 'encode' => 'jpg', 'cat' => $GLOBALS['templates']['vars']['cat'],
+				: <a href="<?php print url(array('plugin' => 'encode', 'encode' => 'jpg', 'cat' => $GLOBALS['templates']['vars']['cat'],
 								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">JPG</a>
-				: <a href="<?php print href(array('plugin' => 'encode', 'encode' => 'gif', 'cat' => $GLOBALS['templates']['vars']['cat'],
+				: <a href="<?php print url(array('plugin' => 'encode', 'encode' => 'gif', 'cat' => $GLOBALS['templates']['vars']['cat'],
 								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">GIF</a>
-				: <a href="<?php print href(array('plugin' => 'encode', 'encode' => 'png', 'cat' => $GLOBALS['templates']['vars']['cat'],
+				: <a href="<?php print url(array('plugin' => 'encode', 'encode' => 'png', 'cat' => $GLOBALS['templates']['vars']['cat'],
 								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">PNG</a>
 				<?php
 			}
 			if(handles($GLOBALS['templates']['vars']['files'][$i]['Filepath'], 'code'))
 			{
 				?>
-				: <a href="<?php print href(array('plugin' => 'code', 'cat' => $GLOBALS['templates']['vars']['cat'],
+				: <a href="<?php print url(array('plugin' => 'code', 'cat' => $GLOBALS['templates']['vars']['cat'],
 								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">view</a>
 				<?php
 			}

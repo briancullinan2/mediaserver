@@ -12,11 +12,11 @@ function register_plain_xml()
 function theme_plain_xml()
 {
 	$ext_icons = array();
-	$ext_icons['FOLDER'] = href('template=' . HTML_TEMPLATE . '&file=images/filetypes/folder_96x96.png');
-	$ext_icons['FILE'] = href('template=' . HTML_TEMPLATE . '&file=images/filetypes/file_96x96.png');
+	$ext_icons['FOLDER'] = url('template=' . HTML_TEMPLATE . '&file=images/filetypes/folder_96x96.png');
+	$ext_icons['FILE'] = url('template=' . HTML_TEMPLATE . '&file=images/filetypes/file_96x96.png');
 	
 	$type_icons = array();
-	$type_icons['audio'] = href('template=' . HTML_TEMPLATE . '&file=images/filetypes/music_96x96.png');
+	$type_icons['audio'] = url('template=' . HTML_TEMPLATE . '&file=images/filetypes/music_96x96.png');
 
 	print '<?xml version="1.0" encoding="utf-8"?>';
 	
@@ -56,7 +56,7 @@ function theme_plain_xml()
 			}
 			?></tip>
 			<path><?php print $file['Filepath']; ?></path>
-			<link><?php print href('plugin=file&cat=' . $GLOBALS['templates']['vars']['cat'] . '&id=' . $file['id'] . '&filename=' . urlencode($file['Filename']), false, true); ?></link>
+			<link><?php print url('plugin=file&cat=' . $GLOBALS['templates']['vars']['cat'] . '&id=' . $file['id'] . '&filename=' . urlencode($file['Filename']), false, true); ?></link>
 			<short><?php print htmlspecialchars(substr($GLOBALS['templates']['vars']['files'][$i]['Filename'], 0, 13)); ?>...</short>
 			<?php
 			if(handles($GLOBALS['templates']['vars']['files'][$i]['Filepath'], 'archive'))

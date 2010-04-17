@@ -27,7 +27,7 @@ function theme_live_list()
 	{
 		?>
 		<div class="nothover" onMouseOver="this.className='hover';" onMouseOut="this.className='nothover';">
-			<a href="<?php print href('plugin=list&list=' . $type); ?>" style="font-size:14px;"><?php print $list['name']; ?></a><br /><br />
+			<a href="<?php print url('plugin=list&list=' . $type); ?>" style="font-size:14px;"><?php print $list['name']; ?></a><br /><br />
 			Format: <?php print $list['encoding']; ?><br />
 			Extension: <?php print $type; ?>
 			<br /><br />
@@ -68,7 +68,7 @@ function theme_live_login_block()
 	else
 		$return = $GLOBALS['templates']['vars']['get'];
 	?>
-	<form action="<?php echo href('plugin=users&users=login&return=' . urlencode($return)); ?>" method="post">
+	<form action="<?php echo url('plugin=users&users=login&return=' . urlencode($return)); ?>" method="post">
 		<input class="stndsize" type="text" onmouseout="if(this.value=='' && !this.hasfocus) document.getElementById('username').style.visibility='visible'" onblur="this.hasfocus=false; this.onmouseout();" onfocus="this.hasfocus=true" name="username" value="<?php print isset($GLOBALS['templates']['vars']['username'])?$GLOBALS['templates']['vars']['username']:''; ?>" />
 		<input class="stndsize" type="password" onmouseout="if(this.value=='' && !this.hasfocus) document.getElementById('password').style.visibility='visible'" onblur="this.hasfocus=false; this.onmouseout();" onfocus="this.hasfocus=true" name="password" value="" />
 		<input type="submit" value="Login" />

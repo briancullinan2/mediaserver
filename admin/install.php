@@ -549,14 +549,14 @@ function output_admin_install($request)
 	
 	if(isset($request['install_next']))
 	{
-		header('Location: ' . generate_href('plugin=admin_install&install_step=' . ($request['install_step'] + 1), true));
+		header('Location: ' . url('plugin=admin_install&install_step=' . ($request['install_step'] + 1), true));
 		exit;
 	}
 
 	if(isset($_POST) && count($_POST) > 0)
 	{
 		if(isset($_POST['dberror'])) $_SESSION['dberror'] = $_POST['dberror'];
-		header('Location: ' . generate_href('plugin=admin_install&install_step=' . $request['install_step'], true));
+		header('Location: ' . url('plugin=admin_install&install_step=' . $request['install_step'], true));
 		exit;
 	}
 	

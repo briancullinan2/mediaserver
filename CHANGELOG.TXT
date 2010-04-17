@@ -1,3 +1,20 @@
+2010-04-16
+Replaced all occurances of href() with url()
+
+2010-04-15
+Discovered that network timeouts make the libraries for archives and movies hang up really badly
+Fixed some bugs in the Live template
+	now check if more variables are missing and doesn't cause as many errors
+Fixed some bugs in the search.php plugin
+	Now fully implements query_alter_
+
+2010-04-14
+Fixed some bugs in the live/index.php template
+	Variables should still be checked to see if they are set incase something goes wrong
+Fixed many bugs in search.php plugin
+Added to core.php plugin
+	Now directory separators can be used in the path to specify which plugin you would like to use
+
 2010-04-12
 Worked on documentation site
 Worked on monolithicmedia site

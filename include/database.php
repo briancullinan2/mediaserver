@@ -228,7 +228,7 @@ class database
 	{
 		if($require_permit)
 		{
-			$where_security = '(LEFT(Filepath, ' . strlen(LOCAL_USERS) . ') != "' . addslashes(LOCAL_USERS) . '" OR ' . 
+			$where_security = 'LEFT(Filepath, ' . strlen(LOCAL_USERS) . ') != "' . addslashes(LOCAL_USERS) . '" OR ' . 
 								'Filepath = "' . addslashes(LOCAL_USERS) . '" OR ' . 
 								'(LEFT(Filepath, ' . strlen(LOCAL_USERS) . ') = "' . addslashes(LOCAL_USERS) . '" AND LOCATE("/", Filepath, ' . (strlen(LOCAL_USERS) + 1) . ') = LENGTH(Filepath)) OR ' . 
 								'LEFT(Filepath, ' . strlen(LOCAL_USERS . $_SESSION['user']['Username'] . '/') . ') = "' . addslashes(LOCAL_USERS . $_SESSION['user']['Username'] . '/') . '" OR ' . 
@@ -240,18 +240,14 @@ class database
 					$where_security .= ' OR LEFT(Filepath, ' . strlen(LOCAL_USERS . $username . '/') . ') = "' . addslashes(LOCAL_USERS . $username . '/') . '"';
 				}
 			}
-			$where_security .= ')';
-			
-			if(!isset($props['WHERE'])) $where = 'WHERE ' . $where_security;
-			elseif(is_array($props['WHERE'])) $where = 'WHERE (' . join(' AND ', $props['WHERE']) . ') AND ' . $where_security;
-			elseif(is_string($props['WHERE'])) $where = 'WHERE (' . $props['WHERE'] . ') AND ' . $where_security;
+			if(is_string($props['WHERE']))
+				$props['WHERE'] = array($props['WHERE']);
+			$props['WHERE'][] = $where_security;
 		}
-		else
-		{
-			if(!isset($props['WHERE'])) $where = '';
-			elseif(is_array($props['WHERE'])) $where = 'WHERE ' . join(' AND ', $props['WHERE']);
-			elseif(is_string($props['WHERE'])) $where = 'WHERE ' . $props['WHERE'];
-		}
+
+		if(!isset($props['WHERE'])) $where = '';
+		elseif(is_array($props['WHERE'])) $where = 'WHERE (' . join(') AND (', $props['WHERE']) . ')';
+		elseif(is_string($props['WHERE'])) $where = 'WHERE ' . $props['WHERE'];
 		
 		if(!isset($props['GROUP'])) $group = '';
 		elseif(is_string($props['GROUP'])) $group = 'GROUP BY ' . $props['GROUP'];

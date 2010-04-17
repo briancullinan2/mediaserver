@@ -15,7 +15,7 @@ function theme_plain_m3u()
 	{
 		if(!isset($GLOBALS['templates']['vars']['selected']))
 		{
-			header('Location: ' . href('list=m3u&plugin=list&cat=' . $_REQUEST['cat']));
+			header('Location: ' . url('list=m3u&plugin=list&cat=' . $_REQUEST['cat']));
 		}
 		else
 		{
@@ -30,9 +30,9 @@ function theme_plain_m3u()
 <body>
 Note: All non-media types will be filtered out using this list type.<br />
 Select your audio/video format:<br />
-<a href="<?php print href('plugin=list&list=m3u&cat=' . $GLOBALS['templates']['vars']['cat'] . '&selected=' . $ids . '&extra=mp3&filename=Files.m3u'); ?>">mp4</a>
-: <a href="<?php print href('plugin=list&list=m3u&cat=' . $GLOBALS['templates']['vars']['cat'] . '&selected=' . $ids . '&extra=mpg&filename=Files.m3u'); ?>">mpg/mp3</a>
-: <a href="<?php print href('plugin=list&list=m3u&cat=' . $GLOBALS['templates']['vars']['cat'] . '&selected=' . $ids . '&extra=wm&filename=Files.m3u'); ?>">wmv/wma</a>
+<a href="<?php print url('plugin=list&list=m3u&cat=' . $GLOBALS['templates']['vars']['cat'] . '&selected=' . $ids . '&extra=mp3&filename=Files.m3u'); ?>">mp4</a>
+: <a href="<?php print url('plugin=list&list=m3u&cat=' . $GLOBALS['templates']['vars']['cat'] . '&selected=' . $ids . '&extra=mpg&filename=Files.m3u'); ?>">mpg/mp3</a>
+: <a href="<?php print url('plugin=list&list=m3u&cat=' . $GLOBALS['templates']['vars']['cat'] . '&selected=' . $ids . '&extra=wm&filename=Files.m3u'); ?>">wmv/wma</a>
 <br />
 Some files that will be listed: <br />
 <?php
@@ -88,12 +88,12 @@ foreach($GLOBALS['templates']['vars']['files'] as $i => $file)
 		if(handles($file['Filepath'], 'audio'))
 		{
 			?>#EXTINF:<?php print $length; ?>,<?php print $title; ?>
-			<?php print href('plugin=encode&cat=' . $GLOBALS['templates']['vars']['cat'] . '&id=' . $file['id'] . '&encode=' . $audio . '&filename=' . basename($file['Filepath']), true, true);
+			<?php print url('plugin=encode&cat=' . $GLOBALS['templates']['vars']['cat'] . '&id=' . $file['id'] . '&encode=' . $audio . '&filename=' . basename($file['Filepath']), true, true);
 		}
 		elseif(handles($file['Filepath'], 'video'))
 		{
 			?>#EXTINF:<?php print $length; ?>,<?php print $title; ?>
-			<?php print href('plugin=encode&cat=' . $GLOBALS['templates']['vars']['cat'] . '&id=' . $file['id'] . '&encode=' . $video . '&filename=' . basename($file['Filepath']), true, true);
+			<?php print url('plugin=encode&cat=' . $GLOBALS['templates']['vars']['cat'] . '&id=' . $file['id'] . '&encode=' . $video . '&filename=' . basename($file['Filepath']), true, true);
 		}
 	}
 }

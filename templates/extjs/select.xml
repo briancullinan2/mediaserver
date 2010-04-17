@@ -2,11 +2,11 @@
 {if $smarty.const.USE_DATABASE}{assign var=prefix value='db_'}{else}{assign var=prefix value='fs_'}{/if}
 {php}
 $ext_icons = array();
-$ext_icons['FOLDER'] = generate_href('template=' . HTML_TEMPLATE . '&file=images/filetypes/folder_96x96.png');
-$ext_icons['FILE'] = generate_href('template=' . HTML_TEMPLATE . '&file=images/filetypes/file_96x96.png');
+$ext_icons['FOLDER'] = generate_url('template=' . HTML_TEMPLATE . '&file=images/filetypes/folder_96x96.png');
+$ext_icons['FILE'] = generate_url('template=' . HTML_TEMPLATE . '&file=images/filetypes/file_96x96.png');
 
 $type_icons = array();
-$type_icons['audio'] = generate_href('template=' . HTML_TEMPLATE . '&file=images/filetypes/music_96x96.png');
+$type_icons['audio'] = generate_url('template=' . HTML_TEMPLATE . '&file=images/filetypes/music_96x96.png');
 
 $this->assign('ext_icons', $ext_icons);
 $this->assign('type_icons', $type_icons);

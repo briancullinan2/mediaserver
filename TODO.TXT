@@ -1,3 +1,11 @@
+Test and find a fix for some media dropping off the network
+	Check to see if the file exists in the archive module before trying to analyze it
+Remove all occurances on props['WHERE'] being set to a string
+	It should be set to an array from now on, so that we can differentiate between each query_alter_
+	Same with all the other variables
+Write a goto() function in core.php that check if headers have been sent and parses addresses
+Start implementing lang() calls
+Set variables to default specified by template if they are not set because of an improper input
 Change tools to output a list like the select plugin, a list of info objects used for outputting
 Cache all loaded plugin files in settings database (possibly storing in admin settings and deserializing would be efficient?)
 Check all requires to make sure they can't be substituted for an include (abstract them to allow for better error handling)
