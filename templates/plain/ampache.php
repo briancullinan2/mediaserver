@@ -102,7 +102,7 @@ function theme_plain_ampache()
 	<genre id="<?php echo $song['id']; ?>"><![CDATA[<?php echo $song['Genre']; ?>]]></genre>
 	<track><?php echo $song['Track']; ?></track>
 	<time><?php echo $song['Length']; ?></time>
-	<url><![CDATA[<?php echo generate_url('encode=mp3&id=' . $song['id'] . '&cat=db_audio&plugin=encode', true, true); ?>]]></url>
+	<url><![CDATA[<?php echo url('encode=mp3&id=' . $song['id'] . '&cat=db_audio&plugin=encode', true, true); ?>]]></url>
 	<size><?php echo filesize($song['Filepath']); ?></size>
 	<art><![CDATA[]]></art>
 	</song>

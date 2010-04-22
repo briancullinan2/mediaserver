@@ -254,8 +254,7 @@ function output_users($request)
 			{
 				if( isset($request['return']) && (!isset($request['required_priv']) || $_SESSION['user']['Privilage'] >= $request['required_priv']))
 				{
-					header('Location: ' . $request['return']);
-					exit();
+					goto($request['return']);
 				}
 				else
 					PEAR::raiseError('Already logged in!', E_USER);

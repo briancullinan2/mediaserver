@@ -32,7 +32,12 @@ function validate_dir($request)
 		$request['cat'] = validate_cat($request);
 		if(USE_ALIAS == true)
 			$tmp = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
-		if(is_dir(realpath($tmp)) || call_user_func_array($request['cat'] . '::handles', array($request['dir'])) == true)
+			// this check the input 'dir' for actual files
+		if(is_dir(realpath($tmp)) || 
+			// this check the 'dir' for directories inside archives and disk images
+			call_user_func_array($request['cat'] . '::handles', array($request['dir'])) == true ||
+			// this check the dir for wrappers, wrappers can handle their own dir
+			is_wrapper($request['cat']))
 			return $request['dir'];
 		else
 			PEAR::raiseError('Directory does not exist!', E_USER);

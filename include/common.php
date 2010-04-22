@@ -44,7 +44,10 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.php';
 
 /** require compatibility */
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'compatibility.php';
-	
+
+/** require core functionality */
+require_once LOCAL_ROOT . 'plugins' . DIRECTORY_SEPARATOR . 'core.php';
+
 /** require pear for error handling */
 require_once 'PEAR.php';
 /** Set the error handler to use our custom function for storing errors */
@@ -69,8 +72,7 @@ session_start();
 if(isset($_POST) && count($_POST) > 0)
 {
 	$_SESSION['last_request'] = $_REQUEST;
-	header('Location: ' . $_SERVER['REQUEST_URI']);
-	exit;
+	goto($_SERVER['REQUEST_URI']);
 }
 if(isset($_SESSION['last_request']))
 {
@@ -111,7 +113,6 @@ function setup()
 	setupModules();
 	
 	// set up a list of plugins available to the system
-	include_once LOCAL_ROOT . 'plugins' . DIRECTORY_SEPARATOR . 'core.php';
 	setup_plugins();
 	
 	// set up list of tables
@@ -232,6 +233,16 @@ function setupTables()
 	$GLOBALS['watched'] = db_watch::get(array('search_Filepath' => '/^\\^/'), $count);
 	// always add user local to watch list
 	$GLOBALS['watched'][] = array('id' => 0, 'Filepath' => str_replace('\\', '/', LOCAL_USERS));
+}
+
+/**
+ * Check if the specified class is just a wrapper for some parent database
+ * @param module is the catagory or module to check
+ * @return true or false if the class is a wrapper
+ */
+function is_wrapper($module)
+{
+	return (constant($module . '::DATABASE') == constant(get_parent_class($module) . '::DATABASE'));
 }
 
 /**

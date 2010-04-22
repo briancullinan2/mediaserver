@@ -128,8 +128,7 @@ function setup_input()
 				basename($_REQUEST['plugin']) != 'index' &&
 				basename($_REQUEST['plugin']) != 'sitemap')
 			{
-				header('Location: ' . url('plugin=sitemap'));
-				exit;
+				goto('plugin=sitemap');
 			}
 			else
 			{
@@ -237,6 +236,30 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 		return $link;
 	else
 		return htmlspecialchars($link);
+}
+
+/**
+ * Change the header location to the specified request
+ * @param request The string or array of request variables containing the location to go to
+ */
+function goto($request)
+{
+	if(!headers_sent())
+	{
+		// check if we are forwarding to the same domain
+		if(is_string($request) && strpos($request, '://') !== false)
+		{
+			header('Location: ' . $request);
+		}
+		// if so, verify all request variables
+		else
+		{
+			header('Location: ' . url($request, true));
+		}
+		
+		// exit now so the page is redirected
+		exit;
+	}
 }
 
 function set_output_vars()
@@ -479,7 +502,13 @@ function validate_plugin($request)
 function create_path_info(&$request)
 {
 	// use the same algorithm to rebuild the path info
-	$path = $request['plugin'] . '/';
+	$path = str_replace('_', '/', $request['plugin']) . '/';
+	
+	// make sure the plugin doesn't actually exists on the web server
+	if(file_exists(LOCAL_ROOT . $path))
+		return '';
+	
+	// construct query out of remaining variables
 	if(isset($request['cat']) && isset($request['id']) &&
 		isset($request[$request['plugin']]) &&
 		isset($request['extra']) && isset($request['filename']))

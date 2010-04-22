@@ -90,11 +90,11 @@ function theme_live_debug_block()
 		foreach($GLOBALS['debug_errors'] as $i => $error)
 		{
 			?>
-			<a onClick="toggleDiv('error_<?php print $i; ?>')"><?php print $error->message; ?></a><br />
+			<a onClick="toggleDiv('error_<?php print $i; ?>')"><?php print htmlspecialchars($error->message); ?></a><br />
 			<div id="error_<?php print $i; ?>" style="display:none;">
 				<code>
 					<pre>
-					<?php print_r($error); ?>
+					<?php htmlspecialchars(print_r($error, true)); ?>
 					</pre>
 				</code>
 			</div>

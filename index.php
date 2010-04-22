@@ -7,8 +7,7 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEP
 
 if(substr(selfURL(), 0, strlen(HTML_DOMAIN)) != HTML_DOMAIN)
 {
-	header('Location: ' . url($_GET, true, true));
-	exit();
+	goto(url($_GET, true, true));
 }
 
 // check if plugin exists
@@ -20,12 +19,12 @@ if(isset($GLOBALS['plugins'][$_REQUEST['plugin']]))
 	if( isset($GLOBALS['plugins'][$_REQUEST['plugin']]['privilage']) && $_SESSION['user']['Privilage'] < $GLOBALS['plugins'][$_REQUEST['plugin']]['privilage'] )
 	{
 		// redirect to login page
-		header('Location: ' . url(array(
+		goto(array(
 			'plugin' => 'users',
 			'users' => 'login',
 			'return' => urlencode(url($_GET, true)),
 			'required_priv' => $GLOBALS['plugins'][$_REQUEST['plugin']]['privilage']
-		), true));
+		));
 		
 		exit();
 	}

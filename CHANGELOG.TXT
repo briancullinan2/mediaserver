@@ -1,3 +1,12 @@
+2010-04-22
+Created goto function for changing header(Location) and redirecting to other pages
+Fixed a bug in search.php plugin, it wasn't initialized $props[WHERE]
+Changed create_path_info in core.php plugin to convert plugin names to paths by replacing underscores with forward slashes
+Added wrapper recognition
+	Modules that use the same database as their parent will be considered "wrappers" for that database
+	This is useful for displaying the same informtion in a different way such as turning artist/albums into a directory tree
+	Wrappers are acknowledged by the select.php plugin as well as in the validate_dir function in file.php plugin
+
 2010-04-16
 Replaced all occurances of href() with url()
 

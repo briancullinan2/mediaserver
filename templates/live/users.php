@@ -7,6 +7,18 @@ function register_live_users()
 	);
 }
 
+function theme_live_login()
+{
+	?>	
+	<form action="<?php echo url('plugin=users&users=login' . (isset($GLOBALS['templates']['vars']['return'])?('&return=' . urlencode($GLOBALS['templates']['vars']['return'])):'')); ?>" method="post">
+	
+		Username: <input type="text" name="username" value="<?php print isset($GLOBALS['templates']['vars']['username'])?$GLOBALS['templates']['vars']['username']:''; ?>" /><br />
+		Password: <input type="password" name="password" value="" /><br />
+		<input type="submit" value="Login" /><input type="reset" value="Reset" />
+		
+	</form>
+	<?php
+}
 
 function theme_live_users()
 {

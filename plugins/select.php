@@ -182,7 +182,11 @@ function output_select($request)
 	// the ids module will do the replacement of the ids
 	if(count($files) > 0)
 	{
-		$files = db_ids::get(array('cat' => $request['cat']), $tmp_count, $files);
+		// wrappers for parent databases do not get IDs!
+		if(!is_wrapper($request['cat']))
+		{
+			$files = db_ids::get(array('cat' => $request['cat']), $tmp_count, $files);
+		}
 		$files = db_users::get(array(), $tmp_count, $files);
 	}
 	

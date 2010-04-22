@@ -219,6 +219,8 @@ function alter_query_search($request, $props)
 			$parts[] = ' LOCATE("' . addslashes($search) . '", ' . $column . ')';
 		}
 	}
+	if(!isset($props['WHERE']))
+		$props['WHERE'] = array();
 	if(is_string($props['WHERE']))
 		$props['WHERE'] = array($props['WHERE']);
 		

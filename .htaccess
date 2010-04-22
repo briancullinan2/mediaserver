@@ -1,4 +1,4 @@
-<FilesMatch "^(modules|include|templates_c)">
+<FilesMatch "^(modules|include|users)">
 	Order Deny,Allow
 	Deny from all
 </FilesMatch>
@@ -6,12 +6,6 @@
 <IfModule mod_rewrite.c>
 
 RewriteEngine on
-
-RewriteRule ^plugins/([^/\.]+)(\.php)?/([^/]*)$ 									index.php?plugin=$1&search=$3 [L]
-RewriteRule ^plugins/([^/\.]+)(\.php)?/([^/]*)/([^/]*)$ 							index.php?plugin=$1&cat=$3&id=$4 [L]
-RewriteRule ^plugins/([^/\.]+)(\.php)?/([^/]*)/([^/]*)/([^/]*)$ 					index.php?plugin=$1&cat=$3&id=$4&filename=$5 [L]
-RewriteRule ^plugins/([^/\.]+)(\.php)?/([^/]*)/([^/]*)/([^/]*)/([^/]*)$ 			index.php?plugin=$1&cat=$3&id=$4&$1=$5&filename=$6 [L]
-RewriteRule ^plugins/([^/\.]+)(\.php)?/([^/]*)/([^/]*)/([^/]*)/([^/]*)/([^/]*)$ 	index.php?plugin=$1&cat=$3&id=$4&$1=$5&extra=$6&filename=$7 [L]
 
 RewriteRule ^admin/install\.php$													admin/install.php?modrewrite=true [QSA,L]
 

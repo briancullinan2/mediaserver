@@ -15,7 +15,7 @@ function theme_plain_m3u()
 	{
 		if(!isset($GLOBALS['templates']['vars']['selected']))
 		{
-			header('Location: ' . url('list=m3u&plugin=list&cat=' . $_REQUEST['cat']));
+			goto('list=m3u&plugin=list&cat=' . $_REQUEST['cat']);
 		}
 		else
 		{

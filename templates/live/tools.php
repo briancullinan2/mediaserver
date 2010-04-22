@@ -25,7 +25,7 @@ function theme_live_tools()
 	{
 		?>
 		<div class="nothover" onMouseOver="this.className='hover';" onMouseOut="this.className='nothover';">
-			<a href="<?php print generate_url('plugin=admin_tools_' . $name); ?>" style="font-size:14px;"><?php print $tool['name']; ?></a><br />
+			<a href="<?php print url('plugin=admin_tools_' . $name); ?>" style="font-size:14px;"><?php print $tool['name']; ?></a><br />
 			Description: <?php print $tool['description']; ?><br /><br />
 			<?php
 			foreach($tool['subtools'] as $i => $subtool)
