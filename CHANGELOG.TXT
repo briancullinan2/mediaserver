@@ -6,6 +6,9 @@ Added wrapper recognition
 	Modules that use the same database as their parent will be considered "wrappers" for that database
 	This is useful for displaying the same informtion in a different way such as turning artist/albums into a directory tree
 	Wrappers are acknowledged by the select.php plugin as well as in the validate_dir function in file.php plugin
+Delete smarty from includes and install, site still works
+	All current smarty templates are obsolete
+Moved the core.php plugin include in common.php to the GLOBAL scope just incase something has to use a core function like goto() before plugins are initialized
 
 2010-04-16
 Replaced all occurances of href() with url()

@@ -215,7 +215,6 @@ function output_tests($install_step)
 			'local_root' => 'LOCAL_ROOT',
 			'check_adodb' => '',
 			'check_pear' => '',
-			'check_smarty' => '',
 			'check_getid3' => '',
 			'check_snoopy' => '',
 			'check_extjs' => '',
@@ -766,41 +765,6 @@ function output_test_check_pear($result, $variable)
 		<ul>
 			<li>The system has detected that PEAR is NOT INSTALLED.</li>
 			<li>The PEAR library is an extensive PHP library that provides common functions for modules and plugins in the site.</li>
-		</ul>
-		</td></tr>
-		<?php
-	}
-}
-
-
-function output_test_check_smarty($result, $variable)
-{
-	// check for smarty
-	if($result)
-	{
-		?><tr><td class="title">Smarty Templates</td>
-		<td>
-		<label>Smarty Templating System detected</label>
-		</td>
-		<td class="desc">
-		<ul>
-			<li>The system has detected that Smarty system is installed in the includes directory.</li>
-			<li>Smarty templates is a templating system for adding logic and extra functionality to a standard HTML document.</li>
-		</ul>
-		</td></tr>
-		<?php
-	}
-	else
-	{
-		?><tr><td class="title fail">Smarty Templates Missing</td>
-		<td>
-		<a href="http://www.smarty.net/">Get Smarty</a>
-		</td>
-		<td class="desc">
-		<ul>
-			<li>The system has detected that Smarty Templates is NOT INSTALLED.</li>
-			<li>The root of the Smarty system (eg "Smarty-2.6/libs") must be placed in &lt;site root&gt;/include/Smarty/</li>
-			<li>Smarty templates is a templating system for adding logic and extra functionality to a standard HTML document.</li>
 		</ul>
 		</td></tr>
 		<?php

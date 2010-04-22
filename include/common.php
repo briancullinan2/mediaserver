@@ -242,6 +242,8 @@ function setupTables()
  */
 function is_wrapper($module)
 {
+	if($module == 'db_file')
+		return false;
 	return (constant($module . '::DATABASE') == constant(get_parent_class($module) . '::DATABASE'));
 }
 

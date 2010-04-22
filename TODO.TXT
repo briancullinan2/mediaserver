@@ -3,22 +3,19 @@ Test and find a fix for some media dropping off the network
 Remove all occurances on props['WHERE'] being set to a string
 	It should be set to an array from now on, so that we can differentiate between each query_alter_
 	Same with all the other variables
-Write a goto() function in core.php that check if headers have been sent and parses addresses
 Start implementing lang() calls
 Set variables to default specified by template if they are not set because of an improper input
 Change tools to output a list like the select plugin, a list of info objects used for outputting
 Cache all loaded plugin files in settings database (possibly storing in admin settings and deserializing would be efficient?)
 Check all requires to make sure they can't be substituted for an include (abstract them to allow for better error handling)
 Finish ampache.php plugin to support genres, videos, and playlists
-Remove smarty from the entire system because it sucks
 Check for bt plugin in install.php script
 Add bttracker install script to admin/install.php to fully bootstrap the install process
 Re-upload entire site
 Finish fixing up plugins to use new API
-	admin section
+	admin tools section
 Drupalish style coding
 	More streamlined way of plugins outputting data to template (assuming that $files is being used is no good)
-Create a developer plugin that verifies plugins register themselves and don't use query() function
 Doxygen compliant
 Speed testing with new User queries
 More compatibility testing with clients

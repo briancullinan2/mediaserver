@@ -424,10 +424,6 @@ EOF;
 	$tests['check_pear'] = <<<EOF
 		return ((@include_once 'PEAR.php') == true);
 EOF;
-	$tests['check_smarty'] = <<<EOF
-		\$request['LOCAL_ROOT'] = validate_LOCAL_ROOT(\$request);
-		return file_exists(\$request['LOCAL_ROOT'] . 'include' . DIRECTORY_SEPARATOR . 'Smarty' . DIRECTORY_SEPARATOR . 'Smarty.class.php');
-EOF;
 	$tests['check_getid3'] = <<<EOF
 		\$request['LOCAL_ROOT'] = validate_LOCAL_ROOT(\$request);
 		return file_exists(\$request['LOCAL_ROOT'] . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.lib.php');
