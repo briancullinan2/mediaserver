@@ -16,7 +16,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;* <b>DB_</b> constants control database access<br />
 &nbsp;&nbsp;&nbsp;&nbsp;* <b>LOCAL_</b> controls paths to the local system<br />
 &nbsp;&nbsp;&nbsp;&nbsp;* <b>HTML_</b> controls how users access the site<br />
-&nbsp;&nbsp;&nbsp;&nbsp;* &lt;COMMAND&gt;_ controlls some programs for the default plugins<br />
+&nbsp;&nbsp;&nbsp;&nbsp;* &lt;COMMAND&gt;_ controlls some programs for the default modules<br />
 2. Give files permission<br />
 &nbsp;&nbsp;&nbsp;&nbsp;* &lt;site path&gt;/templates_c/ needs write access in order to compiler templates and cache them<br />
 &nbsp;&nbsp;&nbsp;&nbsp;* &lt;site path&gt;/state_dirs.txt needs write access in order to save the state of the cron script<br />
@@ -28,9 +28,9 @@
 &nbsp;&nbsp;&nbsp;&nbsp;<b>Warning</b>, this is for advanced users only, changing this section could alter the functionality of the site<br />
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="alias.php">Alias</a><br />
 6. Add a cron job:<br />
-&nbsp;&nbsp;&nbsp;&nbsp;Run the <b>&lt;site path&gt;/plugins/cron.php</b> script (optionally run manually) to look for changed directories<br /><code>
-&nbsp;&nbsp;&nbsp;&nbsp;0 * * * * /usr/bin/php /&lt;site path&gt;/plugins/cron.php &gt;/dev/null 2&gt;&amp;1<br />
-&nbsp;&nbsp;&nbsp;&nbsp;30 * * * * /usr/bin/php /&lt;site path&gt;/plugins/cron.php &gt;/dev/null 2&gt;&amp;1<br /></code>
+&nbsp;&nbsp;&nbsp;&nbsp;Run the <b>&lt;site path&gt;/modules/cron.php</b> script (optionally run manually) to look for changed directories<br /><code>
+&nbsp;&nbsp;&nbsp;&nbsp;0 * * * * /usr/bin/php /&lt;site path&gt;/modules/cron.php &gt;/dev/null 2&gt;&amp;1<br />
+&nbsp;&nbsp;&nbsp;&nbsp;30 * * * * /usr/bin/php /&lt;site path&gt;/modules/cron.php &gt;/dev/null 2&gt;&amp;1<br /></code>
 &nbsp;&nbsp;&nbsp;&nbsp;This would run a job every half hour<br />
 &nbsp;&nbsp;&nbsp;&nbsp;You can also use Scheduled Tasks on Windows to run the cron.php script with PHP-CLI<br /><br />
 <b>Note:</b><br />
@@ -38,8 +38,8 @@ The site can be run on a remote system with a shared directory in between howeve
 See the alias editor for more information.<br />
 In order to run the site remotely and minimalistically the following sections are required:<br />
 &nbsp;&nbsp;&nbsp;&nbsp;/&lt;site path&gt;/include/<br />
-&nbsp;&nbsp;&nbsp;&nbsp;/&lt;site path&gt;/plugin/cron.php<br />
-&nbsp;&nbsp;&nbsp;&nbsp;/&lt;site path&gt;/modules/<br />
+&nbsp;&nbsp;&nbsp;&nbsp;/&lt;site path&gt;/module/cron.php<br />
+&nbsp;&nbsp;&nbsp;&nbsp;/&lt;site path&gt;/handlers/<br />
 After this is set up, cron can be run locally on the files.<br />
 </body>
 </html>

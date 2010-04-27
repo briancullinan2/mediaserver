@@ -10,7 +10,7 @@ class fs_archive extends fs_file
 {
 	const NAME = 'Archives on Filesystem';
 	
-	// define if this module is internal so templates won't try to use it
+	// define if this handler is internal so templates won't try to use it
 	const INTERNAL = false;
 
 	static function init()
@@ -207,7 +207,7 @@ class fs_archive extends fs_file
 					return $files;
 				}
 				// maybe they are trying to access a zip file as if it were a folder
-				// this is perfectly acceptable so lets check to see if this module handles it
+				// this is perfectly acceptable so lets check to see if this handler handles it
 					
 				if(fs_archive::handles($request['dir']))
 				{

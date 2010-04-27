@@ -8,7 +8,7 @@ function register_live()
 		'privilage' => 1,
 		'path' => __FILE__,
 		'alter request' => true,
-		'files' => array('admin', 'encode', 'footer', 'header', 'index', 'install', 'list', 'plugins', 'search', 'select', 'settings', 'tools', 'users')
+		'files' => array('admin', 'encode', 'footer', 'header', 'index', 'install', 'list', 'modules', 'search', 'select', 'settings', 'tools', 'users')
 	);
 }
 
@@ -25,7 +25,7 @@ function alter_request_live($request)
 
 function output_live()
 {
-	switch($GLOBALS['templates']['vars']['plugin'])
+	switch($GLOBALS['templates']['vars']['module'])
 	{
 		case 'ampache':
 			theme('ampache');
@@ -55,8 +55,8 @@ function output_live()
 		case 'admin_watch':
 			theme('watch');
 		break;
-		case 'admin_plugins':
-			theme('plugins');
+		case 'admin_modules':
+			theme('modules');
 		break;
 		case 'admin_template':
 			theme('template');
@@ -64,8 +64,9 @@ function output_live()
 		case 'admin_tools':
 			theme('tools');
 		break;
+		case 'admin_tools_statistics':
 		case 'admin_tools_filetools':
-			theme('tools_filetools');
+			theme('tools_subtools');
 		break;
 		default:
 			theme('default');
@@ -78,7 +79,7 @@ function theme_live_default()
 	
 	?>
 	<div class="contentSpacing">
-			<h1 class="title">Plugin: <?php print $GLOBALS['plugins'][$GLOBALS['templates']['vars']['plugin']]['name']; ?></h1>
+			<h1 class="title">Module: <?php print $GLOBALS['modules'][$GLOBALS['templates']['vars']['module']]['name']; ?></h1>
 			<span class="subText">This page requires special parameters that have not been set.  This default page is a placeholder.</span>
 	<?php
 	

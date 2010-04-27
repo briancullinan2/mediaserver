@@ -16,7 +16,7 @@ class db_artists extends db_audio
 
 	static function handles($file)
 	{
-		// we don't want this module to handle any files, it is just a wrapper
+		// we don't want this handler to handle any files, it is just a wrapper
 		return false;
 	}
 

@@ -9,8 +9,8 @@
             {/if}
             {/foreach}
 			<select name="cat">
-			{foreach item=name key=module from=$modules}
-				<option value="{$module}" {if isset($cat) && $cat eq $module}selected{/if}>{$name}</option>
+			{foreach item=name key=module from=$handlers}
+				<option value="{$handler}" {if isset($cat) && $cat eq $handler}selected{/if}>{$name}</option>
 			{/foreach}
 			</select>
 			<br />
@@ -27,11 +27,11 @@
 		<br />
 		<form name="search" action="{$search_str|htmlspecialchars}" method="get">
 			<select name="cat">
-			{section name=module loop=$modules}
-				{assign var=module value=$modules[module]}
-				<option value="{$modules[module]}" {if isset($search.cat) && $search.cat eq $modules[module]}selected{/if}>{php}
-					$module = $this->get_template_vars('module');
-					echo constant($module . '::NAME');
+			{section name=module loop=$handlers}
+				{assign var=module value=$handlers[module]}
+				<option value="{$handlers[module]}" {if isset($search.cat) && $search.cat eq $handlers[module]}selected{/if}>{php}
+					$handler = $this->get_template_vars('handler');
+					echo constant($handler . '::NAME');
 				{/php}</option>
 			{/section}
 			</select>

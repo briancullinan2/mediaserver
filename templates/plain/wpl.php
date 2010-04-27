@@ -27,7 +27,7 @@ function theme_plain_wpl()
 				<?php
 				foreach($files as $i => $file)
 				{
-					?><media src="<?php print url('plugin=file&cat=' . $GLOBALS['templates']['vars']['cat'] . '&id=' . $file['id'] . '&filename=' . urlencode($file['Filename']), false, true); ?>" /><?php
+					?><media src="<?php print url('module=file&cat=' . $GLOBALS['templates']['vars']['cat'] . '&id=' . $file['id'] . '&filename=' . urlencode($file['Filename']), false, true); ?>" /><?php
 				}
 				?>
 			</seq>

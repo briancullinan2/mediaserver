@@ -240,7 +240,7 @@ class db_playlist extends db_file
 		return $paths;
 	}
 
-	static function get($request, &$count, $module = NULL)
+	static function get($request, &$count, $handler = NULL)
 	{
 		$files = array();
 		

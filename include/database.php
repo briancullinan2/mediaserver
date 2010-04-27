@@ -41,16 +41,16 @@ class database
 	
 	function dropAll()
 	{
-		// loop through each module and compile a list of databases
+		// loop through each handler and compile a list of databases
 		$GLOBALS['tables'] = array();
-		foreach($GLOBALS['modules'] as $i => $module)
+		foreach($GLOBALS['handlers'] as $i => $handler)
 		{
-			if(defined($module . '::DATABASE'))
-				$GLOBALS['tables'][] = constant($module . '::DATABASE');
+			if(defined($handler . '::DATABASE'))
+				$GLOBALS['tables'][] = constant($handler . '::DATABASE');
 		}
 		$GLOBALS['tables'] = array_values(array_unique($GLOBALS['tables']));
 		
-		// create module tables
+		// create handler tables
 		foreach($GLOBALS['tables'] as $i => $table)
 		{
 			$query = 'DROP TABLE ' . $table;
@@ -126,15 +126,15 @@ class database
 	// install function
 	function install($callback = NULL)
 	{
-		// create module tables
+		// create handler tables
 		$tables_created = array();
-		foreach($GLOBALS['modules'] as $i => $module)
+		foreach($GLOBALS['handlers'] as $i => $handler)
 		{
-			$query = 'CREATE TABLE ' . constant($module . '::DATABASE') . ' (';
-			$struct = call_user_func($module . '::struct');
-			if(is_array($struct) && !in_array(constant($module . '::DATABASE'), $tables_created))
+			$query = 'CREATE TABLE ' . constant($handler . '::DATABASE') . ' (';
+			$struct = call_user_func($handler . '::struct');
+			if(is_array($struct) && !in_array(constant($handler . '::DATABASE'), $tables_created))
 			{
-				$tables_created[] = constant($module . '::DATABASE');
+				$tables_created[] = constant($handler . '::DATABASE');
 				if(!isset($struct['id']))
 					$query .= 'id INT NOT NULL AUTO_INCREMENT, PRIMARY KEY (id),';
 				foreach($struct as $column => $type)
@@ -151,7 +151,7 @@ class database
 				$result = $this->db_conn->Execute($query);
 				if($callback !== NULL)
 				{
-					call_user_func_array($callback, array($result, constant($module . '::DATABASE')));
+					call_user_func_array($callback, array($result, constant($handler . '::DATABASE')));
 				}
 			}
 		}
@@ -160,34 +160,34 @@ class database
 	function upgrade()
 	{
 		$tables_updated = array();
-		foreach($GLOBALS['modules'] as $i => $module)
+		foreach($GLOBALS['handlers'] as $i => $handler)
 		{
-			$struct = call_user_func($module . '::struct');
-			if(is_array($struct) && !in_array(constant($module . '::DATABASE'), $tables_updated))
+			$struct = call_user_func($handler . '::struct');
+			if(is_array($struct) && !in_array(constant($handler . '::DATABASE'), $tables_updated))
 			{
-				$tables_updated[] = constant($module . '::DATABASE');
+				$tables_updated[] = constant($handler . '::DATABASE');
 				
 				// first insert a row with id 0 to use for reading
-				$ids = $this->query(array('INSERT' => constant($module . '::DATABASE'), 'VALUES' => array('Filepath' => ''))) or print_r(mysql_error());
+				$ids = $this->query(array('INSERT' => constant($handler . '::DATABASE'), 'VALUES' => array('Filepath' => ''))) or print_r(mysql_error());
 				
 				// alter table to match the struct
-				$files = $this->query(array('SELECT' => constant($module . '::DATABASE'), 'WHERE' => 'Filepath=""')) or print_r(mysql_error());
+				$files = $this->query(array('SELECT' => constant($handler . '::DATABASE'), 'WHERE' => 'Filepath=""')) or print_r(mysql_error());
 				
 				if(count($files) > 0)
 				{
 					$columns = array_keys($files[0]);
 						
 					// find missing columns
-					$query = 'ALTER TABLE ' . constant($module . '::DATABASE');
+					$query = 'ALTER TABLE ' . constant($handler . '::DATABASE');
 					foreach($struct as $column => $type)
 					{
 						if(!in_array($column, $columns))
 						{
 							// alter the table
 							if(strpos($type, ' ') === false)
-								$this->query('ALTER TABLE ' . constant($module . '::DATABASE') . ' ADD ' . $column . ' ' . $type . ' NOT NULL') or print_r(mysql_error());
+								$this->query('ALTER TABLE ' . constant($handler . '::DATABASE') . ' ADD ' . $column . ' ' . $type . ' NOT NULL') or print_r(mysql_error());
 							else
-								$this->query('ALTER TABLE ' . constant($module . '::DATABASE') . ' ADD ' . $column . ' ' . $type) or print_r(mysql_error());
+								$this->query('ALTER TABLE ' . constant($handler . '::DATABASE') . ' ADD ' . $column . ' ' . $type) or print_r(mysql_error());
 						}
 						
 						if($column != 'id')
@@ -208,7 +208,7 @@ class database
 					{
 						if(!isset($struct[$key]))
 						{
-							$this->query('ALTER TABLE ' . constant($module . '::DATABASE') . ' DROP ' . $key) or print_r(mysql_error());
+							$this->query('ALTER TABLE ' . constant($handler . '::DATABASE') . ' DROP ' . $key) or print_r(mysql_error());
 						}
 					}
 				
@@ -216,7 +216,7 @@ class database
 					$this->query($query) or print_r(mysql_error());
 				
 					// remove id 0
-					$files = $this->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => 'Filepath=""')) or print_r(mysql_error());
+					$files = $this->query(array('DELETE' => constant($handler . '::DATABASE'), 'WHERE' => 'Filepath=""')) or print_r(mysql_error());
 				}
 			}
 		}
@@ -332,7 +332,7 @@ class database
 	}
 	
 	// function for making calls on the database, this is what is called by the rest of the site
-	//   for_users tells the script whether or not these results will eventually be used by plugins and template and be printed out
+	//   for_users tells the script whether or not these results will eventually be used by modules and template and be printed out
 	//   this allows the script to add user permissions filters to the query easily
 	function query($props, $require_permit)
 	{

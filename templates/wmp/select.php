@@ -83,7 +83,7 @@ else
 		
 		?>
 		<name><?php echo htmlspecialchars(utf8_encode($file['Filename'])); ?></name>
-		<icon><?php echo url('plugin=convert&id=' . dirname($file['id']) . '&filename=folder.jpg' . '&convert=jpg&theight=100&twidth=100', false, true); ?></icon>
+		<icon><?php echo url('module=convert&id=' . dirname($file['id']) . '&filename=folder.jpg' . '&convert=jpg&theight=100&twidth=100', false, true); ?></icon>
 		<path><?php echo htmlspecialchars(utf8_encode($file['Filepath'])); ?></path>
 		<link><?php echo url('file/' . $_REQUEST['cat'] . '/' . $file['id'] . '/' . basename($file['Filepath']), false, true); ?></link>
 		<short><?php echo htmlspecialchars(utf8_encode(substr($file['Filename'], 0, 13))) . '...'; ?></short>

@@ -15,7 +15,7 @@ function theme_live_search_block()
 		<tr>
 			<td class="searchParent"><?php print str_replace(' from Database', '', constant($GLOBALS['templates']['vars']['cat'] . '::NAME')); ?> Search:
 				<form action="<?php print $GLOBALS['templates']['vars']['get']; ?>" method="get" id="search">
-					<span class="searchBorder" style="border-color:<?php print ($theme == 'audio')?'#BB8888 #AA6666 #995555':(($theme == 'image')?'#BBBBAA #AAAACC #9999BB':(($theme == 'video')?'#88DDBB #66CCAA #55BB99':'#88BBDD #66AACC #5599BB')); ?>;"><span class="innerSearchBorder" style="border-color:<?php print ($theme == 'audio')?'#883333 #883322 #772211':(($theme == 'image')?'#888844 #888833 #777722':(($theme == 'video')?'#668866 #448844 #447744':'#446688 #335588 #115577')); ?>;"><input type="text" name="search" value="<?php print isset($GLOBALS['templates']['vars']['search']['search'])?$GLOBALS['templates']['vars']['search']['search']:''; ?>" id="searchInput" /><span class="buttonBorder"><input type="submit" value="Search" id="searchButton" /></span></span></span>&nbsp;&nbsp; <a id="advancedSearch" href="<?php echo url('plugin=search' . (isset($GLOBALS['templates']['vars']['dir'])?('&dir=' . $GLOBALS['templates']['vars']['dir']):'')); ?>">Advanced Search</a>
+					<span class="searchBorder" style="border-color:<?php print ($theme == 'audio')?'#BB8888 #AA6666 #995555':(($theme == 'image')?'#BBBBAA #AAAACC #9999BB':(($theme == 'video')?'#88DDBB #66CCAA #55BB99':'#88BBDD #66AACC #5599BB')); ?>;"><span class="innerSearchBorder" style="border-color:<?php print ($theme == 'audio')?'#883333 #883322 #772211':(($theme == 'image')?'#888844 #888833 #777722':(($theme == 'video')?'#668866 #448844 #447744':'#446688 #335588 #115577')); ?>;"><input type="text" name="search" value="<?php print isset($GLOBALS['templates']['vars']['search']['search'])?$GLOBALS['templates']['vars']['search']['search']:''; ?>" id="searchInput" /><span class="buttonBorder"><input type="submit" value="Search" id="searchButton" /></span></span></span>&nbsp;&nbsp; <a id="advancedSearch" href="<?php echo url('module=search' . (isset($GLOBALS['templates']['vars']['dir'])?('&dir=' . $GLOBALS['templates']['vars']['dir']):'')); ?>">Advanced Search</a>
 				</form>
 			</td>
 		</tr>
@@ -33,9 +33,9 @@ function theme_live_search()
 	
 	var cat_columns = [];
 	<?php
-	foreach($GLOBALS['modules'] as $module)
+	foreach($GLOBALS['handlers'] as $handler)
 	{
-		?>cat_columns['<?php print $module; ?>'] = new Array('<?php print join('\', \'', call_user_func($module . '::columns')); ?>');<?php
+		?>cat_columns['<?php print $handler; ?>'] = new Array('<?php print join('\', \'', call_user_func($handler . '::columns')); ?>');<?php
 	}
 	?>
 	function makeVisible(cat)
@@ -76,9 +76,9 @@ function theme_live_search()
 			<h3>Search Individual Fields:</h3>
 			Category: <select name="cat" onchange="makeVisible(this.value)">
 			<?php
-			foreach($GLOBALS['modules'] as $module)
+			foreach($GLOBALS['handlers'] as $handler)
 			{
-				?><option value="<?php print $module; ?>" <?php print ($GLOBALS['templates']['vars']['cat'] == $module)?'selected="selected"':''; ?>><?php print constant($module . '::NAME'); ?></option><?php
+				?><option value="<?php print $handler; ?>" <?php print ($GLOBALS['templates']['vars']['cat'] == $handler)?'selected="selected"':''; ?>><?php print constant($handler . '::NAME'); ?></option><?php
 			}
 			?>
 			</select><br /><br />

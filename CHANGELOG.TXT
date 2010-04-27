@@ -1,14 +1,27 @@
+2010-04-26
+Worked on tools section, template and outputing info arrays instead of hard to parse xml
+In light of making my site more drupalish, I replaced every occurance of plugin throughout the site with module
+	Plugins are now modules
+	Modules are all located in the modules directory including admin stuff
+I renamed all modules to handlers, because they are handlers of file types
+
+2010-04-24
+Worked a lot on the documentation
+Worked on monolithicmedia.org website and added tags and meta information
+Fixed the module problem in the url() function in core.php module
+	Wasn't setting the module and messed up redirect if accessing the site from a different path
+
 2010-04-22
 Created goto function for changing header(Location) and redirecting to other pages
-Fixed a bug in search.php plugin, it wasn't initialized $props[WHERE]
-Changed create_path_info in core.php plugin to convert plugin names to paths by replacing underscores with forward slashes
+Fixed a bug in search.php module, it wasn't initialized $props[WHERE]
+Changed create_path_info in core.php module to convert module names to paths by replacing underscores with forward slashes
 Added wrapper recognition
-	Modules that use the same database as their parent will be considered "wrappers" for that database
+	Handlers that use the same database as their parent will be considered "wrappers" for that database
 	This is useful for displaying the same informtion in a different way such as turning artist/albums into a directory tree
-	Wrappers are acknowledged by the select.php plugin as well as in the validate_dir function in file.php plugin
+	Wrappers are acknowledged by the select.php module as well as in the validate_dir function in file.php module
 Delete smarty from includes and install, site still works
 	All current smarty templates are obsolete
-Moved the core.php plugin include in common.php to the GLOBAL scope just incase something has to use a core function like goto() before plugins are initialized
+Moved the core.php module include in common.php to the GLOBAL scope just incase something has to use a core function like goto() before modules are initialized
 
 2010-04-16
 Replaced all occurances of href() with url()
@@ -17,27 +30,27 @@ Replaced all occurances of href() with url()
 Discovered that network timeouts make the libraries for archives and movies hang up really badly
 Fixed some bugs in the Live template
 	now check if more variables are missing and doesn't cause as many errors
-Fixed some bugs in the search.php plugin
+Fixed some bugs in the search.php module
 	Now fully implements query_alter_
 
 2010-04-14
 Fixed some bugs in the live/index.php template
 	Variables should still be checked to see if they are set incase something goes wrong
-Fixed many bugs in search.php plugin
-Added to core.php plugin
-	Now directory separators can be used in the path to specify which plugin you would like to use
+Fixed many bugs in search.php module
+Added to core.php module
+	Now directory separators can be used in the path to specify which module you would like to use
 
 2010-04-12
 Worked on documentation site
 Worked on monolithicmedia site
-Added functions for a plugin to alter the mysql query with input from it's variables
+Added functions for a module to alter the mysql query with input from it's variables
 	This allows for abstracting certain parts of the db_file::get() API
 
 2010-04-07
 Worked on monolithicmedia.org website.
 
 2010-04-06
-Removed defaulting functionality from theme() in template.php plugin
+Removed defaulting functionality from theme() in template.php module
 	All templates must now implement everything they need by themselves
 Started WMP qooXdoo template
 Worked on Live theme
@@ -46,77 +59,77 @@ Worked on plain theme
 2010-04-05
 Removed all unnessicary template files
 Worked on displaying admin section
-	Converted install and plugins to use default admin header
+	Converted install and modules to use default admin header
 
 2010-04-04
 Worked on Admin section
-	Added admin.php plugin for loading all of the admin scripts
-Worked on tools admin plugin
+	Added admin.php module for loading all of the admin scripts
+Worked on tools admin module
 	Now dynamically loads tool set
 Worked on many templates
 	wpl playlist, xml info list in the base template, tools, admin section
 Worked on users
-Worked on list plugins, now has a pretty display in the live template
+Worked on list modules, now has a pretty display in the live template
 
 2010-04-03
 Worked on converting templates to PHP
 	Login, m3u, rss, search, plain
 Worked on cron.php
 	Made simpler by getting rid of state and just using a single directory path to resume
-Watch module now detects if folder is in watch list for sub directories also!
+Watch handler now detects if folder is in watch list for sub directories also!
 	Using LEFT("<some watched subfolder>", LENGTH(Filepath)) = Filepath;
-Fixed plugins and install templates
-Worked on users.php plugin
-	Registration now supported, merged with login.php plugin (deprecated)
+Fixed modules and install templates
+Worked on users.php module
+	Registration now supported, merged with login.php module (deprecated)
 
 2010-03-30
 Finished converting my first template to the new API
 Templates will now have a general function for beginning output
 	and will be responsible for displaying all information from there
-Templates can call some more output_plugin() functions if they need to, in the theme_live_preload() function
+Templates can call some more output_module() functions if they need to, in the theme_live_preload() function
 	After that function, the only variables that should be available to the templates is $GLOBALS['templates']['vars']
 Added some output variables to search
 Fixed core.php general_href and validate doesn't work after template is outputted
 Index now uses theme() function, getting rid of smarty
-Made some fixes to users.php plugin
+Made some fixes to users.php module
 
 2010-03-16
 Fixed a problem with the return in the login.php script
-parse_path_info() in core.php no longer validates the plugin or any variables in that function
+parse_path_info() in core.php no longer validates the module or any variables in that function
 	Validation is done afterwards in the setupInputVars() functions, parse_path_info() is called by rewrite_vars()
 
 2010-03-14
-Renamed lots of plugins in the register_() functions
+Renamed lots of modules in the register_() functions
 Converted tools.php to use new API
 Re-Added mime functionality to common.php because PEAR MIME_Type sucks ass
-Common.php check many different paths for plugins easily now
+Common.php check many different paths for modules easily now
 Fixed $_GET being transfered to another path in core.php
 	Rewrite now works on $_REQUEST, $_GET, and $_POST
 Started converting smarty templates to normal PHP
 
 2010-03-12
-Fixed encode.php plugin, time offset (%TO) wasn't being replaced since new API changed
+Fixed encode.php module, time offset (%TO) wasn't being replaced since new API changed
 Also enabled the HTTP-RANGES headers to make it work on AmDroid
-Added lots more actions to ampache.php plugin
+Added lots more actions to ampache.php module
 	Now supports albums, songs, search_songs, etc.
-Converted search.php plugin over to use new API
+Converted search.php module over to use new API
 
 2010-03-10
-Finished install.php plugin
+Finished install.php module
 	Now fully funtional under the new API
 
 2010-03-05
 Working on install.php
 Fine tuning API
 Added a method of creating validate_<> functions and setting them as GLOBAL variables
-	This is useful when the search.php plugin is implemented since there is no define set of fields
+	This is useful when the search.php module is implemented since there is no define set of fields
 Fixed recognition of 'true' values from request variables
 	is_bool doesn't work if a string 'true' or 'false' is passed in
 
 2010-03-04
 Replaced some uses of $smarty.request and $smarty.get and $smarty.session
-Fixed $smarty.session.selected to use $selected and the way the select.php plugin uses it
-Added detection for Snoopy, EXT, bttracker JS to install.php plugin
+Fixed $smarty.session.selected to use $selected and the way the select.php module uses it
+Added detection for Snoopy, EXT, bttracker JS to install.php module
 
 2010-03-02
 Deleted repository copy of extjs
@@ -126,47 +139,47 @@ Changed the API for generate_href
 	Optional "notspecial" does not invoke the htmlspecialchars() procedure on the link, also "include_domain" which adds the HTML_DOMAIN
 
 2010-03-01
-Fixed Ampache.php plugin
+Fixed Ampache.php module
 Made request.php pluin obsolete
-	Now handled in core.php under validate_plugin() which will check for other clues as to what they are trying to access if the plugin variable isn't set
+	Now handled in core.php under validate_module() which will check for other clues as to what they are trying to access if the module variable isn't set
 Common.php setupInputVars() also calls the rewrite_vars() function, which will move around variables for compatibility before the request is processed
-	This is also based on which plugin is selected
+	This is also based on which module is selected
 Permissions for ampache were already in effect since it uses the database.php wrapper that adds to the $where query
 
 2010-02-28
-Fixed error outputting in some plugins
+Fixed error outputting in some modules
 Fixed validate_dir() and validate_file()
 Created different $GLOBALS for holding user and debug errors so functions can abort if there are errors
-Fixed checking for total_count when group_by is specified in db_file.php module
-Fixed ampache.php plugin...  mostly
+Fixed checking for total_count when group_by is specified in db_file.php handler
+Fixed ampache.php module...  mostly
 
 2010-02-25
-Plugins now use Drupalish API
-	They must register with a register_<plugin_name>() function
-	They must have an output_<plugin_name>($request) plugin for outputting their content
+modules now use Drupalish API
+	They must register with a register_<module_name>() function
+	They must have an output_<module_name>($request) module for outputting their content
 	They must have valitade_<request_var>($request) functions and validate every request variable they depend on
 Site now uses PEAR::raiseError() extensively
 	Used for debugging/log information, as well as reporting error to users
 
 2010-02-24
-Worked on template.php plugin that handles outputting template files
+Worked on template.php module that handles outputting template files
 	This is useful if in the future we want to support PHP code in CSS files
 Worked on generate_href() function for creating valid links
 	This will eventaully validate every parameter
-Added some parameters to the register_plugin() API
-	Plugins can now specify if they will handle their own template and output
-	Useful for file.php and template.php plugins
+Added some parameters to the register_module() API
+	modules can now specify if they will handle their own template and output
+	Useful for file.php and template.php modules
 
 2010-02-23
 Started making API changes
-Plugins are now required to register themselves with the system
-Modules will soon be required to register a description
-Plugins now are required to validate input, and the returned value if not blank should be used as the default
-Plugins are required to have a register_<plugin name> as well as output_<plugin_name>
+modules are now required to register themselves with the system
+handlers will soon be required to register a description
+modules now are required to validate input, and the returned value if not blank should be used as the default
+modules are required to have a register_<module name> as well as output_<module_name>
 Removed some unnessicary validation from common.php
-Removed validation from database.php, plugins now handle own validation
+Removed validation from database.php, modules now handle own validation
 Fixed validation for select and IDs in select.php
-Modules must re-validate only the request variables they depend on, if they are completely optional, no validation is needed
+handlers must re-validate only the request variables they depend on, if they are completely optional, no validation is needed
 
 2010-02-22
 Finished install.php admin script
@@ -174,17 +187,17 @@ Finished install.php admin script
 Fixed sizing problems in Live template
 
 2010-02-17
-Made modules more compatible with loading by requiring modules to INIT the includes they need before they use them, instead of when the module is loaded
-	This way a module's information can be loaded and read (later including descriptions) without worrying about the dependencies
+Made handlers more compatible with loading by requiring handlers to INIT the includes they need before they use them, instead of when the handler is loaded
+	This way a handler's information can be loaded and read (later including descriptions) without worrying about the dependencies
 Worked on install.php script
 	Now more self contained and handles errors more elegantly
 	Finished database installation
 Changed sql.php to database.php
 	Created wrapper functions for ADOdb throughout script
 Adding optional callback to install() function in database.php
-Modules should not include_once their own module dependencies
+handlers should not include_once their own handler dependencies
 	All other includes should be place in an init() function and called when needed
-Created more setup functions in common.php for handling the reading of modules and tables
+Created more setup functions in common.php for handling the reading of handlers and tables
 Removed MIME functionality from common.php
 	Now fully relies on PEAR_MIME
 System is becoming more reliant of PEAR_ERROR and will support more advanced debugging soon
@@ -205,7 +218,7 @@ Created filetools.php admin tool for manipulating files the site has loaded
 2010-02-10
 Added RECURSIVE_GET to the Settings and db_file.php to allow for an option to turn on reading directories while the site is being used
 Started converting Settings to fill in the definitions automatically, the install script should verify this information
-Added a check to db_file.php module to make sure that it doesn't add directories that are ignored
+Added a check to db_file.php handler to make sure that it doesn't add directories that are ignored
 
 2010-02-04
 Fixed some problems with searching in the Live template
@@ -222,8 +235,8 @@ Worked on user implementation
 	sql.php creates default users in install() function, used in other places
 	Statement_builder() function adds to where clause so that only files the current user has access to appears in the results
 	New required variable to query() function in sql.php, determines whether or not to add to where clause based on if the results will ever be displayed to users
-Changed all plugins to check for user permissions
-Changes all modules and Database->query() calls to decide to include private user files
+Changed all modules to check for user permissions
+Changes all handlers and Database->query() calls to decide to include private user files
 Fixed some template issues
 Added SECRET_KEY value to settings.php
 Also added DEBUG_MODE to settings.php so templates can add debugging options
@@ -231,32 +244,32 @@ Also added DEBUG_MODE to settings.php so templates can add debugging options
 2009-12-12
 Created user database
 Added user settings to be loaded in the setup() section in common.php
-Added user requirements to all plugins including admin section
+Added user requirements to all modules including admin section
 	Now checks for user privilage
-Removed loggedIn() function from common.php, plugins now must use privilage settings
+Removed loggedIn() function from common.php, modules now must use privilage settings
 
 2009-07-05
 Fixed some size limiting problems in the db_code script
 Worked on WMP template
 	Added icons and formatting to album field
-Fixed some bugs in convert.php and file.php plugin
+Fixed some bugs in convert.php and file.php module
 	Full file paths can now be used to get a file, if it exists in database of course
 
 2009-07-02
-All relevant admin scripts now use templates the same way any other plugin does
+All relevant admin scripts now use templates the same way any other module does
 
 2009-07-01
 Worked on WMP template
-Commented users.php plugin
+Commented users.php module
 
 2009-06-27
-Converted most admin plugins to use the template system
+Converted most admin modules to use the template system
 
 2009-06-26
-Created an xml api compatible with ampache, amarok can now connect to the media server using the same ampache plugin
+Created an xml api compatible with ampache, amarok can now connect to the media server using the same ampache module
 
 2009-06-21
-Worked on users.php plugin, laid out the design for all types of user management
+Worked on users.php module, laid out the design for all types of user management
 Started WMP template, modeled after the new Windows Media Player for Windows 7
 
 2009-04-18
@@ -267,7 +280,7 @@ Cron doesn't run if it is already running, so only one instance is working at a 
 Worked on live template, got drag selecting working
 
 2009-04-16
-Worked on reports.php plugin, file renaming working fairly well
+Worked on reports.php module, file renaming working fairly well
 Added lock detection to cron.php script, now if the log is locked it will exit the script, so they don't overlap
 
 2009-04-14
@@ -275,26 +288,26 @@ Worked on default template
 Worked on reports
 
 2009-04-10
-Plugins not include pages that contain template information if the extension of the template is a .php
+modules not include pages that contain template information if the extension of the template is a .php
 Smarty system is now a GLOBAL that is setup in common
 Added some comments in the code
 
 2009-04-09
-Worked on encoding presets in the encode.php plugin
-Added constants for disabling modules
+Worked on encoding presets in the encode.php module
+Added constants for disabling handlers
 
 2009-04-08
-Fixed a bad error with db_archive and db_diskimage module, the Filepath was being passed to the db_ids modules with the addslashes before, so slashes were added twice
-Fixed an error with db_ids module, if an ID wasn't in the array it overwrote the entire id array so it then rechecked every id
+Fixed a bad error with db_archive and db_diskimage handler, the Filepath was being passed to the db_ids handlers with the addslashes before, so slashes were added twice
+Fixed an error with db_ids handler, if an ID wasn't in the array it overwrote the entire id array so it then rechecked every id
 	Doesn't check for IDs in watch, watch_list, alias, and itself now
 Worked on speed issues for cron.php script
 Limit all select calls that include Filepath = "" by 1 because filepaths are unique
 
 2009-04-07
-Added the db_ids results to the file requests in plugins, this is so modules can try to be more efficient then just looking up filepaths
-	Changed modules to use int ids, bigint is unnessicary and cost twice as much time, it is unlikely that anyone will load more then 2 billion files into the database
+Added the db_ids results to the file requests in modules, this is so handlers can try to be more efficient then just looking up filepaths
+	Changed handlers to use int ids, bigint is unnessicary and cost twice as much time, it is unlikely that anyone will load more then 2 billion files into the database
 Changed db_ids to look up all the ids at once, it now accepts a $files parameter and appends all the needed id information
-Fixed some problems with db_file module and the handle() functions
+Fixed some problems with db_file handler and the handle() functions
 
 2009-04-05
 Changed db_files search feature to put the directory matching first to narrow down results better
@@ -310,60 +323,60 @@ Worked on live template, added information box, and Advanced Search button
 2009-04-02
 Created a LOCAL_BASE variable that is the base template for holding shared pages for other templates to use
 Changed LOCAL_DEFAULT to the default template that loads when one is not selected
-Modified db_archive module to use PEAR archive library, which works much better then the lib_id3
+Modified db_archive handler to use PEAR archive library, which works much better then the lib_id3
 Worked on live template
 
 2009-04-01
 Fixed some speed issues when loading files, apparently checking the connection takes a while, so the watch_list now exists when it done scanning a directory instead of in between files
 	Reduced the sleep, if they want efficiency and not as much load, you should use the small version on the system the files actually live on
-	Fixed the archive and disk image module to set up the IDs to pass to db_ids, all IDs are 0 except for the respective module database
-	Fixed db_watch_list modules handle_file() method to not "force" file modification if it is skipped
+	Fixed the archive and disk image handler to set up the IDs to pass to db_ids, all IDs are 0 except for the respective handler database
+	Fixed db_watch_list handlers handle_file() method to not "force" file modification if it is skipped
 
 2009-03-31
-Fixed db_amazon module to not access the database unnessicarily
+Fixed db_amazon handler to not access the database unnessicarily
 Nearly finished live template
 Fixed some problems in db_files and db_ids
 
 2009-03-30
-All modules return the ID of added or modified entry
+All handlers return the ID of added or modified entry
 	This makes adding items to the IDs database much faster when they are already known
 
 2009-03-26
 Added a few sleeps in the file looping, the directory looping, and the cron script watch_list looping
-Added a struct() function to each module that returns the structure of the database
+Added a struct() function to each handler that returns the structure of the database
 	Format is array('column_name' => 'type'), the type should be SQL compatible, and the php equivilent will try to be detected
-	You can only search columns listed by the module::columns() function, ::struct() is used internally
+	You can only search columns listed by the handler::columns() function, ::struct() is used internally
 	If a space is detected the type will be the first word and it will override NOT NULL being added to the create query
 Added an INTERNAL constant to some classes to define if they should only be used internally
-	this does not affect the functionality of any script, it is only used for template to filter out internal modules
+	this does not affect the functionality of any script, it is only used for template to filter out internal handlers
 	Added INTERNAL = true to db_watch, db_watch_list, db_alias, db_ids
-All modules are now included and accessible, but only the appropriate db_ or fs_ modules are listed in $GLOBALS['modules']
-	This is so functionality can be extracted from the db_modules and used in the fs_modules or vice versa
-	But templates should still only use the modules that are not INTERNAL and are listed in $GLOBALS['modules']
-Fixed plugins that check for cat, now they make sure the module being accessed isn't an INTERNAL module
-Fixed db_watch_list module, and cron.php plugins, now it recognizes connection_abort() and doesn't exit immedialy, but instead when the current process is complete
+All handlers are now included and accessible, but only the appropriate db_ or fs_ handlers are listed in $GLOBALS['handlers']
+	This is so functionality can be extracted from the db_handlers and used in the fs_handlers or vice versa
+	But templates should still only use the handlers that are not INTERNAL and are listed in $GLOBALS['handlers']
+Fixed modules that check for cat, now they make sure the handler being accessed isn't an INTERNAL handler
+Fixed db_watch_list handler, and cron.php modules, now it recognizes connection_abort() and doesn't exit immedialy, but instead when the current process is complete
 
 2009-03-26
-Made all the modules add() functions handle the ID for modifying in the same order as the handle() function
-Fixed modules handling the removing of ids from database
+Made all the handlers add() functions handle the ID for modifying in the same order as the handle() function
+Fixed handlers handling the removing of ids from database
 Fixed some vulnerablities with not using htmlspecialchars() from global variables in templates
 
 2009-03-25
-New clause added to the top of plugins that require at least 1 file to be selected
+New clause added to the top of modules that require at least 1 file to be selected
 	They now search the request when all possible fields that would return a result are empty
 Added centralized ID database
-Fixed modules not updating their files because db_file module always changes the date before other modules get to it
-	Modules now return true if the file is added by the handle() method, 1 if the file modified, or false if the file is skipped
-	There are a few exceptions, the db_watch_list module returns true by default and false if there are still files to scan
+Fixed handlers not updating their files because db_file handler always changes the date before other handlers get to it
+	handlers now return true if the file is added by the handle() method, 1 if the file modified, or false if the file is skipped
+	There are a few exceptions, the db_watch_list handler returns true by default and false if there are still files to scan
 	
 2009-03-24 (14,000+ lines of code)
 Created a GLOBAL['database'] because it is not at all state dependant, and there is no reason to pass it to a bunch of different functions
-Worked on db_amazon module
+Worked on db_amazon handler
 Created tokenizing function to take strings and parse out useless stuff
 
 2009-03-23
-Made cleanup faster by only checking for removed/non-existent files when the directory changes in the db_watch_list module
-	Non-standard modules are still responsible for doing cleanup
+Made cleanup faster by only checking for removed/non-existent files when the directory changes in the db_watch_list handler
+	Non-standard handlers are still responsible for doing cleanup
 Removed the cleanup_remove function since it is no longer needed
 	Standard removing will remove files INSIDE of directories, to minize broken paths, this will remove files inside files like the db_archive and db_disk image by default as well
 
@@ -379,63 +392,63 @@ Made masive progress on reports.php admin script
 Fixed unicode problem by changing the TEXT columns in the database to BLOB, now binary text is preserved
 
 2009-03-10
-Fixed some searching and sorting problems in the db_files module
-Fixed the fs_module::out() methods to work with new convention
+Fixed some searching and sorting problems in the db_files handler
+Fixed the fs_handler::out() methods to work with new convention
 Made db_playlist use standard db_file search functionality
-Fixed some problems with accessing the ignored and watched files since db_file module regexp changes
+Fixed some problems with accessing the ignored and watched files since db_file handler regexp changes
 
 2009-03-09
 Made searched terms highlight on select page
-Worked on db_file module and fixed some search functionality
+Worked on db_file handler and fixed some search functionality
 
 2009-03-06
-Fixed zip template, crc() can work with a file pointer, still working on bt.php plugin which uses md5
+Fixed zip template, crc() can work with a file pointer, still working on bt.php module which uses md5
 Improved searching capabilities in db_file
 
 2009-03-04
-Worked on db_playlist module, mostly working just needs some tweaks
+Worked on db_playlist handler, mostly working just needs some tweaks
 
 2009-03-03
-Added db_alias module to handle the aliases, although it is semi-incomplete
-module::out() methods can only remove header declarations, they cannot set them, that is controlled by the plugin that calls it
+Added db_alias handler to handle the aliases, although it is semi-incomplete
+handler::out() methods can only remove header declarations, they cannot set them, that is controlled by the module that calls it
 Cron now doesn't clean or scan when a directory is unmounted or missing
 Site now completely directory separator independant, it stores all files with / in between directories and all system calls replace the / with DIRECTORY_SEPARATOR
 
 2009-03-02
 Made cleanup more efficient by creating a THREASHOLD constant for how many times the cron should run before cleaning up
-Also cleanup will fire when physical directories are changed and it is detected by the db_watch_list module, so they will no longer clean up when just adding new files to database
+Also cleanup will fire when physical directories are changed and it is detected by the db_watch_list handler, so they will no longer clean up when just adding new files to database
 Found that vlc has even more transcoding errors when the bitrate is being downscaled, this may screw up the client player responsiveness
-Fixed a problem with the db_watch_list module, if a directory in the db_watch list was searched but was never removed, it would recurse that directory infinitely
+Fixed a problem with the db_watch_list handler, if a directory in the db_watch list was searched but was never removed, it would recurse that directory infinitely
 Set the site up so it can be run minimalistically across a network share
 Fixed some issues with cron.php and common.php
 Replaced most REGEXP queries with a series of LEFT and LOCATE modifiers to select files from paths, much faster!
 
 2009-02-27
-db_artists module now shows albums from an artist also has $all$ option that shows all the songs by that artist
+db_artists handler now shows albums from an artist also has $all$ option that shows all the songs by that artist
 Added log_error() function that prints out the cron messages but only to cron
 Got files to be added when they are browsed, it is an imperfect system due to the way the default template works, folders need to be immediately browsable
 
 2009-02-26
-Moved Accept-Ranges back to the file.php plugin!  Modules should not be in control of output, only getting information from database
-The Module->out() method now returns a SEEKABLE file resource, some can be custom like db_diskimage which can read a file out of a disk image and stop reading in the appropriate places
-Added some filesize checking to the file.php plugin, it now checks everywhere that it can to try and get the Filesize value for using HTTP-RANGE, including the header (incase it was set by a module already)
+Moved Accept-Ranges back to the file.php module!  handlers should not be in control of output, only getting information from database
+The handler->out() method now returns a SEEKABLE file resource, some can be custom like db_diskimage which can read a file out of a disk image and stop reading in the appropriate places
+Added some filesize checking to the file.php module, it now checks everywhere that it can to try and get the Filesize value for using HTTP-RANGE, including the header (incase it was set by a handler already)
 Added extension from filename feature to encode, the desired output type can now be determined from the expension that is used on the filename field
 Added a feature to making searches easier, the last filename in pretty dirs can now be a search term
-Made encode.php plugin detect whether or not the %IF input field is used in the ENCODE_ARGS definition
-Modified the modules to ignore errors from the pack() function, using encoding path IDs are easily corruptible
+Made encode.php module detect whether or not the %IF input field is used in the ENCODE_ARGS definition
+Modified the handlers to ignore errors from the pack() function, using encoding path IDs are easily corruptible
 Made pretty dirs optional, they are still pretty and php parses off the directory part and puts it into the request
 Fixed some stuff with the search, the search variable is not search instead of includes, and the includes variable is used for searching a literal string
 Added a TRIM feature to order by queries that allows for sorting without preceeding words like A, AN and THE
-Fixed db_artists and db_albums module, they now handle their own filepaths, and added more wrapper modules for Genre, and Year
+Fixed db_artists and db_albums handler, they now handle their own filepaths, and added more wrapper handlers for Genre, and Year
 
 2009-02-24
 Implemented stream_select() in encode, this is the KEY! to making multiple streams work on a single threaded system
 Made a correction to db_artists that was causing the search to completely fail!
 Fixed some cleanup inefficiencies, now using NOT REGEXP in the expression
-Thought about what to do for the similar_text() problem with the db_album and db_artist modules
-Added Accept-Ranges handing to fs_file module, also abstracted some of the code just like db_file
-Finished db_video and fs_video module, and made some corrections in the fs_modules
-Finished implementing ranges into db_file module, multiple streams can now be started
+Thought about what to do for the similar_text() problem with the db_album and db_artist handlers
+Added Accept-Ranges handing to fs_file handler, also abstracted some of the code just like db_file
+Finished db_video and fs_video handler, and made some corrections in the fs_handlers
+Finished implementing ranges into db_file handler, multiple streams can now be started
 Used session_write_close() when outputing files in order to allow browsing of other pages while files are downloading
 Moved request validation to SQL class, this is so it can be overridden by other database types
 
@@ -445,22 +458,22 @@ Renamed all the $mysql variables to $database which is more appropriate
 Fixed a bug with the dir $request variable being used, added preg_quote to quote the special character in the query
 
 2009-02-20
-Fixed watch_list module ignored specific directories now, runs an extra query to compare current directory with all the paths in the watch list
+Fixed watch_list handler ignored specific directories now, runs an extra query to compare current directory with all the paths in the watch list
 Started on new mobile template
 
 2009-02-19
-Added a few more status features to the cron.php plugin
-Fixed state for cron.php script using globals in the db_watch_list module
+Added a few more status features to the cron.php module
+Fixed state for cron.php script using globals in the db_watch_list handler
 Changed the $database->get() and $database->set() functions to $GLOBALS['database']->query() and improved the API for accessing the database
-Changed the cron script to use db_watch and db_watch_list modules for checking changed on the filesystem and adding files to the database
+Changed the cron script to use db_watch and db_watch_list handlers for checking changed on the filesystem and adding files to the database
 	This will potenially allow us to load any directory on the file while it is being browsed
 Made improvements on sql queries which should allow easier parsing for different database types in the future
 Started on db_albums and db_artists, abstraction level is perfect for code readability and minimizing repeated code
 
 2009-02-18
-Abstracted db_archive and db_diskimage module to using the db_file::get and db_file::cleanup functions
-Fixed abstraction in all the modules, they can now specify modifiers and pass the $request to the file module
-Fixed some problems with archive and diskimage modules, handles wasn't working on Windows because apprently <file>.zip\ also exists instead of exiting the for loop
+Abstracted db_archive and db_diskimage handler to using the db_file::get and db_file::cleanup functions
+Fixed abstraction in all the handlers, they can now specify modifiers and pass the $request to the file handler
+Fixed some problems with archive and diskimage handlers, handles wasn't working on Windows because apprently <file>.zip\ also exists instead of exiting the for loop
 Fixed counting in fs_archive and fs_diskimage, the matching and the !in_array was throwing off the count
 Blogged about site
 Migrated to new repository
@@ -471,59 +484,59 @@ Removed excess .htaccess files from all the subdirectories and put it in a locat
 Finished adding db_diskimage, time for some curl! for downloading movie information
 Fixed db_archive and db_diskimage, there was a problem with showing the directory because it was acting like the fs_ version which is completely different
 Archives not list out all directories properly even if the central directory doesn't specify one
-Fixed db_archive module when adding zip files to database
-Adding a nice percent complete print out in db_files module
-Fixed cron.php plugin, it wasn't loading the state properly
+Fixed db_archive handler when adding zip files to database
+Adding a nice percent complete print out in db_files handler
+Fixed cron.php module, it wasn't loading the state properly
 Fixed a lot of inconsistencies, now the $sql->get command only accepts an array of arguments
-Worked on db_albums module and made very little progress
+Worked on db_albums handler and made very little progress
 
 2009-02-16
 Worked on fs_imagedisk, outputting files works now
 Worked on some more organization
 Db_archive now fully functional, archives are searchable and in the database
-Made the pretty dirs for the plugins the same for every plugins, links must now be specified in the template as /<plugin>/<category>/<id>/<filename>
+Made the pretty dirs for the modules the same for every modules, links must now be specified in the template as /<module>/<category>/<id>/<filename>
 
 2009-02-11
-Added fs_ modules for handling reading files off the filesystem, this should make the use of a database a lot more modular
-Fixed broken plugins from the fs_ modules change.
-Fixed broken plugins by adding a little requirement to aliasing, in order to show bottom level directories an alias must match ^/$ alone
-getIDsFromRequest() is only accessed by modules
-Downloading files with database turned off works by using a hex encoded pathname to the file, it is automatically decoded by getIDsFromRequest() and each modules $request['selected'] handler
-All plugins use the appropriate modules for getting file information
-File.php plugin uses modules fully now
-Cron.php plugin doesn't run if not using a database
-Modules are now required to start with db_ for USE_DATABASE == true, and fs_ for USE_DATABASE == false
-Common.php only loads modules that are needed for the type of USE_DATABASE
+Added fs_ handlers for handling reading files off the filesystem, this should make the use of a database a lot more modular
+Fixed broken modules from the fs_ handlers change.
+Fixed broken modules by adding a little requirement to aliasing, in order to show bottom level directories an alias must match ^/$ alone
+getIDsFromRequest() is only accessed by handlers
+Downloading files with database turned off works by using a hex encoded pathname to the file, it is automatically decoded by getIDsFromRequest() and each handlers $request['selected'] handler
+All modules use the appropriate handlers for getting file information
+File.php module uses handlers fully now
+Cron.php module doesn't run if not using a database
+handlers are now required to start with db_ for USE_DATABASE == true, and fs_ for USE_DATABASE == false
+Common.php only loads handlers that are needed for the type of USE_DATABASE
 
 2009-02-09
-Made select.php use the modules to get lists of files
-Modified all the modules to handle the returning of their own file types, lots of repetitive code but leaves it more open for expansion
-All modules can return a list of files off of the filesystem now, instead of using a database
+Made select.php use the handlers to get lists of files
+Modified all the handlers to handle the returning of their own file types, lots of repetitive code but leaves it more open for expansion
+All handlers can return a list of files off of the filesystem now, instead of using a database
 Replaced includes with absolute path and ROOT_PATH, this enables the site to exist in a completely different location from the settings file and index page.
 Tested setup on two different environments, installation is down to about 15 minutes and working perfectly.
-Added functionality to db_file module for outputting file, it takes a mysql object, filename, and stream to output to.
+Added functionality to db_file handler for outputting file, it takes a mysql object, filename, and stream to output to.
 Added links to default template for downloading files and browsing directories
 
 2009-02-06
 Finished Windows compatibility
 Fixed many directory and file reference structure
 Eliminated unnecissary settings
-Added more $_request options to encode.php and convert.php plugins
+Added more $_request options to encode.php and convert.php modules
 Standardized settings so that ROOT_ always refers to a path on the filesystem and HTML_ always refers to something a template will use to access files
 
 2009-01-31
 Fixed some bugs in the cron.php script, folders leading up to the watch directories were being added and in turn causing them not to be scanned
 Added an ignore directory option, folders in watch list can now be preceeded with ! sign in order to be ignored
-Also added the same filtering to the cleanup scripts in each module
+Also added the same filtering to the cleanup scripts in each handler
 Fixed some problems in select.php, if folders exist on disk but are not in the database the script will not return an error
 Added the usual item/on/off api for selecting files in list.php
 Added a convert.php script for converting images
 Added a kill9() function to common.php for killing processes after connection_abort() != 0
 Added some links to the default select template for accessing the convert.php script
-Modified the .htaccess for the plugins directory to redirect traffic for encoding and converting
+Modified the .htaccess for the modules directory to redirect traffic for encoding and converting
 
 2009-01-25
-Started on re-encoding script, currently named encode.php under plugins
+Started on re-encoding script, currently named encode.php under modules
 Updated EXT and Livegrid libraries successfully
 Column information displays safely by downloading column titles
 
@@ -546,7 +559,7 @@ Added a function for settings request variables in template so form could recall
 Add a button to clear search query
 Make a page that holds the search form and the list selector
 Move the button for creating a list (add it to builder)
-Fixed image magick thumbnail creator in db_image.php module to only create 1 image on gifs and icons that contain multiple images
+Fixed image magick thumbnail creator in db_image.php handler to only create 1 image on gifs and icons that contain multiple images
 
 2008-05-12
 Dividing up search form into a seperate processing page

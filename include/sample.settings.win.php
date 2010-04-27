@@ -4,7 +4,7 @@
 // all other settings are stored in the appropriate classes that handle each section
 
 // database connection constants
-define('USE_DATABASE', 	                  false); // set to false to make modules load information about every file on the fly
+define('USE_DATABASE', 	                  false); // set to false to make handlers load information about every file on the fly
 define('DB_SERVER',                'localhost');
 define('DB_USER',                    'tmpuser');
 define('DB_PASS',                    'tmppass');
@@ -50,7 +50,7 @@ define('HTML_NAME',			                                   'Brian\'s Media Website
 // commands, these are used for converting media throughout the site
 // multiple definitions can be set with the extension in all caps for different file types
 //  for example CONVERT_JPG, and CONVERT_ARGS_JPG can be used for converting any file with the JPG extension
-//  if %IF is not found in the string the plugins and modules will assume STDIN is used, additional functionality will be enabled in this case
+//  if %IF is not found in the string the modules and handlers will assume STDIN is used, additional functionality will be enabled in this case
 //  same for %0F, STDOUT will be used and this will enable much faster response times
 
 // the arguments to use with encode are as follows
@@ -59,7 +59,7 @@ define('HTML_NAME',			                                   'Brian\'s Media Website
 %FM - Format to output
 %OF - Output file if necissary
 */
-// More options can be added but you will have to do some scripting in the convert.php plugin
+// More options can be added but you will have to do some scripting in the convert.php module
 define('CONVERT', 				   'C:\Program Files\ImageMagick-6.4.9-Q16\convert.exe'); // image magick's convert program
 define('CONVERT_ARGS', 			   '"%IF" %FM:-'); // image magick's convert program
 
@@ -78,7 +78,7 @@ define('CONVERT_ARGS', 			   '"%IF" %FM:-'); // image magick's convert program
 %FS - Frames per Second
 %OF - Output file if necissary
 */
-// More options can be added but you will have to do some scripting in the encode.php plugin
+// More options can be added but you will have to do some scripting in the encode.php module
 // remember ffmpeg uses generally the same codec names as the default vlc, however custom commands may be needed to convert to each type
 define('ENCODE',                                'C:\Program Files\VideoLAN\VLC\vlc.exe'); // a program that can convert video and audio streams
 define('ENCODE_ARGS',                           '"%IF" :sout=#transcode{vcodec=%VC,acodec=%AC,vb=%VB,ab=%AB,samplerate=%SR,channels=%CH,audio-sync,scale=%SC,fps=%FS}:std{mux=%MX,access=file,dst=-} vlc://quit'); // a program that can convert video and audio streams

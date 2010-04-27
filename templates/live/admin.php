@@ -14,41 +14,25 @@ function theme_live_admin()
 	?>
 	<div class="contentSpacing">
 			<h1 class="title">Administration</h1>
-			<span class="subText">Select the administration plugin you would like to use below.</span>
+			<span class="subText">Select the administration module you would like to use below.</span>
 	<?php
 	
 	theme('errors');
 	
 	?><div class="titlePadding"></div><?php
 
-	foreach($GLOBALS['plugins']['admin']['plugins'] as $name => $plugin)
+	foreach($GLOBALS['modules']['admin']['modules'] as $name => $module)
 	{
-		if($plugin['privilage'] > $GLOBALS['templates']['vars']['user']['Privilage'])
+		if($module['privilage'] > $GLOBALS['templates']['vars']['user']['Privilage'])
 			continue;
 			
 		?>
 		<div class="nothover" onMouseOver="this.className='hover';" onMouseOut="this.className='nothover';">
-			<a href="<?php print url('plugin=admin_' . $name); ?>" style="font-size:14px;"><?php print $plugin['name']; ?></a><br /><br />
-			Description: <?php print $plugin['description']; ?>
+			<a href="<?php print url('module=admin_' . $name); ?>" style="font-size:14px;"><?php print $module['name']; ?></a><br /><br />
+			Description: <?php print $module['description']; ?>
 			<br /><br />
 		</div>
 		<?php
-		/*$tool = preg_replace('/\<warning label="([^"]*)"\>/i', '<div class="warning"><span>$1: </span>', $tool);
-		$tool = preg_replace('/\<\/warning\>/i', '</div>', $tool);
-		
-		$tool = preg_replace('/\<info label="([^"]*)"\>/i', '<div class="info"><span>$1: </span>', $tool);
-		$tool = preg_replace('/\<\/info\>/i', '</div>', $tool);
-		
-		$tool = preg_replace('/\<section label="([^"]*)"\>/i', '<div class="section"><span>$1: </span>', $tool);
-		$tool = preg_replace('/\<\/section\>/i', '</div>', $tool);
-		
-		$tool = preg_replace('/\<text\>/i', '<p>', $tool);
-		$tool = preg_replace('/\<\/text\>/i', '</p>', $tool);
-		
-		$tool = preg_replace('/\<note\>/i', '<div class="note">', $tool);
-		$tool = preg_replace('/\<\/note\>/i', '</div>', $tool);
-		print $tool;
-		?></div><br /><?php*/
 	}
 	
 	?><div class="titlePadding"></div>
@@ -67,7 +51,7 @@ function theme_live_template()
 	?>
 	<div class="contentSpacing">
 			<h1 class="title">Templates</h1>
-			<span class="subText"><?php print $GLOBALS['plugins']['admin_template']['description']; ?></span>
+			<span class="subText"><?php print $GLOBALS['modules']['admin_template']['description']; ?></span>
 	<?php
 	
 	theme('errors');
@@ -115,7 +99,7 @@ function theme_live_alias()
 	?>
 	<div class="contentSpacing">
 			<h1 class="title">Path Aliasing</h1>
-			<span class="subText"><?php print $GLOBALS['plugins']['admin_alias']['description']; ?></span>
+			<span class="subText"><?php print $GLOBALS['modules']['admin_alias']['description']; ?></span>
 	<?php
 	
 	theme('errors');
@@ -162,7 +146,7 @@ function theme_live_alias()
 	For example, if a Windows or Samba share is mounted on /home/share/Remote/, and that path exists on the remote computer under C:\Documents\Shared Files\<br />
 	An alias can be used to replace C:\Documents\Shared Files\ with /home/share/Remote/, then a cron job can be run on the remote system, but files can still be accessed by the webserver using the /home/share/Remote/ path.<br />
 	For security reasons, only the Soft aliases are accessible from the site, Hard aliases are only used internally.<br />
-	Note: Hard aliases can also be used to help some path processing like in the db_playlist module.
+	Note: Hard aliases can also be used to help some path processing like in the db_playlist handler.
 	<?php
 
 	?><div class="titlePadding"></div>

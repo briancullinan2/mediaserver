@@ -83,7 +83,7 @@ class db_users extends db_file
 			if( count($db_user) == 0 )
 			{
 				// just set up the user with default information
-				//   if they don't use the plugin, this creates a system user
+				//   if they don't use the module, this creates a system user
 				return $GLOBALS['database']->query(array('INSERT' => 'users', 'VALUES' => array(
 							'Username' => addslashes($username),
 							'Password' => '',

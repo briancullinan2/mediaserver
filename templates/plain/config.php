@@ -39,7 +39,7 @@ function register_plain()
 
 function output_plain()
 {
-	switch($GLOBALS['templates']['vars']['plugin'])
+	switch($GLOBALS['templates']['vars']['module'])
 	{
 		case 'ampache':
 			theme('ampache');

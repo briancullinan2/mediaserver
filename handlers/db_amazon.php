@@ -18,7 +18,7 @@ class db_amazon extends db_file
 	
 	const NAME = 'Amazon from Database';
 
-	// initialize any extra tools this module needs
+	// initialize any extra tools this handler needs
 	static function init()
 	{
 		// include the id handler
@@ -445,7 +445,7 @@ class db_amazon extends db_file
 						
 						if($amazon[0]['AmazonId'] != '')
 							$amazon[0]['AmazonLink'] = 'http://www.amazon.com/dp/' . $amazon[0]['AmazonId'] . '/?SubscriptionId=' . AMAZON_DEV_KEY;
-						$amazon[0]['Module'] = 'db_audio';
+						$amazon[0]['Handler'] = 'db_audio';
 						
 						foreach($files as $i => $file)
 						{
@@ -486,7 +486,7 @@ class db_amazon extends db_file
 		return $files;
 	}
 
-	static function remove($file, $module = NULL)
+	static function remove($file, $handler = NULL)
 	{
 		// remove the amazon entry for whatever is passed in
 		//  but only if the artist/album doesn't exist in the database anymore

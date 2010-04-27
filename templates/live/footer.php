@@ -15,15 +15,15 @@ function theme_live_footer()
 						<table id="footerCtr">
 							<tr>
 								<td>
-									Plugins:<br />
+									Modules:<br />
 									<ul>
 									<?php
-									foreach($GLOBALS['plugins'] as $name => $plugin)
+									foreach($GLOBALS['modules'] as $name => $module)
 									{
-										if($plugin['privilage'] > $GLOBALS['templates']['vars']['user']['Privilage'])
+										if($module['privilage'] > $GLOBALS['templates']['vars']['user']['Privilage'])
 											continue;
 										
-										?><li class="last"><a href="<?php echo url('plugin=' . $name); ?>"><?php echo $plugin['name']; ?></a></li><?php
+										?><li class="last"><a href="<?php echo url('module=' . $name); ?>"><?php echo $module['name']; ?></a></li><?php
 									}
 									?>
 									</ul>
@@ -34,13 +34,13 @@ function theme_live_footer()
 									Categories:<br />
 									<ul>
 									<?php
-									foreach($GLOBALS['modules'] as $module)
+									foreach($GLOBALS['handlers'] as $handler)
 									{
-										if(constant($module . '::INTERNAL'))
+										if(constant($handler . '::INTERNAL'))
 											continue;
 											
-										$name = str_replace(' from Database', '', constant($module . '::NAME'));
-										?><li class="last"><a href="<?php echo url('plugin=select&cat=' . $module); ?>"><?php echo $name; ?></a></li><?php
+										$name = str_replace(' from Database', '', constant($handler . '::NAME'));
+										?><li class="last"><a href="<?php echo url('module=select&cat=' . $handler); ?>"><?php echo $name; ?></a></li><?php
 									}
 									?>
 									</ul>

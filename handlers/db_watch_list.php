@@ -176,7 +176,7 @@ class db_watch_list extends db_watch
 		// search all the files in the directory
 		$files = fs_file::get(array('dir' => $dir, 'limit' => 32000), $count, true);
 		
-		// send new/changed files to other modules
+		// send new/changed files to other handlers
 		$paths = array();
 		$paths[] = $dir;
 		foreach($files as $i => $file)
@@ -204,13 +204,13 @@ class db_watch_list extends db_watch
 			{
 				PEAR::raiseError('Removing: ' . $file['Filepath'], E_DEBUG);
 				
-				// remove file from each module
-				foreach($GLOBALS['modules'] as $i => $module)
+				// remove file from each handler
+				foreach($GLOBALS['handlers'] as $i => $handler)
 				{
-					// do not remove ids because other modules may still use the id
-					//  allow other modules to handle removing of ids
-					if($module != 'db_ids')
-						call_user_func_array($module . '::remove', array($file['Filepath'], $module));
+					// do not remove ids because other handlers may still use the id
+					//  allow other handlers to handle removing of ids
+					if($handler != 'db_ids')
+						call_user_func_array($handler . '::remove', array($file['Filepath'], $handler));
 				}
 			}
 			$db_paths[] = $file['Filepath'];
@@ -340,23 +340,23 @@ class db_watch_list extends db_watch
 		}
 		
 		// if the file is skipped the only pass it to other handlers for adding, not modifing
-		//   if the file was modified or added the information could have changed, so the modules must modify it, if it is already added
-		foreach($GLOBALS['modules'] as $i => $module)
+		//   if the file was modified or added the information could have changed, so the handlers must modify it, if it is already added
+		foreach($GLOBALS['handlers'] as $i => $handler)
 		{
 			// never pass it to fs_file, it is only used to internals in this case
 			// db_file and db_ids are handled independently
 			// skip db_watch and db_watch_list to prevent recursion
-			if(constant($module . '::INTERNAL') == false && $module != 'db_file')
+			if(constant($handler . '::INTERNAL') == false && $handler != 'db_file')
 			{
-				$result = call_user_func_array($module . '::handle', array($file, ($skipped !== false)));
+				$result = call_user_func_array($handler . '::handle', array($file, ($skipped !== false)));
 				if($result !== false)
 				{
 					$added = true;
-					$ids[constant($module . '::DATABASE') . '_id'] = $result;
+					$ids[constant($handler . '::DATABASE') . '_id'] = $result;
 				}
-				elseif(!isset($ids[constant($module . '::DATABASE') . '_id']))
+				elseif(!isset($ids[constant($handler . '::DATABASE') . '_id']))
 				{
-					$ids[constant($module . '::DATABASE') . '_id'] = false;
+					$ids[constant($handler . '::DATABASE') . '_id'] = false;
 				}
 			}
 		}

@@ -43,6 +43,6 @@ Hard links are meant to replace paths when inputting to the database, this can b
 For example, if a Windows or Samba share is mounted on /home/share/Remote/, and that path exists on the remote computer under C:\Documents\Shared Files\<br />
 An alias can be used to replace C:\Documents\Shared Files\ with /home/share/Remote/, then a cron job can be run on the remote system, but files can still be accessed by the webserver using the /home/share/Remote/ path.<br />
 For security reasons, only the Soft aliases are accessible from the site, Hard aliases are only used internally.<br />
-Note: Hard aliases can also be used to help some path processing like in the db_playlist module.
+Note: Hard aliases can also be used to help some path processing like in the db_playlist handler.
 </body>
 </html>

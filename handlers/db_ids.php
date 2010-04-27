@@ -17,12 +17,12 @@ class db_ids extends db_file
 	
 	static function setupTables()
 	{
-		// loop through each module and compile a list of databases
+		// loop through each handler and compile a list of databases
 		$GLOBALS['tables'] = array();
-		foreach($GLOBALS['modules'] as $i => $module)
+		foreach($GLOBALS['handlers'] as $i => $handler)
 		{
-			if(defined($module . '::DATABASE'))
-				$GLOBALS['tables'][] = constant($module . '::DATABASE');
+			if(defined($handler . '::DATABASE'))
+				$GLOBALS['tables'][] = constant($handler . '::DATABASE');
 		}
 		$GLOBALS['tables'] = array_values(array_unique($GLOBALS['tables']));
 	}
@@ -228,19 +228,19 @@ class db_ids extends db_file
 		return $files;
 	}
 	
-	static function remove($file, $module = NULL)
+	static function remove($file, $handler = NULL)
 	{
-		if($module != NULL)
+		if($handler != NULL)
 		{
-			// do the same thing db_file does except update and set module_id to 0
+			// do the same thing db_file does except update and set handler_id to 0
 			$file = str_replace('\\', '/', $file);
 			
 			// remove files with inside paths like directories
 			if($file[strlen($file)-1] != '/') $file_dir = $file . '/';
 			else $file_dir = $file;
 			
-			// all the removing will be done by other modules
-			$GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => array(constant($module . '::DATABASE') . '_id' => 0), 'WHERE' => 'Filepath = "' . addslashes($file) . '" OR LEFT(Filepath, ' . strlen($file_dir) . ') = "' . addslashes($file_dir) . '"'), false);	
+			// all the removing will be done by other handlers
+			$GLOBALS['database']->query(array('UPDATE' => self::DATABASE, 'VALUES' => array(constant($handler . '::DATABASE') . '_id' => 0), 'WHERE' => 'Filepath = "' . addslashes($file) . '" OR LEFT(Filepath, ' . strlen($file_dir) . ') = "' . addslashes($file_dir) . '"'), false);	
 		}
 	}
 	

@@ -101,7 +101,7 @@ class db_archive extends db_file
 	
 	static function init()
 	{
-		require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'db_file.php';
+		require_once LOCAL_ROOT . 'handlers' . DIRECTORY_SEPARATOR . 'db_file.php';
 		
 		// include the id handler
 		require_once 'File' . DIRECTORY_SEPARATOR . 'Archive.php';

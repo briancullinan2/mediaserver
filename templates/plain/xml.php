@@ -56,7 +56,7 @@ function theme_plain_xml()
 			}
 			?></tip>
 			<path><?php print $file['Filepath']; ?></path>
-			<link><?php print url('plugin=file&cat=' . $GLOBALS['templates']['vars']['cat'] . '&id=' . $file['id'] . '&filename=' . urlencode($file['Filename']), false, true); ?></link>
+			<link><?php print url('module=file&cat=' . $GLOBALS['templates']['vars']['cat'] . '&id=' . $file['id'] . '&filename=' . urlencode($file['Filename']), false, true); ?></link>
 			<short><?php print htmlspecialchars(substr($GLOBALS['templates']['vars']['files'][$i]['Filename'], 0, 13)); ?>...</short>
 			<?php
 			if(handles($GLOBALS['templates']['vars']['files'][$i]['Filepath'], 'archive'))
@@ -74,7 +74,7 @@ function theme_plain_xml()
 			
 			foreach($GLOBALS['columns'] as $i => $column)
 			{
-					?><info-<?php print $column; ?>><?php print isset($file[$column])?$file[$column]:''; ?></info-<?php print $column; ?>><?php
+					?><info-<?php print $column; ?>><?php print isset($file[$column])?$file[$column]:''; ?></info-><?php print $column; ?>><?php
 			}
 			?>
 		</file>

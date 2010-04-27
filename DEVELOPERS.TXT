@@ -1,31 +1,31 @@
 This site uses a model, view, controller paradigm.
-The Modules control access to data, they handle files and read off of the filesystem and store the cached information in the database.
-The Plugins control user input, this is the controller, it reads and manipulates the data and interacts with the user from the back-end.
+The handlers control access to data, they handle files and read off of the filesystem and store the cached information in the database.
+The modules control user input, this is the controller, it reads and manipulates the data and interacts with the user from the back-end.
 The Templates control the view, this is how the information is displayed to the user, buttons and forms can then be submitted to the controller.
 
-Plugins:
-At the top of each plugin the variables that it assigns to templates are listed
-	Shared variables are ones placed in most plugins but assign the same values, this is because the plugin probably uses it, and because it is probably useful to the template
-Plugins pick the template page to compile generally in the form of TEMPLATE_<PLUGIN NAME>
+modules:
+At the top of each module the variables that it assigns to templates are listed
+	Shared variables are ones placed in most modules but assign the same values, this is because the module probably uses it, and because it is probably useful to the template
+modules pick the template page to compile generally in the form of TEMPLATE_<module NAME>
 
 Templates:
-If the template honors the ability to use mod_rewrite, every path has to add .php to the plugins path.
+If the template honors the ability to use mod_rewrite, every path has to add .php to the modules path.
 
-Modules:
-Everything that uses a different file structure to display information should have a different module.  
-For exmaple, the db_audio module accepts parameters for searching artists and albums, these modifiers change which results are displayed.
+handlers:
+Everything that uses a different file structure to display information should have a different handler.  
+For exmaple, the db_audio handler accepts parameters for searching artists and albums, these modifiers change which results are displayed.
 On the other hand, the db_album and db_artists displayes a completely different structure.
-Modules are responsible for replacing Filepaths with the alias, module::get() and module::out() calls parse the input request with soft aliases, and output the soft alias
-	module::handles() calls parse with both hard and soft aliases, and module::handle() calls parse just the hard aliases
-	module::columns() returns the columns that the module handles in the module::get() function, this is useful when certain columns are ommitted from the database but filled in afterwards
-	for example in the db_albums module the SongCount isn't actually stored in the database, but it is filled in after the query, modules should be responsible for searching these types of fields
-	module::struct() defined what type the field is and the name, this information is used to install the database, id can be excluded
+handlers are responsible for replacing Filepaths with the alias, handler::get() and handler::out() calls parse the input request with soft aliases, and output the soft alias
+	handler::handles() calls parse with both hard and soft aliases, and handler::handle() calls parse just the hard aliases
+	handler::columns() returns the columns that the handler handles in the handler::get() function, this is useful when certain columns are ommitted from the database but filled in afterwards
+	for example in the db_albums handler the SongCount isn't actually stored in the database, but it is filled in after the query, handlers should be responsible for searching these types of fields
+	handler::struct() defined what type the field is and the name, this information is used to install the database, id can be excluded
 	There is no biased towards particular columns, if a column is hidden it can just be excluded from the ::columns() list, but it can still be used in templates
-	For example, we don't necissarily want to display the Lastwatch timestamp from the db_watch module, so the columns can be removed from what db_watch::columns() returns without affecting the functionality of the script
+	For example, we don't necissarily want to display the Lastwatch timestamp from the db_watch handler, so the columns can be removed from what db_watch::columns() returns without affecting the functionality of the script
 	Format is array('column_name' => 'type'), the type should be SQL compatible, and the php equivilent will try to be detected
-	You can only search columns listed by the module::columns() function, ::struct() is used internally
+	You can only search columns listed by the handler::columns() function, ::struct() is used internally
 	If a space is detected the type will be the first word and it will override NOT NULL being added to the create query
 
 Needs:
-A svn module for connecting to remove or local SVN databases
+A svn handler for connecting to remove or local SVN databases
 Better support on windows for running commands

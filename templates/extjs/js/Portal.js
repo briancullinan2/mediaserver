@@ -106,7 +106,7 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 			autoLoad : true,
 			bufferSize : 300,
 			reader : FileReader,
-			url: plugins_path + 'select.php',
+			url: modules_path + 'select.php',
 			baseParams: {
 				dir: '/'
 			},
@@ -138,7 +138,7 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 		var colModel = new Ext.grid.ColumnModel([]);
 		// get some settings
 		Ext.Ajax.request({
-			url: plugins_path + 'display.php',
+			url: modules_path + 'display.php',
 			callback: this.displayColumns,
 			scope: this,
 			colModel: colModel,
@@ -244,7 +244,7 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 
 		var address = new Ext.Address({
 			store: new Ext.data.Store({
-				url: plugins_path + 'select.php',
+				url: modules_path + 'select.php',
 				reader: FileReader,
 				baseParams: {
 					dirs_only: true
@@ -266,7 +266,7 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 					selectedIds += selections[i].data.id + ((i!=selections.length-1)?',':'');
 				}
 				Ext.Ajax.request({
-					url: plugins_path + 'select.php',
+					url: modules_path + 'select.php',
 					params: {
 						on: selectedIds,
 						select: true
@@ -371,7 +371,7 @@ Ext.app.PortalWindow = Ext.extend(Ext.app.Module, {
 				path: '/'
 			}),
 			loader: new Ext.data.Store({
-				url: plugins_path + 'select.php',
+				url: modules_path + 'select.php',
 				reader: FileReader,
 				baseParams: {
 					dirs_only: true,

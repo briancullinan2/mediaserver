@@ -37,7 +37,7 @@ Ext.app.PlayerWindow = Ext.extend(Ext.app.Module, {
 		{
 			case 'audio':
 			case 'video':
-				url = plugins_path + 'encode.php/' + row.data.id + '/' + this.video_type + '/' + row.data.id + '.' + this.video_type.toLowerCase();
+				url = modules_path + 'encode.php/' + row.data.id + '/' + this.video_type + '/' + row.data.id + '.' + this.video_type.toLowerCase();
 				
 				toolbar_items[toolbar_items.length] = {xtype: 'button', text: 'WMV', enableToggle: true, pressed: true};
 				toolbar_items[toolbar_items.length] = {xtype: 'button', text: 'MP4', enableToggle: true, pressed: false};

@@ -23,8 +23,8 @@ function theme_live_settings()
 	
 	?>
 	<div class="titlePadding"></div>
-	<form action="<?php print url('plugin=settings'); ?>" method="get">
-	<input type="hidden" name="plugin" value="settings" />
+	<form action="<?php print url('module=settings'); ?>" method="get">
+	<input type="hidden" name="module" value="settings" />
 	<?php
 
 	// generate form based on config spec

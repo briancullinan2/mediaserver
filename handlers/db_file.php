@@ -1,7 +1,9 @@
 <?php
 
-// the basic file type
-
+/**
+ * Handle all physical files
+ * display information like Filesize, Filepath, and detect MIME types
+ */
 class db_file
 {	
 	// most of these methods should just be static, no need to instantiate the class
@@ -10,7 +12,7 @@ class db_file
 	
 	const NAME = 'Files from Database';
 	
-	// define if this module is internal so templates won't try to use it
+	// define if this handler is internal so templates won't try to use it
 	const INTERNAL = false;
 	
 	// this function specifies the level of detail for the array of file info, ORDER matters!
@@ -33,7 +35,11 @@ class db_file
 		);
 	}
 	
-	// return whether or not this module handles trhe specified type of file
+	/**
+	 * return whether or not this handler handles trhe specified type of file
+	 * @param file the file to test for handling
+	 * @return true if this handler is capable of handling the specified file, false if this handler does not handle the file
+	 */
 	static function handles($file)
 	{
 		//print_r(self::struct());
@@ -54,7 +60,12 @@ class db_file
 		}
 	}
 	
-	// this function determines if the file qualifies for this type and handles it according
+	/**
+	 * this function determines if the file qualifies for this type and handles it according
+	 * @param file the file to add to the database
+	 * @param force force checking if the file is in the database and add it
+	 * @return The ID for the file added to the database, or false if nothing was done or it isn't handled
+	 */
 	static function handle($file, $force = false)
 	{
 		$file = str_replace('\\', '/', $file);
@@ -96,6 +107,11 @@ class db_file
 		return false;
 	}
 	
+	/**
+	 * this is a common function for handlers, just abstracting the information about a file
+	 * @param file The file to get the info for
+	 * @return an associative array of information that can be inserted directly in to the database
+	 */
 	static function getInfo($file)
 	{
 		$file = str_replace('/', DIRECTORY_SEPARATOR, $file);
@@ -111,9 +127,12 @@ class db_file
 		return $fileinfo;
 	}
 	
-	// add a given file to the given database
-	// returns the id of the entry
-	// if the id is given then it updates the entry
+	/**
+	 * add a given file to the given database
+	 * @param file the file to add to the database
+	 * @param id the ID of the file entry to modify or update
+	 * @return the id of the entry, if the id is given then it updates the entry
+	 */
 	static function add($file, $id = NULL)
 	{
 		// get file information
@@ -140,8 +159,12 @@ class db_file
 		
 	}
 	
-	// output provided file to given stream
-	//  no headers is used to prevent changing the headers, if it is called by a plugin it may just need the stream and no header changes
+	/**
+	 * output provided file to given stream
+	 // no headers is used to prevent changing the headers, if it is called by a module it may just need the stream and no header changes
+	 * @param file the file to output
+	 * @return a stream handle for use with fread, or false if there was an error
+	 */
 	static function out($file)
 	{
 		$file = str_replace('\\', '/', $file);
@@ -164,16 +187,22 @@ class db_file
 		return false;
 	}
 	
-	//----------------------- Magic, do not touch -----------------------
-	// the mysql can be left null to get the files from a directory, in which case a directory must be specified
-	// if the mysql is provided, then the file listings will be loaded from the database
-	// this is a very generalized module to provide a template for overriding, or for other modules to modify the $request and pass to this one
-	//  other modules are responsible for any validation of input that is not listed here, like making sure files exist on the filesystem
-	static function get($request, &$count, $module = NULL)
+	/**----------------------- Magic, do not touch -----------------------
+	 * - the mysql can be left null to get the files from a directory, in which case a directory must be specified
+	 * - if the mysql is provided, then the file listings will be loaded from the database
+	 * - this is a very generalized handler to provide a template for overriding, or for other handlers to modify the $request and pass to this one
+	 *   - other handlers are responsible for any validation of input that is not listed here, like making sure files exist on the filesystem
+	 *
+	 * @param request the request information for the list of files to get from the file database
+	 * @param count inserts the total number of files that meet the requested criteria in the database
+	 * @param handler a utility parameter for other handlers to use the default file get() functionality but acting on their own columns() and DATABASE
+	 * @return an indexed array of files from the database
+	 */
+	static function get($request, &$count, $handler = NULL)
 	{
-		if( $module == NULL )
+		if( $handler == NULL )
 		{
-			$module = get_class();
+			$handler = get_class();
 		}
 		
 		$files = array();
@@ -182,7 +211,7 @@ class db_file
 		{
 			// set up initial props
 			$props = array();
-			$request['cat'] = $module;
+			$request['cat'] = $handler;
 			$request['limit'] = validate_limit($request);
 			$request['start'] = validate_start($request);
 			$request['order_by'] = validate_order_by($request);
@@ -192,7 +221,7 @@ class db_file
 			$props = alter_query_core($request, $props);
 
 //---------------------------------------- Selection ----------------------------------------\\
-			$columns = call_user_func($module . '::columns');
+			$columns = call_user_func($handler . '::columns');
 
 			// select an array of ids!
 			if(isset($request['selected']) && count($request['selected']) > 0 )
@@ -224,11 +253,11 @@ class db_file
 				
 				if(count($files) > 0)
 				{
-					// loop through ids and construct new where based on module
+					// loop through ids and construct new where based on handler
 					$props['WHERE'] = '';
 					foreach($files as $i => $file)
 					{
-							$props['WHERE'] .= ' id = ' . $file[constant($module . '::DATABASE') . '_id'] . ' OR';
+							$props['WHERE'] .= ' id = ' . $file[constant($handler . '::DATABASE') . '_id'] . ' OR';
 					}
 					$props['WHERE'] = substr($props['WHERE'], 0, strlen($props['WHERE'])-2);
 				}
@@ -245,7 +274,7 @@ class db_file
 			
 //---------------------------------------- Query ----------------------------------------\\
 			// finally start processing query
-			$props['SELECT'] = constant($module . '::DATABASE');
+			$props['SELECT'] = constant($handler . '::DATABASE');
 			if(isset($props['GROUP'])) $props['COLUMNS'] = ',count(*)' . (isset($props['COLUMNS'])?$props['COLUMNS']:'');
 			$props['COLUMNS'] = '*' . (isset($props['COLUMNS'])?$props['COLUMNS']:'');
 			
@@ -289,7 +318,7 @@ class db_file
 					// if where is not set then there is no reason to count the entire database
 					if(!isset($props['WHERE']) && !isset($props['GROUP']))
 					{
-						$props = array('SELECT' => constant($module . '::DATABASE'));
+						$props = array('SELECT' => constant($handler . '::DATABASE'));
 					}
 					else
 					{
@@ -313,12 +342,16 @@ class db_file
 		return $files;
 	}
 	
-	// remove function to delete from from a database
-	static function remove($file, $module = NULL)
+	/**
+	 * remove function to delete from from a database
+	 * @param file the file or folder to remove from the database
+	 * @param handler a utility parameter to allow handlers to use the default functionality
+	 */
+	static function remove($file, $handler = NULL)
 	{
-		if( $module == NULL )
+		if( $handler == NULL )
 		{
-			$module = get_class();
+			$handler = get_class();
 		}
 		
 		$file = str_replace('\\', '/', $file);
@@ -327,22 +360,25 @@ class db_file
 		if($file[strlen($file)-1] != '/') $file_dir = $file . '/';
 		else $file_dir = $file;
 		
-		PEAR::raiseError('Removing ' . constant($module . '::NAME') . ': ' . $file, E_DEBUG);
+		PEAR::raiseError('Removing ' . constant($handler . '::NAME') . ': ' . $file, E_DEBUG);
 	
 		// remove file(s) from database
-		$GLOBALS['database']->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($file) . '" OR LEFT(Filepath, ' . strlen($file_dir) . ') = "' . addslashes($file_dir) . '"'), false);	
+		$GLOBALS['database']->query(array('DELETE' => constant($handler . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($file) . '" OR LEFT(Filepath, ' . strlen($file_dir) . ') = "' . addslashes($file_dir) . '"'), false);	
 
 		// delete ids
-		db_ids::remove($file, $module);
+		db_ids::remove($file, $handler);
 	}
 	
 	
-	// cleanup the non-existant files
-	static function cleanup($module = NULL)
+	/**
+	 * cleanup the non-existant files
+	 * @param handler the utility parameter to allow handler to use the default file functionality but acting on their own DATABASE
+	 */
+	static function cleanup($handler = NULL)
 	{
-		if( $module == NULL )
+		if( $handler == NULL )
 		{
-			$module = get_class();
+			$handler = get_class();
 		}
 	
 		// first clear all the items that are no longer in the watch list
@@ -409,7 +445,7 @@ class db_file
 		$where_str = $watched_to_where . ' AND ' . $watched_where;
 		
 		// remove items that aren't in where directories
-		$GLOBALS['database']->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => $where_str), false);
+		$GLOBALS['database']->query(array('DELETE' => constant($handler . '::DATABASE'), 'WHERE' => $where_str), false);
 		
 		if(count($GLOBALS['ignored']) > 0)
 		{
@@ -425,12 +461,12 @@ class db_file
 			$ignored_where = substr($ignored_where, 0, strlen($ignored_where)-2);
 			
 			// remove items that are ignored
-			$GLOBALS['database']->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => $ignored_where), false);
+			$GLOBALS['database']->query(array('DELETE' => constant($handler . '::DATABASE'), 'WHERE' => $ignored_where), false);
 		}
 		
 		// remove any duplicates
 		$files = $GLOBALS['database']->query(array(
-				'SELECT' => constant($module . '::DATABASE'),
+				'SELECT' => constant($handler . '::DATABASE'),
 				'COLUMNS' => array('MIN(id) as id', 'Filepath', 'COUNT(*) as num'),
 				'GROUP' => 'Filepath',
 				'HAVING' => 'num > 1'
@@ -440,15 +476,14 @@ class db_file
 		// remove first item from all duplicates
 		foreach($files as $i => $file)
 		{
-			PEAR::raiseError('Removing Duplicate ' . constant($module . '::NAME') . ': ' . $file['Filepath'], E_DEBUG);
+			PEAR::raiseError('Removing Duplicate ' . constant($handler . '::NAME') . ': ' . $file['Filepath'], E_DEBUG);
 			
-			$GLOBALS['database']->query(array('DELETE' => constant($module . '::DATABASE'), 'WHERE' => 'id=' . $file['id']), false);
+			$GLOBALS['database']->query(array('DELETE' => constant($handler . '::DATABASE'), 'WHERE' => 'id=' . $file['id']), false);
 		}
 		
-		PEAR::raiseError('Cleanup: for ' . constant($module . '::NAME') . ' complete.', E_DEBUG);
+		PEAR::raiseError('Cleanup: for ' . constant($handler . '::NAME') . ' complete.', E_DEBUG);
 		
 	}
 	
 }
 
-?>

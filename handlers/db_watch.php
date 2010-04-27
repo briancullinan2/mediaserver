@@ -64,7 +64,7 @@ class db_watch extends db_file
 			}
 			else
 			{
-				// just pass the first directories to watch_list module
+				// just pass the first directories to watch_list handler
 				return db_watch_list::handle(substr($file, 1));
 			}
 			

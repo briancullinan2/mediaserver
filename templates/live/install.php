@@ -35,8 +35,8 @@ function theme_live_install()
 											for($i = 1; $i <= $GLOBALS['templates']['vars']['install_step']; $i++)
 											{
 											?>
-											<li><img src="/?plugin=admin_install&install_image=carat" class="crumbsep" alt="&gt;" /></li>
-											<li><a href="<?php echo url('plugin=admin_install&install_step=' . $i); ?>">Step <?php echo $i; ?></a></li>
+											<li><img src="/?module=admin_install&install_image=carat" class="crumbsep" alt="&gt;" /></li>
+											<li><a href="<?php echo url('module=admin_install&install_step=' . $i); ?>">Step <?php echo $i; ?></a></li>
 											<?php
 											}
 											?>
@@ -107,16 +107,16 @@ function print_fields()
 		case 5.1:
 		case 5.2:
 		case 6:
-		$count = 11 + count($GLOBALS['modules']);
+		$count = 11 + count($GLOBALS['handlers']);
 		break;
 		case 7:
-		$count = 11 + count($GLOBALS['modules']) + 4;
+		$count = 11 + count($GLOBALS['handlers']) + 4;
 		break;
 		case 8:
-		$count = 11 + count($GLOBALS['modules']) + 6;
+		$count = 11 + count($GLOBALS['handlers']) + 6;
 		break;
 		case 9:
-		$count = 11 + count($GLOBALS['modules']) + 13;
+		$count = 11 + count($GLOBALS['handlers']) + 13;
 		break;
 	}
 	for($i = 0; $i < $count; $i++)
@@ -141,7 +141,7 @@ function output_heading($install_step)
 		case 2:
 			?>
             <h2>Local Resources and Libraries</h2>
-            <p>Before the site can't function properly, we must define some paths for templates and plugins to use.</p>
+            <p>Before the site can't function properly, we must define some paths for templates and modules to use.</p>
 			<?php
 		break;
 		case 3:
@@ -152,8 +152,8 @@ function output_heading($install_step)
 		break;
 		case 4:
 			?>
-            <h2>Select Modules</h2>
-            <p>Below is a list of available modules.  Modules can be added or removed at any time, but with large file-structures, inserting new modules could take a very long time.  Therefore, all modules are enabled by default, with the recommended modules marked as such.</p>
+            <h2>Select Handlers</h2>
+            <p>Below is a list of available handlers.  Handlers can be added or removed at any time, but with large file-structures, inserting new handlers could take a very long time.  Therefore, all handlers are enabled by default, with the recommended handlers marked as such.</p>
 			<?php
 		break;
 		case 5:
@@ -351,7 +351,7 @@ function output_test_db_install($result, $variable)
 	$DATABASE = new database($dsn);
 	?>
 	<body onload="top.document.getElementById('loading2').style.display = 'none'; top.document.getElementById('install').style.height=document.getElementById('installtable').clientHeight+'px';">
-	<form action="<?php echo url('plugin=admin_install&install_step=3'); ?>" method="post" target="_top">
+	<form action="<?php echo url('module=admin_install&install_step=3'); ?>" method="post" target="_top">
 	<?php
 	print_fields();
 	?>
@@ -396,7 +396,7 @@ function output_test_db_test($result, $variable)
     <td class="title fail">Access to Database</td>
     <td>
     The connection manager reported the following error:<br /><?php echo $e->userinfo; ?>.
-    <form action="<?php echo url('plugin=admin_install&install_step=3'); ?>" method="post" target="_top">
+    <form action="<?php echo url('module=admin_install&install_step=3'); ?>" method="post" target="_top">
     <input type="hidden" name="install_dberror" value="<?php echo $e->userinfo; ?>" />
 	<?php
 	print_fields();
@@ -421,7 +421,7 @@ function output_test_db_test($result, $variable)
 	{
 		
     ?>
-<body onLoad="top.document.getElementById('loading1').style.display = 'none'; top.document.getElementById('test').style.height=document.getElementById('testtable').clientHeight+'px'; top.document.getElementById('loading2').style.display='inline'; top.document.getElementById('install').src='<?php echo url('plugin=admin_install&install_step=5.2'); ?>'">
+<body onLoad="top.document.getElementById('loading1').style.display = 'none'; top.document.getElementById('test').style.height=document.getElementById('testtable').clientHeight+'px'; top.document.getElementById('loading2').style.display='inline'; top.document.getElementById('install').src='<?php echo url('module=admin_install&install_step=5.2'); ?>'">
 <table id="testtable" border="0" cellpadding="0" cellspacing="0">
 	<tr>
     <td class="title">Access to Database</td>
@@ -508,7 +508,7 @@ function output_test_mod_rewrite($result)
 		<td class="desc">
 		<ul>
 			<li>The system has detected that you have mod_rewrite enabled.</li>
-			<li>Mod_rewrite is used by some templates and plugins to make the paths look prettier.</li>
+			<li>Mod_rewrite is used by some templates and modules to make the paths look prettier.</li>
 		</ul>
 		</td></tr>
 		<?php
@@ -522,7 +522,7 @@ function output_test_mod_rewrite($result)
 		<td class="desc">
 		<ul>
 			<li>The system has detected that you do not have mod_rewrite enabled.  Please follow the link for instructions on enabling mod_rewrite.</li>
-			<li>Mod_rewrite is used by some templates and plugins to make the paths look prettier.</li>
+			<li>Mod_rewrite is used by some templates and modules to make the paths look prettier.</li>
 		</ul>
 		</td></tr>
 		<?php
@@ -740,7 +740,7 @@ function output_test_check_pear($result, $variable)
 		<td class="desc">
 		<ul>
 			<li>The system has detected that PEAR is installed properly.</li>
-			<li>The PEAR library is an extensive PHP library that provides common functions for modules and plugins in the site.</li>
+			<li>The PEAR library is an extensive PHP library that provides common functions for modules and modules in the site.</li>
 		</ul>
 		</td></tr>
 		<?php
@@ -764,7 +764,7 @@ function output_test_check_pear($result, $variable)
 		<td class="desc">
 		<ul>
 			<li>The system has detected that PEAR is NOT INSTALLED.</li>
-			<li>The PEAR library is an extensive PHP library that provides common functions for modules and plugins in the site.</li>
+			<li>The PEAR library is an extensive PHP library that provides common functions for modules and modules in the site.</li>
 		</ul>
 		</td></tr>
 		<?php
@@ -1051,17 +1051,17 @@ function output_test_drop_tables($result, $variable)
 function output_test_enable_modules($result, $variable)
 {
 	$recommended = $GLOBALS['templates']['vars']['recommended'];
-	foreach($GLOBALS['modules'] as $key => $module)
+	foreach($GLOBALS['handlers'] as $key => $handler)
 	{
-		if(constant($module . '::INTERNAL') == true)
+		if(constant($handler . '::INTERNAL') == true)
 			continue;
 		
-		$module_en = $GLOBALS['templates']['vars']['request'][strtoupper($module) . '_ENABLE'];
+		$handler_en = $GLOBALS['templates']['vars']['request'][strtoupper($handler) . '_ENABLE'];
 		?><tr>
-		<td class="title"><?php echo constant($module . '::NAME'); ?></td>
+		<td class="title"><?php echo constant($handler . '::NAME'); ?></td>
 		<td>
 		<?php
-		if($module == 'db_file')
+		if($handler == 'db_file')
 		{
 		?>
 		<select disabled="disabled">
@@ -1072,9 +1072,9 @@ function output_test_enable_modules($result, $variable)
 		else
 		{
 		?>
-		<select name="<?php echo strtoupper($module); ?>_ENABLE">
-				<option value="true" <?php echo ($module_en == true)?'selected="selected"':''; ?>>Enabled <?php echo in_array($module, $recommended)?'(Recommended)':'(Optional)'; ?></option>
-				<option value="false" <?php echo ($module_en == false)?'selected="selected"':''; ?>>Disabled</option>
+		<select name="<?php echo strtoupper($handler); ?>_ENABLE">
+				<option value="true" <?php echo ($handler_en == true)?'selected="selected"':''; ?>>Enabled <?php echo in_array($handler, $recommended)?'(Recommended)':'(Optional)'; ?></option>
+				<option value="false" <?php echo ($handler_en == false)?'selected="selected"':''; ?>>Disabled</option>
 			</select>
 		<?php
 		}
@@ -1082,7 +1082,7 @@ function output_test_enable_modules($result, $variable)
 	</td>
 		<td class="desc">
 		<ul>
-			<li>Choose whether or not to select the <?php echo $module; ?> module.</li>
+			<li>Choose whether or not to select the <?php echo $handler; ?> module.</li>
 		</ul>
 		</td>
 	</tr>
@@ -1094,9 +1094,9 @@ function output_test_enable_modules($result, $variable)
 function output_test_db_check()
 {
 	?>
-	<div id="loading1"><img src="/?plugin=admin_install&install_image=loading" alt="" /> Testing...</div>
-	<iframe name="test" id="test" frameborder="0" width="100%" src="<?php echo url('plugin=admin_install&install_step=5.1'); ?>"></iframe>
-	<div id="loading2" style="display:none;"><img src="/?plugin=admin_install&install_image=loading" alt="" /> Installing...</div>
+	<div id="loading1"><img src="/?module=admin_install&install_image=loading" alt="" /> Testing...</div>
+	<iframe name="test" id="test" frameborder="0" width="100%" src="<?php echo url('module=admin_install&install_step=5.1'); ?>"></iframe>
+	<div id="loading2" style="display:none;"><img src="/?module=admin_install&install_image=loading" alt="" /> Installing...</div>
 	<iframe name="test" id="install" frameborder="0" width="100%" src=""></iframe>
 	</script>
 	<?php
@@ -1205,8 +1205,8 @@ function output_test_cron($result, $variable)
 	<td>
 	On Unix and Linux:<br />
 	<code>
-	&nbsp;&nbsp;&nbsp;&nbsp;0 * * * * /usr/bin/php /&lt;site path&gt;/plugins/cron.php &gt;/dev/null 2&gt;&amp;1<br />
-	&nbsp;&nbsp;&nbsp;&nbsp;30 * * * * /usr/bin/php /&lt;site path&gt;/plugins/cron.php &gt;/dev/null 2&gt;&amp;1<br /></code>
+	&nbsp;&nbsp;&nbsp;&nbsp;0 * * * * /usr/bin/php /&lt;site path&gt;/modules/cron.php &gt;/dev/null 2&gt;&amp;1<br />
+	&nbsp;&nbsp;&nbsp;&nbsp;30 * * * * /usr/bin/php /&lt;site path&gt;/modules/cron.php &gt;/dev/null 2&gt;&amp;1<br /></code>
 	<br />On Windows:<br />
 	Run this command from the command line to install the cron script as a task:<br />
 	</td>
@@ -1323,7 +1323,7 @@ function output_test_robots($result, $variable)
 	<td class="desc">
 	<ul>
 		<li>Some services like Google like to scan websites.  This option will prevent robots from downloading and scanning files on your site.</li>
-		<li>This will also enable robots to view a customizable sitemap.php plugin that provides them with the information they deserve.</li>
+		<li>This will also enable robots to view a customizable sitemap.php module that provides them with the information they deserve.</li>
 	</ul>
 	</td></tr>
 	<?php
@@ -1413,7 +1413,7 @@ function output_test_buffer_size($result, $variable)
 	</td>
 	<td class="desc">
 	<ul>
-		<li>Some plugins and modules require open file streams of a specific size.  This allows you to set what size these streams should try to remain below.</li>
+		<li>Some modules and modules require open file streams of a specific size.  This allows you to set what size these streams should try to remain below.</li>
 	</ul>
 	</td></tr>
 	<?php
@@ -1519,7 +1519,7 @@ function output_test_save($result, $variable)
 // all other settings are stored in the appropriate classes that handle each section
 
 // database connection constants
-define('USE_DATABASE', 	                  true); // set to false to make modules load information about every file on the fly
+define('USE_DATABASE', 	                  true); // set to false to make handlers load information about every file on the fly
 
 define('DB_CONNECT',			'$DB_CONNECT');
 
@@ -1562,7 +1562,7 @@ define('HTML_NAME',			                                   '$HTML_NAME'); // name 
 // commands, these are used for converting media throughout the site
 // multiple definitions can be set with the extension in all caps for different file types
 //  for example CONVERT_JPG, and CONVERT_ARGS_JPG can be used for converting any file with the JPG extension
-//  if %IF is not found in the string the plugins and modules will assume STDIN is used, additional functionality will be enabled in this case
+//  if %IF is not found in the string the modules and handlers will assume STDIN is used, additional functionality will be enabled in this case
 //  same for %0F, STDOUT will be used and this will enable much faster response times
 
 // the arguments to use with encode are as follows
@@ -1573,7 +1573,7 @@ define('HTML_NAME',			                                   '$HTML_NAME'); // name 
 %TW - Thumbnail width
 %OF - Output file if necissary
 */
-// More options can be added but you will have to do some scripting in the convert.php plugin
+// More options can be added but you will have to do some scripting in the convert.php module
 define('CONVERT', 				   '$CONVERT_PATH'); // image magick's convert program
 define('CONVERT_ARGS', 			   '"%IF" -resize "%TWx%TH" %FM:-'); // image magick's convert program
 
@@ -1592,7 +1592,7 @@ define('CONVERT_ARGS', 			   '"%IF" -resize "%TWx%TH" %FM:-'); // image magick's
 %FS - Frames per Second
 %OF - Output file if necissary
 */
-// More options can be added but you will have to do some scripting in the encode.php plugin
+// More options can be added but you will have to do some scripting in the encode.php module
 // remember ffmpeg uses generally the same codec names as the default vlc, however custom commands may be needed to convert to each type
 define('ENCODE', 				       '$ENCODE_PATH'); // a program that can convert video and audio streams
 define('ENCODE_ARGS',                  '-I dummy - --start-time=%TO :sout=\'#transcode{vcodec=%VC,acodec=%AC,vb=%VB,ab=%AB,samplerate=%SR,channels=%CH,audio-sync,scale=%SC,fps=%FS}:std{mux=%MX,access=file,dst=-}\' vlc://quit'); // a program that can convert video and audio streams
@@ -1615,7 +1615,7 @@ define('DEBUG_MODE', 							$DEBUG_MODE);
 //   don't use this when there are many complex files and the site has loaded thousands already
 define('RECURSIVE_GET', 				$RECURSIVE_GET);
 
-// this will redirect a google bot to the sitemap.php plugin or remove request options like search
+// this will redirect a google bot to the sitemap.php module or remove request options like search
 //   this is recommended because GoogleBots usually look for the wrong information and this will slow down the site A LOT
 define('NO_BOTS', 							$NO_BOTS);
 

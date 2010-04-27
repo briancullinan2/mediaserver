@@ -90,7 +90,7 @@ Ext.apply(Ext.ux.MediaBase.prototype , {
              media.style || (media.style = {});
              media.style = Ext.apply({height:'@height',width:'@width'} ,m.style||{}, media.style );
 
-             if(m.unsupportedText){  //childNode Text if plugin/object is not installed.
+             if(m.unsupportedText){  //childNode Text if plugins/object is not installed.
                   media.html = m.unsupportedText;
              }
 
@@ -197,7 +197,7 @@ Ext.apply(Ext.ux.MediaBase.prototype , {
                          }
              },Ext.isIE?
                     {  classid      :'clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B'
-                      ,codebase     :'http://www.apple.com/qtactivex/qtplugin.cab'
+                      ,codebase     :'http://www.apple.com/qtactivex/qtplugins.cab'
                       ,type         : 'application/x-oleobject'
                       ,params   : { src         : "@url"
                                    ,controller  :'@controls'
@@ -284,7 +284,7 @@ Ext.apply(Ext.ux.MediaBase.prototype , {
 
         },Ext.isIE?
          { classid      :'clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B'
-          ,codebase     :'http://www.apple.com/qtactivex/qtplugin.cab'
+          ,codebase     :'http://www.apple.com/qtactivex/qtplugins.cab'
           ,type         : 'application/x-oleobject'
           ,params   : { src   : "@url"
                        ,controller   :'@controls'
@@ -301,7 +301,7 @@ Ext.apply(Ext.ux.MediaBase.prototype , {
 
          },Ext.isIE?
               { classid      :'clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B'
-               ,codebase     :'http://www.apple.com/qtactivex/qtplugin.cab'
+               ,codebase     :'http://www.apple.com/qtactivex/qtplugins.cab'
                ,type         : 'application/x-oleobject'
                ,params   : { src   : "@url"
                             ,controller   :'@controls'
@@ -317,7 +317,7 @@ Ext.apply(Ext.ux.MediaBase.prototype , {
             ,params   : {autostart    :'@start'}
        },Ext.isIE?
             { classid      :'clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B'
-             ,codebase     :'http://www.apple.com/qtactivex/qtplugin.cab'
+             ,codebase     :'http://www.apple.com/qtactivex/qtplugins.cab'
              ,type         : 'application/x-oleobject'
              ,params   : { src   : "@url"
                           ,controller   :'@controls'

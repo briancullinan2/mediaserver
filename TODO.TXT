@@ -1,21 +1,23 @@
+Make validate_return actually validate the return path
+Fix vulnerability with template printing out any valid file
 Test and find a fix for some media dropping off the network
-	Check to see if the file exists in the archive module before trying to analyze it
+	Check to see if the file exists in the archive handler before trying to analyze it
 Remove all occurances on props['WHERE'] being set to a string
 	It should be set to an array from now on, so that we can differentiate between each query_alter_
 	Same with all the other variables
 Start implementing lang() calls
 Set variables to default specified by template if they are not set because of an improper input
-Change tools to output a list like the select plugin, a list of info objects used for outputting
-Cache all loaded plugin files in settings database (possibly storing in admin settings and deserializing would be efficient?)
+Change tools to output a list like the select module, a list of info objects used for outputting
+Cache all loaded module files in settings database (possibly storing in admin settings and deserializing would be efficient?)
 Check all requires to make sure they can't be substituted for an include (abstract them to allow for better error handling)
-Finish ampache.php plugin to support genres, videos, and playlists
-Check for bt plugin in install.php script
+Finish ampache.php module to support genres, videos, and playlists
+Check for bt module in install.php script
 Add bttracker install script to admin/install.php to fully bootstrap the install process
 Re-upload entire site
-Finish fixing up plugins to use new API
+Finish fixing up modules to use new API
 	admin tools section
 Drupalish style coding
-	More streamlined way of plugins outputting data to template (assuming that $files is being used is no good)
+	More streamlined way of modules outputting data to template (assuming that $files is being used is no good)
 Doxygen compliant
 Speed testing with new User queries
 More compatibility testing with clients
@@ -24,35 +26,35 @@ Store the remote_address in the session, and if it doesn't match up with what is
 Create a unique id and insert it into forms, this is required when the form is submitted
 Make hard links and soft links, hard links are replaced when they are put in to the database, soft links are replaced when they are read from the database, this will allow us to do more network stuff
 Interface with mediatomb and support UPnP protocol
-------------- Plugin TODO -------------
-Finish users.php plugin
-Work on settings.php plugin
+------------- module TODO -------------
+Finish users.php module
+Work on settings.php module
 	Global settings such as default template to use for each devide logged in the to account
 	Template settings, must provide specification in template config, use database for storing fields?
-	Make display plugin obsolete by completing the settings plugins
-Work on tools.php plugin for admin
+	Make display module obsolete by completing the settings modules
+Work on tools.php module for admin
 	Provide useful information in tools section about missing songs (music.php tool?)
-Make a sync plugin in admin section for syncing between two databases and pulling out differences
+Make a sync module in admin section for syncing between two databases and pulling out differences
 	Use musicbrainz to sync music
-FIX bt.php plugin to work with command line torrent seeder on windows
+FIX bt.php module to work with command line torrent seeder on windows
 Set up conditions for when the streams are used based on if %OF and %IF are used in the command arguments
-Get ranges working in encode plugin
-	only allow the option if the argument can read from stdin and read the input from the module and write it to the input stream
+Get ranges working in encode module
+	only allow the option if the argument can read from stdin and read the input from the handler and write it to the input stream
 Figure out a way of doing this with files even if stdin is not being used in the command, if fopen is writing to a file, does it file feof when reading from the same file simulaneously?
-Make convert.php plugin recognize video thumbnails and use vlc to extract them
-------------- Module TODO -------------
+Make convert.php module recognize video thumbnails and use vlc to extract them
+------------- handler TODO -------------
 Look in to the possibility of corruption if the db_files::handles check for is_dir or is_file is removed (if file is removed before cron.php detects it, it won't load all the available information from DB)
-Make a discography module that parses out wikipedia discographys, store album information, and return links to Full Discography, and Partial Discography
-	Base discography module on discogs.com
+Make a discography handler that parses out wikipedia discographys, store album information, and return links to Full Discography, and Partial Discography
+	Base discography handler on discogs.com
 	this will list out each artist with full or missing albums
 	It handles artists, when an album count changes or doesn't exist it updates the database
-Work on playlist module, use hard links to help find files
-Make a fs_code module
+Work on playlist handler, use hard links to help find files
+Make a fs_code handler
 Work on db_movies, use cUrl to download movie information from imdb, use the volume decriptor for lookup, this shouldn't change even if they edited an image
 	Look up movies on amazon, and see if that will help with searching IMDb
 	Research the video_ts.ifo file, there must be a way of getting the full name from a DVD image, windows media center projects can do it, so can we
 ------------- All Template TODO -------------
-Figure out how template_path and plugins_path is used in the javascript in the WMP and EXT JS templates
+Figure out how template_path and modules_path is used in the javascript in the WMP and EXT JS templates
 Test modifications to extjs and wmp template script and link includes
 Finish mobile template.
 Convert some templates to php instead of smarty because it would look nicer to developers
@@ -77,4 +79,4 @@ Get settings dialog working and set up user accounts to control it
 Finish the player app that displays pictures
 Make players resize to Player window
 ------------- LIVE -------------
-Add basename to template output if filename is not available from module selection otherwise it just shows up blank
+Add basename to template output if filename is not available from handler selection otherwise it just shows up blank

@@ -6,7 +6,7 @@ class fs_image_browser extends fs_image
 {
 	const NAME = 'Browser Images on Filesystem';
 	
-	// define if this module is internal so templates won't try to use it
+	// define if this handler is internal so templates won't try to use it
 	const INTERNAL = false;
 
 	static function handles($file)

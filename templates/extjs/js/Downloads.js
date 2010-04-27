@@ -73,14 +73,14 @@ Ext.app.DownloadsWindow = Ext.extend(Ext.app.Module, {
 						iconCls: 'ux-zipfile',
 						text: 'Zip File',
 						handler: function(item) {
-							var path = plugins_path + 'zip.php/' + this.parentMenu.record.data.id + '/' + this.parentMenu.record.data.id + '.zip';
+							var path = modules_path + 'zip.php/' + this.parentMenu.record.data.id + '/' + this.parentMenu.record.data.id + '.zip';
 							window.location = path;
 						}
 					},{
 						iconCls: 'ux-torrentfile',
 						text: 'Torrent File',
 						handler: function(item) {
-							var path = plugins_path + 'bt.php/' + this.parentMenu.record.data.id + '/' + this.parentMenu.record.data.id + '.torrent';
+							var path = modules_path + 'bt.php/' + this.parentMenu.record.data.id + '/' + this.parentMenu.record.data.id + '.torrent';
 							window.location = path;
 						}
 					}]
@@ -115,7 +115,7 @@ Ext.app.DownloadsWindow = Ext.extend(Ext.app.Module, {
 			region: 'center',
 			bodyStyle: 'border-top:0px;',
 			ds : new Ext.data.Store({
-				url: site_path + 'plugins/list.php',
+				url: site_path + 'modules/list.php',
 				reader: FileReader,
 				baseParams: {
 					type: 'select',
@@ -161,7 +161,7 @@ Ext.app.DownloadsWindow = Ext.extend(Ext.app.Module, {
 					selectedIds += selections[i].data.id + ((i!=selections.length-1)?',':'');
 				}
 				Ext.Ajax.request({
-					url: site_path + 'plugins/select.php',
+					url: site_path + 'modules/select.php',
 					params: {
 						off: selectedIds,
 						select: true
@@ -183,7 +183,7 @@ Ext.app.DownloadsWindow = Ext.extend(Ext.app.Module, {
 					selectedIds += selections[i].data.id + ((i!=selections.length-1)?',':'');
 				}
 				Ext.Ajax.request({
-					url: site_path + 'plugins/select.php',
+					url: site_path + 'modules/select.php',
 					params: {
 						off: selectedIds,
 						select: true
@@ -211,7 +211,7 @@ Ext.app.DownloadsWindow = Ext.extend(Ext.app.Module, {
 						{
 							selectedIds += selections[i].data.id + ((i!=selections.length-1)?',':'');
 						}
-						var path = plugins_path + 'zip.php/' + selectedIds + '/files.zip';
+						var path = modules_path + 'zip.php/' + selectedIds + '/files.zip';
 						window.location = path;
 					},
 					scope: grid
@@ -225,7 +225,7 @@ Ext.app.DownloadsWindow = Ext.extend(Ext.app.Module, {
 						{
 							selectedIds += selections[i].data.id + ((i!=selections.length-1)?',':'');
 						}
-						var path = plugins_path + 'bt.php/' + selectedIds + '/files.torrent';
+						var path = modules_path + 'bt.php/' + selectedIds + '/files.torrent';
 						window.location = path;
 					},
 					scope: grid

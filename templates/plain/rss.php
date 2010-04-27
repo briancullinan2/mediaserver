@@ -24,7 +24,7 @@ function theme_plain_rss()
 				?>
 				<item>
 					<title><?php print basename($file['Filepath']); ?></title>
-					<link><?php print url('plugin=file&cat=' . $GLOBALS['templates']['vars']['cat'] . '&id=' . $file['id'] . '&filename=' . basename($file['Filepath']), false, true); ?></link>
+					<link><?php print url('module=file&cat=' . $GLOBALS['templates']['vars']['cat'] . '&id=' . $file['id'] . '&filename=' . basename($file['Filepath']), false, true); ?></link>
 					<description></description>
 				</item>
                 <?php

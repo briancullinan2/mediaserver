@@ -13,7 +13,7 @@
  * @enum VERSION set version for stuff to reference
  * @enum VERSION_NAME set the name for a text representation of the version
  */
-define('VERSION', 			     '0.60.0');
+define('VERSION', 			     '0.60.5');
 define('VERSION_NAME', 			'Goliath');
 /** @} */
 
@@ -46,7 +46,7 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.php';
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'compatibility.php';
 
 /** require core functionality */
-require_once LOCAL_ROOT . 'plugins' . DIRECTORY_SEPARATOR . 'core.php';
+require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'core.php';
 
 /** require pear for error handling */
 require_once 'PEAR.php';
@@ -89,13 +89,20 @@ require_once 'MIME' . DIRECTORY_SEPARATOR . 'Type.php';
 setup();
 
 /**
+ * @defgroup setup Setup Functions
+ * All functions that are used to set up necissary parts of the site
+ * These functions usually specify global variables
+ * @{
+ */
+ 
+/**
  * Setup all the GLOBAL variables used throughout the site
  */
 function setup()
 {
-	// this is where most of the initialization occurs, some global variables are set up for other pages and modules to use
+	// this is where most of the initialization occurs, some global variables are set up for other pages and handlers to use
 	//  first the variables are parsed out of the path, just incase mod_rewrite isn't enabled
-	//  in order of importance, the database is set up, the modules are loaded, the aliases and watch list are loaded, the template system is loaded
+	//  in order of importance, the database is set up, the handlers are loaded, the aliases and watch list are loaded, the template system is loaded
 
 	// include the database wrapper class so it can be used by any page
 	if( USE_DATABASE ) require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'database.php';
@@ -107,35 +114,35 @@ function setup()
 		$GLOBALS['database'] = NULL;
 	
 	// set up mime types because PEAR MIME_Type is retarded
-	setupMime();
+	setup_mime();
 	
-	// set up the list of modules
-	setupModules();
+	// set up the list of handlers
+	setup_handlers();
 	
-	// set up a list of plugins available to the system
-	setup_plugins();
+	// set up a list of modules available to the system
+	setup_register();
 	
 	// set up list of tables
-	setupTables();
+	setup_tables();
 	
 	// set up aliases for path replacement
-	setupAliases();
+	setup_aliases();
 	
 	// set up the template system for outputting
 	setup_template();
 
 	// set up variables passed to the system in the request or post
-	setup_input();
+	setup_validate();
 	
 	// set up users for permission based access
-	setup_users();
+	setup_user();
 
 }
 
 /**
  * Set up the list of aliases from the database
  */
-function setupAliases()
+function setup_aliases()
 {
 	// get the aliases to use to replace parts of the filepath
 	$GLOBALS['paths_regexp'] = array();
@@ -161,31 +168,31 @@ function setupAliases()
 }
 
 /**
- * Scan modules directory and load all of the modules that handle files
+ * Scan handlers directory and load all of the handlers that handle files
  */
-function setupModules()
+function setup_handlers()
 {
 	
-	// include the modules
-	$tmp_modules = array();
-	if ($dh = @opendir(LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR))
+	// include the handlers
+	$tmp_handlers = array();
+	if ($dh = @opendir(LOCAL_ROOT . 'handlers' . DIRECTORY_SEPARATOR))
 	{
 		while (($file = readdir($dh)) !== false)
 		{
-			// filter out only the modules for our USE_DATABASE setting
-			if ($file[0] != '.' && !is_dir(LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . $file))
+			// filter out only the handlers for our USE_DATABASE setting
+			if ($file[0] != '.' && !is_dir(LOCAL_ROOT . 'handlers' . DIRECTORY_SEPARATOR . $file))
 			{
 				$class_name = substr($file, 0, strrpos($file, '.'));
 				if(!defined(strtoupper($class_name) . '_ENABLED') || constant(strtoupper($class_name) . '_ENABLED') != false)
 				{
-					// include all the modules
-					require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . $file;
+					// include all the handlers
+					require_once LOCAL_ROOT . 'handlers' . DIRECTORY_SEPARATOR . $file;
 					
-					// only use the module if it is properly defined
+					// only use the handler if it is properly defined
 					if(class_exists($class_name))
 					{
 						if(substr($file, 0, 3) == (USE_DATABASE?'db_':'fs_'))
-							$tmp_modules[] = $class_name;
+							$tmp_handlers[] = $class_name;
 					}
 				}
 			}
@@ -194,37 +201,37 @@ function setupModules()
 	}
 	
 	$error_count = 0;
-	$new_modules = array();
+	$new_handlers = array();
 	
-	// reorganize modules to reflect heirarchy
-	while(count($tmp_modules) > 0 && $error_count < 1000)
+	// reorganize handlers to reflect heirarchy
+	while(count($tmp_handlers) > 0 && $error_count < 1000)
 	{
-		foreach($tmp_modules as $i => $module)
+		foreach($tmp_handlers as $i => $handler)
 		{
-			$tmp_override = get_parent_class($module);
-			if(in_array($tmp_override, $new_modules) || $tmp_override == '')
+			$tmp_override = get_parent_class($handler);
+			if(in_array($tmp_override, $new_handlers) || $tmp_override == '')
 			{
-				$new_modules[] = $module;
-				unset($tmp_modules[$i]);
+				$new_handlers[] = $handler;
+				unset($tmp_handlers[$i]);
 			}
 		}
 		$error_count++;
 	}
-	$GLOBALS['modules'] = $new_modules;
+	$GLOBALS['handlers'] = $new_handlers;
 }
 
 
 /**
- * Create a GLOBAL list of tables used by all the modules
+ * Create a GLOBAL list of tables used by all the handlers
  */
-function setupTables()
+function setup_tables()
 {
-	// loop through each module and compile a list of databases
+	// loop through each handler and compile a list of databases
 	$GLOBALS['tables'] = array();
-	foreach($GLOBALS['modules'] as $i => $module)
+	foreach($GLOBALS['handlers'] as $i => $handler)
 	{
-		if(defined($module . '::DATABASE'))
-			$GLOBALS['tables'][] = constant($module . '::DATABASE');
+		if(defined($handler . '::DATABASE'))
+			$GLOBALS['tables'][] = constant($handler . '::DATABASE');
 	}
 	$GLOBALS['tables'] = array_values(array_unique($GLOBALS['tables']));
 	
@@ -236,30 +243,56 @@ function setupTables()
 }
 
 /**
- * Check if the specified class is just a wrapper for some parent database
- * @param module is the catagory or module to check
- * @return true or false if the class is a wrapper
+ * @}
  */
-function is_wrapper($module)
+
+/**
+ * Output a module
+ * @ingroup output
+ */
+function output($request)
 {
-	if($module == 'db_file')
-		return false;
-	return (constant($module . '::DATABASE') == constant(get_parent_class($module) . '::DATABASE'));
+	$GLOBALS['module'] = $request['module'];
+	
+	// output module
+	call_user_func_array('output_' . $request['module'], array($request));
+	
+	// only display a template for the current module if there is one
+	if(!isset($GLOBALS['modules'][$GLOBALS['module']]['notemplate']) || 
+			$GLOBALS['modules'][$GLOBALS['module']]['notemplate'] == false
+		)
+	{
+		theme();
+		
+		theme('errors');
+	}
 }
 
 /**
- * Check if a module handles a certain type of files
+ * Check if the specified class is just a wrapper for some parent database
+ * @param handler is the catagory or handler to check
+ * @return true or false if the class is a wrapper
+ */
+function is_wrapper($handler)
+{
+	if($handler == 'db_file')
+		return false;
+	return (constant($handler . '::DATABASE') == constant(get_parent_class($handler) . '::DATABASE'));
+}
+
+/**
+ * Check if a handler handles a certain type of files
  * this is a useful call for templates to use because it provides short syntax
  * @param file The file to test if it is handled
- * @param module The module to check if it handles the specified file
- * @return true if the specified module handles the specified file, false if the module does not handle that file
+ * @param handler The handler to check if it handles the specified file
+ * @return true if the specified handler handles the specified file, false if the handler does not handle that file
  */
-function handles($file, $module)
+function handles($file, $handler)
 {
-	if(class_exists((USE_DATABASE?'db_':'fs_') . $module))
+	if(class_exists((USE_DATABASE?'db_':'fs_') . $handler))
 	{
 		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
-		return call_user_func((USE_DATABASE?'db_':'fs_') . $module . '::handles', $file);
+		return call_user_func((USE_DATABASE?'db_':'fs_') . $handler . '::handles', $file);
 	}
 	return false;
 }
@@ -277,13 +310,13 @@ function selfURL()
 
 /**
  * check a list of files for access by comparing session keys and user information to each file
- * @param file associative array from a module::get() call
+ * @param file associative array from a handler::get() call
  * @return the modified list of files with items removed
- * leave keys alone so plugin can profile more feedback
+ * leave keys alone so module can profile more feedback
  */
 function checkAccess($file)
 {
-	// user can access files not handled by user module
+	// user can access files not handled by user handler
 	if(!db_users::handles($file['Filepath']))
 		return true;
 		
@@ -399,7 +432,7 @@ function termSort($a, $b)
 }
 
 /**
- * parses the path inside of a file, useful to modules like archive and diskimage
+ * parses the path inside of a file, useful to handlers like archive and diskimage
  * @param file The filepath to search for the inside part of
  * @param last_path The part of the path that exists on disk
  * @param inside_path The inner part of the path that exists within the directory
@@ -427,16 +460,16 @@ function parseInner($file, &$last_path, &$inside_path)
 }
 
 /**
- * get all columns from every modules
- * @return a list of all the columns combined from every module installed
+ * get all columns from every handlers
+ * @return a list of all the columns combined from every handler installed
  */
 function getAllColumns()
 {
 	$columns = array();
-	foreach($GLOBALS['modules'] as $i => $module)
+	foreach($GLOBALS['handlers'] as $i => $handler)
 	{
-		if(USE_DATABASE == false || constant($module . '::INTERNAL') == false)
-			$columns = array_merge($columns, array_flip(call_user_func($module . '::columns')));
+		if(USE_DATABASE == false || constant($handler . '::INTERNAL') == false)
+			$columns = array_merge($columns, array_flip(call_user_func($handler . '::columns')));
 	}
 	
 	$columns = array_keys($columns);
@@ -456,9 +489,9 @@ function roundFileSize($dirsize)
 }
 
 /**
- * just a function for getting the names keys used in the db_ids module
- * this is used is most plugins for simplifying database access by looking up the key first
- * @return all the id_ columns from db_ids module
+ * just a function for getting the names keys used in the db_ids handler
+ * this is used is most modules for simplifying database access by looking up the key first
+ * @return all the id_ columns from db_ids handler
  */
 function getIDKeys()
 {
@@ -775,11 +808,11 @@ function error_callback($error)
 	$i++;
 	if(isset($error->backtrace[$i]['file']))
 	{
-		if(dirname($error->backtrace[$i]['file']) == 'plugins' && basename($error->backtrace[$i]['file']) == 'template.php')
+		if(dirname($error->backtrace[$i]['file']) == 'modules' && basename($error->backtrace[$i]['file']) == 'template.php')
 		{
 			for($i = $i; $i < count($error->backtrace); $i++)
 			{
-				if(dirname($error->backtrace[$i]['file']) != 'plugins' || basename($error->backtrace[$i]['file']) != 'template.php')
+				if(dirname($error->backtrace[$i]['file']) != 'modules' || basename($error->backtrace[$i]['file']) != 'template.php')
 					break;
 			}
 		}
@@ -923,8 +956,9 @@ function parseDSN($dsn)
 /** 
  * parse mime types from a mime.types file, 
  * This functionality sucks less then the PEAR mime type library
+ * @ingroup setup
  */
-function setupMime()
+function setup_mime()
 {
 	// this will load the mime-types from a linux dist mime.types file stored in includes
 	// this will organize the types for easy lookup

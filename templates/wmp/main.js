@@ -15,7 +15,7 @@ Ext.onReady(function(){
 				 
 	// get some settings
 	Ext.Ajax.request({
-		url: plugins_path + 'display.php',
+		url: modules_path + 'display.php',
 		callback: displayColumns,
 		defaultRecord: defaultRecord
 	});
@@ -86,7 +86,7 @@ Ext.onReady(function(){
 		}, File);
 	
 		var store = new Ext.data.Store({
-			url: plugins_path + 'select.php',
+			url: modules_path + 'select.php',
 			reader: FileReader,
 			baseParams: {
 				limit: 50
@@ -127,7 +127,7 @@ Ext.onReady(function(){
 				msg          : 'Loading...'
 			},
 			store          : new Ext.ux.grid.livegrid.Store({
-				url          : plugins_path + 'select.php',
+				url          : modules_path + 'select.php',
 				bufferSize   : 300,
 				reader       : FileReader
 			}),
@@ -237,7 +237,7 @@ Ext.onReady(function(){
 			width : 250,
 			root: rootNode,
 			loader: new Ext.data.Store({
-				url: plugins_path + 'select.php',
+				url: modules_path + 'select.php',
 				reader: FileReader,
 				baseParams: {
 					dirs_only: true,
