@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * Implementation of register
+ * @ingroup register
+ */
 function register_sitemap()
 {
 	return array(
@@ -11,6 +15,10 @@ function register_sitemap()
 	);
 }
 
+/**
+ * Implementation of output
+ * @ingroup output
+ */
 function output_sitemap($request)
 {
 	

@@ -1,8 +1,8 @@
 <?php
 
 /**
+ * Implementation of register_module
  * @ingroup register
- * Implementation of register_plugin
  */
 function register_admin_alias()
 {
@@ -15,9 +15,8 @@ function register_admin_alias()
 }
 
 /**
- * Implementation of output_plugin
- * @param request The request passed in from the GLOBAL validated request
- * @return nothing, just prepare the variables needed to use in the template
+ * Implementation of output
+ * @ingroup output
  */
 function output_admin_alias($request)
 {

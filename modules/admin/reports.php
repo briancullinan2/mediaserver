@@ -368,7 +368,7 @@ if(isset($_REQUEST['show3']) && $_REQUEST['show3'] == true)
 				}
 				else
 				{
-					// replace filename in each module
+					// replace filename in each handler
 					foreach($GLOBALS['tables'] as $i => $table)
 					{
 						if(isset($file[$table . '_id']) && $file[$table . '_id'] != 0)

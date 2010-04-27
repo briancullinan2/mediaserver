@@ -1,6 +1,10 @@
 <?php
 // query the database based on search stored in session
 
+/**
+ * Implementation of register
+ * @ingroup register
+ */
 function register_list()
 {
 	return array(
@@ -12,7 +16,11 @@ function register_list()
 	);
 }
 
-function setup_list()
+/**
+ * Set up a list of different types of lists that can be outputted from any theme at any time
+ * @ingroup setup
+ */
+function setup_lists()
 {
 	$GLOBALS['lists'] = array();
 	
@@ -38,13 +46,22 @@ function setup_list()
 	}
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return NULL by default, accepts any valid list name
+ */
 function validate_list($request)
 {
-	if(!isset($GLOBALS['lists'])) setup_list();
+	if(!isset($GLOBALS['lists'])) setup_lists();
 	if(isset($request['list']) && in_array($request['list'], array_keys($GLOBALS['lists'])))
 		return $request['list'];
 }
 
+/**
+ * Implementation of output
+ * @ingroup output
+ */
 function output_list($request)
 {
 	$request['cat'] = validate_cat($request);
@@ -78,7 +95,7 @@ function output_list($request)
 		register_output_vars('list', $request['list']);
 		if(isset($_SESSION['select']['selected'])) register_output_vars('selected', $_SESSION['select']['selected']);
 	
-		// use the select.php plugin file selector to generate a list from the request
+		// use the select.php module file selector to generate a list from the request
 		//   should be the same list, and it will register the files output
 		output_select();
 	

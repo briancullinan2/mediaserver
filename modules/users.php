@@ -1,12 +1,17 @@
 <?php
 
-// add users
-// remove users
-// view a user profile
-// send messages
+/**
+ * add users
+ * remove users
+ * view a user profile
+ * send messages
+ */
 
-
-function setup_users()
+/**
+ * Set up the current user and get their settings from the database
+ * @ingroup setup
+ */
+function setup_user()
 {
 	// check if user is logged in
 	if( isset($_SESSION['users']['username']) && isset($_SESSION['users']['password']) )
@@ -95,6 +100,10 @@ function setup_users()
 	}
 }
 
+/**
+ * Implementation of register
+ * @ingroup register
+ */
 function register_users()
 {
 	return array(
@@ -106,6 +115,11 @@ function register_users()
 	);
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return 'login' by default
+ */
 function validate_users($request)
 {
 	if(!isset($request['users']) || !in_array($request['users'], array('register', 'remove', 'modify', 'login', 'logout', 'list', 'view')))
@@ -115,36 +129,66 @@ function validate_users($request)
 	
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return an MD5 has of the DB_SECRET prepended to the inputted password, it can never be decoded or displayed
+ */
 function validate_password($request)
 {
 	if(isset($request['password']))
 		return md5(DB_SECRET . $request['password']);
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return Any e-mail address
+ */
 function validate_email($request)
 {
 	if(isset($request['email']))
 		return $request['email'];
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return Any Username
+ */
 function validate_username($request)
 {
 	if(isset($request['username']))
 		return $request['username'];
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return Any valid return path to the site
+ */
 function validate_return($request)
 {
 	if(isset($request['return']))
 		return $request['return'];
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return (Optional) NULL by default, any number indicated what permission level is required to access a particular module
+ */
 function validate_required_priv($request)
 {
 	if(is_numeric($request['required_priv']))
 		return $request['required_priv'];
 }
 
+/**
+ * Implementation of session
+ * @ingroup session
+ * @return the username and password for user validation and reference
+ */
 function session_users($request)
 {
 	$save = array();
@@ -160,6 +204,10 @@ function session_users($request)
 	return $save;
 }
 
+/**
+ * Implementation of output
+ * @ingroup output
+ */
 function output_users($request)
 {
 	// check for what action we should do
@@ -286,4 +334,3 @@ function output_users($request)
 	if(isset($request['return'])) register_output_vars('return', $request['return']);
 }
 
-?>

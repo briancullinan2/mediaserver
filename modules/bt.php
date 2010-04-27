@@ -1,17 +1,26 @@
 <?php
 // handle bit torrenting of selected files
 
+/**
+ * Implementation of register
+ * @ingroup register
+ */
 function register_bt()
 {
 	return array(
 		'name' => 'BitTorrent Creator',
-		'description' => 'Bittorrent plugin that creates torrents for files or directories so users can share downloads with each other.',
+		'description' => 'Bittorrent module that creates torrents for files or directories so users can share downloads with each other.',
 		'privilage' => 1,
 		'path' => __FILE__,
 		'notemplate' => true
 	);
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return announce if 'bt' is set in the request, otherwise returns 'bencode'
+ */
 function validate_bt($request)
 {
 	if(isset($request['bt']))
@@ -20,11 +29,20 @@ function validate_bt($request)
 		return 'bencode';
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return The entire request for use with the bttracker script
+ */
 function validate_bt_request($request)
 {
 	return $request['bt_request'];
 }
 
+/**
+ * Implementation of output
+ * @ingroup output
+ */
 function output_bt($request)
 {
 	$request['bt'] = validate_bt($request);
@@ -42,7 +60,7 @@ function output_bt($request)
 			)
 		, false);
 	
-		require_once LOCAL_ROOT . 'plugins' . DIRECTORY_SEPARATOR . 'bttracker' . DIRECTORY_SEPARATOR . 'config.php';
+		require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'bttracker' . DIRECTORY_SEPARATOR . 'config.php';
 		$admin_user = $admin[0]['Username'];
 		$admin_pass = $admin[0]['Password'];
 		
@@ -52,13 +70,13 @@ function output_bt($request)
 		$dbpass = $parsed_dsn['password'];
 		$database = $parsed_dsn['database'];
 	
-		include LOCAL_ROOT . 'plugins' . DIRECTORY_SEPARATOR . 'bttracker' . DIRECTORY_SEPARATOR . 'announce.php';
+		include LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'bttracker' . DIRECTORY_SEPARATOR . 'announce.php';
 		
 	}
 	else
 	{
-		require_once LOCAL_ROOT . 'plugins' . DIRECTORY_SEPARATOR . 'bttracker' . DIRECTORY_SEPARATOR . 'BEncode.php';
-		require_once LOCAL_ROOT . 'plugins' . DIRECTORY_SEPARATOR . 'bttracker' . DIRECTORY_SEPARATOR . 'funcsv2.php';
+		require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'bttracker' . DIRECTORY_SEPARATOR . 'BEncode.php';
+		require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'bttracker' . DIRECTORY_SEPARATOR . 'funcsv2.php';
 	
 		$request['cat'] = validate_cat($request);
 		
@@ -67,11 +85,11 @@ function output_bt($request)
 		
 		$files_length = count($files);
 		
-		// the ids module will do the replacement of the ids
+		// the ids handler will do the replacement of the ids
 		if(count($files) > 0)
 			$files = db_ids::get(array('cat' => $request['cat']), $tmp_count, $files);
 		
-		// get all the other information from other modules
+		// get all the other information from other handlers
 		for($index = 0; $index < $files_length; $index++)
 		{
 			$file = $files[$index];
@@ -82,11 +100,11 @@ function output_bt($request)
 			$tmp_request = array_merge(array_intersect_key($file, getIDKeys()), $tmp_request);
 				
 			// merge all the other information to each file
-			foreach($GLOBALS['modules'] as $i => $module)
+			foreach($GLOBALS['handlers'] as $i => $handler)
 			{
-				if($module != $_REQUEST['cat'] && constant($module . '::INTERNAL') == false && call_user_func_array($module . '::handles', array($file['Filepath'])))
+				if($handler != $_REQUEST['cat'] && constant($handler . '::INTERNAL') == false && call_user_func_array($handler . '::handles', array($file['Filepath'])))
 				{
-					$return = call_user_func_array($module . '::get', array($tmp_request, &$tmp_count));
+					$return = call_user_func_array($handler . '::get', array($tmp_request, &$tmp_count));
 					if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
 				}
 			}
@@ -180,7 +198,7 @@ function output_bt($request)
 			}
 			$torrent['info']['pieces'] = $output;
 			
-			$torrent['announce'] = url('bt=announce&plugin=bt', true, true);
+			$torrent['announce'] = url('bt=announce&module=bt', true, true);
 			$torrent['creation date'] = time();
 			$torrent['comment'] = HTML_NAME;
 			$torrent['created by'] = HTML_NAME;
@@ -232,4 +250,3 @@ function output_bt($request)
 	}
 }
 
-?>

@@ -1,5 +1,10 @@
 <?php
 
+
+/**
+ * Implementation of register
+ * @ingroup register
+ */
 function register_admin()
 {
 	return array(
@@ -7,10 +12,15 @@ function register_admin()
 		'description' => 'Basic instructions for getting started with the system.',
 		'privilage' => 1,
 		'path' => __FILE__,
-		'plugins' => load_plugins('admin' . DIRECTORY_SEPARATOR)
+		'modules' => setup_register_modules('modules' . DIRECTORY_SEPARATOR . 'admin' . DIRECTORY_SEPARATOR)
 	);
 }
 
+/**
+ * Implementation of output
+ * Simple wrapper to provide menu items to the administrative modules
+ * @ingroup output
+ */
 function output_admin($request)
 {
 }

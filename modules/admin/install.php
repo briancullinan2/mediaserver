@@ -1,11 +1,15 @@
 <?php
 
+/**
+ * Implementation of register
+ * @ingroup register
+ */
 function register_admin_install()
 {
 	// create additional functions
-	foreach($GLOBALS['modules'] as $i => $module)
+	foreach($GLOBALS['handlers'] as $i => $handler)
 	{
-		$GLOBALS['validate_' . strtoupper($module) . '_ENABLE'] = create_function('$request', 'return validate__ENABLE($request, \'' . $module . '\');');
+		$GLOBALS['validate_' . strtoupper($handler) . '_ENABLE'] = create_function('$request', 'return validate__ENABLE($request, \'' . $handler . '\');');
 	}
 	
 	return array(
@@ -18,18 +22,28 @@ function register_admin_install()
 	);
 }
 
-function validate__ENABLE($request, $module)
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return true by default
+ */
+function validate__ENABLE($request, $handler)
 {
-	if(isset($request[strtoupper($module) . '_ENABLE']))
+	if(isset($request[strtoupper($handler) . '_ENABLE']))
 	{
-		if($request[strtoupper($module) . '_ENABLE'] === false || $request[strtoupper($module) . '_ENABLE'] === 'false')
+		if($request[strtoupper($handler) . '_ENABLE'] === false || $request[strtoupper($handler) . '_ENABLE'] === 'false')
 			return false;
-		elseif($request[strtoupper($module) . '_ENABLE'] === true || $request[strtoupper($module) . '_ENABLE'] === 'true')
+		elseif($request[strtoupper($handler) . '_ENABLE'] === true || $request[strtoupper($handler) . '_ENABLE'] === 'true')
 			return true;
 	}
 	return true;
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return false by default
+ */
 function validate_install_dberror($request)
 {
 	if(isset($request['install_dberror']))
@@ -38,24 +52,44 @@ function validate_install_dberror($request)
 		return false;
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return NULL by default
+ */
 function validate_install_next($request)
 {
 	if(isset($request['install_next']))
 		return $request['install_next'];
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return NULL by default
+ */
 function validate_install_save($request)
 {
 	if(isset($request['install_save']))
 		return $request['install_save'];
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return NULL by default
+ */
 function validate_install_image($request)
 {
 	if(in_array($request['install_image'], array('carat', 'loading', 'shadow', 'gradient', 'style')))
 		return $request['install_image'];
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return false by default
+ */
 function validate_install_db($request)
 {
 	if(isset($request['install_db']) && ($request['install_db'] == 'install' || $request['install_db'] == 'test'))
@@ -64,6 +98,11 @@ function validate_install_db($request)
 		return false;
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return 1 by default, accepts numbers
+ */
 function validate_install_step($request)
 {
 	// display setting for specified step
@@ -73,6 +112,9 @@ function validate_install_step($request)
 		return 1*$request['install_step'];
 }
 
+/**
+ * Set up variables needed by install
+ */
 function setup_misc_vars()
 {
 	global $required, $recommended, $supported_databases;
@@ -83,16 +125,19 @@ function setup_misc_vars()
 	$supported_databases = array('access','ado','ado_access','ado_mssql','db2','odbc_db2','vfp','fbsql','ibase','firebird','borland_ibase','informix','informix72','ldap','mssql','mssqlpo','mysql','mysqli','mysqlt','maxsql','oci8','oci805','oci8po','odbc','odbc_mssql','odbc_oracle','odbtp','odbtp_unicode','oracle','netezza','pdo','postgres','postgres64','postgres7','postgres8','sapdb','sqlanywhere','sqlite','sqlitepo','sybase');
 }
 
-function setup_post_vars($request)
+/**
+ * Set up the valid post variables
+ */
+function setup_post_vars()
 {
 	global $post;
 	
 	// list of acceptable post variables
 	$post = array('SYSTEM_TYPE', 'ENCODE_PATH', 'CONVERT_PATH', 'LOCAL_ROOT', 'HTML_DOMAIN', 'HTML_ROOT', 'DB_TYPE', 'DB_SERVER', 'DB_USER', 'DB_PASS', 'DB_NAME');
 	
-	foreach($GLOBALS['modules'] as $i => $module)
+	foreach($GLOBALS['handlers'] as $i => $handler)
 	{
-		$post[] = strtoupper($module . '_ENABLE');
+		$post[] = strtoupper($handler . '_ENABLE');
 	}
 
 	$post[] = 'HTML_NAME';
@@ -112,6 +157,11 @@ function setup_post_vars($request)
 }
 
 // ---------------------------------- step 1 ---------------------------------
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return 'win' by default if it can't determine the OS
+ */
 function validate_SYSTEM_TYPE($request)
 {
 	if(isset($request['SYSTEM_TYPE']) && ($request['SYSTEM_TYPE'] == 'mac' || $request['SYSTEM_TYPE'] == 'nix' || $request['SYSTEM_TYPE'] == 'win'))
@@ -133,6 +183,11 @@ function validate_SYSTEM_TYPE($request)
 	return $SYSTEM_TYPE;
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return The default install path for VLC on windows or linux based on validate_SYSTEM_TYPE
+ */
 function validate_ENCODE_PATH($request)
 {
 	$request['SYSTEM_TYPE'] = validate_SYSTEM_TYPE($request);
@@ -148,6 +203,11 @@ function validate_ENCODE_PATH($request)
 	}
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return The default install path for image magick on windows or linux based on validate_SYSTEM_TYPE
+ */
 function validate_CONVERT_PATH($request)
 {
 	$request['SYSTEM_TYPE'] = validate_SYSTEM_TYPE($request);
@@ -164,6 +224,11 @@ function validate_CONVERT_PATH($request)
 }
 
 // ---------------------------------- step 2 ---------------------------------
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return The parent directory of the admin directory by default
+ */
 function validate_LOCAL_ROOT($request)
 {
 	if(isset($request['LOCAL_ROOT']) && is_dir($request['LOCAL_ROOT']))
@@ -172,6 +237,11 @@ function validate_LOCAL_ROOT($request)
 		return dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR;
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return The domain information set by the SERVER by default
+ */
 function validate_HTML_DOMAIN($request)
 {
 	if(isset($request['HTML_DOMAIN']) && @parse_url($request['HTML_DOMAIN']) !== false)
@@ -180,6 +250,11 @@ function validate_HTML_DOMAIN($request)
 		return strtolower(substr($_SERVER['SERVER_PROTOCOL'], 0, strpos($_SERVER['SERVER_PROTOCOL'], '/'))) . '://' . $_SERVER['HTTP_HOST'] . (($_SERVER['SERVER_PORT'] != 80)?':' . $_SERVER['SERVER_PORT']:'');
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return The working path to this installer minus the server path
+ */
 function validate_HTML_ROOT($request)
 {
 	$request['HTML_DOMAIN'] = validate_HTML_DOMAIN($request);
@@ -192,6 +267,11 @@ function validate_HTML_ROOT($request)
 }
 
 // ---------------------------------- step 3 ---------------------------------
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return 'mysql' by default
+ */
 function validate_DB_TYPE($request)
 {
 	if(!isset($GLOBALS['supported_databases']))
@@ -202,6 +282,11 @@ function validate_DB_TYPE($request)
 		return 'mysql';
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return 'localhost' by default
+ */
 function validate_DB_SERVER($request)
 {
 	if(isset($request['DB_SERVER']))
@@ -210,34 +295,54 @@ function validate_DB_SERVER($request)
 		return 'localhost';
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return blank by default
+ */
 function validate_DB_USER($request)
 {
 	if(isset($request['DB_USER']))
 		return $request['DB_USER'];
 	else
-		return 'username';
+		return '';
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return blank by default
+ */
 function validate_DB_PASS($request)
 {
 	if(isset($request['DB_PASS']))
 		return $request['DB_PASS'];
 	else
-		return 'password';
+		return '';
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return blank by default
+ */
 function validate_DB_NAME($request)
 {
 	if(isset($request['DB_NAME']))
 		return $request['DB_NAME'];
 	else
-		return 'mediaserver';
+		return '';
 }
 
 // ---------------------------------- step 4 ---------------------------------
 
 
 // ---------------------------------- step 6 ---------------------------------
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return blank by default
+ */
 function validate_HTML_NAME($request)
 {
 	if(isset($request['HTML_NAME']))
@@ -246,6 +351,11 @@ function validate_HTML_NAME($request)
 		return 'Brian\'s Media Website';
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return The plain template by default
+ */
 function validate_LOCAL_BASE($request)
 {
 	if(isset($request['LOCAL_BASE']) && in_array(basename($request['LOCAL_BASE']), $GLOBALS['templates']))
@@ -254,6 +364,11 @@ function validate_LOCAL_BASE($request)
 		return 'templates' . DIRECTORY_SEPARATOR . 'plain' . DIRECTORY_SEPARATOR;
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return The live template by default
+ */
 function validate_LOCAL_DEFAULT($request)
 {
 	if(isset($request['LOCAL_DEFAULT']) && in_array($request['LOCAL_DEFAULT'], $GLOBALS['templates']))
@@ -262,6 +377,11 @@ function validate_LOCAL_DEFAULT($request)
 		return 'live';
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return blank by default
+ */
 function validate_LOCAL_TEMPLATE($request)
 {
 	if(isset($request['LOCAL_TEMPLATE']) && in_array($request['LOCAL_TEMPLATE'], $GLOBALS['templates']))
@@ -271,6 +391,11 @@ function validate_LOCAL_TEMPLATE($request)
 }
 
 // ---------------------------------- step 7 ---------------------------------
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return 60 by default
+ */
 function validate_DIRECTORY_SEEK_TIME($request)
 {
 	if(isset($request['DIRECTORY_SEEK_TIME']) && isset($request['DIRECTORY_SEEK_TIME_MULTIPLIER']))
@@ -279,6 +404,11 @@ function validate_DIRECTORY_SEEK_TIME($request)
 		return 60;
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return 60 by default
+ */
 function validate_FILE_SEEK_TIME($request)
 {
 	if(isset($request['FILE_SEEK_TIME']) && isset($request['FILE_SEEK_TIME_MULTIPLIER']))
@@ -288,6 +418,11 @@ function validate_FILE_SEEK_TIME($request)
 }
 
 // ---------------------------------- step 8 ---------------------------------
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return false by default
+ */
 function validate_DEBUG_MODE($request)
 {
 	if(isset($request['DEBUG_MODE']))
@@ -300,6 +435,11 @@ function validate_DEBUG_MODE($request)
 	return false;
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return false by default
+ */
 function validate_RECURSIVE_GET($request)
 {
 	if(isset($request['RECURSIVE_GET']))
@@ -312,6 +452,11 @@ function validate_RECURSIVE_GET($request)
 	return false;
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return true by default
+ */
 function validate_NO_BOTS($request)
 {
 	if(isset($request['NO_BOTS']))
@@ -324,6 +469,11 @@ function validate_NO_BOTS($request)
 	return true;
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return the temp directory reported by the OS by default
+ */
 function validate_TMP_DIR($request)
 {
 	if(isset($request['TMP_DIR']) && is_dir($request['TMP_DIR']))
@@ -336,6 +486,11 @@ function validate_TMP_DIR($request)
 	}
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return A 'users' directory withing the site root
+ */
 function validate_LOCAL_USERS($request)
 {
 	$request['LOCAL_ROOT'] = validate_LOCAL_ROOT($request);
@@ -346,6 +501,11 @@ function validate_LOCAL_USERS($request)
 		return $request['LOCAL_ROOT'] . 'users' . DIRECTORY_SEPARATOR;
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return 16MB by default
+ */
 function validate_BUFFER_SIZE($request)
 {
 	if(isset($request['BUFFER_SIZE']) && isset($request['BUFFER_SIZE_MULTIPLIER']))
@@ -354,6 +514,11 @@ function validate_BUFFER_SIZE($request)
 		return 2*1024*8;
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return true by default
+ */
 function validate_USE_ALIAS($request)
 {
 	if(isset($request['USE_ALIAS']))
@@ -366,6 +531,11 @@ function validate_USE_ALIAS($request)
 	return true;
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return NULL by default
+ */
 function validate_drop_tables($request)
 {
 	if(isset($request['drop_tables']))
@@ -388,6 +558,13 @@ function validate_drop_tables($request)
 	}
 }
 
+/**
+ * Performs a listed set of tests to find out if settings are valid
+ * @param request the request to use for tests
+ * @param start which test to start with
+ * @param stop which test to end with
+ * @return an associative array of test names set to true or false depending on if the test failed or not
+ */
 function perform_tests($request, $start = 0, $stop = NULL)
 {
 	$tests = array();
@@ -495,17 +672,26 @@ EOF;
 	return $tests;
 }
 
+/**
+ * Implementation of session
+ * @ingroup session
+ * @return
+ */
 function session_admin_install($request)
 {
 	// save the entire request in the session, except the install state
 	unset($request['install_step']);
 	unset($request['install_next']);
 	unset($request['install_save']);
-	unset($request['plugin']);
+	unset($request['module']);
 
 	return $request;
 }
 
+/**
+ * Implementation of output
+ * @ingroup output
+ */
 function output_admin_install($request)
 {
 	global $post, $required, $recommended, $supported_databases;
@@ -545,13 +731,13 @@ function output_admin_install($request)
 	
 	if(isset($request['install_next']))
 	{
-		goto('plugin=admin_install&install_step=' . ($request['install_step'] + 1));
+		goto('module=admin_install&install_step=' . ($request['install_step'] + 1));
 	}
 
 	if(isset($_POST) && count($_POST) > 0)
 	{
 		if(isset($_POST['dberror'])) $_SESSION['dberror'] = $_POST['dberror'];
-		goto('plugin=admin_install&install_step=' . $request['install_step']);
+		goto('module=admin_install&install_step=' . $request['install_step']);
 	}
 	
 	register_output_vars('post', $post);
@@ -573,7 +759,7 @@ function output_admin_install($request)
 	register_output_vars('required', $required);
 	register_output_vars('recommended', $recommended);
 	
-	register_output_vars('modules', $GLOBALS['modules']);
+	register_output_vars('handlers', $GLOBALS['handlers']);
 	
 	theme('install');
 }

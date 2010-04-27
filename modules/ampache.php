@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * Implementation of register
+ * @ingroup register
+ */
 function register_ampache()
 {
 	return array(
@@ -10,12 +14,22 @@ function register_ampache()
 	);
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return NULL by default, the auth key is any string if specified
+ */
 function validate_auth($request)
 {
 	if(isset($request['auth']))
-	return $request['auth'];
+		return $request['auth'];
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return NULL by default, creates an error if action is invalid
+ */
 function validate_action($request)
 {
 	if(isset($request['action']) && in_array($request['action'], array(
@@ -36,6 +50,10 @@ function validate_action($request)
 		PEAR::raiseError('405:Invalid Request', E_USER);
 }
 
+/**
+ * Implementation of output
+ * @ingroup output
+ */
 function output_ampache($request)
 {
 	set_time_limit(0);
@@ -301,7 +319,7 @@ function output_ampache($request)
 				'WHERE' => 'id = ' . intval($songs[0]['audio_id'])
 			), true);			
 			
-			// the ids module will do the replacement of the ids
+			// the ids handler will do the replacement of the ids
 			if(count($files) > 0)
 				$files = db_ids::get(array('cat' => 'db_audio'), $tmp_count, $files);
 					
@@ -318,7 +336,7 @@ function output_ampache($request)
 				'ORDER' => 'Title'
 			), true);
 			
-			// the ids module will do the replacement of the ids
+			// the ids handler will do the replacement of the ids
 			if(count($files) > 0)
 				$files = db_ids::get(array('cat' => 'db_audio'), $tmp_count, $files);
 					
@@ -342,7 +360,7 @@ function output_ampache($request)
 				'WHERE' => 'Artist = "' . addslashes($artist_album[0]['Artist']) . '"'
 			), true);
 			
-			// the ids module will do the replacement of the ids
+			// the ids handler will do the replacement of the ids
 			if(count($files) > 0)
 				$files = db_ids::get(array('cat' => 'db_audio'), $tmp_count, $files);
 					
@@ -366,7 +384,7 @@ function output_ampache($request)
 				'WHERE' => 'Album = "' . addslashes($artist_album[0]['Album']) . '" AND Artist = "' . addslashes($artist_album[0]['Artist']) . '"'
 			), true);
 			
-			// the ids module will do the replacement of the ids
+			// the ids handler will do the replacement of the ids
 			if(count($files) > 0)
 				$files = db_ids::get(array('cat' => 'db_audio'), $tmp_count, $files);
 					
@@ -381,7 +399,7 @@ function output_ampache($request)
 			);
 			$files = db_audio::get($request, $count);
 								   
-			// the ids module will do the replacement of the ids
+			// the ids handler will do the replacement of the ids
 			if(count($files) > 0)
 				$files = db_ids::get(array('cat' => 'db_audio'), $tmp_count, $files);
 				

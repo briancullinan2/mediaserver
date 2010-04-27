@@ -2,6 +2,10 @@
 
 // search form for selecting files from the database
 
+/**
+ * Implementation of register
+ * @ingroup register
+ */
 function register_search()
 {
 	// create functions for searching
@@ -21,23 +25,38 @@ function register_search()
 	);
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return NULL by default, returns any search query, this is validated in the alter_query instead of here
+ */
 function validate_search($request, $column = 'ALL')
 {
 	if($column = 'ALL' && isset($request['search']))
 		return $request['search'];
 	if(isset($request['search_' . $column]))
 	{
-		// validated in modules when used
+		// validated in handlers when used
 		return $request['search_' . $column];
 	}
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return NULL by default, accepts 'AND' or 'OR'
+ */
 function validate_search_operator($request)
 {
 	if(isset($request['search_operator']) && ($request['search_operator'] == 'AND' || $request['search_operator'] == 'OR'))
 		return $request['search_operator'];
 }
 
+/**
+ * Implementation of session
+ * Saves the previous search information for references
+ * @ingroup session
+ */
 function session_search($request)
 {
 	if(isset($_POST['clear_search']) || isset($_GET['clear_search']))
@@ -58,6 +77,14 @@ function session_search($request)
 	return $save;
 }
 
+/**
+ * Determines the type of search a user would like to perform based on the surrounding characters
+ * @param search the search query for any column
+ * @return 'normal' by default indicating the search string should be tokenized and read for '+' required tokens, '-' excluded tokens, and optional include tokens
+ * 'literal' if the search string is surrounded by double quotes
+ * 'equal' if the search string is surrounded by equal signs
+ * 'regular' for regular expression if the search is surrounded by forward slashes
+ */
 function search_get_type($search)
 {
 	if(strlen($search) > 1 && $search[0] == '"' && $search[strlen($search)-1] == '"')
@@ -70,6 +97,16 @@ function search_get_type($search)
 		return 'normal';
 }
 
+/**
+ * For a normal search, get each piece that may be preceeded with a '+' for require or a '-' for exclude
+ * @param search the search string
+ * @return an associative array containing:
+ * 'length' of the query string
+ * 'count' of all the pieces
+ * 'required' all the pieces preceeded by a '+' in the query string
+ * 'excluded' all the pieces to be excluded preceeded by a '-'
+ * 'includes' all the pieces that should contain at least 1 include
+ */
 function search_get_pieces($search)
 {
 	// loop through search terms and construct query
@@ -108,6 +145,11 @@ function search_get_pieces($search)
 	);
 }
 
+/**
+ * Generate an SQL query from the pieces
+ * @param pieces The pieces from search_get_pieces()
+ * @return an associative array of properties of the SQL query, containing COLUMNS, ORDER, and WHERE
+ */
 function search_get_pieces_query($pieces)
 {
 	$props = array();
@@ -151,7 +193,11 @@ function search_get_pieces_query($pieces)
 	return $props;
 }
 
-// this function is called to alter a database queries when the search variable is set in the request
+/**
+ * Implementation of alter_query
+ * Alter a database queries when the search variable is set in the request
+ * @ingroup alter_query
+ */
 function alter_query_search($request, $props)
 {
 	// they can specify multiple columns to search for the same string
@@ -230,6 +276,10 @@ function alter_query_search($request, $props)
 	return $props;
 }
 
+/**
+ * Implementation of output
+ * @ingroup output
+ */
 function output_search($request)
 {
 	// output search information
@@ -289,5 +339,3 @@ function output_search($request)
 	}
 	register_output_vars('search_regexp', $search_regexp);
 }
-
-?>

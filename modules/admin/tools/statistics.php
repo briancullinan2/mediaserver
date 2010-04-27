@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * Implementation of register
+ * @ingroup register
+ */
 function register_admin_tools_statistics()
 {
 	$tools = array(
@@ -26,25 +30,28 @@ function register_admin_tools_statistics()
 	return $tools;
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return an array containing temp mediaserver.log or a list of log files that exist
+ */
 function validate_tools_logs($request)
 {
-		if(!isset($request['logs']))
-			return TMP_DIR . 'mediaserver.log';
-		else
-			return preg_split('/[\n\r;]/i', $request['logs']);
-}
-
-function output_admin_tools_statistics($request)
-{
-	$request['plugin'] = validate_plugin($request);
-	
-	if($request['plugin'] == 'admin/tools/statistics/0')
+	if(!isset($request['logs']))
+		return array(TMP_DIR . 'mediaserver.log');
+	else
 	{
-		$request['tools_logs'] = validate_tools_logs($request);
+		$logs = preg_split('/[\n\r;]/i', $request['logs']);
 		
 		// load list of logs even from a directory
-		foreach($request['tools_logs'] as $i => $file)
+		foreach($logs as $i => $file)
 		{
+			if(!file_exists($file))
+			{
+				unset($logs[$i]);
+				continue;
+			}
+			
 			if(is_dir($file))
 			{
 				if($file[strlen($file)-1] != '/' && $file[strlen($file)-1] != '\\') $file .= '/';
@@ -61,6 +68,23 @@ function output_admin_tools_statistics($request)
 				}
 			}
 		}
+		
+		return array_values($logs);
+	}
+}
+
+/**
+ * Implementation of output
+ * @ingroup output
+ */
+function output_admin_tools_statistics($request)
+{
+	$request['subtool'] = validate_subtool($request);
+	$infos = array();
+	
+	if($request['subtool'] == 0)
+	{
+		$request['tools_logs'] = validate_tools_logs($request);
 		
 		// open each file and look for log information
 		// start the parsing when "Cron Script" is found
@@ -97,7 +121,10 @@ function output_admin_tools_statistics($request)
 						{
 							// show the most recent time the script has run
 							if($time > $last_time)
-								?><info label="Last Run Time"><?php echo date('m/d/Y:H:i:s O', $time);?></info><?php
+								$infos[] = array(
+									'label' => 'Last Run Time',
+									'text' => date('m/d/Y:H:i:s O', $time)
+								);
 								
 							// do version compare and make suggestion
 							$version = split('_', $matches[4]);
@@ -105,7 +132,10 @@ function output_admin_tools_statistics($request)
 							{
 								$in_most_recent = true;
 								$last_version = $version[0];
-								?><info label="Last Version"><?php echo $last_version . ' (' . $version[1] . ')';?></info><?php
+								$infos[] = array(
+									'label' => 'Last Run Time',
+									'text' => $last_version . ' (' . $version[1] . ')'
+								);
 							}
 							else
 							{
@@ -114,9 +144,15 @@ function output_admin_tools_statistics($request)
 							
 							if(version_compare($last_version, VERSION) == -1)
 							{
-								?><warning label="Upgrade">The last version of the logs are before your current running version.<br />
-								Possible causes of this include:<br />
-								You are running a remote script that needs to be upgraded!</warning><?php
+								$infos[] = array(
+									'label' => 'Upgrade',
+									'text' => array(
+										'The last version of the logs are before your current running version.',
+										'Possible causes of this include:',
+										'You are running a remote script that needs to be upgraded!',
+									),
+									'type' => 'warning'
+								);
 							}
 							
 							// do some other stuff for each run
@@ -130,64 +166,98 @@ function output_admin_tools_statistics($request)
 						{
 							if($in_most_recent)
 							{
-								?><info label="Ignore List">Here is the ignore list for the most recent cron run:</info><?php
+								$new_info = array(
+									'label' => 'Ignore List',
+									'text' => array(
+										'Here is the ignore list for the most recent cron run:',
+									),
+								);
 								$ignored = @unserialize($matches[4]);
 								if($ignored === false || !is_array($ignored))
 								{
-									?><error label="Ignore List">Error loading list!</error><?php
+									$new_info['text'][] = array(
+										'label' => 'Ignore List',
+										'text' => 'Error loading list!',
+										'type' => 'error',
+									);
 								}
 								else
 								{
 									foreach($ignored as $i => $ignore)
 									{
-										?><text><?php echo htmlspecialchars($ignore['Filepath']); ?></text><?php
+										$new_info['text'][] = htmlspecialchars($ignore['Filepath']);
 									}
 								}
+								$infos[] = $new_info;
 							}
 						}
 						elseif($matches[3] == 'Watched')
 						{
 							if($in_most_recent)
 							{
-								?><info label="Watch List">Here is the watch list for the most recent cron run:</info><?php
+								$new_info = array(
+									'label' => 'Watch List',
+									'text' => array(
+										'Here is the watch list for the most recent cron run:',
+									),
+								);
 								$watched = @unserialize($matches[4]);
 								if($watched === false || !is_array($watched))
 								{
-									?><error label="Ignore List">Error loading list!</error><?php
+									$new_info['text'][] = array(
+										'label' => 'Watch List',
+										'text' => 'Error loading list!',
+										'type' => 'error',
+									);
 								}
 								else
 								{
 									foreach($watched as $i => $watch)
 									{
-										?><text><?php echo htmlspecialchars($watch['Filepath']); ?></text><?php
+										$new_info['text'][] = htmlspecialchars($watch['Filepath']);
 									}
 								}
+								$infos[] = $new_info;
 							}
 						}
 						elseif($matches[3] == 'State')
 						{
 							if($in_most_recent)
 							{
-								?><info label="State List">Here is the most recent state:</info><?php
+								$new_info = array(
+									'label' => 'State List',
+									'text' => array(
+										'Here is the most recent state:',
+									),
+								);
+								?><info label="State List"></info><?php
 								$state = @unserialize($matches[4]);
 								if($state === false || !is_array($state))
 								{
-									?><error label="State List">Error loading state!</error><?php
+									$new_info['text'][] = array(
+										'label' => 'State List',
+										'text' => 'Error loading state!',
+										'type' => 'error',
+									);
 								}
 								else
 								{
 									foreach($state as $i => $value)
 									{
-										?><text><?php echo htmlspecialchars(@$value['file']); ?></text><?php
+										$new_info['text'][] = htmlspecialchars(@$value['file']);
 									}
 								}
+								$infos[] = $new_info;
 							}
 						}
 						elseif($matches[3] == 'Clean Count')
 						{
 							if($in_most_recent)
 							{
-								?><info label="Cleanup Count">The most recent cleanup count is <?php echo $matches[4]; ?></info><?php
+								$infos[] = array(
+									'label' => 'Cleanup Count',
+									'text' => 'The most recent cleanup count is ' . $matches[4],
+								);
 							}
 						}
 						elseif(substr($matches[3], 0, 3) == 'Add')
@@ -213,11 +283,35 @@ function output_admin_tools_statistics($request)
 					{
 						if(strpos($line, 'Fatal') !== false)
 						{
-							?><error label="Fatal Error">A fatal error was detected in the logs! Line <?php echo $line_count; ?> in file <?php echo $file; ?><warning>Reinstalling the script is recommended</warning></error><?php
+							$infos[] = array(
+								'label' => 'Fatal Error',
+								'text' => array(
+									'A fatal error was detected in the logs! Line ' . $line_count . ' in file ' . $file,
+									array(
+										'text' => 'Reinstalling the script is recommended.',
+										'type' => 'warning'
+									),
+								),
+								'type' => 'error',
+							);
 						}
 						elseif(strpos($line, 'Warning') !== false)
 						{
-							?><warning label="Warning Detected">A warning was detected in the logs! Line <?php echo $line_count; ?> in file <?php echo $file; ?><info>Possible causes include:<text>Files are inaccessible by the script</text><text>Permission problems</text><text>Configuration problems</text></info></warning><?php
+							$infos[] = array(
+								'label' => 'Warning Detected',
+								'text' => array(
+									'A warning was detected in the logs! Line ' . $line_count . ' in file ' . $file,
+									array(
+										'text' => array(
+											'Possible causes include:',
+											'Files are inaccessible by the script',
+											'Permission problems',
+											'Configuration problems',
+										),
+									),
+								),
+								'type' => 'warning',
+							);
 						}
 					}
 				}
@@ -227,7 +321,10 @@ function output_admin_tools_statistics($request)
 		
 		if($avg_add_count > 0)
 		{
-			?><info label="Average Add Speed"><?php echo round(($avg_add / $avg_add_count), 2); ?> Files per Second</info><?php
+			$infos[] = array(
+				'label' => 'Average Add Speed',
+				'text' => round(($avg_add / $avg_add_count), 2) . ' Files per Second',
+			);
 		}
 		
 		if(isset($look_count))
@@ -238,48 +335,73 @@ function output_admin_tools_statistics($request)
 		
 		if($avg_look_count > 0)
 		{
-			?><info label="Average Looks"><?php echo round(($avg_look / $avg_look_count), 2); ?> Directories were searched for changes per run</info><?php
+			$infos[] = array(
+				'label' => 'Average Looks',
+				'text' => round(($avg_look / $avg_look_count), 2) . ' Directories were searched for changes per run',
+			);
 		}
 	
-		?><info label="Logs"><form action="" method="post">
-			<text>Enter directories or files that contain logs, put each entry on a new line or seperate with a semi-colon.</text>
-			<textarea><?php echo (isset($request['tools_logs'])?$request['tools_logs']:''); ?></textarea>
-			<input type="submit" value="Submit" />
-			</form>
-			</info>
-		<?php
-		
-		$tools['Log Parser'] = ob_get_contents();
-		ob_clean();
+		$infos[] = array(
+			'label' => 'Logs',
+			'text' => array(
+				'<form action="" method="post">',
+				'Enter directories or files that contain logs, put each entry on a new line or seperate with a semi-colon.',
+				'<textarea>' . implode("\n", $request['tools_logs']) . '</textarea>',
+				'<input type="submit" value="Submit" />',
+				'</form>',
+			),
+		);
 	}
 
-	if($request['plugin'] == 'admin/tools/statistics/1')
+	if($request['subtool'] == 1)
 	{
 		// show some information about current setup
-		?><info label="Current Version"><?php echo VERSION . ' (' . VERSION_NAME . ')'; ?></info><?php
+		$infos[] = array(
+			'label' => 'Current Version',
+			'text' => VERSION . ' (' . VERSION_NAME . ')',
+		);
 		
 		// get database counts
-		?><section label="Database Counts">Here is a list of counts for the databases:<?php
+		$section_info = array(
+			'label' => 'Database Counts',
+			'text' => array(
+				'Here is a list of counts for the databases:',
+			),
+			'type' => 'section'
+		);
 		foreach($GLOBALS['tables'] as $i => $db)
 		{
 			$result = $GLOBALS['database']->query(array('SELECT' => $db, 'COLUMNS' => 'count(*)'), false);
 			if(count($result) > 0)
 			{
-				?><info label="<?php echo $db; ?>">has <?php echo $result[0]['count(*)']; ?> entries</info><?php
+				$section_info['text'][] = array(
+					'label' => $db,
+					'text' => 'has ' . $result[0]['count(*)'] . ' entries',
+				);
 				if($db == db_watch_list::DATABASE)
 				{
-					?><info label="Watch List">The watch list contains directories that have to be searched for files<text>There are <?php echo $result[0]['count(*)']; ?> directories in the watch list database.</text></info><?php
+					$new_info = array(
+						'label' => 'Watch List',
+						'text' => array(
+							'The watch list contains directories that have to be searched for files',
+							'There are ' . $result[0]['count(*)'] . ' directories in the watch list database.',
+						),
+					);
 					if($result[0]['count(*)'] == 0)
 					{
-						?><note>All files are added and up to date!</note><?php
+						$new_info['text'][] = array(
+							'text' => 'All files are added and up to date!',
+							'type' => 'note'
+						);
 					}
+					$section_info['text'][] = $new_info;
 				}
 			}
 		}
-		?></section><?php
-		
-		$tools['Site Information'] = ob_get_contents();
-		ob_clean();
+		$infos[] = $section_info;
 	}
+
+	if(isset($request['subtool'])) register_output_vars('subtool', $request['subtool']);
+	register_output_vars('infos', $infos);
 }
 

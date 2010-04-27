@@ -2,6 +2,10 @@
 
 // handle selecting of files
 
+/**
+ * Implementation of register
+ * @ingroup register
+ */
 function register_select()
 {
 	return array(
@@ -14,8 +18,11 @@ function register_select()
 	);
 }
 
-// combine and manipulate the IDs from a request
-//  this function looks for item, on, and off, variables in a request and generates a list of IDs
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return None by default, All or None are valid inputs
+ */
 function validate_select($request)
 {
 	if(isset($request['select']))
@@ -27,6 +34,12 @@ function validate_select($request)
 	}
 }
 
+/**
+ * Implmenetation of validate, combine and manipulate the IDs from a request
+ * this function looks for item, on, and off, variables in a request and generates a list of IDs
+ * @ingroup validate
+ * @return an array of specified and validate IDs, combines 'item' and 'on' and removes 'off', and empty array by default
+ */
 function validate_selected($request)
 {
 	if(!isset($request['selected']) || !is_array($request['selected']))
@@ -55,7 +68,11 @@ function validate_selected($request)
 	return array_values($selected);
 }
 
-// return an array of IDs for the selected value
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return an array of IDs for the selected value
+ */
 function validate_item($request)
 {
 	$select = validate_select($request);
@@ -89,12 +106,22 @@ function validate_item($request)
 	return array_values($selected);
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return NULL by default, any numeric ID is acceptable
+ */
 function validate_id($request)
 {
 	if(isset($request['id']) && is_numeric($request['id']))
 		return $request['id'];
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return An empty array by default, otherwise a numeric list of IDs to save for later reference
+ */
 function validate_on($request)
 {
 
@@ -111,6 +138,11 @@ function validate_on($request)
 	return array();
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return an empty array by default or the validated list of numeric IDs to remove from the saved list
+ */
 function validate_off($request)
 {
 	
@@ -127,6 +159,11 @@ function validate_off($request)
 	return array();
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return false by default, if set to true the select call will not append all relevant information to a list of files, only the information from the specified handler (cat) will be retrieved, this is convenient for performing fast queries
+ */
 function validate_short($request)
 {
 	if(isset($request['short']))
@@ -138,9 +175,12 @@ function validate_short($request)
 	}
 	return false;
 }
-
-// passes a validated request to the session select for processing and saving
-//  the array of settings returned from this is stored in $_SESSION[<name>] = session_select($request);
+ 
+/**
+ * Implementation of session
+ * passes a validated request to the session select for processing and saving
+ * @ingroup session
+ */ 
 function session_select($request)
 {
 	$save = array();
@@ -152,6 +192,10 @@ function session_select($request)
 	return $save;
 }
 
+/**
+ * Implementation of output
+ * @ingroup output
+ */
 function output_select($request)
 {
 	// set up required request variables
@@ -162,7 +206,7 @@ function output_select($request)
 	$request['direction'] = validate_direction($request);
 	
 	// discard selected stuff here, we want to show a full list, the selected stuff is just for saving in the session
-	//   in order to list the selected stuff only, one should use the list.php plugin
+	//   in order to list the selected stuff only, one should use the list.php module
 	if(isset($request['selected'])) unset($request['selected']);
 	if(isset($request['item'])) unset($request['item']);
 	if(isset($request['id'])) unset($request['id']);
@@ -179,7 +223,7 @@ function output_select($request)
 	
 	$order_keys_values = array();
 	
-	// the ids module will do the replacement of the ids
+	// the ids handler will do the replacement of the ids
 	if(count($files) > 0)
 	{
 		// wrappers for parent databases do not get IDs!
@@ -196,7 +240,7 @@ function output_select($request)
 	$video_count = 0;
 	$audio_count = 0;
 	
-	// get all the other information from other modules
+	// get all the other information from other handlers
 	foreach($files as $index => $file)
 	{
 		$tmp_request = array();
@@ -205,21 +249,21 @@ function output_select($request)
 		// merge with tmp_request to look up more information
 		$tmp_request = array_merge(array_intersect_key($file, getIDKeys()), $tmp_request);
 		
-		// short results to not include information from all the modules
+		// short results to not include information from all the handlers
 		if(!isset($request['short']) || $request['short'] == false)
 		{
 			// merge all the other information to each file
-			foreach($GLOBALS['modules'] as $i => $module)
+			foreach($GLOBALS['handlers'] as $i => $handler)
 			{
-				if(USE_DATABASE == false || ($module != $request['cat'] && constant($module . '::INTERNAL') == false && call_user_func_array($module . '::handles', array($file['Filepath'], $file))))
+				if(USE_DATABASE == false || ($handler != $request['cat'] && constant($handler . '::INTERNAL') == false && call_user_func_array($handler . '::handles', array($file['Filepath'], $file))))
 				{
-					$return = call_user_func_array($module . '::get', array($tmp_request, &$tmp_count));
+					$return = call_user_func_array($handler . '::get', array($tmp_request, &$tmp_count));
 					if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
-					if($module == 'db_audio' || $module == 'fs_audio' || $module == 'db_video' || $module == 'fs_video' || $module == 'db_image' || $module == 'fs_image')
+					if($handler == 'db_audio' || $handler == 'fs_audio' || $handler == 'db_video' || $handler == 'fs_video' || $handler == 'db_image' || $handler == 'fs_image')
 					{
-						if($module == 'db_audio' || $module == 'fs_audio') $audio_count++;
-						if($module == 'db_video' || $module == 'fs_video') $video_count++;
-						if($module == 'db_image' || $module == 'fs_image') $image_count++;
+						if($handler == 'db_audio' || $handler == 'fs_audio') $audio_count++;
+						if($handler == 'db_video' || $handler == 'fs_video') $video_count++;
+						if($handler == 'db_image' || $handler == 'fs_image') $image_count++;
 					}
 					else
 						$files_count++;
@@ -266,5 +310,4 @@ function output_select($request)
 	// register selected files for templates to use
 	if(isset($_SESSION['select']['selected'])) register_output_vars('selected', $_SESSION['select']['selected']);
 }
-
 

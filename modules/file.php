@@ -1,9 +1,14 @@
 <?php
 
-// things to consider:
-// recognize category because that will determine what the id is refering to
-// if the type can be handled by a browser then output it, otherwise disposition it
-
+/** things to consider:
+ * recognize category because that will determine what the id is refering to
+ * if the type can be handled by a browser then output it, otherwise disposition it
+ */
+ 
+/**
+ * Implementation of register
+ * @ingroup register
+ */
 function register_file()
 {
 	return array(
@@ -16,16 +21,35 @@ function register_file()
 	);
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return NULL by default, accepts any file name
+ */
 function validate_filename($request)
 {
 	// just return the same, this is only used for pretty dirs and compatibility
 	if(isset($request['filename']))
+	{
+		// remove any slashes that still exist in the file name
+		if(strpos($request['filename'], '/') !== false)
+			$request['filename'] = substr($request['filename'], -strrpos($request['filename'], '/') + 1);
+		if(strpos($request['filename'], '\\') !== false)
+			$request['filename'] = substr($request['filename'], -strrpos($request['filename'], '\\') + 1);
+		
+		// return the filename
 		return $request['filename'];
+	}
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return NULL by default, validate input is a directory inside an archive or disk image, a directory directly on the filesystem, or a directory handled by the selected wrapper handler
+ */
 function validate_dir($request)
 {
-	// if this is not validated completely it is OK because it will be fixed in the db_file module when it is looked up
+	// if this is not validated completely it is OK because it will be fixed in the db_file handler when it is looked up
 	//   this shouldn't cause any security risks
 	if(isset($request['dir']))
 	{
@@ -37,16 +61,22 @@ function validate_dir($request)
 			// this check the 'dir' for directories inside archives and disk images
 			call_user_func_array($request['cat'] . '::handles', array($request['dir'])) == true ||
 			// this check the dir for wrappers, wrappers can handle their own dir
-			is_wrapper($request['cat']))
+			is_wrapper($request['cat'])
+		)
 			return $request['dir'];
 		else
 			PEAR::raiseError('Directory does not exist!', E_USER);
 	}
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return NULL by default, accepts files on the actual file system, or files handled by a handler other than db_file/fs_file
+ */
 function validate_file($request)
 {
-	// if this is not validated completely it is OK because it will be fixed in the db_file module when it is looked up
+	// if this is not validated completely it is OK because it will be fixed in the db_file handler when it is looked up
 	//   this shouldn't cause any security risks
 	if(isset($request['file']))
 	{
@@ -60,6 +90,11 @@ function validate_file($request)
 	}
 }
 
+/**
+ * Implementation of alter_query
+ * Alters the query based on file and dir input variables
+ * @ingroup alter_query
+ */
 function alter_query_file($request, $props)
 {
 //---------------------------------------- Directory ----------------------------------------\\
@@ -88,16 +123,16 @@ function alter_query_file($request, $props)
 			db_watch_list::scan_dir($request['dir']);
 		}
 		
-		// make sure file exists if we are using the file module
+		// make sure file exists if we are using the file handler
 		if($request['cat'] != 'db_file' || is_dir(realpath($request['dir'])) !== false)
 		{
 		
 			// make sure directory is in the database
 			$dirs = $GLOBALS['database']->query(array('SELECT' => constant($request['cat'] . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"', 'LIMIT' => 1), true);
 			
-			// check the file database, some modules use their own database to store special paths,
-			//  while other modules only store files and no directories, but these should still be searchable paths
-			//  in which case the module is responsible for validation of it's own paths
+			// check the file database, some handlers use their own database to store special paths,
+			//  while other handlers only store files and no directories, but these should still be searchable paths
+			//  in which case the handler is responsible for validation of it's own paths
 			if(count($dirs) == 0)
 				$dirs = $GLOBALS['database']->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"', 'LIMIT' => 1), true);
 				
@@ -114,7 +149,7 @@ function alter_query_file($request, $props)
 					else
 						$props['WHERE'][] = 'LEFT(Filepath, ' . strlen($request['dir']) . ') = "' . addslashes($request['dir']) . '" AND (LOCATE("/", Filepath, ' . (strlen($request['dir'])+1) . ') = 0 OR LOCATE("/", Filepath, ' . (strlen($request['dir'])+1) . ') = LENGTH(Filepath)) AND Filepath != "' . addslashes($request['dir']) . '"';
 					
-					// put folders at top if the module supports a filetype
+					// put folders at top if the handler supports a filetype
 					if(in_array('Filetype', $columns))
 					{
 						$props['ORDER'] = '(Filetype = "FOLDER") DESC,' . (isset($props['ORDER'])?$props['ORDER']:'');
@@ -163,7 +198,7 @@ function alter_query_file($request, $props)
 		}
 		else
 		{
-			// make sure file exists if we are using the file module
+			// make sure file exists if we are using the file handler
 			if($request['cat'] != 'db_file' || file_exists(realpath($request['file'])) !== false)
 			{					
 				if(!isset($props['WHERE'])) $props['WHERE'] = '';
@@ -188,7 +223,10 @@ function alter_query_file($request, $props)
 	return $props;
 }
 
-
+/**
+ * Implementation of output
+ * @ingroup output
+ */
 function output_file($request)
 {
 	set_time_limit(0);
@@ -212,7 +250,7 @@ function output_file($request)
 		PEAR::raiseError('File not found!', E_USER);
 	}
 
-	// the ids module will do the replacement of the ids
+	// the ids handler will do the replacement of the ids
 	$files = db_ids::get(array('cat' => $request['cat']), $tmp_count, $files);
 
 	$tmp_request = array();
@@ -222,11 +260,11 @@ function output_file($request)
 	$tmp_request = array_merge(array_intersect_key($files[0], getIDKeys()), $tmp_request);
 
 	// get info from other handlers
-	foreach($GLOBALS['modules'] as $i => $module)
+	foreach($GLOBALS['handlers'] as $i => $handler)
 	{
-		if($module != $request['cat'] && constant($module . '::INTERNAL') == false && call_user_func_array($module . '::handles', array($files[0]['Filepath'])))
+		if($handler != $request['cat'] && constant($handler . '::INTERNAL') == false && call_user_func_array($handler . '::handles', array($files[0]['Filepath'])))
 		{
-			$return = call_user_func_array($module . '::get', array($tmp_request, &$tmp_count));
+			$return = call_user_func_array($handler . '::get', array($tmp_request, &$tmp_count));
 			if(isset($return[0])) $files[0] = array_merge($return[0], $files[0]);
 		}
 	}

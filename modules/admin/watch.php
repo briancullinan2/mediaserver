@@ -1,7 +1,9 @@
 <?php
 
-// handles the watch tables
-
+/**
+ * Implementation of register
+ * @ingroup register
+ */
 function register_admin_watch()
 {
 	return array(
@@ -12,6 +14,11 @@ function register_admin_watch()
 	);
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return NULL by default, returns the path with a prepended carrot ^, accepts a path with prepended carrot or exclamation point
+ */
 function validate_waddpath($request)
 {
 	if(isset($request['waddpath']) && $request['waddpath'][0] != '!' && $request['waddpath'][0] != '^')
@@ -20,12 +27,21 @@ function validate_waddpath($request)
 		return $request['waddpath'];
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return accepts any positive numeric index to remove
+ */
 function validate_wremove($request)
 {
-	if(isset($request['wremove']) && is_numeric($request['wremove']))
+	if(isset($request['wremove']) && is_numeric($request['wremove']) && $request['wremove'] >= 0)
 		return $request['wremove'];
 }
 
+/**
+ * Implementation of output
+ * @ingroup output
+ */
 function output_admin_watch($request)
 {
 	$request['waddpath'] = validate_waddpath($request);
@@ -35,7 +51,7 @@ function output_admin_watch($request)
 	{
 		if(db_watch::handles($request['waddpath']))
 		{
-				// pass file to module
+				// pass file to handler
 				db_watch::handle($request['waddpath']);
 		}
 		else

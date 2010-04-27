@@ -1,15 +1,21 @@
 <?php
-// this controlls all of the inputing of data into the database
-// to add extra type handling create a function that inserts data into the database based on a filepath
-// add calls to that function in the getfile procedure
+/**
+ * this controlls all of the inputing of data into the database
+ * to add extra type handling create a function that inserts data into the database based on a filepath
+ * add calls to that function in the getfile procedure
 
-// some things to take into consideration:
-// Access the database in intervals of files, not every individual file
-// Sleep so output can be recorded to disk or downloaded in a browser
-// Only update files that don't exist in database, have changed timestamps, have changed in size
+ * some things to take into consideration:
+ * Access the database in intervals of files, not every individual file
+ * Sleep so output can be recorded to disk or downloaded in a browser
+ * Only update files that don't exist in database, have changed timestamps, have changed in size
 
-// this is an iterator to update the server database and all the media listings
-
+ * this is an iterator to update the server database and all the media listings
+ */
+ 
+/**
+ * Implementation of register
+ * @ingroup register
+ */
 function register_cron()
 {
 	return array(
@@ -21,6 +27,10 @@ function register_cron()
 	);
 }
 
+/**
+ * Save the inputted state to a file either in the site root or in temp depending on permissions
+ * @param state The state array containing the current directory and the clean_count
+ */
 function save_state($state)
 {
 	$fp = @fopen(LOCAL_ROOT . "state_dirs.txt", "w");
@@ -33,11 +43,19 @@ function save_state($state)
 	}
 }
 
+/**
+ * Save a blank state to clear it
+ */
 function clear_state()
 {
 	save_state(array());
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return NULL by default, valid input is the index of the watched directory to scan
+ */
 function validate_scan_entry($request)
 {
 	if(isset($request['scan_entry']) && is_numeric($request['scan_entry']) && $request['scan_entry'] > 0 && $request['scan_entry'] < count($GLOBALS['watched']))
@@ -52,6 +70,11 @@ function validate_scan_entry($request)
 	}
 }
 
+/**
+ * Imeplementation of validate
+ * @ingroup validate
+ * @return NULL by default, valid input is the full watched path of the directory to scan
+ */
 function validate_scan_dir($request)
 {
 	$request['scan_entry'] = validate_scan_entry($request);
@@ -73,6 +96,11 @@ function validate_scan_dir($request)
 		return isset($request['scan_entry'])?$GLOBALS['watched'][$request['scan_entry']]['Filepath']: $GLOBALS['watched'][0]['Filepath'];
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return false by default, true to ingore the lock on the log file and scan anyways
+ */
 function validate_ignore_lock($request)
 {
 	if(isset($request['ignore_lock']) && ($request['ignore_lock'] == 'true' || $request['ignore_lock'] == true))
@@ -81,6 +109,11 @@ function validate_ignore_lock($request)
 		return false;
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return CLEAN_UP_THREASHOLD by default, any number between zero and CLEAN_UP_THREASHOLD is valid, this will be incremented and saved in the state
+ */
 function validate_clean_count($request)
 {
 	if(isset($request['clean_count']) && is_numeric($request['clean_count']) && $request['clean_count'] > 0 && $request['clean_count'] < CLEAN_UP_THREASHOLD)
@@ -89,6 +122,11 @@ function validate_clean_count($request)
 		return CLEAN_UP_THREASHOLD;
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return false by default, when set to true the file scanning will be skipped, only the directory scanning will be done
+ */
 function validate_scan_skip($request)
 {
 	if(isset($request['scan_skip']) && ($request['scan_skip'] == 'true' || $request['scan_skip'] == true))
@@ -97,6 +135,10 @@ function validate_scan_skip($request)
 		return false;
 }
 
+/**
+ * Recursively scans directories for changed files
+ * @param request the request containing extra options for the scan performance
+ */
 function read_changed($request)
 {
 	global $should_clean;
@@ -169,6 +211,9 @@ function read_changed($request)
 	}
 }
 
+/**
+ * Pull out directories from the watch_list and scan for new and removed files
+ */
 function read_files()
 {
 	global $should_clean;
@@ -213,6 +258,10 @@ function read_files()
 	}
 }
 
+/**
+ * Implementation of output
+ * @ingroup output
+ */
 function output_cron($request)
 {
 	global $log_fp, $should_clean;
@@ -345,9 +394,9 @@ function output_cron($request)
 	
 	PEAR::raiseError("Phase 3: Cleaning up", E_DEBUG);
 	
-	foreach($GLOBALS['modules'] as $i => $module)
+	foreach($GLOBALS['handlers'] as $i => $handler)
 	{
-		call_user_func_array($module . '::cleanup', array());
+		call_user_func_array($handler . '::cleanup', array());
 	}
 	
 	// read all the folders that lead up to the watched folder

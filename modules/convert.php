@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * Implementation of register
+ * @ingroup register
+ */
 function register_convert()
 {
 	return array(
@@ -11,6 +15,11 @@ function register_convert()
 	);
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return jpg by default, jpg, gif, and png are valid
+ */
 function validate_convert($request)
 {
 	// set the header first thing so browser doesn't stall or get tired of waiting for the process to start
@@ -25,6 +34,11 @@ function validate_convert($request)
 	return 'jpg';
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return jpeg by default, jpeg, gif, and png are valid
+ */
 function validate_cformat($request)
 {
 	if(!isset($request['cformat']))
@@ -50,22 +64,36 @@ function validate_cformat($request)
 		return $request['cformat'];
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return 512 by default, any number greater than zero is valid
+ */
 function validate_cheight($request)
 {
-	if(!isset($request['cheight']) || !is_numeric($request['cheight']))
+	if(!isset($request['cheight']) || !is_numeric($request['cheight']) || $request['cheight'] <= 0)
 		return 512;
 	else
 		return $request['cheight'];
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return 512 by default, any number greater than zero is valid
+ */
 function validate_cwidth($request)
 {
-	if(!isset($request['cwidth']) || !is_numeric($request['cwidth']))
+	if(!isset($request['cwidth']) || !is_numeric($request['cwidth']) || $request['cwidth'] <= 0)
 		return 512;
 	else
 		return $request['cwidth'];
 }
 
+/**
+ * Implementation of output
+ * @ingroup output
+ */
 function output_convert($request)
 {
 
@@ -96,7 +124,7 @@ function output_convert($request)
 	
 	if(count($files) > 0)
 	{
-		// the ids module will do the replacement of the ids
+		// the ids handler will do the replacement of the ids
 		$files = db_ids::get(array('cat' => $request['cat']), $tmp_count, $files);
 		
 		$tmp_request = array();
@@ -106,11 +134,11 @@ function output_convert($request)
 		$tmp_request = array_merge(array_intersect_key($files[0], getIDKeys()), $tmp_request);
 		
 		// get all the information incase we need to use it
-		foreach($GLOBALS['modules'] as $i => $module)
+		foreach($GLOBALS['handlers'] as $i => $handler)
 		{
-			if($module != $request['cat'] && constant($module . '::INTERNAL') == false && call_user_func_array($module . '::handles', array($files[0]['Filepath'])))
+			if($handler != $request['cat'] && constant($handler . '::INTERNAL') == false && call_user_func_array($handler . '::handles', array($files[0]['Filepath'])))
 			{
-				$return = call_user_func_array($module . '::get', array($tmp_request, &$tmp_count));
+				$return = call_user_func_array($handler . '::get', array($tmp_request, &$tmp_count));
 				if(isset($return[0])) $files[0] = array_merge($return[0], $files[0]);
 			}
 		}
@@ -160,6 +188,3 @@ function output_convert($request)
 		$return_value = proc_close($process);
 	}
 }
-
-
-?>

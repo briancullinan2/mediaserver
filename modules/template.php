@@ -1,8 +1,14 @@
 <?php
 
-// control outputting of template files
-//  validate template variable
-
+/**
+ * control outputting of template files
+ *  validate template variable
+ */
+ 
+/**
+ * Generate a list of templates
+ * @ingroup setup
+ */
 function setup_template()
 {
 	// load templating system but only if we are using templates
@@ -21,7 +27,7 @@ function setup_template()
 				// determin template based on path
 				$template = substr($file['Filepath'], strlen(LOCAL_ROOT));
 				
-				// remove default directory from plugin name
+				// remove default directory from module name
 				if(substr($template, 0, 10) == 'templates/')
 					$template = substr($template, 10);
 				
@@ -34,7 +40,7 @@ function setup_template()
 					$GLOBALS['templates'][$template] = call_user_func_array('register_' . $template, array());
 					
 				// register template files
-				register_template_files($GLOBALS['templates'][$template]);
+				setup_template_files($GLOBALS['templates'][$template]);
 			}
 		}
 	}
@@ -56,13 +62,17 @@ function setup_template()
 	
 	// assign some shared variables
 	register_output_vars('tables', $GLOBALS['tables']);
-	register_output_vars('plugins', $GLOBALS['plugins']);
 	register_output_vars('modules', $GLOBALS['modules']);
+	register_output_vars('handlers', $GLOBALS['handlers']);
 	register_output_vars('templates', $GLOBALS['templates']);
 	register_output_vars('columns', getAllColumns());
 	
 }
 
+/**
+ * Implementation of register
+ * @ingroup register
+ */
 function register_template()
 {
 	return array(
@@ -75,6 +85,11 @@ function register_template()
 	);
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return NULL by default, accepts any valid existing file from the scope of the template directory, throws an error if the file is invalid
+ */
 function validate_tfile($request)
 {
 	if(isset($request['tfile']))
@@ -87,7 +102,12 @@ function validate_tfile($request)
 	}
 }
 
-function register_template_files($template_config)
+/**
+ * Include a list of template files specified by the template config
+ * @ingroup setup
+ * @param template_config the template config to read the list of files from
+ */
+function setup_template_files($template_config)
 {
 	$template_name = basename(dirname($template_config['path']));
 	if(isset($template_config['files']))
@@ -124,6 +144,11 @@ function register_template_files($template_config)
 	}
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return LOCAL_DEFAULT by default, accepts any valid template, attempts to determine the best template based on the HTTP_USER_AGENT
+ */
 function validate_template($request, $session = '')
 {
 	if(!isset($request['template']) && $session != '')
@@ -153,11 +178,21 @@ function validate_template($request, $session = '')
 	return basename(LOCAL_DEFAULT);
 }
 
+/**
+ * Implementation of session
+ * @ingroup session
+ * @return the selected template for reference
+ */
 function session_template($request)
 {
 	return $request['template'];
 }
 
+/**
+ * Register a stylesheet for use with a particular template
+ * @param request the url to the stylesheet that validate with validate_template and validate_tfile
+ * @return true on success, false on failure and throws an error
+ */
 function register_style($request)
 {
 	// convert the request string to an array
@@ -171,7 +206,7 @@ function register_style($request)
 	// only continue if bath properties are set
 	if(isset($request['template']) && isset($request['tfile']))
 	{
-		register_output_vars('styles', 'plugin=template&template=' . $request['template'] . '&tfile=' . $request['tfile'], true);
+		register_output_vars('styles', 'module=template&template=' . $request['template'] . '&tfile=' . $request['tfile'], true);
 		return true;
 	}
 	else
@@ -179,6 +214,11 @@ function register_style($request)
 	return false;
 }
 
+/**
+ * Register a javascript for use with a particular template
+ * @param request the url to the javascript that validate with validate_template and validate_tfile
+ * @return true on success, false on failure and throws an error
+ */
 function register_script($request)
 {
 	// convert the request string to an array
@@ -192,7 +232,7 @@ function register_script($request)
 	// only continue if bath properties are set
 	if(isset($request['template']) && isset($request['tfile']))
 	{
-		register_output_vars('scripts', 'plugin=template&template=' . $request['template'] . '&tfile=' . $request['tfile'], true);
+		register_output_vars('scripts', 'module=template&template=' . $request['template'] . '&tfile=' . $request['tfile'], true);
 		return true;
 	}
 	else
@@ -201,6 +241,10 @@ function register_script($request)
 	return false;
 }
 
+/**
+ * Calls theming functions
+ * @param request the name of the theme function to call
+ */
 function theme($request = '')
 {
 	// if the theme function is just being called without any input
@@ -268,6 +312,10 @@ function theme($request = '')
 	return false;
 }
 
+/**
+ * Implementation of output
+ * @ingroup output
+ */
 function output_template($request)
 {
 	$request['template'] = validate_template($request);

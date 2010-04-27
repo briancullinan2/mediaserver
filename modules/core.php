@@ -1,14 +1,26 @@
 <?php
-
-// Core plugin validates core request variables
-//   since many plugins are related to getting information from the database
-//   this plugin will register all the common functions for handling request variables, so the other plugins don't have to
-
-function setup_plugins()
+/**
+ * Core module validates core request variables
+ * - since many modules are related to getting information from the database
+ * - this module will register all the common functions for handling request variables, so the other modules don't have to
+ */
+ 
+/**
+ * @defgroup register Register Functions
+ * All functions that register modules and templates
+ * @return an associative array that describes the modules functionality
+ * @{
+ */
+ 
+/**
+ * Create a global variable for storing all the module information
+ * @ingroup setup
+ */
+function setup_register()
 {
-	$GLOBALS['plugins'] = array('index' => array(
+	$GLOBALS['modules'] = array('index' => array(
 		'name' => 'Index',
-		'description' => 'Load a plugin\'s output variables and display the template.',
+		'description' => 'Load a module\'s output variables and display the template.',
 		'privilage' => 1,
 		'path' => LOCAL_ROOT . 'index.php',
 		'alter query' => array('limit', 'start', 'direction', 'order_by', 'group_by')
@@ -16,15 +28,23 @@ function setup_plugins()
 	);
 	$GLOBALS['triggers'] = array('session' => array(), 'settings' => array());
 	
-	// read plugin list and create a list of available plugins	
-	load_plugins('plugins' . DIRECTORY_SEPARATOR);
+	// read module list and create a list of available modules	
+	setup_register_modules('modules' . DIRECTORY_SEPARATOR);
 }
 
-function load_plugins($path)
+/**
+ * Abstracted from setup_modules <br />
+ * Generates a list of modules from a specified directory <br />
+ * This allows for modules to load more modules, such as admin_tools
+ * @ingroup setup
+ * @param path The path to load modules from
+ * @return An array containing only the modules found in the specified directory, modules loaded are also added to the GLOBAL list of modules
+ */
+function setup_register_modules($path)
 {
 	$files = fs_file::get(array('dir' => LOCAL_ROOT . $path, 'limit' => 32000), $count, true);
 	
-	$plugins = array();
+	$modules = array();
 
 	if(is_array($files))
 	{
@@ -34,54 +54,79 @@ function load_plugins($path)
 			{
 				include_once $file['Filepath'];
 				
-				// determin plugin based on path
-				$plugin = basename($file['Filepath']);
+				// determin module based on path
+				$module = basename($file['Filepath']);
 				
-				// functional prefix so there can be multiple plugins with the same name
-				$prefix = substr($file['Filepath'], strlen(LOCAL_ROOT), -strlen($plugin));
+				// functional prefix so there can be multiple modules with the same name
+				$prefix = substr($file['Filepath'], strlen(LOCAL_ROOT), -strlen($module));
 				
 				// remove slashes and replace with underscores
 				$prefix = str_replace(array('/', '\\'), '_', $prefix);
 				
-				// remove plugins_ prefix so as not to be redundant
-				if($prefix == 'plugins_') $prefix = '';
+				// remove modules_ prefix so as not to be redundant
+				if(substr($prefix, 0, 8) == 'modules_') $prefix = substr($prefix, 8);
 				
-				// remove extension from plugin name
-				$plugin = substr($plugin, 0, strrpos($plugin, '.'));
+				// remove extension from module name
+				$module = substr($module, 0, strrpos($module, '.'));
 				
 				// call register function
-				if(function_exists('register_' . $prefix . $plugin))
+				if(function_exists('register_' . $prefix . $module))
 				{
-					$plugins[$plugin] = call_user_func_array('register_' . $prefix . $plugin, array());
-					$GLOBALS['plugins'][$prefix . $plugin] = &$plugins[$plugin];
+					$modules[$module] = call_user_func_array('register_' . $prefix . $module, array());
+					$GLOBALS['modules'][$prefix . $module] = &$modules[$module];
 				}
 				
 				// reorganize the session triggers for easy access
-				if(isset($plugins[$plugin]['session']))
+				if(isset($modules[$module]['session']))
 				{
-					foreach($plugins[$plugin]['session'] as $i => $var)
+					foreach($modules[$module]['session'] as $i => $var)
 					{
-						$GLOBALS['triggers']['session'][$var][] = $prefix . $plugin;
+						$GLOBALS['triggers']['session'][$var][] = $prefix . $module;
 					}
 				}
 				
 				// reorganize alter query triggers
-				if(isset($plugins[$plugin]['alter query']))
+				if(isset($modules[$module]['alter query']))
 				{
-					foreach($plugins[$plugin]['alter query'] as $i => $var)
+					foreach($modules[$module]['alter query'] as $i => $var)
 					{
-						$GLOBALS['triggers']['alter query'][$var][] = $prefix . $plugin;
+						$GLOBALS['triggers']['alter query'][$var][] = $prefix . $module;
 					}
 				}
 			}
 		}
 	}
 	
-	return $plugins;
+	return $modules;
 }
 
-// this is used to set up the input variables
-function setup_input()
+/** 
+ * Implementation of register
+ */
+function register_core()
+{
+	// register permission requirements
+	
+	// register the request variables we will be providing validators for
+	
+	// this module has no output
+	return array(
+		'name' => 'Core Functions',
+		'description' => 'Adds core functionality to site that other common modules depend on.',
+		'path' => __FILE__,
+		'privilage' => 1
+	);
+}
+/**
+ * @}
+ */
+
+/**
+ * Set up input variables, everything the site needs about the request <br />
+ * Validate all variables, and remove the ones that aren't validate
+ * @ingroup setup
+ */
+function setup_validate()
 {
 	// first fix the REQUEST_URI and pull out what is meant to be pretty dirs
 	if(isset($_SERVER['PATH_INFO']))
@@ -90,7 +135,7 @@ function setup_input()
 	// call rewrite_vars in order to set some request variables
 	rewrite_vars($_REQUEST, $_GET, $_POST);
 	
-	// go through the rest of the request and validate all the variables with the plugins they are for
+	// go through the rest of the request and validate all the variables with the modules they are for
 	foreach($_REQUEST as $key => $value)
 	{
 		if(function_exists('validate_' . $key))
@@ -107,28 +152,19 @@ function setup_input()
 		if(isset($_GET[$key])) $_GET[$key] = $_REQUEST[$key];
 	}
 	
-	// check plugins for vars and trigger a session save
-	foreach($_REQUEST as $key => $value)
-	{
-		if(isset($GLOBALS['triggers']['session'][$key]))
-		{
-			foreach($GLOBALS['triggers']['session'][$key] as $i => $plugin)
-			{
-				$_SESSION[$plugin] = call_user_func_array('session_' . $plugin, array($_REQUEST));
-			}
-		}
-	}
+	// call the session save functions
+	session($_REQUEST);
 	
 	// do not let GoogleBot perform searches or file downloads
 	if(NO_BOTS)
 	{
 		if(preg_match('/.*Googlebot.*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
 		{
-			if(basename($_REQUEST['plugin']) != 'select' && 
-				basename($_REQUEST['plugin']) != 'index' &&
-				basename($_REQUEST['plugin']) != 'sitemap')
+			if(basename($_REQUEST['module']) != 'select' && 
+				basename($_REQUEST['module']) != 'index' &&
+				basename($_REQUEST['module']) != 'sitemap')
 			{
-				goto('plugin=sitemap');
+				goto('module=sitemap');
 			}
 			else
 			{
@@ -145,35 +181,45 @@ function setup_input()
 	}
 }
 
+
 /**
- * @defgroup register Register Functions
- * All functions that register plugins and templates
- * @return an associative array that describes the plugins functionality
+ * @defgroup session Session Save Functions
+ * All functions that save information to the session for later reference
+ * @param request The full request array to use for saving request information to the session
+ * @return An associative array to be saved to $_SESSION[&lt;module&gt;] = session_select($request);
  * @{
  */
  
-/** 
- * Implementation of register_plugin
+/**
+ * Save session information based on triggers specified by a module configuration
  */
-function register_core()
+function session($request = array())
 {
-	// register permission requirements
-	
-	// register the request variables we will be providing validators for
-	
-	// this plugin has no output
-	return array(
-		'name' => 'Core Functions',
-		'description' => 'Adds core functionality to site that other common plugins depend on.',
-		'path' => __FILE__,
-		'privilage' => 1
-	);
+	// check modules for vars and trigger a session save
+	foreach($request as $key => $value)
+	{
+		if(isset($GLOBALS['triggers']['session'][$key]))
+		{
+			foreach($GLOBALS['triggers']['session'][$key] as $i => $module)
+			{
+				$_SESSION[$module] = call_user_func_array('session_' . $module, array($request));
+			}
+		}
+	}
 }
+
 /**
  * @}
  */
 
-// this makes all the variables available for output
+
+/**
+ * Make variables available for output in the templates,
+ * convert variables to HTML compatible for security
+ * @param name name of the variable the template can use to refer to
+ * @param value value for the variable, converted to HTML
+ * @param append (Optional) append the input value to a pre-existing set of data
+ */
 function register_output_vars($name, $value, $append = false)
 {
 	if(isset($GLOBALS['output'][$name]) && $append == false)
@@ -190,7 +236,15 @@ function register_output_vars($name, $value, $append = false)
 		$GLOBALS['output'][$name][] = $value;
 }
 
-// this function takes a request as input, and based on the .htaccess rules, converts it to a pretty url, or makes no changes if mod_rewrite is off
+/**
+ * This function takes a request as input, and converts it to a pretty url, or makes no changes if mod_rewrite is off <br />
+ * this function also supports PATH_INFO, and will convert any available path info into a path
+ * @param request The request information in QUERY_STRING format or as an associative array
+ * @param not_special If it is set to false, it will not automatically encode the path to HTML
+ * @param include_domain will append the website's domain to the path, useful for feeds that are downloaded
+ * @param return_array will return the parsed request from any time of inputted request for further formatting
+ * @return Returns a htmlspecialchars() string for a specified request
+ */
 function url($request = array(), $not_special = false, $include_domain = false, $return_array = false)
 {
 	if(is_string($request))
@@ -220,8 +274,8 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 		return $request;
 	
 	// rebuild link
-	if(!isset($request['plugin']))
-		$request['plugin'] = $GLOBALS['plugin'];
+	if(!isset($request['module']))
+		$request['module'] = validate_module(array('module' => isset($GLOBALS['module'])?$GLOBALS['module']:''));
 	$path_info = create_path_info($request);
 	$link = (($include_domain)?HTML_DOMAIN:'') . HTML_ROOT . $path_info;
 	if(count($request) > 0)
@@ -262,18 +316,22 @@ function goto($request)
 	}
 }
 
+/**
+ * Function to call before the template is called, this can also be called from the first time #theme() is called
+ * This sets all the register variables as HTML or original content, it also removes all unnecissary variables that might be used to penetrate the site
+ */
 function set_output_vars()
 {
 	// set a couple more that are used a lot
 	
-	// if the search is set, then alway output because any plugin that uses a get will also use search
+	// if the search is set, then alway output because any module that uses a get will also use search
 	if(isset($_REQUEST['search']))
 	{
 		output_search($_REQUEST);
 	}
 	
 	// the entire site depends on this
-	register_output_vars('plugin', $_REQUEST['plugin']);
+	register_output_vars('module', $_REQUEST['module']);
 	
 	// most template pieces use the category variable, so set that
 	register_output_vars('cat', $_REQUEST['cat']);
@@ -323,11 +381,11 @@ function set_output_vars()
 		'paths',
 		'paths_regexp',
 		'mte',
-		'plugin',
-		'plugins',
+		'module',
+		'modules',
 		'_PEAR_default_error_mode',
 		'_PEAR_default_error_options',
-		'modules',
+		'handlers',
 		'tables',
 		'ext_to_mime',
 		'lists'
@@ -349,6 +407,10 @@ function set_output_vars()
 	unset($GLOBALS['output']);
 }
 
+/**
+ * Recursively convert an array of string information to htmlspecialchars(), used by #register_output_vars()
+ * @return a multilevel array with all strings converted to HTML compatible
+ */
 function traverse_array($input)
 {
 	if(is_string($input))
@@ -365,123 +427,31 @@ function traverse_array($input)
 		return htmlspecialchars((string)$input);
 }
 
-function validate_cat($request)
-{
-	if(isset($request['cat']) && (substr($request['cat'], 0, 3) == 'db_' || substr($request['cat'], 0, 3)))
-		$request['cat'] = ((USE_DATABASE)?'db_':'fs_') . substr($request['cat'], 3);
-	if(!isset($request['cat']) || !in_array($request['cat'], $GLOBALS['modules']) || constant($request['cat'] . '::INTERNAL') == true)
-		return USE_DATABASE?'db_file':'fs_file';
-	return $request['cat'];
-}
-
-function validate_start($request)
-{
-	if( !isset($request['start']) || !is_numeric($request['start']) || $request['start'] < 0 )
-		return 0;
-	return $request['start'];
-}
-
-function validate_limit($request)
-{
-	if( !isset($request['limit']) || !is_numeric($request['limit']) || $request['limit'] < 0 )
-		return 15;
-	return $request['limit'];
-}
-
-function validate_order_by($request)
-{
-	$module = validate_cat($request);
-	
-	$columns = call_user_func($module . '::columns');
-	
-	if( !isset($request['order_by']) || !in_array($request['order_by'], $columns) )
-	{
-		if(isset($request['search']))
-			return 'Relevance';
-			
-		// make sure if it is a list that it is all valid columns
-		$columns = split(',', (isset($request['order_by'])?$request['order_by']:''));
-		foreach($columns as $i => $column)
-		{
-			if(!in_array($column, call_user_func($module . '::columns')))
-				unset($columns[$i]);
-		}
-		if(count($columns) == 0)
-			return 'Filepath';
-		else
-			return join(',', $columns);
-	}
-	return $request['order_by'];
-}
-
-function validate_group_by($request)
-{
-	$module = validate_cat($request);
-	
-	$columns = call_user_func($module . '::columns');
-	
-	if( isset($request['group_by']) && !in_array($request['group_by'], $columns) )
-	{
-		// make sure if it is a list that it is all valid columns
-		$columns = split(',', $request['group_by']);
-		foreach($columns as $i => $column)
-		{
-			if(!in_array($column, call_user_func($module . '::columns')))
-				unset($columns[$i]);
-		}
-		if(count($columns) == 0)
-			return;
-		else
-			return join(',', $columns);
-	}
-	return $request['group_by'];
-}
-
-function validate_direction($request)
-{
-	if( !isset($request['direction']) || ($request['direction'] != 'ASC' && $request['direction'] != 'DESC') )
-		return 'ASC';
-	return $request['direction'];
-}
-
-function validate_columns($request)
-{
-	$module = validate_cat($request);
-	
-	$columns = call_user_func($module . '::columns');
-	
-	// which columns to search
-	if( isset($request['columns']) && !in_array($request['columns'], $columns) )
-	{
-		// make sure if it is a list that it is all valid columns
-		if(!is_array($request['columns'])) $request['columns'] = split(',', $request['columns']);
-		foreach($request['columns'] as $i => $column)
-		{
-			if(!in_array($column, call_user_func($module . '::columns')))
-				unset($columns[$i]);
-		}
-		if(count($request['columns']) == 0)
-			return;
-		else
-			return join(',', $request['columns']);
-	}
-	return $request['columns'];
-}
-
-// Redirect unknown file and folder requests to recognized protocols and other plugins.
-function validate_plugin($request)
+/**
+ * @defgroup validate Validate Functions
+ * All functions that are for validating input variables
+ * @param request The full request array incase validation depends on other variables from the request
+ * @return NULL if the input is invalid and there is no default, the default value if the input is invalid, the input if it is valid
+ * @{
+ */
+ 
+/**
+ * Implementation of #setup_validate()
+ * @return The index module by default, also checks for compatibility based on other request information
+ */
+function validate_module($request)
 {
 	// remove .php extension
-	if(isset($request['plugin']) && substr($request['plugin'], -4) == '.php')
-		$request['plugin'] = substr($request['plugin'], 0, -4);
+	if(isset($request['module']) && substr($request['module'], -4) == '.php')
+		$request['module'] = substr($request['module'], 0, -4);
 		
 	// replace slashes
-	if(isset($request['plugin'])) $request['plugin'] = str_replace(array('/', '\\'), '_', $request['plugin']);
+	if(isset($request['module'])) $request['module'] = str_replace(array('/', '\\'), '_', $request['module']);
 	
-	// if the plugin is set then return right away
-	if(isset($request['plugin']) && isset($GLOBALS['plugins'][$request['plugin']]))
+	// if the module is set then return right away
+	if(isset($request['module']) && isset($GLOBALS['modules'][$request['module']]))
 	{
-		return $request['plugin'];
+		return $request['module'];
 	}
 	// check for ampache compitibility
 	elseif(strpos($_SERVER['REQUEST_URI'], '/server/xml.server.php?') !== false)
@@ -492,45 +462,202 @@ function validate_plugin($request)
 	{
 		$script = basename($_SERVER['SCRIPT_NAME']);
 		$script = substr($script, 0, strpos($script, '.'));
-		if(isset($GLOBALS['plugins'][$script]))
+		if(isset($GLOBALS['modules'][$script]))
 			return $script;
 		else
 			return 'index';
 	}
 }
 
+/**
+ * Implementation of #setup_validate()
+ * @return db_file/fs_file handler by default
+ */
+function validate_cat($request)
+{
+	if(isset($request['cat']) && (substr($request['cat'], 0, 3) == 'db_' || substr($request['cat'], 0, 3)))
+		$request['cat'] = ((USE_DATABASE)?'db_':'fs_') . substr($request['cat'], 3);
+	if(!isset($request['cat']) || !in_array($request['cat'], $GLOBALS['handlers']) || constant($request['cat'] . '::INTERNAL') == true)
+		return USE_DATABASE?'db_file':'fs_file';
+	return $request['cat'];
+}
+
+/**
+ * Implementation of #setup_validate()
+ * @return Zero by default, any number greater then zero is valid
+ */
+function validate_start($request)
+{
+	if( !isset($request['start']) || !is_numeric($request['start']) || $request['start'] < 0 )
+		return 0;
+	return $request['start'];
+}
+
+/**
+ * Implementation of #setup_validate()
+ * @return 15 by default, accepts any positive number
+ */
+function validate_limit($request)
+{
+	if( !isset($request['limit']) || !is_numeric($request['limit']) || $request['limit'] < 0 )
+		return 15;
+	return $request['limit'];
+}
+
+/**
+ * Implementation of #setup_validate()
+ * @return Filepath by default, Relevance if performing a search which is a keyword for the #alter_query_search() call, any set of columns defined in the specified handler (cat) is valid
+ */
+function validate_order_by($request)
+{
+	$handler = validate_cat($request);
+	
+	$columns = call_user_func($handler . '::columns');
+	
+	if( !isset($request['order_by']) || !in_array($request['order_by'], $columns) )
+	{
+		if(isset($request['search']))
+			return 'Relevance';
+			
+		// make sure if it is a list that it is all valid columns
+		$columns = split(',', (isset($request['order_by'])?$request['order_by']:''));
+		foreach($columns as $i => $column)
+		{
+			if(!in_array($column, call_user_func($handler . '::columns')))
+				unset($columns[$i]);
+		}
+		if(count($columns) == 0)
+			return 'Filepath';
+		else
+			return join(',', $columns);
+	}
+	return $request['order_by'];
+}
+
+/**
+ * Implementation of #setup_validate()
+ * @return NULL by default, any set of columns defined in the handler (cat) are valid
+ */
+function validate_group_by($request)
+{
+	$handler = validate_cat($request);
+	
+	$columns = call_user_func($handler . '::columns');
+	
+	if( isset($request['group_by']) && !in_array($request['group_by'], $columns) )
+	{
+		// make sure if it is a list that it is all valid columns
+		$columns = split(',', $request['group_by']);
+		foreach($columns as $i => $column)
+		{
+			if(!in_array($column, call_user_func($handler . '::columns')))
+				unset($columns[$i]);
+		}
+		if(count($columns) == 0)
+			return;
+		else
+			return join(',', $columns);
+	}
+	return $request['group_by'];
+}
+
+/**
+ * Implementation of #setup_validate()
+ * @return Ascending (ASC) by default, ASC or DESC are valid
+ */
+function validate_direction($request)
+{
+	if( !isset($request['direction']) || ($request['direction'] != 'ASC' && $request['direction'] != 'DESC') )
+		return 'ASC';
+	return $request['direction'];
+}
+
+/**
+ * Implementation of #setup_validate()
+ * @return NULL by default, any set of columns defined in the handler (cat) are valid
+ */
+function validate_columns($request)
+{
+	$handler = validate_cat($request);
+	
+	$columns = call_user_func($handler . '::columns');
+	
+	// which columns to search
+	if( isset($request['columns']) && !in_array($request['columns'], $columns) )
+	{
+		// make sure if it is a list that it is all valid columns
+		if(!is_array($request['columns'])) $request['columns'] = split(',', $request['columns']);
+		foreach($request['columns'] as $i => $column)
+		{
+			if(!in_array($column, call_user_func($handler . '::columns')))
+				unset($columns[$i]);
+		}
+		if(count($request['columns']) == 0)
+			return;
+		else
+			return join(',', $request['columns']);
+	}
+	return $request['columns'];
+}
+
+/**
+ * Implementation of #setup_validate()
+ * @return NULL by default, no validation necessary, used only by templates to control what they display
+ */
+function validate_extra($request)
+{
+	if(isset($request['extra']))
+		return $request['extra'];
+}
+
+/**
+ * @}
+ */
+
+/**
+ * Reverse the affects of #parse_path_info() <br />
+ * Use specified request variables to construct a path, that can then be understood and parsed by parse_path_info()
+ * @param request the request array from the url() function
+ * @return a string containing just the path info from the input request
+ */
 function create_path_info(&$request)
 {
 	// use the same algorithm to rebuild the path info
-	$path = str_replace('_', '/', $request['plugin']) . '/';
+	$path = str_replace('_', '/', $request['module']) . '/';
 	
-	// make sure the plugin doesn't actually exists on the web server
+	// make sure the module doesn't actually exists on the web server
 	if(file_exists(LOCAL_ROOT . $path))
-		return '';
+	{
+		// a path without all the underscores replaced would be better then no path at all
+		$path = $request['module'] . '/';
+
+		if(file_exists(LOCAL_ROOT . $path))
+			return '';
+	}
 	
 	// construct query out of remaining variables
 	if(isset($request['cat']) && isset($request['id']) &&
-		isset($request[$request['plugin']]) &&
+		isset($request[$request['module']]) &&
 		isset($request['extra']) && isset($request['filename']))
 	{
 		$path .= $request['cat'] . '/' . $request['id'] . '/' . 
-				$request[$request['plugin']] . '/' . $request['extra'] . '/' . 
+				$request[$request['module']] . '/' . $request['extra'] . '/' . 
 				$request['filename'];
 		unset($request['cat']);
 		unset($request['id']);
-		unset($request[$request['plugin']]);
+		unset($request[$request['module']]);
 		unset($request['extra']);
 		unset($request['filename']);
 	}
 	elseif(isset($request['cat']) && isset($request['id']) &&
-			isset($request[$request['plugin']]) &&
+			isset($request[$request['module']]) &&
 			isset($request['filename']))
 	{
 		$path .= $request['cat'] . '/' . $request['id'] . '/' . 
-				$request[$request['plugin']] . '/' . $request['filename'];
+				$request[$request['module']] . '/' . $request['filename'];
 		unset($request['cat']);
 		unset($request['id']);
-		unset($request[$request['plugin']]);
+		unset($request[$request['module']]);
 		unset($request['filename']);
 	}
 	elseif(isset($request['cat']) && isset($request['id']) &&
@@ -552,10 +679,15 @@ function create_path_info(&$request)
 		$path .= $request['search']; 
 		unset($request['search']);
 	}
-	unset($request['plugin']);
+	unset($request['module']);
 	return $path;
 }
 
+/**
+ * Parse a request from the path
+ * @param path_info The part of a request that relects pretty dirs and contains slashes
+ * @return all the request information retrieved from the path in an associative array
+ */
 function parse_path_info($path_info)
 {
 	$request = array();
@@ -574,18 +706,18 @@ function parse_path_info($path_info)
 	$dirs = array_values($dirs);
 	if(count($dirs) > 0)
 	{
-		// get plugin from path info
-		//   match the plugin until it doesn't make any more, then apply the rules below
-		// remove default plugin directory just like when the plugins are loaded and set up
-		if($dirs[0] == 'plugins')
+		// get module from path info
+		//   match the module until it doesn't make any more, then apply the rules below
+		// remove default module directory just like when the modules are loaded and set up
+		if($dirs[0] == 'modules')
 			unset($dirs[0]);
-		$plugin = '';
+		$module = '';
 		foreach($dirs as $i => $dir)
 		{
-			$plugin .= (($plugin != '')?'_':'') . $dir;
-			if(isset($GLOBALS['plugins'][$plugin]))
+			$module .= (($module != '')?'_':'') . $dir;
+			if(isset($GLOBALS['modules'][$module]))
 			{
-				$request['plugin'] = $plugin;
+				$request['module'] = $module;
 				unset($dirs[$i]);
 			}
 			else
@@ -609,13 +741,13 @@ function parse_path_info($path_info)
 			case 4:
 				$request['cat'] = $dirs[0];
 				$request['id'] = $dirs[1];
-				$request[$request['plugin']] = $dirs[2];
+				$request[$request['module']] = $dirs[2];
 				$request['filename'] = $dirs[3];
 				break;
 			case 5:
 				$request['cat'] = $dirs[0];
 				$request['id'] = $dirs[1];
-				$request[$request['plugin']] = $dirs[2];
+				$request[$request['module']] = $dirs[2];
 				$request['extra'] = $dirs[3];
 				$request['filename'] = $dirs[4];
 				break;
@@ -625,6 +757,9 @@ function parse_path_info($path_info)
 	return $request;
 }
 
+/**
+ * Rewrite variables in to different names including GET and POST
+ */
 function rewrite($old_var, $new_var, &$request, &$get, &$post)
 {
 	if(isset($request[$old_var])) $request[$new_var] = $request[$old_var];
@@ -636,9 +771,16 @@ function rewrite($old_var, $new_var, &$request, &$get, &$post)
 	unset($post[$old_var]);
 }
 
+/**
+ * Check for variables to be rewritten for specific modules like @ref modules/ampache.php "Ampache" <br />
+ * This allows for libraries such as bttracker to recieve variables with similar names in the right way
+ * @param request the full request variables
+ * @param get the get params
+ * @param post the post variables
+ */
 function rewrite_vars(&$request, &$get, &$post)
 {
-	$request['plugin'] = validate_plugin($request);
+	$request['module'] = validate_module($request);
 	
 	if(isset($request['path_info']))
 		$request = array_merge($request, parse_path_info($request['path_info']));
@@ -646,15 +788,15 @@ function rewrite_vars(&$request, &$get, &$post)
 	// just about everything uses the cat variable so always validate and add this
 	$request['cat'] = validate_cat($request);
 
-	// do some modifications to specific plugins being used
-	if($request['plugin'] == 'bt')
+	// do some modifications to specific modules being used
+	if($request['module'] == 'bt')
 	{
 		// save the whole request to be used later
 		$request['bt_request'] = $request;
 	}
-	if($request['plugin'] == 'ampache')
+	if($request['module'] == 'ampache')
 	{
-		// a valid action is required for this plugin
+		// a valid action is required for this module
 		$request['action'] = validate_action($request);
 		
 		// rewrite some variables
@@ -664,12 +806,19 @@ function rewrite_vars(&$request, &$get, &$post)
 	}
 }
 
-function validate_extra($request)
-{
-	if(isset($request['extra']))
-		return $request['extra'];
-}
+/**
+ * @defgroup alter_query Alter Query Functions
+ * All functions that are for altering database queries based on the input variables they support
+ * @param request The full request array so the input variables can alter database queries performed by handlers
+ * @param props The list of current database properties for reference
+ * @return A set of database properties to append to the current query
+ * @{
+ */
 
+/**
+ * Implementation of #alter_query()
+ * Core input variables that alter database queries
+ */
 function alter_query_core($request, $props)
 {
 	$request['limit'] = validate_limit($request);
@@ -698,11 +847,30 @@ function alter_query_core($request, $props)
 	return $props;
 }
 
+/**
+ * @}
+ */
+
+/**
+ * @defgroup output Output Functions
+ * All functions that output the module
+ * @param request The full request array to use when outputting the module
+ * @{
+ */
+
+/**
+ * Implementation of #output()
+ * simply outputs the core
+ */
 function output_index($request)
 {
 	output_core($request);
 }
 
+/**
+ * Implementation of #output()
+ * Outputs select by default
+ */
 function output_core($request)
 {
 	// output any index like information
@@ -710,3 +878,7 @@ function output_core($request)
 	// perform a select so files can show up on the index page
 	output_select($request);
 }
+
+/**
+ * @}
+ */

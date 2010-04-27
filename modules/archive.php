@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * Implementation of register
+ * @ingroup register
+ */
 function register_archive()
 {
 	return array(
@@ -10,11 +14,21 @@ function register_archive()
 	);
 }
 
+/**
+ * Implementation of validate
+ * Does nothing yet
+ * @ingroup validate
+ */
 function validate_archive($request)
 {
 	
 }
 
+/**
+ * Implementation of output
+ * Outputs an archive
+ * @ingroup output
+ */
 function output_archive($request)
 {
 		
@@ -113,4 +127,3 @@ function output_archive($request)
 	}
 }
 
-?>

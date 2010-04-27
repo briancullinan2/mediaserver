@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * Implementation of register
+ * @ingroup register
+ */
 function register_encode()
 {
 	return array(
@@ -11,6 +15,11 @@ function register_encode()
 	);
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return default mp3, if not defined, this function uses other request information to determine the best format to use
+ */
 function validate_encode($request)
 {
 	if(!isset($request['encode']))
@@ -45,6 +54,11 @@ function validate_encode($request)
 		return 'mp3';
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return dummy by default, based on validate_encode
+ */
 function validate_vcodec($request)
 {
 	if(!isset($request['vcodec']) || !in_array($request['vcodec'], array('mp4v', 'mpgv', 'WMV2', 'DIV3','dummy')))
@@ -75,6 +89,11 @@ function validate_vcodec($request)
 	return $request['vcodec'];
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return mp3 by default, based on validate_encode
+ */
 function validate_acodec($request)
 {
 	if(!isset($request['acodec']) || !in_array($request['acodec'], array('mp4a', 'mpga', 'mp3', 'wma2', 'dummy')))
@@ -105,9 +124,14 @@ function validate_acodec($request)
 	return $request['acodec'];
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return zero by default based on validate_encode, accepts any positive number
+ */
 function validate_vbitrate($request)
 {
-	if(!isset($request['vbitrate']) || !is_numeric($request['vbitrate']))
+	if(!isset($request['vbitrate']) || !is_numeric($request['vbitrate']) || $request['vbitrate'] < 0)
 	{
 		$request['encode'] = validate_encode($request);
 		switch($request['encode'])
@@ -135,20 +159,35 @@ function validate_vbitrate($request)
 	return $request['vbitrate'];
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return 160 by default, any positive number
+ */
 function validate_abitrate($request)
 {
-	if(!isset($request['abitrate']) || !is_numeric($request['abitrate']))
+	if(!isset($request['abitrate']) || !is_numeric($request['abitrate']) || $request['abitrate'] < 0)
 		return 160;
 	return $request['abitrate'];
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return 44100 by default, accepts any positive number
+ */
 function validate_samplerate($request)
 {
-	if(!isset($request['samplerate']) || !is_numeric($request['samplerate']))
+	if(!isset($request['samplerate']) || !is_numeric($request['samplerate']) || $request['samplerate'] < 0)
 		return 44100;
 	return $request['samplerate'];
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return 1 by default, accepts any number
+ */
 function validate_scalar($request)
 {
 	if(!isset($request['scalar']) || !is_numeric($request['scalar']))
@@ -156,13 +195,23 @@ function validate_scalar($request)
 	return $request['scalar'];
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return 2 by default, accepts any number greater than zero
+ */
 function validate_channels($request)
 {
-	if(!isset($request['channels']) || !is_numeric($request['channels']))
+	if(!isset($request['channels']) || !is_numeric($request['channels']) || $request['channels'] <= 0)
 		return 2;
 	return $request['channels'];
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return dummy by default, based on validate_encode
+ */
 function validate_muxer($request)
 {
 	if(!isset($request['muxer']) || !in_array($request['muxer'], array('ts', 'ps', 'mpeg1', 'asf', 'mp4', 'ogg', 'dummy')))
@@ -193,6 +242,11 @@ function validate_muxer($request)
 	return $request['muxer'];
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return zero by default, based on validate_encode
+ */
 function validate_framerate($request)
 {
 	if(!isset($request['framerate']) || !is_numeric($request['framerate']))
@@ -223,14 +277,23 @@ function validate_framerate($request)
 	return $request['framerate'];
 }
 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return zero by default, accepts any positive number
+ */
 function validate_timeoffset($request)
 {
-	if(isset($request['timeoffset']) && is_numeric($request['timeoffset']))
+	if(isset($request['timeoffset']) && is_numeric($request['timeoffset']) && $request['timeoffset'] >= 0)
 		return $request['timeoffset'];
 	else
 		return 0;
 }
 
+/**
+ * Implementation of output
+ * @ingroup output
+ */
 function output_encode($request)
 {
 	
@@ -283,7 +346,7 @@ function output_encode($request)
 	
 	if(count($files) > 0)
 	{
-		// the ids module will do the replacement of the ids
+		// the ids handler will do the replacement of the ids
 		$files = db_ids::get(array('cat' => $_REQUEST['cat']), $tmp_count, $files);
 		
 		$tmp_request = array();
@@ -293,11 +356,11 @@ function output_encode($request)
 		$tmp_request = array_merge(array_intersect_key($files[0], getIDKeys()), $tmp_request);
 	
 		// get all the information incase we need to use it
-		foreach($GLOBALS['modules'] as $i => $module)
+		foreach($GLOBALS['handlers'] as $i => $handler)
 		{
-			if($module != $request['cat'] && constant($module . '::INTERNAL') == false && call_user_func_array($module . '::handles', array($files[0]['Filepath'])))
+			if($handler != $request['cat'] && constant($handler . '::INTERNAL') == false && call_user_func_array($handler . '::handles', array($files[0]['Filepath'])))
 			{
-				$return = call_user_func_array($module . '::get', array($tmp_request, &$tmp_count));
+				$return = call_user_func_array($handler . '::get', array($tmp_request, &$tmp_count));
 				if(isset($return[0])) $files[0] = array_merge($return[0], $files[0]);
 			}
 		}
