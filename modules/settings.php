@@ -88,13 +88,13 @@ function settings_get_defaults()
 	$settings['db_pass'] = '';
 	$settings['db_name'] = '';
 	
-	// html name
-	$settings['html_name'] = 'Brian\'s Media Website';
-	
 	// template
 	$settings['local_base'] = 'plain';
 	$settings['local_default'] = 'live';
 	$settings['local_template'] = '';
+		
+	// html name
+	$settings['html_name'] = 'Brian\'s Media Website';
 	
 	// other
 	$settings['dir_seek_time'] = 60;

@@ -299,45 +299,6 @@ function validate_HTML_NAME($request)
 		return setting('html_name');
 }
 
-/**
- * Implementation of validate
- * @ingroup validate
- * @return The plain template by default
- */
-function validate_LOCAL_BASE($request)
-{
-	if(isset($request['LOCAL_BASE']) && in_array(basename($request['LOCAL_BASE']), $GLOBALS['templates']))
-		return basename($request['LOCAL_BASE']);
-	else
-		return setting('local_base');
-}
-
-/**
- * Implementation of validate
- * @ingroup validate
- * @return The live template by default
- */
-function validate_LOCAL_DEFAULT($request)
-{
-	if(isset($request['LOCAL_DEFAULT']) && in_array($request['LOCAL_DEFAULT'], $GLOBALS['templates']))
-		return $request['LOCAL_DEFAULT'];
-	else
-		return setting('live');
-}
-
-/**
- * Implementation of validate
- * @ingroup validate
- * @return blank by default
- */
-function validate_LOCAL_TEMPLATE($request)
-{
-	if(isset($request['LOCAL_TEMPLATE']) && in_array($request['LOCAL_TEMPLATE'], $GLOBALS['templates']))
-		return $request['LOCAL_TEMPLATE'];
-	else
-		return setting('local_template');
-}
-
 // ---------------------------------- step 7 ---------------------------------
 /**
  * Implementation of validate
@@ -563,13 +524,6 @@ EOF;
 	$tests['db_test'] = 'return false;'; // always test the database before installing
 	$tests['db_install'] = 'return false;'; // always install the database
 	$tests['site_name'] = 'return false;'; // always ask to set site name
-	$tests['local_base'] = <<<EOF
-		\$request['LOCAL_ROOT'] = validate_LOCAL_ROOT(\$request);
-		\$request['LOCAL_BASE'] = validate_LOCAL_BASE(\$request);
-		return file_exists(\$request['LOCAL_ROOT'] . \$request['LOCAL_BASE']);
-EOF;
-	$tests['local_default'] = 'return true;'; // don't ask just use live
-	$tests['local_template'] = 'return true;';
 	$tests['cron'] = 'return false;'; // always inform user they need to install cron
 	$tests['dir_seek_time'] = 'return true;';
 	$tests['file_seek_time'] = 'return true;';

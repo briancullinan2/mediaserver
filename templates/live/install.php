@@ -253,9 +253,6 @@ function output_tests($install_step)
 		case 6:
 		$output = array(
 			'site_name' => 'HTML_NAME',
-			'local_base' => 'LOCAL_BASE',
-			'local_default' => 'LOCAL_DEFAULT',
-			'local_template' => 'LOCAL_TEMPLATE'
 		);
 		break;
 		case 7:
@@ -1040,87 +1037,6 @@ function output_test_site_name($result, $variable)
 	<td class="desc">
 	<ul>
 		<li>Some templates can display a name for this media server.  Set this here.</li>
-	</ul>
-	</td></tr>
-	<?php
-}
-
-function output_test_local_base($result, $variable)
-{
-	// check for base template
-	if($result)
-	{
-		?><tr><td class="title">Template Base</td>
-		<td>
-		<input type="text" name="LOCAL_BASE" value="<?php echo $variable; ?>" />
-		</td>
-		<td class="desc">
-		<ul>
-			<li>The template base provides a backup/default set of template files. This template supports all possible functionality, in the simplest way.</li>
-			<li>Default functionality includes things like printing out an XML file, or an M3U playlist instead of a vieable HTML list of files.</li>
-			<li>The server reports that <?php echo $GLOBALS['templates']['vars']['request']['LOCAL_ROOT'] . $variable; ?> does, in fact, exist.</li>
-		</ul>
-		</td></tr>
-		<?php
-	}
-	else
-	{
-		?><tr><td class="title fail">Template Base</td>
-		<td>
-		<input type="text" name="LOCAL_BASE" value="<?php echo $variable; ?>" />
-		</td>
-		<td class="desc">
-		<ul>
-			<li>The system has detected that the local basic template files are not where they are expected to be.</li>
-			<li>The template base provides a backup/default set of template files. This template supports all possible functionality, in the simplest way.</li>
-			<li>Default functionality includes things like printing out an XML file, or an M3U playlist instead of a vieable HTML list of files.</li>
-			<li>The server reports that <?php echo $GLOBALS['templates']['vars']['request']['LOCAL_ROOT'] . $variable; ?> does NOT EXIST.</li>
-		</ul>
-		</td></tr>
-		<?php
-	}
-}
-
-function output_test_local_default($result, $variable)
-{
-	// select default template
-	?><tr><td class="title">Default Template</td>
-	<td>
-	<select name="LOCAL_DEFAULT">
-	<?php
-	foreach($GLOBALS['templates'] as $template)
-	{
-		?><option value="<?php echo $template; ?>" <?php echo ($variable == $template)?'selected="selected"':''; ?>><?php echo ucwords(basename($template)); ?></option><?php
-	}
-	?>
-	</select>
-	</td>
-	<td class="desc">
-	<ul>
-		<li>The default template is the template displayed to users until they select an alternative template.</li>
-	</ul>
-	</td></tr>
-	<?php
-}
-
-function output_test_local_template($result, $variable)
-{
-	// select local template
-	?><tr><td class="title">Local Template</td>
-	<td>
-	<select name="LOCAL_TEMPLATE">
-	<option value="" <?php echo ($variable == '')?'selected="selected"':''; ?>>&lt;Not Set&gt;</option>
-	<?php
-	foreach($GLOBALS['templates'] as $template)
-	{
-		?><option value="<?php echo $template; ?>" <?php echo ($variable == $template)?'selected="selected"':''; ?>><?php echo ucwords(basename($template)); ?></option><?php
-	}
-	?>
-	</select>
-	</td>
-	<td class="desc">
-	<ul>
-		<li>If this is set, this template will always be displayed to the users.  They will not be given the option to select their own template.</li>
 	</ul>
 	</td></tr>
 	<?php

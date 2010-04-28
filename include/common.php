@@ -285,7 +285,7 @@ function setup_tables()
 function output($request)
 {
 	$GLOBALS['module'] = $request['module'];
-	
+
 	// output module
 	call_user_func_array('output_' . $request['module'], array($request));
 	

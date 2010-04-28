@@ -114,37 +114,3 @@ function theme_live_tools_subtools()
 		
 }
 
-function print_info_objects($infos)
-{
-	?><div class="<?php print isset($infos['type'])?$infos['type']:'info'; ?>"><?php
-	if(isset($infos['label']))
-	{
-		?><span><?php print $infos['label']; ?>: </span><?php
-	}
-	if(isset($infos['text']))
-	{
-		if(is_string($infos['text']))
-		{
-			print $infos['text'];
-		}
-		elseif(is_array($infos['text']))
-			print_info_objects($infos['text']);
-	}
-	
-	foreach($infos as $key => $value)
-	{
-		if(is_numeric($key))
-		{
-			if(is_string($value))
-			{
-				print $value; ?><br /><?php
-			}
-			// treat value like sub info object
-			elseif(is_array($value))
-				print_info_objects($value);
-		}
-	}
-	?></div><?php
-}
-
-

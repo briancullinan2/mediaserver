@@ -12,13 +12,13 @@ function register_encode()
 		'privilage' => 1,
 		'path' => __FILE__,
 		'notemplate' => true,
-		'configurable' => array('encode_path', 'encode_args'),
+		'settings' => array('encode_path', 'encode_args'),
 	);
 }
 
 /**
  * Checks for encode path
- * @ingroup install
+ * @ingroup configure
  */
 function configure_encode($request)
 {
@@ -32,10 +32,15 @@ function configure_encode($request)
 		$options['encode_path'] = array(
 			'name' => 'Encode Path',
 			'status' => '',
-			'description' => '<li>An encoder has been set and detected, you may change this path to specify a new encoder.</li>
-			<li>The system needs some sort of file encoder that it can use to output files in different formats.</li>
-			<li>The encoder detected is "' . basename($request['encode_path']) . '".</li>',
-			'input' => '<input type="text" name="encode_path" value="' . htmlspecialchars($request['encode_path']) . '" />'
+			'description' => array(
+				'list' => array(
+					'An encoder has been set and detected, you may change this path to specify a new encoder.',
+					'The system needs some sort of file encoder that it can use to output files in different formats.',
+					'The encoder detected is "' . basename($request['encode_path']) . '".',
+				),
+			),
+			'type' => 'text',
+			'value' => $request['encode_path'],
 		);
 	}
 	else
@@ -43,31 +48,40 @@ function configure_encode($request)
 		$options['encode_path'] = array(
 			'name' => 'Encode Path',
 			'status' => 'fail',
-			'description' => '<li>The system needs some sort of file encoder that it can use to output files in different formats.</li>
-			<li>This encoder could be VLC or FFMPEG.</li>',
-			'input' => '<input type="text" name="encode_path" value="' . htmlspecialchars($request['encode_path']) . '" />'
+			'description' => array(
+				'list' => array(
+					'The system needs some sort of file encoder that it can use to output files in different formats.',
+					'This encoder could be VLC or FFMPEG.',
+				),
+			),
+			'type' => 'text',
+			'value' => $request['encode_path'],
 		);
 	}
 	
 	$options['encode_args'] = array(
 		'name' => 'Encode Arguments',
 		'status' => '',
-		'description' => '<li>Specify the string of arguments to pass to the encoder.</li>
-		<li>Certain keys in the argument string will be replaced with dynamic values by the encode plugin:
-		%IF - Input file, the filename that will be inserted for transcoding<br />
-		%VC - Video Codec to be used in the conversion<br />
-		%AC - Audio Codec<br />
-		%VB - Video Bitrate<br />
-		%AB - Audio Bitrate<br />
-		%SR - Sample Rate<br />
-		%SR - Scale<br />
-		%CH - Number of Channels<br />
-		%MX - Muxer to use for encapsulating the streams<br />
-		%TO - Time Offset for resumable listening and moving time position<br />
-		%FS - Frames per Second<br />
-		%OF - Output file if necissary
-		</li>',
-		'input' => '<input type="text" name="encode_args" value="' . htmlspecialchars($request['encode_args']) . '" />'
+		'description' => array(
+			'list' => array(
+				'Specify the string of arguments to pass to the encoder.',
+				'Certain keys in the argument string will be replaced with dynamic values by the encode plugin:
+				%IF - Input file, the filename that will be inserted for transcoding<br />
+				%VC - Video Codec to be used in the conversion<br />
+				%AC - Audio Codec<br />
+				%VB - Video Bitrate<br />
+				%AB - Audio Bitrate<br />
+				%SR - Sample Rate<br />
+				%SR - Scale<br />
+				%CH - Number of Channels<br />
+				%MX - Muxer to use for encapsulating the streams<br />
+				%TO - Time Offset for resumable listening and moving time position<br />
+				%FS - Frames per Second<br />
+				%OF - Output file if necissary',
+			),
+		),
+		'type' => 'text',
+		'value' => $request['encode_args'],
 	);
 	
 	return $options;

@@ -55,7 +55,7 @@ function theme_live_modules()
 					<?php
 					}
 					
-					if(isset($GLOBALS['modules'][$key]['configurable']) && count($GLOBALS['modules'][$key]['configurable']) > 0)
+					if(isset($GLOBALS['modules'][$key]['settings']) && count($GLOBALS['modules'][$key]['settings']) > 0)
 					{
 						?><a href="<?php print url('module=admin_modules&configure_module=' . $key); ?>">Configure</a><?php
 					}
@@ -102,12 +102,10 @@ function theme_live_modules()
 				<tr>
 					<td class="title <?php print $config['status']; ?>"><?php print $config['name']; ?> (<?php print $name; ?>)</td>
 					<td>
-					<?php print $config['input']; ?>
+					<?php print_form_objects(array($config)); ?>
 					</td>
 					<td class="desc">
-					<ul>
-						<?php print $config['description']; ?>
-					</ul>
+					<?php print_info_objects($config['description']); ?>
 					</td>
 				</tr>
 				<?php

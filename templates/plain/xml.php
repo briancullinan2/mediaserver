@@ -12,11 +12,11 @@ function register_plain_xml()
 function theme_plain_xml()
 {
 	$ext_icons = array();
-	$ext_icons['FOLDER'] = url('template=' . HTML_TEMPLATE . '&file=images/filetypes/folder_96x96.png');
-	$ext_icons['FILE'] = url('template=' . HTML_TEMPLATE . '&file=images/filetypes/file_96x96.png');
+	$ext_icons['FOLDER'] = url('template=' . setting('local_template') . '&file=images/filetypes/folder_96x96.png');
+	$ext_icons['FILE'] = url('template=' . setting('local_template') . '&file=images/filetypes/file_96x96.png');
 	
 	$type_icons = array();
-	$type_icons['audio'] = url('template=' . HTML_TEMPLATE . '&file=images/filetypes/music_96x96.png');
+	$type_icons['audio'] = url('template=' . setting('local_template') . '&file=images/filetypes/music_96x96.png');
 
 	print '<?xml version="1.0" encoding="utf-8"?>';
 	

@@ -1,3 +1,4 @@
+local_template is returning nothing when removed from setting_get_defaults(), this should be fixed by getting all the default settings for each plugin when the plugin is loaded
 Move template settings and site settings over to their designated plugin
 Create a plugin for adding system checks for db_archive and any module that uses getID3()
 Create a status admin tool

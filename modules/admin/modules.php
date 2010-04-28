@@ -22,7 +22,7 @@ function register_admin_modules()
 function validate_configure_module($request)
 {
 	if(isset($request['configure_module']) && isset($GLOBALS['modules'][$request['configure_module']]) &&
-		isset($GLOBALS['modules'][$request['configure_module']]['configurable']) && count($GLOBALS['modules'][$request['configure_module']]['configurable']) > 0
+		isset($GLOBALS['modules'][$request['configure_module']]['settings']) && count($GLOBALS['modules'][$request['configure_module']]['settings']) > 0
 		)
 		return $request['configure_module'];
 }

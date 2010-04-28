@@ -135,7 +135,7 @@ function theme_live_breadcrumbs()
 	{
 		?>
 		<li><a href="<?php print url('module=select&cat=' . $GLOBALS['templates']['vars']['cat'] . '&dir=' . urlencode('/')); ?>"><?php print setting('html_name'); ?></a></li>
-		<li><img src="<?php print url('module=template&tfile=images/carat.gif&template=' . HTML_TEMPLATE); ?>" class="crumbsep"></li>
+		<li><img src="<?php print url('module=template&tfile=images/carat.gif&template=' . setting('local_template')); ?>" class="crumbsep"></li>
 		<?php
 		// break up the module by the underscores
 		$crumbs = split('_', $GLOBALS['module']);
@@ -151,7 +151,7 @@ function theme_live_breadcrumbs()
 				if($i != count($crumbs) - 1)
 				{
 					?>
-					<li><img src="<?php print url('module=template&tfile=images/carat.gif&template=' . HTML_TEMPLATE); ?>" class="crumbsep"></li>
+					<li><img src="<?php print url('module=template&tfile=images/carat.gif&template=' . setting('local_template')); ?>" class="crumbsep"></li>
 					<?php
 				}
 			}
@@ -171,7 +171,7 @@ function theme_live_breadcrumbs()
 			{
 				?>
 				<li><a href="<?php print url('module=select&cat=' . $GLOBALS['templates']['vars']['cat'] . '&dir=' . urlencode('/')); ?>"><?php print setting('html_name'); ?></a></li>
-				<li><img src="<?php print url('module=template&tfile=images/carat.gif&template=' . HTML_TEMPLATE); ?>" class="crumbsep"></li>
+				<li><img src="<?php print url('module=template&tfile=images/carat.gif&template=' . setting('local_template')); ?>" class="crumbsep"></li>
 				<?php
 			}
 			elseif($count == count($crumbs)-1)
@@ -182,7 +182,7 @@ function theme_live_breadcrumbs()
 			{
 				?>
 				<li><a href="<?php print url('module=select&cat=' . $GLOBALS['templates']['vars']['cat'] . '&dir=' . urlencode($path . '/')); ?>"><?php print $text; ?></a></li>
-				<li><img src="<?php print url('module=template&tfile=images/carat.gif&template=' . HTML_TEMPLATE); ?>" class="crumbsep"></li>
+				<li><img src="<?php print url('module=template&tfile=images/carat.gif&template=' . setting('local_template')); ?>" class="crumbsep"></li>
 				<?php
 			}
 			$path .= '/';

@@ -12,10 +12,14 @@ function register_convert()
 		'privilage' => 1,
 		'path' => __FILE__,
 		'notemplate' => true,
-		'configurable' => array('convert_path', 'convert_args'),
+		'settings' => array('convert_path', 'convert_args'),
 	);
 }
 
+/**
+ * Checks for convert path
+ * @ingroup configure
+ */
 function configure_convert($request)
 {
 	$request['convert_path'] = validate_convert_path($request);
@@ -28,10 +32,15 @@ function configure_convert($request)
 		$options['convert_path'] = array(
 			'name' => 'Convert Path',
 			'status' => '',
-			'description' => '<li>A converter has been set and detected, you may change this path to specify a new converter.</li>
-			<li>The system needs some sort of image converter for creating thumbnails of images and outputting images as different file types.</li>
-			<li>The converter detected is "' . basename($request['convert_path']) . '".</li>',
-			'input' => '<input type="text" name="convert_path" value="' . htmlspecialchars($request['convert_path']) . '" />'
+			'description' => array(
+				'list' => array(
+					'A converter has been set and detected, you may change this path to specify a new converter.',
+					'The system needs some sort of image converter for creating thumbnails of images and outputting images as different file types.',
+					'The converter detected is "' . basename($request['convert_path']) . '".',
+				),
+			),
+			'type' => 'text',
+			'value' => $request['convert_path'],
 		);
 	}
 	else
@@ -39,24 +48,33 @@ function configure_convert($request)
 		$options['convert_path'] = array(
 			'name' => 'Convert Path',
 			'status' => 'fail',
-			'description' => '<li>The system needs some sort of image converter for creating thumbnails of images and outputting images as different file types.</li>
-			<li>This convert could be ImageMagik.</li>',
-			'input' => '<input type="text" name="convert_path" value="' . htmlspecialchars($request['convert_path']) . '" />'
+			'description' => array(
+				'list' => array(
+					'The system needs some sort of image converter for creating thumbnails of images and outputting images as different file types.',
+					'This convert could be ImageMagik.',
+				),
+			),
+			'type' => 'text',
+			'value' => $request['convert_path'],
 		);
 	}
 	
 	$options['convert_args'] = array(
 		'name' => 'Convert Arguments',
 		'status' => '',
-		'description' => '<li>Specify the string of arguments to pass to the converter.</li>
-		<li>Certain keys in the argument string will be replaced with dynamic values by the encode plugin:
-		%IF - Input file, the filename that will be inserted for transcoding<br />
-		%FM - Format to output<br />
-		%TH - Thumbnail height<br />
-		%TW - Thumbnail width<br />
-		%OF - Output file if necissary<br />
-		</li>',
-		'input' => '<input type="text" name="convert_args" value="' . htmlspecialchars($request['convert_args']) . '" />'
+		'description' => array(
+			'list' => array(
+				'Specify the string of arguments to pass to the converter.',
+				'Certain keys in the argument string will be replaced with dynamic values by the encode plugin:
+				%IF - Input file, the filename that will be inserted for transcoding<br />
+				%FM - Format to output<br />
+				%TH - Thumbnail height<br />
+				%TW - Thumbnail width<br />
+				%OF - Output file if necissary',
+			),
+		),
+		'type' => 'text',
+		'value' => $request['convert_args'],
 	);
 
 	return $options;
