@@ -3,7 +3,7 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
 	<meta http-equiv="Pragma" content="no-cache">
 	<meta http-equiv="Expires" content="-1">
-	<title><?php echo HTML_NAME?>: Tools</title>
+	<title><?php echo setting('html_name')?>: Tools</title>
     <link rel="stylesheet" href="<?php echo url('module=template&tfile=css/tools.css&template=' . LOCAL_BASE); ?>" type="text/css"/>
 </head>
 <body>

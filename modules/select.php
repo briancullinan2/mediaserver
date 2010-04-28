@@ -224,14 +224,17 @@ function output_select($request)
 	$order_keys_values = array();
 	
 	// the ids handler will do the replacement of the ids
-	if(count($files) > 0)
+	if(setting('use_database') == true)
 	{
-		// wrappers for parent databases do not get IDs!
-		if(!is_wrapper($request['cat']))
+		if(count($files) > 0)
 		{
-			$files = db_ids::get(array('cat' => $request['cat']), $tmp_count, $files);
+			// wrappers for parent databases do not get IDs!
+			if(!is_wrapper($request['cat']))
+			{
+				$files = db_ids::get(array('cat' => $request['cat']), $tmp_count, $files);
+			}
+			$files = db_users::get(array(), $tmp_count, $files);
 		}
-		$files = db_users::get(array(), $tmp_count, $files);
 	}
 	
 	// count a few types of media for templates to use
@@ -255,7 +258,7 @@ function output_select($request)
 			// merge all the other information to each file
 			foreach($GLOBALS['handlers'] as $i => $handler)
 			{
-				if(USE_DATABASE == false || ($handler != $request['cat'] && constant($handler . '::INTERNAL') == false && call_user_func_array($handler . '::handles', array($file['Filepath'], $file))))
+				if($handler != $request['cat'] && constant($handler . '::INTERNAL') == false && call_user_func_array($handler . '::handles', array($file['Filepath'], $file)))
 				{
 					$return = call_user_func_array($handler . '::get', array($tmp_request, &$tmp_count));
 					if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
@@ -284,7 +287,7 @@ function output_select($request)
 	
 	// only order it if the database is not already going to order it
 	// this will unlikely be used when the database is in use
-	if(USE_DATABASE == false)
+	if(setting('use_database') == false)
 	{
 		if(isset($order_keys_values[0]) && is_numeric($order_keys_values[0]))
 			$sorting = SORT_NUMERIC;

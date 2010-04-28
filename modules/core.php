@@ -22,7 +22,7 @@ function setup_register()
 		'name' => 'Index',
 		'description' => 'Load a module\'s output variables and display the template.',
 		'privilage' => 1,
-		'path' => LOCAL_ROOT . 'index.php',
+		'path' => dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'index.php',
 		'alter query' => array('limit', 'start', 'direction', 'order_by', 'group_by')
 		)
 	);
@@ -42,7 +42,7 @@ function setup_register()
  */
 function setup_register_modules($path)
 {
-	$files = fs_file::get(array('dir' => LOCAL_ROOT . $path, 'limit' => 32000), $count, true);
+	$files = fs_file::get(array('dir' => $GLOBALS['settings']['local_root'] . $path, 'limit' => 32000), $count, true);
 	
 	$modules = array();
 
@@ -58,7 +58,7 @@ function setup_register_modules($path)
 				$module = basename($file['Filepath']);
 				
 				// functional prefix so there can be multiple modules with the same name
-				$prefix = substr($file['Filepath'], strlen(LOCAL_ROOT), -strlen($module));
+				$prefix = substr($file['Filepath'], strlen($GLOBALS['settings']['local_root']), -strlen($module));
 				
 				// remove slashes and replace with underscores
 				$prefix = str_replace(array('/', '\\'), '_', $prefix);
@@ -212,7 +212,6 @@ function session($request = array())
  * @}
  */
 
-
 /**
  * Make variables available for output in the templates,
  * convert variables to HTML compatible for security
@@ -277,7 +276,7 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 	if(!isset($request['module']))
 		$request['module'] = validate_module(array('module' => isset($GLOBALS['module'])?$GLOBALS['module']:''));
 	$path_info = create_path_info($request);
-	$link = (($include_domain)?HTML_DOMAIN:'') . HTML_ROOT . $path_info;
+	$link = (($include_domain)?$GLOBALS['settings']['html_domain']:'') . (defined('HTML_ROOT')?HTML_ROOT:'') . $path_info;
 	if(count($request) > 0)
 	{
 		$link .= '?';
@@ -388,7 +387,8 @@ function set_output_vars()
 		'handlers',
 		'tables',
 		'ext_to_mime',
-		'lists'
+		'lists',
+		'settings'
 	);
 	
 	foreach($GLOBALS as $key => $value)
@@ -476,9 +476,9 @@ function validate_module($request)
 function validate_cat($request)
 {
 	if(isset($request['cat']) && (substr($request['cat'], 0, 3) == 'db_' || substr($request['cat'], 0, 3)))
-		$request['cat'] = ((USE_DATABASE)?'db_':'fs_') . substr($request['cat'], 3);
+		$request['cat'] = (($GLOBALS['settings']['use_database'])?'db_':'fs_') . substr($request['cat'], 3);
 	if(!isset($request['cat']) || !in_array($request['cat'], $GLOBALS['handlers']) || constant($request['cat'] . '::INTERNAL') == true)
-		return USE_DATABASE?'db_file':'fs_file';
+		return $GLOBALS['settings']['use_database']?'db_file':'fs_file';
 	return $request['cat'];
 }
 
@@ -625,13 +625,17 @@ function create_path_info(&$request)
 	// use the same algorithm to rebuild the path info
 	$path = str_replace('_', '/', $request['module']) . '/';
 	
+	// do not use pretty paths before the site is configured
+	if(defined('NOT_INSTALLED') && NOT_INSTALLED == true)
+		return '';
+	
 	// make sure the module doesn't actually exists on the web server
-	if(file_exists(LOCAL_ROOT . $path))
+	if(file_exists($GLOBALS['settings']['local_root'] . $path))
 	{
 		// a path without all the underscores replaced would be better then no path at all
 		$path = $request['module'] . '/';
 
-		if(file_exists(LOCAL_ROOT . $path))
+		if(file_exists($GLOBALS['settings']['local_root'] . $path))
 			return '';
 	}
 	

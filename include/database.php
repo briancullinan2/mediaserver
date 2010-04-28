@@ -2,8 +2,8 @@
 
 //$no_setup = true;
 //ini_set('include_path', ini_get('include_path') . ':' . dirname(__FILE__));
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb-errorpear.inc.php';
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb.inc.php';
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb-errorpear.inc.php';
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb.inc.php';
 
 // control lower level handling of each database
 // things to consider:
@@ -35,8 +35,15 @@ class database
 	
 	function database($connect_str)
 	{
-		$this->db_conn = ADONewConnection($connect_str);  # no need for Connect()
-		$this->db_conn->SetFetchMode(ADODB_FETCH_ASSOC);
+		if(class_exists('ADONewConnection'))
+		{
+			$this->db_conn = ADONewConnection($connect_str);  # no need for Connect()
+			$this->db_conn->SetFetchMode(ADODB_FETCH_ASSOC);
+		}
+		else
+		{
+			PEAR::raiseError('Error loading database classes.');
+		}
 	}
 	
 	function dropAll()

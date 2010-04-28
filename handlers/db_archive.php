@@ -101,10 +101,19 @@ class db_archive extends db_file
 	
 	static function init()
 	{
-		require_once LOCAL_ROOT . 'handlers' . DIRECTORY_SEPARATOR . 'db_file.php';
-		
-		// include the id handler
-		require_once 'File' . DIRECTORY_SEPARATOR . 'Archive.php';
+		if(file_exists(setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.php'))
+		{
+			include_once setting('local_root') . 'handlers' . DIRECTORY_SEPARATOR . 'db_file.php';
+			
+			// include the id handler
+			include_once 'File' . DIRECTORY_SEPARATOR . 'Archive.php';
+			
+			return true;
+		}
+		else
+			PEAR::raiseError('getID3() missing from include directory! Archive handlers cannot function properly.', E_DEBUG);
+			
+		return false;
 	}
 
 	static function columns()

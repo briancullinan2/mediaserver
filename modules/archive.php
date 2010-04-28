@@ -115,7 +115,7 @@ function output_archive($request)
 				proc_terminate($process);
 				break;
 			}
-			print fread($pipes[1], BUFFER_SIZE);
+			print fread($pipes[1], setting('buffer_size'));
 			flush();
 		}
 		fclose($pipes[1]);

@@ -20,7 +20,7 @@ function theme_plain_wpl()
 			<meta name="ContentPartnerName"/>
 			<meta name="Subtitle"/>
 			<author/>
-			<title>{HTML_NAME} - {CATEGORY}</title>
+			<title><?php print setting('html_name');?> - <?php print $GLOBALS['module']; ?></title>
 		</head>
 		<body>
 			<seq>

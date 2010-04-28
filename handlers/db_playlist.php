@@ -41,7 +41,7 @@ class db_playlist extends db_file
 				// read in the buffer size from the file and check to see if it even contains a file path
 				if($fp = @fopen($file, 'rb'))
 				{
-					$buffer = fread($fp, BUFFER_SIZE);
+					$buffer = fread($fp, setting('buffer_size'));
 					fclose($fp);
 					$count = preg_match('/(([^\\\\\\/\\:\\*\\?\\<\\>\\|]+[\\\\\\/])+[^\\\\\\/\\:\\*\\?\\<\\>\\|]+\.[a-z0-9]+)([^a-z0-9]|$)/i', $buffer, $matches);
 					if($count > 0 && trim($matches[1]) != '')

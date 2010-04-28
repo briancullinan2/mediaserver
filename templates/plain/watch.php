@@ -15,7 +15,7 @@ function theme_plain_watch()
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
 	<meta http-equiv="Pragma" content="no-cache">
 	<meta http-equiv="Expires" content="-1">
-	<title><?php echo HTML_NAME?>: Watch Editor</title>
+	<title><?php echo setting('html_name')?>: Watch Editor</title>
 </head>
 <body>
 

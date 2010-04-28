@@ -60,7 +60,7 @@ function output_bt($request)
 			)
 		, false);
 	
-		require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'bttracker' . DIRECTORY_SEPARATOR . 'config.php';
+		include_once setting('local_root') . 'modules' . DIRECTORY_SEPARATOR . 'bttracker' . DIRECTORY_SEPARATOR . 'config.php';
 		$admin_user = $admin[0]['Username'];
 		$admin_pass = $admin[0]['Password'];
 		
@@ -70,13 +70,13 @@ function output_bt($request)
 		$dbpass = $parsed_dsn['password'];
 		$database = $parsed_dsn['database'];
 	
-		include LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'bttracker' . DIRECTORY_SEPARATOR . 'announce.php';
+		include setting('local_root') . 'modules' . DIRECTORY_SEPARATOR . 'bttracker' . DIRECTORY_SEPARATOR . 'announce.php';
 		
 	}
 	else
 	{
-		require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'bttracker' . DIRECTORY_SEPARATOR . 'BEncode.php';
-		require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'bttracker' . DIRECTORY_SEPARATOR . 'funcsv2.php';
+		include_once setting('local_root') . 'modules' . DIRECTORY_SEPARATOR . 'bttracker' . DIRECTORY_SEPARATOR . 'BEncode.php';
+		include_once setting('local_root') . 'modules' . DIRECTORY_SEPARATOR . 'bttracker' . DIRECTORY_SEPARATOR . 'funcsv2.php';
 	
 		$request['cat'] = validate_cat($request);
 		
@@ -114,7 +114,7 @@ function output_bt($request)
 			{
 				// get all files in directory
 				$props = array('dir' => $file['Filepath']);
-				$sub_files = call_user_func_array((USE_DATABASE?'db_':'fs_') . 'file::get', array($props, &$tmp_count));
+				$sub_files = call_user_func_array(validate_cat(array('cat' => 'file')) . '::get', array($props, &$tmp_count));
 				
 				// put these files on the end of the array so they also get processed
 				$files = array_merge($files, $sub_files);
@@ -151,7 +151,7 @@ function output_bt($request)
 			}
 			$torrent['info']['private'] = 0;
 			// use a . as the name so that it can use the root of the file system
-			$torrent['info']['name'] = 'Files from ' . HTML_NAME;
+			$torrent['info']['name'] = 'Files from ' . setting('html_name');
 			$torrent['info']['piece length'] = ($total_size < 1024*1024*10)?pow(2,18):(($total_size < 1024*1024*1024*10)?pow(2,19):pow(2,20));
 			$torrent['info']['pieces'] = '';
 			
@@ -200,8 +200,8 @@ function output_bt($request)
 			
 			$torrent['announce'] = url('bt=announce&module=bt', true, true);
 			$torrent['creation date'] = time();
-			$torrent['comment'] = HTML_NAME;
-			$torrent['created by'] = HTML_NAME;
+			$torrent['comment'] = setting('html_name');
+			$torrent['created by'] = setting('html_name');
 			
 			// encode info to sha1 it and get hash value
 			$info_hash = sha1(BEncode($torrent['info']));
@@ -222,28 +222,28 @@ function output_bt($request)
 			quickQuery($query);
 			
 			// kill previous ctorrent
-			$stop = "kill `cat ". escapeshellarg(TMP_DIR . $info_hash . '.pid') . "`";
+			$stop = "kill `cat ". escapeshellarg(setting('tmp_dir') . $info_hash . '.pid') . "`";
 			system ($stop);
-			if(file_exists(TMP_DIR . $info_hash . '.pid'))
-				unlink(TMP_DIR . $info_hash . '.pid');
+			if(file_exists(setting('tmp_dir') . $info_hash . '.pid'))
+				unlink(setting('tmp_dir') . $info_hash . '.pid');
 		
 			
 			// restart ctorrent
 			$filename = 'temp-' . time();
 			
-			if($fp = @fopen(TMP_DIR . $filename . '.torrent', 'w'))
+			if($fp = @fopen(setting('tmp_dir') . $filename . '.torrent', 'w'))
 			{
 				fwrite($fp, BEncode($torrent));
 				fclose($fp);
 			}
-			$pid = escapeshellarg(TMP_DIR . $info_hash . '.pid');
-			$file = escapeshellarg(TMP_DIR . $filename . '.torrent');
-			$stat = escapeshellarg(TMP_DIR . $filename . '.stat');
+			$pid = escapeshellarg(setting('tmp_dir') . $info_hash . '.pid');
+			$file = escapeshellarg(setting('tmp_dir') . $filename . '.torrent');
+			$stat = escapeshellarg(setting('tmp_dir') . $filename . '.stat');
 			$command = "cd /tmp/; /usr/local/bin/ctorrent -s / '" . $file . "' > '" . $stat . "' & echo $! > '" . $pid . "'";
 			shell_exec($command);
 			
 			header('Content-Type: application/x-bittorrent');
-			header('Content-Disposition: filename="' . HTML_NAME . '-' . time() . '.torrent"'); 
+			header('Content-Disposition: filename="' . setting('html_name') . '-' . time() . '.torrent"'); 
 			
 			print BEncode($torrent);
 		}

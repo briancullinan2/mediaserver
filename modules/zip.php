@@ -10,7 +10,7 @@ function register_zip()
 		'name' => 'Zip Creator',
 		'description' => 'Support downloading of zip packages.',
 		'privilage' => 1,
-		'path' => __FILE__
+		'path' => __FILE__,
 	);
 }
 
@@ -72,7 +72,7 @@ function output_zip($request)
 		{
 			// get all files in directory
 			$props = array('dir' => $file['Filepath']);
-			$sub_files = call_user_func_array((USE_DATABASE?'db_':'fs_') . 'file::get', array($props, &$tmp_count));
+			$sub_files = call_user_func_array(validate_cat(array('cat' => 'file')) . '::get', array($props, &$tmp_count));
 		
 			// put these files on the end of the array so they also get processed
 			$files = array_merge($files, $sub_files);
@@ -91,7 +91,7 @@ function output_zip($request)
 
 	header('Content-Transfer-Encoding: binary');
 	header('Content-Type: application/zip');
-	header('Content-Disposition: filename="' . HTML_NAME . '-' . time() . '.zip"'); 
+	header('Content-Disposition: filename="' . setting('html_name') . '-' . time() . '.zip"'); 
 
 	// loop through files and generate and expected file length
 	$length = 22;
@@ -155,7 +155,7 @@ function output_zip($request)
 			{
 				break;
 			}
-			$buffer=fread($fp, BUFFER_SIZE);
+			$buffer=fread($fp, setting('buffer_size'));
 			$len=strlen($buffer);      
 			$t=crc32($buffer);   
 	       

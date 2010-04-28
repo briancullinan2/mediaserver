@@ -12,7 +12,7 @@ class fs_audio extends fs_file
 	static function init()
 	{
 		// include the id handler
-		require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.php';
+		include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.php';
 		
 		// set up id3 reader incase any files need it
 		$GLOBALS['getID3'] = new getID3();

@@ -278,7 +278,7 @@ class db_watch_list extends db_watch
 					// check if execution time is too long
 					$secs_total = array_sum(explode(' ', microtime())) - $GLOBALS['tm_start'];
 					
-					if( $secs_total > DIRECTORY_SEEK_TIME )
+					if( $secs_total > setting('dir_seek_time') )
 					{
 						// return the path to be saved in the state
 						return $file['Filepath'];

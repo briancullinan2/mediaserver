@@ -21,7 +21,7 @@ function output_wmp()
 function theme_frame()
 {
 	// ?><script>
-	var win = new qx.ui.window.Window("<?php print HTML_NAME;?>");
+	var win = new qx.ui.window.Window("<?php print setting('html_name');?>");
 	
 	<?php
 }

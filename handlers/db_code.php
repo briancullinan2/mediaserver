@@ -58,7 +58,7 @@ class db_code extends db_file
 	
 	static function init()
 	{
-		require_once 'Text' . DIRECTORY_SEPARATOR . 'Highlighter.php';
+		include_once 'Text' . DIRECTORY_SEPARATOR . 'Highlighter.php';
 	}
 
 	static function columns()

@@ -60,23 +60,11 @@ define('HTML_NAME',			                                   'Brian\'s Media Website
 %OF - Output file if necissary
 */
 // More options can be added but you will have to do some scripting in the convert.php module
-define('CONVERT', 				   'C:\Program Files\ImageMagick-6.4.9-Q16\convert.exe'); // image magick's convert program
-define('CONVERT_ARGS', 			   '"%IF" %FM:-'); // image magick's convert program
+define('CONVERT', 				   ''); // image magick's convert program
+define('CONVERT_ARGS', 			   ''); // image magick's convert program
 
 // the arguments to use with encode are as follows
 /*
-%IF - Input file, the filename that will be inserted for transcoding
-%VC - Video Codec to be used in the conversion
-%AC - Audio Codec
-%VB - Video Bitrate
-%AB - Audio Bitrate
-%SR - Sample Rate
-%SR - Scale
-%CH - Number of Channels
-%MX - Muxer to use for encapsulating the streams
-%TO - Time Offset for resumable listening and moving time position
-%FS - Frames per Second
-%OF - Output file if necissary
 */
 // More options can be added but you will have to do some scripting in the encode.php module
 // remember ffmpeg uses generally the same codec names as the default vlc, however custom commands may be needed to convert to each type

@@ -23,7 +23,7 @@ function theme_live_footer()
 										if($module['privilage'] > $GLOBALS['templates']['vars']['user']['Privilage'])
 											continue;
 										
-										?><li class="last"><a href="<?php echo url('module=' . $name); ?>"><?php echo $module['name']; ?></a></li><?php
+										?><li class="last"><a href="<?php print url('module=' . $name); ?>"><?php echo $module['name']; ?></a></li><?php
 									}
 									?>
 									</ul>
@@ -40,7 +40,7 @@ function theme_live_footer()
 											continue;
 											
 										$name = str_replace(' from Database', '', constant($handler . '::NAME'));
-										?><li class="last"><a href="<?php echo url('module=select&cat=' . $handler); ?>"><?php echo $name; ?></a></li><?php
+										?><li class="last"><a href="<?php print url('module=select&cat=' . $handler); ?>"><?php echo $name; ?></a></li><?php
 									}
 									?>
 									</ul>

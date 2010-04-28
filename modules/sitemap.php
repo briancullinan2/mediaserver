@@ -29,7 +29,7 @@ function output_sitemap($request)
 	?>
 	<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 	<url>
-		<loc><?php echo HTML_DOMAIN; ?></loc>
+		<loc><?php echo url('', true, true); ?></loc>
 		<lastmod><?php echo date('Y-m-d'); ?></lastmod>
 		<changefreq>hourly</changefreq>
 		<priority>1</priority>

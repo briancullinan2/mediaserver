@@ -206,8 +206,6 @@ function output_tests($install_step)
 			'settings_perm' => $GLOBALS['templates']['vars']['settings'],
 			'mod_rewrite' => '',
 			'memory_limit' => $GLOBALS['templates']['vars']['memory_limit'],
-			'encode' => 'ENCODE_PATH',
-			'convert' => 'CONVERT_PATH'
 		);
 		break;
 		case 2:
@@ -563,76 +561,6 @@ function output_test_memory_limit($result, $variable)
 		<?php
 	}
 }
-
-
-function output_test_encode($result, $variable)
-{
-	// check for convert and image magic and vlc
-	if($result)
-	{
-		?><tr><td class="title">Encoder Path</td>
-		<td>
-		<input type="text" name="ENCODE_PATH" value="<?php echo $variable; ?>" />
-		</td>
-		<td class="desc">
-		<ul>
-			<li>An encoder has been set and detected, you may change this path to specify a new encoder.</li>
-			<li>The system needs some sort of file encoder that it can use to output files in different formats.</li>
-			<li>The encoder detected is "<?php echo basename($variable); ?>".</li>
-		</ul>
-		</td></tr>
-		<?php
-	}
-	else
-	{
-		?><tr><td class="title warn">Encoder Path</td>
-		<td>
-		<input type="text" name="ENCODE_PATH" value="<?php echo $variable; ?>" />
-		</td>
-		<td class="desc">
-		<ul>
-			<li>The system needs some sort of file encoder that it can use to output files in different formats.</li>
-			<li>This encoder could be VLC or FFMPEG.</li>
-		</ul>
-		</td></tr>
-		<?php
-	}
-}
-
-
-function output_test_convert($result, $variable)
-{
-	if($result)
-	{
-		?><tr><td class="title">Convert Path</td>
-		<td>
-		<input type="text" name="CONVERT_PATH" value="<?php echo $variable; ?>" />
-		</td>
-		<td class="desc">
-		<ul>
-			<li>A converter has been set and detected, you may change this path to specify a new converter.</li>
-			<li>The system needs some sort of image converter for creating thumbnails of images and outputting images as different file types.</li>
-			<li>The encoder detected is "<?php echo basename($variable); ?>".</li>
-		</ul>
-		</td></tr>
-		<?php
-	}
-	else
-	{
-		?><tr><td class="title warn">Convert Path</td>
-		<td>
-		<input type="text" name="CONVERT_PATH" value="<?php echo $variable; ?>" />
-		</td>
-		<td class="desc">
-		<ul>
-			<li>The system needs some sort of image converter for creating thumbnails of images and outputting images as different file types.</li>
-			<li>This convert could be ImageMagik.</li>
-		</ul>
-		</td></tr>
-		<?php
-	}
-}
-
 
 function output_test_local_root($result, $variable)
 {

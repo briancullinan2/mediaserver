@@ -118,7 +118,7 @@ function alter_query_file($request, $props)
 			$request['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
 			
 		// maybe the dir is not loaded yet, this part is costly but it is a good way to do it
-		if(RECURSIVE_GET && db_watch_list::handles($request['dir']))
+		if(setting('recursive_get') && db_watch_list::handles($request['dir']))
 		{
 			db_watch_list::scan_dir($request['dir']);
 		}
@@ -354,7 +354,7 @@ function output_file($request)
 	
 	// output file
 	while (!feof($fp)) {
-		fwrite($op, fread($fp, BUFFER_SIZE));
+		fwrite($op, fread($fp, setting('buffer_size')));
 	}
 	
 	// close file handles and return succeeded

@@ -25,7 +25,7 @@ function theme_plain_m3u()
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title><?php print HTML_NAME; ?>: M3U List</title>
+<title><?php print setting('html_name'); ?>: M3U List</title>
 </head>
 <body>
 Note: All non-media types will be filtered out using this list type.<br />

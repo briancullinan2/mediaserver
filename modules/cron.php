@@ -33,9 +33,9 @@ function register_cron()
  */
 function save_state($state)
 {
-	$fp = @fopen(LOCAL_ROOT . "state_dirs.txt", "w");
+	$fp = @fopen(setting('local_root') . "state_dirs.txt", "w");
 	if($fp === false) // try tmp dir
-		$fp = @fopen(TMP_DIR . "state_dirs.txt", "w");
+		$fp = @fopen(setting('tmp_dir') . "state_dirs.txt", "w");
 	if($fp !== false)
 	{
 		fwrite($fp, serialize($state));
@@ -275,13 +275,13 @@ function output_cron($request)
 	
 	//------------- DON'T CHANGE THIS - USE /include/settings.php TO MODIFY THESE VALUES ---------//
 	// add 30 seconds becase the cleanup shouldn't take any longer then that
-	set_time_limit(DIRECTORY_SEEK_TIME + FILE_SEEK_TIME + CLEAN_UP_BUFFER_TIME);
+	set_time_limit(setting('dir_seek_time') + FILE_SEEK_TIME + CLEAN_UP_BUFFER_TIME);
 	
 	// ignore user abort because the script will handle it
 	ignore_user_abort(1);
 	
 	// start output buffer so we can save in tmp file
-	$log_fp = @fopen(TMP_DIR . 'mediaserver.log', 'wb');
+	$log_fp = @fopen(setting('tmp_dir') . 'mediaserver.log', 'wb');
 	ob_start(create_function('$buffer', 'global $log_fp; @fwrite($log_fp, $buffer); return $buffer;'));
 	
 	// start the page with a pre to output messages that can be viewed in a browser
@@ -310,7 +310,7 @@ function output_cron($request)
 	PEAR::raiseError('Cron Script: ' . VERSION . '_' . VERSION_NAME, E_DEBUG);
 	
 	// the cron script is useless if it has nowhere to store the information it reads
-	if(USE_DATABASE == false || count($GLOBALS['watched']) == 0)
+	if(setting('use_database') == false || count($GLOBALS['watched']) == 0)
 	{
 		@fclose($log_fp);
 		exit;
@@ -327,10 +327,10 @@ function output_cron($request)
 	$state = array();
 	
 	// get previous state if it exists
-	if( file_exists(LOCAL_ROOT . 'state_dirs.txt') )
-		$state = unserialize(implode("", @file(LOCAL_ROOT . "state_dirs.txt")));
-	elseif( file_exists(TMP_DIR . 'state_dirs.txt') )
-		$state = unserialize(implode("", @file(TMP_DIR . "state_dirs.txt")));
+	if( file_exists(setting('local_root') . 'state_dirs.txt') )
+		$state = unserialize(implode("", @file(setting('local_root') . "state_dirs.txt")));
+	elseif( file_exists(setting('tmp_dir') . 'state_dirs.txt') )
+		$state = unserialize(implode("", @file(setting('tmp_dir') . "state_dirs.txt")));
 	
 	// something is wrong
 	if(!is_array($state))

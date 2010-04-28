@@ -57,15 +57,10 @@ define('HTML_NAME',			                                   'Brian\'s Media Website
 
 // the arguments to use with encode are as follows
 /*
-%IF - Input file, the filename that will be inserted for transcoding
-%FM - Format to output
-%TH - Thumbnail height
-%TW - Thumbnail width
-%OF - Output file if necissary
 */
 // More options can be added but you will have to do some scripting in the convert.php module
-define('CONVERT', 				   '/usr/bin/convert'); // image magick's convert program
-define('CONVERT_ARGS', 			   '"%IF" -resize "%TWx%TH" %FM:-'); // image magick's convert program
+define('CONVERT', 				   ''); // image magick's convert program
+define('CONVERT_ARGS', 			   ''); // image magick's convert program
 
 // the arguments to use with encode are as follows
 /*
@@ -85,7 +80,7 @@ define('CONVERT_ARGS', 			   '"%IF" -resize "%TWx%TH" %FM:-'); // image magick's
 // More options can be added but you will have to do some scripting in the encode.php module
 // remember ffmpeg uses generally the same codec names as the default vlc, however custom commands may be needed to convert to each type
 define('ENCODE', 				       '/usr/bin/vlc'); // a program that can convert video and audio streams
-define('ENCODE_ARGS',                  '-I dummy - --start-time=%TO :sout=\'#transcode{vcodec=%VC,acodec=%AC,vb=%VB,ab=%AB,samplerate=%SR,channels=%CH,audio-sync,scale=%SC,fps=%FS}:std{mux=%MX,access=file,dst=-}\' vlc://quit'); // a program that can convert video and audio streams
+define('ENCODE_ARGS',                  ''); // a program that can convert video and audio streams
 
 // the arguments to use with archive are as follows
 /*

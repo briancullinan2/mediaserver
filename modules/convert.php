@@ -11,8 +11,91 @@ function register_convert()
 		'description' => 'Convert images to different formats.',
 		'privilage' => 1,
 		'path' => __FILE__,
-		'notemplate' => true
+		'notemplate' => true,
+		'configurable' => array('convert_path', 'convert_args'),
 	);
+}
+
+function configure_convert($request)
+{
+	$request['convert_path'] = validate_convert_path($request);
+	$request['convert_args'] = validate_convert_args($request);
+	
+	$options = array();
+	
+	if(file_exists($request['convert_path']))
+	{
+		$options['convert_path'] = array(
+			'name' => 'Convert Path',
+			'status' => '',
+			'description' => '<li>A converter has been set and detected, you may change this path to specify a new converter.</li>
+			<li>The system needs some sort of image converter for creating thumbnails of images and outputting images as different file types.</li>
+			<li>The converter detected is "' . basename($request['convert_path']) . '".</li>',
+			'input' => '<input type="text" name="convert_path" value="' . htmlspecialchars($request['convert_path']) . '" />'
+		);
+	}
+	else
+	{
+		$options['convert_path'] = array(
+			'name' => 'Convert Path',
+			'status' => 'fail',
+			'description' => '<li>The system needs some sort of image converter for creating thumbnails of images and outputting images as different file types.</li>
+			<li>This convert could be ImageMagik.</li>',
+			'input' => '<input type="text" name="convert_path" value="' . htmlspecialchars($request['convert_path']) . '" />'
+		);
+	}
+	
+	$options['convert_args'] = array(
+		'name' => 'Convert Arguments',
+		'status' => '',
+		'description' => '<li>Specify the string of arguments to pass to the converter.</li>
+		<li>Certain keys in the argument string will be replaced with dynamic values by the encode plugin:
+		%IF - Input file, the filename that will be inserted for transcoding<br />
+		%FM - Format to output<br />
+		%TH - Thumbnail height<br />
+		%TW - Thumbnail width<br />
+		%OF - Output file if necissary<br />
+		</li>',
+		'input' => '<input type="text" name="convert_args" value="' . htmlspecialchars($request['convert_args']) . '" />'
+	);
+
+	return $options;
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return The default install path for VLC on windows or linux based on validate_SYSTEM_TYPE
+ */
+function validate_convert_path($request)
+{
+	if(isset($request['convert_path']) && is_file($request['convert_path']))
+		return $request['convert_path'];
+	else
+	{
+		if(setting('system_type') == 'win')
+			return 'C:\Program Files\ImageMagick-6.4.9-Q16\convert.exe';
+		else
+			return '/usr/bin/convert';
+	}
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return The entire arg string for further validation by the configure() function
+ */
+function validate_convert_args($request)
+{
+	if(isset($request['convert_args']) && is_file($request['convert_args']))
+		return $request['convert_args'];
+	else
+	{
+		if(setting('system_type') == 'win')
+			return '"%IF" %FM:-';
+		else
+			return '"%IF" -resize "%TWx%TH" %FM:-';
+	}
 }
 
 /**
@@ -157,7 +240,17 @@ function output_convert($request)
 
 	// replace the argument string with the contents of $_REQUEST
 	//  without validation this is VERY DANGEROUS!
-	$cmd = basename(CONVERT) . ' ' . str_replace(array('%TH', '%TW', '%IF', '%FM'), array($request['cheight'], $request['cwidth'], $request['cfile'], $request['cformat']), CONVERT_ARGS);
+	$cmd = basename(setting('convert_path')) . ' ' . str_replace(array(
+		'%TH', 
+		'%TW', 
+		'%IF', 
+		'%FM'
+	), array(
+		$request['cheight'], 
+		$request['cwidth'], 
+		$request['cfile'], 
+		$request['cformat']
+	), setting('convert_args'));
 
 	// run process and output binary from pipe
 	$descriptorspec = array(
@@ -165,7 +258,7 @@ function output_convert($request)
 	   1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
 	);
 
-	$process = proc_open($cmd, $descriptorspec, $pipes, dirname(CONVERT), NULL, array('binary_pipes' => true));
+	$process = proc_open($cmd, $descriptorspec, $pipes, dirname(setting('convert_path')), NULL, array('binary_pipes' => true));
 
 	// output file
 	if(is_resource($process))
@@ -177,7 +270,7 @@ function output_convert($request)
 				proc_terminate($process);
 				break;
 			}
-			print fread($pipes[1], BUFFER_SIZE);
+			print fread($pipes[1], setting('buffer_size'));
 			flush();
 		}
 		fclose($pipes[1]);

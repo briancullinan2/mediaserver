@@ -15,7 +15,7 @@ function theme_plain_rss()
 	?>
 	<rss version="2.0">
 		<channel>
-			<title><?php print HTML_NAME; ?> - <?php print $GLOBALS['templates']['vars']['cat']; ?></title>
+			<title><?php print setting('html_name'); ?> - <?php print $GLOBALS['templates']['vars']['cat']; ?></title>
 			<link><?php print url('', false, true); ?></link>
 			<description></description>
             <?php

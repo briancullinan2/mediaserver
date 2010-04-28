@@ -21,14 +21,29 @@ class db_amazon extends db_file
 	// initialize any extra tools this handler needs
 	static function init()
 	{
-		// include the id handler
-		require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.php';
+		if(file_exists(setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.php'))
+		{
+			// include the id handler
+			include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.php';
+			
+			// set up id3 reader incase any files need it
+			$GLOBALS['getID3'] = new getID3();
+		}
+		else
+			PEAR::raiseError('getID3() missing from include directory! Archive handlers cannot function properly.', E_DEBUG);
 		
-		// include snoopy to download pages
-		require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'Snoopy.class.php';
-		
-		// set up id3 reader incase any files need it
-		$GLOBALS['snoopy'] = new Snoopy();
+		if(file_exists(setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.php'))
+		{
+			// include snoopy to download pages
+			include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'Snoopy.class.php';
+			
+			// set up id3 reader incase any files need it
+			$GLOBALS['snoopy'] = new Snoopy();
+		}
+		else
+			PEAR::raiseError('getID3() missing from include directory! Archive handlers cannot function properly.', E_DEBUG);
+			
+		return false;
 	}
 
 	static function columns()

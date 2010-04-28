@@ -38,7 +38,7 @@ function register_admin_tools_statistics()
 function validate_tools_logs($request)
 {
 	if(!isset($request['logs']))
-		return array(TMP_DIR . 'mediaserver.log');
+		return array(setting('tmp_dir') . 'mediaserver.log');
 	else
 	{
 		$logs = preg_split('/[\n\r;]/i', $request['logs']);
@@ -55,7 +55,7 @@ function validate_tools_logs($request)
 			if(is_dir($file))
 			{
 				if($file[strlen($file)-1] != '/' && $file[strlen($file)-1] != '\\') $file .= '/';
-				if ($dh = @opendir(LOCAL_ROOT . 'templates'))
+				if ($dh = @opendir($file))
 				{
 					while (($subfile = readdir($dh)) !== false)
 					{
@@ -107,7 +107,7 @@ function output_admin_tools_statistics($request)
 				// loop through file and get lines
 				while(!feof($fh))
 				{
-					$line = fgets($fh, BUFFER_SIZE);
+					$line = fgets($fh, setting('buffer_size'));
 					$line_count++;
 				
 					// try and regexp parse the line

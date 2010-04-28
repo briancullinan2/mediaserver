@@ -1,3 +1,8 @@
+Move template settings and site settings over to their designated plugin
+Create a plugin for adding system checks for db_archive and any module that uses getID3()
+Create a status admin tool
+Finish setting() function in settings.php plugin
+	Settings should also be loadable from the database
 Make validate_return actually validate the return path
 Fix vulnerability with template printing out any valid file
 Test and find a fix for some media dropping off the network
@@ -7,18 +12,12 @@ Remove all occurances on props['WHERE'] being set to a string
 	Same with all the other variables
 Start implementing lang() calls
 Set variables to default specified by template if they are not set because of an improper input
-Change tools to output a list like the select module, a list of info objects used for outputting
 Cache all loaded module files in settings database (possibly storing in admin settings and deserializing would be efficient?)
-Check all requires to make sure they can't be substituted for an include (abstract them to allow for better error handling)
 Finish ampache.php module to support genres, videos, and playlists
 Check for bt module in install.php script
 Add bttracker install script to admin/install.php to fully bootstrap the install process
-Re-upload entire site
 Finish fixing up modules to use new API
 	admin tools section
-Drupalish style coding
-	More streamlined way of modules outputting data to template (assuming that $files is being used is no good)
-Doxygen compliant
 Speed testing with new User queries
 More compatibility testing with clients
 ------------- GENERAL TODO -------------
@@ -26,7 +25,7 @@ Store the remote_address in the session, and if it doesn't match up with what is
 Create a unique id and insert it into forms, this is required when the form is submitted
 Make hard links and soft links, hard links are replaced when they are put in to the database, soft links are replaced when they are read from the database, this will allow us to do more network stuff
 Interface with mediatomb and support UPnP protocol
-------------- module TODO -------------
+------------- Module TODO -------------
 Finish users.php module
 Work on settings.php module
 	Global settings such as default template to use for each devide logged in the to account
@@ -42,7 +41,7 @@ Get ranges working in encode module
 	only allow the option if the argument can read from stdin and read the input from the handler and write it to the input stream
 Figure out a way of doing this with files even if stdin is not being used in the command, if fopen is writing to a file, does it file feof when reading from the same file simulaneously?
 Make convert.php module recognize video thumbnails and use vlc to extract them
-------------- handler TODO -------------
+------------- Handler TODO -------------
 Look in to the possibility of corruption if the db_files::handles check for is_dir or is_file is removed (if file is removed before cron.php detects it, it won't load all the available information from DB)
 Make a discography handler that parses out wikipedia discographys, store album information, and return links to Full Discography, and Partial Discography
 	Base discography handler on discogs.com

@@ -94,24 +94,20 @@ class db_watch extends db_file
 	
 	static function get($request, &$count)
 	{
-		$files = array();
-		if(USE_DATABASE)
+		$props = array();
+		
+		$props = array(
+			'SELECT' => self::DATABASE,
+			'WHERE' => 'Filepath REGEXP "' . addslashes(substr($request['search_Filepath'], 1, strlen($request['search_Filepath']) - 2)) . '"'
+		);
+		
+		// get directory from database
+		$files = $GLOBALS['database']->query($props, false);
+		
+		// make some changes
+		foreach($files as $i => $file)
 		{
-			$props = array();
-			
-			$props = array(
-				'SELECT' => self::DATABASE,
-				'WHERE' => 'Filepath REGEXP "' . addslashes(substr($request['search_Filepath'], 1, strlen($request['search_Filepath']) - 2)) . '"'
-			);
-			
-			// get directory from database
-			$files = $GLOBALS['database']->query($props, false);
-			
-			// make some changes
-			foreach($files as $i => $file)
-			{
-				$files[$i]['Filepath'] = substr($file['Filepath'], 1);
-			}
+			$files[$i]['Filepath'] = substr($file['Filepath'], 1);
 		}
 		
 		return $files;

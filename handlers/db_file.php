@@ -206,136 +206,133 @@ class db_file
 		}
 		
 		$files = array();
+	
+		// set up initial props
+		$props = array();
+		$request['cat'] = $handler;
+		$request['limit'] = validate_limit($request);
+		$request['start'] = validate_start($request);
+		$request['order_by'] = validate_order_by($request);
+		$request['direction'] = validate_direction($request);
+		$request['selected'] = validate_selected($request);
 		
-		if(USE_DATABASE)
-		{
-			// set up initial props
-			$props = array();
-			$request['cat'] = $handler;
-			$request['limit'] = validate_limit($request);
-			$request['start'] = validate_start($request);
-			$request['order_by'] = validate_order_by($request);
-			$request['direction'] = validate_direction($request);
-			$request['selected'] = validate_selected($request);
-			
-			$props = alter_query_core($request, $props);
+		$props = alter_query_core($request, $props);
 
 //---------------------------------------- Selection ----------------------------------------\\
-			$columns = call_user_func($handler . '::columns');
+		$columns = call_user_func($handler . '::columns');
 
-			// select an array of ids!
-			if(isset($request['selected']) && count($request['selected']) > 0 )
+		// select an array of ids!
+		if(isset($request['selected']) && count($request['selected']) > 0 )
+		{
+			$props['WHERE'] = '';
+			// compile where statement for either numeric id or encoded path
+			foreach($request['selected'] as $i => $id)
 			{
-				$props['WHERE'] = '';
-				// compile where statement for either numeric id or encoded path
-				foreach($request['selected'] as $i => $id)
+				if(is_numeric($id))
 				{
-					if(is_numeric($id))
-					{
-						$props['WHERE'] .= ' id = ' . $id . ' OR';
-					}
-					else
-					{
-						// unpack encoded path and add it to where
-						$props['WHERE'] .= ' Hex = "' . $id . '" OR';
-					}
-				}
-				// remove last or
-				$props['WHERE'] = substr($props['WHERE'], 0, strlen($props['WHERE'])-2);
-
-				// selected items have priority over all the other options!
-				unset($props['LIMIT']);
-				unset($props['ORDER']);
-				unset($request);
-				
-				// get ids from centralized id database
-				$files = $GLOBALS['database']->query(array('WHERE' => $props['WHERE'], 'SELECT' => db_ids::DATABASE), true);
-				
-				if(count($files) > 0)
-				{
-					// loop through ids and construct new where based on handler
-					$props['WHERE'] = '';
-					foreach($files as $i => $file)
-					{
-							$props['WHERE'] .= ' id = ' . $file[constant($handler . '::DATABASE') . '_id'] . ' OR';
-					}
-					$props['WHERE'] = substr($props['WHERE'], 0, strlen($props['WHERE'])-2);
+					$props['WHERE'] .= ' id = ' . $id . ' OR';
 				}
 				else
 				{
-					PEAR::raiseError('IDs not found!', E_USER);
-					return array();
+					// unpack encoded path and add it to where
+					$props['WHERE'] .= ' Hex = "' . $id . '" OR';
 				}
 			}
-		
-			$props = alter_query_file($request, $props);
+			// remove last or
+			$props['WHERE'] = substr($props['WHERE'], 0, strlen($props['WHERE'])-2);
 
-			$props = alter_query_search($request, $props);
+			// selected items have priority over all the other options!
+			unset($props['LIMIT']);
+			unset($props['ORDER']);
+			unset($request);
 			
-//---------------------------------------- Query ----------------------------------------\\
-			// finally start processing query
-			$props['SELECT'] = constant($handler . '::DATABASE');
-			if(isset($props['GROUP'])) $props['COLUMNS'] = ',count(*)' . (isset($props['COLUMNS'])?$props['COLUMNS']:'');
-			$props['COLUMNS'] = '*' . (isset($props['COLUMNS'])?$props['COLUMNS']:'');
+			// get ids from centralized id database
+			$files = $GLOBALS['database']->query(array('WHERE' => $props['WHERE'], 'SELECT' => db_ids::DATABASE), true);
 			
-			// get directory from database
-			$files = $GLOBALS['database']->query($props, true);
-
-			if($files !== false)
+			if(count($files) > 0)
 			{
-				// now make some changes
-				foreach($files as $index => $file)
+				// loop through ids and construct new where based on handler
+				$props['WHERE'] = '';
+				foreach($files as $i => $file)
 				{
-					// do alias replacement on every file path
-					if(USE_ALIAS == true)
+						$props['WHERE'] .= ' id = ' . $file[constant($handler . '::DATABASE') . '_id'] . ' OR';
+				}
+				$props['WHERE'] = substr($props['WHERE'], 0, strlen($props['WHERE'])-2);
+			}
+			else
+			{
+				PEAR::raiseError('IDs not found!', E_USER);
+				return array();
+			}
+		}
+	
+		$props = alter_query_file($request, $props);
+
+		$props = alter_query_search($request, $props);
+		
+//---------------------------------------- Query ----------------------------------------\\
+		// finally start processing query
+		$props['SELECT'] = constant($handler . '::DATABASE');
+		if(isset($props['GROUP'])) $props['COLUMNS'] = ',count(*)' . (isset($props['COLUMNS'])?$props['COLUMNS']:'');
+		$props['COLUMNS'] = '*' . (isset($props['COLUMNS'])?$props['COLUMNS']:'');
+		
+		// get directory from database
+		$files = $GLOBALS['database']->query($props, true);
+
+		if($files !== false)
+		{
+			// now make some changes
+			foreach($files as $index => $file)
+			{
+				// do alias replacement on every file path
+				if(USE_ALIAS == true)
+				{
+					if(isset($file['Filepath']))
+						$files[$index]['Filepath'] = preg_replace($GLOBALS['paths_regexp'], $GLOBALS['alias'], $file['Filepath']);
+					$alias_flipped = array_flip($GLOBALS['alias']);
+					// check if the replaced path was the entire alias path
+					// in this case we want to replace the filename with the alias name
+					if(isset($file['Filepath']) && isset($alias_flipped[$file['Filepath']]))
 					{
-						if(isset($file['Filepath']))
-							$files[$index]['Filepath'] = preg_replace($GLOBALS['paths_regexp'], $GLOBALS['alias'], $file['Filepath']);
-						$alias_flipped = array_flip($GLOBALS['alias']);
-						// check if the replaced path was the entire alias path
-						// in this case we want to replace the filename with the alias name
-						if(isset($file['Filepath']) && isset($alias_flipped[$file['Filepath']]))
-						{
-							$index = $alias_flipped[$file['Filepath']];
-							$files[$index]['Filename'] = substr($GLOBALS['alias'][$index], 1, strlen($GLOBALS['alias'][$index]) - 2);
-						}
+						$index = $alias_flipped[$file['Filepath']];
+						$files[$index]['Filename'] = substr($GLOBALS['alias'][$index], 1, strlen($GLOBALS['alias'][$index]) - 2);
 					}
 				}
-				
+			}
+			
 //---------------------------------------- Get Count ----------------------------------------\\
-				// only get count if the query is not limited by the limit field
-				//  get count if limit is not set, which is should always be because of validate()
-				//  get count if it is greater than or equal to the limit, even though it will always be equal to or less then limit
-				//  if it is less, only get count if start is set
-				if(!isset($request['limit']) || count($files) >= $request['limit'] || (isset($request['start']) && $request['start'] > 0))
+			// only get count if the query is not limited by the limit field
+			//  get count if limit is not set, which is should always be because of validate()
+			//  get count if it is greater than or equal to the limit, even though it will always be equal to or less then limit
+			//  if it is less, only get count if start is set
+			if(!isset($request['limit']) || count($files) >= $request['limit'] || (isset($request['start']) && $request['start'] > 0))
+			{
+				// this is how we get the count of all the items
+				//  unset the limit to count it
+				unset($props['LIMIT']);
+				unset($props['ORDER']);
+				$props['COLUMNS'] = '*';
+				
+				// if where is not set then there is no reason to count the entire database
+				if(!isset($props['WHERE']) && !isset($props['GROUP']))
 				{
-					// this is how we get the count of all the items
-					//  unset the limit to count it
-					unset($props['LIMIT']);
-					unset($props['ORDER']);
-					$props['COLUMNS'] = '*';
-					
-					// if where is not set then there is no reason to count the entire database
-					if(!isset($props['WHERE']) && !isset($props['GROUP']))
-					{
-						$props = array('SELECT' => constant($handler . '::DATABASE'));
-					}
-					else
-					{
-						// count the last query
-						$props = array('SELECT' => '(' . DATABASE::statement_builder($props, true) . ') AS db_to_count');
-					}
-					$props['COLUMNS'] = 'count(*)';
-					
-					$result = $GLOBALS['database']->query($props, false);
-					
-					$count = intval($result[0]['count(*)']);
+					$props = array('SELECT' => constant($handler . '::DATABASE'));
 				}
-				// set the count to whatever the number of files is
 				else
 				{
-					$count = count($files);
+					// count the last query
+					$props = array('SELECT' => '(' . DATABASE::statement_builder($props, true) . ') AS db_to_count');
 				}
+				$props['COLUMNS'] = 'count(*)';
+				
+				$result = $GLOBALS['database']->query($props, false);
+				
+				$count = intval($result[0]['count(*)']);
+			}
+			// set the count to whatever the number of files is
+			else
+			{
+				$count = count($files);
 			}
 		}
 			

@@ -11,8 +11,102 @@ function register_encode()
 		'description' => 'Encode video files to the selected output.',
 		'privilage' => 1,
 		'path' => __FILE__,
-		'notemplate' => true
+		'notemplate' => true,
+		'configurable' => array('encode_path', 'encode_args'),
 	);
+}
+
+/**
+ * Checks for encode path
+ * @ingroup install
+ */
+function configure_encode($request)
+{
+	$request['encode_path'] = validate_encode_path($request);
+	$request['encode_args'] = validate_encode_args($request);
+	
+	$options = array();
+	
+	if(file_exists($request['encode_path']))
+	{
+		$options['encode_path'] = array(
+			'name' => 'Encode Path',
+			'status' => '',
+			'description' => '<li>An encoder has been set and detected, you may change this path to specify a new encoder.</li>
+			<li>The system needs some sort of file encoder that it can use to output files in different formats.</li>
+			<li>The encoder detected is "' . basename($request['encode_path']) . '".</li>',
+			'input' => '<input type="text" name="encode_path" value="' . htmlspecialchars($request['encode_path']) . '" />'
+		);
+	}
+	else
+	{
+		$options['encode_path'] = array(
+			'name' => 'Encode Path',
+			'status' => 'fail',
+			'description' => '<li>The system needs some sort of file encoder that it can use to output files in different formats.</li>
+			<li>This encoder could be VLC or FFMPEG.</li>',
+			'input' => '<input type="text" name="encode_path" value="' . htmlspecialchars($request['encode_path']) . '" />'
+		);
+	}
+	
+	$options['encode_args'] = array(
+		'name' => 'Encode Arguments',
+		'status' => '',
+		'description' => '<li>Specify the string of arguments to pass to the encoder.</li>
+		<li>Certain keys in the argument string will be replaced with dynamic values by the encode plugin:
+		%IF - Input file, the filename that will be inserted for transcoding<br />
+		%VC - Video Codec to be used in the conversion<br />
+		%AC - Audio Codec<br />
+		%VB - Video Bitrate<br />
+		%AB - Audio Bitrate<br />
+		%SR - Sample Rate<br />
+		%SR - Scale<br />
+		%CH - Number of Channels<br />
+		%MX - Muxer to use for encapsulating the streams<br />
+		%TO - Time Offset for resumable listening and moving time position<br />
+		%FS - Frames per Second<br />
+		%OF - Output file if necissary
+		</li>',
+		'input' => '<input type="text" name="encode_args" value="' . htmlspecialchars($request['encode_args']) . '" />'
+	);
+	
+	return $options;
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return The default install path for VLC on windows or linux based on validate_SYSTEM_TYPE
+ */
+function validate_encode_path($request)
+{
+	if(isset($request['encode_path']) && is_file($request['encode_path']))
+		return $request['encode_path'];
+	else
+	{
+		if(setting('system_type') == 'win')
+			return 'C:\Program Files\VideoLAN\VLC\vlc.exe';
+		else
+			return '/usr/bin/vlc';
+	}
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return The entire arg string for further validation by the configure() function
+ */
+function validate_encode_args($request)
+{
+	if(isset($request['encode_args']) && is_file($request['encode_args']))
+		return $request['encode_args'];
+	else
+	{
+		if(setting('system_type') == 'win')
+			return '"%IF" :sout=#transcode{vcodec=%VC,acodec=%AC,vb=%VB,ab=%AB,samplerate=%SR,channels=%CH,audio-sync,scale=%SC,fps=%FS}:std{mux=%MX,access=file,dst=-} vlc://quit';
+		else
+			return '-I dummy - --start-time=%TO :sout=\'#transcode{vcodec=%VC,acodec=%AC,vb=%VB,ab=%AB,samplerate=%SR,channels=%CH,audio-sync,scale=%SC,fps=%FS}:std{mux=%MX,access=file,dst=-}\' vlc://quit';
+	}
 }
 
 /**
@@ -468,7 +562,19 @@ function output_encode($request)
 	
 	// replace the argument string with the contents of $_REQUEST
 	//  without validation this is VERY DANGEROUS!
-	$cmd = basename(ENCODE) . ' ' . str_replace(array('%IF', '%VC', '%AC', '%VB', '%AB', '%SR', '%SC', '%CH', '%MX', '%FS', '%TO'), array(
+	$cmd = basename(setting('encode_path')) . ' ' . str_replace(array(
+		'%IF', 
+		'%VC',
+		'%AC', 
+		'%VB', 
+		'%AB', 
+		'%SR', 
+		'%SC', 
+		'%CH', 
+		'%MX', 
+		'%FS', 
+		'%TO'
+	), array(
 		$request['efile'],
 		$request['vcodec'],
 		$request['acodec'],
@@ -480,7 +586,7 @@ function output_encode($request)
 		$request['muxer'],
 		$request['framerate'],
 		$request['timeoffset']
-	), ENCODE_ARGS);
+	), setting('encode_args'));
 	
 	$descriptorspec = array(
 	   0 => array("pipe", "r"),  // stdin is a pipe that the child will read from
@@ -489,7 +595,7 @@ function output_encode($request)
 	);
 	
 	// start process
-	$process = proc_open($cmd, $descriptorspec, $pipes, dirname(ENCODE), NULL); //array('binary_pipes' => true, 'bypass_shell' => true));
+	$process = proc_open($cmd, $descriptorspec, $pipes, dirname(setting('encode_path')), NULL); //array('binary_pipes' => true, 'bypass_shell' => true));
 	
 	stream_set_blocking($pipes[0], 0);
 	stream_set_blocking($pipes[1], 0);
@@ -505,7 +611,7 @@ function output_encode($request)
 	{
 		// don't use the file at all if the %IF field exists in the ARGS sections
 		//   the reason for this is because it won't be reading from STDIN
-		$file_closed = (strpos(ENCODE_ARGS, '%IF') !== false);
+		$file_closed = (strpos(setting('encode_args'), '%IF') !== false);
 		$read_count = 0;
 		$write_count = 0;
 		$in_buffer = '';
@@ -556,7 +662,7 @@ function output_encode($request)
 			// if we can read then read more and send it out to php
 			if(in_array($pipes[1], $read))
 			{
-				$count = fwrite($php_out, fread($pipes[1], BUFFER_SIZE));
+				$count = fwrite($php_out, fread($pipes[1], setting('buffer_size')));
 				$read_count += $count;
 			}
 			
@@ -565,7 +671,7 @@ function output_encode($request)
 			{
 				if(strlen($in_buffer) == 0)
 				{
-					$in_buffer = fread($fp, BUFFER_SIZE);
+					$in_buffer = fread($fp, setting('buffer_size'));
 				}
 				$count = fwrite($pipes[0], $in_buffer);
 				$in_buffer = substr($in_buffer, $count);

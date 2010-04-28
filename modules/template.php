@@ -15,7 +15,7 @@ function setup_template()
 
 	// get the list of templates
 	$GLOBALS['templates'] = array();
-	$files = fs_file::get(array('dir' => LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR, 'limit' => 32000), $count, true);
+	$files = fs_file::get(array('dir' => setting('local_root') . 'templates' . DIRECTORY_SEPARATOR, 'limit' => 32000), $count, true);
 	if(is_array($files))
 	{
 		foreach($files as $i => $file)
@@ -25,7 +25,7 @@ function setup_template()
 				include_once $file['Filepath'] . 'config.php';
 				
 				// determin template based on path
-				$template = substr($file['Filepath'], strlen(LOCAL_ROOT));
+				$template = substr($file['Filepath'], strlen(setting('local_root')));
 				
 				// remove default directory from module name
 				if(substr($template, 0, 10) == 'templates/')
@@ -95,7 +95,7 @@ function validate_tfile($request)
 	if(isset($request['tfile']))
 	{
 		$request['template'] = validate_template($request);
-		if(is_file(LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR . $request['template'] . DIRECTORY_SEPARATOR . $request['tfile']))
+		if(is_file(setting('local_root') . 'templates' . DIRECTORY_SEPARATOR . $request['template'] . DIRECTORY_SEPARATOR . $request['tfile']))
 			return $request['tfile'];
 		else
 			PEAR::raiseError('Template file requested but could not be found!', E_DEBUG|E_WARN);
@@ -114,7 +114,7 @@ function setup_template_files($template_config)
 	{
 		foreach($template_config['files'] as $file)
 		{
-			include LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR . $template_name . DIRECTORY_SEPARATOR . $file . '.php';
+			include setting('local_root') . 'templates' . DIRECTORY_SEPARATOR . $template_name . DIRECTORY_SEPARATOR . $file . '.php';
 			if(function_exists('register_' . $template_name . '_' . $file))
 			{
 				$template = call_user_func_array('register_' . $template_name . '_' . $file, array());
@@ -147,7 +147,7 @@ function setup_template_files($template_config)
 /**
  * Implementation of validate
  * @ingroup validate
- * @return LOCAL_DEFAULT by default, accepts any valid template, attempts to determine the best template based on the HTTP_USER_AGENT
+ * @return setting('local_default') by default, accepts any valid template, attempts to determine the best template based on the HTTP_USER_AGENT
  */
 function validate_template($request, $session = '')
 {
@@ -175,7 +175,7 @@ function validate_template($request, $session = '')
 	{
 		return 'mobile';
 	}
-	return basename(LOCAL_DEFAULT);
+	return setting('local_default');
 }
 
 /**
@@ -321,7 +321,7 @@ function output_template($request)
 	$request['template'] = validate_template($request);
 	$request['tfile'] = validate_tfile($request);
 
-	$file = LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR . $request['template'] . DIRECTORY_SEPARATOR . $request['tfile'];
+	$file = setting('local_root') . 'templates' . DIRECTORY_SEPARATOR . $request['template'] . DIRECTORY_SEPARATOR . $request['tfile'];
 
 	if(!isset($request['tfile']))
 	{
@@ -406,7 +406,7 @@ function output_template($request)
 		
 		// output file
 		while (!feof($fp)) {
-			fwrite($op, fread($fp, BUFFER_SIZE));
+			fwrite($op, fread($fp, setting('buffer_size')));
 		}
 		
 		// close file handles and return succeeded

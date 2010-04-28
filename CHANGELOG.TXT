@@ -1,3 +1,14 @@
+2010-04-27
+Worked on settings.php plugin
+	Settings can now be loaded from a settings.ini file in the include directory
+Worked on modules.php
+	Modules are now configurable, this will eventually make the settings.php include and all constants deprecated
+Tools admin plugin now outputs a standardized info object
+All requires are now and include
+	System is more aware of itself, checking and double checking to make sure it can function properly
+New rule, core.php and common.php are the only files that do not need to follow the API strictly
+	That is, common.php can use $GLOBALS['settings'] to refer to settings instead of the setting() function
+
 2010-04-26
 Worked on tools section, template and outputing info arrays instead of hard to parse xml
 In light of making my site more drupalish, I replaced every occurance of plugin throughout the site with module

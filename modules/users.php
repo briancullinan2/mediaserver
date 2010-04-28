@@ -49,7 +49,7 @@ function setup_user()
 		}
 	}
 	// use guest information
-	elseif(USE_DATABASE == true)
+	elseif(setting('use_database') == true)
 	{
 		$db_user = $GLOBALS['database']->query(array(
 				'SELECT' => 'users',
@@ -73,6 +73,13 @@ function setup_user()
 				'Privilage' => 1
 			);
 		}
+	}
+	else
+	{
+		$_SESSION['user'] = array(
+			'Username' => 'admin',
+			'Privilage' => 10
+		);
 	}
 	
 	// this will hold a cached list of the users that were looked up
@@ -281,7 +288,7 @@ function output_users($request)
 					$confirmation = ob_get_contents();
 					ob_end_clean();
 					
-					mail($request['email'], 'E-Mail Confirmation for ' . HTML_NAME, $confirmation);
+					mail($request['email'], 'E-Mail Confirmation for ' . setting('html_name'), $confirmation);
 				}
 			}
 		break;

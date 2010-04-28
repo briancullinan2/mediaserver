@@ -31,9 +31,9 @@ function setup_lists()
 		{
 			foreach($template['lists'] as $i => $list)
 			{
-				if(file_exists(LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . $list . '.php'))
+				if(file_exists(setting('local_root') . 'templates' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . $list . '.php'))
 				{
-					include_once LOCAL_ROOT . 'templates' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . $list . '.php';
+					include_once setting('local_root') . 'templates' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . $list . '.php';
 					
 					if(isset($GLOBALS['lists'][$list]))
 						PEAR::raiseError('List already defined!', E_DEBUG|E_WARN);

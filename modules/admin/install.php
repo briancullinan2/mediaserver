@@ -12,6 +12,8 @@ function register_admin_install()
 		$GLOBALS['validate_' . strtoupper($handler) . '_ENABLE'] = create_function('$request', 'return validate__ENABLE($request, \'' . $handler . '\');');
 	}
 	
+	register_output_vars('styles', 'module=admin_install&install_image=style');
+	
 	return array(
 		'name' => 'Install Setup',
 		'description' => 'Install the system.',
@@ -165,62 +167,9 @@ function setup_post_vars()
 function validate_SYSTEM_TYPE($request)
 {
 	if(isset($request['SYSTEM_TYPE']) && ($request['SYSTEM_TYPE'] == 'mac' || $request['SYSTEM_TYPE'] == 'nix' || $request['SYSTEM_TYPE'] == 'win'))
-	{
 		return $request['SYSTEM_TYPE'];
-	}
 	else
-	{
-		if(realpath('/') == '/')
-		{
-			if(file_exists('/Users/'))
-				$SYSTEM_TYPE = 'mac';
-			else
-				$SYSTEM_TYPE = 'nix';
-		}
-		else
-			$SYSTEM_TYPE = 'win';
-	}
-	return $SYSTEM_TYPE;
-}
-
-/**
- * Implementation of validate
- * @ingroup validate
- * @return The default install path for VLC on windows or linux based on validate_SYSTEM_TYPE
- */
-function validate_ENCODE_PATH($request)
-{
-	$request['SYSTEM_TYPE'] = validate_SYSTEM_TYPE($request);
-	
-	if(isset($request['ENCODE_PATH']) && is_file($request['ENCODE_PATH']))
-		return $request['ENCODE_PATH'];
-	else
-	{
-		if($request['SYSTEM_TYPE'] == 'win')
-			return 'C:\Program Files\VideoLAN\VLC\vlc.exe';
-		else
-			return '/usr/bin/vlc';
-	}
-}
-
-/**
- * Implementation of validate
- * @ingroup validate
- * @return The default install path for image magick on windows or linux based on validate_SYSTEM_TYPE
- */
-function validate_CONVERT_PATH($request)
-{
-	$request['SYSTEM_TYPE'] = validate_SYSTEM_TYPE($request);
-	
-	if(isset($request['CONVERT_PATH']) && is_file($request['CONVERT_PATH']))
-		return $request['CONVERT_PATH'];
-	else
-	{
-		if($request['SYSTEM_TYPE'] == 'win')
-			return 'C:\Program Files\ImageMagick-6.4.9-Q16\convert.exe';
-		else
-			return '/usr/bin/convert';
-	}
+		return setting('system_type');
 }
 
 // ---------------------------------- step 2 ---------------------------------
@@ -234,7 +183,7 @@ function validate_LOCAL_ROOT($request)
 	if(isset($request['LOCAL_ROOT']) && is_dir($request['LOCAL_ROOT']))
 		return $request['LOCAL_ROOT'];
 	else
-		return dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR;
+		return setting('local_root');
 }
 
 /**
@@ -247,7 +196,7 @@ function validate_HTML_DOMAIN($request)
 	if(isset($request['HTML_DOMAIN']) && @parse_url($request['HTML_DOMAIN']) !== false)
 		return $request['HTML_DOMAIN'];
 	else
-		return strtolower(substr($_SERVER['SERVER_PROTOCOL'], 0, strpos($_SERVER['SERVER_PROTOCOL'], '/'))) . '://' . $_SERVER['HTTP_HOST'] . (($_SERVER['SERVER_PORT'] != 80)?':' . $_SERVER['SERVER_PORT']:'');
+		return setting('html_domain');
 }
 
 /**
@@ -258,12 +207,11 @@ function validate_HTML_DOMAIN($request)
 function validate_HTML_ROOT($request)
 {
 	$request['HTML_DOMAIN'] = validate_HTML_DOMAIN($request);
-	$request['LOCAL_ROOT'] = validate_LOCAL_ROOT($request);
 	
 	if(isset($request['HTML_ROOT']) && @parse_url($request['HTML_DOMAIN'] . $request['HTML_ROOT']) !== false)
 		return $request['HTML_ROOT'];
 	else
-    	return ((substr($request['LOCAL_ROOT'], 0, strlen($_SERVER['DOCUMENT_ROOT'])) == $_SERVER['DOCUMENT_ROOT'])?substr($request['LOCAL_ROOT'], strlen($_SERVER['DOCUMENT_ROOT'])):'');
+		return setting('html_root');
 }
 
 // ---------------------------------- step 3 ---------------------------------
@@ -279,7 +227,7 @@ function validate_DB_TYPE($request)
 	if(isset($request['DB_TYPE']) && in_array($request['DB_TYPE'], $GLOBALS['supported_databases']))
 		return $request['DB_TYPE'];
 	else
-		return 'mysql';
+		return setting('db_type');
 }
 
 /**
@@ -292,7 +240,7 @@ function validate_DB_SERVER($request)
 	if(isset($request['DB_SERVER']))
 		return $request['DB_SERVER'];
 	else
-		return 'localhost';
+		return setting('db_server');
 }
 
 /**
@@ -305,7 +253,7 @@ function validate_DB_USER($request)
 	if(isset($request['DB_USER']))
 		return $request['DB_USER'];
 	else
-		return '';
+		return setting('db_user');
 }
 
 /**
@@ -318,7 +266,7 @@ function validate_DB_PASS($request)
 	if(isset($request['DB_PASS']))
 		return $request['DB_PASS'];
 	else
-		return '';
+		return setting('db_pass');
 }
 
 /**
@@ -331,7 +279,7 @@ function validate_DB_NAME($request)
 	if(isset($request['DB_NAME']))
 		return $request['DB_NAME'];
 	else
-		return '';
+		return setting('db_name');
 }
 
 // ---------------------------------- step 4 ---------------------------------
@@ -348,7 +296,7 @@ function validate_HTML_NAME($request)
 	if(isset($request['HTML_NAME']))
 		return $request['HTML_NAME'];
 	else
-		return 'Brian\'s Media Website';
+		return setting('html_name');
 }
 
 /**
@@ -359,9 +307,9 @@ function validate_HTML_NAME($request)
 function validate_LOCAL_BASE($request)
 {
 	if(isset($request['LOCAL_BASE']) && in_array(basename($request['LOCAL_BASE']), $GLOBALS['templates']))
-		return 'templates' . DIRECTORY_SEPARATOR . basename($request['LOCAL_BASE']) . DIRECTORY_SEPARATOR;
+		return basename($request['LOCAL_BASE']);
 	else
-		return 'templates' . DIRECTORY_SEPARATOR . 'plain' . DIRECTORY_SEPARATOR;
+		return setting('local_base');
 }
 
 /**
@@ -374,7 +322,7 @@ function validate_LOCAL_DEFAULT($request)
 	if(isset($request['LOCAL_DEFAULT']) && in_array($request['LOCAL_DEFAULT'], $GLOBALS['templates']))
 		return $request['LOCAL_DEFAULT'];
 	else
-		return 'live';
+		return setting('live');
 }
 
 /**
@@ -387,7 +335,7 @@ function validate_LOCAL_TEMPLATE($request)
 	if(isset($request['LOCAL_TEMPLATE']) && in_array($request['LOCAL_TEMPLATE'], $GLOBALS['templates']))
 		return $request['LOCAL_TEMPLATE'];
 	else
-		return '';
+		return setting('local_template');
 }
 
 // ---------------------------------- step 7 ---------------------------------
@@ -401,7 +349,7 @@ function validate_DIRECTORY_SEEK_TIME($request)
 	if(isset($request['DIRECTORY_SEEK_TIME']) && isset($request['DIRECTORY_SEEK_TIME_MULTIPLIER']))
 		return $request['DIRECTORY_SEEK_TIME'] * $request['DIRECTORY_SEEK_TIME_MULTIPLIER'];
 	else
-		return 60;
+		return setting('dir_seek_time');
 }
 
 /**
@@ -414,7 +362,7 @@ function validate_FILE_SEEK_TIME($request)
 	if(isset($request['FILE_SEEK_TIME']) && isset($request['FILE_SEEK_TIME_MULTIPLIER']))
 		return $request['FILE_SEEK_TIME'] * $request['FILE_SEEK_TIME_MULTIPLIER'];
 	else
-		return 60;
+		return setting('file_seek_time');
 }
 
 // ---------------------------------- step 8 ---------------------------------
@@ -432,7 +380,7 @@ function validate_DEBUG_MODE($request)
 		elseif($request['DEBUG_MODE'] === false || $request['DEBUG_MODE'] === 'false')
 			return false;
 	}
-	return false;
+	return setting('debug_mode');
 }
 
 /**
@@ -449,7 +397,7 @@ function validate_RECURSIVE_GET($request)
 		elseif($request['RECURSIVE_GET'] === false || $request['RECURSIVE_GET'] === 'false')
 			return false;
 	}
-	return false;
+	return setting('recursive_get');
 }
 
 /**
@@ -466,7 +414,7 @@ function validate_NO_BOTS($request)
 		elseif($request['NO_BOTS'] === false || $request['NO_BOTS'] === 'false')
 			return false;
 	}
-	return true;
+	return setting('no_bots');
 }
 
 /**
@@ -479,11 +427,7 @@ function validate_TMP_DIR($request)
 	if(isset($request['TMP_DIR']) && is_dir($request['TMP_DIR']))
 		return $request['TMP_DIR'];
 	else
-	{
-		$tmpfile = tempnam("dummy","");
-		unlink($tmpfile);
-		return dirname($tmpfile) . DIRECTORY_SEPARATOR;
-	}
+		setting('tmp_dir');
 }
 
 /**
@@ -493,12 +437,10 @@ function validate_TMP_DIR($request)
  */
 function validate_LOCAL_USERS($request)
 {
-	$request['LOCAL_ROOT'] = validate_LOCAL_ROOT($request);
-	
 	if(isset($request['LOCAL_USERS']) && is_dir($request['LOCAL_USERS']))
 		return $request['LOCAL_USERS'];
 	else
-		return $request['LOCAL_ROOT'] . 'users' . DIRECTORY_SEPARATOR;
+		return setting('local_users');
 }
 
 /**
@@ -511,7 +453,7 @@ function validate_BUFFER_SIZE($request)
 	if(isset($request['BUFFER_SIZE']) && isset($request['BUFFER_SIZE_MULTIPLIER']))
 		return $request['BUFFER_SIZE'] * $request['BUFFER_SIZE_MULTIPLIER'];
 	else
-		return 2*1024*8;
+		return setting('buffer_size');
 }
 
 /**
@@ -528,7 +470,7 @@ function validate_USE_ALIAS($request)
 		elseif($request['USE_ALIAS'] === false || $request['USE_ALIAS'] === 'false')
 			return false;
 	}
-	return true;
+	return setting('use_alias');
 }
 
 /**
@@ -580,14 +522,6 @@ EOF;
 	$tests['memory_limit'] = <<<EOF
 		\$memory_limit = ini_get('memory_limit');
 		return (intval(\$memory_limit) >= 96);
-EOF;
-	$tests['encode'] = <<<EOF
-		\$request['ENCODE_PATH'] = validate_ENCODE_PATH(\$request);
-		return file_exists(\$request['ENCODE_PATH']);
-EOF;
-	$tests['convert'] = <<<EOF
-		\$request['CONVERT_PATH'] = validate_CONVERT_PATH(\$request);
-		return file_exists(\$request['CONVERT_PATH']);
 EOF;
 	// step 2
 	$tests['local_root'] = <<<EOF
@@ -791,7 +725,691 @@ function print_image($install_image)
 		
 		$image = '47494638396110001000b30c00aaa8a0918e869d9b93b7b5ad9d9b92b7b5ac908f86aaa89fc3c1b9d0cec577756c848279ffffff00000000000000000021ff0b4e45545343415045322e30030100000021f9040500000c002c000000001000100000044f90c9c98ca198067bb31404b359ccb260021892a649a54438b5e72b53ee0400dea4288c83f0d0fbfd86448f1128ec497e94c2209348600ad2e9a45a8d66190804836b8d4ec3e171d983163b27e94c040021f9040500000c002c000000001000100000044e90c9c904a1980a7bb30440c53186811de8515d41694ea93ab5e52953f5540cdeb42c8cc28ee7f9fd840362c608dcf5243f0a0291512830d329c56a9566198904837bf582c3e26e0f2d7e4ec29e080021f9040500000c002c000000001000100000044d90c9c9cea198da03f22c456575828081a0c8942535bc0345cc04f666338520de14048cddae67281a843c8fd1104c1299934422b35860a4524ab54ac14e150ac6d6dafd82c3dcde39dca3803d110021f9040500000c002c000000001000100000044e90c9c94aa1985a9b2742cc200ecc7160df1792e601502938b52f2c53269524dd24088cddaef7fb09791d82921044f694148522130860a4528a616b8862198b0583dbf582c3e26def1c5e53da99080021f9040500000c002c000000001000100000044d90c9c910a2985a9b674ad5c60c05f67de14896de490dab096224a528dd741ccc7de7bb9d0fd709f27e39060040592c320401c6e9a410a2d209f5693030ae82ac96db0d7cc599aec19c9c743b110021f9040500000c002c000000001000100000044d90c9c952a2985a9ba752d5c62008f67de14896de49ad6c9b91d4b274d35030b68d0fba42efd60116763e1c43473118328703c6690850a2d1a6d34a1030b0522d83d0f502004ab2c0ab9c743b110021f9040500000c002c000000001000100000044d90c9c994a2985a9be75ad5c62409f67de14896de49ad6c9b91946174138230b68debbadead03dc050238898e42206406034cb34981422982ac807138300ae00226cb0074bde0a4b99ba4b03311003b0a';
 	}
+	elseif($install_image = 'style')
+	{
+		header('Content-Type: text/css');
+		?>
+@charset "utf-8";
+/* CSS Document */
 
+body, html {
+	height:100%;
+	width:100%;
+}
+
+body {
+	margin:0px;
+	background-color:#FFFFFF;
+	background-image:none;
+	background-repeat:repeat;
+	background-position:top left;
+	font-family:Verdana, Arial, sans-serif;
+	font-size:70%;
+	color:#444444;
+	direction:ltr;
+}
+
+.debug {
+	border:3px solid #FC0;
+	background-color:#FF6;
+}
+
+#selector {
+	-moz-opacity:.25;
+	opacity: .25;
+	filter:alpha(opacity=25);
+	position:absolute;
+	background-color:#6CF;
+	border:1px solid #169;
+	z-index:1000;
+}
+
+.menu {
+	background:#FCFCFC none repeat scroll 0 0;
+	border:1px solid #CCCCCC;
+	display:none;
+	list-style-image:none;
+	list-style-position:outside;
+	list-style-type:none;
+	margin:0;
+	min-width:120px;
+	padding:0 0 2px;
+	position:absolute;
+	z-index:2000001;
+}
+
+.menuShadow {
+	background-color:#000000;
+	display:none;
+	-moz-opacity:.5;
+	opacity: .5;
+	filter:alpha(opacity=50);
+	position:absolute;
+	z-index:2000000;
+}
+
+.menu li {
+	display:block;
+	list-style-image:none;
+	list-style-position:outside;
+	list-style-type:none;
+	margin:2px 2px 0;
+}
+
+.menu li a {
+	border:1px solid #FFFFFF;
+	color:#444444;
+	display:block !important;
+	overflow:visible;
+	padding:3px 6px 5px;
+	text-align:left;
+	text-decoration:none;
+	white-space:nowrap;
+	cursor:pointer;
+	font-weight:inherit;
+}
+
+.menu .itemSelect {
+	background:#F7FBFF url(?module=template&template=live&tfile=images/browse_select_bg.png) repeat-x scroll center bottom;
+	border:1px solid #D8F0FA;
+}
+
+.menu .sep {
+	border-bottom:1px solid #DCDCDC;
+	margin:2px 2px 0;
+}
+
+.template_box a {
+	color:#FFF;
+	padding-right:10px;
+}
+
+#bodydiv {
+	padding:0 400px 0 400px
+}
+#sizer {
+	width:100%
+}
+#expander {
+	margin:0 -400px 0 -400px;
+	position:relative;
+	min-width:800px
+}
+
+#header {
+	color:white;
+	-x-system-font:none;
+	font-family:Verdana,Arial,sans-serif;
+	font-size:100%;
+	font-size-adjust:none;
+	font-stretch:normal;
+	font-style:normal;
+	font-variant:normal;
+	font-weight:normal;
+	line-height:normal;
+	width:100%;
+	background:url(?install_image=gradient) repeat scroll center top;
+	height:39px;
+	text-align:left;
+}
+
+#header * {
+	line-height:normal;
+}
+
+#header td {
+	white-space:nowrap;
+	vertical-align:middle;
+}
+
+#siteTitle, #templates {
+	padding:0;
+	white-space:nowrap;
+	vertical-align:middle;
+	width:0.1%;
+	font-family:Verdana,Arial,sans-serif;
+	font-size:125%;
+	line-height:normal;
+	font-weight:bold;
+}
+
+#siteTitle a {
+	color:#FFF;
+	text-decoration:none;
+}
+
+#advancedSearch {
+	font-size:12px;
+	font-weight:normal;
+	color:#FFF;
+}
+
+#siteTitle {
+	padding:0px 0px 0px 10px;
+}
+
+#middleArea {
+	margin-left:auto;
+	margin-right:auto;
+}
+
+.searchParent {
+	padding:0;
+	white-space:nowrap;
+	vertical-align:middle;
+	text-align:center;
+}
+
+#search {
+	display:inline;
+}
+
+.searchBorder {
+	border-color:#88BBDD #66AACC #5599BB;
+	border-style:solid;
+	border-width:1px;
+	padding-bottom:6px;
+	padding-top:3px;
+}
+
+.innerSearchBorder {
+	background-color:#FFFFFF;
+	border-color:#446688 #335588 #115577;
+	border-style:solid;
+	border-width:1px;
+	padding-bottom:5px;
+	padding-top:2px;
+}
+
+#searchInput {
+	border-right:1px solid #8F8F8F;
+	border-style:none solid none none;
+	padding-bottom:4px;
+	padding-left:2px;
+	padding-top:3px;
+	width:21em;
+	vertical-align:middle;
+	-x-system-font:none;
+	font-family:Verdana,Arial,sans-serif;
+	font-size:100%;
+	font-size-adjust:none;
+	font-stretch:normal;
+	font-style:normal;
+	font-variant:normal;
+	font-weight:normal;
+	line-height:normal;
+}
+
+.buttonBorder {
+	border-color:#CFE3C4 #99C383 #5DA253;
+	border-style:solid;
+	border-width:1px;
+	padding-bottom:4px;
+	padding-top:1px;
+}
+
+#searchButton {
+	vertical-align:middle;
+	font-family:Verdana,Arial,sans-serif;
+	font-size:100%;
+	font-size-adjust:none;
+	font-stretch:normal;
+	font-style:normal;
+	font-variant:normal;
+	font-weight:normal;
+	line-height:normal;
+	width:auto;
+	background:#307C0B url(?install_image=gradiant) repeat scroll center center;
+	border:medium none;
+	color:#FFFFFF;
+	margin:0;
+	padding-bottom:2px;
+	padding-top:1px;
+}
+
+#container {
+	margin:auto;
+	width:900px;
+}
+
+#breadcrumb {
+	color:#444444;
+	margin-left:9px;
+	overflow:hidden;
+	width:99%;
+}
+
+#breadcrumb ul {
+	list-style-image:none;
+	list-style-position:outside;
+	list-style-type:none;
+	margin:0;
+	padding-left:0;
+	padding:0 0 0 1em;
+}
+
+#breadcrumb li {
+	display:block;
+	float:left;
+	margin:0;
+}
+
+#breadcrumb a {
+	color:#0066A7;
+	text-decoration:none;
+}
+
+#main {
+	height:100%;
+	table-layout:fixed;
+	width:100%;
+}
+
+.sideColumn {
+	width:10px;
+}
+
+.sideColumn.right {
+	background-image:url(?install_image=shadow);
+	background-position:0 0;
+	background-repeat:no-repeat;
+}
+
+#mainColumn {
+	height:100%;
+}
+
+#mainTable {
+	border:1px solid #E0E0E0;
+	table-layout:fixed;
+	vertical-align:top;
+	width:100%;
+}
+
+.contentSpacing {
+	overflow:hidden;
+	padding:1.25em;
+	position:relative;
+}
+
+.title {
+	font-size:160%;
+	font-weight:normal;
+	margin:0;
+	overflow:hidden;
+	padding:0 0 0.2em;
+	line-height:145%;
+}
+
+.titlePadding {
+	clear:both;
+	height:1.25em;
+	width:1em;
+}
+
+.pageTable {
+	width:100%;
+}
+
+.page, .pageW {
+	border:1px solid #FEFEFE;
+	margin:0.2em 1px;
+	position:relative;
+	height:1.5em;
+	float:left;
+	text-align:center;
+}
+
+.page {
+	width:1.5em;
+}
+
+.pageW {
+	width:2.5em;
+}
+
+.pageHighlight, .pageHighlightW {
+	background:#F7FBFF url(?module=template&template=live&tfile=images/browse_select_bg.png) repeat-x scroll center bottom;
+	border:1px solid #D8F0FA;
+	height:1.5em;
+	left:0;
+	position:absolute;
+	top:0;
+	visibility:hidden;
+}
+
+.pageHighlight {
+	width:1.5em;
+}
+
+.pageHighlightW {
+	width:2.5em;
+}
+
+.pageLink {
+	background:transparent url(?module=template&template=live&tfile=images/transparent.gif) repeat scroll 0 0;
+	color:#0066A7;
+	font-weight:inherit;
+	height:100%;
+	left:0;
+	position:absolute;
+	text-decoration:none;
+	top:0;
+	width:100%;
+	z-index:100;
+}
+
+.files {
+	margin:0;
+	top:0;
+	float:left;
+	position:relative;
+	width:850px;
+}
+
+.file {
+	border:1px solid #FEFEFE;
+	float:left;
+	height:9.5em;
+	margin:0.2em 1px;
+	position:relative;
+	width:7em;
+}
+
+.select .selected, .select .notselected {
+	visibility: visible;
+}
+
+.notselected {
+	visibility:hidden;
+	background:#F7FBFF url(?module=template&template=live&tfile=images/browse_select_bg.png) repeat-x scroll center bottom;
+	border:1px solid #D8F0FA;
+	height:9.5em;
+	left:0;
+	position:absolute;
+	top:0;
+	width:7em;
+}
+
+.selected {
+	visibility:visible;
+	background:#F7FBFF url(?module=template&template=live&tfile=images/browse_select_bg.png) repeat-x scroll center bottom;
+	border:1px solid #D8F0FA;
+	height:9.5em;
+	left:0;
+	position:absolute;
+	top:0;
+	width:7em;
+}
+
+.itemTable {
+	left:0;
+	position:absolute;
+	top:0;
+}
+
+.itemTable tr {
+	height:5.5em;
+}
+
+.itemTable td {
+	width:7em;
+	text-align:center;
+}
+
+.itemTable div {
+	text-align:center;
+	margin-left:1.2em;
+	height:48px;
+	width:48px;
+}
+
+.itemLink {
+	background:transparent url(?module=template&template=live&tfile=images/transparent.gif) repeat scroll 0 0;
+	height:100%;
+	left:0;
+	position:absolute;
+	top:0;
+	width:100%;
+	z-index:100;
+	color:#0066A7;
+	font-weight:inherit;
+	text-decoration:none;
+}
+
+.itemLink span {
+	bottom:0;
+	cursor:pointer;
+	display:block;
+	height:4em;
+	left:0.5em;
+	overflow:hidden;
+	position:absolute;
+	text-align:center;
+	width:6em;
+}
+
+#infoBar {
+	border-top:1px solid #E0E0E0;
+	height:64px;
+	background:transparent url(?module=template&template=live&tfile=images/middle_fade.png) repeat scroll 0 0;
+	color:#FFF;
+	width:100%;
+	line-height:normal;
+	margin:0;
+	padding:0;
+	vertical-align:middle;
+	white-space:nowrap;
+}
+
+#infoBar * {
+	line-height:normal;
+}
+
+.fileInfo {
+	width:100%;
+	vertical-align:top;
+	height:48px;
+	white-space:normal;
+}
+
+.fileInfo .title {
+	font-size:14px;
+}
+
+.fileInfo .label {
+	font-weight:bold;
+	width:50%;
+	text-align:right;
+	margin-right:4px;
+}
+
+.fileInfo td {
+	width:33%;
+	vertical-align:middle;
+	padding:4px;
+}
+
+.fileInfo .fileThumb, .fileInfo .fileThumb td {
+	padding:0;
+	width:auto;
+}
+
+.fileInfo infoCell {
+	width:100%;
+}
+
+.crumbsep {
+	display:inline-block;
+	height:8px;
+	margin:2px 8px 4px;
+	vertical-align:middle;
+	width:8px;
+}
+
+.subText {
+	color:#8B8B8B;
+	display:block;
+	overflow:hidden;
+	padding-bottom:0.1em;
+	width:100%;
+}
+
+#footer {
+	margin-top:0.42em;
+}
+
+#footerCtr {
+	border-color:#F7F3F7;
+	background-color:transparent;
+	border-top-style:solid;
+	border-top-width:1px;
+	color:#444444;
+	font-size:100%;
+	width:100%;
+}
+
+#footerCtr td {
+	padding:8px 0;
+	vertical-align:top;
+}
+
+#footerCtr ul {
+	list-style-image:none;
+	list-style-position:outside;
+	list-style-type:none;
+	margin:0;
+	padding:0;
+	white-space:nowrap;
+}
+
+#footerCtr ul li {
+	border-right-style:solid;
+	border-right-width:1px;
+	float:left;
+	padding:0 8px;
+	white-space:nowrap;
+	margin:0 0 3px;
+}
+
+#footerCtr ul li a {
+	color:#444444;
+	text-decoration:none;
+	font-weight:inherit;
+}
+
+#footerCtr ul li.last {
+	border-right-style:none;
+}
+
+.hover {
+	display:block;
+	border:1px solid #D8F0FA;
+	margin:5px 0px 5px 0px;
+	background: url(?module=template&template=live&tfile=images/browse_select_bg.png) repeat-x scroll center bottom #F7FBFF;
+}
+
+.hover.red {
+	display:block;
+	border:1px solid #FAF0D8;
+	margin:5px 0px 5px 0px;
+	background: url(?module=template&template=live&tfile=images/browse_select_bg_red.png) repeat-x scroll center bottom #F7FBFF;
+}
+
+.nothover {
+	display:block;
+	border:1px solid #FFF;
+	margin:5px 0px 5px 0px;
+}
+
+.disablebtn {
+	display:block;
+	position:relative;
+	top:24px;
+	right:24px;
+	float:right;
+	height:48px;
+	width:48px;
+	background-image:url(?module=template&template=live&tfile=images/button_cancel.png);
+}
+
+td.title {
+	width:175px;
+	font-weight:bold;
+	font-size:10pt;
+	background-color:#6F9;
+}
+
+.title.fail {
+	background-color:#F66;
+}
+
+.title.warn {
+	background-color:#FC3;
+}
+
+table.install td.desc {
+	width:360px;
+	border-left:1px solid #999;
+	border-bottom:1px solid #999;
+	text-align:left;
+}
+
+table.install {
+	width:100%;
+}
+
+table.install td {
+	text-align:center;
+}
+
+.list_block {
+	color:white;
+	-x-system-font:none;
+	font-family:Verdana,Arial,sans-serif;
+	font-size:100%;
+	font-size-adjust:none;
+	font-stretch:normal;
+	font-style:normal;
+	font-variant:normal;
+	font-weight:normal;
+	line-height:normal;
+	background:url(?install_image=gradiant) repeat scroll center top;
+	height:39px;
+	text-align:left;
+	position:fixed;
+	bottom:0px;
+	left:0px;
+	background-color:#06A;
+	z-index:1000;
+}
+
+.list_block form {
+	margin:5px 5px 5px 5px;
+	overflow:hidden;
+	height:26px;
+}
+
+#username, #password {
+	width:154px;
+	position:relative;
+	color:#666;
+	display:block;
+	top:-24px;
+	height:24px;
+}
+
+#password {
+	top:-48px;
+	left:160px;
+}
+
+input.stndsize {
+	width:150px;
+}
+<?php
+		return;
+	}
 	if(isset($image))
 	{
 		for($i = 0; $i < strlen($image); $i+=2)

@@ -21,25 +21,18 @@ class fs_file
 	static function handles($file, $internals = false)
 	{
 		$file = str_replace('\\', '/', $file);
-		
-		if(USE_DATABASE && $internals == false)
-		{
-			return false;
-		}
-		else
-		{
-			if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $file)) || is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)))
-			{
-				$filename = basename($file);
 	
-				// make sure it isn't a hidden file
-				if(strlen($filename) > 0 && $filename[0] != '.')
-					return true;
-				else
-					return false;
-			} else {
+		if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $file)) || is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)))
+		{
+			$filename = basename($file);
+
+			// make sure it isn't a hidden file
+			if(strlen($filename) > 0 && $filename[0] != '.')
+				return true;
+			else
 				return false;
-			}
+		} else {
+			return false;
 		}
 	}
 		
@@ -90,7 +83,7 @@ class fs_file
 		
 		// only allow this section to run if the database is not being used
 		//  otherwise it could be vulnerable to people accessing any file even on a system restricted to database access
-		if(!USE_DATABASE || $internals)
+		if(!$GLOBALS['settings']['use_database'] || $internals)
 		{
 			// do validation! for the fields we use
 			if( !isset($request['start']) || !is_numeric($request['start']) || $request['start'] < 0 )
@@ -122,7 +115,7 @@ class fs_file
 			if(isset($request['file']))
 			{
 				$request['file'] = str_replace('\\', '/', $request['file']);
-				if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $request['file'])))
+				if(file_exists(str_replace('/', DIRECTORY_SEPARATOR, $request['file'])))
 				{
 					if(call_user_func($handler . '::handles', $request['file']))
 					{

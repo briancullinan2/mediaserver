@@ -37,19 +37,45 @@ define('E_NOTE',					16);
 //@}
 
 //if(realpath('/') == '/')
-//	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.nix.php';
+//	include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.nix.php';
 //else
 /** require the settings */
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.php';
+if(!file_exists(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.ini'))
+{
+	// try and forward them to the install page
+	define('NOT_INSTALLED', true);
+	if(!isset($_REQUEST['module'])) $_REQUEST['module'] = 'admin_install';
+}
+else
+{
+	if($GLOBALS['settings'] = parse_ini_file(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.ini'))
+	{
+		// awesome settings are loaded properly
+	}
+	else
+	{
+		unset($GLOBALS['settings']);
+	}
+}
+if(!isset($GLOBALS['settings']['local_root']))
+{
+	// spoof local root
+	$GLOBALS['settings']['local_root'] = dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR;
+}
+if(!isset($GLOBALS['settings']['use_database']))
+{
+	// decide for them
+	$GLOBALS['settings']['use_database'] = false;
+}
 
 /** require compatibility */
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'compatibility.php';
+include_once $GLOBALS['settings']['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'compatibility.php';
 
 /** require core functionality */
-require_once LOCAL_ROOT . 'modules' . DIRECTORY_SEPARATOR . 'core.php';
+include_once $GLOBALS['settings']['local_root'] . 'modules' . DIRECTORY_SEPARATOR . 'core.php';
 
 /** require pear for error handling */
-require_once 'PEAR.php';
+include_once 'PEAR.php';
 /** Set the error handler to use our custom function for storing errors */
 PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'error_callback');
 //set_error_handler('php_to_PEAR_Error');
@@ -83,7 +109,7 @@ if(isset($_SESSION['last_request']))
  * @}
  */
 
-require_once 'MIME' . DIRECTORY_SEPARATOR . 'Type.php';
+include_once 'MIME' . DIRECTORY_SEPARATOR . 'Type.php';
 
 /** set up all the GLOBAL variables needed throughout the site */
 setup();
@@ -105,10 +131,10 @@ function setup()
 	//  in order of importance, the database is set up, the handlers are loaded, the aliases and watch list are loaded, the template system is loaded
 
 	// include the database wrapper class so it can be used by any page
-	if( USE_DATABASE ) require_once LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'database.php';
+	if( $GLOBALS['settings']['use_database'] ) include_once $GLOBALS['settings']['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'database.php';
 		
 	// set up database to be used everywhere
-	if(USE_DATABASE)
+	if($GLOBALS['settings']['use_database'])
 		$GLOBALS['database'] = new database(DB_CONNECT);
 	else
 		$GLOBALS['database'] = NULL;
@@ -121,6 +147,9 @@ function setup()
 	
 	// set up a list of modules available to the system
 	setup_register();
+	
+	// set up the settings to use from here on out
+	setup_settings();
 	
 	// set up list of tables
 	setup_tables();
@@ -149,7 +178,7 @@ function setup_aliases()
 	$GLOBALS['alias_regexp'] = array();
 	$GLOBALS['paths'] = array();
 	$GLOBALS['alias'] = array();
-	if(USE_ALIAS == true && USE_DATABASE == true)
+	if($GLOBALS['settings']['use_database'] && $GLOBALS['settings']['use_alias'] == true)
 	{
 		$aliases = $GLOBALS['database']->query(array('SELECT' => 'alias'), false);
 		
@@ -175,23 +204,23 @@ function setup_handlers()
 	
 	// include the handlers
 	$tmp_handlers = array();
-	if ($dh = @opendir(LOCAL_ROOT . 'handlers' . DIRECTORY_SEPARATOR))
+	if ($dh = @opendir($GLOBALS['settings']['local_root'] . 'handlers' . DIRECTORY_SEPARATOR))
 	{
 		while (($file = readdir($dh)) !== false)
 		{
-			// filter out only the handlers for our USE_DATABASE setting
-			if ($file[0] != '.' && !is_dir(LOCAL_ROOT . 'handlers' . DIRECTORY_SEPARATOR . $file))
+			// filter out only the handlers for our $GLOBALS['settings']['use_database'] setting
+			if ($file[0] != '.' && !is_dir($GLOBALS['settings']['local_root'] . 'handlers' . DIRECTORY_SEPARATOR . $file))
 			{
 				$class_name = substr($file, 0, strrpos($file, '.'));
 				if(!defined(strtoupper($class_name) . '_ENABLED') || constant(strtoupper($class_name) . '_ENABLED') != false)
 				{
 					// include all the handlers
-					require_once LOCAL_ROOT . 'handlers' . DIRECTORY_SEPARATOR . $file;
+					include_once $GLOBALS['settings']['local_root'] . 'handlers' . DIRECTORY_SEPARATOR . $file;
 					
 					// only use the handler if it is properly defined
 					if(class_exists($class_name))
 					{
-						if(substr($file, 0, 3) == (USE_DATABASE?'db_':'fs_'))
+						if(substr($file, 0, 3) == ($GLOBALS['settings']['use_database']?'db_':'fs_'))
 							$tmp_handlers[] = $class_name;
 					}
 				}
@@ -228,18 +257,21 @@ function setup_tables()
 {
 	// loop through each handler and compile a list of databases
 	$GLOBALS['tables'] = array();
-	foreach($GLOBALS['handlers'] as $i => $handler)
+	if($GLOBALS['settings']['use_database'])
 	{
-		if(defined($handler . '::DATABASE'))
-			$GLOBALS['tables'][] = constant($handler . '::DATABASE');
+		foreach($GLOBALS['handlers'] as $i => $handler)
+		{
+			if(defined($handler . '::DATABASE'))
+				$GLOBALS['tables'][] = constant($handler . '::DATABASE');
+		}
+		$GLOBALS['tables'] = array_values(array_unique($GLOBALS['tables']));
+		
+		// get watched and ignored directories because they are used a lot
+		$GLOBALS['ignored'] = db_watch::get(array('search_Filepath' => '/^!/'), $count);
+		$GLOBALS['watched'] = db_watch::get(array('search_Filepath' => '/^\\^/'), $count);
+		// always add user local to watch list
+		$GLOBALS['watched'][] = array('id' => 0, 'Filepath' => str_replace('\\', '/', LOCAL_USERS));
 	}
-	$GLOBALS['tables'] = array_values(array_unique($GLOBALS['tables']));
-	
-	// get watched and ignored directories because they are used a lot
-	$GLOBALS['ignored'] = db_watch::get(array('search_Filepath' => '/^!/'), $count);
-	$GLOBALS['watched'] = db_watch::get(array('search_Filepath' => '/^\\^/'), $count);
-	// always add user local to watch list
-	$GLOBALS['watched'][] = array('id' => 0, 'Filepath' => str_replace('\\', '/', LOCAL_USERS));
 }
 
 /**
@@ -275,6 +307,9 @@ function output($request)
  */
 function is_wrapper($handler)
 {
+	// fs_ handlers are never wrappers
+	if($GLOBALS['settings']['use_database'] == false)
+		return false;
 	if($handler == 'db_file')
 		return false;
 	return (constant($handler . '::DATABASE') == constant(get_parent_class($handler) . '::DATABASE'));
@@ -289,10 +324,10 @@ function is_wrapper($handler)
  */
 function handles($file, $handler)
 {
-	if(class_exists((USE_DATABASE?'db_':'fs_') . $handler))
+	if(class_exists(($GLOBALS['settings']['use_database']?'db_':'fs_') . $handler))
 	{
 		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
-		return call_user_func((USE_DATABASE?'db_':'fs_') . $handler . '::handles', $file);
+		return call_user_func(($GLOBALS['settings']['use_database']?'db_':'fs_') . $handler . '::handles', $file);
 	}
 	return false;
 }
@@ -468,7 +503,7 @@ function getAllColumns()
 	$columns = array();
 	foreach($GLOBALS['handlers'] as $i => $handler)
 	{
-		if(USE_DATABASE == false || constant($handler . '::INTERNAL') == false)
+		if($GLOBALS['settings']['use_database'] == false || constant($handler . '::INTERNAL') == false)
 			$columns = array_merge($columns, array_flip(call_user_func($handler . '::columns')));
 	}
 	
@@ -629,7 +664,7 @@ function crc32_file($filename)
         $buffer = '';
        
         while (!feof($fp)) {
-            $buffer=fread($fp, BUFFER_SIZE);
+            $buffer=fread($fp, $GLOBALS['settings']['buffer_size']);
             $len=strlen($buffer);      
             $t=crc32($buffer);   
        
@@ -962,10 +997,10 @@ function setup_mime()
 {
 	// this will load the mime-types from a linux dist mime.types file stored in includes
 	// this will organize the types for easy lookup
-	if(file_exists(LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'mime.types'))
+	if(file_exists($GLOBALS['settings']['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'mime.types'))
 	{
-		$handle = fopen(LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'mime.types', 'r');
-		$mime_text = fread($handle, filesize(LOCAL_ROOT . 'include' . DIRECTORY_SEPARATOR . 'mime.types'));
+		$handle = fopen($GLOBALS['settings']['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'mime.types', 'r');
+		$mime_text = fread($handle, filesize($GLOBALS['settings']['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'mime.types'));
 		fclose($handle);
 		
 		$mimes = split("\n", $mime_text);

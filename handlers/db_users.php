@@ -106,108 +106,105 @@ class db_users extends db_file
 	
 	static function get($request, &$count, $files = array())
 	{
-		if(USE_DATABASE)
+		if(count($files) > 0 && !isset($request['selected']))
 		{
-			if(count($files) > 0 && !isset($request['selected']))
+			$users = array();
+			
+			// get a list of users to look up
+			foreach($files as $index => $file)
 			{
-				$users = array();
+				if(self::handles($file['Filepath']))
+				{
+					// replace virtual paths
+					$path = str_replace('\\', '/', $file['Filepath']);
+					if(USE_ALIAS == true) $path = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $path);
+					
+					if(substr($path, 0, strlen(LOCAL_USERS)) == LOCAL_USERS)
+					{
+						$path = substr($path, strlen(LOCAL_USERS));
+						
+						// remove rest of path
+						if(strpos($path, '/') !== false)
+							$path = substr($path, 0, strpos($path, '/'));
+					}
+					
+					// add to list of users to look up
+					$files[$index]['Username'] = $path;
+					if(!isset($GLOBALS['user_cache'][$path]))
+						$users[] = $path;
+				}
+			}
+			$users = array_unique($users);
+			
+			// perform query to get all the needed users
+			if(count($users) > 0)
+			{
+				$return = $GLOBALS['database']->query(array(
+						'SELECT' => self::DATABASE,
+						'WHERE' => 'Username = "' . join('" OR Username = "', $users) . '"',
+						'LIMIT' => count($users)
+					)
+				, false);
 				
-				// get a list of users to look up
+				// replace get for easy lookup
+				foreach($return as $i => $user)
+				{
+					$GLOBALS['user_cache'][$user['Username']] = $user;
+				}
+				
+				// merge user information to each file
 				foreach($files as $index => $file)
 				{
-					if(self::handles($file['Filepath']))
-					{
-						// replace virtual paths
-						$path = str_replace('\\', '/', $file['Filepath']);
-						if(USE_ALIAS == true) $path = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $path);
-						
-						if(substr($path, 0, strlen(LOCAL_USERS)) == LOCAL_USERS)
-						{
-							$path = substr($path, strlen(LOCAL_USERS));
-							
-							// remove rest of path
-							if(strpos($path, '/') !== false)
-								$path = substr($path, 0, strpos($path, '/'));
-						}
-						
-						// add to list of users to look up
-						$files[$index]['Username'] = $path;
-						if(!isset($GLOBALS['user_cache'][$path]))
-							$users[] = $path;
-					}
+					if(isset($file['Username']))
+						$files[$index] = array_merge($GLOBALS['user_cache'][$file['Username']], $files[$index]);
 				}
-				$users = array_unique($users);
-				
-				// perform query to get all the needed users
-				if(count($users) > 0)
-				{
-					$return = $GLOBALS['database']->query(array(
-							'SELECT' => self::DATABASE,
-							'WHERE' => 'Username = "' . join('" OR Username = "', $users) . '"',
-							'LIMIT' => count($users)
-						)
-					, false);
-					
-					// replace get for easy lookup
-					foreach($return as $i => $user)
-					{
-						$GLOBALS['user_cache'][$user['Username']] = $user;
-					}
-					
-					// merge user information to each file
-					foreach($files as $index => $file)
-					{
-						if(isset($file['Username']))
-							$files[$index] = array_merge($GLOBALS['user_cache'][$file['Username']], $files[$index]);
-					}
-				}
-				
 			}
-			elseif(isset($request['file']))
+			
+		}
+		elseif(isset($request['file']))
+		{
+			// change some of the default request variables
+			$request['order_by'] = 'Username';
+			$request['limit'] = 1;
+			
+			// modify the file variable to use username instead
+			$file = str_replace('\\', '/', $request['file']);
+			if(USE_ALIAS == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+			
+			if(substr($file, 0, strlen(LOCAL_USERS)) == LOCAL_USERS)
 			{
-				// change some of the default request variables
-				$request['order_by'] = 'Username';
-				$request['limit'] = 1;
+				$file = substr($file, strlen(LOCAL_USERS));
 				
-				// modify the file variable to use username instead
-				$file = str_replace('\\', '/', $request['file']);
-				if(USE_ALIAS == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
-				
-				if(substr($file, 0, strlen(LOCAL_USERS)) == LOCAL_USERS)
-				{
-					$file = substr($file, strlen(LOCAL_USERS));
-					
-					// remove rest of path
-					if(strpos($file, '/') !== false)
-						$file = substr($file, 0, strpos($file, '/'));
-				}
-				
-				$request['search_Username'] = '=' . $file . '=';
-				
-				// unset the fields that aren't needed
-				unset($request['file']);
-				unset($request['files_id']);
-				
-				// extract user directory from path
-				// add a users information to each file
-				if(isset($file) && isset($GLOBALS['user_cache']))
-				{
-					$files = array(0 => $GLOBALS['user_cache']);
-				}
-				else
-				{
-					$files = parent::get($request, $count, get_class());
-					
-					if(isset($file))
-						$GLOBALS['user_cache'][$file] = $files[0];
-				}
+				// remove rest of path
+				if(strpos($file, '/') !== false)
+					$file = substr($file, 0, strpos($file, '/'));
 			}
-	
-			// remove restricted variables
-			foreach($files as $i => $file)
+			
+			$request['search_Username'] = '=' . $file . '=';
+			
+			// unset the fields that aren't needed
+			unset($request['file']);
+			unset($request['files_id']);
+			
+			// extract user directory from path
+			// add a users information to each file
+			if(isset($file) && isset($GLOBALS['user_cache']))
 			{
-				unset($files[$i]['Password']);
+				$files = array(0 => $GLOBALS['user_cache']);
 			}
+			else
+			{
+				$files = parent::get($request, $count, get_class());
+				
+				if(isset($file))
+					$GLOBALS['user_cache'][$file] = $files[0];
+			}
+		}
+
+		// remove restricted variables
+		foreach($files as $i => $file)
+		{
+			unset($files[$i]['Password']);
 		}
 
 		return $files;
