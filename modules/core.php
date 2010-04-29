@@ -11,7 +11,29 @@
  * @return an associative array that describes the modules functionality
  * @{
  */
- 
+
+/** 
+ * Implementation of register
+ */
+function register_core()
+{
+	// register permission requirements
+	
+	// register the request variables we will be providing validators for
+	
+	// this module has no output
+	return array(
+		'name' => 'Core Functions',
+		'description' => 'Adds core functionality to site that other common modules depend on.',
+		'path' => __FILE__,
+		'privilage' => 1,
+		'settings' => array('system_type', 'local_root', 'html_domain', 'html_root')
+	);
+}
+/**
+ * @}
+ */
+
 /**
  * Create a global variable for storing all the module information
  * @ingroup setup
@@ -19,11 +41,11 @@
 function setup_register()
 {
 	$GLOBALS['modules'] = array('index' => array(
-		'name' => 'Index',
-		'description' => 'Load a module\'s output variables and display the template.',
-		'privilage' => 1,
-		'path' => dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'index.php',
-		'alter query' => array('limit', 'start', 'direction', 'order_by', 'group_by')
+			'name' => 'Index',
+			'description' => 'Load a module\'s output variables and display the template.',
+			'privilage' => 1,
+			'path' => dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'index.php',
+			'alter query' => array('limit', 'start', 'direction', 'order_by', 'group_by'),
 		)
 	);
 	$GLOBALS['triggers'] = array('session' => array(), 'settings' => array());
@@ -31,6 +53,493 @@ function setup_register()
 	// read module list and create a list of available modules	
 	setup_register_modules('modules' . DIRECTORY_SEPARATOR);
 }
+
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return 'win' by default if it can't determine the OS
+ */
+function validate_system_type($request)
+{
+	if(isset($request['SYSTEM_TYPE']) && ($request['SYSTEM_TYPE'] == 'mac' || $request['SYSTEM_TYPE'] == 'nix' || $request['SYSTEM_TYPE'] == 'win'))
+		return $request['SYSTEM_TYPE'];
+	else
+	{
+		if(realpath('/') == '/')
+		{
+			if(file_exists('/Users/'))
+				$default_settings['system_type'] = 'mac';
+			else
+				$default_settings['system_type'] = 'nix';
+		}
+		else
+			$default_settings['system_type'] = 'win';
+	}
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return The parent directory of the admin directory by default
+ */
+function validate_local_root($request)
+{
+	if(isset($request['local_root']) && is_dir($request['local_root']))
+		return $request['local_root'];
+	else
+		return dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR;
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return The domain information set by the SERVER by default
+ */
+function validate_html_domain($request)
+{
+	if(isset($request['html_domain']) && @parse_url($request['html_domain']) !== false)
+		return $request['html_domain'];
+	else
+		return strtolower(substr($_SERVER['SERVER_PROTOCOL'], 0, strpos($_SERVER['SERVER_PROTOCOL'], '/'))) . '://' . $_SERVER['HTTP_HOST'] . (($_SERVER['SERVER_PORT'] != 80)?':' . $_SERVER['SERVER_PORT']:'');
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return The working path to this installer minus the server path
+ */
+function validate_html_root($request)
+{
+	$request['html_domain'] = validate_html_domain($request);
+	$request['local_root'] = validate_local_root($request);
+	
+	if(isset($request['html_root']) && @parse_url($request['html_domain'] . $request['html_root']) !== false)
+		return $request['html_root'];
+	else
+		return ((substr($request['local_root'], 0, strlen($_SERVER['DOCUMENT_ROOT'])) == $_SERVER['DOCUMENT_ROOT'])?substr($request['local_root'], strlen($_SERVER['DOCUMENT_ROOT'])):'');
+}
+
+ 
+/**
+ * @defgroup configure Configure Functions
+ * All functions that all configuring of settings for a module
+ * @param request The request array that contains values for configuration options
+ * @return an associative array that describes the configuration options
+ * @{
+ */
+ 
+/**
+ * Implementation of configure. Checks for convert path
+ * @ingroup configure
+ */
+function configure_core($request)
+{
+	$request['system_type'] = validate_system_type($request);
+	$request['local_root'] = validate_local_root($request);
+	$request['local_root'] = validate_local_root($request);
+	
+	$options = array();
+	
+	$settings = dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'settings.ini';
+	$memory_limit = ini_get('memory_limit');
+	
+	// system type
+	$options['system_type'] = array(
+		'name' => 'System Type',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'The system has detected that you are running ' . ($request['system_type']=='win')?'Windows':(($request['system_type']=='nix')?'Linux or Unix':'Mac OS') . '.',
+				'If this is not correct, you must specify the system type so the media server can be optimized for your system.',
+			),
+		),
+		'type' => 'select',
+		'values' => array(
+			'win' => 'Windows',
+			'nix' => 'Linux',
+			'mac' => 'Mac',
+		),
+	);
+	
+	// settings permission
+	if(is_writable($settings))
+	{
+		$options['settings_perm'] = array(
+			'name' => 'Access to Settings',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'The system has detected that is has access to the settings file.  Write permissions should be removed when this installation is complete.',
+				),
+			),
+			'type' => 'text',
+			'disabled' => true,
+			'value' => $settings,
+		);
+	}
+	else
+	{
+		$options['settings_perm'] = array(
+			'name' => 'Access to Settings',
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					'The system would like access to the following file.  This is so it can write all the settings when we are done with the install.',
+					'Please create this file, and grant it Read/Write permissions.',
+				),
+			),
+			'type' => 'text',
+			'disabled' => true,
+			'value' => $settings,
+		);
+	}
+	
+	if(isset($_REQUEST['modrewrite']) && $_REQUEST['modrewrite'] == true)
+	{
+		$options['mod_rewrite'] = array(
+			'name' => 'Mod_Rewrite Enabled',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'The system has detected that you have mod_rewrite enabled.',
+					'Mod_rewrite is used by some templates and modules to make the paths look prettier.',
+				),
+			),
+			'disabled' => true,
+			'value' => array(
+				'link' => array(
+					'url' => 'http://httpd.apache.org/docs/1.3/mod/mod_rewrite.html',
+					'text' => 'Mod_Rewrite Instructions',
+				),
+			),
+		);
+	}
+	else
+	{
+		$options['mod_rewrite'] = array(
+			'name' => 'Mod_Rewrite Enabled',
+			'status' => 'warn',
+			'description' => array(
+				'list' => array(
+					'The system has detected that you do not have mod_rewrite enabled.  Please follow the link for instructions on enabling mod_rewrite.',
+					'Mod_rewrite is used by some templates and modules to make the paths look prettier.',
+				),
+			),
+			'disabled' => true,
+			'value' => array(
+				'link' => array(
+					'url' => 'http://httpd.apache.org/docs/1.3/mod/mod_rewrite.html',
+					'text' => 'Mod_Rewrite Instructions',
+				),
+			),
+		);
+	}
+
+	if(intval($memory_limit) >= 96)
+	{
+		$options['memory_limit'] = array(
+			'name' => 'Memory Limit',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'The system has detected that the set memory limit is enough to function properly.',
+					'This system requires a large amount of memory for encoding and converting files, some of the third party libraries are not memory efficient.',
+					'PHP reports that the set memory_limit is ' . $memory_limit . '.',
+				),
+			),
+			'disabled' => true,
+			'value' => array(
+				'link' => array(
+					'url' => 'http://php.net/manual/en/ini.core.php',
+					'text' => 'PHP Core INI Settings',
+				),
+			),
+		);
+	}
+	else
+	{
+		$options['memory_limit'] = array(
+			'name' => 'Memory Limit',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'The system has detected that the set memory limit is NOT ENOUGH for the system to function properly.',
+					'This system requires a large amount of memory for encoding and converting files, some of the third party libraries are not memory efficient.',
+					'PHP reports that the set memory_limit is ' . $memory_limit . '.',
+				),
+			),
+			'disabled' => true,
+			'value' => array(
+				'link' => array(
+					'url' => 'http://php.net/manual/en/ini.core.php',
+					'text' => 'PHP Core INI Settings',
+				),
+			),
+		);
+	}
+	
+	if(file_exists($request['local_root'] . 'include'))
+	{
+		$options['local_root'] = array(
+			'name' => 'Local Root',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'This is the directory that the site lives in.',
+					'This directory MUST end with a directory seperate such as / or \.',
+				),
+			),
+			'type' => 'text',
+			'value' => $request['local_root'],
+		);
+	}
+	else
+	{
+		$options['local_root'] = array(
+			'name' => 'Local Root',
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					'The system has detected that there is no "include" directory in the site root folder.  You must specify the root directory that the site lives in.',
+					'This directory MUST end with a directory seperate such as / or \.',
+				),
+			),
+			'type' => 'text',
+			'value' => $request['local_root'],
+		);
+	}
+	
+	if(file_exists($request['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb.inc.php'))
+	{
+		$options['check_adodb'] = array(
+			'name' => 'ADOdb Library',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'The system has detected that ADOdb is installed in the includes directory.',
+					'ADOdb is a common PHP database abstraction layer that can connect to dozens of SQL databases.',
+				),
+			),
+			'type' => 'label',
+			'value' => 'ADOdb Detected',
+		);
+	}
+	else
+	{
+		$options['check_adodb'] = array(
+			'name' => 'ADOdb Library Missing',
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					'The system has detected that ADOdb is NOT INSTALLED.',
+					'The root of the ADOdb Library must be placed in &lt;site root&gt;/include/adodb5',
+					'ADOdb is a common PHP database abstraction layer that can connect to dozens of SQL databases.',
+				),
+			),
+			'value' => array(
+				'link' => array(
+					'url' => 'http://adodb.sourceforge.net/',
+					'text' => 'Get ADOdb',
+				),
+			),
+		);
+	}
+	
+	$pear_libs = array('File/Archive.php' => 'File_Archive', 'MIME/Type.php' => 'MIME_Type', 'Text/Highlighter.php' => 'Text_Highlighter');
+	$not_installed = array();
+	$installed = array();
+	foreach($pear_libs as $lib => $link)
+	{
+		if((@include_once $lib) === false)
+		{
+			$not_installed[] = array(
+				'link' => array(
+					'url' => 'http://pear.php.net/package/' . $link,
+					'text' => $link,
+				),
+			);
+		}
+		else
+		{
+			$installed[] = array(
+				'link' => array(
+					'url' => 'http://pear.php.net/package/' . $link,
+					'text' => $link,
+				),
+			);
+		}
+	}
+	
+	if((@include_once 'PEAR.php') == true)
+	{
+		$options['check_pear'] = array(
+			'name' => 'PEAR Installed',
+			'status' => (count($not_installed) > 0)?'warn':'',
+			'description' => array(
+				'list' => array(
+					'The system has detected that PEAR is installed properly.',
+					'The PEAR library is an extensive PHP library that provides common functions for modules and modules in the site.',
+				),
+			),
+			'value' => array(
+				'text' => array(
+					'PEAR Detected',
+				),
+			),
+		);
+		
+		if(count($not_installed) > 0)
+		{
+			$options['check_pear']['value']['text'][] = 'However, the following packages must be installed:';
+			$options['check_pear']['value']['text'][] = array('list' => $not_installed);
+		}
+		else
+		{
+			$options['check_pear']['value']['text'][] = 'The following required packages are also installed:';
+			$options['check_pear']['value']['text'][] = array('list' => $installed);
+		}
+	}
+	else
+	{
+		$options['check_pear'] = array(
+			'name' => 'PEAR Missing',
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					'The system has detected that PEAR is NOT INSTALLED.',
+					'The PEAR library is an extensive PHP library that provides common functions for modules and modules in the site.',
+				),
+			),
+			'value' => array(
+				'text' => array(
+					array(
+						'link' => array(
+							'url' => 'http://pear.php.net/',
+							'text' => 'Get PEAR',
+						),
+					),
+					'As well as the following libraries:',
+					array('list' => $not_installed),
+				),
+			),
+		);
+	}
+	
+	
+	if(file_exists($request['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.lib.php'))
+	{
+		$options['check_getid3'] = array(
+			'name' => 'getID3() Library',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'The system has detected that getID3() library is installed in the includes directory.',
+					'getID3() is a library for reading file headers for MP3s and many different file formats.',
+				),
+			),
+			'type' => 'label',
+			'value' => 'getID3() Library detected',
+		);
+	}
+	else
+	{
+		$options['check_getid3'] = array(
+			'name' => 'getID3() Library Missing',
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					'The system has detected that getID3() Library is NOT INSTALLED.',
+					'The root of the getID3() library must be placed in &lt;site root&gt;/include/getid3/',
+					'getID3() is a library for reading file headers for MP3s and many different file formats.',
+				),
+			),
+			'value' => array(
+				'link' => array(
+					'url' => 'http://www.smarty.net/',
+					'text' => 'Get ID3()',
+				),
+			),
+		);
+	}
+	
+	if(file_exists($request['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'Snoopy.class.php'))
+	{
+		$options['check_snoopy'] = array(
+			'name' => 'Snoopy cUrl API',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'The system has detected that the Scoopy cUrl API is installed in the includes directory.',
+					'Snoopy is an API for making connections to other sites and downloading web pages and files, this is used by the db_amazon module.',
+				),
+			),
+			'type' => 'label',
+			'value' => 'Snoopy detected',
+		);
+	}
+	else
+	{
+		$options['check_getid3'] = array(
+			'name' => 'Snoopy cUrl API Missing',
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					'The system has detected that Snoopy cUrl API is NOT INSTALLED.',
+					'The Snoopy class (Snoopy.class.php) must be placed in &lt;site root&gt;/include/',
+					'Snoopy is an API for making connections to other sites and downloading web pages and files, this is used by the db_amazon module.',
+				),
+			),
+			'value' => array(
+				'link' => array(
+					'url' => 'http://sourceforge.net/projects/snoopy/',
+					'text' => 'Get Snoopy',
+				),
+			),
+		);
+	}
+
+	if(file_exists($request['local_root'] . 'templates' . DIRECTORY_SEPARATOR . 'plain' . DIRECTORY_SEPARATOR . 'extjs' . DIRECTORY_SEPARATOR . 'ext-all.js'))
+	{
+		$options['check_extjs'] = array(
+			'name' => 'EXT JS',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'The system has detected that EXT JS is installed in the templates/plain/extjs directory.',
+					'EXT JS is a javascript library for creating windows and toolbars in templates, this library can be used across all templates.',
+				),
+			),
+			'type' => 'label',
+			'value' => 'EXT JS Detected',
+		);
+	}
+	else
+	{
+		$options['check_getid3'] = array(
+			'name' => 'EXT JS Missing',
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					'The system has detected that EXT JS is NOT INSTALLED.',
+					'The EXT JS root folder must be placed in &lt;site root&gt;/templates/plain/extjs/',
+					'EXT JS is a javascript library for creating windows and toolbars in templates, this library can be used across all templates.',
+				),
+			),
+			'value' => array(
+				'link' => array(
+					'url' => 'http://www.extjs.com/',
+					'text' => 'Get EXT JS',
+				),
+			),
+		);
+	}
+	
+	return $options;
+}
+/**
+ * @}
+ */
 
 /**
  * Abstracted from setup_modules <br />
@@ -99,27 +608,6 @@ function setup_register_modules($path)
 	
 	return $modules;
 }
-
-/** 
- * Implementation of register
- */
-function register_core()
-{
-	// register permission requirements
-	
-	// register the request variables we will be providing validators for
-	
-	// this module has no output
-	return array(
-		'name' => 'Core Functions',
-		'description' => 'Adds core functionality to site that other common modules depend on.',
-		'path' => __FILE__,
-		'privilage' => 1
-	);
-}
-/**
- * @}
- */
 
 /**
  * Set up input variables, everything the site needs about the request <br />
@@ -246,45 +734,88 @@ function register_output_vars($name, $value, $append = false)
  */
 function url($request = array(), $not_special = false, $include_domain = false, $return_array = false)
 {
+	// check if the link is offsite, if so just make sure it is valid and return
+	if(is_string($request) && strpos($request, '://') !== false)
+	{
+		if(parse_url($request) !== false)
+			return $request;
+		else
+			PEAR::raiseError('The path \'' . $request . '\' is invalid!', E_DEBUG);
+	}
+	
+	// if the link is a string, we need to convert it to an array for processing
 	if(is_string($request))
 	{
+		// if the question mark is detected, there must be some amount of path info
 		if(strpos($request, '?') !== false)
 		{
+			// split up the link into path info and query string
 			$request = explode('?', $request);
+			
+			// save the path info for later usage
 			$dirs = split('/', $request[0]);
+			
+			// set the request back to the query string for processing
 			$request = $request[1];
 		}
 		
+		// split up the query string by amersands
 		$arr = explode('&', $request);
 		if(count($arr) == 1 && $arr[0] == '')
 			$arr = array();
 		$request = array();
+		
+		// loop through all the query string and generate our new request array
 		foreach($arr as $i => $value)
 		{
+			// split each part of the query string into name value pairs
 			$x = explode('=', $value);
+			
+			// set each part of the query string in our new request array
 			$request[$x[0]] = isset($x[1])?$x[1]:'';
 		}
 	}
+	
+	// add the path info to the request array
 	if(isset($dirs))
 	{
+		// add the path info in this order so that the path can be used 
+		//   and any modifications to the path variables can be specified in the query string
 		$request = array_merge($request, parse_path_info($dirs));
 	}
+	
+	// if the caller functionality would like an array returned for further processing such as in theme() return now
 	if($return_array)
 		return $request;
 	
 	// rebuild link
+	// always add the module to the path
 	if(!isset($request['module']))
 		$request['module'] = validate_module(array('module' => isset($GLOBALS['module'])?$GLOBALS['module']:''));
+		
+	// if this option is available, add the path into back on to the front of the query string,
+	//   maybe it will be only path information after this step
+	//   the request is pass by reference so the request can be altered when variables are added to the path info
 	$path_info = create_path_info($request);
-	$link = (($include_domain)?$GLOBALS['settings']['html_domain']:'') . (defined('HTML_ROOT')?HTML_ROOT:'') . $path_info;
+	
+	// generate a link, with optional domain the html root and path info prepended
+	$link = (($include_domain)?$GLOBALS['settings']['html_domain']:'') . 
+		$GLOBALS['settings']['html_root'] . 
+		$path_info;
+		
+	// add other variables to the query string
 	if(count($request) > 0)
 	{
 		$link .= '?';
+		
+		// loop through each variable still existing in the reuqest and add it to the query info on the link
 		foreach($request as $key => $value)
 		{
 			$link .= (($link[strlen($link)-1] != '?')?'&':'') . $key . '=' . $value;
 		}
 	}
+	
+	// optionally return a non html special chars converted URL
 	if($not_special)
 		return $link;
 	else

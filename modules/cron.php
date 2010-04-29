@@ -23,8 +23,96 @@ function register_cron()
 		'description' => 'Update the database to match the file system.',
 		'privilage' => 1,
 		'path' => __FILE__,
-		'notemplate' => true
+		'notemplate' => true,
+		'settings' => array('cron', 'dir_seek_time', 'file_seek_time')
 	);
+}
+
+function configure_cron($request)
+{
+	$request['dir_seek_time'] = validate_dir_seek_time($request);
+	$request['file_seek_time'] = validate_file_seek_time($request);
+	
+	$options = array();
+	
+	$options['cron'] = array(
+		'name' => 'Running the Cron',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'In order for the cron script to run, it must be installed in the OS to run periodically throughout the day.',
+			),
+		),
+		'value' => array(
+			'On Unix and Linux:',
+			array(
+				'code' => '&nbsp;&nbsp;&nbsp;&nbsp;0 * * * * /usr/bin/php /&lt;site path&gt;/modules/cron.php &gt;/dev/null 2&gt;&amp;1<br />
+				&nbsp;&nbsp;&nbsp;&nbsp;30 * * * * /usr/bin/php /&lt;site path&gt;/modules/cron.php &gt;/dev/null 2&gt;&amp;1<br />',
+			),
+			'On Windows:',
+			'Run this command from the command line to install the cron script as a task:',
+		),
+	);
+	
+	// dir seek time
+	$options['dir_seek_time'] = array(
+		'name' => 'Directory Seek Time',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'This script allows you to specify an amount of time to spend on searching directories.  This is so the script only runs for a few minutes every hour or every half hour.',
+				'The directory seek time is the amount of time the script will spend searching directories for changed files.',
+			),
+		),
+		'type' => 'filesize',
+		'value' => array(
+			'On Unix and Linux:',
+			array(
+				'code' => '&nbsp;&nbsp;&nbsp;&nbsp;0 * * * * /usr/bin/php /&lt;site path&gt;/modules/cron.php &gt;/dev/null 2&gt;&amp;1<br />
+				&nbsp;&nbsp;&nbsp;&nbsp;30 * * * * /usr/bin/php /&lt;site path&gt;/modules/cron.php &gt;/dev/null 2&gt;&amp;1<br />',
+			),
+			'On Windows:',
+			'Run this command from the command line to install the cron script as a task:',
+		),
+	);
+	
+	return $options;
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return 60 by default, accepts a number over zero or numeric [value] * numeric [multiplier]
+ */
+function validate_dir_seek_time($request)
+{
+	if(isset($request['dir_seek_time']['value']) && isset($request['dir_seek_time']['multiplier']) && 
+		is_numeric($request['dir_seek_time']['value']) && is_numeric($request['dir_seek_time']['multiplier'])
+	)
+		$request['dir_seek_time'] = $request['dir_seek_time']['value'] * $request['dir_seek_time']['multiplier'];
+	
+	if(isset($request['dir_seek_time']) && is_numeric($request['dir_seek_time']) && $request['dir_seek_time'] > 0)
+		return $request['dir_seek_time'];
+	else
+		return 60;
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return 60 by default
+ */
+function validate_file_seek_time($request)
+{
+	if(isset($request['file_seek_time']['value']) && isset($request['file_seek_time']['multiplier']) && 
+		is_numeric($request['file_seek_time']['value']) && is_numeric($request['file_seek_time']['multiplier'])
+	)
+		$request['file_seek_time'] = $request['file_seek_time']['value'] * $request['file_seek_time']['multiplier'];
+	
+	if(isset($request['file_seek_time']) && is_numeric($request['file_seek_time']) && $request['file_seek_time'] > 0)
+		return $request['file_seek_time'];
+	else
+		return 60;
 }
 
 /**

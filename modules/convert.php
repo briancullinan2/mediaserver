@@ -91,7 +91,7 @@ function validate_convert_path($request)
 		return $request['convert_path'];
 	else
 	{
-		if(setting('system_type') == 'win')
+		if(validate_system_type($request) == 'win')
 			return 'C:\Program Files\ImageMagick-6.4.9-Q16\convert.exe';
 		else
 			return '/usr/bin/convert';
@@ -109,7 +109,7 @@ function validate_convert_args($request)
 		return $request['convert_args'];
 	else
 	{
-		if(setting('system_type') == 'win')
+		if(validate_system_type($request) == 'win')
 			return '"%IF" %FM:-';
 		else
 			return '"%IF" -resize "%TWx%TH" %FM:-';

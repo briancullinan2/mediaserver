@@ -40,13 +40,7 @@ define('E_NOTE',					16);
 //	include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.nix.php';
 //else
 /** require the settings */
-if(!file_exists(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.ini'))
-{
-	// try and forward them to the install page
-	define('NOT_INSTALLED', true);
-	if(!isset($_REQUEST['module'])) $_REQUEST['module'] = 'admin_install';
-}
-else
+if(file_exists(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.ini'))
 {
 	if($GLOBALS['settings'] = parse_ini_file(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.ini'))
 	{
@@ -57,6 +51,14 @@ else
 		unset($GLOBALS['settings']);
 	}
 }
+
+if(!isset($GLOBALS['settings']))
+{
+	// try and forward them to the install page
+	define('NOT_INSTALLED', true);
+	if(!isset($_REQUEST['module'])) $_REQUEST['module'] = 'admin_install';
+}
+
 if(!isset($GLOBALS['settings']['local_root']))
 {
 	// spoof local root
@@ -135,7 +137,7 @@ function setup()
 		
 	// set up database to be used everywhere
 	if($GLOBALS['settings']['use_database'])
-		$GLOBALS['database'] = new database(DB_CONNECT);
+		$GLOBALS['database'] = new database($GLOBALS['settings']['db_connect']);
 	else
 		$GLOBALS['database'] = NULL;
 	

@@ -98,7 +98,7 @@ function validate_encode_path($request)
 		return $request['encode_path'];
 	else
 	{
-		if(setting('system_type') == 'win')
+		if(validate_system_type($request) == 'win')
 			return 'C:\Program Files\VideoLAN\VLC\vlc.exe';
 		else
 			return '/usr/bin/vlc';
@@ -116,7 +116,7 @@ function validate_encode_args($request)
 		return $request['encode_args'];
 	else
 	{
-		if(setting('system_type') == 'win')
+		if(validate_system_type($request) == 'win')
 			return '"%IF" :sout=#transcode{vcodec=%VC,acodec=%AC,vb=%VB,ab=%AB,samplerate=%SR,channels=%CH,audio-sync,scale=%SC,fps=%FS}:std{mux=%MX,access=file,dst=-} vlc://quit';
 		else
 			return '-I dummy - --start-time=%TO :sout=\'#transcode{vcodec=%VC,acodec=%AC,vb=%VB,ab=%AB,samplerate=%SR,channels=%CH,audio-sync,scale=%SC,fps=%FS}:std{mux=%MX,access=file,dst=-}\' vlc://quit';

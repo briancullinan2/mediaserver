@@ -25,7 +25,6 @@ function alter_request_live($request)
 
 function output_live()
 {
-		print 'hit';
 	switch($GLOBALS['templates']['vars']['module'])
 	{
 		case 'ampache':
@@ -96,9 +95,23 @@ function print_info_objects($infos)
 			}
 			elseif(is_array($infos['list']))
 			{
-				?><li><?php print implode('</li><li>', $infos['list']); ?></li><?php
+				foreach($infos['list'] as $i => $text)
+				{
+					?><li><?php print_info_objects($text); ?></li><?php
+				}
 			}
 			?></ul><?php
+		}
+		if(isset($infos['link']))
+		{
+			if(is_string($infos['link']))
+			{
+				?><a href="<?php print url($infos['link']); ?>"><?php print htmlspecialchars($infos['link']); ?></a><?php
+			}
+			elseif(is_array($infos['link']))
+			{
+				?><a <?php print isset($infos['link']['name'])?$infos['link']['name']:''; ?> href="<?php print url($infos['link']['url']); ?>"><?php print_info_objects($infos['link']['text']); ?></a><?php
+			}
 		}
 		if(isset($infos['text']))
 		{
@@ -132,52 +145,76 @@ function print_form_objects($form)
 	// generate form based on config spec
 	foreach($form as $field_name => $config)
 	{
-		if($config['type'] == 'radio' || $config['type'] == 'checkbox')
+		if(!isset($config['type']))
 		{
-			print $config['name'] . ':<br />';
-			// check if array is associative or not
-			if(array_keys($config['values']) === array_keys(array_keys($config['values'])))
-			{
-				// numeric keys
-				foreach($config['values'] as $value)
-				{
-					?><input type="<?php print $config['type']; ?>" value="<?php print $value; ?>" name="<?php print $field_name . (($config['type'] == 'checkbox')?'[]':''); ?>" /><?php print $value; ?><br /><?php
-				}
-			}
-			else
-			{
-				// named keys
-				foreach($config['values'] as $value => $text)
-				{
-					?><input type="<?php print $config['type']; ?>" value="<?php print $value; ?>" name="<?php print $field_name . (($config['type'] == 'checkbox')?'[]':''); ?>" /><?php print $text; ?><br /><?php
-				}
-			}
+			print_info_objects($config['value']);
+			continue;
 		}
-		elseif($config['type'] == 'text')
+		
+		switch($config['type'])
 		{
-			?><input type="<?php print $config['type']; ?>" value="<?php print htmlspecialchars($config['value']); ?>" name="<?php print $field_name; ?>" /><?php
-		}
-		elseif($config['type'] == 'select')
-		{
-			?><select name="<?php print $field_name; ?>"><?php
-			// check if array is associative or not
-			if(array_keys($config['values']) === array_keys(array_keys($config['values'])))
-			{
-				// numeric keys
-				foreach($config['values'] as $value)
+			case 'radio':
+			case 'checkbox':
+				print $config['name'] . ':<br />';
+				// check if array is associative or not
+				if(array_keys($config['values']) === array_keys(array_keys($config['values'])))
 				{
-					?><option value="<?php print $value; ?>"><?php print $value; ?></option><?php
+					// numeric keys
+					foreach($config['values'] as $value)
+					{
+						?><input <?php print (isset($config['disabled']) && $config['disabled'] == true)?'disabled="disabled"':'';?> type="<?php print $config['type']; ?>" value="<?php print $value; ?>" name="<?php print $field_name . (($config['type'] == 'checkbox')?'[]':''); ?>" /><?php print $value; ?><br /><?php
+					}
 				}
-			}
-			else
-			{
-				// named keys
-				foreach($config['values'] as $value => $text)
+				else
 				{
-					?><option value="<?php print $value; ?>"><?php print $text; ?></option><?php
+					// named keys
+					foreach($config['values'] as $value => $text)
+					{
+						?><input <?php print (isset($config['disabled']) && $config['disabled'] == true)?'disabled="disabled"':'';?> type="<?php print $config['type']; ?>" value="<?php print $value; ?>" name="<?php print $field_name . (($config['type'] == 'checkbox')?'[]':''); ?>" /><?php print $text; ?><br /><?php
+					}
 				}
-			}
-			?></select><?php
+			break;
+			case 'text':
+				?><input <?php print (isset($config['disabled']) && $config['disabled'] == true)?'disabled="disabled"':'';?> type="<?php print $config['type']; ?>" value="<?php print htmlspecialchars($config['value']); ?>" name="<?php print $field_name; ?>" /><?php
+			break;
+			case 'select':
+				?><select <?php print (isset($config['disabled']) && $config['disabled'] == true)?'disabled="disabled"':'';?> name="<?php print $field_name; ?>"><?php
+				// check if array is associative or not
+				if(array_keys($config['values']) === array_keys(array_keys($config['values'])))
+				{
+					// numeric keys
+					foreach($config['values'] as $value)
+					{
+						?><option value="<?php print $value; ?>"><?php print $value; ?></option><?php
+					}
+				}
+				else
+				{
+					// named keys
+					foreach($config['values'] as $value => $text)
+					{
+						?><option value="<?php print $value; ?>"><?php print $text; ?></option><?php
+					}
+				}
+				?></select><?php
+			break;
+			case 'filesize':
+				?>
+				<select <?php print (isset($config['disabled']) && $config['disabled'] == true)?'disabled="disabled"':'';?> name="<?php print $field_name; ?>[value]" style="width:50px; display:inline; margin-right:0px;">
+				<?php
+				for($i = 1; $i < 60; $i++)
+				{
+					?><option value="<?php echo $i; ?>" <?php echo ($config['value'] == $i || $config['value'] / 60 == $i || $config['value'] / 360 == $i)?'selected="selected"':''; ?>><?php echo $i; ?></option><?php
+				}
+				?>
+				</select>
+				<select name="<?php print $field_name; ?>[multiplier]" style="width:100px; display:inline; margin-right:0px;">
+					<option value="1" <?php echo ($config['value'] >= 1 && $config['value'] < 60)?'selected="selected"':''; ?>>Seconds</option>
+					<option value="60" <?php echo ($config['value'] / 60 >= 1 && $config['value'] / 60 < 60)?'selected="selected"':''; ?>>Minutes</option>
+					<option value="360" <?php echo ($config['value'] / 360 >= 1)?'selected="selected"':''; ?>>Hours</option>
+				</select>
+				<?php
+			break;
 		}
 	}
 }

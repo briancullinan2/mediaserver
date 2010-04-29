@@ -84,16 +84,15 @@ function theme_live_files()
 			else $cat = $GLOBALS['templates']['vars']['cat'];
 			
 			if($GLOBALS['templates']['vars']['cat'] != $cat || $file['Filetype'] == 'FOLDER') $new_cat = $cat;
-			
 			$link = isset($new_cat)?url('module=select&cat=' . $new_cat . '&dir=' . urlencode($file['Filepath'])):url('module=file&cat=' . $cat . '&id=' . $file['id'] . '&filename=' . $file['Filename']);
-			
+			unset($new_cat);
 			?>
 			<div class="file <?php print $file['Filetype']; ?>" onmousedown="deselectAll(event);fileSelect(this, true, event);return false;" oncontextmenu="showMenu(this);return false;" id="<?php print $file['id']; ?>"><div class="notselected"></div>
 				<table class="itemTable" cellpadding="0" cellspacing="0" onclick="location.href = '<?php print $link; ?>';">
 					<tr>
 						<td>
 							<div class="thumb file_ext_<?php print $file['Filetype']; ?> file_type_<?php print isset($file['Filemime'])?str_replace('/', ' file_type_', $file['Filemime']):''; ?>">
-								<img src="<?php print url('module=template&tfile=images/s.gif&template=' . HTML_TEMPLATE); ?>" alt="<?php print $file['Filetype']; ?>" height="48" width="48">
+								<img src="<?php print url('module=template&tfile=images/s.gif&template=' . setting('local_template')); ?>" alt="<?php print $file['Filetype']; ?>" height="48" width="48">
 							</div>
 						</td>
 					</tr>

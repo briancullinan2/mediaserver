@@ -57,7 +57,7 @@ function theme_live_modules()
 					
 					if(isset($GLOBALS['modules'][$key]['settings']) && count($GLOBALS['modules'][$key]['settings']) > 0)
 					{
-						?><a href="<?php print url('module=admin_modules&configure_module=' . $key); ?>">Configure</a><?php
+						?><input type="button" value="Configure" onclick="window.location.href='<?php print url('module=admin_modules&configure_module=' . $key); ?>'" /><?php
 					}
 					?>
 					</td>

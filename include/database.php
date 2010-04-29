@@ -2,8 +2,18 @@
 
 //$no_setup = true;
 //ini_set('include_path', ini_get('include_path') . ':' . dirname(__FILE__));
-include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb-errorpear.inc.php';
-include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb.inc.php';
+if(file_exists(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb.inc.php'))
+{
+	include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb-errorpear.inc.php';
+	include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb.inc.php';
+}
+else
+{
+	// something has gone terribly wrong, disable database and notify administrator
+	$GLOBALS['settings']['use_database'] = false;
+	if(!defined('NOT_INSTALLED')) define('NOT_INSTALLED', true);
+	PEAR::raiseError('Use database is turned on but adoDB is missing!', E_DEBUG|E_USER|E_FATAL);
+}
 
 // control lower level handling of each database
 // things to consider:

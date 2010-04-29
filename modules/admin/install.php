@@ -159,60 +159,7 @@ function setup_post_vars()
 }
 
 // ---------------------------------- step 1 ---------------------------------
-/**
- * Implementation of validate
- * @ingroup validate
- * @return 'win' by default if it can't determine the OS
- */
-function validate_SYSTEM_TYPE($request)
-{
-	if(isset($request['SYSTEM_TYPE']) && ($request['SYSTEM_TYPE'] == 'mac' || $request['SYSTEM_TYPE'] == 'nix' || $request['SYSTEM_TYPE'] == 'win'))
-		return $request['SYSTEM_TYPE'];
-	else
-		return setting('system_type');
-}
-
 // ---------------------------------- step 2 ---------------------------------
-/**
- * Implementation of validate
- * @ingroup validate
- * @return The parent directory of the admin directory by default
- */
-function validate_LOCAL_ROOT($request)
-{
-	if(isset($request['LOCAL_ROOT']) && is_dir($request['LOCAL_ROOT']))
-		return $request['LOCAL_ROOT'];
-	else
-		return setting('local_root');
-}
-
-/**
- * Implementation of validate
- * @ingroup validate
- * @return The domain information set by the SERVER by default
- */
-function validate_HTML_DOMAIN($request)
-{
-	if(isset($request['HTML_DOMAIN']) && @parse_url($request['HTML_DOMAIN']) !== false)
-		return $request['HTML_DOMAIN'];
-	else
-		return setting('html_domain');
-}
-
-/**
- * Implementation of validate
- * @ingroup validate
- * @return The working path to this installer minus the server path
- */
-function validate_HTML_ROOT($request)
-{
-	$request['HTML_DOMAIN'] = validate_HTML_DOMAIN($request);
-	
-	if(isset($request['HTML_ROOT']) && @parse_url($request['HTML_DOMAIN'] . $request['HTML_ROOT']) !== false)
-		return $request['HTML_ROOT'];
-	else
-		return setting('html_root');
-}
 
 // ---------------------------------- step 3 ---------------------------------
 /**
@@ -300,31 +247,6 @@ function validate_HTML_NAME($request)
 }
 
 // ---------------------------------- step 7 ---------------------------------
-/**
- * Implementation of validate
- * @ingroup validate
- * @return 60 by default
- */
-function validate_DIRECTORY_SEEK_TIME($request)
-{
-	if(isset($request['DIRECTORY_SEEK_TIME']) && isset($request['DIRECTORY_SEEK_TIME_MULTIPLIER']))
-		return $request['DIRECTORY_SEEK_TIME'] * $request['DIRECTORY_SEEK_TIME_MULTIPLIER'];
-	else
-		return setting('dir_seek_time');
-}
-
-/**
- * Implementation of validate
- * @ingroup validate
- * @return 60 by default
- */
-function validate_FILE_SEEK_TIME($request)
-{
-	if(isset($request['FILE_SEEK_TIME']) && isset($request['FILE_SEEK_TIME_MULTIPLIER']))
-		return $request['FILE_SEEK_TIME'] * $request['FILE_SEEK_TIME_MULTIPLIER'];
-	else
-		return setting('file_seek_time');
-}
 
 // ---------------------------------- step 8 ---------------------------------
 /**
@@ -472,44 +394,7 @@ function perform_tests($request, $start = 0, $stop = NULL)
 {
 	$tests = array();
 	// step 1
-	$tests['system_type'] = 'return true;'; // return true because we don't want to show this if they choose the quick install
-	$tests['settings_perm'] = <<<EOF
-		\$settings = dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'settings.php';
-		return (is_writable(\$settings));
-EOF;
-	$tests['mod_rewrite'] = <<<EOF
-		return (isset(\$_REQUEST['modrewrite']) && \$_REQUEST['modrewrite'] == true);
-EOF;
-	$tests['memory_limit'] = <<<EOF
-		\$memory_limit = ini_get('memory_limit');
-		return (intval(\$memory_limit) >= 96);
-EOF;
 	// step 2
-	$tests['local_root'] = <<<EOF
-		\$request['LOCAL_ROOT'] = validate_LOCAL_ROOT(\$request);
-		return file_exists(\$request['LOCAL_ROOT'] . 'include');
-EOF;
-	$tests['check_adodb'] = <<<EOF
-		\$request['LOCAL_ROOT'] = validate_LOCAL_ROOT(\$request);
-		return file_exists(\$request['LOCAL_ROOT'] . 'include' . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb.inc.php');
-EOF;
-	$tests['check_pear'] = <<<EOF
-		return ((@include_once 'PEAR.php') == true);
-EOF;
-	$tests['check_getid3'] = <<<EOF
-		\$request['LOCAL_ROOT'] = validate_LOCAL_ROOT(\$request);
-		return file_exists(\$request['LOCAL_ROOT'] . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.lib.php');
-EOF;
-	$tests['check_snoopy'] = <<<EOF
-		\$request['LOCAL_ROOT'] = validate_LOCAL_ROOT(\$request);
-		return file_exists(\$request['LOCAL_ROOT'] . 'include' . DIRECTORY_SEPARATOR . 'Snoopy.class.php');
-EOF;
-	$tests['check_extjs'] = <<<EOF
-		\$request['LOCAL_ROOT'] = validate_LOCAL_ROOT(\$request);
-		return file_exists(\$request['LOCAL_ROOT'] . 'templates' . DIRECTORY_SEPARATOR . 'plain' . DIRECTORY_SEPARATOR . 'extjs' . DIRECTORY_SEPARATOR . 'ext-all.js');
-EOF;
-	$tests['html_domain'] = 'return true;';
-	$tests['html_root'] = 'return true;';
 	$tests['db_type'] = 'return true;';
 	$tests['db_server'] = 'return false;'; // return false so the user always sees this option
 	$tests['db_user'] = 'return false;';
@@ -524,9 +409,6 @@ EOF;
 	$tests['db_test'] = 'return false;'; // always test the database before installing
 	$tests['db_install'] = 'return false;'; // always install the database
 	$tests['site_name'] = 'return false;'; // always ask to set site name
-	$tests['cron'] = 'return false;'; // always inform user they need to install cron
-	$tests['dir_seek_time'] = 'return true;';
-	$tests['file_seek_time'] = 'return true;';
 	$tests['debug_mode'] = 'return true;';
 	$tests['deep_select'] = 'return true;';
 	$tests['robots'] = 'return true;';

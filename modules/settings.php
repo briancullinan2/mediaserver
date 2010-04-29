@@ -30,11 +30,12 @@ function register_settings()
  */
 function setup_settings()
 {
+	// if there isn't by chance already a setting global set it up here
 	if(!isset($GLOBALS['settings']))
 		$GLOBALS['settings'] = array();
-		
+	
 	// merge everything with the default settings
-	$GLOBALS['settings'] = array_merge(settings_get_defaults(), $GLOBALS['settings']);
+	$GLOBALS['settings'] = array_merge(settings_get_defaults($GLOBALS['settings']), $GLOBALS['settings']);
 }
 
 /**
@@ -53,71 +54,67 @@ function setting($name)
 /**
  * Get all the default settings
  */
-function settings_get_defaults()
+function settings_get_defaults($settings)
 {
-	if(realpath('/') == '/')
-	{
-		if(file_exists('/Users/'))
-			$settings['system_type'] = 'mac';
-		else
-			$settings['system_type'] = 'nix';
-	}
-	else
-		$settings['system_type'] = 'win';
+	// existing settings are passed in to this function incase a default depends on something already set up
 	
-	// convert path
-	if(setting('system_type') == 'win')
-		$settings['convert_path'] = 'C:\Program Files\ImageMagick-6.4.9-Q16\convert.exe';
-	else
-		$settings['convert_path'] = '/usr/bin/convert';
-
-	// local root
-	$settings['local_root'] = dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR;
-
-	// html domain
-	$settings['html_domain'] = strtolower(substr($_SERVER['SERVER_PROTOCOL'], 0, strpos($_SERVER['SERVER_PROTOCOL'], '/'))) . '://' . $_SERVER['HTTP_HOST'] . (($_SERVER['SERVER_PORT'] != 80)?':' . $_SERVER['SERVER_PORT']:'');
-
-	// html root
-	$settings['html_root'] = ((substr(setting('local_root'), 0, strlen($_SERVER['DOCUMENT_ROOT'])) == $_SERVER['DOCUMENT_ROOT'])?substr(setting('local_root'), strlen($_SERVER['DOCUMENT_ROOT'])):'');
+	// new settings to return
+	$default_settings = array();
+	
+	// load core settings first
+	foreach($GLOBALS['modules']['core']['settings'] as $i => $setting)
+	{
+		$default_settings[$setting] = call_user_func_array('validate_' . $setting, array($settings));
+	}
+	
+	// loop through each module and get the default settings
+	foreach($GLOBALS['modules'] as $module => $config)
+	{
+		if(isset($config['settings']))
+		{
+			foreach($config['settings'] as $i => $setting)
+			{
+				if(function_exists('validate_' . $setting))
+				{
+					$default_settings[$setting] = call_user_func_array('validate_' . $setting, array($settings));
+				}
+				else
+					PEAR::raiseError('Setting \'' . $setting . '\' is specified without a validate function in the ' . $module . ' module.');
+			}
+		}
+	}
 
 	// database
-	$settings['use_database'] = false;
-	$settings['db_type'] = 'mysql';
-	$settings['db_server'] = 'localhost';
-	$settings['db_user'] = '';
-	$settings['db_pass'] = '';
-	$settings['db_name'] = '';
-	
-	// template
-	$settings['local_base'] = 'plain';
-	$settings['local_default'] = 'live';
-	$settings['local_template'] = '';
+	$default_settings['use_database'] = false;
+	$default_settings['db_type'] = 'mysql';
+	$default_settings['db_server'] = 'localhost';
+	$default_settings['db_user'] = '';
+	$default_settings['db_pass'] = '';
+	$default_settings['db_name'] = '';
 		
 	// html name
-	$settings['html_name'] = 'Brian\'s Media Website';
+	$default_settings['html_name'] = 'Brian\'s Media Website';
 	
 	// other
-	$settings['dir_seek_time'] = 60;
-	$settings['file_seek_time'] = 60;
-	$settings['debug_mode'] = false;
-	$settings['recursive_get'] = false;
-	$settings['no_bots'] = true;
+	$default_settings['debug_mode'] = false;
+	$default_settings['recursive_get'] = false;
+	$default_settings['no_bots'] = true;
 	
 	// tmp dir
 	$tmpfile = tempnam("dummy","");
 	unlink($tmpfile);
-	$settings['tmp_dir'] = dirname($tmpfile) . DIRECTORY_SEPARATOR;
+	$default_settings['tmp_dir'] = dirname($tmpfile) . DIRECTORY_SEPARATOR;
 
 	// users
-	$settings['local_users'] = setting('local_root') . 'users' . DIRECTORY_SEPARATOR;
+	$default_settings['local_users'] = $settings['local_root'] . 'users' . DIRECTORY_SEPARATOR;
 	
 	// buffer size
-	$settings['buffer_size'] = 2*1024*8;
+	$default_settings['buffer_size'] = 2*1024*8;
 	
 	// use alias
-	$settings['use_alias'] = true;
+	$default_settings['use_alias'] = true;
 	
-	return $settings;
+	return $default_settings;
 }
 
 /**
