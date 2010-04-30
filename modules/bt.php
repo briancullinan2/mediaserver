@@ -139,7 +139,7 @@ function output_bt($request)
 			$torrent['info']['files'] = array();
 			foreach($files as $index => &$file)
 			{
-				if(USE_ALIAS == true) $files[$index]['Filepath'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file['Filepath']);
+				if(setting('use_alias') == true) $files[$index]['Filepath'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file['Filepath']);
 				if(!file_exists($files[$index]['Filepath']))
 					continue;
 				$file_info = array();

@@ -14,7 +14,7 @@
 function setup_user()
 {
 	// check if user is logged in
-	if( isset($_SESSION['users']['username']) && isset($_SESSION['users']['password']) )
+	if( isset($_SESSION['users']['username']) && isset($_SESSION['users']['password']) && setting('use_database') == true )
 	{
 		// lookup username in table
 		$db_user = $GLOBALS['database']->query(array(
@@ -118,8 +118,66 @@ function register_users()
 		'description' => 'Allows for managing and displaying users.',
 		'privilage' => 1,
 		'path' => __FILE__,
-		'session' => array('username')
+		'session' => array('username'),
+		'settings' => array('local_users'),
 	);
+}
+
+/**
+ * Implementation of configure
+ */
+function configure_users($settings)
+{
+	$settings['local_users'] = setting_local_users($settings);
+	
+	$options = array();
+	
+	if(is_writable($request['local_users']))
+	{
+		$options['local_users'] = array(
+			'name' => 'User Files',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'This directory will be used for uploaded user files.  This will also be included in the directories that are watched by the server.',
+				),
+			),
+			'type' => 'text',
+			'value' => $settings['local_users'],
+		);
+	}
+	else
+	{
+		$options['local_users'] = array(
+			'name' => 'User Files',
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					'The system has detected that this directory does not exist or is not writable.',
+					'Please correct this error by entering a directory path that exists and is writable by the web server',
+				),
+			),
+			'type' => 'text',
+			'value' => $settings['local_users'],
+		);
+	}
+	
+	return $options;
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ * @return A 'users' directory withing the site root
+ */
+function setting_local_users($settings)
+{
+	$settings['local_root'] = setting_local_root($settings);
+	
+	if(isset($settings['local_users']) && is_dir($settings['local_users']))
+		return $settings['local_users'];
+	else
+		return $settings['local_root'] . 'users' . DIRECTORY_SEPARATOR;
 }
 
 /**
@@ -139,12 +197,12 @@ function validate_users($request)
 /**
  * Implementation of validate
  * @ingroup validate
- * @return an MD5 has of the DB_SECRET prepended to the inputted password, it can never be decoded or displayed
+ * @return an MD5 has of the setting('db_secret') prepended to the inputted password, it can never be decoded or displayed
  */
 function validate_password($request)
 {
 	if(isset($request['password']))
-		return md5(DB_SECRET . $request['password']);
+		return md5(setting('db_secret') . $request['password']);
 }
 
 /**
@@ -231,7 +289,7 @@ function output_users($request)
 		case 'register':
 			
 			// validate input
-			if(db_users::handles(LOCAL_USERS . $request['username']))
+			if(db_users::handles(setting('local_users') . $request['username']))
 			{
 				// make sure the user doesn't already exist
 				$db_user = $GLOBALS['database']->query(array(
@@ -254,9 +312,9 @@ function output_users($request)
 				}
 				
 				// create user folders
-				if(!file_exists(LOCAL_USERS . $request['username']))
+				if(!file_exists(setting('local_users') . $request['username']))
 				{
-					$made = @mkdir(LOCAL_USERS . $request['username']);
+					$made = @mkdir(setting('local_users') . $request['username']);
 				
 					if($made == false)
 					{
@@ -264,13 +322,13 @@ function output_users($request)
 					}
 				}
 			
-				@mkdir(LOCAL_USERS . $request['username'] . DIRECTORY_SEPARATOR . 'public');
-				@mkdir(LOCAL_USERS . $request['username'] . DIRECTORY_SEPARATOR . 'private');
+				@mkdir(setting('local_users') . $request['username'] . DIRECTORY_SEPARATOR . 'public');
+				@mkdir(setting('local_users') . $request['username'] . DIRECTORY_SEPARATOR . 'private');
 			
 				if( count($GLOBALS['user_errors']) == 0 )
 				{
 					// create database entry
-					$user_id = db_users::handle(LOCAL_USERS . $request['username']);
+					$user_id = db_users::handle(setting('local_users') . $request['username']);
 					
 					// add password and profile information
 					$result = $GLOBALS['database']->query(array(

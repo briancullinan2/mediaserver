@@ -35,14 +35,14 @@ class db_users extends db_file
 	static function handles($file)
 	{
 		$file = str_replace('\\', '/', $file);
-		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+		if(setting('use_alias') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 		
-		// handle directories found in the LOCAL_USERS directory
+		// handle directories found in the setting('local_users') directory
 		//  automatically create a user entry in the database for those directories
 		// extract username from path
-		if(substr($file, 0, strlen(LOCAL_USERS)) == LOCAL_USERS)
+		if(substr($file, 0, strlen(setting('local_users'))) == setting('local_users'))
 		{
-			$file = substr($file, strlen(LOCAL_USERS));
+			$file = substr($file, strlen(setting('local_users')));
 			
 			// remove rest of path
 			if(strpos($file, '/') !== false)
@@ -117,11 +117,11 @@ class db_users extends db_file
 				{
 					// replace virtual paths
 					$path = str_replace('\\', '/', $file['Filepath']);
-					if(USE_ALIAS == true) $path = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $path);
+					if(setting('use_alias') == true) $path = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $path);
 					
-					if(substr($path, 0, strlen(LOCAL_USERS)) == LOCAL_USERS)
+					if(substr($path, 0, strlen(setting('local_users'))) == setting('local_users'))
 					{
-						$path = substr($path, strlen(LOCAL_USERS));
+						$path = substr($path, strlen(setting('local_users')));
 						
 						// remove rest of path
 						if(strpos($path, '/') !== false)
@@ -169,11 +169,11 @@ class db_users extends db_file
 			
 			// modify the file variable to use username instead
 			$file = str_replace('\\', '/', $request['file']);
-			if(USE_ALIAS == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+			if(setting('use_alias') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 			
-			if(substr($file, 0, strlen(LOCAL_USERS)) == LOCAL_USERS)
+			if(substr($file, 0, strlen(setting('local_users'))) == setting('local_users'))
 			{
-				$file = substr($file, strlen(LOCAL_USERS));
+				$file = substr($file, strlen(setting('local_users')));
 				
 				// remove rest of path
 				if(strpos($file, '/') !== false)

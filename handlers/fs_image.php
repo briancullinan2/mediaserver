@@ -11,11 +11,16 @@ class fs_image extends fs_file
 
 	static function init()
 	{
-		// include the id handler
-		include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.php';
-		
-		// set up id3 reader incase any files need it
-		$GLOBALS['getID3'] = new getID3();
+		if(setting('exists_getid3'))
+		{
+			// include the id handler
+			include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.php';
+			
+			// set up id3 reader incase any files need it
+			$GLOBALS['getID3'] = new getID3();
+		}
+		else
+			PEAR::raiseError('getID3() missing from include directory! Archive handlers cannot function properly.', E_DEBUG);
 	}
 
 	static function columns()

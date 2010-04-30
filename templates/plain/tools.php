@@ -4,7 +4,7 @@
 	<meta http-equiv="Pragma" content="no-cache">
 	<meta http-equiv="Expires" content="-1">
 	<title><?php echo setting('html_name')?>: Tools</title>
-    <link rel="stylesheet" href="<?php echo url('module=template&tfile=css/tools.css&template=' . LOCAL_BASE); ?>" type="text/css"/>
+    <link rel="stylesheet" href="<?php echo url('module=template&tfile=css/tools.css&template=' . setting('local_base')); ?>" type="text/css"/>
 </head>
 <body>
 	<p>View different types of reports by selecting the link and following the instructions.</p>

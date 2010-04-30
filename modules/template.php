@@ -87,15 +87,16 @@ function register_template()
  * Configure all template options
  * @ingroup configure
  */
-function configure_template($request)
+function configure_template($settings)
 {
-	$request['local_base'] = validate_local_base($request);
-	$request['local_default'] = validate_local_default($request);
-	$request['local_template'] = validate_local_template($request);
+	$settings['local_root'] = setting_local_root($settings);
+	$settings['local_base'] = setting_local_base($settings);
+	$settings['local_default'] = setting_local_default($settings);
+	$settings['local_template'] = setting_local_template($settings);
 	
 	$options = array();
 	
-	if(file_exists(setting('local_root') . 'templates' . DIRECTORY_SEPARATOR . $request['local_base']))
+	if(file_exists(setting('local_root') . 'templates' . DIRECTORY_SEPARATOR . $settings['local_base']))
 	{
 		$options['local_base'] = array(
 			'name' => 'Template Base',
@@ -104,11 +105,11 @@ function configure_template($request)
 				'list' => array(
 					'The template base provides a backup/default set of template files. This template supports all possible functionality, in the simplest way.',
 					'Default functionality includes things like printing out an XML file, or an M3U playlist instead of a vieable HTML list of files.',
-					'The server reports that ' . setting('local_root') . 'template' . DIRECTORY_SEPARATOR . $request['local_base'] . ' does, in fact, exist.',
+					'The server reports that ' . $settings['local_root'] . 'template' . DIRECTORY_SEPARATOR . $settings['local_base'] . ' does, in fact, exist.',
 				),
 			),
 			'type' => 'text',
-			'value' => $request['local_base'],
+			'value' => $settings['local_base'],
 		);
 	}
 	else
@@ -121,11 +122,11 @@ function configure_template($request)
 					'The system has detected that the local basic template files are not where they are expected to be.',
 					'The template base provides a backup/default set of template files. This template supports all possible functionality, in the simplest way.',
 					'Default functionality includes things like printing out an XML file, or an M3U playlist instead of a vieable HTML list of files.',
-					'The server reports that ' . setting('local_root') . 'template' . DIRECTORY_SEPARATOR . $request['local_base'] . ' does NOT EXIST.',
+					'The server reports that ' . $settings['local_root'] . 'template' . DIRECTORY_SEPARATOR . $settings['local_base'] . ' does NOT EXIST.',
 				),
 			),
 			'type' => 'text',
-			'value' => $request['convert_path'],
+			'value' => $settings['convert_path'],
 		);
 	}
 	
@@ -144,7 +145,8 @@ function configure_template($request)
 			),
 		),
 		'type' => 'select',
-		'values' => $templates,
+		'value' => $settings['local_default'],
+		'options' => $templates,
 	);
 	
 	$options['local_template'] = array(
@@ -156,47 +158,48 @@ function configure_template($request)
 			),
 		),
 		'type' => 'select',
-		'values' => array('' => 'Not Set') + $templates,
+		'value' => $settings['local_template'],
+		'options' => array('' => 'Not Set') + $templates,
 	);
 
 	return $options;
 }
 
 /**
- * Implementation of validate
- * @ingroup validate
+ * Implementation of setting
+ * @ingroup setting
  * @return The plain template by default
  */
-function validate_local_base($request)
+function setting_local_base($settings)
 {
-	if(isset($request['local_base']) && in_array(basename($request['local_base']), $GLOBALS['templates']))
-		return basename($request['local_base']);
+	if(isset($settings['local_base']) && in_array(basename($settings['local_base']), array_keys($GLOBALS['templates'])))
+		return basename($settings['local_base']);
 	else
 		return 'plain';
 }
 
 /**
- * Implementation of validate
- * @ingroup validate
+ * Implementation of setting
+ * @ingroup setting
  * @return The live template by default
  */
-function validate_local_default($request)
+function setting_local_default($settings)
 {
-	if(isset($request['local_default']) && in_array($request['local_default'], $GLOBALS['templates']))
-		return $request['local_default'];
+	if(isset($settings['local_default']) && in_array($settings['local_default'], array_keys($GLOBALS['templates'])))
+		return $settings['local_default'];
 	else
 		return 'live';
 }
 
 /**
- * Implementation of validate
- * @ingroup validate
+ * Implementation of setting
+ * @ingroup setting
  * @return blank by default
  */
-function validate_local_template($request)
+function setting_local_template($settings)
 {
-	if(isset($request['local_template']) && in_array($request['local_template'], $GLOBALS['templates']))
-		return $request['local_template'];
+	if(isset($settings['local_template']) && in_array($settings['local_template'], array_keys($GLOBALS['templates'])))
+		return $settings['local_template'];
 	else
 		return '';
 }
@@ -412,16 +415,7 @@ function theme($request = '')
 		}
 		// it is possible the whole request
 		else
-		{
-			// parse out the request into an array
-			$request = url($request, true, false, true);
-			
-			// call the theme again
-			$result = theme((array)$request);
-			if($result == false)
-				PEAR::raiseError('Theme function could not be handled because of an unrecognized argument.', E_DEBUG|E_WARN);
-			return $result;
-		}
+			PEAR::raiseError('Theme function \'theme_' . validate_template(array('template' => setting('local_template'))) . '_' . $request . '\' was not found.', E_DEBUG|E_WARN);
 	}
 	else
 		PEAR::raiseError('Theme function could not be handled because of an unrecognized argument.', E_DEBUG|E_WARN);

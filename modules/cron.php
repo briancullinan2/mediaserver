@@ -28,10 +28,10 @@ function register_cron()
 	);
 }
 
-function configure_cron($request)
+function configure_cron($settings)
 {
-	$request['dir_seek_time'] = validate_dir_seek_time($request);
-	$request['file_seek_time'] = validate_file_seek_time($request);
+	$settings['dir_seek_time'] = setting_dir_seek_time($settings);
+	$settings['file_seek_time'] = setting_file_seek_time($settings);
 	
 	$options = array();
 	
@@ -65,52 +65,57 @@ function configure_cron($request)
 			),
 		),
 		'type' => 'filesize',
-		'value' => array(
-			'On Unix and Linux:',
-			array(
-				'code' => '&nbsp;&nbsp;&nbsp;&nbsp;0 * * * * /usr/bin/php /&lt;site path&gt;/modules/cron.php &gt;/dev/null 2&gt;&amp;1<br />
-				&nbsp;&nbsp;&nbsp;&nbsp;30 * * * * /usr/bin/php /&lt;site path&gt;/modules/cron.php &gt;/dev/null 2&gt;&amp;1<br />',
+		'value' => $settings['dir_seek_time'],
+	);
+	
+	// file seek time
+	$options['file_seek_time'] = array(
+		'name' => 'File Seek Time',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'The file seek time is the amount of time the script will spend reading file information and putting it in to the database.',
 			),
-			'On Windows:',
-			'Run this command from the command line to install the cron script as a task:',
 		),
+		'type' => 'filesize',
+		'value' => $settings['dir_seek_time'],
 	);
 	
 	return $options;
 }
 
 /**
- * Implementation of validate
- * @ingroup validate
+ * Implementation of setting
+ * @ingroup setting
  * @return 60 by default, accepts a number over zero or numeric [value] * numeric [multiplier]
  */
-function validate_dir_seek_time($request)
+function setting_dir_seek_time($settings)
 {
-	if(isset($request['dir_seek_time']['value']) && isset($request['dir_seek_time']['multiplier']) && 
-		is_numeric($request['dir_seek_time']['value']) && is_numeric($request['dir_seek_time']['multiplier'])
+	if(isset($settings['dir_seek_time']['value']) && isset($settings['dir_seek_time']['multiplier']) && 
+		is_numeric($settings['dir_seek_time']['value']) && is_numeric($settings['dir_seek_time']['multiplier'])
 	)
-		$request['dir_seek_time'] = $request['dir_seek_time']['value'] * $request['dir_seek_time']['multiplier'];
+		$settings['dir_seek_time'] = $settings['dir_seek_time']['value'] * $settings['dir_seek_time']['multiplier'];
 	
-	if(isset($request['dir_seek_time']) && is_numeric($request['dir_seek_time']) && $request['dir_seek_time'] > 0)
-		return $request['dir_seek_time'];
+	if(isset($settings['dir_seek_time']) && is_numeric($settings['dir_seek_time']) && $settings['dir_seek_time'] > 0)
+		return $settings['dir_seek_time'];
 	else
 		return 60;
 }
 
 /**
- * Implementation of validate
- * @ingroup validate
+ * Implementation of setting
+ * @ingroup setting
  * @return 60 by default
  */
-function validate_file_seek_time($request)
+function setting_file_seek_time($settings)
 {
-	if(isset($request['file_seek_time']['value']) && isset($request['file_seek_time']['multiplier']) && 
-		is_numeric($request['file_seek_time']['value']) && is_numeric($request['file_seek_time']['multiplier'])
+	if(isset($settings['file_seek_time']['value']) && isset($settings['file_seek_time']['multiplier']) && 
+		is_numeric($settings['file_seek_time']['value']) && is_numeric($settings['file_seek_time']['multiplier'])
 	)
-		$request['file_seek_time'] = $request['file_seek_time']['value'] * $request['file_seek_time']['multiplier'];
+		$settings['file_seek_time'] = $settings['file_seek_time']['value'] * $settings['file_seek_time']['multiplier'];
 	
-	if(isset($request['file_seek_time']) && is_numeric($request['file_seek_time']) && $request['file_seek_time'] > 0)
-		return $request['file_seek_time'];
+	if(isset($settings['file_seek_time']) && is_numeric($settings['file_seek_time']) && $settings['file_seek_time'] > 0)
+		return $settings['file_seek_time'];
 	else
 		return 60;
 }
@@ -316,7 +321,7 @@ function read_files()
 		if(count($db_dirs) > 0)
 		{
 			$dir = $db_dirs[0]['Filepath'];
-			if(USE_ALIAS == true)
+			if(setting('use_alias') == true)
 				$dir = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $dir);
 			$status = db_watch_list::scan_dir($dir);
 			
@@ -331,11 +336,11 @@ function read_files()
 		// check if execution time is too long
 		$secs_total = array_sum(explode(' ', microtime())) - $GLOBALS['tm_start'];
 		
-		if($secs_total > FILE_SEEK_TIME)
+		if($secs_total > setting('file_seek_time'))
 			PEAR::raiseError("Ran out of Time: Changed directories still in database", E_DEBUG);
 		
 	// if the connection is lost complete current directory then quit
-	} while( $secs_total < FILE_SEEK_TIME && count($db_dirs) > 0 && connection_status()==0 );
+	} while( $secs_total < setting('file_seek_time') && count($db_dirs) > 0 && connection_status()==0 );
 	
 	PEAR::raiseError("Phase 2: Complete!", E_DEBUG);
 
@@ -363,7 +368,7 @@ function output_cron($request)
 	
 	//------------- DON'T CHANGE THIS - USE /include/settings.php TO MODIFY THESE VALUES ---------//
 	// add 30 seconds becase the cleanup shouldn't take any longer then that
-	set_time_limit(setting('dir_seek_time') + FILE_SEEK_TIME + CLEAN_UP_BUFFER_TIME);
+	set_time_limit(setting('dir_seek_time') + setting('file_seek_time') + CLEAN_UP_BUFFER_TIME);
 	
 	// ignore user abort because the script will handle it
 	ignore_user_abort(1);
@@ -509,7 +514,7 @@ function output_cron($request)
 				// if using aliases then only add the revert from the watch directory to the alias
 				// ex. Watch = /home/share/Pictures/, Alias = /home/share/ => /Shared/
 				//     only /home/share/ is added here
-				if(!USE_ALIAS || in_array($curr_dir, $GLOBALS['paths']) !== false)
+				if(!setting('use_alias') || in_array($curr_dir, $GLOBALS['paths']) !== false)
 				{
 					// this allows for us to make sure that at least the beginning 
 					//   of the path is an aliased path
@@ -519,13 +524,13 @@ function output_cron($request)
 					if(!in_array($curr_dir, $directories))
 					{
 						$directories[] = $curr_dir;
-						// if the USE_ALIAS is true this will only add the folder
+						// if the setting('use_alias') is true this will only add the folder
 						//    if it is in the list of aliases
 						db_watch_list::handle_file($curr_dir);
 					}
 				}
 				// but make an exception for folders between an alias and the watch path
-				elseif(USE_ALIAS && $between && !in_array($curr_dir, $directories))
+				elseif(setting('use_alias') && $between && !in_array($curr_dir, $directories))
 				{
 					$directories[] = $curr_dir;
 					

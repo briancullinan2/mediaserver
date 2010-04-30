@@ -159,26 +159,47 @@ function live_alter_file($file)
 
 function theme_live_errors()
 {
-	if(count($GLOBALS['warn_errors']) > 0)
+	if(!isset($GLOBALS['templates']['vars']['errors_only']) || $GLOBALS['templates']['vars']['errors_only'] == false)
 	{
-		?><div style="border:2px solid #CC0; background-color:#FF9;"><?php
-		foreach($GLOBALS['warn_errors'] as $error)
-		{
-			?><b><?php print $error->message; ?></b><br /><?php
-		}
-		?></div><?php
+		?>
+		<div id="errors"></div>
+		<script language="javascript">
+		$("#errors").load('<?php print url('module=index&errors_only=true'); ?>');
+		</script>
+		<?php
 	}
+	else
+	{
+		if(count($GLOBALS['warn_errors']) > 0)
+		{
+			?><div style="border:2px solid #CC0; background-color:#FF9;"><?php
+			foreach($GLOBALS['warn_errors'] as $error)
+			{
+				?><b><?php print $error->message; ?></b><br /><?php
+			}
+			?></div><?php
+		}
+		
+		if(count($GLOBALS['user_errors']) > 0)
+		{
+			?><div style="border:2px solid #C00; background-color:#F99;"><?php
+			foreach($GLOBALS['user_errors'] as $error)
+			{
+				?><b><?php print $error->message; ?></b><br /><?php
+			}
+			?></div><?php
+		}
 	
-	if(count($GLOBALS['user_errors']) > 0)
-	{
-		?><div style="border:2px solid #C00; background-color:#F99;"><?php
-		foreach($GLOBALS['user_errors'] as $error)
+		if(count($GLOBALS['note_errors']) > 0)
 		{
-			?><b><?php print $error->message; ?></b><br /><?php
+			?><div style="border:2px solid #09F; background-color:#CEF;"><?php
+			foreach($GLOBALS['note_errors'] as $error)
+			{
+				?><b><?php print $error->message; ?></b><br /><?php
+			}
+			?></div><?php
 		}
-		?></div><?php
 	}
-	restore_error_handler();
 }
 
 function theme_live_index()

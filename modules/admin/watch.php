@@ -69,9 +69,29 @@ function output_admin_watch($request)
 	// reget the watched and ignored because they may have changed
 	$GLOBALS['ignored'] = db_watch::get(array('search_Filepath' => '/^!/'), $count);
 	$GLOBALS['watched'] = db_watch::get(array('search_Filepath' => '/^\\^/'), $count);
-	$GLOBALS['watched'][] = array('id' => 0, 'Filepath' => str_replace('\\', '/', LOCAL_USERS));
+	$GLOBALS['watched'][] = array('id' => 0, 'Filepath' => str_replace('\\', '/', setting('local_users')));
+	
+	// make select call for the file browser
+	$files = fs_file::get(array(
+		'dir' => validate_dir($request),
+		'start' => validate_start($request),
+		'limit' => 32000,
+		'dirs_only' => true,
+	), &$total_count, true);
+
+	$request = validate_start($request);
+
+	// support paging
+	register_output_vars('start', $request['start']);
+	register_output_vars('limit', 32000);
 	
 	// assign variables for a smarty template to use
+	register_output_vars('total_count', $total_count);
+	register_output_vars('files', $files);
+	register_output_vars('dir', $request['dir']);
+	
+	// watch information
 	register_output_vars('watched', $GLOBALS['watched']);
 	register_output_vars('ignored', $GLOBALS['ignored']);
 }
+

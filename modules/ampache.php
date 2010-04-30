@@ -406,7 +406,7 @@ function output_ampache($request)
 			// replace file path is actual path
 			foreach($files as $i => $file)
 			{
-				if(USE_ALIAS == true) $files[$i]['Filepath'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $files[$i]['Filepath']);
+				if(setting('use_alias') == true) $files[$i]['Filepath'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $files[$i]['Filepath']);
 			}
 					
 			// set the variables in the template		

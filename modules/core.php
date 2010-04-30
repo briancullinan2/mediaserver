@@ -27,7 +27,11 @@ function register_core()
 		'description' => 'Adds core functionality to site that other common modules depend on.',
 		'path' => __FILE__,
 		'privilage' => 1,
-		'settings' => array('system_type', 'local_root', 'html_domain', 'html_root')
+		'settings' => array(
+			'system_type', 'local_root', 'settings_file', 'writable_settings_file',
+			'modrewrite', 'memory_limit', 'exists_local_root', 'exists_adodb', 'exists_pear',
+			'exists_getid3', 'exists_snoopy', 'exists_extjs',
+		),
 	);
 }
 /**
@@ -40,109 +44,475 @@ function register_core()
  */
 function setup_register()
 {
-	$GLOBALS['modules'] = array('index' => array(
+	$GLOBALS['modules'] = array(
+		'index' => array(
 			'name' => 'Index',
 			'description' => 'Load a module\'s output variables and display the template.',
 			'privilage' => 1,
 			'path' => dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'index.php',
 			'alter query' => array('limit', 'start', 'direction', 'order_by', 'group_by'),
-		)
+			'settings' => array('html_domain', 'html_root', 'html_name', 'tmp_dir', 'writable_tmp_dir', 'debug_mode', 'recursive_get', 'no_bots', 'buffer_size')
+		),
+		'database' => array(
+			'name' => 'Database',
+			'description' => 'Wrapper module for displaying database configuration',
+			'privilage' => 10,
+			'path' => dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'database.php',
+			'settings' => array('db_connect', 'db_type', 'db_server', 'db_user', 'db_pass', 'db_name', 'use_alias')
+		),
 	);
 	$GLOBALS['triggers'] = array('session' => array(), 'settings' => array());
 	
 	// read module list and create a list of available modules	
 	setup_register_modules('modules' . DIRECTORY_SEPARATOR);
+	
+	// load the modules module again because the config depends on all the other modules
+	$GLOBALS['admin']['modules']['modules'] = register_admin_modules();
+	$GLOBALS['modules']['admin_modules'] = $GLOBALS['admin']['modules']['modules'];
 }
 
 
 /**
- * Implementation of validate
- * @ingroup validate
+ * Implementation of setting
+ * @ingroup setting
  * @return 'win' by default if it can't determine the OS
  */
-function validate_system_type($request)
+function setting_system_type($settings)
 {
-	if(isset($request['SYSTEM_TYPE']) && ($request['SYSTEM_TYPE'] == 'mac' || $request['SYSTEM_TYPE'] == 'nix' || $request['SYSTEM_TYPE'] == 'win'))
-		return $request['SYSTEM_TYPE'];
+	if(isset($settings['system_type']) && ($settings['system_type'] == 'mac' || $settings['system_type'] == 'nix' || $settings['system_type'] == 'win'))
+		return $settings['system_type'];
 	else
 	{
 		if(realpath('/') == '/')
 		{
 			if(file_exists('/Users/'))
-				$default_settings['system_type'] = 'mac';
+				return 'mac';
 			else
-				$default_settings['system_type'] = 'nix';
+				return 'nix';
 		}
 		else
-			$default_settings['system_type'] = 'win';
+			return 'win';
 	}
 }
 
 /**
- * Implementation of validate
- * @ingroup validate
+ * Implementation of setting
+ * @ingroup setting
  * @return The parent directory of the admin directory by default
  */
-function validate_local_root($request)
+function setting_local_root($settings)
 {
-	if(isset($request['local_root']) && is_dir($request['local_root']))
-		return $request['local_root'];
+	if(isset($settings['local_root']) && is_dir($settings['local_root']))
+		return $settings['local_root'];
 	else
 		return dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR;
 }
 
 /**
- * Implementation of validate
- * @ingroup validate
+ * Implementation of setting
+ * @ingroup setting
  * @return The domain information set by the SERVER by default
  */
-function validate_html_domain($request)
+function setting_html_domain($settings)
 {
-	if(isset($request['html_domain']) && @parse_url($request['html_domain']) !== false)
-		return $request['html_domain'];
+	if(isset($settings['html_domain']) && @parse_url($settings['html_domain']) !== false)
+		return $settings['html_domain'];
 	else
 		return strtolower(substr($_SERVER['SERVER_PROTOCOL'], 0, strpos($_SERVER['SERVER_PROTOCOL'], '/'))) . '://' . $_SERVER['HTTP_HOST'] . (($_SERVER['SERVER_PORT'] != 80)?':' . $_SERVER['SERVER_PORT']:'');
 }
 
 /**
- * Implementation of validate
- * @ingroup validate
+ * Implementation of setting
+ * @ingroup setting
  * @return The working path to this installer minus the server path
  */
-function validate_html_root($request)
+function setting_html_root($settings)
 {
-	$request['html_domain'] = validate_html_domain($request);
-	$request['local_root'] = validate_local_root($request);
+	$settings['html_domain'] = setting_html_domain($settings);
+	$settings['local_root'] = setting_local_root($settings);
 	
-	if(isset($request['html_root']) && @parse_url($request['html_domain'] . $request['html_root']) !== false)
-		return $request['html_root'];
+	if(isset($settings['html_root']) && @parse_url($settings['html_domain'] . $settings['html_root']) !== false)
+		return $settings['html_root'];
 	else
-		return ((substr($request['local_root'], 0, strlen($_SERVER['DOCUMENT_ROOT'])) == $_SERVER['DOCUMENT_ROOT'])?substr($request['local_root'], strlen($_SERVER['DOCUMENT_ROOT'])):'');
+		return ((substr($settings['local_root'], 0, strlen($_SERVER['DOCUMENT_ROOT'])) == $_SERVER['DOCUMENT_ROOT'])?substr($settings['local_root'], strlen($_SERVER['DOCUMENT_ROOT'])):'');
 }
 
- 
+/**
+ * Implementation of setting
+ * @ingroup setting
+ * @return blank by default
+ */
+function setting_html_name($settings)
+{
+	if(isset($settings['html_name']))
+		return $settings['html_name'];
+	else
+		return 'Brian\'s Media Website';
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ * @return false by default
+ */
+function setting_debug_mode($settings)
+{
+	if(isset($settings['debug_mode']))
+	{
+		if($settings['debug_mode'] === true || $settings['debug_mode'] === 'true')
+			return true;
+		elseif($settings['debug_mode'] === false || $settings['debug_mode'] === 'false')
+			return false;
+	}
+	return false;
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ * @return false by default
+ */
+function setting_recursive_get($settings)
+{
+	if(isset($settings['recursive_get']))
+	{
+		if($settings['recursive_get'] === true || $settings['recursive_get'] === 'true')
+			return true;
+		elseif($settings['recursive_get'] === false || $settings['recursive_get'] === 'false')
+			return false;
+	}
+	return false;
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ * @return true by default
+ */
+function setting_no_bots($settings)
+{
+	if(isset($settings['no_bots']))
+	{
+		if($settings['no_bots'] === true || $settings['no_bots'] === 'true')
+			return true;
+		elseif($settings['no_bots'] === false || $settings['no_bots'] === 'false')
+			return false;
+	}
+	return true;
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ * @return the temp directory reported by the OS by default
+ */
+function setting_tmp_dir($settings)
+{
+	if(isset($settings['tmp_dir']) && is_dir($settings['tmp_dir']))
+		return $settings['tmp_dir'];
+	else
+	{
+		$tmpfile = tempnam("dummy","");
+		unlink($tmpfile);
+		return dirname($tmpfile) . DIRECTORY_SEPARATOR;
+	}
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ * @return 16MB by default
+ */
+function setting_buffer_size($settings)
+{
+	if(isset($settings['buffer_size']['value']) && isset($settings['buffer_size']['multiplier']) && 
+		is_numeric($settings['buffer_size']['value']) && is_numeric($settings['buffer_size']['multiplier'])
+	)
+		$settings['buffer_size'] = $settings['buffer_size']['value'] * $settings['buffer_size']['multiplier'];
+	
+	if(isset($settings['buffer_size']) && is_numeric($settings['buffer_size']) && $settings['buffer_size'] > 0)
+		return $settings['buffer_size'];
+	else
+		return 2*1024*8;
+}
+
+/**
+ * Implementation of setting, basic wrapper for checks
+ * @ingroup setting
+ */
+function setting_settings_file($settings)
+{
+	return dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'settings.ini';
+}
+
+/**
+ * Implementation of setting, basic wrapper for checks
+ * @ingroup setting
+ */
+function setting_writable_settings_file($settings)
+{
+	return is_writable(setting_settings_file($settings));
+}
+
+/**
+ * Implementation of setting, basic wrapper for checks
+ * @ingroup setting
+ */
+function setting_writable_tmp_dir($settings)
+{
+	$settings['tmp_dir'] = setting_tmp_dir($settings);
+	return is_writable($settings['tmp_dir']);
+}
+
+/**
+ * Implementation of setting, basic wrapper for checks
+ * @ingroup setting
+ */
+function setting_modrewrite($settings)
+{
+	return (isset($_REQUEST['modrewrite']) && $_REQUEST['modrewrite'] == true);
+}
+
+/**
+ * Implementation of setting, basic wrapper for checks
+ * @ingroup setting
+ */
+function setting_memory_limit($settings)
+{
+	return (intval(ini_get('memory_limit')) >= 96);
+}
+
+/**
+ * Implementation of setting, basic wrapper for checks
+ * @ingroup setting
+ */
+function setting_exists_local_root($settings)
+{
+	$settings['local_root'] = setting_local_root($settings);
+	return file_exists($settings['local_root'] . 'include');
+}
+
+/**
+ * Implementation of setting, basic wrapper for checks
+ * @ingroup setting
+ */
+function setting_exists_adodb($settings)
+{
+	$settings['local_root'] = setting_local_root($settings);
+	return file_exists($settings['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb.inc.php');
+}
+
+/**
+ * Implementation of setting, basic wrapper for checks
+ * @ingroup setting
+ */
+function setting_exists_pear($settings)
+{
+	return ((@include_once 'PEAR.php') == true);
+}
+
+/**
+ * Implementation of setting, basic wrapper for checks
+ * @ingroup setting
+ */
+function setting_exists_getid3($settings)
+{
+	$settings['local_root'] = setting_local_root($settings);
+	return file_exists($settings['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.lib.php');
+}
+
+/**
+ * Implementation of setting, basic wrapper for checks
+ * @ingroup setting
+ */
+function setting_exists_snoopy($settings)
+{
+	$settings['local_root'] = setting_local_root($settings);
+	return file_exists($settings['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'Snoopy.class.php');
+}
+
+/**
+ * Implementation of setting, basic wrapper for checks
+ * @ingroup setting
+ */
+function setting_exists_extjs($settings)
+{
+	return file_exists($settings['local_root'] . 'templates' . DIRECTORY_SEPARATOR . 'plain' . DIRECTORY_SEPARATOR . 'extjs' . DIRECTORY_SEPARATOR . 'ext-all.js');
+}
+
 /**
  * @defgroup configure Configure Functions
  * All functions that all configuring of settings for a module
- * @param request The request array that contains values for configuration options
+ * @param settings The request array that contains values for configuration options
  * @return an associative array that describes the configuration options
  * @{
  */
- 
+
+/**
+ * Implementation of configure
+ */
+function configure_index($settings)
+{
+	$settings['html_root'] = setting_html_root($settings);
+	$settings['html_domain'] = setting_html_domain($settings);
+	$settings['html_name'] = setting_html_name($settings);
+	$settings['tmp_dir'] = setting_tmp_dir($settings);
+	$settings['debug_mode'] = setting_debug_mode($settings);
+	$settings['recursive_get'] = setting_recursive_get($settings);
+	$settings['no_bots'] = setting_no_bots($settings);
+	$settings['buffer_size'] = setting_buffer_size($settings);
+	
+	$options = array();
+	
+	// domain and root
+	$options['html_domain'] = array(
+		'name' => 'HTML Domain',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'This is the path that you would like to access the site.',
+				'This path is used when someone tries to view the from the wrong path, when this happens, the site can redirect the user to the right place.',
+			),
+		),
+		'type' => 'text',
+		'value' => $settings['html_domain'],
+	);
+
+	$options['html_root'] = array(
+		'name' => 'HTML Root',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'This is the directory that the site is accessed through.',
+				'This allows the site to run along site another website, in the specified directory.  This is needed so that templates can find the right path to images and styles.',
+				'This path must also end with the HTTP separator /.',
+				'The server reports the DOCUMENT ROOT is ' . $_SERVER['DOCUMENT_ROOT'],
+			),
+		),
+		'type' => 'text',
+		'value' => $settings['html_root'],
+	);
+
+	// site name
+	$options['html_name'] = array(
+		'name' => 'Site Name',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Some templates can display a name for this media server.  Set this here.',
+			),
+		),
+		'type' => 'text',
+		'value' => $settings['html_name'],
+	);
+	
+	if(setting_writable_tmp_dir($settings))
+	{
+		$options['tmp_dir'] = array(
+			'name' => 'Temporary Files',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'This directory will be used for uploaded files and storing temporary files like converted files and images.',
+				),
+			),
+			'type' => 'text',
+			'value' => $settings['tmp_dir'],
+		);
+	}
+	else
+	{
+		$options['tmp_dir'] = array(
+			'name' => 'Temporary Files',
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					'The system has detected that this directory does not exist or is not writable.',
+					'Please correct this error by entering a directory path that exists and is writable by the web server.',
+				),
+			),
+			'type' => 'text',
+			'value' => $settings['tmp_dir'],
+		);
+	}
+	
+	$options['debug_mode'] = array(
+		'name' => 'Debug Mode',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Debug mode is used by many templates to display debugging options on the page.',
+				'This is usefull for viewing information about file system and database problems and to test if the system is running properly.',
+			),
+		),
+		'type' => 'boolean',
+		'value' => $settings['debug_mode'],
+		'options' => array(
+			'Turn Debug Mode On',
+			'Do Not Use Debug Mode',
+		)
+	);
+	
+	$options['recursive_get'] = array(
+		'name' => 'Deep Select',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'This tells to system whether or not it should read directories on the fly and recursively.',
+				'If some files in a directory haven\'t been loaded, this will load them when the directory is accessed.',
+				'On large systems, this could cause page response to be VERY SLOW.  This option is not recommended for system where files change a lot.',
+			),
+		),
+		'type' => 'boolean',
+		'value' => $settings['recursive_get'],
+		'options' => array(
+			'Turn Deep Select On',
+			'Do Not Use Deep Select',
+		)
+	);
+	
+	$options['no_bots'] = array(
+		'name' => 'Robots Handling',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Some services like Google like to scan websites.  This option will prevent robots from downloading and scanning files on your site.',
+				'This will also enable robots to view a customizable sitemap.php module that provides them with the information they deserve.',
+			),
+		),
+		'type' => 'boolean',
+		'value' => $settings['no_bots'],
+		'options' => array(
+			'Disable Robots',
+			'Allow Robots to Scan my Files',
+		)
+	);
+	
+	$options['buffer_size'] = array(
+		'name' => 'Buffer Size',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Some modules and modules require open file streams of a specific size.  This allows you to set what size these streams should try to remain below.',
+			),
+		),
+		'type' => 'filesize',
+		'value' => $settings['buffer_size'],
+	);
+	
+	return $options;
+}
+
 /**
  * Implementation of configure. Checks for convert path
  * @ingroup configure
  */
-function configure_core($request)
+function configure_core($settings)
 {
-	$request['system_type'] = validate_system_type($request);
-	$request['local_root'] = validate_local_root($request);
-	$request['local_root'] = validate_local_root($request);
+	$settings['system_type'] = setting_system_type($settings);
+	$settings['local_root'] = setting_local_root($settings);
 	
 	$options = array();
-	
-	$settings = dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'settings.ini';
-	$memory_limit = ini_get('memory_limit');
 	
 	// system type
 	$options['system_type'] = array(
@@ -150,12 +520,13 @@ function configure_core($request)
 		'status' => '',
 		'description' => array(
 			'list' => array(
-				'The system has detected that you are running ' . ($request['system_type']=='win')?'Windows':(($request['system_type']=='nix')?'Linux or Unix':'Mac OS') . '.',
+				'The system has detected that you are running ' . (($settings['system_type']=='win')?'Windows':(($settings['system_type']=='nix')?'Linux or Unix':'Mac OS')) . '.',
 				'If this is not correct, you must specify the system type so the media server can be optimized for your system.',
 			),
 		),
 		'type' => 'select',
-		'values' => array(
+		'value' => $settings['system_type'],
+		'options' => array(
 			'win' => 'Windows',
 			'nix' => 'Linux',
 			'mac' => 'Mac',
@@ -163,9 +534,9 @@ function configure_core($request)
 	);
 	
 	// settings permission
-	if(is_writable($settings))
+	if(setting_writable_settings_file($settings))
 	{
-		$options['settings_perm'] = array(
+		$options['writable_settings_file'] = array(
 			'name' => 'Access to Settings',
 			'status' => '',
 			'description' => array(
@@ -175,12 +546,12 @@ function configure_core($request)
 			),
 			'type' => 'text',
 			'disabled' => true,
-			'value' => $settings,
+			'value' => setting_settings_file($settings),
 		);
 	}
 	else
 	{
-		$options['settings_perm'] = array(
+		$options['writable_settings_file'] = array(
 			'name' => 'Access to Settings',
 			'status' => 'fail',
 			'description' => array(
@@ -191,13 +562,13 @@ function configure_core($request)
 			),
 			'type' => 'text',
 			'disabled' => true,
-			'value' => $settings,
+			'value' => setting_settings_file($settings),
 		);
 	}
 	
-	if(isset($_REQUEST['modrewrite']) && $_REQUEST['modrewrite'] == true)
+	if(setting_modrewrite($settings))
 	{
-		$options['mod_rewrite'] = array(
+		$options['modrewrite'] = array(
 			'name' => 'Mod_Rewrite Enabled',
 			'status' => '',
 			'description' => array(
@@ -217,7 +588,7 @@ function configure_core($request)
 	}
 	else
 	{
-		$options['mod_rewrite'] = array(
+		$options['modrewrite'] = array(
 			'name' => 'Mod_Rewrite Enabled',
 			'status' => 'warn',
 			'description' => array(
@@ -236,7 +607,7 @@ function configure_core($request)
 		);
 	}
 
-	if(intval($memory_limit) >= 96)
+	if(setting_memory_limit($settings))
 	{
 		$options['memory_limit'] = array(
 			'name' => 'Memory Limit',
@@ -245,7 +616,7 @@ function configure_core($request)
 				'list' => array(
 					'The system has detected that the set memory limit is enough to function properly.',
 					'This system requires a large amount of memory for encoding and converting files, some of the third party libraries are not memory efficient.',
-					'PHP reports that the set memory_limit is ' . $memory_limit . '.',
+					'PHP reports that the set memory_limit is ' . ini_get('memory_limit') . '.',
 				),
 			),
 			'disabled' => true,
@@ -266,7 +637,7 @@ function configure_core($request)
 				'list' => array(
 					'The system has detected that the set memory limit is NOT ENOUGH for the system to function properly.',
 					'This system requires a large amount of memory for encoding and converting files, some of the third party libraries are not memory efficient.',
-					'PHP reports that the set memory_limit is ' . $memory_limit . '.',
+					'PHP reports that the set memory_limit is ' . ini_get('memory_limit') . '.',
 				),
 			),
 			'disabled' => true,
@@ -279,7 +650,7 @@ function configure_core($request)
 		);
 	}
 	
-	if(file_exists($request['local_root'] . 'include'))
+	if(setting_exists_local_root($settings))
 	{
 		$options['local_root'] = array(
 			'name' => 'Local Root',
@@ -291,7 +662,7 @@ function configure_core($request)
 				),
 			),
 			'type' => 'text',
-			'value' => $request['local_root'],
+			'value' => $settings['local_root'],
 		);
 	}
 	else
@@ -306,13 +677,13 @@ function configure_core($request)
 				),
 			),
 			'type' => 'text',
-			'value' => $request['local_root'],
+			'value' => $settings['local_root'],
 		);
 	}
 	
-	if(file_exists($request['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb.inc.php'))
+	if(setting_exists_adodb($settings))
 	{
-		$options['check_adodb'] = array(
+		$options['exists_adodb'] = array(
 			'name' => 'ADOdb Library',
 			'status' => '',
 			'description' => array(
@@ -327,7 +698,7 @@ function configure_core($request)
 	}
 	else
 	{
-		$options['check_adodb'] = array(
+		$options['exists_adodb'] = array(
 			'name' => 'ADOdb Library Missing',
 			'status' => 'fail',
 			'description' => array(
@@ -371,9 +742,9 @@ function configure_core($request)
 		}
 	}
 	
-	if((@include_once 'PEAR.php') == true)
+	if(setting_exists_pear($settings))
 	{
-		$options['check_pear'] = array(
+		$options['exists_pear'] = array(
 			'name' => 'PEAR Installed',
 			'status' => (count($not_installed) > 0)?'warn':'',
 			'description' => array(
@@ -391,18 +762,18 @@ function configure_core($request)
 		
 		if(count($not_installed) > 0)
 		{
-			$options['check_pear']['value']['text'][] = 'However, the following packages must be installed:';
-			$options['check_pear']['value']['text'][] = array('list' => $not_installed);
+			$options['exists_pear']['value']['text'][] = 'However, the following packages must be installed:';
+			$options['exists_pear']['value']['text'][] = array('list' => $not_installed);
 		}
 		else
 		{
-			$options['check_pear']['value']['text'][] = 'The following required packages are also installed:';
-			$options['check_pear']['value']['text'][] = array('list' => $installed);
+			$options['exists_pear']['value']['text'][] = 'The following required packages are also installed:';
+			$options['exists_pear']['value']['text'][] = array('list' => $installed);
 		}
 	}
 	else
 	{
-		$options['check_pear'] = array(
+		$options['exists_pear'] = array(
 			'name' => 'PEAR Missing',
 			'status' => 'fail',
 			'description' => array(
@@ -427,9 +798,9 @@ function configure_core($request)
 	}
 	
 	
-	if(file_exists($request['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.lib.php'))
+	if(setting_exists_getid3($settings))
 	{
-		$options['check_getid3'] = array(
+		$options['exists_getid3'] = array(
 			'name' => 'getID3() Library',
 			'status' => '',
 			'description' => array(
@@ -444,7 +815,7 @@ function configure_core($request)
 	}
 	else
 	{
-		$options['check_getid3'] = array(
+		$options['exists_getid3'] = array(
 			'name' => 'getID3() Library Missing',
 			'status' => 'fail',
 			'description' => array(
@@ -463,9 +834,9 @@ function configure_core($request)
 		);
 	}
 	
-	if(file_exists($request['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'Snoopy.class.php'))
+	if(setting_exists_snoopy($settings))
 	{
-		$options['check_snoopy'] = array(
+		$options['exists_snoopy'] = array(
 			'name' => 'Snoopy cUrl API',
 			'status' => '',
 			'description' => array(
@@ -480,7 +851,7 @@ function configure_core($request)
 	}
 	else
 	{
-		$options['check_getid3'] = array(
+		$options['exists_snoopy'] = array(
 			'name' => 'Snoopy cUrl API Missing',
 			'status' => 'fail',
 			'description' => array(
@@ -499,9 +870,9 @@ function configure_core($request)
 		);
 	}
 
-	if(file_exists($request['local_root'] . 'templates' . DIRECTORY_SEPARATOR . 'plain' . DIRECTORY_SEPARATOR . 'extjs' . DIRECTORY_SEPARATOR . 'ext-all.js'))
+	if(setting_exists_extjs($settings))
 	{
-		$options['check_extjs'] = array(
+		$options['exists_extjs'] = array(
 			'name' => 'EXT JS',
 			'status' => '',
 			'description' => array(
@@ -516,7 +887,7 @@ function configure_core($request)
 	}
 	else
 	{
-		$options['check_getid3'] = array(
+		$options['exists_extjs'] = array(
 			'name' => 'EXT JS Missing',
 			'status' => 'fail',
 			'description' => array(
@@ -626,12 +997,18 @@ function setup_validate()
 	// go through the rest of the request and validate all the variables with the modules they are for
 	foreach($_REQUEST as $key => $value)
 	{
+		// validate every single input
 		if(function_exists('validate_' . $key))
 			$_REQUEST[$key] = call_user_func_array('validate_' . $key, array($_REQUEST));
 		elseif(isset($GLOBALS['validate_' . $key]) && is_callable($GLOBALS['validate_' . $key]))
 			$_REQUEST[$key] = $GLOBALS['validate_' . $key]($_REQUEST);
+		// if it is an attempted setting, keep it for now and let the configure modules module handle it
+		elseif(substr($key, 0, 8) == 'setting_')
+			$_REQUEST[$key] = $_REQUEST[$key];
+		// if there is no validator
 		else
 		{
+			// unset it to prevent anything from using the input
 			unset($_REQUEST[$key]);
 			if(isset($_GET[$key])) unset($_GET[$key]);
 		}
@@ -644,7 +1021,7 @@ function setup_validate()
 	session($_REQUEST);
 	
 	// do not let GoogleBot perform searches or file downloads
-	if(NO_BOTS)
+	if($GLOBALS['settings']['no_bots'])
 	{
 		if(preg_match('/.*Googlebot.*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
 		{
@@ -774,6 +1151,21 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 			// set each part of the query string in our new request array
 			$request[$x[0]] = isset($x[1])?$x[1]:'';
 		}
+		
+		// if the first item contains slashes it must be a part of the directory, fix this
+		if(count($request) > 0)
+		{
+			// make sure the keys don't contain slashes, that would be weird
+			$keys = array_keys($request);
+			if(isset($keys[0]) && strpos($keys[0], '/') !== false)
+			{
+				// set the path
+				$dirs = split('/', $keys[0]);
+				
+				// remove the weird key
+				unset($request[$keys[0]]);
+			}
+		}
 	}
 	
 	// add the path info to the request array
@@ -893,18 +1285,17 @@ function set_output_vars()
 		register_output_vars('settings', $settings);
 	}
 	
-	// remove everything else so templates can't violate the security
-	//   there is no going back from here
-	if(isset($_SESSION)) session_write_close();
-	
+	// do not remove these variables
 	$dont_remove = array(
 		'GLOBALS',
 		//'_REQUEST', // allow this because it has been fully validated
+		'_SESSION', // purely for error handling
 		'templates',
 		'errors',
 		'debug_errors',
 		'user_errors',
 		'warn_errors',
+		'note_errors',
 		'output',
 		'alias',
 		'alias_regexp',
@@ -921,7 +1312,8 @@ function set_output_vars()
 		'lists',
 		'settings'
 	);
-	
+
+	// unset all other globals to prevent templates from using them
 	foreach($GLOBALS as $key => $value)
 	{
 		if(in_array($key, $dont_remove) === false)
@@ -998,6 +1390,23 @@ function validate_module($request)
 		else
 			return 'index';
 	}
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return false by default
+ */
+function validate_errors_only($request)
+{
+	if(isset($request['errors_only']))
+	{
+		if($request['errors_only'] === true || $request['errors_only'] === 'true')
+			return true;
+		elseif($request['errors_only'] === false || $request['errors_only'] === 'false')
+			return false;
+	}
+	return false;
 }
 
 /**
@@ -1399,6 +1808,19 @@ function alter_query_core($request, $props)
  */
 function output_index($request)
 {
+	if(isset($request['errors_only']) && $request['errors_only'] == true)
+	{
+		register_output_vars('errors_only', true);
+		
+		theme('errors');
+		
+		// remove old errors from session
+		$_SESSION['errors']['user'] = array();
+		$_SESSION['errors']['warn'] = array();
+		$_SESSION['errors']['note'] = array();
+		
+		exit;
+	}
 	output_core($request);
 }
 

@@ -58,7 +58,7 @@ class db_watch extends db_file
 				)
 			, false);
 			
-			if( count($db_watch) == 0 && $file != '^' . LOCAL_USERS )
+			if( count($db_watch) == 0 && $file != '^' . setting('local_users') )
 			{
 				return self::add($file);
 			}

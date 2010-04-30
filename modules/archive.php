@@ -96,14 +96,14 @@ function output_archive($request)
 	
 	// replace the argument string with the contents of $_REQUEST
 	//  without validation this is VERY DANGEROUS!
-	$cmd = basename(CONVERT) . ' ' . str_replace(array_keys($_REQUEST), array_values($_REQUEST), CONVERT_ARGS);
+	$cmd = basename(setting('archive_path')) . ' ' . str_replace(array_keys($_REQUEST), array_values($_REQUEST), setting('archive_args'));
 	
 	// run process and output binary from pipe
 	$descriptorspec = array(
 	   1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
 	);
 	
-	$process = proc_open($cmd, $descriptorspec, $pipes, dirname(CONVERT), NULL, array('binary_pipes' => true));
+	$process = proc_open($cmd, $descriptorspec, $pipes, dirname(setting('archive_path')), NULL, array('binary_pipes' => true));
 	
 	// output file
 	if(is_resource($process))

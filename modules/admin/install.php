@@ -6,52 +6,14 @@
  */
 function register_admin_install()
 {
-	// create additional functions
-	foreach($GLOBALS['handlers'] as $i => $handler)
-	{
-		$GLOBALS['validate_' . strtoupper($handler) . '_ENABLE'] = create_function('$request', 'return validate__ENABLE($request, \'' . $handler . '\');');
-	}
-	
-	register_output_vars('styles', 'module=admin_install&install_image=style');
-	
 	return array(
 		'name' => 'Install Setup',
 		'description' => 'Install the system.',
-		'privilage' => 0,
+		'privilage' => 10,
 		'path' => __FILE__,
 		'notemplate' => true,
 		'session' => array('install_next', 'install_save')
 	);
-}
-
-/**
- * Implementation of validate
- * @ingroup validate
- * @return true by default
- */
-function validate__ENABLE($request, $handler)
-{
-	if(isset($request[strtoupper($handler) . '_ENABLE']))
-	{
-		if($request[strtoupper($handler) . '_ENABLE'] === false || $request[strtoupper($handler) . '_ENABLE'] === 'false')
-			return false;
-		elseif($request[strtoupper($handler) . '_ENABLE'] === true || $request[strtoupper($handler) . '_ENABLE'] === 'true')
-			return true;
-	}
-	return true;
-}
-
-/**
- * Implementation of validate
- * @ingroup validate
- * @return false by default
- */
-function validate_install_dberror($request)
-{
-	if(isset($request['install_dberror']))
-		return $request['install_dberror'];
-	else
-		return false;
 }
 
 /**
@@ -122,9 +84,6 @@ function setup_misc_vars()
 	global $required, $recommended, $supported_databases;
 	$required = array('DB_FILE_ENABLE', 'DB_IDS_ENABLE', 'DB_WATCH_ENABLE', 'DB_ALIAS_ENABLE', 'DB_USERS_ENABLE', 'DB_WATCH_LIST_ENABLE');
 	
-	$recommended = array('db_audio', 'db_image', 'db_video');
-	
-	$supported_databases = array('access','ado','ado_access','ado_mssql','db2','odbc_db2','vfp','fbsql','ibase','firebird','borland_ibase','informix','informix72','ldap','mssql','mssqlpo','mysql','mysqli','mysqlt','maxsql','oci8','oci805','oci8po','odbc','odbc_mssql','odbc_oracle','odbtp','odbtp_unicode','oracle','netezza','pdo','postgres','postgres64','postgres7','postgres8','sapdb','sqlanywhere','sqlite','sqlitepo','sybase');
 }
 
 /**
@@ -162,199 +121,15 @@ function setup_post_vars()
 // ---------------------------------- step 2 ---------------------------------
 
 // ---------------------------------- step 3 ---------------------------------
-/**
- * Implementation of validate
- * @ingroup validate
- * @return 'mysql' by default
- */
-function validate_DB_TYPE($request)
-{
-	if(!isset($GLOBALS['supported_databases']))
-		setup_misc_vars();
-	if(isset($request['DB_TYPE']) && in_array($request['DB_TYPE'], $GLOBALS['supported_databases']))
-		return $request['DB_TYPE'];
-	else
-		return setting('db_type');
-}
-
-/**
- * Implementation of validate
- * @ingroup validate
- * @return 'localhost' by default
- */
-function validate_DB_SERVER($request)
-{
-	if(isset($request['DB_SERVER']))
-		return $request['DB_SERVER'];
-	else
-		return setting('db_server');
-}
-
-/**
- * Implementation of validate
- * @ingroup validate
- * @return blank by default
- */
-function validate_DB_USER($request)
-{
-	if(isset($request['DB_USER']))
-		return $request['DB_USER'];
-	else
-		return setting('db_user');
-}
-
-/**
- * Implementation of validate
- * @ingroup validate
- * @return blank by default
- */
-function validate_DB_PASS($request)
-{
-	if(isset($request['DB_PASS']))
-		return $request['DB_PASS'];
-	else
-		return setting('db_pass');
-}
-
-/**
- * Implementation of validate
- * @ingroup validate
- * @return blank by default
- */
-function validate_DB_NAME($request)
-{
-	if(isset($request['DB_NAME']))
-		return $request['DB_NAME'];
-	else
-		return setting('db_name');
-}
 
 // ---------------------------------- step 4 ---------------------------------
 
 
 // ---------------------------------- step 6 ---------------------------------
-/**
- * Implementation of validate
- * @ingroup validate
- * @return blank by default
- */
-function validate_HTML_NAME($request)
-{
-	if(isset($request['HTML_NAME']))
-		return $request['HTML_NAME'];
-	else
-		return setting('html_name');
-}
 
 // ---------------------------------- step 7 ---------------------------------
 
 // ---------------------------------- step 8 ---------------------------------
-/**
- * Implementation of validate
- * @ingroup validate
- * @return false by default
- */
-function validate_DEBUG_MODE($request)
-{
-	if(isset($request['DEBUG_MODE']))
-	{
-		if($request['DEBUG_MODE'] === true || $request['DEBUG_MODE'] === 'true')
-			return true;
-		elseif($request['DEBUG_MODE'] === false || $request['DEBUG_MODE'] === 'false')
-			return false;
-	}
-	return setting('debug_mode');
-}
-
-/**
- * Implementation of validate
- * @ingroup validate
- * @return false by default
- */
-function validate_RECURSIVE_GET($request)
-{
-	if(isset($request['RECURSIVE_GET']))
-	{
-		if($request['RECURSIVE_GET'] === true || $request['RECURSIVE_GET'] === 'true')
-			return true;
-		elseif($request['RECURSIVE_GET'] === false || $request['RECURSIVE_GET'] === 'false')
-			return false;
-	}
-	return setting('recursive_get');
-}
-
-/**
- * Implementation of validate
- * @ingroup validate
- * @return true by default
- */
-function validate_NO_BOTS($request)
-{
-	if(isset($request['NO_BOTS']))
-	{
-		if($request['NO_BOTS'] === true || $request['NO_BOTS'] === 'true')
-			return true;
-		elseif($request['NO_BOTS'] === false || $request['NO_BOTS'] === 'false')
-			return false;
-	}
-	return setting('no_bots');
-}
-
-/**
- * Implementation of validate
- * @ingroup validate
- * @return the temp directory reported by the OS by default
- */
-function validate_TMP_DIR($request)
-{
-	if(isset($request['TMP_DIR']) && is_dir($request['TMP_DIR']))
-		return $request['TMP_DIR'];
-	else
-		setting('tmp_dir');
-}
-
-/**
- * Implementation of validate
- * @ingroup validate
- * @return A 'users' directory withing the site root
- */
-function validate_LOCAL_USERS($request)
-{
-	if(isset($request['LOCAL_USERS']) && is_dir($request['LOCAL_USERS']))
-		return $request['LOCAL_USERS'];
-	else
-		return setting('local_users');
-}
-
-/**
- * Implementation of validate
- * @ingroup validate
- * @return 16MB by default
- */
-function validate_BUFFER_SIZE($request)
-{
-	if(isset($request['BUFFER_SIZE']) && isset($request['BUFFER_SIZE_MULTIPLIER']))
-		return $request['BUFFER_SIZE'] * $request['BUFFER_SIZE_MULTIPLIER'];
-	else
-		return setting('buffer_size');
-}
-
-/**
- * Implementation of validate
- * @ingroup validate
- * @return true by default
- */
-function validate_USE_ALIAS($request)
-{
-	if(isset($request['USE_ALIAS']))
-	{
-		if($request['USE_ALIAS'] === true || $request['USE_ALIAS'] === 'true')
-			return true;
-		elseif($request['USE_ALIAS'] === false || $request['USE_ALIAS'] === 'false')
-			return false;
-	}
-	return setting('use_alias');
-}
 
 /**
  * Implementation of validate
@@ -395,33 +170,11 @@ function perform_tests($request, $start = 0, $stop = NULL)
 	$tests = array();
 	// step 1
 	// step 2
-	$tests['db_type'] = 'return true;';
-	$tests['db_server'] = 'return false;'; // return false so the user always sees this option
-	$tests['db_user'] = 'return false;';
-	$tests['db_pass'] = 'return false;';
-	$tests['db_name'] = 'return false;';
-	$tests['drop_tables'] = <<<EOF
-		\$request['install_dberror'] = validate_install_dberror(\$request);
-		return (strpos(\$request['install_dberror'], 'already exists') !== false);
 EOF;
 	$tests['enable_modules'] = 'return true;';
 	$tests['db_check'] = 'return false;'; // return false so it always runs the database checking
 	$tests['db_test'] = 'return false;'; // always test the database before installing
 	$tests['db_install'] = 'return false;'; // always install the database
-	$tests['site_name'] = 'return false;'; // always ask to set site name
-	$tests['debug_mode'] = 'return true;';
-	$tests['deep_select'] = 'return true;';
-	$tests['robots'] = 'return true;';
-	$tests['tmp_files'] = <<<EOF
-		\$request['TMP_DIR'] = validate_TMP_DIR(\$request);
-		return (is_writable(\$request['TMP_DIR']));
-EOF;
-	$tests['user_files'] = <<<EOF
-		\$request['LOCAL_USERS'] = validate_LOCAL_USERS(\$request);
-		return (is_writable(\$request['LOCAL_USERS']));
-EOF;
-	$tests['buffer_size'] = 'return true;';
-	$tests['aliasing'] = 'return true;';
 	$tests['save'] = <<<EOF
 		\$settings = dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'settings.php';
 		return (is_writable(\$settings));
@@ -465,6 +218,8 @@ function session_admin_install($request)
 function output_admin_install($request)
 {
 	global $post, $required, $recommended, $supported_databases;
+	
+	register_output_vars('styles', 'module=admin_install&install_image=style');
 	
 	$request['install_step'] = validate_install_step($request);
 	

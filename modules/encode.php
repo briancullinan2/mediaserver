@@ -20,10 +20,10 @@ function register_encode()
  * Checks for encode path
  * @ingroup configure
  */
-function configure_encode($request)
+function configure_encode($settings)
 {
-	$request['encode_path'] = validate_encode_path($request);
-	$request['encode_args'] = validate_encode_args($request);
+	$settings['encode_path'] = setting_encode_path($settings);
+	$settings['encode_args'] = setting_encode_args($settings);
 	
 	$options = array();
 	
@@ -36,11 +36,11 @@ function configure_encode($request)
 				'list' => array(
 					'An encoder has been set and detected, you may change this path to specify a new encoder.',
 					'The system needs some sort of file encoder that it can use to output files in different formats.',
-					'The encoder detected is "' . basename($request['encode_path']) . '".',
+					'The encoder detected is "' . basename($settings['encode_path']) . '".',
 				),
 			),
 			'type' => 'text',
-			'value' => $request['encode_path'],
+			'value' => $settings['encode_path'],
 		);
 	}
 	else
@@ -55,7 +55,7 @@ function configure_encode($request)
 				),
 			),
 			'type' => 'text',
-			'value' => $request['encode_path'],
+			'value' => $settings['encode_path'],
 		);
 	}
 	
@@ -81,24 +81,24 @@ function configure_encode($request)
 			),
 		),
 		'type' => 'text',
-		'value' => $request['encode_args'],
+		'value' => $settings['encode_args'],
 	);
 	
 	return $options;
 }
 
 /**
- * Implementation of validate
- * @ingroup validate
+ * Implementation of setting
+ * @ingroup setting
  * @return The default install path for VLC on windows or linux based on validate_SYSTEM_TYPE
  */
-function validate_encode_path($request)
+function setting_encode_path($settings)
 {
-	if(isset($request['encode_path']) && is_file($request['encode_path']))
-		return $request['encode_path'];
+	if(isset($settings['encode_path']) && is_file($settings['encode_path']))
+		return $settings['encode_path'];
 	else
 	{
-		if(validate_system_type($request) == 'win')
+		if(setting_system_type($settings) == 'win')
 			return 'C:\Program Files\VideoLAN\VLC\vlc.exe';
 		else
 			return '/usr/bin/vlc';
@@ -106,17 +106,17 @@ function validate_encode_path($request)
 }
 
 /**
- * Implementation of validate
- * @ingroup validate
+ * Implementation of setting
+ * @ingroup setting
  * @return The entire arg string for further validation by the configure() function
  */
-function validate_encode_args($request)
+function setting_encode_args($settings)
 {
-	if(isset($request['encode_args']) && is_file($request['encode_args']))
-		return $request['encode_args'];
+	if(isset($settings['encode_args']) && is_file($settings['encode_args']))
+		return $settings['encode_args'];
 	else
 	{
-		if(validate_system_type($request) == 'win')
+		if(setting_system_type($settings) == 'win')
 			return '"%IF" :sout=#transcode{vcodec=%VC,acodec=%AC,vb=%VB,ab=%AB,samplerate=%SR,channels=%CH,audio-sync,scale=%SC,fps=%FS}:std{mux=%MX,access=file,dst=-} vlc://quit';
 		else
 			return '-I dummy - --start-time=%TO :sout=\'#transcode{vcodec=%VC,acodec=%AC,vb=%VB,ab=%AB,samplerate=%SR,channels=%CH,audio-sync,scale=%SC,fps=%FS}:std{mux=%MX,access=file,dst=-}\' vlc://quit';

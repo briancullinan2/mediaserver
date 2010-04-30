@@ -20,14 +20,14 @@ function register_convert()
  * Checks for convert path
  * @ingroup configure
  */
-function configure_convert($request)
+function configure_convert($settings)
 {
-	$request['convert_path'] = validate_convert_path($request);
-	$request['convert_args'] = validate_convert_args($request);
+	$settings['convert_path'] = setting_convert_path($settings);
+	$settings['convert_args'] = setting_convert_args($settings);
 	
 	$options = array();
 	
-	if(file_exists($request['convert_path']))
+	if(file_exists($settings['convert_path']))
 	{
 		$options['convert_path'] = array(
 			'name' => 'Convert Path',
@@ -36,11 +36,11 @@ function configure_convert($request)
 				'list' => array(
 					'A converter has been set and detected, you may change this path to specify a new converter.',
 					'The system needs some sort of image converter for creating thumbnails of images and outputting images as different file types.',
-					'The converter detected is "' . basename($request['convert_path']) . '".',
+					'The converter detected is "' . basename($settings['convert_path']) . '".',
 				),
 			),
 			'type' => 'text',
-			'value' => $request['convert_path'],
+			'value' => $settings['convert_path'],
 		);
 	}
 	else
@@ -55,7 +55,7 @@ function configure_convert($request)
 				),
 			),
 			'type' => 'text',
-			'value' => $request['convert_path'],
+			'value' => $settings['convert_path'],
 		);
 	}
 	
@@ -74,24 +74,24 @@ function configure_convert($request)
 			),
 		),
 		'type' => 'text',
-		'value' => $request['convert_args'],
+		'value' => $settings['convert_args'],
 	);
 
 	return $options;
 }
 
 /**
- * Implementation of validate
- * @ingroup validate
+ * Implementation of setting
+ * @ingroup setting
  * @return The default install path for VLC on windows or linux based on validate_SYSTEM_TYPE
  */
-function validate_convert_path($request)
+function setting_convert_path($settings)
 {
-	if(isset($request['convert_path']) && is_file($request['convert_path']))
-		return $request['convert_path'];
+	if(isset($settings['convert_path']) && is_file($settings['convert_path']))
+		return $settings['convert_path'];
 	else
 	{
-		if(validate_system_type($request) == 'win')
+		if(setting_system_type($settings) == 'win')
 			return 'C:\Program Files\ImageMagick-6.4.9-Q16\convert.exe';
 		else
 			return '/usr/bin/convert';
@@ -99,17 +99,17 @@ function validate_convert_path($request)
 }
 
 /**
- * Implementation of validate
- * @ingroup validate
+ * Implementation of setting
+ * @ingroup setting
  * @return The entire arg string for further validation by the configure() function
  */
-function validate_convert_args($request)
+function setting_convert_args($settings)
 {
-	if(isset($request['convert_args']) && is_file($request['convert_args']))
-		return $request['convert_args'];
+	if(isset($settings['convert_args']) && is_file($settings['convert_args']))
+		return $settings['convert_args'];
 	else
 	{
-		if(validate_system_type($request) == 'win')
+		if(setting_system_type($settings) == 'win')
 			return '"%IF" %FM:-';
 		else
 			return '"%IF" -resize "%TWx%TH" %FM:-';

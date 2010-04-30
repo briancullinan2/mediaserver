@@ -1,6 +1,6 @@
-local_template is returning nothing when removed from setting_get_defaults(), this should be fixed by getting all the default settings for each plugin when the plugin is loaded
-Move template settings and site settings over to their designated plugin
-Create a plugin for adding system checks for db_archive and any module that uses getID3()
+Current solution for dependencies is not very good, rewrite, possibly call module init whenever handles() is called?
+Finish setting input handling in the modules admin plugin
+Checks abstracted into setting_ wrappers, is this the best solution?
 Create a status admin tool
 Finish setting() function in settings.php plugin
 	Settings should also be loadable from the database

@@ -230,7 +230,7 @@ function alter_query_search($request, $props)
 			$search = substr($search, 1, -1);
 		
 		// incase an aliased path is being searched for replace it here too!
-		if(USE_ALIAS == true)
+		if(setting('use_alias') == true)
 			$search = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $search);
 		
 		if($type == 'normal')

@@ -19,7 +19,7 @@ function register_plain()
 			'view' => array(
 				'name' => 'View Options',
 				'type' => 'radio',
-				'values' => array(
+				'options' => array(
 					'mono' => 'Monospace',
 					'table' => 'Table',
 					'dash' => 'Dash delimited'
@@ -29,7 +29,7 @@ function register_plain()
 			'columns' => array(
 				'name' => 'Visible Columns',
 				'type' => 'checkbox',
-				'values' => $columns,
+				'options' => $columns,
 				'default' => array('Filename', 'Filesize')
 			)
 		),

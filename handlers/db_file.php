@@ -44,7 +44,7 @@ class db_file
 	{
 		//print_r(self::struct());
 		$file = str_replace('\\', '/', $file);
-		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+		if(setting('use_alias') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 		
 		if((is_dir(str_replace('/', DIRECTORY_SEPARATOR, $file)) || (is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)) && $file[strlen($file)-1] != '/')) && !in_array($file, $GLOBALS['ignored']))
 		{
@@ -169,7 +169,7 @@ class db_file
 	{
 		$file = str_replace('\\', '/', $file);
 		
-		if(USE_ALIAS == true)
+		if(setting('use_alias') == true)
 			$file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 		
 		// check to make sure file is valid
@@ -285,7 +285,7 @@ class db_file
 			foreach($files as $index => $file)
 			{
 				// do alias replacement on every file path
-				if(USE_ALIAS == true)
+				if(setting('use_alias') == true)
 				{
 					if(isset($file['Filepath']))
 						$files[$index]['Filepath'] = preg_replace($GLOBALS['paths_regexp'], $GLOBALS['alias'], $file['Filepath']);
@@ -412,7 +412,7 @@ class db_file
 					// if using aliases then only add the revert from the watch directory to the alias
 					// ex. Watch = /home/share/Pictures/, Alias = /home/share/ => /Shared/
 					//     only /home/share/ is added here
-					if((!USE_ALIAS || in_array($curr_dir, $GLOBALS['paths']) !== false))
+					if((!setting('use_alias') || in_array($curr_dir, $GLOBALS['paths']) !== false))
 					{
 						// this allows for us to make sure that at least the beginning 
 						//   of the path is an aliased path
@@ -421,13 +421,13 @@ class db_file
 						if(!in_array($curr_dir, $directories))
 						{
 							$directories[] = $curr_dir;
-							// if the USE_ALIAS is true this will only add the folder
+							// if the setting('use_alias') is true this will only add the folder
 							//    if it is in the list of aliases
 							$watched_to_where .= ' Filepath != "' . addslashes($curr_dir) . '" AND';
 						}
 					}
 					// but make an exception for folders between an alias and the watch path
-					elseif(USE_ALIAS && $between && !in_array($curr_dir, $directories))
+					elseif(setting('use_alias') && $between && !in_array($curr_dir, $directories))
 					{
 						$directories[] = $curr_dir;
 						

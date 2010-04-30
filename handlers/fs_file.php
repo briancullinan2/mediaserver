@@ -143,7 +143,7 @@ class fs_file
 					// parse out all the files that this handler doesn't handle, just like a filter
 					//  but only if we are not called by internals
 					for($j = 0; $j < $count; $j++)
-						if(!call_user_func($handler . '::handles', $request['dir'] . $tmp_files[$j], $internals)) unset($tmp_files[$j]);
+						if(!call_user_func($handler . '::handles', $request['dir'] . $tmp_files[$j], $internals) || (isset($request['dirs_only']) && $request['dirs_only'] == true && !is_dir($request['dir'] . $tmp_files[$j]))) unset($tmp_files[$j]);
 						
 					// get the values again, this will reset all the indices
 					$tmp_files = array_values($tmp_files);

@@ -11,7 +11,7 @@ class db_image_browser extends db_image
 	static function handles($file)
 	{
 		$file = str_replace('\\', '/', $file);
-		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+		if(setting('use_alias') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 				
 		// get file extension
 		$type = getExtType($file);

@@ -21,7 +21,7 @@ class db_amazon extends db_file
 	// initialize any extra tools this handler needs
 	static function init()
 	{
-		if(file_exists(setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.php'))
+		if(setting('exists_getid3'))
 		{
 			// include the id handler
 			include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.php';
@@ -32,7 +32,7 @@ class db_amazon extends db_file
 		else
 			PEAR::raiseError('getID3() missing from include directory! Archive handlers cannot function properly.', E_DEBUG);
 		
-		if(file_exists(setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.php'))
+		if(setting('exists_snoopy'))
 		{
 			// include snoopy to download pages
 			include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'Snoopy.class.php';
@@ -41,7 +41,7 @@ class db_amazon extends db_file
 			$GLOBALS['snoopy'] = new Snoopy();
 		}
 		else
-			PEAR::raiseError('getID3() missing from include directory! Archive handlers cannot function properly.', E_DEBUG);
+			PEAR::raiseError('Snoopy missing from include directory! Archive handlers cannot function properly.', E_DEBUG);
 			
 		return false;
 	}
@@ -66,7 +66,7 @@ class db_amazon extends db_file
 	static function handles($file)
 	{
 		$file = str_replace('\\', '/', $file);
-		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+		if(setting('use_alias') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 		
 		if(db_audio::handles($file) || db_movies::handles($file))
 		{

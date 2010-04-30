@@ -25,7 +25,9 @@ function theme_live_admin()
 	{
 		if($module['privilage'] > $GLOBALS['templates']['vars']['user']['Privilage'])
 			continue;
-			
+		if(!function_exists('output_admin_' . $name))
+			continue;
+		
 		?>
 		<div class="nothover" onMouseOver="this.className='hover';" onMouseOut="this.className='nothover';">
 			<a href="<?php print url('module=admin_' . $name); ?>" style="font-size:14px;"><?php print $module['name']; ?></a><br /><br />
@@ -85,6 +87,58 @@ function theme_live_template()
 		</div>
 		<?php
 	}
+
+	?><div class="titlePadding"></div>
+	</div><?php
+	
+	theme('footer');
+}
+
+function theme_live_watch()
+{
+	theme('header');
+	
+	?>
+	<div class="contentSpacing">
+			<h1 class="title"><?php print $GLOBALS['modules']['admin_watch']['name']; ?></h1>
+			<span class="subText"><?php print $GLOBALS['modules']['admin_watch']['description']; ?></span>
+	<?php
+	
+	theme('errors');
+	
+	?><div class="titlePadding"></div><?php
+
+	?>
+	<form action="" method="post">
+		<select name="wremove" size="10">
+		
+		<?php
+			foreach($GLOBALS['templates']['vars']['ignored'] as $i => $watch)
+			{
+			?>
+				<option value="<?php echo $watch['id']; ?>">ignore: <?php print $watch['Filepath']; ?></option>
+			<?php
+			}
+			foreach($GLOBALS['templates']['vars']['watched'] as $i => $watch)
+			{
+			?>
+				<option value="<?php echo $watch['id']; ?>">watch: <?php print $watch['Filepath']; ?></option>
+			<?php
+			}
+		?>
+		</select>
+		<br />
+		<input type="submit" value="Remove" />
+	</form>
+	<form action="" method="post">
+		<input type="text" name="waddpath" size="50" value="<?php print isset($GLOBALS['templates']['vars']['waddpath'])?$GLOBALS['templates']['vars']['waddpath']:(isset($GLOBALS['templates']['vars']['dir'])?$GLOBALS['templates']['vars']['dir']:''); ?>" />
+		<input type="submit" value="Add" />
+		<br />
+	</form>
+	<?php
+	?>Select a Folder:<br /><?php
+	
+	theme('select_block');
 
 	?><div class="titlePadding"></div>
 	</div><?php

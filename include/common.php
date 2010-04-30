@@ -13,7 +13,7 @@
  * @enum VERSION set version for stuff to reference
  * @enum VERSION_NAME set the name for a text representation of the version
  */
-define('VERSION', 			     '0.60.5');
+define('VERSION', 			     '0.70.0');
 define('VERSION_NAME', 			'Goliath');
 /** @} */
 
@@ -76,42 +76,27 @@ include_once $GLOBALS['settings']['local_root'] . 'include' . DIRECTORY_SEPARATO
 /** require core functionality */
 include_once $GLOBALS['settings']['local_root'] . 'modules' . DIRECTORY_SEPARATOR . 'core.php';
 
-/** require pear for error handling */
-include_once 'PEAR.php';
-/** Set the error handler to use our custom function for storing errors */
-PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'error_callback');
-//set_error_handler('php_to_PEAR_Error');
-/** stores a list of all errors */
-$GLOBALS['errors'] = array();
-/** stores a list of all user errors */
-$GLOBALS['user_errors'] = array();
-/** stores a list of all warnings */
-$GLOBALS['warn_errors'] = array();
-/** stores a list of all debug information */
-$GLOBALS['debug_errors'] = array();
+include_once 'MIME' . DIRECTORY_SEPARATOR . 'Type.php';
 
 //session_cache_limiter('public');
 /** always begin the session */
 session_start();
 
-/** Remove annoying POST error message with the page is refreshed 
- * @{
- */
-if(isset($_POST) && count($_POST) > 0)
-{
-	$_SESSION['last_request'] = $_REQUEST;
-	goto($_SERVER['REQUEST_URI']);
-}
-if(isset($_SESSION['last_request']))
-{
-	$_REQUEST = $_SESSION['last_request'];
-	unset($_SESSION['last_request']);
-}
-/**
- * @}
- */
-
-include_once 'MIME' . DIRECTORY_SEPARATOR . 'Type.php';
+/** require pear for error handling */
+include_once 'PEAR.php';
+/** Set the error handler to use our custom function for storing errors */
+PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'error_callback');
+set_error_handler('php_to_PEAR_Error');
+/** stores a list of all errors */
+$GLOBALS['errors'] = array();
+/** stores a list of all user errors */
+$GLOBALS['user_errors'] = isset($_SESSION['errors']['user'])?$_SESSION['errors']['user']:array();
+/** stores a list of all warnings */
+$GLOBALS['warn_errors'] = isset($_SESSION['errors']['warn'])?$_SESSION['errors']['warn']:array();
+/** stores a list of all debug information */
+$GLOBALS['debug_errors'] = isset($_SESSION['errors']['debug'])?$_SESSION['errors']['debug']:array();
+/** stores a list of all notices and friendly messages */
+$GLOBALS['note_errors'] = isset($_SESSION['errors']['note'])?$_SESSION['errors']['note']:array();
 
 /** set up all the GLOBAL variables needed throughout the site */
 setup();
@@ -132,20 +117,32 @@ function setup()
 	//  first the variables are parsed out of the path, just incase mod_rewrite isn't enabled
 	//  in order of importance, the database is set up, the handlers are loaded, the aliases and watch list are loaded, the template system is loaded
 
-	// include the database wrapper class so it can be used by any page
-	if( $GLOBALS['settings']['use_database'] ) include_once $GLOBALS['settings']['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'database.php';
-		
 	// set up database to be used everywhere
 	if($GLOBALS['settings']['use_database'])
+	{
+		// include the database wrapper class so it can be used by any page
+		include_once $GLOBALS['settings']['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'database.php';
+		
 		$GLOBALS['database'] = new database($GLOBALS['settings']['db_connect']);
+		
+		// check again incase something went wrong with the connection
+		if($GLOBALS['settings']['use_database'])
+		{
+		}
+	}
 	else
+	{
 		$GLOBALS['database'] = NULL;
-	
-	// set up mime types because PEAR MIME_Type is retarded
-	setup_mime();
+	}
 	
 	// set up the list of handlers
 	setup_handlers();
+	
+	// set up aliases for path replacement
+	setup_aliases();
+	
+	// set up mime types because PEAR MIME_Type is retarded
+	setup_mime();
 	
 	// set up a list of modules available to the system
 	setup_register();
@@ -153,17 +150,26 @@ function setup()
 	// set up the settings to use from here on out
 	setup_settings();
 	
+	//Remove annoying POST error message with the page is refreshed 
+	if(isset($_POST) && count($_POST) > 0)
+	{
+		$_SESSION['last_request'] = $_REQUEST;
+		goto($_SERVER['REQUEST_URI']);
+	}
+	if(isset($_SESSION['last_request']))
+	{
+		$_REQUEST = $_SESSION['last_request'];
+		unset($_SESSION['last_request']);
+	}
+	
 	// set up list of tables
 	setup_tables();
-	
-	// set up aliases for path replacement
-	setup_aliases();
-	
-	// set up the template system for outputting
-	setup_template();
 
 	// set up variables passed to the system in the request or post
 	setup_validate();
+	
+	// set up the template system for outputting
+	setup_template();
 	
 	// set up users for permission based access
 	setup_user();
@@ -272,7 +278,7 @@ function setup_tables()
 		$GLOBALS['ignored'] = db_watch::get(array('search_Filepath' => '/^!/'), $count);
 		$GLOBALS['watched'] = db_watch::get(array('search_Filepath' => '/^\\^/'), $count);
 		// always add user local to watch list
-		$GLOBALS['watched'][] = array('id' => 0, 'Filepath' => str_replace('\\', '/', LOCAL_USERS));
+		$GLOBALS['watched'][] = array('id' => 0, 'Filepath' => str_replace('\\', '/', $GLOBALS['settings']['local_users']));
 	}
 }
 
@@ -297,8 +303,6 @@ function output($request)
 		)
 	{
 		theme();
-		
-		theme('errors');
 	}
 }
 
@@ -328,7 +332,7 @@ function handles($file, $handler)
 {
 	if(class_exists(($GLOBALS['settings']['use_database']?'db_':'fs_') . $handler))
 	{
-		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+		if($GLOBALS['settings']['use_alias'] == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 		return call_user_func(($GLOBALS['settings']['use_database']?'db_':'fs_') . $handler . '::handles', $file);
 	}
 	return false;
@@ -358,11 +362,11 @@ function checkAccess($file)
 		return true;
 		
 	$tmp_file = str_replace('\\', '/', $file['Filepath']);
-	if(USE_ALIAS == true) $tmp_file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $tmp_file);
+	if($GLOBALS['settings']['use_alias'] == true) $tmp_file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $tmp_file);
 	
 	// user can always access own files
-	if(substr($tmp_file, 0, strlen(LOCAL_USERS)) == LOCAL_USERS)
-		$user = substr($tmp_file, strlen(LOCAL_USERS));
+	if(substr($tmp_file, 0, strlen($GLOBALS['settings']['local_users'])) == $GLOBALS['settings']['local_users'])
+		$user = substr($tmp_file, strlen($GLOBALS['settings']['local_users']));
 	
 	if(strpos($user, '/') !== false)
 		$user = substr($user, 0, strpos($user, '/'));
@@ -371,11 +375,11 @@ function checkAccess($file)
 		return true;
 	
 	// the current user can access public files
-	if(substr($tmp_file, 0, strlen(LOCAL_USERS . $user . '/public/')) == LOCAL_USERS . $user . '/public/')
+	if(substr($tmp_file, 0, strlen($GLOBALS['settings']['local_users'] . $user . '/public/')) == $GLOBALS['settings']['local_users'] . $user . '/public/')
 		return true;
 	
 	// the current user can access private files if they provided a key
-	if(substr($tmp_file, 0, strlen(LOCAL_USERS . $user . '/private/')) == LOCAL_USERS . $user . '/private/')
+	if(substr($tmp_file, 0, strlen($GLOBALS['settings']['local_users'] . $user . '/private/')) == $GLOBALS['settings']['local_users'] . $user . '/private/')
 	{
 		if(isset($_SESSION['settings']['keys']) && 
 		   isset($file['PrivateKey']) &&
@@ -823,7 +827,7 @@ function kill9($command, $startpid, $limit = 2)
 function php_to_PEAR_Error($error_code, $error_str, $error_file, $error_line)
 {
 	if($error_code & E_WARNING || $error_code & E_NOTICE)
-		$error_code = E_WARN;
+		$error_code = E_WARN|E_DEBUG;
 		
 	PEAR::raiseError($error_str, $error_code);
 	
@@ -863,6 +867,8 @@ function error_callback($error)
 		$GLOBALS['user_errors'][] = $error;
 	if($error->code & E_WARN)
 		$GLOBALS['warn_errors'][] = $error;
+	if($error->code & E_NOTE)
+		$GLOBALS['note_errors'][] = $error;
 	
 	$GLOBALS['errors'][] = $error;
 }

@@ -1,3 +1,24 @@
+2010-04-29
+Settings validation functions can now be defined in GLOBALS just like request validation functions
+Fixed bug in template plugin configuration
+Added configuration for file handlers
+	Now if a admin module does not have an output function, it is assumed to be there only for configuration
+Worked a lot on the select_block template in live
+	It is very pretty now
+Decided to make Live the main template
+Worked on the way errors are displayed
+The live template now gets the errors through ajax, errors that haven't been printed are saved in an error queue in the session
+
+2010-04-28
+Worked a lot on configure_ functions
+	Now all modules can have their own configuration page
+	Uses the default forms
+	Uses default info objects
+Fixed a bug in db_file handlers,
+	Wasn't checking correct database in the dir alter_query() function
+Added offsite handling to the url() function
+	Commented url() function a lot more
+
 2010-04-27
 Worked on settings.php plugin
 	Settings can now be loaded from a settings.ini file in the include directory

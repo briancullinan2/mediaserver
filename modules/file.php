@@ -54,7 +54,7 @@ function validate_dir($request)
 	if(isset($request['dir']))
 	{
 		$request['cat'] = validate_cat($request);
-		if(USE_ALIAS == true)
+		if(setting('use_alias') == true)
 			$tmp = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
 			// this check the input 'dir' for actual files
 		if(is_dir(realpath($tmp)) || 
@@ -81,13 +81,30 @@ function validate_file($request)
 	if(isset($request['file']))
 	{
 		$request['cat'] = validate_cat($request);
-		if(USE_ALIAS == true)
+		if(setting('use_alias') == true)
 			$tmp = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']);
 		if(is_file(realpath($tmp)) || call_user_func_array($request['cat'] . '::handles', array($request['file'])) == true)
 			return $request['file'];
 		else
 			PEAR::raiseError('File does not exist!', E_USER);
 	}
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return true by default
+ */
+function validate_dirs_only($request)
+{
+	if(isset($request['dirs_only']))
+	{
+		if($request['dirs_only'] === true || $request['dirs_only'] === 'true')
+			return true;
+		elseif($request['dirs_only'] === false || $request['dirs_only'] === 'false')
+			return false;
+	}
+	return true;
 }
 
 /**
@@ -114,7 +131,7 @@ function alter_query_file($request, $props)
 		$request['dir'] = str_replace('\\', '/', $request['dir']);
 		
 		// replace aliased path with actual path
-		if(USE_ALIAS == true)
+		if(setting('use_alias') == true)
 			$request['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
 			
 		// maybe the dir is not loaded yet, this part is costly but it is a good way to do it
@@ -134,8 +151,7 @@ function alter_query_file($request, $props)
 			//  while other handlers only store files and no directories, but these should still be searchable paths
 			//  in which case the handler is responsible for validation of it's own paths
 			if(count($dirs) == 0)
-				$dirs = $GLOBALS['database']->query(array('SELECT' => self::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"', 'LIMIT' => 1), true);
-				
+				$dirs = $GLOBALS['database']->query(array('SELECT' => constant($request['cat'] . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"', 'LIMIT' => 1), true);
 			// top level directory / should always exist
 			if($request['dir'] == realpath('/') || count($dirs) > 0)
 			{
@@ -184,7 +200,7 @@ function alter_query_file($request, $props)
 		if($request['file'][0] == DIRECTORY_SEPARATOR) $request['file'] = realpath('/') . substr($request['file'], 1);
 		
 		// replace aliased path with actual path
-		if(USE_ALIAS == true)
+		if(setting('use_alias') == true)
 			$request['file'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']);
 		
 		// if the id is available then use that instead

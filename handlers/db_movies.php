@@ -15,11 +15,16 @@ class db_movies extends db_file
 
 	static function init()
 	{
-		// include the id handler
-		include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.php';
-		
-		// set up id3 reader incase any files need it
-		$GLOBALS['getID3'] = new getID3();
+		if(setting('exists_getid3'))
+		{
+			// include the id handler
+			include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.php';
+			
+			// set up id3 reader incase any files need it
+			$GLOBALS['getID3'] = new getID3();
+		}
+		else
+			PEAR::raiseError('getID3() missing from include directory! Archive handlers cannot function properly.', E_DEBUG);
 	}
 
 	static function columns()
@@ -33,7 +38,7 @@ class db_movies extends db_file
 			self::init();
 			
 		$file = str_replace('\\', '/', $file);
-		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+		if(setting('use_alias') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 		
 		// parse through the file path and try to find a zip
 		$paths = split('/', $file);

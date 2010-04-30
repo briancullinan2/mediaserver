@@ -39,7 +39,16 @@ function setup_settings()
 }
 
 /**
+ * @defgroup setting Settings Functions
+ * All functions that handling site settings, basically designed exactly the same way as validate()
+ * @param settings the current list of settings for settings to depend on each other
+ * @return default values of settings or a validated setting input
+ * @{
+ */
+
+/**
  * Get a setting
+ * @ingroup setting
  * @param name The setting name to get
  */
 function setting($name)
@@ -53,6 +62,7 @@ function setting($name)
 
 /**
  * Get all the default settings
+ * @ingroup setting
  */
 function settings_get_defaults($settings)
 {
@@ -64,7 +74,7 @@ function settings_get_defaults($settings)
 	// load core settings first
 	foreach($GLOBALS['modules']['core']['settings'] as $i => $setting)
 	{
-		$default_settings[$setting] = call_user_func_array('validate_' . $setting, array($settings));
+		$default_settings[$setting] = call_user_func_array('setting_' . $setting, array($settings));
 	}
 	
 	// loop through each module and get the default settings
@@ -74,48 +84,22 @@ function settings_get_defaults($settings)
 		{
 			foreach($config['settings'] as $i => $setting)
 			{
-				if(function_exists('validate_' . $setting))
-				{
-					$default_settings[$setting] = call_user_func_array('validate_' . $setting, array($settings));
-				}
+				if(function_exists('setting_' . $setting))
+					$default_settings[$setting] = call_user_func_array('setting_' . $setting, array($settings));
+				elseif(isset($GLOBALS['setting_' . $setting]) && is_callable($GLOBALS['setting_' . $setting]))
+					$default_settings[$setting] = $GLOBALS['setting_' . $setting]($settings);
 				else
 					PEAR::raiseError('Setting \'' . $setting . '\' is specified without a validate function in the ' . $module . ' module.');
 			}
 		}
 	}
-
-	// database
-	$default_settings['use_database'] = false;
-	$default_settings['db_type'] = 'mysql';
-	$default_settings['db_server'] = 'localhost';
-	$default_settings['db_user'] = '';
-	$default_settings['db_pass'] = '';
-	$default_settings['db_name'] = '';
-		
-	// html name
-	$default_settings['html_name'] = 'Brian\'s Media Website';
-	
-	// other
-	$default_settings['debug_mode'] = false;
-	$default_settings['recursive_get'] = false;
-	$default_settings['no_bots'] = true;
-	
-	// tmp dir
-	$tmpfile = tempnam("dummy","");
-	unlink($tmpfile);
-	$default_settings['tmp_dir'] = dirname($tmpfile) . DIRECTORY_SEPARATOR;
-
-	// users
-	$default_settings['local_users'] = $settings['local_root'] . 'users' . DIRECTORY_SEPARATOR;
-	
-	// buffer size
-	$default_settings['buffer_size'] = 2*1024*8;
-	
-	// use alias
-	$default_settings['use_alias'] = true;
 	
 	return $default_settings;
 }
+
+/**
+ * @}
+ */
 
 /**
  * Implementation of output

@@ -6,14 +6,14 @@ function register_live_header()
 		'name' => 'Live Header',
 	);
 
-	if($GLOBALS['module'] != 'admin_install')
-	{
-		$config['styles'] = array(
-			'module=template&template=live&tfile=live.css',
-			'module=template&template=live&tfile=types.css'
-		);
-		$config['scripts'] = array('module=template&template=live&tfile=dragclick.js');
-	}
+	$config['styles'] = array(
+		'module=template&template=live&tfile=live.css',
+		'module=template&template=live&tfile=types.css',
+	);
+	$config['scripts'] = array(
+		'module=template&template=live&tfile=dragclick.js',
+		'module=template&template=live&tfile=jquery.js',
+	);
 	
 	return $config;
 }
@@ -95,14 +95,14 @@ function theme_live_debug_block()
 			}
 		}
 	</script>
-	<div id="debug" class="debug">
+	<div id="debug" class="debug hide">
 	<?php
 	if($GLOBALS['templates']['vars']['user']['Username'] != 'guest')
 	{
 		foreach($GLOBALS['debug_errors'] as $i => $error)
 		{
 			?>
-			<a onClick="toggleDiv('error_<?php print $i; ?>')"><?php print htmlspecialchars($error->message); ?></a><br />
+			<a class="msg" onClick="toggleDiv('error_<?php print $i; ?>')"><?php print htmlspecialchars($error->message); ?></a><br />
 			<div id="error_<?php print $i; ?>" style="display:none;">
 				<code>
 					<pre>
@@ -112,6 +112,9 @@ function theme_live_debug_block()
 			</div>
 			<?php
 		}
+		?>
+		<a onClick="if(this.hidden == false) { document.getElementById('debug').className='debug hide'; this.hidden=true; this.innerHTML = 'Un Hide'; } else { document.getElementById('debug').className='debug'; this.hidden=false; this.innerHTML = 'Hide'; }">Un Hide</a>
+		<?php
 	}
 	else
 	{
@@ -124,6 +127,7 @@ function theme_live_debug_block()
 		</form>
 		<?php
 	}
+	$GLOBALS['debug_errors'] = array();
 	
 	?></div><?php
 
@@ -248,7 +252,7 @@ function theme_live_body()
 					<td id="templates"><?php theme('template_block'); ?></td>
 				</tr>
 			</table>
-<?php if(DEBUG_MODE) theme('debug_block'); ?>
+<?php if(setting('debug_mode')) theme('debug_block'); ?>
 			<div id="container">
 				<table width="100%" cellpadding="5" cellspacing="0">
 					<tr>

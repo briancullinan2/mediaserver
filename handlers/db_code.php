@@ -80,7 +80,7 @@ class db_code extends db_file
 	static function handles($file)
 	{
 		$file = str_replace('\\', '/', $file);
-		if(USE_ALIAS == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+		if(setting('use_alias') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 		
 		$ext = getExt(basename($file));
 		$type = getExtType($file);
@@ -274,7 +274,7 @@ class db_code extends db_file
 	{
 		$file = str_replace('\\', '/', $file);
 		
-		if(USE_ALIAS == true)
+		if(setting('use_alias') == true)
 			$file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 		
 		header('Content-Disposition: ');

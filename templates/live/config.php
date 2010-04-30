@@ -113,6 +113,10 @@ function print_info_objects($infos)
 				?><a <?php print isset($infos['link']['name'])?$infos['link']['name']:''; ?> href="<?php print url($infos['link']['url']); ?>"><?php print_info_objects($infos['link']['text']); ?></a><?php
 			}
 		}
+		if(isset($infos['code']))
+		{
+			?><code><?php print_info_objects($infos['code']); ?></code><?php
+		}
 		if(isset($infos['text']))
 		{
 			if(is_string($infos['text']))
@@ -157,63 +161,93 @@ function print_form_objects($form)
 			case 'checkbox':
 				print $config['name'] . ':<br />';
 				// check if array is associative or not
-				if(array_keys($config['values']) === array_keys(array_keys($config['values'])))
+				if(array_keys($config['options']) === array_keys(array_keys($config['options'])))
 				{
 					// numeric keys
-					foreach($config['values'] as $value)
+					foreach($config['options'] as $option)
 					{
-						?><input <?php print (isset($config['disabled']) && $config['disabled'] == true)?'disabled="disabled"':'';?> type="<?php print $config['type']; ?>" value="<?php print $value; ?>" name="<?php print $field_name . (($config['type'] == 'checkbox')?'[]':''); ?>" /><?php print $value; ?><br /><?php
+						?><input <?php print (isset($config['disabled']) && $config['disabled'] == true)?'disabled="disabled"':'';?> <?php print ($config['value'] == $option)?'checked="checked"':''; ?> type="<?php print $config['type']; ?>" value="<?php print $option; ?>" name="<?php print $field_name . (($config['type'] == 'checkbox')?'[]':''); ?>" /><?php print $option; ?><br /><?php
 					}
 				}
 				else
 				{
 					// named keys
-					foreach($config['values'] as $value => $text)
+					foreach($config['options'] as $option => $text)
 					{
-						?><input <?php print (isset($config['disabled']) && $config['disabled'] == true)?'disabled="disabled"':'';?> type="<?php print $config['type']; ?>" value="<?php print $value; ?>" name="<?php print $field_name . (($config['type'] == 'checkbox')?'[]':''); ?>" /><?php print $text; ?><br /><?php
+						?><input <?php print (isset($config['disabled']) && $config['disabled'] == true)?'disabled="disabled"':'';?> <?php print ($config['value'] == $option)?'checked="checked"':''; ?> type="<?php print $config['type']; ?>" value="<?php print $option; ?>" name="<?php print $field_name . (($config['type'] == 'checkbox')?'[]':''); ?>" /><?php print $text; ?><br /><?php
 					}
 				}
 			break;
 			case 'text':
-				?><input <?php print (isset($config['disabled']) && $config['disabled'] == true)?'disabled="disabled"':'';?> type="<?php print $config['type']; ?>" value="<?php print htmlspecialchars($config['value']); ?>" name="<?php print $field_name; ?>" /><?php
+				?><input <?php print (isset($config['disabled']) && $config['disabled'] == true)?'disabled="disabled"':'';?> type="text" value="<?php print htmlspecialchars($config['value']); ?>" name="<?php print $field_name; ?>" /><?php
 			break;
 			case 'select':
 				?><select <?php print (isset($config['disabled']) && $config['disabled'] == true)?'disabled="disabled"':'';?> name="<?php print $field_name; ?>"><?php
 				// check if array is associative or not
-				if(array_keys($config['values']) === array_keys(array_keys($config['values'])))
+				if(array_keys($config['options']) === array_keys(array_keys($config['options'])))
 				{
 					// numeric keys
-					foreach($config['values'] as $value)
+					foreach($config['options'] as $option)
 					{
-						?><option value="<?php print $value; ?>"><?php print $value; ?></option><?php
+						?><option value="<?php print $option; ?>" <?php print ($config['value'] == $option)?'selected="selected"':''; ?>><?php print $option; ?></option><?php
 					}
 				}
 				else
 				{
 					// named keys
-					foreach($config['values'] as $value => $text)
+					foreach($config['options'] as $option => $text)
 					{
-						?><option value="<?php print $value; ?>"><?php print $text; ?></option><?php
+						?><option value="<?php print $option; ?>" <?php print ($config['value'] == $option)?'selected="selected"':''; ?>><?php print $text; ?></option><?php
 					}
 				}
 				?></select><?php
 			break;
 			case 'filesize':
 				?>
-				<select <?php print (isset($config['disabled']) && $config['disabled'] == true)?'disabled="disabled"':'';?> name="<?php print $field_name; ?>[value]" style="width:50px; display:inline; margin-right:0px;">
+				<select <?php print (isset($config['disabled']) && $config['disabled'] == true)?'disabled="disabled"':'';?> name="<?php print $field_name; ?>[value]" style="width:100px; display:inline; margin-right:0px;">
 				<?php
 				for($i = 1; $i < 60; $i++)
 				{
-					?><option value="<?php echo $i; ?>" <?php echo ($config['value'] == $i || $config['value'] / 60 == $i || $config['value'] / 360 == $i)?'selected="selected"':''; ?>><?php echo $i; ?></option><?php
+					?><option value="<?php print $i; ?>" <?php print ($config['value'] == $i || $config['value'] / 60 == $i || $config['value'] / 360 == $i)?'selected="selected"':''; ?>><?php print $i; ?></option><?php
 				}
 				?>
 				</select>
-				<select name="<?php print $field_name; ?>[multiplier]" style="width:100px; display:inline; margin-right:0px;">
-					<option value="1" <?php echo ($config['value'] >= 1 && $config['value'] < 60)?'selected="selected"':''; ?>>Seconds</option>
-					<option value="60" <?php echo ($config['value'] / 60 >= 1 && $config['value'] / 60 < 60)?'selected="selected"':''; ?>>Minutes</option>
-					<option value="360" <?php echo ($config['value'] / 360 >= 1)?'selected="selected"':''; ?>>Hours</option>
+				<select <?php print (isset($config['disabled']) && $config['disabled'] == true)?'disabled="disabled"':'';?> name="<?php print $field_name; ?>[multiplier]" style="width:100px; display:inline; margin-right:0px;">
+					<option value="1" <?php print ($config['value'] >= 1 && $config['value'] < 60)?'selected="selected"':''; ?>>Seconds</option>
+					<option value="60" <?php print ($config['value'] / 60 >= 1 && $config['value'] / 60 < 60)?'selected="selected"':''; ?>>Minutes</option>
+					<option value="360" <?php print ($config['value'] / 360 >= 1)?'selected="selected"':''; ?>>Hours</option>
 				</select>
 				<?php
+			break;
+			case 'boolean':
+				?>
+				<select <?php print (isset($config['disabled']) && $config['disabled'] == true)?'disabled="disabled"':'';?> name="<?php print $field_name; ?>">
+					<option value="true" <?php print ($config['value'] == true)?'selected="selected"':''; ?>><?php print isset($config['options'][0])?$config['options'][0]:'true'; ?></option>
+					<option value="false" <?php print ($config['value'] == false)?'selected="selected"':''; ?>><?php print isset($config['options'][0])?$config['options'][1]:'false'; ?></option>
+				</select>
+				<?php
+			break;
+			case 'filesize':
+			?>
+				<select <?php print (isset($config['disabled']) && $config['disabled'] == true)?'disabled="disabled"':'';?> name="<?php print $field_name; ?>[value]" style="width:150px; display:inline; margin-right:0px;">
+				<?php
+				for($i = 0; $i < 10; $i++)
+				{
+					?><option value="<?php echo pow(2, $i); ?>" <?php print ($config['value'] / 1024 == pow(2, $i) || $config['value'] / 1048576 == pow(2, $i) || $config['value'] / 1073741824 == pow(2, $i))?'selected="selected"':''; ?>><?php print pow(2, $i); ?></option><?php
+				}
+				?>
+				</select><select <?php print (isset($config['disabled']) && $config['disabled'] == true)?'disabled="disabled"':'';?> name="<?php print $field_name; ?>[multiplier]" style="width:50px; display:inline; margin-right:0px;">
+					<option value="1024" <?php print ($config['value'] / 1024 >= 1 && $config['value'] / 1024 < 1048576)?'selected="selected"':''; ?>>KB</option>
+					<option value="1048576" <?php print ($config['value'] / 1048576 >= 1 && $config['value'] / 1048576 < 1073741824)?'selected="selected"':''; ?>>MB</option>
+					<option value="1073741824" <?php print ($config['value'] / 1073741824 >= 1)?'selected="selected"':''; ?>>GB</option>
+				</select>
+			<?php
+			break;
+			case 'label':
+				?><label><?php print $config['value']; ?></label><?php
+			break;
+			case 'submit':
+				?><input type="submit" <?php print (isset($config['disabled']) && $config['disabled'] == true)?'disabled="disabled"':'';?> name="<?php print $field_name; ?>" value="<?php print $config['value']; ?>" /><?php
 			break;
 		}
 	}

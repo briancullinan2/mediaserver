@@ -26,7 +26,7 @@ class db_watch_list extends db_watch
 	static function handles($dir, $file = NULL)
 	{
 		$dir = str_replace('\\', '/', $dir);
-		if(USE_ALIAS == true) $dir = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $dir);
+		if(setting('use_alias') == true) $dir = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $dir);
 
 		if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $dir)))
 		{

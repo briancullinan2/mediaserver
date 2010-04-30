@@ -15,7 +15,8 @@ else
 	PEAR::raiseError('Use database is turned on but adoDB is missing!', E_DEBUG|E_USER|E_FATAL);
 }
 
-// control lower level handling of each database
+/**
+ * control lower level handling of each database
 // things to consider:
 // audio-database (for storing artist, album, track fields)
 // file-database (used primarily by the virtualfs to storing file information)
@@ -26,13 +27,282 @@ else
 // everything should fit into the main 3 mediums (music,pictures,videos) and everything else is just a file
 // scalability (add a calendar handler? rss-handler?)
 
-// pretty self explanator handler class for sql databases
+ */
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ * @return true by default
+ */
+function setting_use_alias($settings)
+{
+	if(isset($settings['use_alias']))
+	{
+		if($settings['use_alias'] === true || $settings['use_alias'] === 'true')
+			return true;
+		elseif($settings['use_alias'] === false || $settings['use_alias'] === 'false')
+			return false;
+	}
+	return true;
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ * @return 'mysql' by default
+ */
+function setting_db_type($settings)
+{
+	if(isset($settings['db_type']) && in_array($settings['db_type'], database::supported_databases()))
+		return $settings['db_type'];
+	else
+		return 'mysql';
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ * @return 'localhost' by default
+ */
+function setting_db_server($settings)
+{
+	if(isset($settings['db_server']))
+		return $settings['db_server'];
+	else
+		return 'localhost';
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ * @return blank by default
+ */
+function setting_db_user($settings)
+{
+	if(isset($settings['db_user']))
+		return $settings['db_user'];
+	else
+		return '';
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ * @return blank by default
+ */
+function setting_db_pass($settings)
+{
+	if(isset($settings['db_pass']))
+		return $settings['db_pass'];
+	else
+		return '';
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ * @return blank by default
+ */
+function setting_db_name($settings)
+{
+	if(isset($settings['db_name']))
+		return $settings['db_name'];
+	else
+		return '';
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ * @return blank by default
+ */
+function setting_db_connect($settings)
+{
+	$settings['db_type'] = setting_db_type($settings);
+	$settings['db_server'] = setting_db_server($settings);
+	$settings['db_user'] = setting_db_user($settings);
+	$settings['db_pass'] = setting_db_pass($settings);
+	$settings['db_name'] = setting_db_name($settings);
+	
+	if(isset($settings['db_connect']) && parseDSN($settings['db_connect']) !== NULL)
+		return $settings['db_connect'];
+	else
+		return $settings['db_type'] . '://' . 
+				$settings['db_user'] . ':' . 
+				$settings['db_pass'] . '@' . 
+				$settings['db_server'] . '/' . 
+				$settings['db_name'];
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return false by default
+ */
+function validate_dberror($request)
+{
+	if(isset($request['dberror']))
+		return $request['dberror'];
+	else
+		return false;
+}
+
+/**
+ * Implementation of configure
+ * @ingroup configure
+ */
+function configure_database($settings)
+{
+	$settings['db_connect'] = setting_db_connect($settings);
+	$settings['use_alias'] = setting_use_alias($settings);
+	$settings['dberror'] = validate_dberror($settings);
+	
+	$options = array();
+	
+	$dsn = parseDSN($settings['db_connect']);
+	
+	$options['db_type'] = array(
+		'name' => 'Database Type',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'This site supports a variety of databases, select your database type.',
+			),
+		),
+		'type' => 'select',
+		'value' => $dsn['dbsyntax'],
+		'options' => database::supported_databases(),
+	);
+	
+	$options['db_server'] = array(
+		'name' => 'Database Server',
+		'status' => ($settings['dberror'] !== false && (strpos($settings['dberror'], 'Can\'t connect') !== false || strpos($settings['dberror'], 'Connection error') !== false))?'fail':(($settings['dberror'] !== false && strpos($settings['dberror'], 'Access denied') !== false)?'':'warn'),
+		'description' => array(
+			'list' => array(
+				'Please specify an address of the database server to connect to.',
+			),
+		),
+		'type' => 'text',
+		'value' => $dsn['hostspec'],
+	);
+	
+	if($settings['dberror'] == false)
+	{
+		$options['db_server']['description']['list'][] = 'WARNING: If this information is wrong, it could take up to 1 minute or more to detect these errors.';
+	}
+	elseif($settings['dberror'] !== false && strpos($settings['dberror'], 'Can\'t connect') !== false)
+	{
+		$options['db_server']['description']['list'][] = 'The server reported an error with the connection to the database, please check to make sure the address entered is correct and accessible.';
+	}
+	
+	$options['db_user'] = array(
+		'name' => 'Database User Name',
+		'status' => ($settings['dberror'] !== false && strpos($settings['dberror'], 'Access denied') !== false)?'fail':'',
+		'description' => array(
+			'list' => array(
+				'Please specify a username to log in to the database.',
+			),
+		),
+		'type' => 'text',
+		'value' => $dsn['username'],
+	);
+	
+	if($settings['dberror'] !== false && strpos($settings['dberror'], 'Access denied') !== false)
+	{
+		$options['db_user']['description']['list'][] = 'The server reported that there were problems with your login information.';
+	}
+	
+	$options['db_pass'] = array(
+		'name' => 'Database Password',
+		'status' => ($settings['dberror'] !== false && strpos($settings['dberror'], 'Access denied') !== false)?'fail':'',
+		'description' => array(
+			'list' => array(
+				'Please specify a password to log in to the database.',
+			),
+		),
+		'type' => 'text',
+		'value' => $dsn['password'],
+	);
+	
+	if($settings['dberror'] !== false && strpos($settings['dberror'], 'Access denied') !== false)
+	{
+		$options['db_pass']['description']['list'][] = 'The server reported that there were problems with your login information.';
+	}
+				
+	$options['db_name'] = array(
+		'name' => 'Database Name',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Please specify the name of the database to use.',
+				'This database will not be created for you, it must be created ahead of time with the proper permission settings.',
+			),
+		),
+		'type' => 'text',
+		'value' => $dsn['database'],
+	);
+	
+	if($settings['dberror'] !== false && strpos($settings['dberror'], 'already exists') !== false)
+	{
+		$options['drop'] = array(
+			'name' => 'Tables Already Exist',
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					'It seems there are already tables in this database with the same name.',
+					'If you drop these tables, it could cause an irreversable loss of database information.',
+				),
+			),
+			'type' => 'submit',
+			'value' => 'Drop Tables',
+		);
+	}
+	elseif($settings['dberror'] == 'tables dropped')
+	{
+		$options['drop'] = array(
+			'name' => 'Tables Dropped',
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					'The tables have been successfully dropped.  You may now return to the install page.',
+				),
+			),
+			'type' => 'label',
+			'value' => 'Tables Dropped',
+		);
+	}
+	
+	$options['use_alias'] = array(
+		'name' => 'Aliasing',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Path aliasing is used to disguise the location of files on your file system.  Aliases can be set up to convert a path such as /home/share/ to /Shared/.',
+			),
+		),
+		'type' => 'boolean',
+		'value' => $settings['use_alias'],
+		'options' => array(
+			'Use Aliased Paths',
+			'Display Actual Path to Users',
+		),
+	);
+
+	
+	return $options;
+}
+
+/** pretty self explanator handler class for sql databases */
 class database
 {
 	var $db_conn;
 	var $rowset = array();
 	var $num_queries = 0;
-
+	
+	static function supported_databases()
+	{
+		return $supported_databases = array('access','ado','ado_access','ado_mssql','db2','odbc_db2','vfp','fbsql','ibase','firebird','borland_ibase','informix','informix72','ldap','mssql','mssqlpo','mysql','mysqli','mysqlt','maxsql','oci8','oci805','oci8po','odbc','odbc_mssql','odbc_oracle','odbtp','odbtp_unicode','oracle','netezza','pdo','postgres','postgres64','postgres7','postgres8','sapdb','sqlanywhere','sqlite','sqlitepo','sybase');
+	}
 //=============================================
 //  sql_db($SQL_server, $SQL_Username, $SQL_password, $SQL_database)
 //=============================================
@@ -45,14 +315,16 @@ class database
 	
 	function database($connect_str)
 	{
-		if(class_exists('ADONewConnection'))
+		if(function_exists('ADONewConnection'))
 		{
 			$this->db_conn = ADONewConnection($connect_str);  # no need for Connect()
 			$this->db_conn->SetFetchMode(ADODB_FETCH_ASSOC);
 		}
-		else
+		
+		if(!isset($this->db_conn) || $this->db_conn == false)
 		{
-			PEAR::raiseError('Error loading database classes.');
+			$GLOBALS['settings']['use_database'] = false;
+			PEAR::raiseError('Something has gone wrong with the connection!', E_DEBUG|E_USER|E_FATAL);
 		}
 	}
 	
@@ -245,16 +517,16 @@ class database
 	{
 		if($require_permit)
 		{
-			$where_security = 'LEFT(Filepath, ' . strlen(LOCAL_USERS) . ') != "' . addslashes(LOCAL_USERS) . '" OR ' . 
-								'Filepath = "' . addslashes(LOCAL_USERS) . '" OR ' . 
-								'(LEFT(Filepath, ' . strlen(LOCAL_USERS) . ') = "' . addslashes(LOCAL_USERS) . '" AND LOCATE("/", Filepath, ' . (strlen(LOCAL_USERS) + 1) . ') = LENGTH(Filepath)) OR ' . 
-								'LEFT(Filepath, ' . strlen(LOCAL_USERS . $_SESSION['user']['Username'] . '/') . ') = "' . addslashes(LOCAL_USERS . $_SESSION['user']['Username'] . '/') . '" OR ' . 
-								'SUBSTR(Filepath, ' . strlen(LOCAL_USERS) . ' + LOCATE("/", SUBSTR(Filepath, ' . (strlen(LOCAL_USERS) + 1) . ')), 8) = "/public/"';
+			$where_security = 'LEFT(Filepath, ' . strlen(setting('local_users')) . ') != "' . addslashes(setting('local_users')) . '" OR ' . 
+								'Filepath = "' . addslashes(setting('local_users')) . '" OR ' . 
+								'(LEFT(Filepath, ' . strlen(setting('local_users')) . ') = "' . addslashes(setting('local_users')) . '" AND LOCATE("/", Filepath, ' . (strlen(setting('local_users')) + 1) . ') = LENGTH(Filepath)) OR ' . 
+								'LEFT(Filepath, ' . strlen(setting('local_users') . $_SESSION['user']['Username'] . '/') . ') = "' . addslashes(setting('local_users') . $_SESSION['user']['Username'] . '/') . '" OR ' . 
+								'SUBSTR(Filepath, ' . strlen(setting('local_users')) . ' + LOCATE("/", SUBSTR(Filepath, ' . (strlen(setting('local_users')) + 1) . ')), 8) = "/public/"';
 			if(isset($_SESSION['settings']['keys_usernames']) && count($_SESSION['settings']['keys_usernames']) > 0)
 			{
 				foreach($_SESSION['settings']['keys_usernames'] as $i => $username)
 				{
-					$where_security .= ' OR LEFT(Filepath, ' . strlen(LOCAL_USERS . $username . '/') . ') = "' . addslashes(LOCAL_USERS . $username . '/') . '"';
+					$where_security .= ' OR LEFT(Filepath, ' . strlen(setting('local_users') . $username . '/') . ') = "' . addslashes(setting('local_users') . $username . '/') . '"';
 				}
 			}
 			if(is_string($props['WHERE']))
