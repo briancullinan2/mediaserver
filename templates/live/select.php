@@ -24,7 +24,7 @@ function theme_live_select_block()
 			<a class="itemLink" href="<?php print url('module=' . $GLOBALS['module'] . '&dir=/'); ?>" onmouseout="this.parentNode.firstChild.className = 'notselected';" onmouseover="this.parentNode.firstChild.className = 'selected';"><span>Top Directory</span></a>
 		</div>
 	</div>
-	<div class="files" id="files" style="border:1px solid #006; overflow:scroll; height:150px; width:400px; float:left;"><?php
+	<div class="files" id="files" style="border:1px solid #006; overflow:auto; height:150px; width:400px; float:left;"><?php
 	if(count($GLOBALS['templates']['vars']['files']) == 0)
 	{
 		$link = (dirname($GLOBALS['templates']['vars']['dir']) == '/')?url('module=' . $GLOBALS['module'] . '&dir=/'):url('module=' . $GLOBALS['module'] . '&dir=' . urlencode(dirname($GLOBALS['templates']['vars']['dir']) . '/'));

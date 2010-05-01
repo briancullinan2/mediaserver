@@ -1727,7 +1727,16 @@ function rewrite_vars(&$request, &$get, &$post)
 	$request['module'] = validate_module($request);
 	
 	if(isset($request['path_info']))
-		$request = array_merge($request, parse_path_info($request['path_info']));
+	{
+		// get path info
+		$path = parse_path_info($request['path_info']);
+		
+		// merge path info with get as well as request
+		$get = array_merge($path, $get);
+		
+		// merge path info, but request variables take precedence
+		$request = array_merge($request, $path);
+	}
 		
 	// just about everything uses the cat variable so always validate and add this
 	$request['cat'] = validate_cat($request);

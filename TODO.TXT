@@ -1,6 +1,6 @@
 Current solution for dependencies is not very good, rewrite, possibly call module init whenever handles() is called?
+	Checks abstracted into setting_ wrappers, is this the best solution?
 Finish setting input handling in the modules admin plugin
-Checks abstracted into setting_ wrappers, is this the best solution?
 Create a status admin tool
 Finish setting() function in settings.php plugin
 	Settings should also be loadable from the database

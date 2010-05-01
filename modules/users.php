@@ -245,7 +245,7 @@ function validate_return($request)
  */
 function validate_required_priv($request)
 {
-	if(is_numeric($request['required_priv']))
+	if(is_numeric($request['required_priv']) && $request['required_priv'] >= 0 && $request['required_priv'] <= 10)
 		return $request['required_priv'];
 }
 
@@ -362,7 +362,6 @@ function output_users($request)
 		break;
 		// cache a users login information so they may access the site
 		case 'login':
-			
 			if( $_SESSION['user']['Username'] != 'guest' )
 			{
 				if( isset($request['return']) && (!isset($request['required_priv']) || $_SESSION['user']['Privilage'] >= $request['required_priv']))
@@ -371,6 +370,11 @@ function output_users($request)
 				}
 				else
 					PEAR::raiseError('Already logged in!', E_USER);
+			}
+			$request['required_priv'] = validate_required_priv($request);
+			if(isset($request['required_priv']) && $request['required_priv'] > $_SESSION['user']['Privilage'])
+			{
+				PEAR::raiseError('You do not have sufficient privilages to view this page!', E_USER);
 			}
 		break;
 		// remove all cookies and session information

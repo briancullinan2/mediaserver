@@ -427,8 +427,10 @@ function output_encode($request)
 			'search_operator' => 'OR',
 			'search_Filetype' => 'FOLDER',
 			'start' => validate_start($request),
-			'limit' => validate_limit($request)
+			'limit' => 54,
 		));
+		register_output_vars('start', validate_start($request));
+		register_output_vars('limit', 54);
 		
 		// show template for manually setting encoding options
 		theme('encode');
