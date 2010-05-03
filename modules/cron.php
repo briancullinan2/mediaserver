@@ -24,7 +24,7 @@ function register_cron()
 		'privilage' => 1,
 		'path' => __FILE__,
 		'notemplate' => true,
-		'settings' => array('cron', 'dir_seek_time', 'file_seek_time')
+		'settings' => array('cron', 'dir_seek_time', 'file_seek_time', 'cleanup_buffer_time', 'cleanup_threashold')
 	);
 }
 
@@ -32,6 +32,8 @@ function configure_cron($settings)
 {
 	$settings['dir_seek_time'] = setting_dir_seek_time($settings);
 	$settings['file_seek_time'] = setting_file_seek_time($settings);
+	$settings['cleanup_buffer_time'] = setting_cleanup_buffer_time($settings);
+	$settings['cleanup_threashold'] = setting_cleanup_threashold($settings);
 	
 	$options = array();
 	
@@ -64,7 +66,7 @@ function configure_cron($settings)
 				'The directory seek time is the amount of time the script will spend searching directories for changed files.',
 			),
 		),
-		'type' => 'filesize',
+		'type' => 'time',
 		'value' => $settings['dir_seek_time'],
 	);
 	
@@ -77,8 +79,33 @@ function configure_cron($settings)
 				'The file seek time is the amount of time the script will spend reading file information and putting it in to the database.',
 			),
 		),
-		'type' => 'filesize',
+		'type' => 'time',
 		'value' => $settings['dir_seek_time'],
+	);
+	
+	$options['cleanup_buffer_time'] = array(
+		'name' => 'Clean-Up Buffer Time',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'The clean up buffer time is used to add an extra amount of run time for database cleanup, such as removing non-existent files or duplicate files.',
+			),
+		),
+		'type' => 'time',
+		'value' => $settings['cleanup_buffer_time'],
+	);
+	
+	$options['cleanup_theashold'] = array(
+		'name' => 'Clean-Up Threashold',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'How many time should the script script run before cleaning up.',
+				'Sometimes cleanups can be time consuming, if the accuracy of what is on the filesystem is not a concern, this value should be high.',
+			),
+		),
+		'type' => 'text',
+		'value' => $settings['cleanup_theashold'],
 	);
 	
 	return $options;
@@ -118,6 +145,37 @@ function setting_file_seek_time($settings)
 		return $settings['file_seek_time'];
 	else
 		return 60;
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ * @return 45 by default
+ */
+function setting_cleanup_buffer_time($settings)
+{
+	if(isset($settings['cleanup_buffer_time']['value']) && isset($settings['cleanup_buffer_time']['multiplier']) && 
+		is_numeric($settings['cleanup_buffer_time']['value']) && is_numeric($settings['cleanup_buffer_time']['multiplier'])
+	)
+		$settings['cleanup_buffer_time'] = $settings['cleanup_buffer_time']['value'] * $settings['cleanup_buffer_time']['multiplier'];
+	
+	if(isset($settings['cleanup_buffer_time']) && is_numeric($settings['cleanup_buffer_time']) && $settings['cleanup_buffer_time'] > 0)
+		return $settings['cleanup_buffer_time'];
+	else
+		return 45;
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ * @return 5 by default
+ */
+function setting_cleanup_threashold($settings)
+{
+	if(isset($settings['cleanup_threashold']) && is_numeric($settings['cleanup_threashold']))
+		return $settings['cleanup_threashold'];
+	else
+		return 5;
 }
 
 /**
@@ -205,14 +263,14 @@ function validate_ignore_lock($request)
 /**
  * Implementation of validate
  * @ingroup validate
- * @return CLEAN_UP_THREASHOLD by default, any number between zero and CLEAN_UP_THREASHOLD is valid, this will be incremented and saved in the state
+ * @return setting(cleanup_threashold) by default, any number between zero and setting(cleanup_threashold) is valid, this will be incremented and saved in the state
  */
 function validate_clean_count($request)
 {
-	if(isset($request['clean_count']) && is_numeric($request['clean_count']) && $request['clean_count'] > 0 && $request['clean_count'] < CLEAN_UP_THREASHOLD)
+	if(isset($request['clean_count']) && is_numeric($request['clean_count']) && $request['clean_count'] > 0 && $request['clean_count'] < setting('cleanup_threashold'))
 		return $request['clean_count'];
 	else
-		return CLEAN_UP_THREASHOLD;
+		return setting('cleanup_threashold');
 }
 
 /**
@@ -368,7 +426,7 @@ function output_cron($request)
 	
 	//------------- DON'T CHANGE THIS - USE /include/settings.php TO MODIFY THESE VALUES ---------//
 	// add 30 seconds becase the cleanup shouldn't take any longer then that
-	set_time_limit(setting('dir_seek_time') + setting('file_seek_time') + CLEAN_UP_BUFFER_TIME);
+	set_time_limit(setting('dir_seek_time') + setting('file_seek_time') + setting('cleanup_buffer_time'));
 	
 	// ignore user abort because the script will handle it
 	ignore_user_abort(1);
@@ -447,7 +505,7 @@ function output_cron($request)
 	
 	// there are a few conditions that change whether or not the database should be cleaned
 	$should_clean = false;
-	if($request['clean_count'] >= CLEAN_UP_THREASHOLD)
+	if($request['clean_count'] >= setting('cleanup_threashold'))
 	{
 		PEAR::raiseError("Clean Count: " . $request['clean_count'] . ', clean up will happen this time!', E_DEBUG);
 		
@@ -552,6 +610,7 @@ function cron_error_callback($error)
 {
 	if(substr($error->message, 0, 9) == 'DATABASE:')
 		return;
+	// do not print notes
 	print $error->message . '<br />';
 	flush();
 	ob_flush();

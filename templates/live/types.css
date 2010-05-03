@@ -1,7 +1,7 @@
 @charset "utf-8";
 /* CSS Document */
 
-.thumb {
+.thumb, .thumb img {
 	background-repeat:no-repeat;
 }
 .thumb, .thumb.file_ext_ {
@@ -31,7 +31,7 @@
 }
 
 
-.thumbsmall {
+.thumbsmall, .thumbsmall img {
 	background-repeat:no-repeat;
 }
 .thumbsmall, .thumbsmall.file_ext_ {

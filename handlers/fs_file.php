@@ -50,16 +50,22 @@ class fs_file
 	// output provided file to given stream
 	static function out($file)
 	{
-		$file = str_replace('\\', '/', $file);
-		
-		// check to make sure file is valid
-		if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)))
+		// double check to make sure the database is not in use
+		if(!$GLOBALS['settings']['use_database'] && (!defined('NOT_INSTALLED') || NOT_INSTALLED == false))
 		{
-			if($fp = @fopen($file, 'rb'))
+			// replace path
+			$file = str_replace('\\', '/', $file);
+			
+			// check to make sure file is valid
+			if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)))
 			{
-				return $fp;
+				if($fp = @fopen($file, 'rb'))
+				{
+					return $fp;
+				}
 			}
 		}
+		
 		return false;
 	}
 	
@@ -71,14 +77,23 @@ class fs_file
 	{
 		$files = array();
 		
+		// if a classname is passed in, this is not for internal use
 		if(!is_bool($internals))
 		{
 			$handler = $internals;
 			$internals = false;
 		}
+		// internal use
 		else
 		{
 			$handler = get_class();
+		}
+		
+		// if it is not for internal use and the system is not installed, do not display any files, ever!
+		if(defined('NOT_INSTALLED') && NOT_INSTALLED == true && $internals == false)
+		{
+			$count = 0;
+			return array();
 		}
 		
 		// only allow this section to run if the database is not being used

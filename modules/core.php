@@ -23,8 +23,8 @@ function register_core()
 	
 	// this module has no output
 	return array(
-		'name' => 'Core Functions',
-		'description' => 'Adds core functionality to site that other common modules depend on.',
+		'name' => lang('core title', 'Core Functions'),
+		'description' => lang('core description', 'Adds core functionality to site that other common modules depend on.'),
 		'path' => __FILE__,
 		'privilage' => 1,
 		'settings' => array(
@@ -32,6 +32,7 @@ function register_core()
 			'modrewrite', 'memory_limit', 'exists_local_root', 'exists_adodb', 'exists_pear',
 			'exists_getid3', 'exists_snoopy', 'exists_extjs',
 		),
+		'always output' => 'core_variables',
 	);
 }
 /**
@@ -46,22 +47,27 @@ function setup_register()
 {
 	$GLOBALS['modules'] = array(
 		'index' => array(
-			'name' => 'Index',
-			'description' => 'Load a module\'s output variables and display the template.',
+			'name' => lang('index title', 'Index'),
+			'description' => lang('index description', 'Load a module\'s output variables and display the template.'),
 			'privilage' => 1,
 			'path' => dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'index.php',
 			'alter query' => array('limit', 'start', 'direction', 'order_by', 'group_by'),
-			'settings' => array('html_domain', 'html_root', 'html_name', 'tmp_dir', 'writable_tmp_dir', 'debug_mode', 'recursive_get', 'no_bots', 'buffer_size')
+			'settings' => array('html_domain', 'html_root', 'html_name', 'tmp_dir', 'writable_tmp_dir', 'debug_mode', 'recursive_get', 'no_bots', 'buffer_size', 'verbose')
 		),
 		'database' => array(
-			'name' => 'Database',
-			'description' => 'Wrapper module for displaying database configuration',
+			'name' => lang('database title', 'Database'),
+			'description' => lang('database description', 'Wrapper module for displaying database configuration'),
 			'privilage' => 10,
 			'path' => dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'database.php',
 			'settings' => array('db_connect', 'db_type', 'db_server', 'db_user', 'db_pass', 'db_name', 'use_alias')
 		),
 	);
-	$GLOBALS['triggers'] = array('session' => array(), 'settings' => array());
+	$GLOBALS['triggers'] = array(
+		'session' => array(),
+		'settings' => array(),
+		'always output' => array(),
+		'alter query' => array()
+	);
 	
 	// read module list and create a list of available modules	
 	setup_register_modules('modules' . DIRECTORY_SEPARATOR);
@@ -71,6 +77,23 @@ function setup_register()
 	$GLOBALS['modules']['admin_modules'] = $GLOBALS['admin']['modules']['modules'];
 }
 
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ * @return false by default, set to true to record all notices
+ */
+function setting_verbose($settings)
+{
+	if(isset($settings['verbose']))
+	{
+		if($settings['verbose'] === true || $settings['verbose'] === 'true')
+			return true;
+		elseif($settings['verbose'] === false || $settings['verbose'] === 'false')
+			return false;
+	}
+	return false;
+}
 
 /**
  * Implementation of setting
@@ -242,6 +265,16 @@ function setting_buffer_size($settings)
  */
 function setting_settings_file($settings)
 {
+	// return file from where it is supposed to be
+	// check other directories if it doesn't exist there
+	if(!file_exists(dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'settings.ini'))
+	{
+		if(file_exists(dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'settings.ini'))
+			return dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'settings.ini';
+	}
+	
+	// add handling for multiple domains like drupal does
+	
 	return dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'settings.ini';
 }
 
@@ -366,12 +399,12 @@ function configure_index($settings)
 	
 	// domain and root
 	$options['html_domain'] = array(
-		'name' => 'HTML Domain',
+		'name' => lang('html domain title', 'HTML Domain'),
 		'status' => '',
 		'description' => array(
 			'list' => array(
-				'This is the path that you would like to access the site.',
-				'This path is used when someone tries to view the from the wrong path, when this happens, the site can redirect the user to the right place.',
+				lang('html domain description 1', 'This is the path that you would like to access the site.'),
+				lang('html domain description 2', 'This path is used when someone tries to view the from the wrong path, when this happens, the site can redirect the user to the right place.'),
 			),
 		),
 		'type' => 'text',
@@ -379,14 +412,14 @@ function configure_index($settings)
 	);
 
 	$options['html_root'] = array(
-		'name' => 'HTML Root',
+		'name' => lang('html root title', 'HTML Root'),
 		'status' => '',
 		'description' => array(
 			'list' => array(
-				'This is the directory that the site is accessed through.',
-				'This allows the site to run along site another website, in the specified directory.  This is needed so that templates can find the right path to images and styles.',
-				'This path must also end with the HTTP separator /.',
-				'The server reports the DOCUMENT ROOT is ' . $_SERVER['DOCUMENT_ROOT'],
+				lang('html root description 1', 'This is the directory that the site is accessed through.'),
+				lang('html root description 2', 'This allows the site to run along site another website, in the specified directory.  This is needed so that templates can find the right path to images and styles.'),
+				lang('html root description 3', 'This path must also end with the HTTP separator /.'),
+				lang('html root description 4', 'The server reports the DOCUMENT ROOT is ' . $_SERVER['DOCUMENT_ROOT']),
 			),
 		),
 		'type' => 'text',
@@ -395,11 +428,11 @@ function configure_index($settings)
 
 	// site name
 	$options['html_name'] = array(
-		'name' => 'Site Name',
+		'name' => lang('html name title', 'Site Name'),
 		'status' => '',
 		'description' => array(
 			'list' => array(
-				'Some templates can display a name for this media server.  Set this here.',
+				lang('html name description', 'Some templates can display a name for this media server.  Set this here.'),
 			),
 		),
 		'type' => 'text',
@@ -409,11 +442,11 @@ function configure_index($settings)
 	if(setting_writable_tmp_dir($settings))
 	{
 		$options['tmp_dir'] = array(
-			'name' => 'Temporary Files',
+			'name' => lang('tmp dir title', 'Temporary Files'),
 			'status' => '',
 			'description' => array(
 				'list' => array(
-					'This directory will be used for uploaded files and storing temporary files like converted files and images.',
+					lang('tmp dir description', 'This directory will be used for uploaded files and storing temporary files like converted files and images.'),
 				),
 			),
 			'type' => 'text',
@@ -423,12 +456,12 @@ function configure_index($settings)
 	else
 	{
 		$options['tmp_dir'] = array(
-			'name' => 'Temporary Files',
+			'name' => lang('tmp dir title', 'Temporary Files'),
 			'status' => 'fail',
 			'description' => array(
 				'list' => array(
-					'The system has detected that this directory does not exist or is not writable.',
-					'Please correct this error by entering a directory path that exists and is writable by the web server.',
+					lang('tmp dir fail description 1', 'The system has detected that this directory does not exist or is not writable.'),
+					lang('tmp dir fail description 2', 'Please correct this error by entering a directory path that exists and is writable by the web server.'),
 				),
 			),
 			'type' => 'text',
@@ -437,63 +470,63 @@ function configure_index($settings)
 	}
 	
 	$options['debug_mode'] = array(
-		'name' => 'Debug Mode',
+		'name' => lang('debug mode title', 'Debug Mode'),
 		'status' => '',
 		'description' => array(
 			'list' => array(
-				'Debug mode is used by many templates to display debugging options on the page.',
-				'This is usefull for viewing information about file system and database problems and to test if the system is running properly.',
+				lang('debug mode description 1', 'Debug mode is used by many templates to display debugging options on the page.'),
+				lang('debug mode description 2', 'This is usefull for viewing information about file system and database problems and to test if the system is running properly.'),
 			),
 		),
 		'type' => 'boolean',
 		'value' => $settings['debug_mode'],
 		'options' => array(
-			'Turn Debug Mode On',
-			'Do Not Use Debug Mode',
+			lang('debug mode option 1', 'Turn Debug Mode On'),
+			lang('debug mode option 2', 'Do Not Use Debug Mode'),
 		)
 	);
 	
 	$options['recursive_get'] = array(
-		'name' => 'Deep Select',
+		'name' => lang('recursive get title', 'Deep Select'),
 		'status' => '',
 		'description' => array(
 			'list' => array(
-				'This tells to system whether or not it should read directories on the fly and recursively.',
-				'If some files in a directory haven\'t been loaded, this will load them when the directory is accessed.',
-				'On large systems, this could cause page response to be VERY SLOW.  This option is not recommended for system where files change a lot.',
+				lang('recursive get description 1', 'This tells to system whether or not it should read directories on the fly and recursively.'),
+				lang('recursive get description 2', 'If some files in a directory haven\'t been loaded, this will load them when the directory is accessed.'),
+				lang('recursive get description 3', 'On large systems, this could cause page response to be VERY SLOW.  This option is not recommended for system where files change a lot.'),
 			),
 		),
 		'type' => 'boolean',
 		'value' => $settings['recursive_get'],
 		'options' => array(
-			'Turn Deep Select On',
-			'Do Not Use Deep Select',
+			lang('recursive get option 1', 'Turn Deep Select On'),
+			lang('recursive get option 2', 'Do Not Use Deep Select'),
 		)
 	);
 	
 	$options['no_bots'] = array(
-		'name' => 'Robots Handling',
+		'name' => lang('no bots title', 'Robots Handling'),
 		'status' => '',
 		'description' => array(
 			'list' => array(
-				'Some services like Google like to scan websites.  This option will prevent robots from downloading and scanning files on your site.',
-				'This will also enable robots to view a customizable sitemap.php module that provides them with the information they deserve.',
+				lang('no bots description 1', 'Some services like Google like to scan websites.  This option will prevent robots from downloading and scanning files on your site.'),
+				lang('no bots description 2', 'This will also enable robots to view a customizable sitemap.php module that provides them with the information they deserve.'),
 			),
 		),
 		'type' => 'boolean',
 		'value' => $settings['no_bots'],
 		'options' => array(
-			'Disable Robots',
-			'Allow Robots to Scan my Files',
+			lang('no bots option 1', 'Disable Robots'),
+			lang('no bots option 2', 'Allow Robots to Scan my Files'),
 		)
 	);
 	
 	$options['buffer_size'] = array(
-		'name' => 'Buffer Size',
+		'name' => lang('buffer size title', 'Buffer Size'),
 		'status' => '',
 		'description' => array(
 			'list' => array(
-				'Some modules and modules require open file streams of a specific size.  This allows you to set what size these streams should try to remain below.',
+				lang('buffer size description', 'Some modules and modules require open file streams of a specific size.  This allows you to set what size these streams should try to remain below.'),
 			),
 		),
 		'type' => 'filesize',
@@ -516,12 +549,12 @@ function configure_core($settings)
 	
 	// system type
 	$options['system_type'] = array(
-		'name' => 'System Type',
+		'name' => lang('system type title', 'System Type'),
 		'status' => '',
 		'description' => array(
 			'list' => array(
-				'The system has detected that you are running ' . (($settings['system_type']=='win')?'Windows':(($settings['system_type']=='nix')?'Linux or Unix':'Mac OS')) . '.',
-				'If this is not correct, you must specify the system type so the media server can be optimized for your system.',
+				lang('system type description 1', 'The system has detected that you are running ' . (($settings['system_type']=='win')?'Windows':(($settings['system_type']=='nix')?'Linux or Unix':'Mac OS')) . '.'),
+				lang('system type description 2', 'If this is not correct, you must specify the system type so the media server can be optimized for your system.'),
 			),
 		),
 		'type' => 'select',
@@ -537,11 +570,11 @@ function configure_core($settings)
 	if(setting_writable_settings_file($settings))
 	{
 		$options['writable_settings_file'] = array(
-			'name' => 'Access to Settings',
+			'name' => lang('settings access title', 'Access to Settings'),
 			'status' => '',
 			'description' => array(
 				'list' => array(
-					'The system has detected that is has access to the settings file.  Write permissions should be removed when this installation is complete.',
+					lang('settings access description', 'The system has detected that is has access to the settings file.  Write permissions should be removed when this installation is complete.'),
 				),
 			),
 			'type' => 'text',
@@ -552,12 +585,12 @@ function configure_core($settings)
 	else
 	{
 		$options['writable_settings_file'] = array(
-			'name' => 'Access to Settings',
+			'name' => lang('settings access title', 'Access to Settings'),
 			'status' => 'fail',
 			'description' => array(
 				'list' => array(
-					'The system would like access to the following file.  This is so it can write all the settings when we are done with the install.',
-					'Please create this file, and grant it Read/Write permissions.',
+					lang('settings access fail description 1', 'The system would like access to the following file.  This is so it can write all the settings when we are done with the install.'),
+					lang('settings access fail description 2', 'Please create this file, and grant it Read/Write permissions.'),
 				),
 			),
 			'type' => 'text',
@@ -957,20 +990,39 @@ function setup_register_modules($path)
 				}
 				
 				// reorganize the session triggers for easy access
-				if(isset($modules[$module]['session']))
+				if(isset($modules[$module]['session']) && is_array($modules[$module]['session']))
 				{
 					foreach($modules[$module]['session'] as $i => $var)
 					{
-						$GLOBALS['triggers']['session'][$var][] = $prefix . $module;
+						if(is_numeric($i))
+							$GLOBALS['triggers']['session'][$var][$module] = 'session_' . $prefix . $module;
+						elseif(is_callable($var))
+							$GLOBALS['triggers']['session'][$i][$module] = $var;
 					}
 				}
 				
 				// reorganize alter query triggers
-				if(isset($modules[$module]['alter query']))
+				if(isset($modules[$module]['alter query']) && is_array($modules[$module]['alter query']))
 				{
 					foreach($modules[$module]['alter query'] as $i => $var)
 					{
-						$GLOBALS['triggers']['alter query'][$var][] = $prefix . $module;
+						if(is_numeric($i))
+							$GLOBALS['triggers']['alter query'][$var][$module] = 'alter_query_' . $prefix . $module;
+						elseif(is_callable($var))
+							$GLOBALS['triggers']['alter query'][$i][$module] = $var;
+					}
+				}
+				
+				// reorganize alter query triggers
+				if(isset($modules[$module]['always output']) && is_array($modules[$module]['always output']))
+				{
+					// for named arrays, the key variable will call the named function
+					foreach($modules[$module]['always output'] as $i => $var)
+					{
+						if(is_numeric($i))
+							$GLOBALS['triggers']['always output'][$var][$module] = 'output_' . $prefix . $module;
+						elseif(is_callable($var))
+							$GLOBALS['triggers']['always output'][$i][$module] = $var;
 					}
 				}
 			}
@@ -1018,7 +1070,7 @@ function setup_validate()
 	}
 	
 	// call the session save functions
-	session($_REQUEST);
+	setup_session($_REQUEST);
 	
 	// do not let GoogleBot perform searches or file downloads
 	if($GLOBALS['settings']['no_bots'])
@@ -1046,6 +1098,25 @@ function setup_validate()
 	}
 }
 
+ 
+/**
+ * Set up the triggers for saving a session
+ * @ingroup setup
+ */
+function setup_session($request = array())
+{
+	// check modules for vars and trigger a session save
+	foreach($request as $key => $value)
+	{
+		if(isset($GLOBALS['triggers']['session'][$key]))
+		{
+			foreach($GLOBALS['triggers']['session'][$key] as $module => $function)
+			{
+				$_SESSION[$module] = call_user_func_array($function, array($request));
+			}
+		}
+	}
+}
 
 /**
  * @defgroup session Session Save Functions
@@ -1054,23 +1125,22 @@ function setup_validate()
  * @return An associative array to be saved to $_SESSION[&lt;module&gt;] = session_select($request);
  * @{
  */
- 
+
 /**
- * Save session information based on triggers specified by a module configuration
+ * Save and get information from the session
+ * @return the session variable trying to be accessed
  */
-function session($request = array())
+function session($varname)
 {
-	// check modules for vars and trigger a session save
-	foreach($request as $key => $value)
+	$args = func_get_args();
+	
+	if(count($args = 2))
 	{
-		if(isset($GLOBALS['triggers']['session'][$key]))
-		{
-			foreach($GLOBALS['triggers']['session'][$key] as $i => $module)
-			{
-				$_SESSION[$module] = call_user_func_array('session_' . $module, array($request));
-			}
-		}
+		// they must be trying to set a value to the session
 	}
+	
+	if(isset($_SESSION[$varname]))
+		return $_SESSION[$varname];
 }
 
 /**
@@ -1239,18 +1309,12 @@ function goto($request)
 }
 
 /**
- * Function to call before the template is called, this can also be called from the first time #theme() is called
- * This sets all the register variables as HTML or original content, it also removes all unnecissary variables that might be used to penetrate the site
+ * Implementation of always output
+ * @ingroup output
  */
-function set_output_vars()
+function core_variables()
 {
 	// set a couple more that are used a lot
-	
-	// if the search is set, then alway output because any module that uses a get will also use search
-	if(isset($_REQUEST['search']))
-	{
-		output_search($_REQUEST);
-	}
 	
 	// the entire site depends on this
 	register_output_vars('module', $_REQUEST['module']);
@@ -1273,6 +1337,7 @@ function set_output_vars()
 	// register user settings for this template
 	if(isset($_SESSION['user']['settings']['templates'][$_REQUEST['template']]))
 		register_output_vars('settings', $_SESSION['user']['settings']['templates'][$_REQUEST['template']]);
+	
 	// go through and set the defaults
 	elseif(isset($GLOBALS['templates'][$_REQUEST['template']]['settings']))
 	{
@@ -1284,7 +1349,35 @@ function set_output_vars()
 		}
 		register_output_vars('settings', $settings);
 	}
+}
+
+/**
+ * Function to call before the template is called, this can also be called from the first time #theme() is called
+ * This sets all the register variables as HTML or original content, it also removes all unnecissary variables that might be used to penetrate the site
+ */
+function set_output_vars()
+{
+	// modules can specify variables to trigger their output function if they should always be outputted, even if that module isn't being called directly
+	foreach($GLOBALS['modules'] as $module => $config)
+	{
+		if(isset($config['always output']) && $config['always output'] === true)
+			call_user_func_array('output_' . $module, array($_REQUEST));
+		elseif(isset($config['always output']) && is_callable($config['always output']))
+			call_user_func_array($config['always output'], array($_REQUEST));
+	}
 	
+	// triggers for always output can also be set
+	foreach($_REQUEST as $key => $value)
+	{
+		if(isset($GLOBALS['triggers']['always output'][$key]))
+		{
+			foreach($GLOBALS['triggers']['always output'][$key] as $module => $function)
+			{
+				$_SESSION[$module] = call_user_func_array($function, array($_REQUEST));
+			}
+		}
+	}
+
 	// do not remove these variables
 	$dont_remove = array(
 		'GLOBALS',
@@ -1292,6 +1385,7 @@ function set_output_vars()
 		'_SESSION', // purely for error handling
 		'templates',
 		'errors',
+		'language_buffer',
 		'debug_errors',
 		'user_errors',
 		'warn_errors',

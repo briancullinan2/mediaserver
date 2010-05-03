@@ -21,7 +21,8 @@ function register_search()
 		'privilage' => 1,
 		'path' => __FILE__,
 		'session' => array('search'),
-		'alter query' => array('search')
+		'alter query' => array('search'),
+		'always output' => array('search'),
 	);
 }
 

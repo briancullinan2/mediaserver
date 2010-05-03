@@ -7,8 +7,8 @@
 function register_admin_install()
 {
 	return array(
-		'name' => 'Install Setup',
-		'description' => 'Install the system.',
+		'name' => lang('install title', 'Install Setup'),
+		'description' => lang('install title', 'Install the system.'),
 		'privilage' => 10,
 		'path' => __FILE__,
 		'notemplate' => true,

@@ -7,8 +7,8 @@
 function register_convert()
 {
 	return array(
-		'name' => 'Image Converter',
-		'description' => 'Convert images to different formats.',
+		'name' => lang('convert title', 'Image Converter'),
+		'description' => lang('convert description', 'Convert images to different formats.'),
 		'privilage' => 1,
 		'path' => __FILE__,
 		'notemplate' => true,
@@ -30,13 +30,13 @@ function configure_convert($settings)
 	if(file_exists($settings['convert_path']))
 	{
 		$options['convert_path'] = array(
-			'name' => 'Convert Path',
+			'name' => lang('convert path title', 'Convert Path'),
 			'status' => '',
 			'description' => array(
 				'list' => array(
-					'A converter has been set and detected, you may change this path to specify a new converter.',
-					'The system needs some sort of image converter for creating thumbnails of images and outputting images as different file types.',
-					'The converter detected is "' . basename($settings['convert_path']) . '".',
+					lang('convert path description 1', 'A converter has been set and detected, you may change this path to specify a new converter.'),
+					lang('convert path description 2', 'The system needs some sort of image converter for creating thumbnails of images and outputting images as different file types.'),
+					lang('convert path description 3', 'The converter detected is "' . basename($settings['convert_path']) . '".'),
 				),
 			),
 			'type' => 'text',
@@ -46,12 +46,12 @@ function configure_convert($settings)
 	else
 	{
 		$options['convert_path'] = array(
-			'name' => 'Convert Path',
+			'name' => lang('convert path title', 'Convert Path'),
 			'status' => 'fail',
 			'description' => array(
 				'list' => array(
-					'The system needs some sort of image converter for creating thumbnails of images and outputting images as different file types.',
-					'This convert could be ImageMagik.',
+					lang('convert path fail description 1', 'The system needs some sort of image converter for creating thumbnails of images and outputting images as different file types.'),
+					lang('convert path fail description 2', 'This convert could be ImageMagik.'),
 				),
 			),
 			'type' => 'text',
@@ -60,17 +60,17 @@ function configure_convert($settings)
 	}
 	
 	$options['convert_args'] = array(
-		'name' => 'Convert Arguments',
+		'name' => lang('convert args title', 'Convert Arguments'),
 		'status' => '',
 		'description' => array(
 			'list' => array(
-				'Specify the string of arguments to pass to the converter.',
-				'Certain keys in the argument string will be replaced with dynamic values by the encode plugin:
-				%IF - Input file, the filename that will be inserted for transcoding<br />
-				%FM - Format to output<br />
-				%TH - Thumbnail height<br />
-				%TW - Thumbnail width<br />
-				%OF - Output file if necissary',
+				lang('convert args description 1', 'Specify the string of arguments to pass to the converter.'),
+				lang('convert args description 2', 'Certain keys in the argument string will be replaced with dynamic values by the encode plugin:') . '<br />
+				%IF - ' . lang('convert args input file', 'Input file, the filename that will be inserted for transcoding') . '<br />
+				%FM - ' . lang('convert args format', 'Format to output') . '<br /> 
+				%TH - ' . lang('convert args height', 'Thumbnail height') . '<br />
+				%TW - ' . lang('convert args width', 'Thumbnail width') . '<br />
+				%OF - ' . lang('convert args output file', 'Output file if necissary'),
 			),
 		),
 		'type' => 'text',
@@ -204,7 +204,7 @@ function output_convert($request)
 	$request['convert'] = validate_convert($request);
 	$request['cheight'] = validate_cheight($request);
 	$request['cwidth'] = validate_cwidth($request);
-	$request['cformat'] = validate_cwidth($request);
+	$request['cformat'] = validate_cformat($request);
 	$request['cat'] = validate_cat($request);
 
 	switch($request['convert'])

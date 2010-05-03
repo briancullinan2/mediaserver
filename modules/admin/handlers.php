@@ -18,8 +18,8 @@ function register_admin_handlers()
 	}
 	
 	return array(
-		'name' => 'File Handlers',
-		'description' => 'Display a list of file handlers and allow for enabling and disabling.',
+		'name' => lang('handlers title', 'File Handlers'),
+		'description' => lang('handlers description', 'Display a list of file handlers and allow for enabling and disabling.'),
 		'privilage' => 10,
 		'path' => __FILE__,
 		'settings' => $handler_func,

@@ -7,8 +7,8 @@
 function register_admin_tools()
 {
 	return array(
-		'name' => 'Tools',
-		'description' => 'Tools for manipulating the database and viewing different types of information about the system.',
+		'name' => lang('tools title', 'Tools'),
+		'description' => lang('tools description', 'Tools for manipulating the database and viewing different types of information about the system.'),
 		'privilage' => 10,
 		'path' => __FILE__,
 		'modules' => setup_register_modules('modules' . DIRECTORY_SEPARATOR . 'admin' . DIRECTORY_SEPARATOR . 'tools' . DIRECTORY_SEPARATOR)

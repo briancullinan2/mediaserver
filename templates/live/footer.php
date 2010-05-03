@@ -46,6 +46,9 @@ function theme_live_footer()
 									</ul>
 								</td>
 							</tr>
+							<tr>
+								<td align="center">Powered by <a href="http://www.monolithicmedia.org/" style="text-decoration:none;"><img style="border:0px;" src="http://www.monolithicmedia.org/favicon.ico" />MonolithicMedia.org</a></td>
+							</tr>
 						</table>
 					</div>
 				</div>

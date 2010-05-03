@@ -7,8 +7,8 @@
 function register_archive()
 {
 	return array(
-		'name' => 'Archive Generator',
-		'description' => 'Convert sets of files to an archive using a command line program.',
+		'name' => lang('archive title', 'Archive Generator'),
+		'description' => lang('archive description', 'Convert sets of files to an archive using a command line program.'),
 		'privilage' => 1,
 		'path' => __FILE__
 	);

@@ -11,7 +11,7 @@ else
 {
 	// something has gone terribly wrong, disable database and notify administrator
 	$GLOBALS['settings']['use_database'] = false;
-	if(!defined('NOT_INSTALLED')) define('NOT_INSTALLED', true);
+	define('NOT_INSTALLED', true);
 	PEAR::raiseError('Use database is turned on but adoDB is missing!', E_DEBUG|E_USER|E_FATAL);
 }
 
@@ -28,6 +28,115 @@ else
 // scalability (add a calendar handler? rss-handler?)
 
  */
+
+/**
+ * Set up the list of aliases from the database
+ * @ingroup setup
+ */
+function setup_aliases()
+{
+	// get the aliases to use to replace parts of the filepath
+	$GLOBALS['paths_regexp'] = array();
+	$GLOBALS['alias_regexp'] = array();
+	$GLOBALS['paths'] = array();
+	$GLOBALS['alias'] = array();
+	if($GLOBALS['settings']['use_database'] && $GLOBALS['settings']['use_alias'] == true)
+	{
+		$aliases = $GLOBALS['database']->query(array('SELECT' => 'alias'), false);
+		
+		if($aliases !== false)
+		{
+			foreach($aliases as $key => $alias_props)
+			{
+				$GLOBALS['paths_regexp'][] = $alias_props['Paths_regexp'];
+				$GLOBALS['alias_regexp'][] = $alias_props['Alias_regexp'];
+				$GLOBALS['paths'][] = $alias_props['Filepath'];
+				$GLOBALS['alias'][] = $alias_props['Alias'];
+			}
+		}
+	}
+	
+}
+
+/**
+ * Scan handlers directory and load all of the handlers that handle files
+ * @ingroup setup
+ */
+function setup_handlers()
+{
+	
+	// include the handlers
+	$tmp_handlers = array();
+	if ($dh = @opendir($GLOBALS['settings']['local_root'] . 'handlers' . DIRECTORY_SEPARATOR))
+	{
+		while (($file = readdir($dh)) !== false)
+		{
+			// filter out only the handlers for our $GLOBALS['settings']['use_database'] setting
+			if ($file[0] != '.' && !is_dir($GLOBALS['settings']['local_root'] . 'handlers' . DIRECTORY_SEPARATOR . $file))
+			{
+				$class_name = substr($file, 0, strrpos($file, '.'));
+				if(!defined(strtoupper($class_name) . '_ENABLED') || constant(strtoupper($class_name) . '_ENABLED') != false)
+				{
+					// include all the handlers
+					include_once $GLOBALS['settings']['local_root'] . 'handlers' . DIRECTORY_SEPARATOR . $file;
+					
+					// only use the handler if it is properly defined
+					if(class_exists($class_name))
+					{
+						if(substr($file, 0, 3) == ($GLOBALS['settings']['use_database']?'db_':'fs_'))
+							$tmp_handlers[] = $class_name;
+					}
+				}
+			}
+		}
+		closedir($dh);
+	}
+	
+	$error_count = 0;
+	$new_handlers = array();
+	
+	// reorganize handlers to reflect heirarchy
+	while(count($tmp_handlers) > 0 && $error_count < 1000)
+	{
+		foreach($tmp_handlers as $i => $handler)
+		{
+			$tmp_override = get_parent_class($handler);
+			if(in_array($tmp_override, $new_handlers) || $tmp_override == '')
+			{
+				$new_handlers[] = $handler;
+				unset($tmp_handlers[$i]);
+			}
+		}
+		$error_count++;
+	}
+	$GLOBALS['handlers'] = $new_handlers;
+}
+
+
+/**
+ * Create a GLOBAL list of tables used by all the handlers
+ * @ingroup setup
+ */
+function setup_tables()
+{
+	// loop through each handler and compile a list of databases
+	$GLOBALS['tables'] = array();
+	if($GLOBALS['settings']['use_database'])
+	{
+		foreach($GLOBALS['handlers'] as $i => $handler)
+		{
+			if(defined($handler . '::DATABASE'))
+				$GLOBALS['tables'][] = constant($handler . '::DATABASE');
+		}
+		$GLOBALS['tables'] = array_values(array_unique($GLOBALS['tables']));
+		
+		// get watched and ignored directories because they are used a lot
+		$GLOBALS['ignored'] = db_watch::get(array('search_Filepath' => '/^!/'), $count);
+		$GLOBALS['watched'] = db_watch::get(array('search_Filepath' => '/^\\^/'), $count);
+		// always add user local to watch list
+		$GLOBALS['watched'][] = array('id' => 0, 'Filepath' => str_replace('\\', '/', $GLOBALS['settings']['local_users']));
+	}
+}
 
 /**
  * Implementation of setting
@@ -318,12 +427,13 @@ class database
 		if(function_exists('ADONewConnection'))
 		{
 			$this->db_conn = ADONewConnection($connect_str);  # no need for Connect()
-			$this->db_conn->SetFetchMode(ADODB_FETCH_ASSOC);
+			if($this->db_conn !== false) $this->db_conn->SetFetchMode(ADODB_FETCH_ASSOC);
 		}
 		
-		if(!isset($this->db_conn) || $this->db_conn == false)
+		if(!isset($this->db_conn) || $this->db_conn === false)
 		{
 			$GLOBALS['settings']['use_database'] = false;
+			define('NOT_INSTALLED', true);
 			PEAR::raiseError('Something has gone wrong with the connection!', E_DEBUG|E_USER|E_FATAL);
 		}
 	}

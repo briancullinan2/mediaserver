@@ -164,7 +164,7 @@ function theme_live_errors()
 		?>
 		<div id="errors"></div>
 		<script language="javascript">
-		$("#errors").load('<?php print url('module=index&errors_only=true'); ?>');
+		$("#errors").load('<?php print url('module=index&errors_only=true', true); ?>');
 		</script>
 		<?php
 	}
@@ -173,9 +173,19 @@ function theme_live_errors()
 		if(count($GLOBALS['warn_errors']) > 0)
 		{
 			?><div style="border:2px solid #CC0; background-color:#FF9;"><?php
-			foreach($GLOBALS['warn_errors'] as $error)
+			foreach($GLOBALS['warn_errors'] as $i => $error)
 			{
+				if($i == 5)
+				{
+					?><div id="warn_errors" class="error hide"><?php
+				}
 				?><b><?php print $error->message; ?></b><br /><?php
+			}
+			if(count($GLOBALS['warn_errors']) > 4)
+			{
+				?></div>
+				And <?php print count($GLOBALS['warn_errors']); ?> more: <a href="javascript:return true;" onClick="if(this.hidden == false) { document.getElementById('warn_errors').className='error hide'; this.hidden=true; this.innerHTML = 'Un Hide'; } else { document.getElementById('warn_errors').className='error'; this.hidden=false; this.innerHTML = 'Hide'; }">Un Hide</a>
+				<?php
 			}
 			?></div><?php
 		}
@@ -183,9 +193,19 @@ function theme_live_errors()
 		if(count($GLOBALS['user_errors']) > 0)
 		{
 			?><div style="border:2px solid #C00; background-color:#F99;"><?php
-			foreach($GLOBALS['user_errors'] as $error)
+			foreach($GLOBALS['user_errors'] as $i => $error)
 			{
+				if($i == 5)
+				{
+					?><div id="user_errors" class="error hide"><?php
+				}
 				?><b><?php print $error->message; ?></b><br /><?php
+			}
+			if(count($GLOBALS['user_errors']) > 4)
+			{
+				?></div>
+				And <?php print count($GLOBALS['user_errors']); ?> more: <a href="javascript:return true;" onClick="if(this.hidden == false) { document.getElementById('user_errors').className='error hide'; this.hidden=true; this.innerHTML = 'Un Hide'; } else { document.getElementById('user_errors').className='error'; this.hidden=false; this.innerHTML = 'Hide'; }">Un Hide</a>
+				<?php
 			}
 			?></div><?php
 		}
@@ -193,9 +213,19 @@ function theme_live_errors()
 		if(count($GLOBALS['note_errors']) > 0)
 		{
 			?><div style="border:2px solid #09F; background-color:#CEF;"><?php
-			foreach($GLOBALS['note_errors'] as $error)
+			foreach($GLOBALS['note_errors'] as $i => $error)
 			{
+				if($i == 5)
+				{
+					?><div id="note_errors" class="error hide"><?php
+				}
 				?><b><?php print $error->message; ?></b><br /><?php
+			}
+			if(count($GLOBALS['note_errors']) > 4)
+			{
+				?></div>
+				And <?php print count($GLOBALS['note_errors']); ?> more: <a href="javascript:return true;" onClick="if(this.hidden == false) { document.getElementById('note_errors').className='error hide'; this.hidden=true; this.innerHTML = 'Un Hide'; } else { document.getElementById('note_errors').className='error'; this.hidden=false; this.innerHTML = 'Hide'; }">Un Hide</a>
+				<?php
 			}
 			?></div><?php
 		}

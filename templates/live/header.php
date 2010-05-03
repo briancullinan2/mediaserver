@@ -113,7 +113,7 @@ function theme_live_debug_block()
 			<?php
 		}
 		?>
-		<a onClick="if(this.hidden == false) { document.getElementById('debug').className='debug hide'; this.hidden=true; this.innerHTML = 'Un Hide'; } else { document.getElementById('debug').className='debug'; this.hidden=false; this.innerHTML = 'Hide'; }">Un Hide</a>
+		<a href="javascript:return true;" onClick="if(this.hidden == false) { document.getElementById('debug').className='debug hide'; this.hidden=true; this.innerHTML = 'Un Hide'; } else { document.getElementById('debug').className='debug'; this.hidden=false; this.innerHTML = 'Hide'; }">Un Hide</a>
 		<?php
 	}
 	else
@@ -234,6 +234,19 @@ function live_get_theme_color()
 	return $theme;
 }
 
+function theme_live_languages()
+{
+	?><div id="languages" style="float:right;">
+	Language: <select name="language" onchange="window.location.href='<?php print url($GLOBALS['templates']['var']['get'] . '?language='); ?>' + this.value;">
+	<?php
+	foreach($GLOBALS['templates']['vars']['languages'] as $code => $language)
+	{
+		?><option value="<?php print $code; ?>" <?php print ($GLOBALS['templates']['vars']['language'] == $code)?'selected="selected"':''; ?>><?php print $language; ?></option><?php
+	}
+	
+	?></select></div><?php
+}
+
 function theme_live_body()
 {
 	$theme = live_get_theme_color();
@@ -253,6 +266,7 @@ function theme_live_body()
 				</tr>
 			</table>
 <?php if(setting('debug_mode')) theme('debug_block'); ?>
+			<?php theme('languages'); ?>
 			<div id="container">
 				<table width="100%" cellpadding="5" cellspacing="0">
 					<tr>

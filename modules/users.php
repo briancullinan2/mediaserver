@@ -78,7 +78,7 @@ function setup_user()
 	{
 		$_SESSION['user'] = array(
 			'Username' => 'admin',
-			'Privilage' => 10
+			'Privilage' => 1
 		);
 	}
 	

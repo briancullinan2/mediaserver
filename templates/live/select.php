@@ -120,7 +120,16 @@ function theme_live_files()
 					<tr>
 						<td>
 							<div class="thumb file_ext_<?php print $file['Filetype']; ?> file_type_<?php print isset($file['Filemime'])?str_replace('/', ' file_type_', $file['Filemime']):''; ?>">
-								<img src="<?php print url('module=template&tfile=images/s.gif&template=' . setting('local_template')); ?>" alt="<?php print $file['Filetype']; ?>" height="48" width="48">
+								<?php
+								if(handles($file['Filepath'], 'image'))
+								{
+									?><img src="<?php print url('module=template&tfile=images/s.gif&template=' . setting('local_template')); ?>" alt="<?php print $file['Filetype']; ?>" style="background-image:url(<?php print url('module=convert&convert=png&cheight=56&cwidth=56&id=' . $file['id']); ?>);" height="48" width="48"><?php
+								}
+								else
+								{
+									?><img src="<?php print url('module=template&tfile=images/s.gif&template=' . setting('local_template')); ?>" alt="<?php print $file['Filetype']; ?>" height="48" width="48"><?php
+								}
+								?>
 							</div>
 						</td>
 					</tr>

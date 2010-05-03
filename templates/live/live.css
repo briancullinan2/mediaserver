@@ -28,6 +28,11 @@ body {
 	visibility:hidden;
 }
 
+.error.hide b, .error.hide br {
+	display:none;
+	visibility:hidden;
+}
+
 #selector {
 	-moz-opacity:.25;
 	opacity: .25;

@@ -1,3 +1,17 @@
+2010-05-02
+Fixed huge vulnerability in the template output, validate_tfile() now checks to make sure the file is within the template directory
+Fixed vulnerability with something going wrong with the database and switching to fs_ mode
+	fs_file now returns empty if the system thinks it is not installed
+Began implementing language module
+Worked more on translating
+
+2010-05-01
+Config for modules now supports named keys for session, alter_query, and always output functions
+	Always output will call an output function if a variable is set in the request
+		This is useful for templates to use variables set by core, search, and now language
+	The keys can be named as variables set to the string name of a function to call when that particular variable is present
+		That way, modules can branch out and not just have their output function called
+
 2010-04-29
 Settings validation functions can now be defined in GLOBALS just like request validation functions
 Fixed bug in template plugin configuration

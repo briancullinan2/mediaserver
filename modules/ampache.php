@@ -7,8 +7,8 @@
 function register_ampache()
 {
 	return array(
-		'name' => 'Ampache Compatibility',
-		'description' => 'Compatibility support for the Ampache XMLRPC protocol.',
+		'name' => lang('ampache title', 'Ampache Compatibility'),
+		'description' => lang('ampache description', 'Compatibility support for the Ampache XMLRPC protocol.'),
 		'privilage' => 1,
 		'path' => __FILE__
 	);

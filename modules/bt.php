@@ -8,8 +8,8 @@
 function register_bt()
 {
 	return array(
-		'name' => 'BitTorrent Creator',
-		'description' => 'Bittorrent module that creates torrents for files or directories so users can share downloads with each other.',
+		'name' => lang('bt title', 'BitTorrent Creator'),
+		'description' => lang('bt description', 'Bittorrent module that creates torrents for files or directories so users can share downloads with each other.'),
 		'privilage' => 1,
 		'path' => __FILE__,
 		'notemplate' => true

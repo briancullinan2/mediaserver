@@ -43,5 +43,3 @@ $_SESSION['errors']['user'] = $GLOBALS['user_errors'];
 $_SESSION['errors']['warn'] = $GLOBALS['warn_errors'];
 $_SESSION['errors']['debug'] = $GLOBALS['debug_errors'];
 $_SESSION['errors']['note'] = $GLOBALS['note_errors'];
-
-?>

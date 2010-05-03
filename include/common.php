@@ -75,6 +75,8 @@ include_once $GLOBALS['settings']['local_root'] . 'include' . DIRECTORY_SEPARATO
 
 /** require core functionality */
 include_once $GLOBALS['settings']['local_root'] . 'modules' . DIRECTORY_SEPARATOR . 'core.php';
+include_once $GLOBALS['settings']['local_root'] . 'modules' . DIRECTORY_SEPARATOR . 'settings.php';
+include_once $GLOBALS['settings']['local_root'] . 'modules' . DIRECTORY_SEPARATOR . 'language.php';
 
 include_once 'MIME' . DIRECTORY_SEPARATOR . 'Type.php';
 
@@ -162,124 +164,21 @@ function setup()
 		unset($_SESSION['last_request']);
 	}
 	
+	// set up languages
+	setup_language();
+	
 	// set up list of tables
 	setup_tables();
+	
+	// set up the template system for outputting
+	setup_template();
 
 	// set up variables passed to the system in the request or post
 	setup_validate();
 	
-	// set up the template system for outputting
-	setup_template();
-	
 	// set up users for permission based access
 	setup_user();
 
-}
-
-/**
- * Set up the list of aliases from the database
- */
-function setup_aliases()
-{
-	// get the aliases to use to replace parts of the filepath
-	$GLOBALS['paths_regexp'] = array();
-	$GLOBALS['alias_regexp'] = array();
-	$GLOBALS['paths'] = array();
-	$GLOBALS['alias'] = array();
-	if($GLOBALS['settings']['use_database'] && $GLOBALS['settings']['use_alias'] == true)
-	{
-		$aliases = $GLOBALS['database']->query(array('SELECT' => 'alias'), false);
-		
-		if($aliases !== false)
-		{
-			foreach($aliases as $key => $alias_props)
-			{
-				$GLOBALS['paths_regexp'][] = $alias_props['Paths_regexp'];
-				$GLOBALS['alias_regexp'][] = $alias_props['Alias_regexp'];
-				$GLOBALS['paths'][] = $alias_props['Filepath'];
-				$GLOBALS['alias'][] = $alias_props['Alias'];
-			}
-		}
-	}
-	
-}
-
-/**
- * Scan handlers directory and load all of the handlers that handle files
- */
-function setup_handlers()
-{
-	
-	// include the handlers
-	$tmp_handlers = array();
-	if ($dh = @opendir($GLOBALS['settings']['local_root'] . 'handlers' . DIRECTORY_SEPARATOR))
-	{
-		while (($file = readdir($dh)) !== false)
-		{
-			// filter out only the handlers for our $GLOBALS['settings']['use_database'] setting
-			if ($file[0] != '.' && !is_dir($GLOBALS['settings']['local_root'] . 'handlers' . DIRECTORY_SEPARATOR . $file))
-			{
-				$class_name = substr($file, 0, strrpos($file, '.'));
-				if(!defined(strtoupper($class_name) . '_ENABLED') || constant(strtoupper($class_name) . '_ENABLED') != false)
-				{
-					// include all the handlers
-					include_once $GLOBALS['settings']['local_root'] . 'handlers' . DIRECTORY_SEPARATOR . $file;
-					
-					// only use the handler if it is properly defined
-					if(class_exists($class_name))
-					{
-						if(substr($file, 0, 3) == ($GLOBALS['settings']['use_database']?'db_':'fs_'))
-							$tmp_handlers[] = $class_name;
-					}
-				}
-			}
-		}
-		closedir($dh);
-	}
-	
-	$error_count = 0;
-	$new_handlers = array();
-	
-	// reorganize handlers to reflect heirarchy
-	while(count($tmp_handlers) > 0 && $error_count < 1000)
-	{
-		foreach($tmp_handlers as $i => $handler)
-		{
-			$tmp_override = get_parent_class($handler);
-			if(in_array($tmp_override, $new_handlers) || $tmp_override == '')
-			{
-				$new_handlers[] = $handler;
-				unset($tmp_handlers[$i]);
-			}
-		}
-		$error_count++;
-	}
-	$GLOBALS['handlers'] = $new_handlers;
-}
-
-
-/**
- * Create a GLOBAL list of tables used by all the handlers
- */
-function setup_tables()
-{
-	// loop through each handler and compile a list of databases
-	$GLOBALS['tables'] = array();
-	if($GLOBALS['settings']['use_database'])
-	{
-		foreach($GLOBALS['handlers'] as $i => $handler)
-		{
-			if(defined($handler . '::DATABASE'))
-				$GLOBALS['tables'][] = constant($handler . '::DATABASE');
-		}
-		$GLOBALS['tables'] = array_values(array_unique($GLOBALS['tables']));
-		
-		// get watched and ignored directories because they are used a lot
-		$GLOBALS['ignored'] = db_watch::get(array('search_Filepath' => '/^!/'), $count);
-		$GLOBALS['watched'] = db_watch::get(array('search_Filepath' => '/^\\^/'), $count);
-		// always add user local to watch list
-		$GLOBALS['watched'][] = array('id' => 0, 'Filepath' => str_replace('\\', '/', $GLOBALS['settings']['local_users']));
-	}
 }
 
 /**
@@ -303,6 +202,13 @@ function output($request)
 		)
 	{
 		theme();
+	}
+	// translate the language buffer
+	$lang = validate_language($_REQUEST);
+	if($lang != 'en')
+	{
+		// find a place to store this
+		$_SESSION['translated'] = array_merge($_SESSION['translated'], array_combine(array_keys($GLOBALS['language_buffer']), translate($GLOBALS['language_buffer'], $lang)));
 	}
 }
 
@@ -826,10 +732,22 @@ function kill9($command, $startpid, $limit = 2)
  */
 function php_to_PEAR_Error($error_code, $error_str, $error_file, $error_line)
 {
-	if($error_code & E_WARNING || $error_code & E_NOTICE)
-		$error_code = E_WARN|E_DEBUG;
+	if($error_code & E_WARNING || $error_code & E_STRICT || $error_code & E_NOTICE)
+	{
+		// if verbose is false drop the error
+		if(isset($GLOBALS['settings']['verbose']) && $GLOBALS['settings']['verbose'] == true)
+		{
+			$error_code = E_WARN|E_DEBUG;
+		}
+		else
+		{
+			$error_code = NULL;
+		}
+	}
+	else
+		$error_code = E_DEBUG;
 		
-	PEAR::raiseError($error_str, $error_code);
+	if($error_code !== NULL) PEAR::raiseError($error_str, $error_code);
 	
 	return true;
 }

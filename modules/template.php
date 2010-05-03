@@ -12,7 +12,7 @@
 function setup_template()
 {
 	// load templating system but only if we are using templates
-
+	
 	// get the list of templates
 	$GLOBALS['templates'] = array();
 	$files = fs_file::get(array('dir' => setting('local_root') . 'templates' . DIRECTORY_SEPARATOR, 'limit' => 32000), $count, true);
@@ -44,7 +44,7 @@ function setup_template()
 			}
 		}
 	}
-	
+
 	$_REQUEST['template'] = validate_template($_REQUEST, isset($_SESSION['template'])?$_SESSION['template']:'');
 	
 	// don't use a template if they comment out this define, this enables the tiny remote version
@@ -200,8 +200,6 @@ function setting_local_template($settings)
 {
 	if(isset($settings['local_template']) && in_array($settings['local_template'], array_keys($GLOBALS['templates'])))
 		return $settings['local_template'];
-	else
-		return '';
 }
 
 /**
@@ -214,10 +212,17 @@ function validate_tfile($request)
 	if(isset($request['tfile']))
 	{
 		$request['template'] = validate_template($request);
-		if(is_file(setting('local_root') . 'templates' . DIRECTORY_SEPARATOR . $request['template'] . DIRECTORY_SEPARATOR . $request['tfile']))
-			return $request['tfile'];
-		else
-			PEAR::raiseError('Template file requested but could not be found!', E_DEBUG|E_WARN);
+		$file = setting('local_root') . 'templates' . DIRECTORY_SEPARATOR . $request['template'] . DIRECTORY_SEPARATOR . $request['tfile'];
+		// get real path and make sure it begins with the template directory
+		if(is_file($file))
+		{
+			if(substr(realpath($file), 0, strlen(realpath(setting('local_root') . 'templates'))) == realpath(setting('local_root') . 'templates'))
+			{
+				return $request['tfile'];
+			}
+		}
+
+		PEAR::raiseError('Template file requested but could not be found!', E_DEBUG|E_WARN);
 	}
 }
 
@@ -272,7 +277,7 @@ function validate_template($request, $session = '')
 {
 	if(!isset($request['template']) && $session != '')
 		$request['template'] = $session;
-		
+
 	// check if it is a valid template specified
 	if(isset($request['template']) && $request['template'] != '')
 	{
@@ -283,7 +288,7 @@ function validate_template($request, $session = '')
 		// remove leading slash if there is one
 		if($request['template'][strlen($request['template'])-1] == '/' || $request['template'][strlen($request['template'])-1] == '\\')
 			$request['template'] = substr($request['template'], 0, -1);
-		
+			
 		// check to make sure template is valid
 		if(in_array($request['template'], array_keys($GLOBALS['templates'])))
 		{

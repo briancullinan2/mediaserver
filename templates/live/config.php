@@ -202,7 +202,7 @@ function print_form_objects($form)
 				}
 				?></select><?php
 			break;
-			case 'filesize':
+			case 'time':
 				?>
 				<select <?php print (isset($config['disabled']) && $config['disabled'] == true)?'disabled="disabled"':'';?> name="<?php print $field_name; ?>[value]" style="width:100px; display:inline; margin-right:0px;">
 				<?php

@@ -7,8 +7,8 @@
 function register_admin_watch()
 {
 	return array(
-		'name' => 'Watch List',
-		'description' => 'Handles the watch table and what directories the website scans.',
+		'name' => lang('watch title', 'Watch List'),
+		'description' => lang('watch decscription', 'Handles the watch table and what directories the website scans.'),
 		'privilage' => 10,
 		'path' => __FILE__
 	);

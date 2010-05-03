@@ -14,8 +14,8 @@ function register_admin_modules()
 	}
 	
 	return array(
-		'name' => 'Configure Modules',
-		'description' => 'Display a list of modules and allow for enabling and disabling.',
+		'name' => lang('modules title', 'Configure Modules'),
+		'description' => lang('modules description', 'Display a list of modules and allow for enabling and disabling.'),
 		'privilage' => 10,
 		'path' => __FILE__,
 		'settings' => $module_func,
@@ -49,6 +49,11 @@ function configure_admin_modules($settings)
 	
 	$options = array();
 	
+	$required = lang('modules enable option 1', 'Enabled (Required)');
+	$recommend = lang('modules enable option 2', 'Enabled (Recommended)');
+	$optional = lang('modules enable option 3', 'Enabled (Optional)');
+	$disabled = lang('modules enable option 4', 'Disabled');
+	
 	foreach($GLOBALS['modules'] as $module => $config)
 	{
 		$settings[$module . '_enable'] = setting_module_enable($settings, $module);
@@ -58,8 +63,8 @@ function configure_admin_modules($settings)
 			'description' => array(
 				'list' => array(
 					$GLOBALS['modules'][$module]['description'],
-					'Choose whether or not to enable the ' . $GLOBALS['modules'][$module]['name'] . ' module.',
-					'Click configure to configure additional options for a specific module.'
+					lang('modules enable description 1', 'Choose whether or not to enable the ' . $GLOBALS['modules'][$module]['name'] . ' module.'),
+					lang('modules enable description 2', 'Click configure to configure additional options for a specific module.'),
 				),
 			),
 			'type' => 'boolean',
@@ -69,15 +74,15 @@ function configure_admin_modules($settings)
 		if(in_array($module, $required))
 		{
 			$options[$module . '_enable']['options'] = array(
-				'Enabled (Required)',
+				$required,
 			);
 			$options[$module . '_enable']['disabled'] = true;
 		}
 		else
 		{
 			$options[$module . '_enable']['options'] = array(
-				'Enabled ' . (in_array($module, $recommended)?'(Recommended)':'(Optional)'),
-				'Disabled',
+				(in_array($module, $recommended)?$recommend:$optional),
+				$disabled,
 			);
 		}
 	}
