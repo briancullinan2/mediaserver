@@ -22,8 +22,13 @@ function theme_live_footer()
 									{
 										if($module['privilage'] > $GLOBALS['templates']['vars']['user']['Privilage'])
 											continue;
-										
-										?><li class="last"><a href="<?php print url('module=' . $name); ?>"><?php echo $module['name']; ?></a></li><?php
+																			
+										if(!function_exists('output_' . $name))
+											$link = 'module=admin_modules&configure_module=' . $name;
+										else
+											$link = 'module=' . $name;
+																		
+										?><li class="last"><a href="<?php print url($link); ?>"><?php echo $module['name']; ?></a></li><?php
 									}
 									?>
 									</ul>

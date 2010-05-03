@@ -1915,12 +1915,12 @@ function output_index($request)
 	{
 		register_output_vars('errors_only', true);
 		
-		theme('errors');
-		
 		// remove old errors from session
 		$_SESSION['errors']['user'] = array();
 		$_SESSION['errors']['warn'] = array();
 		$_SESSION['errors']['note'] = array();
+		
+		theme('errors');
 		
 		exit;
 	}

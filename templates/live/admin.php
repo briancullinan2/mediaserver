@@ -25,12 +25,15 @@ function theme_live_admin()
 	{
 		if($module['privilage'] > $GLOBALS['templates']['vars']['user']['Privilage'])
 			continue;
+			
 		if(!function_exists('output_admin_' . $name))
-			continue;
-		
+			$link = 'module=admin_modules&configure_module=admin_' . $name;
+		else
+			$link = 'module=admin_' . $name;
+			
 		?>
 		<div class="nothover" onMouseOver="this.className='hover';" onMouseOut="this.className='nothover';">
-			<a href="<?php print url('module=admin_' . $name); ?>" style="font-size:14px;"><?php print $module['name']; ?></a><br /><br />
+			<a href="<?php print url($link); ?>" style="font-size:14px;"><?php print $module['name']; ?></a><br /><br />
 			Description: <?php print $module['description']; ?>
 			<br /><br />
 		</div>
