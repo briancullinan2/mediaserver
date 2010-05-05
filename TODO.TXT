@@ -1,30 +1,80 @@
+------------- MONOLITHICMEDIA TODO -------------
+Monolithic site is not outputting the htaccess file because it is hidden from the tar command
 ------------- GENERAL TODO -------------
+Come up with a good way to detect modrewrite
+Install from scratch until all the errors are gone
 Look at drupal and find out if there is a better way to save errors to the session at the end of a script
 Add module called balancer used for load balancing
 	Basically it allows the administrator to set different conditions for when to use a different subdomain for accessing media
 		It will forward the use to the other domain with the exact same request information based on the conditions
 	This will allow multiple computers running identical set ups to output files and transcode more efficiently
 	Enter username and password for each remote services and download the remote load balancing information to check for conflicts and easy reference
-Add 'guess' parameter to list module to allow randomly selected files from the same genre
-Add 'long_play' option to encode so instead of inputting a file to vlc, the system inputs a playlist and devices only have to buffer once and no more breaks
+	Maybe this modules could help with hard and soft links?
+Install script is severely broken
 Add a register script to the install process that allows users to register a username, password, and domain for their site, with the monolithicmedia drupal site.
 	Include a key that is unique to every download, to prevent spamming.
 Abstract the setup functions, modules should be set up after being loaded to load more dependencies, this is similar to drupal's module.install file
 Fix up template settings in core.php core_variables() function
+	This should probably be in the template module under always_output()
 Current solution for dependencies is not very good, rewrite, possibly call module init whenever handles() is called?
 	Checks abstracted into setting_ wrappers, is this the best solution?
-Finish setting input handling in the modules admin plugin
-Create a status admin tool
+	Create a series of dependency_ functions that check for the existance of files and settings
+		For example, the database module depends on adodb, but also depends on the settings db_connect and use_database
+		Many modules and handlers depend on Archive and getID3()
+		Add register functions to handlers
+		The 'depends on' field in each module configuration can list functions or modules
+			If modules are listed this will determine the order for calling the setup functions
+		Handlers can depend on other handlers, this will help with the order to load the classes maybe?
+		Create function for sorting the handlers based on parents callable by usort()
+		Create function for sorting the modules based on the 'depends on' field
+		Denpendency form configurations show up on status page as well as along with the configuration for modules
+		If any dependency fails, show an error on admin page
+			Only if the module is not manually disabled, this will be tricky to track since they are force disabled if there is a missing dependency
+		Handlers are configurable
+			Such as db_archive using getid3() or PEAR Archive for parsing out archives
+			db_code can use Text_highlighter or geshi, check the settings first then check dependencies for both and if only 1 exists,
+				choose that one by default and display warning on dependency instead of fail if neither exist
+		In common setup
+			load settings
+			load all modules
+			load all handlers if using a database
+			check dependencies
+			call setup functions
+				This will probably require things like validate_search and the admin modules configure_ be set up in the setup() function
+					because they depend on all the other modules and handlers being loaded
+		If a dependency fails for a modules, that module is forceably disabled
+			Dependency on core is implied
+			Same goes for handlers
+			This will also disable modules that depend on modules
+			Therefore, core should not have any dependencies, but rather settings for using different libraries
+	Localroot cannot be changed, this is unnessisary, it should be detected and displayed though
+	Try removing all the pieces one at a time to make sure that modules are disabling themselves
+		The system should run without PEAR, but anything else that uses PEAR such as libraries are going to fail
+	Fix error output for configurations, should also output debug info for dependencies and seperate messages if the module config contains
+		something the configuration_() function doesn't or if the configuration function contains something the module config doesn't
 Finish setting() function in settings.php plugin
 	Settings should also be loadable from the database
 Cache all loaded module files in settings database (possibly storing in admin settings and deserializing would be efficient?)
 	Save module settings in database
 Make validate_return actually validate the return path
-Test and find a fix for some media dropping off the network
-	Check to see if the file exists in the archive handler before trying to analyze it
 Remove all occurances on props['WHERE'] being set to a string
 	It should be set to an array from now on, so that we can differentiate between each query_alter_
 	Same with all the other variables
+Speed testing with new User queries
+Store the remote_address in the session, and if it doesn't match up with what is in the session then kill the session and die
+Create a unique id and insert it into forms, this is required when the form is submitted
+Make hard links and soft links, hard links are replaced when they are put in to the database, soft links are replaced when they are read from the database, this will allow us to do more network stuff
+------------- MEDIA MODULES -------------
+Search module could be configured to use a different algorithm for searching, possibly an external site 
+	like Google could display results or one of those cool database searching services that cost money
+Add 'guess' parameter to list module to allow randomly selected files from the same genre
+Add 'long_play' option to encode so instead of inputting a file to vlc, the system inputs a playlist and devices only have to buffer once and no more breaks
+Finish ampache.php module to support genres, videos, and playlists
+More compatibility testing with clients
+Interface with mediatomb and support UPnP protocol
+Test and find a fix for some media dropping off the network
+	Check to see if the file exists in the archive handler before trying to analyze it
+------------- LANGUAGE MODULE -------------
 Start implementing lang() calls
 	If the page has language variables that are not known
 		Call the index page with lang_only which runs through the entire identical request and gets all the lang calls
@@ -34,17 +84,19 @@ Start implementing lang() calls
 	Fix where to save translations
 	Fix up lang calls, accept multiple parameters and don't translate certain fields,
 		this will allow us to insert things like file paths in the middle of the sentence
-Set variables to default specified by template if they are not set because of an improper input
-Finish ampache.php module to support genres, videos, and playlists
+	the default Google AJAX functionality can be used for translations that are not found
+		Or the default output for text that doesn't have a translation could be the English text with an AJAX query attached
+			to call the server again for the translations after the page is fully loaded
+	Consider translating the pages with special keys surrounding the text and using the default google translate and somehow
+		submitting the translations back to the server for caching
+		Or pulling out the translations for later use
+------------- BITTORRENT MODULE -------------
+bt module should have a configurable ctorrent settings that uses %IF for the torrent file to start seeding server side
+	Should also check dependencies for bttracker and ctorrent
 Check for bt module in install.php script
 Add bttracker install script to admin/install.php to fully bootstrap the install process
-Speed testing with new User queries
-More compatibility testing with clients
-Store the remote_address in the session, and if it doesn't match up with what is in the session then kill the session and die
-Create a unique id and insert it into forms, this is required when the form is submitted
-Make hard links and soft links, hard links are replaced when they are put in to the database, soft links are replaced when they are read from the database, this will allow us to do more network stuff
-Interface with mediatomb and support UPnP protocol
 ------------- ADMIN TOOLS -------------
+Create a status admin tool
 Port all Jamu stuff from MythTV to PHP admin tools
 Finish fixing up modules to use new API
 	admin tools section
@@ -76,6 +128,11 @@ Work on db_movies, use cUrl to download movie information from imdb, use the vol
 	Look up movies on amazon, and see if that will help with searching IMDb
 	Research the video_ts.ifo file, there must be a way of getting the full name from a DVD image, windows media center projects can do it, so can we
 ------------- All Template TODO -------------
+HIGH-PRIORITY: Check all usage of setting(local_template), setting(local_base), setting(html_template)
+	Templates should refer to themselves only
+	Templates should have functions for outputting their own files instead of using the file output stream in the output_template() function, make this obsolete
+	Never include path in template reference, the validate_ function always removes the path
+Set variables to default specified by template if they are not set because of an improper input
 Figure out how template_path and modules_path is used in the javascript in the WMP and EXT JS templates
 Test modifications to extjs and wmp template script and link includes
 Finish mobile template.

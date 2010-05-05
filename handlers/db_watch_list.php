@@ -1,5 +1,5 @@
 <?php
-include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'db_audio.php';
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'db_watch.php';
 
 // watch list handler
 class db_watch_list extends db_watch

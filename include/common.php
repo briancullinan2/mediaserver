@@ -35,6 +35,7 @@ define('E_FATAL',					8);
  * "account has been created" */
 define('E_NOTE',					16);
 //@}
+ini_set('include_path', '.');
 
 //if(realpath('/') == '/')
 //	include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.nix.php';
@@ -78,17 +79,45 @@ include_once $GLOBALS['settings']['local_root'] . 'modules' . DIRECTORY_SEPARATO
 include_once $GLOBALS['settings']['local_root'] . 'modules' . DIRECTORY_SEPARATOR . 'settings.php';
 include_once $GLOBALS['settings']['local_root'] . 'modules' . DIRECTORY_SEPARATOR . 'language.php';
 
-include_once 'MIME' . DIRECTORY_SEPARATOR . 'Type.php';
-
 //session_cache_limiter('public');
 /** always begin the session */
 session_start();
 
 /** require pear for error handling */
-include_once 'PEAR.php';
+if((@include_once 'PEAR.php') == false)
+{
+	define('DEPENDENCY_PROBLEMS', true);
+	// bootstrap pear error handling but don't load any other pear dependencies
+	class PEAR
+	{
+		static function raiseError($message, $code)
+		{
+			if(defined('PEAR_ERROR_CALLBACK') && is_callable(PEAR_ERROR_CALLBACK))
+			$error = new stdClass();
+			$error->code = $code;
+			$error->message = $message;
+			$error->backtrace = debug_backtrace();
+			call_user_func_array(PEAR_ERROR_CALLBACK, array($error));
+		}
+		
+		static function setErrorHandling($type, $error_func)
+		{
+			if(is_callable($error_func))
+			{
+				define('PEAR_ERROR_CALLBACK', $error_func);
+			}
+		}
+	}
+}
+else
+{
+	include_once 'MIME' . DIRECTORY_SEPARATOR . 'Type.php';
+}
+
 /** Set the error handler to use our custom function for storing errors */
 PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'error_callback');
-set_error_handler('php_to_PEAR_Error');
+set_error_handler('php_to_PEAR_Error', E_ALL);
+PEAR::raiseError('testing', E_USER);
 /** stores a list of all errors */
 $GLOBALS['errors'] = array();
 /** stores a list of all user errors */
@@ -130,15 +159,15 @@ function setup()
 		// check again incase something went wrong with the connection
 		if($GLOBALS['settings']['use_database'])
 		{
+			
+			// set up the list of handlers
+			setup_handlers();
 		}
 	}
 	else
 	{
 		$GLOBALS['database'] = NULL;
 	}
-	
-	// set up the list of handlers
-	setup_handlers();
 	
 	// set up aliases for path replacement
 	setup_aliases();
@@ -559,7 +588,13 @@ function getMime($ext)
  */
 function getExtType($filename)
 {
-	return MIME_Type::getMedia(getMime($filename));
+	if(class_exists('MIME_Type'))
+		return MIME_Type::getMedia(getMime($filename));
+	else
+	{
+		$mime = getMime($filename);
+		return substr($mime, 0, strpos($mime, '/'));
+	}
 }
 
 /**
@@ -735,13 +770,17 @@ function php_to_PEAR_Error($error_code, $error_str, $error_file, $error_line)
 	if($error_code & E_WARNING || $error_code & E_STRICT || $error_code & E_NOTICE)
 	{
 		// if verbose is false drop the error
-		if(isset($GLOBALS['settings']['verbose']) && $GLOBALS['settings']['verbose'] == true)
+		if(defined('DEPENDENCY_PROBLEMS') && DEPENDENCY_PROBLEMS == true)
+		{
+			$error_code = E_DEBUG|E_WARN|E_USER;
+		}
+		elseif(isset($GLOBALS['settings']['verbose']) && $GLOBALS['settings']['verbose'] == true)
 		{
 			$error_code = E_WARN|E_DEBUG;
 		}
 		else
 		{
-			$error_code = NULL;
+			$error_code = E_DEBUG;
 		}
 	}
 	else

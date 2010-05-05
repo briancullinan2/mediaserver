@@ -1707,7 +1707,7 @@ function create_path_info(&$request)
 	$path = str_replace('_', '/', $request['module']) . '/';
 	
 	// do not use pretty paths before the site is configured
-	if(defined('NOT_INSTALLED') && NOT_INSTALLED == true)
+	if((defined('NOT_INSTALLED') && NOT_INSTALLED == true) || !setting('modrewrite'))
 		return '';
 	
 	// make sure the module doesn't actually exists on the web server

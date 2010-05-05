@@ -109,7 +109,7 @@ function lang($keys, $text)
 		PEAR::raiseError('Warning: The input language translation \'' . $keys . '\' has already been register for translation.', E_DEBUG);
 		
 	// use language saved in sesssion
-	if($_REQUEST['language'] == 'en')
+	if(validate_language($_REQUEST) == 'en')
 	{
 		return $text;
 	}

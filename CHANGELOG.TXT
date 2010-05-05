@@ -2,6 +2,7 @@
 Fixed some spacing problems with the search box in IE, extremely annoying
 Fixed counting of file types in select module
 Implemented Geshi code highlighter, hopefully this will have better memory management
+Fixed the site so that it could run without pear if needed
 
 2010-05-02
 Fixed huge vulnerability in the template output, validate_tfile() now checks to make sure the file is within the template directory
