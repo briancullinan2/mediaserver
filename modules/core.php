@@ -30,7 +30,7 @@ function register_core()
 		'settings' => array(
 			'system_type', 'local_root', 'settings_file', 'writable_settings_file',
 			'modrewrite', 'memory_limit', 'exists_local_root', 'exists_adodb', 'exists_pear',
-			'exists_getid3', 'exists_snoopy', 'exists_extjs',
+			'exists_getid3', 'exists_snoopy', 'exists_geshi', 'exists_extjs',
 		),
 		'always output' => 'core_variables',
 	);
@@ -153,11 +153,12 @@ function setting_html_root($settings)
 {
 	$settings['html_domain'] = setting_html_domain($settings);
 	$settings['local_root'] = setting_local_root($settings);
+	if(substr($_SERVER['DOCUMENT_ROOT'], -1) != '/' && substr($_SERVER['DOCUMENT_ROOT'], -1) != '\\') $_SERVER['DOCUMENT_ROOT'] .= DIRECTORY_SEPARATOR;
 	
 	if(isset($settings['html_root']) && @parse_url($settings['html_domain'] . $settings['html_root']) !== false)
 		return $settings['html_root'];
 	else
-		return ((substr($settings['local_root'], 0, strlen($_SERVER['DOCUMENT_ROOT'])) == $_SERVER['DOCUMENT_ROOT'])?substr($settings['local_root'], strlen($_SERVER['DOCUMENT_ROOT'])):'');
+		return '/' . ((substr($settings['local_root'], 0, strlen($_SERVER['DOCUMENT_ROOT'])) == $_SERVER['DOCUMENT_ROOT'])?substr($settings['local_root'], strlen($_SERVER['DOCUMENT_ROOT'])):'');
 }
 
 /**
@@ -362,6 +363,16 @@ function setting_exists_snoopy($settings)
 {
 	$settings['local_root'] = setting_local_root($settings);
 	return file_exists($settings['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'Snoopy.class.php');
+}
+
+/**
+ * Implementation of setting, basic wrapper for checks
+ * @ingroup setting
+ */
+function setting_exists_geshi($settings)
+{
+	$settings['local_root'] = setting_local_root($settings);
+	return file_exists($settings['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'geshi' . DIRECTORY_SEPARATOR . 'geshi.php');
 }
 
 /**
@@ -750,7 +761,7 @@ function configure_core($settings)
 		);
 	}
 	
-	$pear_libs = array('File/Archive.php' => 'File_Archive', 'MIME/Type.php' => 'MIME_Type', 'Text/Highlighter.php' => 'Text_Highlighter');
+	$pear_libs = array('File/Archive.php' => 'File_Archive', 'MIME/Type.php' => 'MIME_Type');
 	$not_installed = array();
 	$installed = array();
 	foreach($pear_libs as $lib => $link)
@@ -898,6 +909,42 @@ function configure_core($settings)
 				'link' => array(
 					'url' => 'http://sourceforge.net/projects/snoopy/',
 					'text' => 'Get Snoopy',
+				),
+			),
+		);
+	}
+	
+	if(setting_exists_geshi($settings))
+	{
+		$options['exists_geshi'] = array(
+			'name' => 'Geshi (Generic Syntax Highlighter)',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'The system has detected that the Geshi Library is installed in the includes directory.',
+					'Geshi is used to highlight a variety of source code files.',
+				),
+			),
+			'type' => 'label',
+			'value' => 'Geshi detected',
+		);
+	}
+	else
+	{
+		$options['exists_geshi'] = array(
+			'name' => 'Geshi (Generic Syntax Highlighter) Missing',
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					'The system has detected that the Geshi Library is NOT INSTALLED.',
+					'The Geshi root directory must be placed in &lt;site root&gt;/include/',
+					'Geshi is used to highlight a variety of source code files.',
+				),
+			),
+			'value' => array(
+				'link' => array(
+					'url' => 'http://qbnz.com/highlighter/',
+					'text' => 'Get Geshi',
 				),
 			),
 		);

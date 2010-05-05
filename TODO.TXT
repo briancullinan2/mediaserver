@@ -26,6 +26,11 @@ Remove all occurances on props['WHERE'] being set to a string
 	It should be set to an array from now on, so that we can differentiate between each query_alter_
 	Same with all the other variables
 Start implementing lang() calls
+	If the page has language variables that are not known
+		Call the index page with lang_only which runs through the entire identical request and gets all the lang calls
+		Generate a query to the google api to translate using multiple q variables
+		Similar to how errors are handled()?
+		Save the translations
 	Fix where to save translations
 	Fix up lang calls, accept multiple parameters and don't translate certain fields,
 		this will allow us to insert things like file paths in the middle of the sentence
@@ -40,6 +45,7 @@ Create a unique id and insert it into forms, this is required when the form is s
 Make hard links and soft links, hard links are replaced when they are put in to the database, soft links are replaced when they are read from the database, this will allow us to do more network stuff
 Interface with mediatomb and support UPnP protocol
 ------------- ADMIN TOOLS -------------
+Port all Jamu stuff from MythTV to PHP admin tools
 Finish fixing up modules to use new API
 	admin tools section
 Work on tools.php module for admin
@@ -94,3 +100,7 @@ Get settings dialog working and set up user accounts to control it
 Finish the player app that displays pictures
 Make players resize to Player window
 ------------- LIVE -------------
+Fix javascript select and right click in all browsers
+Fix appearance in IE and Chrome
+	In IE the search box is messed up again, whitespace?
+	Chrome, the module list doesn't wrap, whitespace:nowrap?

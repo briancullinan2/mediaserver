@@ -186,12 +186,18 @@ function save_state($state)
 {
 	$fp = @fopen(setting('local_root') . "state_dirs.txt", "w");
 	if($fp === false) // try tmp dir
+	{
+		PEAR::raiseError('Error saving state in default state_dirs.txt file!', E_DEBUG);
 		$fp = @fopen(setting('tmp_dir') . "state_dirs.txt", "w");
+	}
+	
 	if($fp !== false)
 	{
 		fwrite($fp, serialize($state));
 		fclose($fp);
 	}
+	else
+		PEAR::raiseError('Error saving state!', E_DEBUG);
 }
 
 /**
@@ -614,4 +620,11 @@ function cron_error_callback($error)
 	print $error->message . '<br />';
 	flush();
 	ob_flush();
+}
+
+// run the script if it is being executed from the command line
+if(php_sapi_name() == 'cli')
+{
+	$_REQUEST['module'] = 'cron';
+	include_once dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'index.php';
 }

@@ -241,7 +241,7 @@ function theme_live_index()
 	?>
 	<div class="contentSpacing">
 			<h1 class="title"><?php print ($current == '')?setting('html_name'):$current; ?></h1>
-			<span class="subText">Click to browse files. Drag to select files, and right click for download options.</span>
+			<span class="subText"><?php print lang('live select description', 'Click to browse files. Drag to select files, and right click for download options.'); ?></span>
 	<?php
 	if (count($GLOBALS['user_errors']) == 0 && count($GLOBALS['templates']['vars']['files']) > 0)
 	{

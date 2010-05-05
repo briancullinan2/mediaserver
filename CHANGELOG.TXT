@@ -1,3 +1,8 @@
+2010-05-04
+Fixed some spacing problems with the search box in IE, extremely annoying
+Fixed counting of file types in select module
+Implemented Geshi code highlighter, hopefully this will have better memory management
+
 2010-05-02
 Fixed huge vulnerability in the template output, validate_tfile() now checks to make sure the file is within the template directory
 Fixed vulnerability with something going wrong with the database and switching to fs_ mode

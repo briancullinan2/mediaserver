@@ -262,15 +262,20 @@ function output_select($request)
 				{
 					$return = call_user_func_array($handler . '::get', array($tmp_request, &$tmp_count));
 					if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
-					if($handler == 'db_audio' || $handler == 'fs_audio' || $handler == 'db_video' || $handler == 'fs_video' || $handler == 'db_image' || $handler == 'fs_image')
-					{
-						if($handler == 'db_audio' || $handler == 'fs_audio') $audio_count++;
-						if($handler == 'db_video' || $handler == 'fs_video') $video_count++;
-						if($handler == 'db_image' || $handler == 'fs_image') $image_count++;
-					}
-					else
+					
+					// do some counting
+					if($handler == 'db_audio' || $handler == 'fs_audio')
+						$audio_count++;
+					elseif($handler == 'db_video' || $handler == 'fs_video')
+						$video_count++;
+					elseif($handler == 'db_image' || $handler == 'fs_image') 
+						$image_count++;
+					elseif($handler == 'db_files' || $handler == 'fs_files')
 						$files_count++;
 				}
+				// this will help with our counting
+				elseif($handler == $request['cat'])
+					$files_count++;
 			}
 		}
 			

@@ -442,8 +442,8 @@ function endDrag()
 
 function getMouseXY(e) {
 	if (IE) { // grab the x-y pos.s if browser is IE
-		tempX = event.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
-		tempY = event.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+		//tempX = event.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+		//tempY = event.clientY + document.body.scrollTop + document.documentElement.scrollTop;
 	} else {  // grab the x-y pos.s if browser is NS
 		tempX = e.pageX;
 		tempY = e.pageY;

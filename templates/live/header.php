@@ -236,8 +236,8 @@ function live_get_theme_color()
 
 function theme_live_languages()
 {
-	?><div id="languages" style="float:right;">
-	Language: <select name="language" onchange="window.location.href='<?php print url($GLOBALS['templates']['var']['get'] . '?language='); ?>' + this.value;">
+	?><div id="languages" style="float:right; margin-bottom:-40px;">
+	Language: <select name="language" onChange="window.location.href='<?php print url($GLOBALS['templates']['var']['get'] . '?language='); ?>' + this.value;">
 	<?php
 	foreach($GLOBALS['templates']['vars']['languages'] as $code => $language)
 	{
