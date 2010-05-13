@@ -261,7 +261,7 @@ foreach($GLOBALS['tables'] as $i => $db)
 	if(count($result) > 0)
 	{
 		$reports[1][1][(TYPE_BOLD).'-Database Counts'] .= $db . ' database has ' . $result[0]['count(*)'] . ' entries' . (($i != count($GLOBALS['tables'])-1)?'<br />':'');
-		if($db == db_watch_list::DATABASE)
+		if($db == database('db_watch_list'))
 		{
 			$reports[1][2][(TYPE_BOLD).'-Watch List'] = 'The watch list contains directories that have to be searched for files<br />There are ' . $result[0]['count(*)'] . ' directories in the watch list database';
 			if($result[0]['count(*)'] == 0)
@@ -276,7 +276,7 @@ $reports[2][0][(TYPE_HEADING).'-Ascii File Names'] = 'List of files that have as
 if(isset($_REQUEST['show2']) && $_REQUEST['show2'] == true)
 {
 	// get some non-standard filenames, ones that contain non ascii characters
-	$results = $GLOBALS['database']->query(array('SELECT' => db_file::DATABASE, 'WHERE' => 'Filepath REGEXP(CONCAT(\'[^\',CHAR(32),\'-\',CHAR(126),\']\')) AND (LEFT(Filemime, 5) = "audio" OR LEFT(Filemime, 5) = "video")', 'LIMIT' => '0,15', 'ORDER' => 'Filepath'));
+	$results = $GLOBALS['database']->query(array('SELECT' => database('db_file'), 'WHERE' => 'Filepath REGEXP(CONCAT(\'[^\',CHAR(32),\'-\',CHAR(126),\']\')) AND (LEFT(Filemime, 5) = "audio" OR LEFT(Filemime, 5) = "video")', 'LIMIT' => '0,15', 'ORDER' => 'Filepath'));
 	
 	if(count($results) > 0)
 	{
@@ -288,7 +288,7 @@ if(isset($_REQUEST['show2']) && $_REQUEST['show2'] == true)
 		}
 		
 		// get total
-		$count = $GLOBALS['database']->query(array('SELECT' => db_file::DATABASE, 'COLUMNS' => 'count(*)', 'WHERE' => 'Filepath REGEXP(CONCAT(\'[^\',CHAR(32),\'-\',CHAR(126),\']\'))'));
+		$count = $GLOBALS['database']->query(array('SELECT' => database('db_file'), 'COLUMNS' => 'count(*)', 'WHERE' => 'Filepath REGEXP(CONCAT(\'[^\',CHAR(32),\'-\',CHAR(126),\']\'))'));
 		
 		if(count($count) > 0)
 		{
@@ -313,11 +313,11 @@ if(isset($_REQUEST['show3']) && $_REQUEST['show3'] == true)
 	// check request for replacements
 	if(isset($_POST) && count($_POST) > 0 && isset($_POST['rename']))
 	{
-		$files = $GLOBALS['database']->query(array('SELECT' => db_file::DATABASE, 'WHERE' => 'id=' . join(' OR id=', array_keys($_POST['File']))));
+		$files = $GLOBALS['database']->query(array('SELECT' => database('db_file'), 'WHERE' => 'id=' . join(' OR id=', array_keys($_POST['File']))));
 
 		if(count($files) > 0)
 		{
-			$files = db_ids::get(array('cat' => 'db_file'), $tmp_count, $files);
+			$files = get_db_ids(array('cat' => 'db_file'), $tmp_count, $files);
 			
 			$directories = array();
 			$mv_files = array();
@@ -381,7 +381,7 @@ if(isset($_REQUEST['show3']) && $_REQUEST['show3'] == true)
 				}
 				
 				// delete directory if it is empty
-				$rm_files = fs_file::get(array('dir' => dirname($file['Filepath']) . '/', 'limit' => 32000), $count, true);
+				$rm_files = get_fs_file(array('dir' => dirname($file['Filepath']) . '/', 'limit' => 32000), 'filesystem', $count);
 				if($rm_files !== false && isset($_POST['remove_empty']) && $_POST['remove_empty'] == true)
 				{
 					if(count($rm_files) == 0)
@@ -428,7 +428,7 @@ if(isset($_REQUEST['show3']) && $_REQUEST['show3'] == true)
 	}
 	
 	// query some files
-	$results = $GLOBALS['database']->query(array('SELECT' => db_file::DATABASE, 'WHERE' => 'Filename REGEXP "^[^ ]*(_.*_.*_|\\\.[^\.]+\\\.[^\.]+\\\.).*$" AND Filename NOT REGEXP BINARY "[^\.]*[A-Z]\\\.[^\.]*[A-Z]\\\.[^\.]*[A-Z]\\\.[^\.]*" AND (LEFT(Filemime, 5) = "audio" OR LEFT(Filemime, 5) = "video")', 'LIMIT' => '0,15', 'ORDER' => 'Filepath'));
+	$results = $GLOBALS['database']->query(array('SELECT' => database('db_file'), 'WHERE' => 'Filename REGEXP "^[^ ]*(_.*_.*_|\\\.[^\.]+\\\.[^\.]+\\\.).*$" AND Filename NOT REGEXP BINARY "[^\.]*[A-Z]\\\.[^\.]*[A-Z]\\\.[^\.]*[A-Z]\\\.[^\.]*" AND (LEFT(Filemime, 5) = "audio" OR LEFT(Filemime, 5) = "video")', 'LIMIT' => '0,15', 'ORDER' => 'Filepath'));
 	
 	if(count($results) > 0)
 	{
@@ -559,7 +559,7 @@ if(isset($_REQUEST['show3']) && $_REQUEST['show3'] == true)
 		$reports[3][1][(TYPE_BOLD).'-Excessive Periods and Underscores'] .= '<br /><input type="submit" name="rename" value="Rename!" /><input type="checkbox" name="remove_empty" value="true" />Remove empty directories.</form>';
 		
 		// get total
-		$count = $GLOBALS['database']->query(array('SELECT' => db_file::DATABASE, 'COLUMNS' => 'count(*)', 'WHERE' => 'Filename REGEXP "(.*_.*_.*_.*|.*\\\..*\\\..*\\\..*)"'));
+		$count = $GLOBALS['database']->query(array('SELECT' => database('db_file'), 'COLUMNS' => 'count(*)', 'WHERE' => 'Filename REGEXP "(.*_.*_.*_.*|.*\\\..*\\\..*\\\..*)"'));
 		
 		if(count($count) > 0)
 		{

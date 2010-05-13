@@ -58,6 +58,9 @@ function output_live()
 		case 'admin_modules':
 			theme('modules');
 		break;
+		case 'admin_status':
+			theme('status');
+		break;
 		case 'admin_template':
 			theme('template');
 		break;

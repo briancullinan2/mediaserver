@@ -28,9 +28,12 @@ function register_core()
 		'path' => __FILE__,
 		'privilage' => 1,
 		'settings' => array(
-			'system_type', 'local_root', 'settings_file', 'writable_settings_file',
-			'modrewrite', 'memory_limit', 'exists_local_root', 'exists_adodb', 'exists_pear',
-			'exists_getid3', 'exists_snoopy', 'exists_geshi', 'exists_extjs',
+			'installed', 'system_type', 'local_root', 'settings_file', 'modrewrite', 
+		),
+		'depends on' => array(
+			'fs_file', 'memory_limit', 'writable_system_files', 'pear_installed',
+			// move these to the proper handlers when it is implemented
+			'getid3_installed', 'snoopy_installed', 'geshi_installed', 'extjs_installed'
 		),
 		'always output' => 'core_variables',
 	);
@@ -43,8 +46,19 @@ function register_core()
  * Create a global variable for storing all the module information
  * @ingroup setup
  */
-function setup_register()
+function setup_core()
 {
+	// include a couple of modules ahead of time
+	// language must be included so that we can translate module definitions
+	include_once setting_local_root() . 'modules' . DIRECTORY_SEPARATOR . 'language.php';
+
+	// include the database module, because it acts like a module, but is kept in the includes directory
+	include_once setting_local_root() . 'include' . DIRECTORY_SEPARATOR . 'database.php';
+
+	// include the settings module ahead of time because it contains 1 needed function setting_settings_file()
+	include_once setting_local_root() . 'modules' . DIRECTORY_SEPARATOR . 'settings.php';
+
+	// add a couple of modules that don't have register functions, yet?
 	$GLOBALS['modules'] = array(
 		'index' => array(
 			'name' => lang('index title', 'Index'),
@@ -52,15 +66,13 @@ function setup_register()
 			'privilage' => 1,
 			'path' => dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'index.php',
 			'alter query' => array('limit', 'start', 'direction', 'order_by', 'group_by'),
-			'settings' => array('html_domain', 'html_root', 'html_name', 'tmp_dir', 'writable_tmp_dir', 'debug_mode', 'recursive_get', 'no_bots', 'buffer_size', 'verbose')
+			'settings' => array(
+				'html_domain', 'html_root', 'html_name', 'tmp_dir',
+				'debug_mode', 'recursive_get', 'no_bots', 'buffer_size', 'verbose'
+			),
+			'depends on' => array('template'),
 		),
-		'database' => array(
-			'name' => lang('database title', 'Database'),
-			'description' => lang('database description', 'Wrapper module for displaying database configuration'),
-			'privilage' => 10,
-			'path' => dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'database.php',
-			'settings' => array('db_connect', 'db_type', 'db_server', 'db_user', 'db_pass', 'db_name', 'use_alias')
-		),
+		'database' => register_database(),
 	);
 	$GLOBALS['triggers'] = array(
 		'session' => array(),
@@ -69,12 +81,133 @@ function setup_register()
 		'alter query' => array()
 	);
 	
+	// set up the mime information
+	setup_mime();
+	
 	// read module list and create a list of available modules	
 	setup_register_modules('modules' . DIRECTORY_SEPARATOR);
 	
-	// load the modules module again because the config depends on all the other modules
-	$GLOBALS['admin']['modules']['modules'] = register_admin_modules();
-	$GLOBALS['modules']['admin_modules'] = $GLOBALS['admin']['modules']['modules'];
+	$shuffle = array_keys($GLOBALS['modules']);
+	shuffle($shuffle);
+	
+	$GLOBALS['modules'] = array_merge(array_flip($shuffle), $GLOBALS['modules']);
+	
+	// resort modules to reflect their dependencies, aka inefficient sort
+	$GLOBALS['modules'] = array_merge(array_flip(flatten_module_dependencies(array_keys($GLOBALS['modules']))), $GLOBALS['modules']);
+	
+	// always make the module list available to templates
+	register_output_vars('modules', $GLOBALS['modules']);
+}
+
+/**
+ * Creates a list of modules with the order of their dependencies first
+ * @param modules the list of modules to recursively loop through
+ * @return an array of modules sorted by dependency
+ */
+function flatten_module_dependencies($modules)
+{
+	$new_modules = array('core');
+	foreach($modules as $i => $module)
+	{
+		// only deal with modules
+		if(!isset($GLOBALS['modules'][$module]))
+			continue;
+		
+		if(isset($GLOBALS['modules'][$module]['depends on']))
+		{
+			$new_modules = array_merge($new_modules, flatten_module_dependencies($GLOBALS['modules'][$module]['depends on']));
+		}
+		$new_modules[] = $module;
+	}
+	return array_values(array_unique($new_modules));
+}
+
+/**
+ * Abstracted from setup_modules <br />
+ * Generates a list of modules from a specified directory <br />
+ * This allows for modules to load more modules, such as admin_tools
+ * @ingroup setup
+ * @param path The path to load modules from
+ * @return An array containing only the modules found in the specified directory, modules loaded are also added to the GLOBAL list of modules
+ */
+function setup_register_modules($path)
+{
+	$files = get_filesystem(array('dir' => setting_local_root() . $path, 'limit' => 32000), $count, true);
+	
+	$modules = array();
+	
+	// loop through files and add modules to global list
+	if(is_array($files))
+	{
+		foreach($files as $i => $file)
+		{
+			if(is_file($file['Filepath']))
+			{
+				include_once $file['Filepath'];
+				
+				// determin module based on path
+				$module = basename($file['Filepath']);
+				
+				// functional prefix so there can be multiple modules with the same name
+				$prefix = substr($file['Filepath'], strlen(setting_local_root()), -strlen($module));
+				
+				// remove slashes and replace with underscores
+				$prefix = str_replace(array('/', '\\'), '_', $prefix);
+				
+				// remove modules_ prefix so as not to be redundant
+				if(substr($prefix, 0, 8) == 'modules_') $prefix = substr($prefix, 8);
+				
+				// remove extension from module name
+				$module = substr($module, 0, strrpos($module, '.'));
+				
+				// call register function
+				if(function_exists('register_' . $prefix . $module))
+				{
+					$modules[$module] = call_user_func_array('register_' . $prefix . $module, array());
+					$GLOBALS['modules'][$prefix . $module] = &$modules[$module];
+				}
+				
+				// reorganize the session triggers for easy access
+				if(isset($modules[$module]['session']) && is_array($modules[$module]['session']))
+				{
+					foreach($modules[$module]['session'] as $i => $var)
+					{
+						if(is_numeric($i))
+							$GLOBALS['triggers']['session'][$var][$module] = 'session_' . $prefix . $module;
+						elseif(is_callable($var))
+							$GLOBALS['triggers']['session'][$i][$module] = $var;
+					}
+				}
+				
+				// reorganize alter query triggers
+				if(isset($modules[$module]['alter query']) && is_array($modules[$module]['alter query']))
+				{
+					foreach($modules[$module]['alter query'] as $i => $var)
+					{
+						if(is_numeric($i))
+							$GLOBALS['triggers']['alter query'][$var][$module] = 'alter_query_' . $prefix . $module;
+						elseif(is_callable($var))
+							$GLOBALS['triggers']['alter query'][$i][$module] = $var;
+					}
+				}
+				
+				// reorganize alter query triggers
+				if(isset($modules[$module]['always output']) && is_array($modules[$module]['always output']))
+				{
+					// for named arrays, the key variable will call the named function
+					foreach($modules[$module]['always output'] as $i => $var)
+					{
+						if(is_numeric($i))
+							$GLOBALS['triggers']['always output'][$var][$module] = 'output_' . $prefix . $module;
+						elseif(is_callable($var))
+							$GLOBALS['triggers']['always output'][$i][$module] = $var;
+					}
+				}
+			}
+		}
+	}
+	
+	return $modules;
 }
 
 
@@ -121,14 +254,23 @@ function setting_system_type($settings)
 /**
  * Implementation of setting
  * @ingroup setting
- * @return The parent directory of the admin directory by default
+ * @return Always returns true if there is a settings file and it is readable
  */
-function setting_local_root($settings)
+function setting_installed()
 {
-	if(isset($settings['local_root']) && is_dir($settings['local_root']))
-		return $settings['local_root'];
-	else
-		return dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR;
+	$settings = setting_settings_file();
+	// make sure the database isn't being used and failed
+	return (file_exists($settings) && is_readable($settings) && (setting_use_database() == false || dependency('database') != false));
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ * @return Always returns the parent directory of the current modules or admin directory
+ */
+function setting_local_root()
+{
+	return dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR;
 }
 
 /**
@@ -228,23 +370,6 @@ function setting_no_bots($settings)
 /**
  * Implementation of setting
  * @ingroup setting
- * @return the temp directory reported by the OS by default
- */
-function setting_tmp_dir($settings)
-{
-	if(isset($settings['tmp_dir']) && is_dir($settings['tmp_dir']))
-		return $settings['tmp_dir'];
-	else
-	{
-		$tmpfile = tempnam("dummy","");
-		unlink($tmpfile);
-		return dirname($tmpfile) . DIRECTORY_SEPARATOR;
-	}
-}
-
-/**
- * Implementation of setting
- * @ingroup setting
  * @return 16MB by default
  */
 function setting_buffer_size($settings)
@@ -264,129 +389,171 @@ function setting_buffer_size($settings)
  * Implementation of setting, basic wrapper for checks
  * @ingroup setting
  */
-function setting_settings_file($settings)
-{
-	// return file from where it is supposed to be
-	// check other directories if it doesn't exist there
-	if(!file_exists(dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'settings.ini'))
-	{
-		if(file_exists(dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'settings.ini'))
-			return dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'settings.ini';
-	}
-	
-	// add handling for multiple domains like drupal does
-	
-	return dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'settings.ini';
-}
-
-/**
- * Implementation of setting, basic wrapper for checks
- * @ingroup setting
- */
-function setting_writable_settings_file($settings)
-{
-	return is_writable(setting_settings_file($settings));
-}
-
-/**
- * Implementation of setting, basic wrapper for checks
- * @ingroup setting
- */
-function setting_writable_tmp_dir($settings)
-{
-	$settings['tmp_dir'] = setting_tmp_dir($settings);
-	return is_writable($settings['tmp_dir']);
-}
-
-/**
- * Implementation of setting, basic wrapper for checks
- * @ingroup setting
- */
 function setting_modrewrite($settings)
 {
 	return (isset($_REQUEST['modrewrite']) && $_REQUEST['modrewrite'] == true);
 }
 
 /**
- * Implementation of setting, basic wrapper for checks
- * @ingroup setting
+ * @defgroup dependency Dependency Functions
+ * All functions that allow the system to check other system settings for module dependencies
+ * @param settings the settings for dependencies to take advantage of, but not necissarily contrained to
+ * @return Usually true or false, in some cases, returns status information about the dependency
+ * for example, the db_code handler depends on a syntax highlighter, it can use either PEAR or Geshi
+ * for highlighting code, so the dependency function would return false, if neither is installed, 
+ * but may return a path to the library is one of them is installed, or true if both are installed.
+ * This can be interpreted by the configuration page and offer an option if both are installed, or fail if it is false
+ * @{
  */
-function setting_memory_limit($settings)
+ 
+/**
+ * Abstracted to prevent errors and display debug information, this is minimally useful since modules call their own dependencies
+ * @param dependency Either the name of a module, or the name of a dependency
+ * @return A dependency, unless the input is a module, then it returns true or false if the module's dependencies are all satisfied
+ */
+function dependency($dependency, $already_checked = array())
+{
+	// check if the caller is trying to verify the dependencies of another module
+	if(isset($GLOBALS['modules'][$dependency]))
+	{
+		$config = $GLOBALS['modules'][$dependency];
+	}
+	// check to see if the dependecy is a handler
+	elseif(isset($GLOBALS['handlers'][$dependency]))
+	{
+		$config = $GLOBALS['handlers'][$dependency];
+	}
+	
+	if(isset($config))
+	{
+		// they are trying to check a module for informational purposes
+		if(!isset($config['depends on']) || 
+			count($config['depends on']) == 0)
+			// the module has no dependencies, hard to believe
+			return true;
+		
+		// now loop through the modules dependencies only, and make sure they are all met
+		$satisfied = true; // disprove this
+		foreach($config['depends on'] as $i => $depend)
+		{
+			//  uses a backup check to prevent recursion and errors if there is
+			if(in_array($depend, $already_checked))
+			{
+				// log the repitition
+				PEAR::raiseError('The dependency \'' . $depend . '\' has already been verified when checking the dependencies of \'' . $dependency . '\'!', E_DEBUG);
+				
+				// checking it twice is unnessicary since it should have failed already
+				continue;
+			}
+			
+			// check for false strictly, anything else should be taken as status information
+			//  this is also recursive so that if one module fails everything that depends on it will fail
+			$already_checked[] = $depend;
+			if(dependency($depend, $already_checked) === false)
+			{
+				$satisfied = false;
+				
+				// no need to continue as it only takes 1 to fail
+				break;
+			}
+		}
+		
+		return $satisfied;
+	}
+	
+	
+	// call dependency function
+	if(function_exists('dependency_' . $dependency))
+		return call_user_func_array('dependency_' . $dependency, array($GLOBALS['settings']));
+	if(isset($GLOBALS['dependency_' . $dependency]) && is_callable($GLOBALS['dependency_' . $dependency]))
+		return $GLOBALS['dependency_' . $dependency]($GLOBALS['settings']);
+	else
+		PEAR::raiseError('Dependency \'' . $dependency . '\' not defined!', E_DEBUG);
+		
+	return false;
+}
+ 
+/**
+ * Implementation of dependency
+ * @ingroup dependency
+ * @return true or false if the system has enough memory to operate properly
+ */
+function dependency_memory_limit()
 {
 	return (intval(ini_get('memory_limit')) >= 96);
 }
 
 /**
- * Implementation of setting, basic wrapper for checks
- * @ingroup setting
+ * Implementation of dependency
+ * @ingroup dependency
+ * @return true or false if there are any critical files to the system that are writable and could cause a security threat
  */
-function setting_exists_local_root($settings)
+function dependency_writable_system_files($settings)
 {
-	$settings['local_root'] = setting_local_root($settings);
-	return file_exists($settings['local_root'] . 'include');
+	PEAR::raiseError('Implement this.', E_DEBUG);
+	return true;
 }
 
 /**
- * Implementation of setting, basic wrapper for checks
- * @ingroup setting
+ * Implementation of dependency
+ * @ingroup dependency
+ * @return true or false whether or not pear is installed
  */
-function setting_exists_adodb($settings)
+function dependency_pear_installed($settings)
 {
-	$settings['local_root'] = setting_local_root($settings);
-	return file_exists($settings['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb.inc.php');
+	return (include_path('PEAR.php') !== false);
 }
 
 /**
- * Implementation of setting, basic wrapper for checks
- * @ingroup setting
+ * Implementation of dependency
+ * @ingroup dependency
+ * @return true or false if getID3() is installed
  */
-function setting_exists_pear($settings)
-{
-	return ((@include_once 'PEAR.php') == true);
-}
-
-/**
- * Implementation of setting, basic wrapper for checks
- * @ingroup setting
- */
-function setting_exists_getid3($settings)
+function dependency_getid3_installed($settings)
 {
 	$settings['local_root'] = setting_local_root($settings);
 	return file_exists($settings['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.lib.php');
 }
 
 /**
- * Implementation of setting, basic wrapper for checks
- * @ingroup setting
+ * Implementation of dependency
+ * @ingroup dependency
+ * @return true or false if snoopy library is installed in the include directory
  */
-function setting_exists_snoopy($settings)
+function dependency_snoopy_installed($settings)
 {
 	$settings['local_root'] = setting_local_root($settings);
 	return file_exists($settings['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'Snoopy.class.php');
 }
 
 /**
- * Implementation of setting, basic wrapper for checks
- * @ingroup setting
+ * Implementation of dependency
+ * @ingroup dependency
+ * @return true or false if geshi is in the include directory
  */
-function setting_exists_geshi($settings)
+function dependency_geshi_installed($settings)
 {
 	$settings['local_root'] = setting_local_root($settings);
 	return file_exists($settings['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'geshi' . DIRECTORY_SEPARATOR . 'geshi.php');
 }
 
 /**
- * Implementation of setting, basic wrapper for checks
- * @ingroup setting
+ * Implementation of dependency
+ * @ingroup dependency
+ * @return true or false if EXT JS library is installed in the plain templates directory for use by other templates
  */
-function setting_exists_extjs($settings)
+function dependency_extjs_installed($settings)
 {
 	return file_exists($settings['local_root'] . 'templates' . DIRECTORY_SEPARATOR . 'plain' . DIRECTORY_SEPARATOR . 'extjs' . DIRECTORY_SEPARATOR . 'ext-all.js');
 }
 
 /**
+ * @}
+ */
+
+/**
  * @defgroup configure Configure Functions
- * All functions that all configuring of settings for a module
+ * All functions that allow configuring of settings for a module
  * @param settings The request array that contains values for configuration options
  * @return an associative array that describes the configuration options
  * @{
@@ -400,7 +567,6 @@ function configure_index($settings)
 	$settings['html_root'] = setting_html_root($settings);
 	$settings['html_domain'] = setting_html_domain($settings);
 	$settings['html_name'] = setting_html_name($settings);
-	$settings['tmp_dir'] = setting_tmp_dir($settings);
 	$settings['debug_mode'] = setting_debug_mode($settings);
 	$settings['recursive_get'] = setting_recursive_get($settings);
 	$settings['no_bots'] = setting_no_bots($settings);
@@ -449,36 +615,6 @@ function configure_index($settings)
 		'type' => 'text',
 		'value' => $settings['html_name'],
 	);
-	
-	if(setting_writable_tmp_dir($settings))
-	{
-		$options['tmp_dir'] = array(
-			'name' => lang('tmp dir title', 'Temporary Files'),
-			'status' => '',
-			'description' => array(
-				'list' => array(
-					lang('tmp dir description', 'This directory will be used for uploaded files and storing temporary files like converted files and images.'),
-				),
-			),
-			'type' => 'text',
-			'value' => $settings['tmp_dir'],
-		);
-	}
-	else
-	{
-		$options['tmp_dir'] = array(
-			'name' => lang('tmp dir title', 'Temporary Files'),
-			'status' => 'fail',
-			'description' => array(
-				'list' => array(
-					lang('tmp dir fail description 1', 'The system has detected that this directory does not exist or is not writable.'),
-					lang('tmp dir fail description 2', 'Please correct this error by entering a directory path that exists and is writable by the web server.'),
-				),
-			),
-			'type' => 'text',
-			'value' => $settings['tmp_dir'],
-		);
-	}
 	
 	$options['debug_mode'] = array(
 		'name' => lang('debug mode title', 'Debug Mode'),
@@ -548,6 +684,299 @@ function configure_index($settings)
 }
 
 /**
+ * @defgroup status Status Functions
+ * All functions that return the output configuration for the dependencies listed in the module's config, for use on the configuration page and the status page
+ * @param settings The request array that contains values for configuration options
+ * @return an associative array that describes the configuration options
+ * @{
+ */
+
+/**
+ * Implementation of dependencies
+ */
+function status_core($settings)
+{
+	$status = array();
+
+	if(dependency('memory_limit'))
+	{
+		$status['memory_limit'] = array(
+			'name' => 'Memory Limit',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'The system has detected that the set memory limit is enough to function properly.',
+					'This system requires a large amount of memory for encoding and converting files, some of the third party libraries are not memory efficient.',
+					'PHP reports that the set memory_limit is ' . ini_get('memory_limit') . '.',
+				),
+			),
+			'disabled' => true,
+			'value' => array(
+				'link' => array(
+					'url' => 'http://php.net/manual/en/ini.core.php',
+					'text' => 'PHP Core INI Settings',
+				),
+			),
+		);
+	}
+	else
+	{
+		$status['memory_limit'] = array(
+			'name' => 'Memory Limit',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'The system has detected that the set memory limit is NOT ENOUGH for the system to function properly.',
+					'This system requires a large amount of memory for encoding and converting files, some of the third party libraries are not memory efficient.',
+					'PHP reports that the set memory_limit is ' . ini_get('memory_limit') . '.',
+				),
+			),
+			'disabled' => true,
+			'value' => array(
+				'link' => array(
+					'url' => 'http://php.net/manual/en/ini.core.php',
+					'text' => 'PHP Core INI Settings',
+				),
+			),
+		);
+	}
+	
+	// move these to proper handlers
+	
+	$pear_libs = array('File/Archive.php' => 'File_Archive', 'MIME/Type.php' => 'MIME_Type');
+	$not_installed = array();
+	$installed = array();
+	foreach($pear_libs as $lib => $link)
+	{
+		if((@include_once $lib) === false)
+		{
+			$not_installed[] = array(
+				'link' => array(
+					'url' => 'http://pear.php.net/package/' . $link,
+					'text' => $link,
+				),
+			);
+		}
+		else
+		{
+			$installed[] = array(
+				'link' => array(
+					'url' => 'http://pear.php.net/package/' . $link,
+					'text' => $link,
+				),
+			);
+		}
+	}
+	
+	if(dependency('pear_installed'))
+	{
+		$status['pear_installed'] = array(
+			'name' => 'PEAR Installed',
+			'status' => (count($not_installed) > 0)?'warn':'',
+			'description' => array(
+				'list' => array(
+					'The system has detected that PEAR is installed properly.',
+					'The PEAR library is an extensive PHP library that provides common functions for modules and modules in the site.',
+				),
+			),
+			'value' => array(
+				'text' => array(
+					'PEAR Detected',
+				),
+			),
+		);
+		
+		if(count($not_installed) > 0)
+		{
+			$status['pear_installed']['value']['text'][] = 'However, the following packages must be installed:';
+			$status['pear_installed']['value']['text'][] = array('list' => $not_installed);
+		}
+		else
+		{
+			$status['pear_installed']['value']['text'][] = 'The following required packages are also installed:';
+			$status['pear_installed']['value']['text'][] = array('list' => $installed);
+		}
+	}
+	else
+	{
+		$status['pear_installed'] = array(
+			'name' => 'PEAR Missing',
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					'The system has detected that PEAR is NOT INSTALLED.',
+					'The PEAR library is an extensive PHP library that provides common functions for modules and modules in the site.',
+				),
+			),
+			'value' => array(
+				'text' => array(
+					array(
+						'link' => array(
+							'url' => 'http://pear.php.net/',
+							'text' => 'Get PEAR',
+						),
+					),
+					'As well as the following libraries:',
+					array('list' => $not_installed),
+				),
+			),
+		);
+	}
+	
+	
+	if(dependency('getid3_installed'))
+	{
+		$status['getid3_installed'] = array(
+			'name' => 'getID3() Library',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'The system has detected that getID3() library is installed in the includes directory.',
+					'getID3() is a library for reading file headers for MP3s and many different file formats.',
+				),
+			),
+			'type' => 'label',
+			'value' => 'getID3() Library detected',
+		);
+	}
+	else
+	{
+		$status['getid3_installed'] = array(
+			'name' => 'getID3() Library Missing',
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					'The system has detected that getID3() Library is NOT INSTALLED.',
+					'The root of the getID3() library must be placed in &lt;site root&gt;/include/getid3/',
+					'getID3() is a library for reading file headers for MP3s and many different file formats.',
+				),
+			),
+			'value' => array(
+				'link' => array(
+					'url' => 'http://www.smarty.net/',
+					'text' => 'Get ID3()',
+				),
+			),
+		);
+	}
+	
+	if(dependency('snoopy_installed'))
+	{
+		$status['snoopy_installed'] = array(
+			'name' => 'Snoopy cUrl API',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'The system has detected that the Scoopy cUrl API is installed in the includes directory.',
+					'Snoopy is an API for making connections to other sites and downloading web pages and files, this is used by the db_amazon module.',
+				),
+			),
+			'type' => 'label',
+			'value' => 'Snoopy detected',
+		);
+	}
+	else
+	{
+		$status['snoopy_installed'] = array(
+			'name' => 'Snoopy cUrl API Missing',
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					'The system has detected that Snoopy cUrl API is NOT INSTALLED.',
+					'The Snoopy class (Snoopy.class.php) must be placed in &lt;site root&gt;/include/',
+					'Snoopy is an API for making connections to other sites and downloading web pages and files, this is used by the db_amazon module.',
+				),
+			),
+			'value' => array(
+				'link' => array(
+					'url' => 'http://sourceforge.net/projects/snoopy/',
+					'text' => 'Get Snoopy',
+				),
+			),
+		);
+	}
+	
+	if(dependency('geshi_installed'))
+	{
+		$status['geshi_installed'] = array(
+			'name' => 'Geshi (Generic Syntax Highlighter)',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'The system has detected that the Geshi Library is installed in the includes directory.',
+					'Geshi is used to highlight a variety of source code files.',
+				),
+			),
+			'type' => 'label',
+			'value' => 'Geshi detected',
+		);
+	}
+	else
+	{
+		$status['geshi_installed'] = array(
+			'name' => 'Geshi (Generic Syntax Highlighter) Missing',
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					'The system has detected that the Geshi Library is NOT INSTALLED.',
+					'The Geshi root directory must be placed in &lt;site root&gt;/include/',
+					'Geshi is used to highlight a variety of source code files.',
+				),
+			),
+			'value' => array(
+				'link' => array(
+					'url' => 'http://qbnz.com/highlighter/',
+					'text' => 'Get Geshi',
+				),
+			),
+		);
+	}
+
+	if(dependency('extjs_installed'))
+	{
+		$status['extjs_installed'] = array(
+			'name' => 'EXT JS',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'The system has detected that EXT JS is installed in the templates/plain/extjs directory.',
+					'EXT JS is a javascript library for creating windows and toolbars in templates, this library can be used across all templates.',
+				),
+			),
+			'type' => 'label',
+			'value' => 'EXT JS Detected',
+		);
+	}
+	else
+	{
+		$status['extjs_installed'] = array(
+			'name' => 'EXT JS Missing',
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					'The system has detected that EXT JS is NOT INSTALLED.',
+					'The EXT JS root folder must be placed in &lt;site root&gt;/templates/plain/extjs/',
+					'EXT JS is a javascript library for creating windows and toolbars in templates, this library can be used across all templates.',
+				),
+			),
+			'value' => array(
+				'link' => array(
+					'url' => 'http://www.extjs.com/',
+					'text' => 'Get EXT JS',
+				),
+			),
+		);
+	}
+	
+	
+	return $status;
+}
+
+/**
+ * @}
+ */
+
+/**
  * Implementation of configure. Checks for convert path
  * @ingroup configure
  */
@@ -576,39 +1005,6 @@ function configure_core($settings)
 			'mac' => 'Mac',
 		),
 	);
-	
-	// settings permission
-	if(setting_writable_settings_file($settings))
-	{
-		$options['writable_settings_file'] = array(
-			'name' => lang('settings access title', 'Access to Settings'),
-			'status' => '',
-			'description' => array(
-				'list' => array(
-					lang('settings access description', 'The system has detected that is has access to the settings file.  Write permissions should be removed when this installation is complete.'),
-				),
-			),
-			'type' => 'text',
-			'disabled' => true,
-			'value' => setting_settings_file($settings),
-		);
-	}
-	else
-	{
-		$options['writable_settings_file'] = array(
-			'name' => lang('settings access title', 'Access to Settings'),
-			'status' => 'fail',
-			'description' => array(
-				'list' => array(
-					lang('settings access fail description 1', 'The system would like access to the following file.  This is so it can write all the settings when we are done with the install.'),
-					lang('settings access fail description 2', 'Please create this file, and grant it Read/Write permissions.'),
-				),
-			),
-			'type' => 'text',
-			'disabled' => true,
-			'value' => setting_settings_file($settings),
-		);
-	}
 	
 	if(setting_modrewrite($settings))
 	{
@@ -650,434 +1046,12 @@ function configure_core($settings)
 			),
 		);
 	}
-
-	if(setting_memory_limit($settings))
-	{
-		$options['memory_limit'] = array(
-			'name' => 'Memory Limit',
-			'status' => '',
-			'description' => array(
-				'list' => array(
-					'The system has detected that the set memory limit is enough to function properly.',
-					'This system requires a large amount of memory for encoding and converting files, some of the third party libraries are not memory efficient.',
-					'PHP reports that the set memory_limit is ' . ini_get('memory_limit') . '.',
-				),
-			),
-			'disabled' => true,
-			'value' => array(
-				'link' => array(
-					'url' => 'http://php.net/manual/en/ini.core.php',
-					'text' => 'PHP Core INI Settings',
-				),
-			),
-		);
-	}
-	else
-	{
-		$options['memory_limit'] = array(
-			'name' => 'Memory Limit',
-			'status' => '',
-			'description' => array(
-				'list' => array(
-					'The system has detected that the set memory limit is NOT ENOUGH for the system to function properly.',
-					'This system requires a large amount of memory for encoding and converting files, some of the third party libraries are not memory efficient.',
-					'PHP reports that the set memory_limit is ' . ini_get('memory_limit') . '.',
-				),
-			),
-			'disabled' => true,
-			'value' => array(
-				'link' => array(
-					'url' => 'http://php.net/manual/en/ini.core.php',
-					'text' => 'PHP Core INI Settings',
-				),
-			),
-		);
-	}
-	
-	if(setting_exists_local_root($settings))
-	{
-		$options['local_root'] = array(
-			'name' => 'Local Root',
-			'status' => '',
-			'description' => array(
-				'list' => array(
-					'This is the directory that the site lives in.',
-					'This directory MUST end with a directory seperate such as / or \.',
-				),
-			),
-			'type' => 'text',
-			'value' => $settings['local_root'],
-		);
-	}
-	else
-	{
-		$options['local_root'] = array(
-			'name' => 'Local Root',
-			'status' => 'fail',
-			'description' => array(
-				'list' => array(
-					'The system has detected that there is no "include" directory in the site root folder.  You must specify the root directory that the site lives in.',
-					'This directory MUST end with a directory seperate such as / or \.',
-				),
-			),
-			'type' => 'text',
-			'value' => $settings['local_root'],
-		);
-	}
-	
-	if(setting_exists_adodb($settings))
-	{
-		$options['exists_adodb'] = array(
-			'name' => 'ADOdb Library',
-			'status' => '',
-			'description' => array(
-				'list' => array(
-					'The system has detected that ADOdb is installed in the includes directory.',
-					'ADOdb is a common PHP database abstraction layer that can connect to dozens of SQL databases.',
-				),
-			),
-			'type' => 'label',
-			'value' => 'ADOdb Detected',
-		);
-	}
-	else
-	{
-		$options['exists_adodb'] = array(
-			'name' => 'ADOdb Library Missing',
-			'status' => 'fail',
-			'description' => array(
-				'list' => array(
-					'The system has detected that ADOdb is NOT INSTALLED.',
-					'The root of the ADOdb Library must be placed in &lt;site root&gt;/include/adodb5',
-					'ADOdb is a common PHP database abstraction layer that can connect to dozens of SQL databases.',
-				),
-			),
-			'value' => array(
-				'link' => array(
-					'url' => 'http://adodb.sourceforge.net/',
-					'text' => 'Get ADOdb',
-				),
-			),
-		);
-	}
-	
-	$pear_libs = array('File/Archive.php' => 'File_Archive', 'MIME/Type.php' => 'MIME_Type');
-	$not_installed = array();
-	$installed = array();
-	foreach($pear_libs as $lib => $link)
-	{
-		if((@include_once $lib) === false)
-		{
-			$not_installed[] = array(
-				'link' => array(
-					'url' => 'http://pear.php.net/package/' . $link,
-					'text' => $link,
-				),
-			);
-		}
-		else
-		{
-			$installed[] = array(
-				'link' => array(
-					'url' => 'http://pear.php.net/package/' . $link,
-					'text' => $link,
-				),
-			);
-		}
-	}
-	
-	if(setting_exists_pear($settings))
-	{
-		$options['exists_pear'] = array(
-			'name' => 'PEAR Installed',
-			'status' => (count($not_installed) > 0)?'warn':'',
-			'description' => array(
-				'list' => array(
-					'The system has detected that PEAR is installed properly.',
-					'The PEAR library is an extensive PHP library that provides common functions for modules and modules in the site.',
-				),
-			),
-			'value' => array(
-				'text' => array(
-					'PEAR Detected',
-				),
-			),
-		);
-		
-		if(count($not_installed) > 0)
-		{
-			$options['exists_pear']['value']['text'][] = 'However, the following packages must be installed:';
-			$options['exists_pear']['value']['text'][] = array('list' => $not_installed);
-		}
-		else
-		{
-			$options['exists_pear']['value']['text'][] = 'The following required packages are also installed:';
-			$options['exists_pear']['value']['text'][] = array('list' => $installed);
-		}
-	}
-	else
-	{
-		$options['exists_pear'] = array(
-			'name' => 'PEAR Missing',
-			'status' => 'fail',
-			'description' => array(
-				'list' => array(
-					'The system has detected that PEAR is NOT INSTALLED.',
-					'The PEAR library is an extensive PHP library that provides common functions for modules and modules in the site.',
-				),
-			),
-			'value' => array(
-				'text' => array(
-					array(
-						'link' => array(
-							'url' => 'http://pear.php.net/',
-							'text' => 'Get PEAR',
-						),
-					),
-					'As well as the following libraries:',
-					array('list' => $not_installed),
-				),
-			),
-		);
-	}
-	
-	
-	if(setting_exists_getid3($settings))
-	{
-		$options['exists_getid3'] = array(
-			'name' => 'getID3() Library',
-			'status' => '',
-			'description' => array(
-				'list' => array(
-					'The system has detected that getID3() library is installed in the includes directory.',
-					'getID3() is a library for reading file headers for MP3s and many different file formats.',
-				),
-			),
-			'type' => 'label',
-			'value' => 'getID3() Library detected',
-		);
-	}
-	else
-	{
-		$options['exists_getid3'] = array(
-			'name' => 'getID3() Library Missing',
-			'status' => 'fail',
-			'description' => array(
-				'list' => array(
-					'The system has detected that getID3() Library is NOT INSTALLED.',
-					'The root of the getID3() library must be placed in &lt;site root&gt;/include/getid3/',
-					'getID3() is a library for reading file headers for MP3s and many different file formats.',
-				),
-			),
-			'value' => array(
-				'link' => array(
-					'url' => 'http://www.smarty.net/',
-					'text' => 'Get ID3()',
-				),
-			),
-		);
-	}
-	
-	if(setting_exists_snoopy($settings))
-	{
-		$options['exists_snoopy'] = array(
-			'name' => 'Snoopy cUrl API',
-			'status' => '',
-			'description' => array(
-				'list' => array(
-					'The system has detected that the Scoopy cUrl API is installed in the includes directory.',
-					'Snoopy is an API for making connections to other sites and downloading web pages and files, this is used by the db_amazon module.',
-				),
-			),
-			'type' => 'label',
-			'value' => 'Snoopy detected',
-		);
-	}
-	else
-	{
-		$options['exists_snoopy'] = array(
-			'name' => 'Snoopy cUrl API Missing',
-			'status' => 'fail',
-			'description' => array(
-				'list' => array(
-					'The system has detected that Snoopy cUrl API is NOT INSTALLED.',
-					'The Snoopy class (Snoopy.class.php) must be placed in &lt;site root&gt;/include/',
-					'Snoopy is an API for making connections to other sites and downloading web pages and files, this is used by the db_amazon module.',
-				),
-			),
-			'value' => array(
-				'link' => array(
-					'url' => 'http://sourceforge.net/projects/snoopy/',
-					'text' => 'Get Snoopy',
-				),
-			),
-		);
-	}
-	
-	if(setting_exists_geshi($settings))
-	{
-		$options['exists_geshi'] = array(
-			'name' => 'Geshi (Generic Syntax Highlighter)',
-			'status' => '',
-			'description' => array(
-				'list' => array(
-					'The system has detected that the Geshi Library is installed in the includes directory.',
-					'Geshi is used to highlight a variety of source code files.',
-				),
-			),
-			'type' => 'label',
-			'value' => 'Geshi detected',
-		);
-	}
-	else
-	{
-		$options['exists_geshi'] = array(
-			'name' => 'Geshi (Generic Syntax Highlighter) Missing',
-			'status' => 'fail',
-			'description' => array(
-				'list' => array(
-					'The system has detected that the Geshi Library is NOT INSTALLED.',
-					'The Geshi root directory must be placed in &lt;site root&gt;/include/',
-					'Geshi is used to highlight a variety of source code files.',
-				),
-			),
-			'value' => array(
-				'link' => array(
-					'url' => 'http://qbnz.com/highlighter/',
-					'text' => 'Get Geshi',
-				),
-			),
-		);
-	}
-
-	if(setting_exists_extjs($settings))
-	{
-		$options['exists_extjs'] = array(
-			'name' => 'EXT JS',
-			'status' => '',
-			'description' => array(
-				'list' => array(
-					'The system has detected that EXT JS is installed in the templates/plain/extjs directory.',
-					'EXT JS is a javascript library for creating windows and toolbars in templates, this library can be used across all templates.',
-				),
-			),
-			'type' => 'label',
-			'value' => 'EXT JS Detected',
-		);
-	}
-	else
-	{
-		$options['exists_extjs'] = array(
-			'name' => 'EXT JS Missing',
-			'status' => 'fail',
-			'description' => array(
-				'list' => array(
-					'The system has detected that EXT JS is NOT INSTALLED.',
-					'The EXT JS root folder must be placed in &lt;site root&gt;/templates/plain/extjs/',
-					'EXT JS is a javascript library for creating windows and toolbars in templates, this library can be used across all templates.',
-				),
-			),
-			'value' => array(
-				'link' => array(
-					'url' => 'http://www.extjs.com/',
-					'text' => 'Get EXT JS',
-				),
-			),
-		);
-	}
 	
 	return $options;
 }
 /**
  * @}
  */
-
-/**
- * Abstracted from setup_modules <br />
- * Generates a list of modules from a specified directory <br />
- * This allows for modules to load more modules, such as admin_tools
- * @ingroup setup
- * @param path The path to load modules from
- * @return An array containing only the modules found in the specified directory, modules loaded are also added to the GLOBAL list of modules
- */
-function setup_register_modules($path)
-{
-	$files = fs_file::get(array('dir' => $GLOBALS['settings']['local_root'] . $path, 'limit' => 32000), $count, true);
-	
-	$modules = array();
-
-	if(is_array($files))
-	{
-		foreach($files as $i => $file)
-		{
-			if(is_file($file['Filepath']))
-			{
-				include_once $file['Filepath'];
-				
-				// determin module based on path
-				$module = basename($file['Filepath']);
-				
-				// functional prefix so there can be multiple modules with the same name
-				$prefix = substr($file['Filepath'], strlen($GLOBALS['settings']['local_root']), -strlen($module));
-				
-				// remove slashes and replace with underscores
-				$prefix = str_replace(array('/', '\\'), '_', $prefix);
-				
-				// remove modules_ prefix so as not to be redundant
-				if(substr($prefix, 0, 8) == 'modules_') $prefix = substr($prefix, 8);
-				
-				// remove extension from module name
-				$module = substr($module, 0, strrpos($module, '.'));
-				
-				// call register function
-				if(function_exists('register_' . $prefix . $module))
-				{
-					$modules[$module] = call_user_func_array('register_' . $prefix . $module, array());
-					$GLOBALS['modules'][$prefix . $module] = &$modules[$module];
-				}
-				
-				// reorganize the session triggers for easy access
-				if(isset($modules[$module]['session']) && is_array($modules[$module]['session']))
-				{
-					foreach($modules[$module]['session'] as $i => $var)
-					{
-						if(is_numeric($i))
-							$GLOBALS['triggers']['session'][$var][$module] = 'session_' . $prefix . $module;
-						elseif(is_callable($var))
-							$GLOBALS['triggers']['session'][$i][$module] = $var;
-					}
-				}
-				
-				// reorganize alter query triggers
-				if(isset($modules[$module]['alter query']) && is_array($modules[$module]['alter query']))
-				{
-					foreach($modules[$module]['alter query'] as $i => $var)
-					{
-						if(is_numeric($i))
-							$GLOBALS['triggers']['alter query'][$var][$module] = 'alter_query_' . $prefix . $module;
-						elseif(is_callable($var))
-							$GLOBALS['triggers']['alter query'][$i][$module] = $var;
-					}
-				}
-				
-				// reorganize alter query triggers
-				if(isset($modules[$module]['always output']) && is_array($modules[$module]['always output']))
-				{
-					// for named arrays, the key variable will call the named function
-					foreach($modules[$module]['always output'] as $i => $var)
-					{
-						if(is_numeric($i))
-							$GLOBALS['triggers']['always output'][$var][$module] = 'output_' . $prefix . $module;
-						elseif(is_callable($var))
-							$GLOBALS['triggers']['always output'][$i][$module] = $var;
-					}
-				}
-			}
-		}
-	}
-	
-	return $modules;
-}
 
 /**
  * Set up input variables, everything the site needs about the request <br />
@@ -1120,7 +1094,7 @@ function setup_validate()
 	setup_session($_REQUEST);
 	
 	// do not let GoogleBot perform searches or file downloads
-	if($GLOBALS['settings']['no_bots'])
+	if(setting('no_bots'))
 	{
 		if(preg_match('/.*Googlebot.*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
 		{
@@ -1308,8 +1282,8 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 	$path_info = create_path_info($request);
 	
 	// generate a link, with optional domain the html root and path info prepended
-	$link = (($include_domain)?$GLOBALS['settings']['html_domain']:'') . 
-		$GLOBALS['settings']['html_root'] . 
+	$link = (($include_domain)?setting('html_domain'):'') . 
+		setting('html_root') . 
 		$path_info;
 		
 	// add other variables to the query string
@@ -1359,43 +1333,20 @@ function goto($request)
  * Implementation of always output
  * @ingroup output
  */
-function core_variables()
+function core_variables($request)
 {
 	// set a couple more that are used a lot
+	$request['module'] = validate_module($request);
+	$request['cat'] = validate_cat($request);
 	
 	// the entire site depends on this
-	register_output_vars('module', $_REQUEST['module']);
+	register_output_vars('module', $request['module']);
 	
 	// most template pieces use the category variable, so set that
-	register_output_vars('cat', $_REQUEST['cat']);
-	
-	// some templates refer to the dir to determine their own location
-	if(isset($_REQUEST['dir'])) register_output_vars('dir', $_REQUEST['dir']);
-	
-	// this is just a helper variable for templates to use that only need to save 1 setting
-	if(isset($_REQUEST['extra'])) register_output_vars('extra', $_REQUEST['extra']);
+	register_output_vars('cat', $request['cat']);
 	
 	// some templates would like to submit to their own page, generate a string based on the current get variable
 	register_output_vars('get', url($_GET, true));
-	
-	// output user information
-	register_output_vars('user', $_SESSION['user']);
-	
-	// register user settings for this template
-	if(isset($_SESSION['user']['settings']['templates'][$_REQUEST['template']]))
-		register_output_vars('settings', $_SESSION['user']['settings']['templates'][$_REQUEST['template']]);
-	
-	// go through and set the defaults
-	elseif(isset($GLOBALS['templates'][$_REQUEST['template']]['settings']))
-	{
-		$settings = array();
-		foreach($GLOBALS['templates'][$_REQUEST['template']]['settings'] as $key => $setting)
-		{
-			if(isset($setting['default']))
-				$settings[$key] = $setting['default'];
-		}
-		register_output_vars('settings', $settings);
-	}
 }
 
 /**
@@ -1438,11 +1389,10 @@ function set_output_vars()
 		'warn_errors',
 		'note_errors',
 		'output',
-		'alias',
+		'alias', // these are needed for validating paths in templates
 		'alias_regexp',
 		'paths',
-		'paths_regexp',
-		'mte',
+		'paths_regexp', //
 		'module',
 		'modules',
 		'_PEAR_default_error_mode',
@@ -1556,11 +1506,11 @@ function validate_errors_only($request)
  */
 function validate_cat($request)
 {
-	if(isset($request['cat']) && (substr($request['cat'], 0, 3) == 'db_' || substr($request['cat'], 0, 3)))
-		$request['cat'] = (($GLOBALS['settings']['use_database'])?'db_':'fs_') . substr($request['cat'], 3);
-	if(!isset($request['cat']) || !in_array($request['cat'], $GLOBALS['handlers']) || constant($request['cat'] . '::INTERNAL') == true)
-		return $GLOBALS['settings']['use_database']?'db_file':'fs_file';
-	return $request['cat'];
+	// check if it exists
+	if(isset($request['cat']) && in_array($request['cat'], array_keys($GLOBALS['handlers'])))
+		return $request['cat'];
+	else
+		return (setting_use_database() && dependency('database'))?'files':'filesystem';
 }
 
 /**
@@ -1593,7 +1543,7 @@ function validate_order_by($request)
 {
 	$handler = validate_cat($request);
 	
-	$columns = call_user_func($handler . '::columns');
+	$columns = columns($handler);
 	
 	if( !isset($request['order_by']) || !in_array($request['order_by'], $columns) )
 	{
@@ -1604,7 +1554,7 @@ function validate_order_by($request)
 		$columns = split(',', (isset($request['order_by'])?$request['order_by']:''));
 		foreach($columns as $i => $column)
 		{
-			if(!in_array($column, call_user_func($handler . '::columns')))
+			if(!in_array($column, columns($handler)))
 				unset($columns[$i]);
 		}
 		if(count($columns) == 0)
@@ -1623,7 +1573,7 @@ function validate_group_by($request)
 {
 	$handler = validate_cat($request);
 	
-	$columns = call_user_func($handler . '::columns');
+	$columns = columns($handler);
 	
 	if( isset($request['group_by']) && !in_array($request['group_by'], $columns) )
 	{
@@ -1631,7 +1581,7 @@ function validate_group_by($request)
 		$columns = split(',', $request['group_by']);
 		foreach($columns as $i => $column)
 		{
-			if(!in_array($column, call_user_func($handler . '::columns')))
+			if(!in_array($column, columns($handler)))
 				unset($columns[$i]);
 		}
 		if(count($columns) == 0)
@@ -1661,7 +1611,7 @@ function validate_columns($request)
 {
 	$handler = validate_cat($request);
 	
-	$columns = call_user_func($handler . '::columns');
+	$columns = columns($handler);
 	
 	// which columns to search
 	if( isset($request['columns']) && !in_array($request['columns'], $columns) )
@@ -1670,7 +1620,7 @@ function validate_columns($request)
 		if(!is_array($request['columns'])) $request['columns'] = split(',', $request['columns']);
 		foreach($request['columns'] as $i => $column)
 		{
-			if(!in_array($column, call_user_func($handler . '::columns')))
+			if(!in_array($column, columns($handler)))
 				unset($columns[$i]);
 		}
 		if(count($request['columns']) == 0)
@@ -1707,16 +1657,16 @@ function create_path_info(&$request)
 	$path = str_replace('_', '/', $request['module']) . '/';
 	
 	// do not use pretty paths before the site is configured
-	if((defined('NOT_INSTALLED') && NOT_INSTALLED == true) || !setting('modrewrite'))
+	if(!setting('modrewrite'))
 		return '';
 	
 	// make sure the module doesn't actually exists on the web server
-	if(file_exists($GLOBALS['settings']['local_root'] . $path))
+	if(file_exists(setting_local_root() . $path))
 	{
 		// a path without all the underscores replaced would be better then no path at all
 		$path = $request['module'] . '/';
 
-		if(file_exists($GLOBALS['settings']['local_root'] . $path))
+		if(file_exists(setting_local_root() . $path))
 			return '';
 	}
 	
@@ -1917,6 +1867,9 @@ function alter_query_core($request, $props)
 {
 	$request['limit'] = validate_limit($request);
 	$request['start'] = validate_start($request);
+	$request['order_by'] = validate_order_by($request);
+	$request['direction'] = validate_direction($request);
+	
 	$props['LIMIT'] = $request['start'] . ',' . $request['limit'];
 	
 	if(isset($request['group_by'])) $props['GROUP'] = validate_group_by($request);
@@ -1944,6 +1897,14 @@ function alter_query_core($request, $props)
 /**
  * @}
  */
+
+/**
+ * Implementation of status
+ * @ingroup status
+ */
+function status_index()
+{
+}
 
 /**
  * @defgroup output Output Functions

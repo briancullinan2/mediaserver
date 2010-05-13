@@ -35,7 +35,8 @@ define('E_FATAL',					8);
  * "account has been created" */
 define('E_NOTE',					16);
 //@}
-ini_set('include_path', '.');
+
+//ini_set('include_path', '.');
 
 //if(realpath('/') == '/')
 //	include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.nix.php';
@@ -56,44 +57,30 @@ if(file_exists(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.ini'))
 if(!isset($GLOBALS['settings']))
 {
 	// try and forward them to the install page
-	define('NOT_INSTALLED', true);
 	if(!isset($_REQUEST['module'])) $_REQUEST['module'] = 'admin_install';
 }
 
-if(!isset($GLOBALS['settings']['local_root']))
-{
-	// spoof local root
-	$GLOBALS['settings']['local_root'] = dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR;
-}
-if(!isset($GLOBALS['settings']['use_database']))
-{
-	// decide for them
-	$GLOBALS['settings']['use_database'] = false;
-}
-
-/** require compatibility */
-include_once $GLOBALS['settings']['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'compatibility.php';
-
-/** require core functionality */
-include_once $GLOBALS['settings']['local_root'] . 'modules' . DIRECTORY_SEPARATOR . 'core.php';
-include_once $GLOBALS['settings']['local_root'] . 'modules' . DIRECTORY_SEPARATOR . 'settings.php';
-include_once $GLOBALS['settings']['local_root'] . 'modules' . DIRECTORY_SEPARATOR . 'language.php';
-
-//session_cache_limiter('public');
-/** always begin the session */
-session_start();
 
 /** require pear for error handling */
-if((@include_once 'PEAR.php') == false)
+if(include_once 'PEAR.php')
 {
-	define('DEPENDENCY_PROBLEMS', true);
+	include_once 'MIME' . DIRECTORY_SEPARATOR . 'Type.php';
+}
+else
+{
+	class PEAR_Error
+	{
+		var $code = 0;
+		var $message = '';
+		var $backtrace = array();
+	}
+	
 	// bootstrap pear error handling but don't load any other pear dependencies
 	class PEAR
 	{
 		static function raiseError($message, $code)
 		{
-			if(defined('PEAR_ERROR_CALLBACK') && is_callable(PEAR_ERROR_CALLBACK))
-			$error = new stdClass();
+			$error = new PEAR_Error();
 			$error->code = $code;
 			$error->message = $message;
 			$error->backtrace = debug_backtrace();
@@ -109,15 +96,12 @@ if((@include_once 'PEAR.php') == false)
 		}
 	}
 }
-else
-{
-	include_once 'MIME' . DIRECTORY_SEPARATOR . 'Type.php';
-}
+//session_cache_limiter('public');
+session_start();
 
 /** Set the error handler to use our custom function for storing errors */
+error_reporting(E_ALL);
 PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'error_callback');
-set_error_handler('php_to_PEAR_Error', E_ALL);
-PEAR::raiseError('testing', E_USER);
 /** stores a list of all errors */
 $GLOBALS['errors'] = array();
 /** stores a list of all user errors */
@@ -128,6 +112,8 @@ $GLOBALS['warn_errors'] = isset($_SESSION['errors']['warn'])?$_SESSION['errors']
 $GLOBALS['debug_errors'] = isset($_SESSION['errors']['debug'])?$_SESSION['errors']['debug']:array();
 /** stores a list of all notices and friendly messages */
 $GLOBALS['note_errors'] = isset($_SESSION['errors']['note'])?$_SESSION['errors']['note']:array();
+//set_error_handler('php_to_PEAR_Error', E_ALL);
+/** always begin the session */
 
 /** set up all the GLOBAL variables needed throughout the site */
 setup();
@@ -147,41 +133,38 @@ function setup()
 	// this is where most of the initialization occurs, some global variables are set up for other pages and handlers to use
 	//  first the variables are parsed out of the path, just incase mod_rewrite isn't enabled
 	//  in order of importance, the database is set up, the handlers are loaded, the aliases and watch list are loaded, the template system is loaded
+	
+	/** require core functionality */
+	include_once dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . 'core.php';
+	
+	// always include fs_file handler
+	include_once setting_local_root() . 'handlers' . DIRECTORY_SEPARATOR . 'filesystem.php';
+	
+	// register all modules
+	setup_core();
+	
+	/** require compatibility */
+	include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'compatibility.php';
 
-	// set up database to be used everywhere
-	if($GLOBALS['settings']['use_database'])
+	// loop through modules and call setup function
+	foreach($GLOBALS['modules'] as $module => $config)
 	{
-		// include the database wrapper class so it can be used by any page
-		include_once $GLOBALS['settings']['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'database.php';
-		
-		$GLOBALS['database'] = new database($GLOBALS['settings']['db_connect']);
-		
-		// check again incase something went wrong with the connection
-		if($GLOBALS['settings']['use_database'])
-		{
-			
-			// set up the list of handlers
-			setup_handlers();
-		}
-	}
-	else
-	{
-		$GLOBALS['database'] = NULL;
+		// do not call set up if dependencies are not met, this will force strict use of modules functionality
+		// set up the modules in the right order
+		if(dependency($module) && function_exists('setup_' . $module))
+			call_user_func_array('setup_' . $module, array());
 	}
 	
-	// set up aliases for path replacement
-	setup_aliases();
-	
-	// set up mime types because PEAR MIME_Type is retarded
-	setup_mime();
-	
-	// set up a list of modules available to the system
-	setup_register();
-	
-	// set up the settings to use from here on out
-	setup_settings();
-	
+	// setup all the handlers
+	foreach($GLOBALS['handlers'] as $handler => $config)
+	{
+		// do not set up handlers if dependency is not met
+		if(dependency($handler) && function_exists('setup_' . $handler))
+			call_user_func_array('setup_' . $handler, array());
+	}
+
 	//Remove annoying POST error message with the page is refreshed 
+	//  better place for this?
 	if(isset($_POST) && count($_POST) > 0)
 	{
 		$_SESSION['last_request'] = $_REQUEST;
@@ -192,27 +175,48 @@ function setup()
 		$_REQUEST = $_SESSION['last_request'];
 		unset($_SESSION['last_request']);
 	}
-	
-	// set up languages
-	setup_language();
-	
-	// set up list of tables
-	setup_tables();
-	
-	// set up the template system for outputting
-	setup_template();
 
 	// set up variables passed to the system in the request or post
 	setup_validate();
-	
-	// set up users for permission based access
-	setup_user();
-
 }
 
 /**
  * @}
  */
+
+/**
+ * Function for checking in libraries are installed, specifically PEAR which likes to use /local/share/php5/
+ * @param filename the library filename from the scope of the expected include_path
+ * @return the full, real path of the library, or false if it is not found in any include path
+ */
+function include_path($filename)
+{
+	// Check for absolute path
+	if (realpath($filename) == $filename) {
+		return $filename;
+	}
+	
+	// Otherwise, treat as relative path
+	$paths = explode(PATH_SEPARATOR, get_include_path());
+	foreach ($paths as $path)
+	{
+		if (substr($path, -1) == DIRECTORY_SEPARATOR)
+		{
+			$fullpath = $path . $filename;
+		}
+		else
+		{
+			$fullpath = $path . DIRECTORY_SEPARATOR . $filename;
+		}
+		if (file_exists($fullpath))
+		{
+			return $fullpath;
+		}
+	}
+	
+	return false;
+}
+
 
 /**
  * Output a module
@@ -223,6 +227,8 @@ function output($request)
 	$GLOBALS['module'] = $request['module'];
 
 	// output module
+	// if the module is disabled, but has no template, call output function for handling disabledness
+	// otherwise just show template for disabled modules
 	call_user_func_array('output_' . $request['module'], array($request));
 	
 	// only display a template for the current module if there is one
@@ -232,45 +238,14 @@ function output($request)
 	{
 		theme();
 	}
+	
 	// translate the language buffer
-	$lang = validate_language($_REQUEST);
-	if($lang != 'en')
-	{
+	//$lang = validate_language($_REQUEST);
+	//if($lang != 'en')
+	//{
 		// find a place to store this
-		$_SESSION['translated'] = array_merge($_SESSION['translated'], array_combine(array_keys($GLOBALS['language_buffer']), translate($GLOBALS['language_buffer'], $lang)));
-	}
-}
-
-/**
- * Check if the specified class is just a wrapper for some parent database
- * @param handler is the catagory or handler to check
- * @return true or false if the class is a wrapper
- */
-function is_wrapper($handler)
-{
-	// fs_ handlers are never wrappers
-	if($GLOBALS['settings']['use_database'] == false)
-		return false;
-	if($handler == 'db_file')
-		return false;
-	return (constant($handler . '::DATABASE') == constant(get_parent_class($handler) . '::DATABASE'));
-}
-
-/**
- * Check if a handler handles a certain type of files
- * this is a useful call for templates to use because it provides short syntax
- * @param file The file to test if it is handled
- * @param handler The handler to check if it handles the specified file
- * @return true if the specified handler handles the specified file, false if the handler does not handle that file
- */
-function handles($file, $handler)
-{
-	if(class_exists(($GLOBALS['settings']['use_database']?'db_':'fs_') . $handler))
-	{
-		if($GLOBALS['settings']['use_alias'] == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
-		return call_user_func(($GLOBALS['settings']['use_database']?'db_':'fs_') . $handler . '::handles', $file);
-	}
-	return false;
+	//	$_SESSION['translated'] = array_merge($_SESSION['translated'], array_combine(array_keys($GLOBALS['language_buffer']), translate($GLOBALS['language_buffer'], $lang)));
+	//}
 }
 
 /**
@@ -293,15 +268,15 @@ function selfURL()
 function checkAccess($file)
 {
 	// user can access files not handled by user handler
-	if(!db_users::handles($file['Filepath']))
+	if(!handles($file['Filepath'], 'db_users'))
 		return true;
 		
 	$tmp_file = str_replace('\\', '/', $file['Filepath']);
-	if($GLOBALS['settings']['use_alias'] == true) $tmp_file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $tmp_file);
+	if(setting('use_alias') == true) $tmp_file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $tmp_file);
 	
 	// user can always access own files
-	if(substr($tmp_file, 0, strlen($GLOBALS['settings']['local_users'])) == $GLOBALS['settings']['local_users'])
-		$user = substr($tmp_file, strlen($GLOBALS['settings']['local_users']));
+	if(substr($tmp_file, 0, strlen(setting('local_users'))) == setting('local_users'))
+		$user = substr($tmp_file, strlen(setting('local_users')));
 	
 	if(strpos($user, '/') !== false)
 		$user = substr($user, 0, strpos($user, '/'));
@@ -310,11 +285,11 @@ function checkAccess($file)
 		return true;
 	
 	// the current user can access public files
-	if(substr($tmp_file, 0, strlen($GLOBALS['settings']['local_users'] . $user . '/public/')) == $GLOBALS['settings']['local_users'] . $user . '/public/')
+	if(substr($tmp_file, 0, strlen(setting('local_users') . $user . '/public/')) == setting('local_users') . $user . '/public/')
 		return true;
 	
 	// the current user can access private files if they provided a key
-	if(substr($tmp_file, 0, strlen($GLOBALS['settings']['local_users'] . $user . '/private/')) == $GLOBALS['settings']['local_users'] . $user . '/private/')
+	if(substr($tmp_file, 0, strlen(setting('local_users') . $user . '/private/')) == setting('local_users') . $user . '/private/')
 	{
 		if(isset($_SESSION['settings']['keys']) && 
 		   isset($file['PrivateKey']) &&
@@ -441,11 +416,13 @@ function parseInner($file, &$last_path, &$inside_path)
  */
 function getAllColumns()
 {
+	if(!isset($GLOBALS['handlers']))
+		return array();
 	$columns = array();
-	foreach($GLOBALS['handlers'] as $i => $handler)
+	foreach($GLOBALS['handlers'] as $handler => $config)
 	{
-		if($GLOBALS['settings']['use_database'] == false || constant($handler . '::INTERNAL') == false)
-			$columns = array_merge($columns, array_flip(call_user_func($handler . '::columns')));
+		if(setting_use_database() == false || is_internal($handler) == false)
+			$columns = array_merge($columns, array_flip(columns($handler)));
 	}
 	
 	$columns = array_keys($columns);
@@ -471,7 +448,9 @@ function roundFileSize($dirsize)
  */
 function getIDKeys()
 {
-	$id_keys = array_flip(db_ids::columns());
+	if(setting_use_database() == false)
+		return array();
+	$id_keys = array_flip(columns('ids'));
 	unset($id_keys['id']);
 	unset($id_keys['Filepath']);
 	unset($id_keys['Hex']);
@@ -611,7 +590,7 @@ function crc32_file($filename)
         $buffer = '';
        
         while (!feof($fp)) {
-            $buffer=fread($fp, $GLOBALS['settings']['buffer_size']);
+            $buffer=fread($fp, setting('buffer_size'));
             $len=strlen($buffer);      
             $t=crc32($buffer);   
        
@@ -770,11 +749,11 @@ function php_to_PEAR_Error($error_code, $error_str, $error_file, $error_line)
 	if($error_code & E_WARNING || $error_code & E_STRICT || $error_code & E_NOTICE)
 	{
 		// if verbose is false drop the error
-		if(defined('DEPENDENCY_PROBLEMS') && DEPENDENCY_PROBLEMS == true)
+		if(setting_installed() == false)
 		{
 			$error_code = E_DEBUG|E_WARN|E_USER;
 		}
-		elseif(isset($GLOBALS['settings']['verbose']) && $GLOBALS['settings']['verbose'] == true)
+		elseif(setting('verbose') == true)
 		{
 			$error_code = E_WARN|E_DEBUG;
 		}
@@ -786,7 +765,7 @@ function php_to_PEAR_Error($error_code, $error_str, $error_file, $error_line)
 	else
 		$error_code = E_DEBUG;
 		
-	if($error_code !== NULL) PEAR::raiseError($error_str, $error_code);
+	PEAR::raiseError($error_str, $error_code);
 	
 	return true;
 }
@@ -818,14 +797,14 @@ function error_callback($error)
 		$error->message .= ' in ' . $error->backtrace[$i]['file'] . ' on line ' . $error->backtrace[$i]['line'];
 	}
 	
-	if($error->code & E_DEBUG)
-		$GLOBALS['debug_errors'][] = $error;
 	if($error->code & E_USER)
 		$GLOBALS['user_errors'][] = $error;
 	if($error->code & E_WARN)
 		$GLOBALS['warn_errors'][] = $error;
 	if($error->code & E_NOTE)
 		$GLOBALS['note_errors'][] = $error;
+	if($error->code & E_DEBUG || setting('verbose') == true)
+		$GLOBALS['debug_errors'][] = $error;
 	
 	$GLOBALS['errors'][] = $error;
 }
@@ -962,10 +941,10 @@ function setup_mime()
 {
 	// this will load the mime-types from a linux dist mime.types file stored in includes
 	// this will organize the types for easy lookup
-	if(file_exists($GLOBALS['settings']['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'mime.types'))
+	if(file_exists(setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'mime.types'))
 	{
-		$handle = fopen($GLOBALS['settings']['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'mime.types', 'r');
-		$mime_text = fread($handle, filesize($GLOBALS['settings']['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'mime.types'));
+		$handle = fopen(setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'mime.types', 'r');
+		$mime_text = fread($handle, filesize(setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'mime.types'));
 		fclose($handle);
 		
 		$mimes = split("\n", $mime_text);

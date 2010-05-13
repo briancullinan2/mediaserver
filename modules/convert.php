@@ -13,6 +13,7 @@ function register_convert()
 		'path' => __FILE__,
 		'notemplate' => true,
 		'settings' => array('convert_path', 'convert_args'),
+		'depends on' => array('converter'),
 	);
 }
 
@@ -81,6 +82,14 @@ function configure_convert($settings)
 }
 
 /**
+ * Implementation of status
+ * @ingroup status
+ */
+function status_convert()
+{
+}
+
+/**
  * Implementation of setting
  * @ingroup setting
  * @return The default install path for VLC on windows or linux based on validate_SYSTEM_TYPE
@@ -145,7 +154,7 @@ function validate_cformat($request)
 	if(!isset($request['cformat']))
 	{
 		$request['convert'] = validate_convert($request);
-		switch(strtoupper($request['convert']))
+		switch($request['convert'])
 		{
 			case 'jpg':
 				$request['cformat'] = 'jpeg';
@@ -197,7 +206,6 @@ function validate_cwidth($request)
  */
 function output_convert($request)
 {
-
 	set_time_limit(0);
 	ignore_user_abort(1);
 
@@ -221,12 +229,12 @@ function output_convert($request)
 	}
 
 	// get the file path from the database
-	$files = call_user_func_array($_REQUEST['cat'] . '::get', array($request, &$count));
+	$files = get_files($request, $count, $request['cat']);
 	
 	if(count($files) > 0)
 	{
 		// the ids handler will do the replacement of the ids
-		$files = db_ids::get(array('cat' => $request['cat']), $tmp_count, $files);
+		$files = get_ids(array('cat' => $request['cat']), $tmp_count, $files);
 		
 		$tmp_request = array();
 		$tmp_request['file'] = $files[0]['Filepath'];
@@ -235,11 +243,11 @@ function output_convert($request)
 		$tmp_request = array_merge(array_intersect_key($files[0], getIDKeys()), $tmp_request);
 		
 		// get all the information incase we need to use it
-		foreach($GLOBALS['handlers'] as $i => $handler)
+		foreach($GLOBALS['handlers'] as $handler => $config)
 		{
-			if($handler != $request['cat'] && constant($handler . '::INTERNAL') == false && call_user_func_array($handler . '::handles', array($files[0]['Filepath'])))
+			if($handler != $request['cat'] && is_internal($handler) == false && handles($files[0]['Filepath'], $handler))
 			{
-				$return = call_user_func_array($handler . '::get', array($tmp_request, &$tmp_count));
+				$return = get_files($tmp_request, $tmp_count, $handler);
 				if(isset($return[0])) $files[0] = array_merge($return[0], $files[0]);
 			}
 		}

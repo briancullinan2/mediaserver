@@ -1,3 +1,26 @@
+2010-05-12
+Made lots of changes regarding the handlers
+	Handlers register themselves just like any other module
+	All that is required different from modules is the database field in the config
+Handlers can now changes what database they are using by specifying a database in the $request['cat'] and passing it to the get_files() function
+	The 3rd parameter should be set to 'files' to use default database get functionality
+fs_ handlers now merged with the database handlers and some have been consolidated back in to modules
+If dependencies fail on a module, it is disabled
+Template module now uses always_output field to always output template information for use in templates
+All setup_ functions have been abstracted from the modules and handlers and called automatically
+Getting closer to a more usable API
+
+2010-05-05
+Created dependency_ functions for checking system requirements
+Created status_ functions for each module to submit information to the status
+Modules config now supports a 'depends on' argument that checks dependencies
+	This can be the name of a module, or the name of a dependency function
+Wrote a module_sort function to sort the modules based on dependencies
+Removed use of DEPENDENCY_PROBLEMS, USE_DATABASE, and NOT_INSTALLED
+Modules are set up after their dependencies
+Handlers and Modules now set up by their modules instead of random functions laying around
+Localroot doesn't change, this is basically just a convenience function for other modules to use
+
 2010-05-04
 Fixed some spacing problems with the search box in IE, extremely annoying
 Fixed counting of file types in select module

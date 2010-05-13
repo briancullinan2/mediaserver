@@ -13,7 +13,7 @@ function register_select()
 		'description' => 'Allows users to select files and saves the selected files in their session and profile.',
 		'privilage' => 1,
 		'path' => __FILE__,
-		'session' => array('item', 'on', 'off'),
+		'session' => array('item', 'on', 'off', 'selected', 'id'),
 		'alter query' => array('selected')
 	);
 }
@@ -192,6 +192,57 @@ function session_select($request)
 	return $save;
 }
 
+function alter_query_select($request, $props)
+{
+	$request['selected'] = validate_selected($request);
+	
+	// select an array of ids!
+	if(isset($request['selected']) && count($request['selected']) > 0 )
+	{
+		$where = '';
+		// compile where statement for either numeric id or encoded path
+		foreach($request['selected'] as $i => $id)
+		{
+			if(is_numeric($id))
+			{
+				$where .= ' id = ' . $id . ' OR';
+			}
+			else
+			{
+				// unpack encoded path and add it to where
+				$where .= ' Hex = "' . $id . '" OR';
+			}
+		}
+		// remove last or and add to where list
+		$props['WHERE'] = array(substr($where, 0, strlen($where)-2));
+
+		// selected items have priority over all the other options!
+		unset($props['LIMIT']);
+		unset($props['ORDER']);
+		
+		// get ids from centralized id database
+		$files = $GLOBALS['database']->query(array('WHERE' => $props['WHERE'], 'SELECT' => 'ids'), true);
+		
+		if(count($files) > 0)
+		{
+			// loop through ids and construct new where based on handler
+			$where = '';
+			foreach($files as $i => $file)
+			{
+					$where .= ' id = ' . $file[$request['cat'] . '_id'] . ' OR';
+			}
+			$props['WHERE'] = array(substr($where, 0, strlen($where)-2));
+		}
+		else
+		{
+			PEAR::raiseError('IDs not found!', E_USER);
+			return false;
+		}
+	}
+	
+	return $props;
+}
+
 /**
  * Implementation of output
  * @ingroup output
@@ -212,8 +263,8 @@ function output_select($request)
 	if(isset($request['id'])) unset($request['id']);
 	
 	// make select call
-	$files = call_user_func_array($request['cat'] . '::get', array($request, &$total_count));
-	
+	$files = get_files($request, $total_count, $request['cat']);
+
 	if(!is_array($files))
 	{
 		PEAR::raiseError('There was an error with the query.', E_USER);
@@ -224,16 +275,20 @@ function output_select($request)
 	$order_keys_values = array();
 	
 	// the ids handler will do the replacement of the ids
-	if(setting('use_database') == true)
+	if(setting_use_database() == true)
 	{
 		if(count($files) > 0)
 		{
 			// wrappers for parent databases do not get IDs!
 			if(!is_wrapper($request['cat']))
 			{
-				$files = db_ids::get(array('cat' => $request['cat']), $tmp_count, $files);
+				$files = get_ids(array('cat' => $request['cat']), $tmp_count, $files);
 			}
-			$files = db_users::get(array(), $tmp_count, $files);
+			else
+			{
+				$files = get_ids(array('cat' => $GLOBALS['handlers'][$request['cat']]['wrapper']), $tmp_count, $files);
+			}
+			$files = get_users(array(), $tmp_count, $files);
 		}
 	}
 	
@@ -251,26 +306,26 @@ function output_select($request)
 	
 		// merge with tmp_request to look up more information
 		$tmp_request = array_merge(array_intersect_key($file, getIDKeys()), $tmp_request);
-		
+
 		// short results to not include information from all the handlers
 		if(!isset($request['short']) || $request['short'] == false)
 		{
 			// merge all the other information to each file
-			foreach($GLOBALS['handlers'] as $i => $handler)
+			foreach($GLOBALS['handlers'] as $handler => $config)
 			{
-				if($handler != $request['cat'] && constant($handler . '::INTERNAL') == false && call_user_func_array($handler . '::handles', array($file['Filepath'], $file)))
+				if($handler != $request['cat'] && is_internal($handler) == false && handles($file['Filepath'], $handler))
 				{
-					$return = call_user_func_array($handler . '::get', array($tmp_request, &$tmp_count));
+					$return = get_files($tmp_request, $tmp_count, $handler);
 					if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
 					
 					// do some counting
-					if($handler == 'db_audio' || $handler == 'fs_audio')
+					if($handler == 'audio')
 						$audio_count++;
-					elseif($handler == 'db_video' || $handler == 'fs_video')
+					elseif($handler == 'video')
 						$video_count++;
-					elseif($handler == 'db_image' || $handler == 'fs_image') 
+					elseif($handler == 'image') 
 						$image_count++;
-					elseif($handler == 'db_files' || $handler == 'fs_files')
+					elseif($handler == 'files')
 						$files_count++;
 				}
 				// this will help with our counting
@@ -292,7 +347,7 @@ function output_select($request)
 	
 	// only order it if the database is not already going to order it
 	// this will unlikely be used when the database is in use
-	if(setting('use_database') == false)
+	if(setting_use_database() == false)
 	{
 		if(isset($order_keys_values[0]) && is_numeric($order_keys_values[0]))
 			$sorting = SORT_NUMERIC;
@@ -301,7 +356,7 @@ function output_select($request)
 		
 		array_multisort($files, SORT_ASC, $sorting, $order_keys_values);
 	}
-	
+
 	register_output_vars('files', $files);
 	
 	// set counts

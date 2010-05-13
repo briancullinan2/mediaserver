@@ -95,10 +95,10 @@ function theme_live_debug_block()
 			}
 		}
 	</script>
-	<div id="debug" class="debug hide">
 	<?php
-	if($GLOBALS['templates']['vars']['user']['Username'] != 'guest')
+	if($GLOBALS['templates']['vars']['user']['Username'] != 'guest' || !setting_use_database())
 	{
+		?><div id="debug" class="debug hide"><?php
 		foreach($GLOBALS['debug_errors'] as $i => $error)
 		{
 			?>
@@ -112,25 +112,25 @@ function theme_live_debug_block()
 			</div>
 			<?php
 		}
+		// clear debug errors
+		$GLOBALS['debug_errors'] = array();
 		?>
-		<a href="javascript:return true;" onClick="if(this.hidden == false) { document.getElementById('debug').className='debug hide'; this.hidden=true; this.innerHTML = 'Un Hide'; } else { document.getElementById('debug').className='debug'; this.hidden=false; this.innerHTML = 'Hide'; }">Un Hide</a>
+		<a id="hide_link" href="javascript:return true;" onClick="if(this.hidden == false) { document.getElementById('debug').className='debug hide'; this.hidden=true; this.innerHTML = 'Un Hide'; } else { document.getElementById('debug').className='debug'; this.hidden=false; this.innerHTML = 'Hide'; }">Un Hide</a>
+		</div>
 		<?php
 	}
 	else
 	{
-		?>
+		?><div id="debug" class="debug">
 		<form action="<?php print url('module=users&users=login&return=' . urlencode($GLOBALS['templates']['vars']['get'])); ?>" method="post">
 			Administrators: Log in to select debug options. Username: <input type="text" name="username" value="" />
 			Password: <input type="password" name="password" value="" />
 			<input type="submit" value="Login" />
 			<input type="reset" value="Reset" />
 		</form>
+		</div>
 		<?php
 	}
-	$GLOBALS['debug_errors'] = array();
-	
-	?></div><?php
-
 }
 
 function theme_live_breadcrumbs()
@@ -237,7 +237,7 @@ function live_get_theme_color()
 function theme_live_languages()
 {
 	?><div id="languages" style="float:right; margin-bottom:-40px;">
-	Language: <select name="language" onChange="window.location.href='<?php print url($GLOBALS['templates']['var']['get'] . '?language='); ?>' + this.value;">
+	Language: <select name="language" onChange="window.location.href='<?php print $GLOBALS['templates']['vars']['get']; ?>?language=' + this.value;">
 	<?php
 	foreach($GLOBALS['templates']['vars']['languages'] as $code => $language)
 	{

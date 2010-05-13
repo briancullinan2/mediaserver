@@ -1,20 +1,5 @@
 <?php
 
-//$no_setup = true;
-//ini_set('include_path', ini_get('include_path') . ':' . dirname(__FILE__));
-if(file_exists(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb.inc.php'))
-{
-	include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb-errorpear.inc.php';
-	include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb.inc.php';
-}
-else
-{
-	// something has gone terribly wrong, disable database and notify administrator
-	$GLOBALS['settings']['use_database'] = false;
-	define('NOT_INSTALLED', true);
-	PEAR::raiseError('Use database is turned on but adoDB is missing!', E_DEBUG|E_USER|E_FATAL);
-}
-
 /**
  * control lower level handling of each database
 // things to consider:
@@ -30,112 +15,101 @@ else
  */
 
 /**
- * Set up the list of aliases from the database
- * @ingroup setup
+ * Implementation of register
+ * @ingroup register
  */
-function setup_aliases()
+function register_database()
 {
-	// get the aliases to use to replace parts of the filepath
-	$GLOBALS['paths_regexp'] = array();
-	$GLOBALS['alias_regexp'] = array();
-	$GLOBALS['paths'] = array();
-	$GLOBALS['alias'] = array();
-	if($GLOBALS['settings']['use_database'] && $GLOBALS['settings']['use_alias'] == true)
-	{
-		$aliases = $GLOBALS['database']->query(array('SELECT' => 'alias'), false);
-		
-		if($aliases !== false)
-		{
-			foreach($aliases as $key => $alias_props)
-			{
-				$GLOBALS['paths_regexp'][] = $alias_props['Paths_regexp'];
-				$GLOBALS['alias_regexp'][] = $alias_props['Alias_regexp'];
-				$GLOBALS['paths'][] = $alias_props['Filepath'];
-				$GLOBALS['alias'][] = $alias_props['Alias'];
-			}
-		}
-	}
-	
+	return array(
+		'name' => lang('database title', 'Database'),
+		'description' => lang('database description', 'Wrapper module for displaying database configuration'),
+		'privilage' => 10,
+		'path' => dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'database.php',
+		'settings' => array('use_database', 'db_connect', 'db_type', 'db_server', 'db_user', 'db_pass', 'db_name'),
+		'depends on' => array('adodb_installed', 'valid_connection')
+	);
 }
 
 /**
- * Scan handlers directory and load all of the handlers that handle files
+ * Implementation of setup, this is the only function called and must call others
  * @ingroup setup
  */
-function setup_handlers()
+function setup_database()
 {
+	// load database stuff
+	include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb-errorpear.inc.php';
+	include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb.inc.php';
 	
-	// include the handlers
-	$tmp_handlers = array();
-	if ($dh = @opendir($GLOBALS['settings']['local_root'] . 'handlers' . DIRECTORY_SEPARATOR))
-	{
-		while (($file = readdir($dh)) !== false)
-		{
-			// filter out only the handlers for our $GLOBALS['settings']['use_database'] setting
-			if ($file[0] != '.' && !is_dir($GLOBALS['settings']['local_root'] . 'handlers' . DIRECTORY_SEPARATOR . $file))
-			{
-				$class_name = substr($file, 0, strrpos($file, '.'));
-				if(!defined(strtoupper($class_name) . '_ENABLED') || constant(strtoupper($class_name) . '_ENABLED') != false)
-				{
-					// include all the handlers
-					include_once $GLOBALS['settings']['local_root'] . 'handlers' . DIRECTORY_SEPARATOR . $file;
-					
-					// only use the handler if it is properly defined
-					if(class_exists($class_name))
-					{
-						if(substr($file, 0, 3) == ($GLOBALS['settings']['use_database']?'db_':'fs_'))
-							$tmp_handlers[] = $class_name;
-					}
-				}
-			}
-		}
-		closedir($dh);
-	}
-	
-	$error_count = 0;
-	$new_handlers = array();
-	
-	// reorganize handlers to reflect heirarchy
-	while(count($tmp_handlers) > 0 && $error_count < 1000)
-	{
-		foreach($tmp_handlers as $i => $handler)
-		{
-			$tmp_override = get_parent_class($handler);
-			if(in_array($tmp_override, $new_handlers) || $tmp_override == '')
-			{
-				$new_handlers[] = $handler;
-				unset($tmp_handlers[$i]);
-			}
-		}
-		$error_count++;
-	}
-	$GLOBALS['handlers'] = $new_handlers;
+	$GLOBALS['database'] = new database(setting('db_connect'));
 }
 
+/**
+ * Implementation of dependency
+ * @ingroup dependency
+ * @return true or false if adodb is installed in the include directory
+ */
+function dependency_adodb_installed($settings)
+{
+	// the adodb set up also depends on PEAR for error handling make sure pear is installed as well
+	return file_exists(setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb.inc.php') && dependency('pear_installed');
+}
 
 /**
- * Create a GLOBAL list of tables used by all the handlers
- * @ingroup setup
+ * Implementation of dependency
+ * @ingroup dependency
+ * @return true if there is a valid connection and a database GLOBAL exists
  */
-function setup_tables()
+function dependency_valid_connection()
 {
-	// loop through each handler and compile a list of databases
-	$GLOBALS['tables'] = array();
-	if($GLOBALS['settings']['use_database'])
+	if(!isset($GLOBALS['database']))
+		return;
+	return is_object($GLOBALS['database']->db_conn);
+}
+
+/**
+ * Implementation of status
+ */
+function status_database($settings)
+{
+	$status = array();
+	
+	if(dependency('adodb_installed'))
 	{
-		foreach($GLOBALS['handlers'] as $i => $handler)
-		{
-			if(defined($handler . '::DATABASE'))
-				$GLOBALS['tables'][] = constant($handler . '::DATABASE');
-		}
-		$GLOBALS['tables'] = array_values(array_unique($GLOBALS['tables']));
-		
-		// get watched and ignored directories because they are used a lot
-		$GLOBALS['ignored'] = db_watch::get(array('search_Filepath' => '/^!/'), $count);
-		$GLOBALS['watched'] = db_watch::get(array('search_Filepath' => '/^\\^/'), $count);
-		// always add user local to watch list
-		$GLOBALS['watched'][] = array('id' => 0, 'Filepath' => str_replace('\\', '/', $GLOBALS['settings']['local_users']));
+		$options['exists_adodb'] = array(
+			'name' => 'ADOdb Library',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'The system has detected that ADOdb is installed in the includes directory.',
+					'ADOdb is a common PHP database abstraction layer that can connect to dozens of SQL databases.',
+				),
+			),
+			'type' => 'label',
+			'value' => 'ADOdb Detected',
+		);
 	}
+	else
+	{
+		$options['exists_adodb'] = array(
+			'name' => 'ADOdb Library Missing',
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					'The system has detected that ADOdb is NOT INSTALLED.',
+					'The root of the ADOdb Library must be placed in &lt;site root&gt;/include/adodb5',
+					'ADOdb is a common PHP database abstraction layer that can connect to dozens of SQL databases.',
+				),
+			),
+			'value' => array(
+				'link' => array(
+					'url' => 'http://adodb.sourceforge.net/',
+					'text' => 'Get ADOdb',
+				),
+			),
+		);
+	}
+	
+	return $status;
 }
 
 /**
@@ -143,13 +117,14 @@ function setup_tables()
  * @ingroup setting
  * @return true by default
  */
-function setting_use_alias($settings)
+function setting_use_database($settings = array())
 {
-	if(isset($settings['use_alias']))
+	// can't use database if the database dependencies are not met
+	if(isset($settings['use_database']))
 	{
-		if($settings['use_alias'] === true || $settings['use_alias'] === 'true')
+		if($settings['use_database'] === true || $settings['use_database'] === 'true')
 			return true;
-		elseif($settings['use_alias'] === false || $settings['use_alias'] === 'false')
+		elseif($settings['use_database'] === false || $settings['use_database'] === 'false')
 			return false;
 	}
 	return true;
@@ -381,23 +356,6 @@ function configure_database($settings)
 		);
 	}
 	
-	$options['use_alias'] = array(
-		'name' => 'Aliasing',
-		'status' => '',
-		'description' => array(
-			'list' => array(
-				'Path aliasing is used to disguise the location of files on your file system.  Aliases can be set up to convert a path such as /home/share/ to /Shared/.',
-			),
-		),
-		'type' => 'boolean',
-		'value' => $settings['use_alias'],
-		'options' => array(
-			'Use Aliased Paths',
-			'Display Actual Path to Users',
-		),
-	);
-
-	
 	return $options;
 }
 
@@ -433,19 +391,18 @@ class database
 		if(!isset($this->db_conn) || $this->db_conn === false)
 		{
 			$GLOBALS['settings']['use_database'] = false;
-			define('NOT_INSTALLED', true);
 			PEAR::raiseError('Something has gone wrong with the connection!', E_DEBUG|E_USER|E_FATAL);
 		}
 	}
-	
+/*
 	function dropAll()
 	{
 		// loop through each handler and compile a list of databases
 		$GLOBALS['tables'] = array();
 		foreach($GLOBALS['handlers'] as $i => $handler)
 		{
-			if(defined($handler . '::DATABASE'))
-				$GLOBALS['tables'][] = constant($handler . '::DATABASE');
+			if(!is_wrapper($handler))
+				$GLOBALS['tables'][] = $handler;
 		}
 		$GLOBALS['tables'] = array_values(array_unique($GLOBALS['tables']));
 		
@@ -456,7 +413,7 @@ class database
 			$result = $this->db_conn->Execute($query);
 		}
 	}
-	
+*/
 	function installFirstTimeUsers($secret)
 	{
 		
@@ -529,11 +486,11 @@ class database
 		$tables_created = array();
 		foreach($GLOBALS['handlers'] as $i => $handler)
 		{
-			$query = 'CREATE TABLE ' . constant($handler . '::DATABASE') . ' (';
+			$query = 'CREATE TABLE ' . $handler . ' (';
 			$struct = call_user_func($handler . '::struct');
-			if(is_array($struct) && !in_array(constant($handler . '::DATABASE'), $tables_created))
+			if(is_array($struct) && !in_array($handler, $tables_created))
 			{
-				$tables_created[] = constant($handler . '::DATABASE');
+				$tables_created[] = $handler;
 				if(!isset($struct['id']))
 					$query .= 'id INT NOT NULL AUTO_INCREMENT, PRIMARY KEY (id),';
 				foreach($struct as $column => $type)
@@ -550,7 +507,7 @@ class database
 				$result = $this->db_conn->Execute($query);
 				if($callback !== NULL)
 				{
-					call_user_func_array($callback, array($result, constant($handler . '::DATABASE')));
+					call_user_func_array($callback, array($result, database($handler)));
 				}
 			}
 		}
@@ -562,31 +519,31 @@ class database
 		foreach($GLOBALS['handlers'] as $i => $handler)
 		{
 			$struct = call_user_func($handler . '::struct');
-			if(is_array($struct) && !in_array(constant($handler . '::DATABASE'), $tables_updated))
+			if(is_array($struct) && !in_array($handler, $tables_updated))
 			{
-				$tables_updated[] = constant($handler . '::DATABASE');
+				$tables_updated[] = $handler;
 				
 				// first insert a row with id 0 to use for reading
-				$ids = $this->query(array('INSERT' => constant($handler . '::DATABASE'), 'VALUES' => array('Filepath' => ''))) or print_r(mysql_error());
+				$ids = $this->query(array('INSERT' => $handler, 'VALUES' => array('Filepath' => ''))) or print_r(mysql_error());
 				
 				// alter table to match the struct
-				$files = $this->query(array('SELECT' => constant($handler . '::DATABASE'), 'WHERE' => 'Filepath=""')) or print_r(mysql_error());
+				$files = $this->query(array('SELECT' => $handler, 'WHERE' => 'Filepath=""')) or print_r(mysql_error());
 				
 				if(count($files) > 0)
 				{
 					$columns = array_keys($files[0]);
 						
 					// find missing columns
-					$query = 'ALTER TABLE ' . constant($handler . '::DATABASE');
+					$query = 'ALTER TABLE ' . database($handler);
 					foreach($struct as $column => $type)
 					{
 						if(!in_array($column, $columns))
 						{
 							// alter the table
 							if(strpos($type, ' ') === false)
-								$this->query('ALTER TABLE ' . constant($handler . '::DATABASE') . ' ADD ' . $column . ' ' . $type . ' NOT NULL') or print_r(mysql_error());
+								$this->query('ALTER TABLE ' . $handler . ' ADD ' . $column . ' ' . $type . ' NOT NULL') or print_r(mysql_error());
 							else
-								$this->query('ALTER TABLE ' . constant($handler . '::DATABASE') . ' ADD ' . $column . ' ' . $type) or print_r(mysql_error());
+								$this->query('ALTER TABLE ' . $handler . ' ADD ' . $column . ' ' . $type) or print_r(mysql_error());
 						}
 						
 						if($column != 'id')
@@ -607,7 +564,7 @@ class database
 					{
 						if(!isset($struct[$key]))
 						{
-							$this->query('ALTER TABLE ' . constant($handler . '::DATABASE') . ' DROP ' . $key) or print_r(mysql_error());
+							$this->query('ALTER TABLE ' . $handler . ' DROP ' . $key) or print_r(mysql_error());
 						}
 					}
 				
@@ -615,7 +572,7 @@ class database
 					$this->query($query) or print_r(mysql_error());
 				
 					// remove id 0
-					$files = $this->query(array('DELETE' => constant($handler . '::DATABASE'), 'WHERE' => 'Filepath=""')) or print_r(mysql_error());
+					$files = $this->query(array('DELETE' => $handler, 'WHERE' => 'Filepath=""')) or print_r(mysql_error());
 				}
 			}
 		}
@@ -738,7 +695,8 @@ class database
 		$query = DATABASE::statement_builder($props, $require_permit);
 		
 		PEAR::raiseError('DATABASE: ' . $query, E_DEBUG);
-		
+//print $query . '<br />';
+
 		if(isset($props['CALLBACK']))
 		{
 			$result = $this->db_query_callback($query);

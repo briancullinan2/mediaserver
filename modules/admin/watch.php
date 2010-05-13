@@ -10,8 +10,36 @@ function register_admin_watch()
 		'name' => lang('watch title', 'Watch List'),
 		'description' => lang('watch decscription', 'Handles the watch table and what directories the website scans.'),
 		'privilage' => 10,
-		'path' => __FILE__
+		'path' => __FILE__,
+		'database' => array(
+			'Filepath' 	=> 'TEXT',
+			// add a space to the end so that it can be NULL in the database
+			'Lastwatch' => 'DATETIME'
+		),
+		'internal' => true,
+		'depends on' => array('database', 'search', 'admin_handlers'),
 	);
+}
+
+/**
+ * Implementation of setup
+ * @ingroup setup
+ */
+function setup_admin_watch()
+{
+	// get watched and ignored directories because they are used a lot
+	$GLOBALS['ignored'] = get_admin_watch(array('search_Filepath' => '/^!/'), $count);
+	$GLOBALS['watched'] = get_admin_watch(array('search_Filepath' => '/^\\^/'), $count);
+	// always add user local to watch list
+	$GLOBALS['watched'][] = array('id' => 0, 'Filepath' => str_replace('\\', '/', setting('local_users')));
+}
+
+/**
+ * Implementation of status
+ * @ingroup status
+ */
+function status_admin_watch()
+{
 }
 
 /**
@@ -38,6 +66,119 @@ function validate_wremove($request)
 		return $request['wremove'];
 }
 
+/** 
+ * Implementation of handles
+ * @ingroup handles
+ */
+function handles_admin_watch($file)
+{
+	$dir = str_replace('\\', '/', $file);
+	
+	if($file[0] == '!' || $file[0] == '^')
+	{
+		$file = substr($file, 1);
+		if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $file)))
+		{
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+/** 
+ * Helper function
+ */
+function add_admin_watch($file)
+{
+	$file = str_replace('\\', '/', $file);
+		
+	if(handles($file, 'admin_watch'))
+	{
+		// add ending backslash
+		if( substr($file, strlen($file)-1) != '/' ) $file .= '/';
+		
+		$db_watch = $GLOBALS['database']->query(array(
+				'SELECT' => 'admin_watch',
+				'COLUMNS' => array('id'),
+				'WHERE' => 'LEFT("' . addslashes($file) . '", LENGTH(Filepath)) = Filepath',
+				'LIMIT' => 1
+			)
+		, false);
+		
+		if( count($db_watch) == 0 && $file != '^' . setting('local_users') )
+		{
+			// pull information from $info
+			$fileinfo = array();
+			$fileinfo['Filepath'] = addslashes($file);
+		
+			PEAR::raiseError('Adding watch: ' . $file, E_DEBUG);
+			
+			// add to database
+			$id = $GLOBALS['database']->query(array('INSERT' => 'admin_watch', 'VALUES' => $fileinfo), false);
+			
+			// add to watch_list and to files database
+			handle_db_watch_list(substr($file, 1));
+			
+			handle_file(substr($file, 1));
+			
+			return $id;
+		}
+		else
+		{
+			// just pass the first directories to watch_list handler
+			return handle_db_watch_list(substr($file, 1));
+		}
+		
+	}
+	return false;
+}
+
+/** 
+ * Implementation of get_handler
+ * @ingroup get_handler
+ */
+function get_admin_watch($request, &$count)
+{
+	$props = array();
+	
+	$props = array(
+		'SELECT' => 'admin_watch',
+		'WHERE' => 'Filepath REGEXP "' . addslashes(substr($request['search_Filepath'], 1, strlen($request['search_Filepath']) - 2)) . '"'
+	);
+	
+	// get directory from database
+	$files = $GLOBALS['database']->query($props, false);
+	
+	// make some changes
+	foreach($files as $i => $file)
+	{
+		$files[$i]['Filepath'] = substr($file['Filepath'], 1);
+	}
+	
+	return $files;
+}
+
+/** 
+ * Implementation of remove_handler
+ * @ingroup remove_handler
+ */
+function remove_admin_watch($file)
+{
+	// watch directories are never removed by the script
+	return false;
+}
+
+/** 
+ * Implementation of cleanup_handler
+ * @ingroup cleanup_handler
+ */
+function cleanup_admin_watch()
+{
+	// do not do anything, watch directories are completely managed
+	return false;
+}
+
 /**
  * Implementation of output
  * @ingroup output
@@ -49,10 +190,10 @@ function output_admin_watch($request)
 
 	if(isset($request['waddpath']))
 	{
-		if(db_watch::handles($request['waddpath']))
+		if(handles_db_watch($request['waddpath']))
 		{
 				// pass file to handler
-				db_watch::handle($request['waddpath']);
+				handle_db_watch($request['waddpath']);
 		}
 		else
 		{
@@ -63,21 +204,21 @@ function output_admin_watch($request)
 	
 	if(isset($request['wremove']))
 	{
-		$GLOBALS['database']->query(array('DELETE' => db_watch::DATABASE, 'WHERE' => 'id=' . $request['wremove']), false);
+		$GLOBALS['database']->query(array('DELETE' => 'watch', 'WHERE' => 'id=' . $request['wremove']), false);
 	}
 	
 	// reget the watched and ignored because they may have changed
-	$GLOBALS['ignored'] = db_watch::get(array('search_Filepath' => '/^!/'), $count);
-	$GLOBALS['watched'] = db_watch::get(array('search_Filepath' => '/^\\^/'), $count);
+	$GLOBALS['ignored'] = get_files(array('search_Filepath' => '/^!/'), $count, 'admin_watch');
+	$GLOBALS['watched'] = get_files(array('search_Filepath' => '/^\\^/'), $count, 'admin_watch');
 	$GLOBALS['watched'][] = array('id' => 0, 'Filepath' => str_replace('\\', '/', setting('local_users')));
 	
 	// make select call for the file browser
-	$files = fs_file::get(array(
+	$files = get_files(array(
 		'dir' => validate_dir($request),
 		'start' => validate_start($request),
 		'limit' => 32000,
 		'dirs_only' => true,
-	), &$total_count, true);
+	), &$total_count, 'filesystem');
 
 	$request = validate_start($request);
 

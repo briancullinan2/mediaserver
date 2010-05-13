@@ -1,9 +1,16 @@
 ------------- MONOLITHICMEDIA TODO -------------
 Monolithic site is not outputting the htaccess file because it is hidden from the tar command
 ------------- GENERAL TODO -------------
+Alter query needs a way to affect the $request
+	If a selection is being done and an ID is specified then search and file and dir are no longer relevant to the query
+Find a way for a module to affect the order of it's loading, without actually making it a dependency
+	Is there a function that could determin it's dependency? and the order?
+	If the database is used, it must be loaded before users
+	Or is the hack of creating the user global variable in the register function regardless really the best option?
 Come up with a good way to detect modrewrite
 Install from scratch until all the errors are gone
 Look at drupal and find out if there is a better way to save errors to the session at the end of a script
+If a modules dependencies fail, output a standard error page, such as ampache plugin
 Add module called balancer used for load balancing
 	Basically it allows the administrator to set different conditions for when to use a different subdomain for accessing media
 		It will forward the use to the other domain with the exact same request information based on the conditions
@@ -13,45 +20,19 @@ Add module called balancer used for load balancing
 Install script is severely broken
 Add a register script to the install process that allows users to register a username, password, and domain for their site, with the monolithicmedia drupal site.
 	Include a key that is unique to every download, to prevent spamming.
-Abstract the setup functions, modules should be set up after being loaded to load more dependencies, this is similar to drupal's module.install file
-Fix up template settings in core.php core_variables() function
-	This should probably be in the template module under always_output()
-Current solution for dependencies is not very good, rewrite, possibly call module init whenever handles() is called?
-	Checks abstracted into setting_ wrappers, is this the best solution?
-	Create a series of dependency_ functions that check for the existance of files and settings
-		For example, the database module depends on adodb, but also depends on the settings db_connect and use_database
+Finish implementing dependencies
 		Many modules and handlers depend on Archive and getID3()
-		Add register functions to handlers
-		The 'depends on' field in each module configuration can list functions or modules
-			If modules are listed this will determine the order for calling the setup functions
-		Handlers can depend on other handlers, this will help with the order to load the classes maybe?
-		Create function for sorting the handlers based on parents callable by usort()
-		Create function for sorting the modules based on the 'depends on' field
-		Denpendency form configurations show up on status page as well as along with the configuration for modules
+		Handlers can depend on other handlers
 		If any dependency fails, show an error on admin page
 			Only if the module is not manually disabled, this will be tricky to track since they are force disabled if there is a missing dependency
 		Handlers are configurable
 			Such as db_archive using getid3() or PEAR Archive for parsing out archives
 			db_code can use Text_highlighter or geshi, check the settings first then check dependencies for both and if only 1 exists,
 				choose that one by default and display warning on dependency instead of fail if neither exist
-		In common setup
-			load settings
-			load all modules
-			load all handlers if using a database
-			check dependencies
-			call setup functions
-				This will probably require things like validate_search and the admin modules configure_ be set up in the setup() function
-					because they depend on all the other modules and handlers being loaded
 		If a dependency fails for a modules, that module is forceably disabled
 			Dependency on core is implied
 			Same goes for handlers
 			This will also disable modules that depend on modules
-			Therefore, core should not have any dependencies, but rather settings for using different libraries
-	Localroot cannot be changed, this is unnessisary, it should be detected and displayed though
-	Try removing all the pieces one at a time to make sure that modules are disabling themselves
-		The system should run without PEAR, but anything else that uses PEAR such as libraries are going to fail
-	Fix error output for configurations, should also output debug info for dependencies and seperate messages if the module config contains
-		something the configuration_() function doesn't or if the configuration function contains something the module config doesn't
 Finish setting() function in settings.php plugin
 	Settings should also be loadable from the database
 Cache all loaded module files in settings database (possibly storing in admin settings and deserializing would be efficient?)
@@ -96,6 +77,7 @@ bt module should have a configurable ctorrent settings that uses %IF for the tor
 Check for bt module in install.php script
 Add bttracker install script to admin/install.php to fully bootstrap the install process
 ------------- ADMIN TOOLS -------------
+Howabout a nifty little remote RPC admin tool or a debug tool
 Create a status admin tool
 Port all Jamu stuff from MythTV to PHP admin tools
 Finish fixing up modules to use new API

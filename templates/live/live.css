@@ -23,9 +23,14 @@ body {
 	background-color:#FF6;
 }
 
-.debug.hide .msg, .debug.hide div, .debug.hide br {
+.debug.hide * {
 	display:none;
 	visibility:hidden;
+}
+
+.debug.hide #hide_link {
+	display:block;
+	visibility:visible;
 }
 
 .error.hide b, .error.hide br {

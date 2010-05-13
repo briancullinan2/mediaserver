@@ -12,15 +12,24 @@ function register_list()
 		'description' => 'Allow users to download different types of lists of files they have selected, such as RSS, XML, and M3U.',
 		'privilage' => 1,
 		'path' => __FILE__,
-		'notemplate' => true
+		'notemplate' => true,
+		'depends on' => array('template'),
 	);
+}
+
+/**
+ * Implementation of status
+ * @ingroup status
+ */
+function status_list()
+{
 }
 
 /**
  * Set up a list of different types of lists that can be outputted from any theme at any time
  * @ingroup setup
  */
-function setup_lists()
+function setup_list()
 {
 	$GLOBALS['lists'] = array();
 	
@@ -53,7 +62,6 @@ function setup_lists()
  */
 function validate_list($request)
 {
-	if(!isset($GLOBALS['lists'])) setup_lists();
 	if(isset($request['list']) && in_array($request['list'], array_keys($GLOBALS['lists'])))
 		return $request['list'];
 }

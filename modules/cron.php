@@ -24,10 +24,23 @@ function register_cron()
 		'privilage' => 1,
 		'path' => __FILE__,
 		'notemplate' => true,
-		'settings' => array('cron', 'dir_seek_time', 'file_seek_time', 'cleanup_buffer_time', 'cleanup_threashold')
+		'settings' => array('dir_seek_time', 'file_seek_time', 'cleanup_buffer_time', 'cleanup_threashold'),
+		'depends on' => array('database', 'cron_last_run'),
 	);
 }
 
+/**
+ * Implementation of status
+ * @ingroup status
+ */
+function status_cron()
+{
+}
+
+/**
+ * Implementation of configure
+ * @ingroup configure
+ */
 function configure_cron($settings)
 {
 	$settings['dir_seek_time'] = setting_dir_seek_time($settings);
@@ -109,6 +122,16 @@ function configure_cron($settings)
 	);
 	
 	return $options;
+}
+
+/**
+ * Implementation of dependency
+ * Check the late date the cron ran and show status if it is too long ago
+ * @ingroup dependency
+ */
+function dependency_cron_last_run()
+{
+	return true; // TODO: more here
 }
 
 /**
@@ -238,7 +261,7 @@ function validate_scan_dir($request)
 	
 	if(isset($request['scan_dir']))
 	{
-		if(db_watch_list::is_watched($request['scan_dir']) && 
+		if(is_watched($request['scan_dir']) && 
 			(
 			 	!isset($request['scan_entry']) ||
 				substr($request['scan_dir'], 0, strlen($GLOBALS['watched'][$request['scan_entry']]['Filepath'])) == $GLOBALS['watched'][$request['scan_entry']]['Filepath']
@@ -328,7 +351,7 @@ function read_changed($request)
 			}
 			
 			// scan the directory
-			$current_dir = db_watch::handle('^' . $request['scan_dir']);
+			$current_dir = handle_db_watch('^' . $request['scan_dir']);
 		
 			// if exited because of time, then save state
 			if( $current_dir !== true )
@@ -346,7 +369,7 @@ function read_changed($request)
 				clear_state();
 		
 				// set the last updated time in the watched table
-				$GLOBALS['database']->query(array('UPDATE' => db_watch::DATABASE, 'VALUES' => array('Lastwatch' => date("Y-m-d h:i:s")), 'WHERE' => 'id = ' . $GLOBALS['watched'][$request['scan_entry']]['id']), false);
+				$GLOBALS['database']->query(array('UPDATE' => 'admin_watch', 'VALUES' => array('Lastwatch' => date("Y-m-d h:i:s")), 'WHERE' => 'id = ' . $GLOBALS['watched'][$request['scan_entry']]['id']), false);
 				
 				// break after specified entry is complete
 				if(isset($request['scan_entry']))
@@ -380,18 +403,18 @@ function read_files()
 	do
 	{
 		// get 1 folder from the database to search the files for
-		$db_dirs = db_watch_list::get(array('limit' => 1, 'order_by' => 'id', 'direction' => 'ASC'), $count);
+		$db_dirs = get_db_watch_list(array('limit' => 1, 'order_by' => 'id', 'direction' => 'ASC'), $count);
 		
 		if(count($db_dirs) > 0)
 		{
 			$dir = $db_dirs[0]['Filepath'];
 			if(setting('use_alias') == true)
 				$dir = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $dir);
-			$status = db_watch_list::scan_dir($dir);
+			$status = scan_dir($dir);
 			
 			// do not call self::remove because we want to leave the folders inside of the current one so they will be scanned also
 			// delete the selected folder from the database
-			$GLOBALS['database']->query(array('DELETE' => db_watch_list::DATABASE, 'WHERE' => 'Filepath = "' . addslashes($dir) . '"'), false);
+			$GLOBALS['database']->query(array('DELETE' => 'updates', 'WHERE' => 'Filepath = "' . addslashes($dir) . '"'), false);
 		}
 	
 		// don't put too much load on the system
@@ -467,7 +490,7 @@ function output_cron($request)
 	PEAR::raiseError('Cron Script: ' . VERSION . '_' . VERSION_NAME, E_DEBUG);
 	
 	// the cron script is useless if it has nowhere to store the information it reads
-	if(setting('use_database') == false || count($GLOBALS['watched']) == 0)
+	if(setting_use_database() == false || count($GLOBALS['watched']) == 0)
 	{
 		@fclose($log_fp);
 		exit;
@@ -526,7 +549,7 @@ function output_cron($request)
 	
 	// clean up the watch_list and remove stuff that doesn't exist in watch anymore
 	if($should_clean !== 0)
-		db_watch_list::cleanup();
+		cleanup_db_watch_list();
 	
 	// now scan some files
 	$GLOBALS['tm_start'] = array_sum(explode(' ', microtime()));
@@ -553,7 +576,7 @@ function output_cron($request)
 	
 	foreach($GLOBALS['handlers'] as $i => $handler)
 	{
-		call_user_func_array($handler . '::cleanup', array());
+		call_user_func_array('cleanup_' . $handler, array());
 	}
 	
 	// read all the folders that lead up to the watched folder
@@ -590,7 +613,7 @@ function output_cron($request)
 						$directories[] = $curr_dir;
 						// if the setting('use_alias') is true this will only add the folder
 						//    if it is in the list of aliases
-						db_watch_list::handle_file($curr_dir);
+						handle_file($curr_dir);
 					}
 				}
 				// but make an exception for folders between an alias and the watch path
@@ -598,7 +621,7 @@ function output_cron($request)
 				{
 					$directories[] = $curr_dir;
 					
-					db_watch_list::handle_file($curr_dir);
+					handle_file($curr_dir);
 				}
 			}
 		}

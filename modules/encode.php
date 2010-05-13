@@ -13,7 +13,16 @@ function register_encode()
 		'path' => __FILE__,
 		'notemplate' => true,
 		'settings' => array('encode_path', 'encode_args'),
+		'depends on' => array('transcoder', 'select', 'template'),
 	);
+}
+
+/**
+ * Implementation of status
+ * @ingroup status
+ */
+function status_encode()
+{
 }
 
 /**
@@ -452,12 +461,12 @@ function output_encode($request)
 	$request['cat'] = validate_cat($request);
 
 	// get the file path from the database
-	$files = call_user_func_array($request['cat'] . '::get', array($request, &$count));
+	$files = call_user_func_array('get_' . $request['cat'], array($request, &$count));
 	
 	if(count($files) > 0)
 	{
 		// the ids handler will do the replacement of the ids
-		$files = db_ids::get(array('cat' => $_REQUEST['cat']), $tmp_count, $files);
+		$files = get_db_ids(array('cat' => $_REQUEST['cat']), $tmp_count, $files);
 		
 		$tmp_request = array();
 		$tmp_request['file'] = $files[0]['Filepath'];
@@ -468,21 +477,21 @@ function output_encode($request)
 		// get all the information incase we need to use it
 		foreach($GLOBALS['handlers'] as $i => $handler)
 		{
-			if($handler != $request['cat'] && constant($handler . '::INTERNAL') == false && call_user_func_array($handler . '::handles', array($files[0]['Filepath'])))
+			if($handler != $request['cat'] && is_internal($handler) == false && handles($files[0]['Filepath'], $handler))
 			{
-				$return = call_user_func_array($handler . '::get', array($tmp_request, &$tmp_count));
+				$return = call_user_func_array('get_' . $handler, array($tmp_request, &$tmp_count));
 				if(isset($return[0])) $files[0] = array_merge($return[0], $files[0]);
 			}
 		}
 			
 		// fix the encode type
-		if(db_audio::handles($files[0]['Filepath']))
+		if(handles($files[0]['Filepath'], 'db_audio'))
 		{
 			if($request['encode'] == 'mp4') $request['encode'] = 'mp4a';
 			elseif($request['encode'] == 'mpg') $request['encode'] = 'mp3';
 			elseif($request['encode'] == 'wmv') $request['encode'] = 'wma';
 		}
-		elseif(db_video::handles($files[0]['Filepath']))
+		elseif(handles($files[0]['Filepath'], 'db_video'))
 		{
 			if($request['encode'] == 'mp4a') $request['encode'] = 'mp4';
 			elseif($request['encode'] == 'mp3') $request['encode'] = 'mpg';
@@ -617,7 +626,7 @@ function output_encode($request)
 	stream_set_blocking($pipes[1], 0);
 	stream_set_blocking($pipes[2], 0);
 	
-	$fp = call_user_func_array($request['cat'] . '::out', array($request['efile']));
+	$fp = output_handler($request['efile'], $request['cat']);
 	//$fp = fopen($_REQUEST['%IF'], 'rb');
 	$php_out = fopen('php://output', 'wb');
 	

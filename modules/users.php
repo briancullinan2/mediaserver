@@ -11,10 +11,10 @@
  * Set up the current user and get their settings from the database
  * @ingroup setup
  */
-function setup_user()
+function setup_users()
 {
 	// check if user is logged in
-	if( isset($_SESSION['users']['username']) && isset($_SESSION['users']['password']) && setting('use_database') == true )
+	if( isset($_SESSION['users']['username']) && isset($_SESSION['users']['password']) && setting_installed() && setting_use_database() )
 	{
 		// lookup username in table
 		$db_user = $GLOBALS['database']->query(array(
@@ -49,7 +49,7 @@ function setup_user()
 		}
 	}
 	// use guest information
-	elseif(setting('use_database') == true)
+	elseif(setting_installed() && setting_use_database())
 	{
 		$db_user = $GLOBALS['database']->query(array(
 				'SELECT' => 'users',
@@ -74,13 +74,6 @@ function setup_user()
 			);
 		}
 	}
-	else
-	{
-		$_SESSION['user'] = array(
-			'Username' => 'admin',
-			'Privilage' => 1
-		);
-	}
 	
 	// this will hold a cached list of the users that were looked up
 	$GLOBALS['user_cache'] = array();
@@ -89,7 +82,7 @@ function setup_user()
 	if(isset($_SESSION['user']['Settings']['keys']))
 	{
 		$return = $GLOBALS['database']->query(array(
-				'SELECT' => db_users::DATABASE,
+				'SELECT' => 'users',
 				'WHERE' => 'PrivateKey = "' . join('" OR PrivateKey = "', $_SESSION['user']['Settings']['keys']) . '"',
 				'LIMIT' => count($_SESSION['user']['Settings']['keys'])
 			)
@@ -105,6 +98,10 @@ function setup_user()
 		
 		$_SESSION['user']['Settings']['keys_users'] = $return;
 	}
+	
+	// output the user so template can print out login or logout stuff
+	register_output_vars('user', $_SESSION['user']);
+	
 }
 
 /**
@@ -113,14 +110,39 @@ function setup_user()
  */
 function register_users()
 {
+	$_SESSION['user'] = array(
+		'Username' => 'guest',
+		'Privilage' => 1
+	);
+	register_output_vars('user', $_SESSION['user']);
+	
 	return array(
 		'name' => 'Users',
 		'description' => 'Allows for managing and displaying users.',
 		'privilage' => 1,
 		'path' => __FILE__,
 		'session' => array('username'),
-		'settings' => array('local_users'),
+		'settings' => array('local_users', 'username_validation'),
+		'depends on' => array('template', 'database'),
+		'database' => array(
+			'Username' 		=> 'TEXT',
+			'Password' 		=> 'TEXT',
+			'Email' 		=> 'TEXT',
+			'Settings' 		=> 'TEXT',
+			'Privilage'		=> 'INT',
+			'PrivateKey'	=> 'TEXT',
+			'LastLogin'		=> 'DATETIME'
+		),
+		'internal' => true,
 	);
+}
+
+/**
+ * Implementation of status
+ * @ingroup status
+ */
+function status_users()
+{
 }
 
 /**
@@ -178,6 +200,18 @@ function setting_local_users($settings)
 		return $settings['local_users'];
 	else
 		return $settings['local_root'] . 'users' . DIRECTORY_SEPARATOR;
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ */
+function setting_username_validation($settings)
+{
+	if(isset($settings['username_validation']) && preg_match($settings['username_validation'], md5(microtime())) !== false)
+		return $settings['username_validation'];
+	else
+		return '/[a-z][a-z0-9]{4}[a-z0-9]*/i';
 }
 
 /**
@@ -245,9 +279,216 @@ function validate_return($request)
  */
 function validate_required_priv($request)
 {
-	if(is_numeric($request['required_priv']) && $request['required_priv'] >= 0 && $request['required_priv'] <= 10)
+	if(isset($request['required_priv']) && is_numeric($request['required_priv']) && $request['required_priv'] >= 0 && $request['required_priv'] <= 10)
 		return $request['required_priv'];
 }
+
+/** 
+ * Implementation of handles
+ * @ingroup handles
+ */
+function handles_users($file)
+{
+	$file = str_replace('\\', '/', $file);
+	if(setting('use_alias') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+	
+	// handle directories found in the setting('local_users') directory
+	//  automatically create a user entry in the database for those directories
+	// extract username from path
+	if(substr($file, 0, strlen(setting('local_users'))) == setting('local_users'))
+	{
+		$file = substr($file, strlen(setting('local_users')));
+		
+		// remove rest of path
+		if(strpos($file, '/') !== false)
+			$file = substr($file, 0, strpos($file, '/'));
+			
+		if(preg_match(setting('username_validation'), basename($file)) > 0)
+		{
+			return true;
+		}
+	}
+	elseif(dirname($file) == '')
+	{
+		if(preg_match(setting('username_validation'), basename($file)) > 0)
+		{
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+/** 
+ * Implementation of handle
+ * @ingroup handle
+ */
+function add_users($file, $force = false)
+{
+	$file = str_replace('\\', '/', $file);
+	
+	if(handles($file, 'users'))
+	{
+		$username = basename($file);
+		
+		// check if it is in the database
+		$db_user = $GLOBALS['database']->query(array(
+				'SELECT' => 'users',
+				'WHERE' => 'Username = "' . addslashes($username) . '"',
+				'LIMIT' => 1
+			)
+		, false);
+		
+		if( count($db_user) == 0 )
+		{
+			// just set up the user with default information
+			//   if they don't use the module, this creates a system user
+			return $GLOBALS['database']->query(array('INSERT' => 'users', 'VALUES' => array(
+						'Username' => addslashes($username),
+						'Password' => '',
+						'Email' => '',
+						'Settings' => serialize(array()),
+						'Privilage' => 1,
+						'PrivateKey' => md5(microtime())
+					)
+				)
+			, false);
+		}
+		elseif($force)
+		{
+			// not really anything to do here
+		}
+	}
+	
+	return false;
+}
+
+/** 
+ * Implementation of get_handler
+ * @ingroup get_handler
+ */
+function get_users($request, &$count, $files = array())
+{
+	if(count($files) > 0 && !isset($request['selected']))
+	{
+		$users = array();
+		
+		// get a list of users to look up
+		foreach($files as $index => $file)
+		{
+			if(handles($file['Filepath'], 'users'))
+			{
+				// replace virtual paths
+				$path = str_replace('\\', '/', $file['Filepath']);
+				if(setting('use_alias') == true) $path = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $path);
+				
+				if(substr($path, 0, strlen(setting('local_users'))) == setting('local_users'))
+				{
+					$path = substr($path, strlen(setting('local_users')));
+					
+					// remove rest of path
+					if(strpos($path, '/') !== false)
+						$path = substr($path, 0, strpos($path, '/'));
+				}
+				
+				// add to list of users to look up
+				$files[$index]['Username'] = $path;
+				if(!isset($GLOBALS['user_cache'][$path]))
+					$users[] = $path;
+			}
+		}
+		$users = array_unique($users);
+		
+		// perform query to get all the needed users
+		if(count($users) > 0)
+		{
+			$return = $GLOBALS['database']->query(array(
+					'SELECT' => 'users',
+					'WHERE' => 'Username = "' . join('" OR Username = "', $users) . '"',
+					'LIMIT' => count($users)
+				)
+			, false);
+			
+			// replace get for easy lookup
+			foreach($return as $i => $user)
+			{
+				$GLOBALS['user_cache'][$user['Username']] = $user;
+			}
+			
+			// merge user information to each file
+			foreach($files as $index => $file)
+			{
+				if(isset($file['Username']))
+					$files[$index] = array_merge($GLOBALS['user_cache'][$file['Username']], $files[$index]);
+			}
+		}
+		
+	}
+	elseif(isset($request['file']))
+	{
+		// change some of the default request variables
+		$request['order_by'] = 'Username';
+		$request['limit'] = 1;
+		
+		// modify the file variable to use username instead
+		$file = str_replace('\\', '/', $request['file']);
+		if(setting('use_alias') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+		
+		if(substr($file, 0, strlen(setting('local_users'))) == setting('local_users'))
+		{
+			$file = substr($file, strlen(setting('local_users')));
+			
+			// remove rest of path
+			if(strpos($file, '/') !== false)
+				$file = substr($file, 0, strpos($file, '/'));
+		}
+		
+		$request['search_Username'] = '=' . $file . '=';
+		
+		// unset the fields that aren't needed
+		unset($request['file']);
+		unset($request['files_id']);
+		
+		// extract user directory from path
+		// add a users information to each file
+		if(isset($file) && isset($GLOBALS['user_cache']))
+		{
+			$files = array(0 => $GLOBALS['user_cache']);
+		}
+		else
+		{
+			$files = get_db_file($request, $count, 'db_users');
+			
+			if(isset($file))
+				$GLOBALS['user_cache'][$file] = $files[0];
+		}
+	}
+
+	// remove restricted variables
+	foreach($files as $i => $file)
+	{
+		unset($files[$i]['Password']);
+	}
+
+	return $files;
+}
+
+/** 
+ * Implementation of remove_handler
+ * @ingroup remove_handler
+ */
+function remove_users($file)
+{
+}
+
+/** 
+ * Implementation of cleanup_handler
+ * @ingroup cleanup_handler
+ */
+function cleanup_users()
+{
+}
+
 
 /**
  * Implementation of session
@@ -289,11 +530,11 @@ function output_users($request)
 		case 'register':
 			
 			// validate input
-			if(db_users::handles(setting('local_users') . $request['username']))
+			if(handles(setting('local_users') . $request['username'], 'db_users'))
 			{
 				// make sure the user doesn't already exist
 				$db_user = $GLOBALS['database']->query(array(
-						'SELECT' => db_users::DATABASE,
+						'SELECT' => 'users',
 						'WHERE' => 'Username = "' . addslashes($request['username']) . '"',
 						'LIMIT' => 1
 					)
@@ -328,7 +569,7 @@ function output_users($request)
 				if( count($GLOBALS['user_errors']) == 0 )
 				{
 					// create database entry
-					$user_id = db_users::handle(setting('local_users') . $request['username']);
+					$user_id = handle_db_users(setting('local_users') . $request['username']);
 					
 					// add password and profile information
 					$result = $GLOBALS['database']->query(array(

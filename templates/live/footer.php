@@ -39,12 +39,12 @@ function theme_live_footer()
 									Categories:<br />
 									<ul>
 									<?php
-									foreach($GLOBALS['handlers'] as $handler)
+									foreach($GLOBALS['handlers'] as $handler => $config)
 									{
-										if(constant($handler . '::INTERNAL'))
+										if(isset($GLOBALS['handlers'][$handler]['internal']) && $GLOBALS['handlers'][$handler]['internal'] == true)
 											continue;
 											
-										$name = str_replace(' from Database', '', constant($handler . '::NAME'));
+										$name = $GLOBALS['handlers'][$handler]['name'];
 										?><li class="last"><a href="<?php print url('module=select&cat=' . $handler); ?>"><?php echo $name; ?></a></li><?php
 									}
 									?>

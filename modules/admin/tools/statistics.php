@@ -369,16 +369,20 @@ function output_admin_tools_statistics($request)
 			),
 			'type' => 'section'
 		);
-		foreach($GLOBALS['tables'] as $i => $db)
+		foreach($GLOBALS['handlers'] as $handler => $config)
 		{
-			$result = $GLOBALS['database']->query(array('SELECT' => $db, 'COLUMNS' => 'count(*)'), false);
+			// skip wrappers
+			if(is_wrapper($handler))
+				continue;
+			
+			$result = $GLOBALS['database']->query(array('SELECT' => $handler, 'COLUMNS' => 'count(*)'), false);
 			if(count($result) > 0)
 			{
 				$section_info['text'][] = array(
-					'label' => $db,
+					'label' => $handler,
 					'text' => 'has ' . $result[0]['count(*)'] . ' entries',
 				);
-				if($db == db_watch_list::DATABASE)
+				if($db == 'watch_list')
 				{
 					$new_info = array(
 						'label' => 'Watch List',

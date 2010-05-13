@@ -4,6 +4,24 @@
  * control outputting of template files
  *  validate template variable
  */
+
+/**
+ * Implementation of register
+ * @ingroup register
+ */
+function register_template()
+{
+	return array(
+		'name' => 'Template Output',
+		'description' => 'Display files from the templates directory. Allows for templating CSS and JS files.',
+		'privilage' => 1,
+		'path' => __FILE__,
+		'session' => array('template'),
+		'notemplate' => true,
+		'settings' => array('local_base', 'local_default', 'local_template'),
+		'always output' => 'template_variables',
+	);
+}
  
 /**
  * Generate a list of templates
@@ -12,10 +30,10 @@
 function setup_template()
 {
 	// load templating system but only if we are using templates
-	
+
 	// get the list of templates
 	$GLOBALS['templates'] = array();
-	$files = fs_file::get(array('dir' => setting('local_root') . 'templates' . DIRECTORY_SEPARATOR, 'limit' => 32000), $count, true);
+	$files = get_filesystem(array('dir' => setting('local_root') . 'templates' . DIRECTORY_SEPARATOR, 'limit' => 32000), $count);
 	if(is_array($files))
 	{
 		foreach($files as $i => $file)
@@ -44,7 +62,7 @@ function setup_template()
 			}
 		}
 	}
-
+	
 	$_REQUEST['template'] = validate_template($_REQUEST, isset($_SESSION['template'])?$_SESSION['template']:'');
 	
 	// don't use a template if they comment out this define, this enables the tiny remote version
@@ -58,29 +76,8 @@ function setup_template()
 		$_REQUEST = call_user_func_array('alter_request_' . $_REQUEST['template'], array($_REQUEST));
 	
 	// assign some shared variables
-	register_output_vars('tables', $GLOBALS['tables']);
-	register_output_vars('modules', $GLOBALS['modules']);
-	register_output_vars('handlers', $GLOBALS['handlers']);
 	register_output_vars('templates', $GLOBALS['templates']);
-	register_output_vars('columns', getAllColumns());
 	
-}
-
-/**
- * Implementation of register
- * @ingroup register
- */
-function register_template()
-{
-	return array(
-		'name' => 'Template Output',
-		'description' => 'Display files from the templates directory. Allows for templating CSS and JS files.',
-		'privilage' => 1,
-		'path' => __FILE__,
-		'session' => array('template'),
-		'notemplate' => true,
-		'settings' => array('local_base', 'local_default', 'local_template'),
-	);
 }
 
 /**
@@ -373,11 +370,11 @@ function theme($request = '')
 {
 	// if the theme function is just being called without any input
 	//   then call the default theme function
-	if($request == '' && isset($_REQUEST['template']))
+	if($request == '')
 	{
-		$template = $_REQUEST['template'];
+		$request['template'] = validate_template(array());
 		set_output_vars();
-		call_user_func_array('output_' . $template, array());
+		call_user_func_array('output_' . $request['template'], array());
 		return;
 	}
 	
@@ -395,7 +392,7 @@ function theme($request = '')
 	// if the request is an array, assume they are setting the template and theme call
 	if(is_array($request))
 	{
-		// the tfile paramet can be used to call the theme_ function
+		// the tfile parameter can be used to call the theme_ function
 		$request['template'] = validate_template($request);
 		$request['tfile'] = validate_tfile($request);
 		
@@ -425,6 +422,33 @@ function theme($request = '')
 	else
 		PEAR::raiseError('Theme function could not be handled because of an unrecognized argument.', E_DEBUG|E_WARN);
 	return false;
+}
+
+/**
+ * Implementation of always_output
+ * @ingroup always_output
+ */
+function template_variables($request)
+{
+	$request['template'] = validate_template($request);
+	
+	// this is just a helper variable for templates to use that only need to save 1 setting
+	if(isset($_REQUEST['extra'])) register_output_vars('extra', $_REQUEST['extra']);
+	
+	// register user settings for this template
+	if(isset($_SESSION['user']['settings']['templates'][$request['template']]))
+		register_output_vars('settings', $_SESSION['user']['settings']['templates'][$request['template']]);
+	// go through and set the defaults
+	elseif(isset($GLOBALS['templates'][$request['template']]['settings']))
+	{
+		$settings = array();
+		foreach($GLOBALS['templates'][$request['template']]['settings'] as $key => $setting)
+		{
+			if(isset($setting['default']))
+				$settings[$key] = $setting['default'];
+		}
+		register_output_vars('settings', $settings);
+	}
 }
 
 /**

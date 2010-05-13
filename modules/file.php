@@ -17,8 +17,18 @@ function register_file()
 		'privilage' => 1,
 		'path' => __FILE__,
 		'notemplate' => true,
-		'alter query' => array('dir', 'file')
+		'alter query' => array('dir', 'file'),
+		'depends on' => array('files', 'filesystem', 'template'),
+		'always output' => 'file_variables',
 	);
+}
+
+/**
+ * Implementation of status
+ * @ingroup status
+ */
+function status_file()
+{
 }
 
 /**
@@ -53,13 +63,19 @@ function validate_dir($request)
 	//   this shouldn't cause any security risks
 	if(isset($request['dir']))
 	{
+		// this is needed to make sure the directory is handled by something
 		$request['cat'] = validate_cat($request);
-		if(setting('use_alias') == true)
+		
+		// replace directory with actual path
+		if(setting('use_alias') == true && setting_use_database() && setting_installed())
 			$tmp = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
-			// this check the input 'dir' for actual files
+		else
+			$tmp = $request['dir'];
+			
+		// this checks the input 'dir' is on the actual file system
 		if(is_dir(realpath($tmp)) || 
 			// this check the 'dir' for directories inside archives and disk images
-			call_user_func_array($request['cat'] . '::handles', array($request['dir'])) == true ||
+			handles($request['dir'], $request['cat']) == true ||
 			// this check the dir for wrappers, wrappers can handle their own dir
 			is_wrapper($request['cat'])
 		)
@@ -83,7 +99,7 @@ function validate_file($request)
 		$request['cat'] = validate_cat($request);
 		if(setting('use_alias') == true)
 			$tmp = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']);
-		if(is_file(realpath($tmp)) || call_user_func_array($request['cat'] . '::handles', array($request['file'])) == true)
+		if(is_file(realpath($tmp)) || handles($request['file'], $request['cat']) == true)
 			return $request['file'];
 		else
 			PEAR::raiseError('File does not exist!', E_USER);
@@ -114,11 +130,15 @@ function validate_dirs_only($request)
  */
 function alter_query_file($request, $props)
 {
+	// do not alter the query if selected is set
+	$request['selected'] = validate_selected($request);
+	if(isset($request['selected']) && count($request['selected']) > 0 ) return $props;
+	
 //---------------------------------------- Directory ----------------------------------------\\
 	// add dir filter to where
 	if(isset($request['dir']))
 	{
-		$columns = call_user_func($request['cat'] . '::columns');
+		$columns = columns($request['cat']);
 				
 		if($request['dir'] == '') $request['dir'] = '/';
 		
@@ -135,9 +155,9 @@ function alter_query_file($request, $props)
 			$request['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
 			
 		// maybe the dir is not loaded yet, this part is costly but it is a good way to do it
-		if(setting('recursive_get') && db_watch_list::handles($request['dir']))
+		if(setting('recursive_get') && handles($request['dir'], 'db_watch_list'))
 		{
-			db_watch_list::scan_dir($request['dir']);
+			scan_dir($request['dir']);
 		}
 		
 		// make sure file exists if we are using the file handler
@@ -145,13 +165,14 @@ function alter_query_file($request, $props)
 		{
 		
 			// make sure directory is in the database
-			$dirs = $GLOBALS['database']->query(array('SELECT' => constant($request['cat'] . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"', 'LIMIT' => 1), true);
+			$dirs = $GLOBALS['database']->query(array('SELECT' => $request['cat'], 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"', 'LIMIT' => 1), true);
 			
 			// check the file database, some handlers use their own database to store special paths,
 			//  while other handlers only store files and no directories, but these should still be searchable paths
 			//  in which case the handler is responsible for validation of it's own paths
 			if(count($dirs) == 0)
-				$dirs = $GLOBALS['database']->query(array('SELECT' => constant($request['cat'] . '::DATABASE'), 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"', 'LIMIT' => 1), true);
+				$dirs = $GLOBALS['database']->query(array('SELECT' => 'files', 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"', 'LIMIT' => 1), true);
+				
 			// top level directory / should always exist
 			if($request['dir'] == realpath('/') || count($dirs) > 0)
 			{
@@ -184,7 +205,7 @@ function alter_query_file($request, $props)
 			{
 				PEAR::raiseError('Directory does not exist!', E_USER);
 				// don't ever continue after this error
-				return array();
+				return false;
 			}
 		}
 	}
@@ -204,13 +225,13 @@ function alter_query_file($request, $props)
 			$request['file'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']);
 		
 		// if the id is available then use that instead
-		if(isset($request[constant($request['cat'] . '::DATABASE') . '_id']) && $request[constant($request['cat'] . '::DATABASE') . '_id'] != 0)
+		if(isset($request[$request['cat'] . '_id']) && $request[$request['cat'] . '_id'] != 0)
 		{
 			if(!isset($props['WHERE'])) $props['WHERE'] = '';
 			elseif($props['WHERE'] != '') $props['WHERE'] .= ' AND ';
 			
 			// add single id to where
-			$props['WHERE'] .= ' id = ' . $request[constant($request['cat'] . '::DATABASE') . '_id'];					
+			$props['WHERE'] .= ' id = ' . $request[$request['cat'] . '_id'];					
 		}
 		else
 		{
@@ -226,7 +247,8 @@ function alter_query_file($request, $props)
 			else
 			{
 				PEAR::raiseError('File does not exist!', E_USER);
-				return array();
+				// don't ever continue after this error
+				return false;
 			}
 		}
 		
@@ -237,6 +259,16 @@ function alter_query_file($request, $props)
 	}
 	
 	return $props;
+}
+
+/**
+ * Implementation of always output
+ * @ingroup always_output
+ */
+function file_variables($request)
+{
+	// some templates refer to the dir to determine their own location
+	if(isset($_REQUEST['dir'])) register_output_vars('dir', $_REQUEST['dir']);
 }
 
 /**
@@ -259,15 +291,12 @@ function output_file($request)
 	}
 
 	// get the file path from the database
-	$files = call_user_func_array($request['cat'] . '::get', array($request, &$count));
+	$files = get_files($request, $count, $request['cat']);
 	
 	if(count($files == 0))
 	{
 		PEAR::raiseError('File not found!', E_USER);
 	}
-
-	// the ids handler will do the replacement of the ids
-	$files = db_ids::get(array('cat' => $request['cat']), $tmp_count, $files);
 
 	$tmp_request = array();
 	$tmp_request['file'] = $files[0]['Filepath'];
@@ -276,15 +305,15 @@ function output_file($request)
 	$tmp_request = array_merge(array_intersect_key($files[0], getIDKeys()), $tmp_request);
 
 	// get info from other handlers
-	foreach($GLOBALS['handlers'] as $i => $handler)
+	foreach($GLOBALS['handlers'] as $handler => $config)
 	{
-		if($handler != $request['cat'] && constant($handler . '::INTERNAL') == false && call_user_func_array($handler . '::handles', array($files[0]['Filepath'])))
+		if($handler != $request['cat'] && is_internal($handler) == false && handles($files[0]['Filepath'], $handler))
 		{
-			$return = call_user_func_array($handler . '::get', array($tmp_request, &$tmp_count));
+			$return = get_files($tmp_request, &$tmp_count, $handler);
 			if(isset($return[0])) $files[0] = array_merge($return[0], $files[0]);
 		}
 	}
-		
+	
 	// set some general headers
 	header('Content-Transfer-Encoding: binary');
 	header('Content-Type: ' . $files[0]['Filemime']);
@@ -294,7 +323,7 @@ function output_file($request)
 	$op = fopen('php://output', 'wb');
 	
 	// get the input stream
-	$fp = call_user_func_array($request['cat'] . '::out', array($files[0]['Filepath']));
+	$fp = output_handler($files[0]['Filepath'], $request['cat']);
 	
 	//-------------------- THIS IS ALL RANAGES STUFF --------------------
 	

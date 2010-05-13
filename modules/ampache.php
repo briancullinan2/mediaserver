@@ -10,8 +10,17 @@ function register_ampache()
 		'name' => lang('ampache title', 'Ampache Compatibility'),
 		'description' => lang('ampache description', 'Compatibility support for the Ampache XMLRPC protocol.'),
 		'privilage' => 1,
-		'path' => __FILE__
+		'path' => __FILE__,
+		'depends on' => array('database'),
 	);
+}
+
+/**
+ * Implementation of status
+ * @ingroup status
+ */
+function status_ampache()
+{
 }
 
 /**
@@ -62,7 +71,7 @@ function output_ampache($request)
 	$fp = fopen('/tmp/test.txt', 'a');
 	fwrite($fp, var_export($_SERVER, true));
 	fclose($fp);
-	
+
 	$request['action'] = validate_action($request);
 	$request['auth'] = validate_auth($request);
 	$request['start'] = validate_start($request);
@@ -321,7 +330,7 @@ function output_ampache($request)
 			
 			// the ids handler will do the replacement of the ids
 			if(count($files) > 0)
-				$files = db_ids::get(array('cat' => 'db_audio'), $tmp_count, $files);
+				$files = get_db_ids(array('cat' => 'db_audio'), $tmp_count, $files);
 					
 			// set the variables in the template		
 			register_output_vars('files', $files);
@@ -338,7 +347,7 @@ function output_ampache($request)
 			
 			// the ids handler will do the replacement of the ids
 			if(count($files) > 0)
-				$files = db_ids::get(array('cat' => 'db_audio'), $tmp_count, $files);
+				$files = get_db_ids(array('cat' => 'db_audio'), $tmp_count, $files);
 					
 			// set the variables in the template		
 			register_output_vars('files', $files);
@@ -362,7 +371,7 @@ function output_ampache($request)
 			
 			// the ids handler will do the replacement of the ids
 			if(count($files) > 0)
-				$files = db_ids::get(array('cat' => 'db_audio'), $tmp_count, $files);
+				$files = get_db_ids(array('cat' => 'db_audio'), $tmp_count, $files);
 					
 			// set the variables in the template		
 			register_output_vars('files', $files);
@@ -386,7 +395,7 @@ function output_ampache($request)
 			
 			// the ids handler will do the replacement of the ids
 			if(count($files) > 0)
-				$files = db_ids::get(array('cat' => 'db_audio'), $tmp_count, $files);
+				$files = get_db_ids(array('cat' => 'db_audio'), $tmp_count, $files);
 					
 			// set the variables in the template		
 			register_output_vars('files', $files);
@@ -397,11 +406,11 @@ function output_ampache($request)
 				'start' => $request['start'],
 				'search' => $request['search']
 			);
-			$files = db_audio::get($request, $count);
+			$files = get_db_audio($request, $count);
 								   
 			// the ids handler will do the replacement of the ids
 			if(count($files) > 0)
-				$files = db_ids::get(array('cat' => 'db_audio'), $tmp_count, $files);
+				$files = get_db_ids(array('cat' => 'db_audio'), $tmp_count, $files);
 				
 			// replace file path is actual path
 			foreach($files as $i => $file)

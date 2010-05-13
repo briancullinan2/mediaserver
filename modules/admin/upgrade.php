@@ -13,7 +13,15 @@ function register_admin_upgrade()
 		'privilage' => 10,
 		'path' => __FILE__,
 		'notemplate' => true,
+		'depends on' => array('database')
 	);
 }
 
 
+/**
+ * Implementation of status
+ * @ingroup status
+ */
+function status_admin_upgrade()
+{
+}

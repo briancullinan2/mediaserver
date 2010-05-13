@@ -12,8 +12,17 @@ function register_bt()
 		'description' => lang('bt description', 'Bittorrent module that creates torrents for files or directories so users can share downloads with each other.'),
 		'privilage' => 1,
 		'path' => __FILE__,
-		'notemplate' => true
+		'notemplate' => true,
+		'depends on' => array('bttracker_installed', 'seeder'),
 	);
+}
+
+/**
+ * Implementation of status
+ * @ingroup status
+ */
+function status_bt()
+{
 }
 
 /**
@@ -81,13 +90,13 @@ function output_bt($request)
 		$request['cat'] = validate_cat($request);
 		
 		// make select call
-		$files = call_user_func_array($request['cat'] . '::get', array($request, &$count));
+		$files = call_user_func_array('get_' . $request['cat'], array($request, &$count));
 		
 		$files_length = count($files);
 		
 		// the ids handler will do the replacement of the ids
 		if(count($files) > 0)
-			$files = db_ids::get(array('cat' => $request['cat']), $tmp_count, $files);
+			$files = get_db_ids(array('cat' => $request['cat']), $tmp_count, $files);
 		
 		// get all the other information from other handlers
 		for($index = 0; $index < $files_length; $index++)
@@ -102,9 +111,9 @@ function output_bt($request)
 			// merge all the other information to each file
 			foreach($GLOBALS['handlers'] as $i => $handler)
 			{
-				if($handler != $_REQUEST['cat'] && constant($handler . '::INTERNAL') == false && call_user_func_array($handler . '::handles', array($file['Filepath'])))
+				if($handler != $request['cat'] && is_internal($handler) == false && handles($file['Filepath'], $handler))
 				{
-					$return = call_user_func_array($handler . '::get', array($tmp_request, &$tmp_count));
+					$return = call_user_func_array('get_' . $handler, array($tmp_request, &$tmp_count));
 					if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
 				}
 			}
@@ -114,7 +123,7 @@ function output_bt($request)
 			{
 				// get all files in directory
 				$props = array('dir' => $file['Filepath']);
-				$sub_files = call_user_func_array(validate_cat(array('cat' => 'file')) . '::get', array($props, &$tmp_count));
+				$sub_files = call_user_func_array('get_' . $request['cat'], array($props, &$tmp_count));
 				
 				// put these files on the end of the array so they also get processed
 				$files = array_merge($files, $sub_files);
@@ -158,7 +167,7 @@ function output_bt($request)
 			$current_file = 0;
 			$contents = '';
 			$read_amount = 0;
-			$fp = call_user_func_array($request['cat'] . '::out', array($files[$current_file]['Filepath']));
+			$fp = output_handler($files[$current_file]['Filepath'], $request['cat']);
 			while($current_file <= count($files))
 			{
 				$read_amount = $torrent['info']['piece length'] - strlen($contents);
@@ -174,7 +183,7 @@ function output_bt($request)
 				if(feof($fp) && $current_file < count($files))
 				{
 					//print $files[$current_file]['Filepath'] . '<br />';
-					$fp = call_user_func_array($request['cat'] . '::out', array($files[$current_file]['Filepath']));
+					$fp = output_handler($files[$current_file]['Filepath'], $request['cat']);
 				}
 				
 				// should keep reading files if middle file is shorter then piece length also

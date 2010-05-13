@@ -111,7 +111,11 @@ function theme_live_files()
 			elseif(handles($file['Filepath'], 'diskimage')) $cat = 'diskimage';
 			else $cat = $GLOBALS['templates']['vars']['cat'];
 			
-			if($GLOBALS['templates']['vars']['cat'] != $cat || $file['Filetype'] == 'FOLDER') $new_cat = $cat;
+			if($GLOBALS['templates']['vars']['cat'] != $cat || $file['Filetype'] == 'FOLDER')
+			{
+				if(substr($file['Filepath'], -1) != '/') $file['Filepath'] .= '/';
+				$new_cat = $cat;
+			}
 			$link = isset($new_cat)?url('module=select&cat=' . $new_cat . '&dir=' . urlencode($file['Filepath'])):url('module=file&cat=' . $cat . '&id=' . $file['id'] . '&filename=' . $file['Filename']);
 			unset($new_cat);
 			?>

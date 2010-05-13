@@ -62,3 +62,49 @@ function theme_live_modules()
 	
 	theme('footer');
 }
+
+
+function theme_live_status()
+{
+	
+	theme('header');
+
+	?>
+	<div class="contentSpacing">
+			<h1 class="title"><?php print $GLOBALS['modules']['admin_status']['name']; ?></h1>
+			<span class="subText"><?php print $GLOBALS['modules']['admin_status']['description']; ?></span>
+	<?php
+	
+	theme('errors');
+	
+	?>
+	<div class="titlePadding"></div>
+	<table border="0" cellpadding="0" cellspacing="0" class="install">
+	<?php
+	foreach($GLOBALS['templates']['vars']['status'] as $name => $config)
+	{
+		?>
+		<tr>
+			<td class="title <?php print $config['status']; ?>"><?php print $config['name']; ?> (<?php print $name; ?>)</td>
+			<td>
+			<?php print_form_objects(array($name => $config)); ?>
+			</td>
+			<td class="desc">
+			<?php print_info_objects($config['description']); ?>
+			</td>
+		</tr>
+		<?php
+	}
+	?>
+	</table>
+	<br />
+	<br />
+	<br />
+	<input type="button" value="Refresh" class="button" style="float:right;" />
+	<?php
+	
+	?><div class="titlePadding"></div>
+	</div><?php
+	
+	theme('footer');
+}

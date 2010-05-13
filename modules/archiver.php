@@ -4,14 +4,23 @@
  * Implementation of register
  * @ingroup register
  */
-function register_archive()
+function register_archiver()
 {
 	return array(
 		'name' => lang('archive title', 'Archive Generator'),
 		'description' => lang('archive description', 'Convert sets of files to an archive using a command line program.'),
 		'privilage' => 1,
-		'path' => __FILE__
+		'path' => __FILE__,
+		'depends on' => array('archiver_installed'),
 	);
+}
+
+/**
+ * Implementation of status
+ * @ingroup status
+ */
+function status_archiver()
+{
 }
 
 /**
@@ -19,7 +28,7 @@ function register_archive()
  * Does nothing yet
  * @ingroup validate
  */
-function validate_archive($request)
+function validate_archiver($request)
 {
 	
 }
@@ -29,7 +38,7 @@ function validate_archive($request)
  * Outputs an archive
  * @ingroup output
  */
-function output_archive($request)
+function output_archiver($request)
 {
 		
 	// set the header first thing so browser doesn't stall or get tired of waiting for the process to start
@@ -53,7 +62,7 @@ function output_archive($request)
 	if(isset($request['%IF']))
 	{
 		// get the file path from the database
-		$files = call_user_func_array($request['cat'] . '::get', array(array('id' => $request['id']), &$count));
+		$files = call_user_func_array('get_' . $request['cat'], array(array('id' => $request['id']), &$count));
 		
 		if(count($files) > 0)
 		{

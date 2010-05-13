@@ -18,7 +18,7 @@ function register_settings()
 {
 	return array(
 		'name' => 'Settings',
-		'description' => 'This allows users to save theme settings.',
+		'description' => 'This allows users to save theme and site settings.',
 		'privilage' => 1,
 		'path' => __FILE__
 	);
@@ -39,6 +39,26 @@ function setup_settings()
 }
 
 /**
+ * Implementation of setting, basic wrapper for checks
+ * @ingroup setting
+ * @return possible settings file paths in order of preference to the system, false if file doesn't exist anywhere
+ */
+function setting_settings_file()
+{
+	// return file from where it is supposed to be
+	// check other directories if it doesn't exist there
+	if(!file_exists(dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'settings.ini'))
+	{
+		if(file_exists(dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'settings.ini'))
+			return dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'settings.ini';
+	}
+	
+	// add handling for multiple domains like drupal does
+	
+	return dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'settings.ini';
+}
+
+/**
  * @defgroup setting Settings Functions
  * All functions that handling site settings, basically designed exactly the same way as validate()
  * @param settings the current list of settings for settings to depend on each other
@@ -53,8 +73,15 @@ function setup_settings()
  */
 function setting($name)
 {
+	// if the setting is loaded already use that
 	if(isset($GLOBALS['settings'][$name]))
 		return $GLOBALS['settings'][$name];
+		
+	// if the setting is not found, try to get the default
+	if(function_exists('setting_' . $name))
+		return call_user_func_array('setting_' . $name, array($GLOBALS['settings']));
+	elseif(isset($GLOBALS['setting_' . $name]) && is_callable($GLOBALS['setting_' . $name]))
+		return $GLOBALS['setting_' . $name]($GLOBALS['settings']);
 		
 	// if the setting isn't found in the configuration
 	PEAR::raiseError('Setting \'' . $name . '\' not found!', E_DEBUG);
@@ -89,7 +116,7 @@ function settings_get_defaults($settings)
 				elseif(isset($GLOBALS['setting_' . $setting]) && is_callable($GLOBALS['setting_' . $setting]))
 					$default_settings[$setting] = $GLOBALS['setting_' . $setting]($settings);
 				else
-					PEAR::raiseError('Setting \'' . $setting . '\' is specified without a validate function in the ' . $module . ' module.');
+					PEAR::raiseError('Setting \'' . $setting . '\' is specified without a validate function in the ' . $module . ' module.', E_DEBUG);
 			}
 		}
 	}

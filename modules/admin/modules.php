@@ -1,10 +1,10 @@
 <?php
 
 /**
- * Implementation of register
- * @ingroup register
+ * Implementation of setup
+ * @ingroup setup
  */
-function register_admin_modules()
+function setup_admin_modules()
 {
 	$module_func = array();
 	foreach($GLOBALS['modules'] as $module => $config)
@@ -13,13 +13,79 @@ function register_admin_modules()
 		$GLOBALS['setting_' . $module . '_enable'] = create_function('$request', 'return setting_module_enable($request, \'' . $module . '\');');
 	}
 	
+	$GLOBALS['modules']['admin_modules']['settings'] = $module_func;
+	
+}
+
+/**
+ * Implementation of register
+ * @ingroup register
+ */
+function register_admin_modules()
+{
 	return array(
 		'name' => lang('modules title', 'Configure Modules'),
 		'description' => lang('modules description', 'Display a list of modules and allow for enabling and disabling.'),
 		'privilage' => 10,
 		'path' => __FILE__,
-		'settings' => $module_func,
+		'settings' => array(),
+		'depends on' => array('writable_settings_file', 'admin', 'admin_tools', 'settings')
 	);
+}
+
+/**
+ * Implementation of dependency
+ * @ingroup dependency
+ * @true or false if the settings file is writeable, so that this module can write to it
+ */
+function dependency_writable_settings_file($settings)
+{
+	if(setting_installed() == false)
+		return false;
+	return is_writable(setting_settings_file($settings));
+}
+
+/**
+ * Implementation of dependencies
+ */
+function status_admin_modules($settings)
+{
+	$options = array();
+	
+	// settings permission
+	if(dependency('writable_settings_file'))
+	{
+		$options['writable_settings_file'] = array(
+			'name' => lang('settings access title', 'Access to Settings'),
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					lang('settings access description', 'The system has detected that is has access to the settings file.  Write permissions should be removed when this installation is complete.'),
+				),
+			),
+			'type' => 'text',
+			'disabled' => true,
+			'value' => setting_settings_file($settings),
+		);
+	}
+	else
+	{
+		$options['writable_settings_file'] = array(
+			'name' => lang('settings access title', 'Access to Settings'),
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					lang('settings access fail description 1', 'The system would like access to the following file.  This is so it can write all the settings when we are done with the install.'),
+					lang('settings access fail description 2', 'Please create this file, and grant it Read/Write permissions.'),
+				),
+			),
+			'type' => 'text',
+			'disabled' => true,
+			'value' => setting_settings_file($settings),
+		);
+	}
+	
+	return $options;
 }
 
 /**
@@ -132,7 +198,7 @@ function output_admin_modules($request)
 			$new_setting = $GLOBALS['setting_' . $setting](array_merge($GLOBALS['settings'], $new_settings));
 		
 		// make sure the new setting is different from the current setting
-		if($new_setting != $GLOBALS['settings'][$setting])
+		if($new_setting != setting($setting))
 		{
 			$GLOBALS['settings'][$setting] = $new_setting;
 			$settings_changed = true;
@@ -142,7 +208,7 @@ function output_admin_modules($request)
 	if($settings_changed == true)
 	{
 		// if we are using a database store the settings in the administrators profile
-		if(setting('use_database'))
+		if(setting_use_database())
 		{
 		}
 		
@@ -161,9 +227,9 @@ function output_admin_modules($request)
 				// only write the settings that are not the default
 				foreach($GLOBALS['settings'] as $setting => $value)
 				{
-					if($GLOBALS['settings'][$setting] != $defaults['settings'])
+					if(setting($setting) != $defaults['settings'])
 					{
-						fwrite($fh, $setting . ' = ' . $GLOBALS['settings'][$setting] . "\n");
+						fwrite($fh, $setting . ' = ' . setting($setting) . "\n");
 					}
 				}
 				
@@ -190,10 +256,16 @@ function output_admin_modules($request)
 		// output configuration page
 		$options = call_user_func_array('configure_' . $request['configure_module'], array($GLOBALS['settings']));
 
-		$diff = array_diff($GLOBALS['modules'][$request['configure_module']]['settings'], array_keys($options));
-		foreach($diff as $i => $key)
+		$missing_settings = array_diff($GLOBALS['modules'][$request['configure_module']]['settings'], array_keys($options));
+		$in_settings_not_in_config = array_intersect($missing_settings, $GLOBALS['modules'][$request['configure_module']]['settings']);
+		$in_config_not_in_settings = array_intersect($missing_settings, array_keys($options));
+		foreach($in_settings_not_in_config as $i => $key)
 		{
-			PEAR::raiseError('Option \'' . $key . '\' listed in configure_' . $request['configure_module'] . ' but not listed in the configuration for the module!', E_DEBUG);
+			PEAR::raiseError('Option \'' . $key . '\' listed in settings for ' . $request['configure_module'] . ' but not listed in the output options configuration!', E_DEBUG);
+		}
+		foreach($in_config_not_in_settings as $i => $key)
+		{
+			PEAR::raiseError('Option \'' . $key . '\' listed in the output options for ' . $request['configure_module'] . ' but not listed in the module config!', E_DEBUG);
 		}
 		
 		register_output_vars('options', $options);

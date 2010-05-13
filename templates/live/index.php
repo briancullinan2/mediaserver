@@ -181,10 +181,10 @@ function theme_live_errors()
 				}
 				?><b><?php print $error->message; ?></b><br /><?php
 			}
-			if(count($GLOBALS['warn_errors']) > 4)
+			if(count($GLOBALS['warn_errors']) > 5)
 			{
 				?></div>
-				And <?php print count($GLOBALS['warn_errors']); ?> more: <a href="javascript:return true;" onClick="if(this.hidden == false) { document.getElementById('warn_errors').className='error hide'; this.hidden=true; this.innerHTML = 'Un Hide'; } else { document.getElementById('warn_errors').className='error'; this.hidden=false; this.innerHTML = 'Hide'; }">Un Hide</a>
+				And <?php print count($GLOBALS['warn_errors']) - 5; ?> more: <a href="javascript:return true;" onClick="if(this.hidden == false) { document.getElementById('warn_errors').className='error hide'; this.hidden=true; this.innerHTML = 'Un Hide'; } else { document.getElementById('warn_errors').className='error'; this.hidden=false; this.innerHTML = 'Hide'; }">Un Hide</a>
 				<?php
 			}
 			?></div><?php
@@ -201,10 +201,10 @@ function theme_live_errors()
 				}
 				?><b><?php print $error->message; ?></b><br /><?php
 			}
-			if(count($GLOBALS['user_errors']) > 4)
+			if(count($GLOBALS['user_errors']) > 5)
 			{
 				?></div>
-				And <?php print count($GLOBALS['user_errors']); ?> more: <a href="javascript:return true;" onClick="if(this.hidden == false) { document.getElementById('user_errors').className='error hide'; this.hidden=true; this.innerHTML = 'Un Hide'; } else { document.getElementById('user_errors').className='error'; this.hidden=false; this.innerHTML = 'Hide'; }">Un Hide</a>
+				And <?php print count($GLOBALS['user_errors']) - 5; ?> more: <a href="javascript:return true;" onClick="if(this.hidden == false) { document.getElementById('user_errors').className='error hide'; this.hidden=true; this.innerHTML = 'Un Hide'; } else { document.getElementById('user_errors').className='error'; this.hidden=false; this.innerHTML = 'Hide'; }">Un Hide</a>
 				<?php
 			}
 			?></div><?php
@@ -221,10 +221,10 @@ function theme_live_errors()
 				}
 				?><b><?php print $error->message; ?></b><br /><?php
 			}
-			if(count($GLOBALS['note_errors']) > 4)
+			if(count($GLOBALS['note_errors']) > 5)
 			{
 				?></div>
-				And <?php print count($GLOBALS['note_errors']); ?> more: <a href="javascript:return true;" onClick="if(this.hidden == false) { document.getElementById('note_errors').className='error hide'; this.hidden=true; this.innerHTML = 'Un Hide'; } else { document.getElementById('note_errors').className='error'; this.hidden=false; this.innerHTML = 'Hide'; }">Un Hide</a>
+				And <?php print count($GLOBALS['note_errors']) - 5; ?> more: <a href="javascript:return true;" onClick="if(this.hidden == false) { document.getElementById('note_errors').className='error hide'; this.hidden=true; this.innerHTML = 'Un Hide'; } else { document.getElementById('note_errors').className='error'; this.hidden=false; this.innerHTML = 'Hide'; }">Un Hide</a>
 				<?php
 			}
 			?></div><?php

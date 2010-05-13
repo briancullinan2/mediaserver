@@ -58,7 +58,7 @@ foreach($GLOBALS['templates']['vars']['files'] as $i => $file)
 	}
 	
 	header('Content-Type: audio/x-mpegurl');
-	header('Content-Disposition: attachment; filename="' . (isset($_REQUEST['filename'])?$_REQUEST['filename']:constant($_REQUEST['cat'] . '::NAME') . '.m3u"')); 
+	header('Content-Disposition: attachment; filename="' . (isset($_REQUEST['filename'])?$_REQUEST['filename']:$GLOBALS['handlers'][$_REQUEST['cat']]['name'] . '.m3u"')); 
 
 	if($GLOBALS['templates']['vars']['extra'] == 'mp4')
 	{

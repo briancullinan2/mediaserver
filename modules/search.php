@@ -23,7 +23,16 @@ function register_search()
 		'session' => array('search'),
 		'alter query' => array('search'),
 		'always output' => array('search'),
+		'depends on' => array('database', 'admin_alias'),
 	);
+}
+
+/**
+ * Implementation of status
+ * @ingroup status
+ */
+function status_search()
+{
 }
 
 /**
@@ -201,6 +210,10 @@ function search_get_pieces_query($pieces)
  */
 function alter_query_search($request, $props)
 {
+	// do not alter the query if selected is set
+	$request['selected'] = validate_selected($request);
+	if(isset($request['selected']) && count($request['selected']) > 0 ) return $props;
+	
 	// they can specify multiple columns to search for the same string
 	if(isset($request['columns']))
 	{
@@ -209,7 +222,7 @@ function alter_query_search($request, $props)
 	// search every column for the same string
 	else
 	{
-		$columns = call_user_func($request['cat'] . '::columns');
+		$columns = columns($request['cat']);
 	}
 		
 	// array for each column
@@ -291,7 +304,7 @@ function output_search($request)
 	$search_regexp = array();
 
 	// get columns being searched
-	$columns = call_user_func($request['cat'] . '::columns');
+	$columns = columns($request['cat']);
 	
 	$all_columns = getAllColumns();
 	

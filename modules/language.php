@@ -10,7 +10,7 @@ define('T_SKIP', 4);
  */
 define('T_REPLACE', 8);
 /** Create new textual context but do it in the same lang call and group it all together */
-define('T_NEW', 16);
+define('T_NEW_CONTEXT', 16);
 
 /**
  * Implementation of setup
@@ -20,9 +20,9 @@ function setup_language()
 {
 	global $LANG_CODE;
 	
-	include_once $GLOBALS['settings']['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'SupportedLanguages.php';
+	include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'SupportedLanguages.php';
 	
-	include_once $GLOBALS['settings']['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'Translator.php';
+	include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'Translator.php';
 
 	if(!isset($_SESSION['translated'])) $_SESSION['translated'] = array();
 
@@ -108,8 +108,8 @@ function lang($keys, $text)
 	else
 		PEAR::raiseError('Warning: The input language translation \'' . $keys . '\' has already been register for translation.', E_DEBUG);
 		
-	// use language saved in sesssion
-	if(validate_language($_REQUEST) == 'en')
+	// use language saved in sesssion, make sure it has been set up before calling this
+	if(isset($GLOBALS['LANG_CODE']) && validate_language($_REQUEST) == 'en')
 	{
 		return $text;
 	}
