@@ -272,6 +272,8 @@ function get_files($request, &$count, $handler)
 	// if the handler is set, call that instead
 	if($handler != 'files' && function_exists('get_' . $handler))
 		return call_user_func_array('get_' . $handler, array($request, $count));
+	elseif(is_wrapper($handler))
+		return get_files($GLOBALS['handlers'][$handler]['wrapper']);
 	elseif($handler != 'files')
 	{
 		PEAR::raiseError('get_files() called with handler \'' . $handler . '\' but no get_ handler function exists! Defaulting to db_file', E_DEBUG);

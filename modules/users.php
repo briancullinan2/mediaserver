@@ -143,6 +143,44 @@ function register_users()
  */
 function status_users()
 {
+	$status = array();
+
+	if(dependency('database') != false && setting_use_database() == true)
+	{
+		$status['users'] = array(
+			'name' => lang('users status title', 'Users'),
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					lang('users status description', 'User functionality is supported because the database is properly installed.'),
+				),
+			),
+			'value' => array(
+				'text' => array(
+					'User functionality available',
+				),
+			),
+		);
+	}
+	else
+	{
+		$status['users'] = array(
+			'name' => lang('users status title', 'Users'),
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					lang('users status fail description', 'User functionality is disabled because the database is not configured.'),
+				),
+			),
+			'value' => array(
+				'text' => array(
+					'User functionality disabled',
+				),
+			),
+		);
+	}
+	
+	return $status;
 }
 
 /**

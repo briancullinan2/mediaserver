@@ -1,6 +1,11 @@
 <?php
 
-$GLOBALS['templates']['TEMPLATE_QUERY'] = LOCAL_ROOT . LOCAL_TEMPLATE . 'query.html';
-$GLOBALS['templates']['TEMPLATE_PAGES'] = LOCAL_ROOT . LOCAL_TEMPLATE . 'pages.html';
-
-?>
+function register_mobile()
+{
+	return array(
+		'name' => 'Mobile',
+		'description' => 'Mobile theme for use of devices with small screens.',
+		'privilage' => 1,
+		'path' => __FILE__,
+	);
+}

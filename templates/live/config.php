@@ -226,7 +226,7 @@ function print_form_objects($form)
 				?>
 				<select <?php print (isset($config['disabled']) && $config['disabled'] == true)?'disabled="disabled"':'';?> name="<?php print $field_name; ?>">
 					<option value="true" <?php print ($config['value'] == true)?'selected="selected"':''; ?>><?php print isset($config['options'][0])?$config['options'][0]:'true'; ?></option>
-					<option value="false" <?php print ($config['value'] == false)?'selected="selected"':''; ?>><?php print isset($config['options'][0])?$config['options'][1]:'false'; ?></option>
+					<option value="false" <?php print ($config['value'] == false)?'selected="selected"':''; ?>><?php print isset($config['options'][1])?$config['options'][1]:'false'; ?></option>
 				</select>
 				<?php
 			break;

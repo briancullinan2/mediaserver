@@ -58,7 +58,9 @@ function setup_admin_handlers()
 			$handler['database'] = $config['database'];
 			$handler['name'] = $config['name'];
 			$handler['description'] = $config['description'];
-			$handler['internal'] = $config['internal'];
+			if(isset($config['internal'])) $handler['internal'] = $config['internal'];
+			if(isset($config['settings'])) $handler['settings'] = $config['settings'];
+			if(isset($config['depends on'])) $handler['depends on'] = $config['depends on'];
 			
 			$GLOBALS['handlers'][$module] = $handler;
 		}
@@ -175,9 +177,9 @@ function configure_admin_handlers($settings)
 	
 	$options = array();
 	
-	foreach($GLOBALS['handlers'] as $i => $handler)
+	foreach($GLOBALS['handlers'] as $handler => $config)
 	{
-		if($GLOBALS['handlers'][$handler]['internal'] == true)
+		if(is_internal($handler))
 			continue;
 			
 		$settings[$handler . '_enable'] = setting_module_enable($settings, $handler);

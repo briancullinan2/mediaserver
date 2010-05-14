@@ -204,7 +204,7 @@ function output_admin_watch($request)
 	
 	if(isset($request['wremove']))
 	{
-		$GLOBALS['database']->query(array('DELETE' => 'watch', 'WHERE' => 'id=' . $request['wremove']), false);
+		$GLOBALS['database']->query(array('DELETE' => 'admin_watch', 'WHERE' => 'id=' . $request['wremove']), false);
 	}
 	
 	// reget the watched and ignored because they may have changed

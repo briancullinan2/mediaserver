@@ -1,9 +1,29 @@
 <?php
 
-$GLOBALS['templates']['TEMPLATE_SELECT'] = LOCAL_ROOT . LOCAL_TEMPLATE . 'select.xml';
-$GLOBALS['templates']['TEMPLATE_INDEX'] = LOCAL_ROOT . LOCAL_TEMPLATE . 'index.html';
-//$templates['TEMPLATE_SEARCH'] = LOCAL_ROOT . LOCAL_TEMPLATE . 'search.xml';
-$GLOBALS['templates']['TEMPLATE_DISPLAY'] = LOCAL_ROOT . LOCAL_TEMPLATE . 'display.xml';
+function register_extjs()
+{
+	return array(
+		'name' => 'Ext JS',
+		'description' => 'Ext JS javascript windows style template.',
+		'privilage' => 1,
+		'path' => __FILE__,
+	);
+}
 
+function output_extjs()
+{
+	?><script language="javascript" type="application/javascript"><?php
+}
 
-?>
+function theme_extjs_index()
+{
+	?>
+	
+	
+	<?php
+}
+
+function theme_extjs_footer()
+{
+	?></script><?php
+}

@@ -31,7 +31,7 @@ function register_core()
 			'installed', 'system_type', 'local_root', 'settings_file', 'modrewrite', 
 		),
 		'depends on' => array(
-			'fs_file', 'memory_limit', 'writable_system_files', 'pear_installed',
+			'memory_limit', 'writable_system_files', 'pear_installed',
 			// move these to the proper handlers when it is implemented
 			'getid3_installed', 'snoopy_installed', 'geshi_installed', 'extjs_installed'
 		),
@@ -94,7 +94,7 @@ function setup_core()
 	
 	// resort modules to reflect their dependencies, aka inefficient sort
 	$GLOBALS['modules'] = array_merge(array_flip(flatten_module_dependencies(array_keys($GLOBALS['modules']))), $GLOBALS['modules']);
-	
+
 	// always make the module list available to templates
 	register_output_vars('modules', $GLOBALS['modules']);
 }
@@ -104,7 +104,7 @@ function setup_core()
  * @param modules the list of modules to recursively loop through
  * @return an array of modules sorted by dependency
  */
-function flatten_module_dependencies($modules)
+function flatten_module_dependencies($modules, $already_added = array())
 {
 	$new_modules = array('core');
 	foreach($modules as $i => $module)
@@ -113,9 +113,28 @@ function flatten_module_dependencies($modules)
 		if(!isset($GLOBALS['modules'][$module]))
 			continue;
 		
-		if(isset($GLOBALS['modules'][$module]['depends on']))
+		if(isset($GLOBALS['modules'][$module]['depends on']) && !in_array($module, $already_added))
 		{
-			$new_modules = array_merge($new_modules, flatten_module_dependencies($GLOBALS['modules'][$module]['depends on']));
+			// add to list to prevent recursion
+			$already_added[] = $module;
+			
+			// if the dependency field is set to the module name, and a valid callback exists, call that to determine list of dependencies
+			if(is_string($GLOBALS['modules'][$module]['depends on']) && $GLOBALS['modules'][$module]['depends on'] == $module &&
+				function_exists('dependency_' . $module)
+			)
+				$depends_on = call_user_func_array('dependency_' . $module, array($GLOBALS['settings']));
+			else
+				$depends_on = $GLOBALS['modules'][$module]['depends on'];
+			
+			// if it is not an array send debug message and reset it
+			if(!isset($depends_on) || !is_array($depends_on))
+			{
+				$depends_on = array();
+				PEAR::raiseError('Something has failed while calling dependecy_' . $module . ', it did not return an array.', E_DEBUG);
+			}
+			
+			// call flatten based on modules dependencies first
+			$new_modules = array_merge($new_modules, flatten_module_dependencies($depends_on, $already_added));
 		}
 		$new_modules[] = $module;
 	}
@@ -423,17 +442,30 @@ function dependency($dependency, $already_checked = array())
 	{
 		$config = $GLOBALS['handlers'][$dependency];
 	}
-	
+		
 	if(isset($config))
 	{
 		// they are trying to check a module for informational purposes
-		if(!isset($config['depends on']) || 
-			count($config['depends on']) == 0)
+		if(!isset($config['depends on']))
 			// the module has no dependencies, hard to believe
+			return true;
+			
+		if(is_string($config['depends on']) && $config['depends on'] == $dependency &&
+			function_exists('dependency_' . $config['depends on'])
+		)
+		{
+			return call_user_func_array('dependency_' . $dependency, array($GLOBALS['settings']));
+		}
+		elseif(is_string($config['depends on']))
+		{
+			PEAR::raiseError('Something has failed while calling dependecy_' . $dependency . ', it did not return an array.', E_DEBUG);
+			//return false;
+		}
+	
+		if(count($config['depends on']) == 0)
 			return true;
 		
 		// now loop through the modules dependencies only, and make sure they are all met
-		$satisfied = true; // disprove this
 		foreach($config['depends on'] as $i => $depend)
 		{
 			//  uses a backup check to prevent recursion and errors if there is
@@ -451,14 +483,11 @@ function dependency($dependency, $already_checked = array())
 			$already_checked[] = $depend;
 			if(dependency($depend, $already_checked) === false)
 			{
-				$satisfied = false;
-				
 				// no need to continue as it only takes 1 to fail
-				break;
+				return false;
 			}
 		}
-		
-		return $satisfied;
+		return true;
 	}
 	
 	
@@ -490,7 +519,11 @@ function dependency_memory_limit()
  */
 function dependency_writable_system_files($settings)
 {
-	PEAR::raiseError('Implement this.', E_DEBUG);
+	// try to make this function return false
+	if(dependency('writable_settings_file') != false)
+		return false;
+		
+	
 	return true;
 }
 
@@ -544,7 +577,7 @@ function dependency_geshi_installed($settings)
  */
 function dependency_extjs_installed($settings)
 {
-	return file_exists($settings['local_root'] . 'templates' . DIRECTORY_SEPARATOR . 'plain' . DIRECTORY_SEPARATOR . 'extjs' . DIRECTORY_SEPARATOR . 'ext-all.js');
+	return file_exists(setting_local_root() . 'templates' . DIRECTORY_SEPARATOR . 'plain' . DIRECTORY_SEPARATOR . 'extjs' . DIRECTORY_SEPARATOR . 'ext-all.js');
 }
 
 /**
@@ -741,14 +774,43 @@ function status_core($settings)
 		);
 	}
 	
-	// move these to proper handlers
+	if(dependency('writable_system_files'))
+	{
+		$status['writable_system_files'] = array(
+			'name' => 'Writeable System Files',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'The system has detected that the the correct permissions are set on critical system files.',
+				),
+			),
+			'disabled' => true,
+			'value' => 'Permissions OK',
+		);
+	}
+	else
+	{
+		$status['writable_system_files'] = array(
+			'name' => 'Writeable System Files',
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					'There are permission problems with critical system files!',
+				),
+			),
+			'disabled' => true,
+			'value' => 'You must correct the following permission problems:',
+		);
+	}
 	
+	
+	// move these to proper handlers
 	$pear_libs = array('File/Archive.php' => 'File_Archive', 'MIME/Type.php' => 'MIME_Type');
 	$not_installed = array();
 	$installed = array();
 	foreach($pear_libs as $lib => $link)
 	{
-		if((@include_once $lib) === false)
+		if(include_path($lib) === false)
 		{
 			$not_installed[] = array(
 				'link' => array(

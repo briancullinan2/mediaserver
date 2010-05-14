@@ -12,11 +12,22 @@ function theme_live_modules()
 	
 	theme('header');
 
-	?>
-	<div class="contentSpacing">
-			<h1 class="title">Configuring: <?php print $GLOBALS['modules'][$GLOBALS['templates']['vars']['configure_module']]['name']; ?></h1>
-			<span class="subText"><?php print $GLOBALS['modules'][$GLOBALS['templates']['vars']['configure_module']]['description']; ?></span>
-	<?php
+	if(isset($GLOBALS['modules'][$GLOBALS['templates']['vars']['configure_module']]))
+	{
+		?>
+		<div class="contentSpacing">
+				<h1 class="title">Configuring: <?php print $GLOBALS['modules'][$GLOBALS['templates']['vars']['configure_module']]['name']; ?></h1>
+				<span class="subText"><?php print $GLOBALS['modules'][$GLOBALS['templates']['vars']['configure_module']]['description']; ?></span>
+		<?php
+	}
+	else
+	{
+		?>
+		<div class="contentSpacing">
+				<h1 class="title">Configuring: <?php print $GLOBALS['handlers'][$GLOBALS['templates']['vars']['configure_module']]['name']; ?></h1>
+				<span class="subText"><?php print $GLOBALS['handlers'][$GLOBALS['templates']['vars']['configure_module']]['description']; ?></span>
+		<?php
+	}
 	
 	theme('errors');
 	
@@ -36,6 +47,12 @@ function theme_live_modules()
 				if($GLOBALS['templates']['vars']['configure_module'] == 'admin_modules' &&
 					isset($GLOBALS['modules'][substr($name, 0, -7)]['settings']) && 
 					count($GLOBALS['modules'][substr($name, 0, -7)]['settings']) > 0)
+				{
+					?><input type="button" value="Configure" onclick="window.location.href='<?php print url('module=admin_modules&configure_module=' . substr($name, 0, -7)); ?>'" /><?php
+				}
+				elseif($GLOBALS['templates']['vars']['configure_module'] == 'admin_handlers' &&
+					isset($GLOBALS['handlers'][substr($name, 0, -7)]['settings']) && 
+					count($GLOBALS['handlers'][substr($name, 0, -7)]['settings']) > 0)
 				{
 					?><input type="button" value="Configure" onclick="window.location.href='<?php print url('module=admin_modules&configure_module=' . substr($name, 0, -7)); ?>'" /><?php
 				}

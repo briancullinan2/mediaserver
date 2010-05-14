@@ -152,7 +152,9 @@ function setup()
 		// do not call set up if dependencies are not met, this will force strict use of modules functionality
 		// set up the modules in the right order
 		if(dependency($module) && function_exists('setup_' . $module))
+		{
 			call_user_func_array('setup_' . $module, array());
+		}
 	}
 	
 	// setup all the handlers

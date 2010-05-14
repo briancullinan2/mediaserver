@@ -30,7 +30,7 @@ function output_admin_status($request)
 			
 		// output configuration page
 		$module_status = call_user_func_array('status_' . $module, array($GLOBALS['settings']));
-		
+
 		if(!is_array($module_status))
 		{
 			PEAR::raiseError('Something has gone terribly wrong while trying to retrieve the status for \'' . $module . '\'!', E_DEBUG);
@@ -39,10 +39,21 @@ function output_admin_status($request)
 			continue;
 		}
 
+		// call the dependency function
+		if(is_string($config['depends on']) && $config['depends on'] == $module &&
+			function_exists('dependency_' . $config['depends on'])
+		)
+			$config['depends on'] = call_user_func_array('dependency_' . $module, array($GLOBALS['settings']));
+
+		if(!is_array($config['depends on']))
+			$config['depends on'] = array();
+
 		// print out missing keys from the system
 		$missing_dependencies = array_diff($config['depends on'], array_keys($module_status));
 		$in_depends_not_in_config = array_intersect($missing_dependencies, $config['depends on']);
 		$in_config_not_in_depends = array_intersect($missing_dependencies, array_keys($module_status));
+		
+		// print out errors
 		foreach($in_depends_not_in_config as $i => $key)
 		{
 			PEAR::raiseError('Dependency \'' . $key . '\' listed in dependencies for ' . $module . ' but not listed in the output status configuration!', E_DEBUG);
@@ -53,10 +64,10 @@ function output_admin_status($request)
 		}
 		
 		// error on interference in keys
-		$key_interference = array_intersect($status, $module_status);
+		$key_interference = array_intersect(array_keys($status), array_keys($module_status));
 		foreach($key_interference as $i => $key)
 		{
-			PEAR::raiseError('Duplicate status listing in ' . $module . '!', E_DEBUG);
+			PEAR::raiseError('Duplicate status listing \'' . $key . '\' in ' . $module . '!', E_DEBUG);
 		}
 		
 		// merge keys to output

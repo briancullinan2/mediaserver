@@ -3,7 +3,10 @@ Monolithic site is not outputting the htaccess file because it is hidden from th
 ------------- GENERAL TODO -------------
 Alter query needs a way to affect the $request
 	If a selection is being done and an ID is specified then search and file and dir are no longer relevant to the query
-Find a way for a module to affect the order of it's loading, without actually making it a dependency
+'depends on' in the configuration of a module can be set to the name of the module if a callback function dependecy_module exists
+	It returns false if the dependencies fail, or and array of dependencies for sorting
+	Since false means it has not met the dependencies, it will not need to be ordered properly since it is not going to be used anyways
+	Find a way for a module to affect the order of it's loading, without actually making it a dependency
 	Is there a function that could determin it's dependency? and the order?
 	If the database is used, it must be loaded before users
 	Or is the hack of creating the user global variable in the register function regardless really the best option?

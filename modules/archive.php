@@ -1,14 +1,18 @@
 <?php
 
-/** 
- * Implementation of register_handler
- * @ingroup register_handler
+/**
+ * Implementation of register
+ * @ingroup register
  */
 function register_archive()
 {
 	return array(
-		'name' => 'Archive',
-		'description' => 'Descend in to archives to enable searching of extra files and compression information.',
+		'name' => lang('archive title', 'Archive Generator'),
+		'description' => lang('archive description', 'Convert sets of files to an archive using a command line program.'),
+		'privilage' => 1,
+		'path' => __FILE__,
+		'depends on' => array('archiver'),
+		'settings' => array('archiver'),
 		'database' => array(
 			'Filepath' 		=> 'TEXT',
 			'Filename'		=> 'TEXT',
@@ -18,8 +22,6 @@ function register_archive()
 			'Filedate'		=> 'DATETIME ',
 			'Filetype'		=> 'TEXT',
 		),
-		'settings' => array('archiver'),
-		'depends on' => array('archiver_installed'),
 	);
 }
 
@@ -29,11 +31,144 @@ function register_archive()
  */
 function setup_archive()
 {
-	include_once setting('local_root') . 'handlers' . DIRECTORY_SEPARATOR . 'db_file.php';
-	
 	// include the id handler
 	include_once 'File' . DIRECTORY_SEPARATOR . 'Archive.php';
 	
+}
+
+/**
+ * Implementation of dependency
+ * @ingroup dependency
+ */
+function dependency_archiver($settings)
+{
+	// get the archiver it is set to
+	$settings['archiver'] = setting_archiver($settings);
+	$settings['local_root'] = setting_local_root($settings);
+
+	// if that archiver is not installed, return false
+	if($settings['archiver'] == 'pear' && dependency('pear_installed') != false && include_path('File/Archive.php') !== false)
+		return true;
+	elseif($settings['archiver'] == 'getid3' && dependency('getid3_installed') != false && 
+			file_exists($settings['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'module.archive.zip.php'))
+		return true;
+	elseif($settings['archiver'] == 'php' && class_exists('ZipArchive'))
+		return true;
+	else
+		return false;
+}
+
+/**
+ * Implementation of status
+ * @ingroup status
+ */
+function status_archive()
+{
+	$status = array();
+
+	if(dependency('archiver') != false)
+	{
+		$status['archive'] = array(
+			'name' => lang('archive status title', 'Archive'),
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					lang('archive status description', 'Archive creation and analyzing available.'),
+				),
+			),
+			'value' => array(
+				'text' => array(
+					'Archiving available',
+				),
+			),
+		);
+	}
+	else
+	{
+		$status['archive'] = array(
+			'name' => lang('archive status title', 'Archive'),
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					lang('archive status fail description', 'Archive analyzing not available.'),
+				),
+			),
+			'value' => array(
+				'text' => array(
+					'Archiving disabled',
+				),
+			),
+		);
+	}
+	
+	return $status;
+}
+
+/**
+ * Implementation of configure
+ * @ingroup configure
+ */
+function configure_archive($settings)
+{
+	$settings['archiver'] = setting_archiver($settings);
+	
+	$options = array();
+	
+	if(dependency('archiver'))
+	{
+		$options['archiver'] = array(
+			'name' => lang('archiver title', 'Archiver'),
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					lang('archiver description 1', 'This script comes equiped with 3 archive analyzers.'),
+					lang('archiver description 2', 'The built in PHP archiver, getID3 which is used by other handlers, and PEAR::Archive.'),
+				),
+			),
+			'type' => 'select',
+			'value' => $settings['archiver'],
+			'options' => array(
+				'pear' => 'PEAR File_Archive Extension',
+				'getid3' => 'GetID3() Library Archive reader',
+				'php' => 'Default PHP archiver',
+			),
+		);
+	}
+	else
+	{
+		$options['archiver'] = array(
+			'name' => lang('archiver title', 'Archiver Not Installed'),
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					lang('archiver description fail 1', 'Either there is no archiver installed, or the chosen archiver is missing.'),
+					lang('archiver description fail 2', 'The built in PHP archiver, getID3 which is used by other handlers, and PEAR::Archive.'),
+				),
+			),
+			'type' => 'select',
+			'value' => $settings['archiver'],
+			'options' => array(
+				'pear' => 'PEAR File_Archive Extension',
+				'getid3' => 'GetID3() Library Archive reader',
+				'php' => 'Default PHP archiver',
+			),
+		);
+	}
+	
+	return $options;
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ * @return returns pear by default
+ */
+function setting_archiver($settings)
+{
+	if(isset($settings['archiver']) && in_array($settings['archiver'], array('pear', 'getid3', 'php')))
+		return $settings['archiver'];
+	else
+		return 'pear';
 }
 
 /**
@@ -395,5 +530,4 @@ class archive
 		}
     }
 }
-
 

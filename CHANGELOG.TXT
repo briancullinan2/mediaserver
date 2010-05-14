@@ -1,3 +1,7 @@
+2010-05-14
+Modules can now use the 'depends on' field set to their own name to call a function to determine dependencies
+	search and user use this
+
 2010-05-12
 Made lots of changes regarding the handlers
 	Handlers register themselves just like any other module

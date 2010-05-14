@@ -19,8 +19,8 @@
 function register_cron()
 {
 	return array(
-		'name' => 'Cron Updater',
-		'description' => 'Update the database to match the file system.',
+		'name' => lang('cron name', 'Cron Updater'),
+		'description' => lang('cron description', 'Update the database to match the file system.'),
 		'privilage' => 1,
 		'path' => __FILE__,
 		'notemplate' => true,
@@ -35,6 +35,44 @@ function register_cron()
  */
 function status_cron()
 {
+	$status = array();
+
+	if(dependency('database') != false && setting_use_database() == true)
+	{
+		$status['cron'] = array(
+			'name' => lang('cron status title', 'Cron'),
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					lang('cron status description', 'Cron updating functionality is available.'),
+				),
+			),
+			'value' => array(
+				'text' => array(
+					'Cron updating available',
+				),
+			),
+		);
+	}
+	else
+	{
+		$status['users'] = array(
+			'name' => lang('users status title', 'Cron'),
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					lang('cron status fail description', 'Cron cannot update the database because it is not configured.'),
+				),
+			),
+			'value' => array(
+				'text' => array(
+					'Cron cannot update',
+				),
+			),
+		);
+	}
+	
+	return $status;
 }
 
 /**

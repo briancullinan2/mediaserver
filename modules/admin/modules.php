@@ -1,6 +1,22 @@
 <?php
 
 /**
+ * Implementation of register
+ * @ingroup register
+ */
+function register_admin_modules()
+{
+	return array(
+		'name' => lang('modules title', 'Configure Modules'),
+		'description' => lang('modules description', 'Display a list of modules and allow for enabling and disabling.'),
+		'privilage' => 10,
+		'path' => __FILE__,
+		'settings' => array(),
+		'depends on' => array('admin', 'admin_tools', 'settings')
+	);
+}
+
+/**
  * Implementation of setup
  * @ingroup setup
  */
@@ -14,23 +30,6 @@ function setup_admin_modules()
 	}
 	
 	$GLOBALS['modules']['admin_modules']['settings'] = $module_func;
-	
-}
-
-/**
- * Implementation of register
- * @ingroup register
- */
-function register_admin_modules()
-{
-	return array(
-		'name' => lang('modules title', 'Configure Modules'),
-		'description' => lang('modules description', 'Display a list of modules and allow for enabling and disabling.'),
-		'privilage' => 10,
-		'path' => __FILE__,
-		'settings' => array(),
-		'depends on' => array('writable_settings_file', 'admin', 'admin_tools', 'settings')
-	);
 }
 
 /**
@@ -111,14 +110,16 @@ function setting_module_enable($settings, $module)
 function configure_admin_modules($settings)
 {
 	$recommended = array('select', 'list', 'search');
-	$required = array('core', 'index', 'login');
+	$required = array('core', 'index', 'users', 'select');
 	
 	$options = array();
 	
-	$required = lang('modules enable option 1', 'Enabled (Required)');
+	$required_str = lang('modules enable option 1', 'Enabled (Required)');
 	$recommend = lang('modules enable option 2', 'Enabled (Recommended)');
 	$optional = lang('modules enable option 3', 'Enabled (Optional)');
 	$disabled = lang('modules enable option 4', 'Disabled');
+	$description_1 = lang('modules enable description 1', 'Choose whether or not to enable the module.');
+	$description_2 = lang('modules enable description 2', 'Click configure to configure additional options for a specific module.');
 	
 	foreach($GLOBALS['modules'] as $module => $config)
 	{
@@ -129,8 +130,8 @@ function configure_admin_modules($settings)
 			'description' => array(
 				'list' => array(
 					$GLOBALS['modules'][$module]['description'],
-					lang('modules enable description 1', 'Choose whether or not to enable the ' . $GLOBALS['modules'][$module]['name'] . ' module.'),
-					lang('modules enable description 2', 'Click configure to configure additional options for a specific module.'),
+					$description_1,
+					$description_2,
 				),
 			),
 			'type' => 'boolean',
@@ -140,7 +141,7 @@ function configure_admin_modules($settings)
 		if(in_array($module, $required))
 		{
 			$options[$module . '_enable']['options'] = array(
-				$required,
+				$required_str,
 			);
 			$options[$module . '_enable']['disabled'] = true;
 		}
@@ -166,8 +167,27 @@ function validate_configure_module($request)
 	if(isset($request['configure_module']) && isset($GLOBALS['modules'][$request['configure_module']]) &&
 		isset($GLOBALS['modules'][$request['configure_module']]['settings']) && count($GLOBALS['modules'][$request['configure_module']]['settings']) > 0
 	)
+	{
+		if(!function_exists('configure_' . $request['configure_module']))
+		{
+			PEAR::raiseError('Configuration function \'' . $request['configure_module'] . '\' does not exist!', E_DEBUG);
+			return 'admin_modules';
+		}
 		return $request['configure_module'];
-	return 'admin_modules';
+	}
+	elseif(isset($request['configure_module']) && isset($GLOBALS['handlers'][$request['configure_module']]) &&
+		isset($GLOBALS['handlers'][$request['configure_module']]['settings']) && count($GLOBALS['handlers'][$request['configure_module']]['settings']) > 0
+	)
+	{
+		if(!function_exists('configure_' . $request['configure_module']))
+		{
+			PEAR::raiseError('Configuration handler function \'' . $request['configure_module'] . '\' does not exist!', E_DEBUG);
+			return 'admin_modules';
+		}
+		return $request['configure_module'];
+	}
+	else
+		return 'admin_modules';
 }
 
 /**
@@ -196,9 +216,11 @@ function output_admin_modules($request)
 			$new_setting = call_user_func_array('setting_' . $setting, array(array_merge($GLOBALS['settings'], $new_settings)));
 		elseif(isset($GLOBALS['setting_' . $setting]) && is_callable($GLOBALS['setting_' . $setting]))
 			$new_setting = $GLOBALS['setting_' . $setting](array_merge($GLOBALS['settings'], $new_settings));
-		
+		else
+			PEAR::raiseError('Setting_ function for \'' . $setting . '\' does not exist!', E_DEBUG);
+			
 		// make sure the new setting is different from the current setting
-		if($new_setting != setting($setting))
+		if(isset($new_setting) && $new_setting != setting($setting))
 		{
 			$GLOBALS['settings'][$setting] = $new_setting;
 			$settings_changed = true;
@@ -248,6 +270,10 @@ function output_admin_modules($request)
 		}
 	}
 	
+	// output error if can't write to settings
+	if(dependency('writable_settings_file') == false)
+		PEAR::raiseError('Cannot save changes made on this page, the settings file is not writable!', E_USER);
+	
 	// get which module to ouput the configuration for
 	$request['configure_module'] = validate_configure_module($request);
 	
@@ -255,9 +281,20 @@ function output_admin_modules($request)
 	{
 		// output configuration page
 		$options = call_user_func_array('configure_' . $request['configure_module'], array($GLOBALS['settings']));
-
-		$missing_settings = array_diff($GLOBALS['modules'][$request['configure_module']]['settings'], array_keys($options));
-		$in_settings_not_in_config = array_intersect($missing_settings, $GLOBALS['modules'][$request['configure_module']]['settings']);
+		
+		// find invalid parameters
+		if(isset($GLOBALS['modules'][$request['configure_module']]))
+		{
+			$missing_settings = array_diff($GLOBALS['modules'][$request['configure_module']]['settings'], array_keys($options));
+			$in_settings_not_in_config = array_intersect($missing_settings, $GLOBALS['modules'][$request['configure_module']]['settings']);
+		}
+		else
+		{
+			$missing_settings = array_diff($GLOBALS['handlers'][$request['configure_module']]['settings'], array_keys($options));
+			$in_settings_not_in_config = array_intersect($missing_settings, $GLOBALS['handlers'][$request['configure_module']]['settings']);
+		}
+		
+		// print out errors for incorrect configuration
 		$in_config_not_in_settings = array_intersect($missing_settings, array_keys($options));
 		foreach($in_settings_not_in_config as $i => $key)
 		{

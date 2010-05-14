@@ -57,7 +57,6 @@ function configure_amazon($settings)
 	
 	$options = array();
 	
-	// domain and root
 	$options['amazon_dev_key'] = array(
 		'name' => lang('amazon dev key title', 'Amazon Development API Access Key'),
 		'status' => '',
@@ -70,7 +69,6 @@ function configure_amazon($settings)
 		'value' => $settings['amazon_dev_key'],
 	);
 	
-	// domain and root
 	$options['amazon_server'] = array(
 		'name' => lang('amazon server title', 'Amazon Development Server'),
 		'status' => '',

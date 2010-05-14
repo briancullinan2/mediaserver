@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Implementation of register_module
+ * Implementation of register
  * @ingroup register
  */
 function register_admin_alias()

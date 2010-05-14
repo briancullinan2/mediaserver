@@ -28,7 +28,7 @@ function configure_convert($settings)
 	
 	$options = array();
 	
-	if(file_exists($settings['convert_path']))
+	if(dependency('converter') != false)
 	{
 		$options['convert_path'] = array(
 			'name' => lang('convert path title', 'Convert Path'),
@@ -85,8 +85,56 @@ function configure_convert($settings)
  * Implementation of status
  * @ingroup status
  */
+function dependency_converter($settings)
+{
+	$settings['convert_path'] = setting_convert_path($settings);
+	return file_exists($settings['convert_path']);
+}
+
+/**
+ * Implementation of status
+ * @ingroup status
+ */
 function status_convert()
 {
+	$status = array();
+
+	if(dependency('converter') != false)
+	{
+		$status['convert'] = array(
+			'name' => lang('convert status title', 'Convert'),
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					lang('convert status description', 'Image conversion is available.'),
+				),
+			),
+			'value' => array(
+				'text' => array(
+					'Converting available',
+				),
+			),
+		);
+	}
+	else
+	{
+		$status['convert'] = array(
+			'name' => lang('convert status title', 'Convert'),
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					lang('convert status fail description', 'Image conversion is not available because there is no valid converter specified.'),
+				),
+			),
+			'value' => array(
+				'text' => array(
+					'Converting disabled',
+				),
+			),
+		);
+	}
+	
+	return $status;
 }
 
 /**
