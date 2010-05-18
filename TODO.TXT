@@ -1,15 +1,11 @@
 ------------- MONOLITHICMEDIA TODO -------------
 Monolithic site is not outputting the htaccess file because it is hidden from the tar command
 ------------- GENERAL TODO -------------
+Create a dav module that allows files to be uploaded and access using the web dav protocol.  This is already mostly supported by PEAR.
+Change all use_database settings over to database_enable and enable and disable database the same way as modules
+	Make sure modules can still be enabled on the configure_modules page
 Alter query needs a way to affect the $request
 	If a selection is being done and an ID is specified then search and file and dir are no longer relevant to the query
-'depends on' in the configuration of a module can be set to the name of the module if a callback function dependecy_module exists
-	It returns false if the dependencies fail, or and array of dependencies for sorting
-	Since false means it has not met the dependencies, it will not need to be ordered properly since it is not going to be used anyways
-	Find a way for a module to affect the order of it's loading, without actually making it a dependency
-	Is there a function that could determin it's dependency? and the order?
-	If the database is used, it must be loaded before users
-	Or is the hack of creating the user global variable in the register function regardless really the best option?
 Come up with a good way to detect modrewrite
 Install from scratch until all the errors are gone
 Look at drupal and find out if there is a better way to save errors to the session at the end of a script
@@ -24,22 +20,13 @@ Install script is severely broken
 Add a register script to the install process that allows users to register a username, password, and domain for their site, with the monolithicmedia drupal site.
 	Include a key that is unique to every download, to prevent spamming.
 Finish implementing dependencies
-		Many modules and handlers depend on Archive and getID3()
-		Handlers can depend on other handlers
-		If any dependency fails, show an error on admin page
-			Only if the module is not manually disabled, this will be tricky to track since they are force disabled if there is a missing dependency
-		Handlers are configurable
-			Such as db_archive using getid3() or PEAR Archive for parsing out archives
-			db_code can use Text_highlighter or geshi, check the settings first then check dependencies for both and if only 1 exists,
-				choose that one by default and display warning on dependency instead of fail if neither exist
-		If a dependency fails for a modules, that module is forceably disabled
-			Dependency on core is implied
-			Same goes for handlers
-			This will also disable modules that depend on modules
+	Many modules and handlers depend on getID3()
+	If any dependency fails, show an error on admin page
+		Only if the module is not manually disabled, this will be tricky to track since they are force disabled if there is a missing dependency
 Finish setting() function in settings.php plugin
 	Settings should also be loadable from the database
-Cache all loaded module files in settings database (possibly storing in admin settings and deserializing would be efficient?)
 	Save module settings in database
+	Cache all loaded module files in settings database (possibly storing in admin settings and deserializing would be efficient?)
 Make validate_return actually validate the return path
 Remove all occurances on props['WHERE'] being set to a string
 	It should be set to an array from now on, so that we can differentiate between each query_alter_
@@ -58,6 +45,11 @@ More compatibility testing with clients
 Interface with mediatomb and support UPnP protocol
 Test and find a fix for some media dropping off the network
 	Check to see if the file exists in the archive handler before trying to analyze it
+Set up conditions for when the streams are used based on if %OF and %IF are used in the command arguments
+Get ranges working in encode module
+	only allow the option if the argument can read from stdin and read the input from the handler and write it to the input stream
+Figure out a way of doing this with files even if stdin is not being used in the command, if fopen is writing to a file, does it file feof when reading from the same file simulaneously?
+Make convert.php module recognize video thumbnails and use vlc to extract them
 ------------- LANGUAGE MODULE -------------
 Start implementing lang() calls
 	If the page has language variables that are not known
@@ -75,16 +67,14 @@ Start implementing lang() calls
 		submitting the translations back to the server for caching
 		Or pulling out the translations for later use
 ------------- BITTORRENT MODULE -------------
+FIX bt.php module to work with command line torrent seeder on windows
 bt module should have a configurable ctorrent settings that uses %IF for the torrent file to start seeding server side
 	Should also check dependencies for bttracker and ctorrent
 Check for bt module in install.php script
 Add bttracker install script to admin/install.php to fully bootstrap the install process
 ------------- ADMIN TOOLS -------------
 Howabout a nifty little remote RPC admin tool or a debug tool
-Create a status admin tool
 Port all Jamu stuff from MythTV to PHP admin tools
-Finish fixing up modules to use new API
-	admin tools section
 Work on tools.php module for admin
 	Provide useful information in tools section about missing songs (music.php tool?)
 Add netflix movie checker to admin tools
@@ -96,19 +86,13 @@ Work on settings.php module
 	Template settings, must provide specification in template config, use database for storing fields?
 Make a sync module in admin section for syncing between two databases and pulling out differences
 	Use musicbrainz to sync music
-FIX bt.php module to work with command line torrent seeder on windows
-Set up conditions for when the streams are used based on if %OF and %IF are used in the command arguments
-Get ranges working in encode module
-	only allow the option if the argument can read from stdin and read the input from the handler and write it to the input stream
-Figure out a way of doing this with files even if stdin is not being used in the command, if fopen is writing to a file, does it file feof when reading from the same file simulaneously?
-Make convert.php module recognize video thumbnails and use vlc to extract them
 ------------- Handler TODO -------------
 Make a discography handler that parses out wikipedia discographys, store album information, and return links to Full Discography, and Partial Discography
 	Base discography handler on discogs.com
 	this will list out each artist with full or missing albums
 	It handles artists, when an album count changes or doesn't exist it updates the database
 Work on playlist handler, use hard links to help find files
-Make a fs_code handler
+HIGH-PRIORITY: Fix all fs_ functionality in new handler system
 Work on db_movies, use cUrl to download movie information from imdb, use the volume decriptor for lookup, this shouldn't change even if they edited an image
 	Look up movies on amazon, and see if that will help with searching IMDb
 	Research the video_ts.ifo file, there must be a way of getting the full name from a DVD image, windows media center projects can do it, so can we

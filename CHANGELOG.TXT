@@ -1,6 +1,15 @@
+2010-05-15
+Worked out some more advanced forms functionality in the admin_balancer module
+Reorganized dependency() function in core to allow the dependency functions to always be called
+	other dependencies are used to disprove all the dependencies are satisfied first
+	And if everything is satisfied but the module is still disabled, then it will finally return false
+
 2010-05-14
 Modules can now use the 'depends on' field set to their own name to call a function to determine dependencies
 	search and user use this
+Archive handler combined with module
+Module admin template now displays dependencies
+Modules are disabled when the dependencies are not met
 
 2010-05-12
 Made lots of changes regarding the handlers

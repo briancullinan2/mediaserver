@@ -190,10 +190,10 @@ function output_admin_watch($request)
 
 	if(isset($request['waddpath']))
 	{
-		if(handles_db_watch($request['waddpath']))
+		if(handles($request['waddpath'], 'admin_watch'))
 		{
 				// pass file to handler
-				handle_db_watch($request['waddpath']);
+				add_admin_watch($request['waddpath']);
 		}
 		else
 		{

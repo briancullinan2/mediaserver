@@ -44,7 +44,7 @@ define('E_NOTE',					16);
 /** require the settings */
 if(file_exists(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.ini'))
 {
-	if($GLOBALS['settings'] = parse_ini_file(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.ini'))
+	if($GLOBALS['settings'] = parse_ini_file(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.ini', true))
 	{
 		// awesome settings are loaded properly
 	}
@@ -155,6 +155,12 @@ function setup()
 		{
 			call_user_func_array('setup_' . $module, array());
 		}
+		// disable the module if the dependencies are not met
+		elseif(dependency($module) == false)
+		{
+			// this prevents us from disabling required modules on accident
+			$GLOBALS['settings'][$module . '_enable'] = setting_module_enable(array($module . '_enable' => false), $module);
+		}
 	}
 	
 	// setup all the handlers
@@ -163,6 +169,12 @@ function setup()
 		// do not set up handlers if dependency is not met
 		if(dependency($handler) && function_exists('setup_' . $handler))
 			call_user_func_array('setup_' . $handler, array());
+		// disable the handler if the dependencies are not met
+		elseif(dependency($handler) == false)
+		{
+			// this prevents us from disabling required modules on accident
+			$GLOBALS['settings'][$handler . '_enable'] = setting_handler_enable(array($handler . '_enable' => false), $handler);
+		}
 	}
 
 	//Remove annoying POST error message with the page is refreshed 
@@ -274,7 +286,7 @@ function checkAccess($file)
 		return true;
 		
 	$tmp_file = str_replace('\\', '/', $file['Filepath']);
-	if(setting('use_alias') == true) $tmp_file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $tmp_file);
+	if(setting('admin_alias_enable') == true) $tmp_file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $tmp_file);
 	
 	// user can always access own files
 	if(substr($tmp_file, 0, strlen(setting('local_users'))) == setting('local_users'))
@@ -423,7 +435,7 @@ function getAllColumns()
 	$columns = array();
 	foreach($GLOBALS['handlers'] as $handler => $config)
 	{
-		if(setting_use_database() == false || is_internal($handler) == false)
+		if(setting('database_enable') == false || is_internal($handler) == false)
 			$columns = array_merge($columns, array_flip(columns($handler)));
 	}
 	
@@ -450,7 +462,7 @@ function roundFileSize($dirsize)
  */
 function getIDKeys()
 {
-	if(setting_use_database() == false)
+	if(setting('database_enable') == false)
 		return array();
 	$id_keys = array_flip(columns('ids'));
 	unset($id_keys['id']);

@@ -24,14 +24,6 @@ function register_file()
 }
 
 /**
- * Implementation of status
- * @ingroup status
- */
-function status_file()
-{
-}
-
-/**
  * Implementation of validate
  * @ingroup validate
  * @return NULL by default, accepts any file name
@@ -67,7 +59,7 @@ function validate_dir($request)
 		$request['cat'] = validate_cat($request);
 		
 		// replace directory with actual path
-		if(setting('use_alias') == true && setting_use_database() && setting_installed())
+		if(setting('admin_alias_enable') == true && setting('database_enable') && setting_installed())
 			$tmp = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
 		else
 			$tmp = $request['dir'];
@@ -97,7 +89,7 @@ function validate_file($request)
 	if(isset($request['file']))
 	{
 		$request['cat'] = validate_cat($request);
-		if(setting('use_alias') == true)
+		if(setting('admin_alias_enable') == true)
 			$tmp = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']);
 		if(is_file(realpath($tmp)) || handles($request['file'], $request['cat']) == true)
 			return $request['file'];
@@ -146,12 +138,12 @@ function alter_query_file($request, $props)
 		//  yes: the template should probably handle this by itself, but this is convenient and easy
 		//   it is purely for making all the paths look prettier
 		if($request['dir'][0] == '/') $request['dir'] = realpath('/') . substr($request['dir'], 1);
-	
+
 		// replace separator
 		$request['dir'] = str_replace('\\', '/', $request['dir']);
 		
 		// replace aliased path with actual path
-		if(setting('use_alias') == true)
+		if(setting('admin_alias_enable') == true)
 			$request['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
 			
 		// maybe the dir is not loaded yet, this part is costly but it is a good way to do it
@@ -221,7 +213,7 @@ function alter_query_file($request, $props)
 		if($request['file'][0] == DIRECTORY_SEPARATOR) $request['file'] = realpath('/') . substr($request['file'], 1);
 		
 		// replace aliased path with actual path
-		if(setting('use_alias') == true)
+		if(setting('admin_alias_enable') == true)
 			$request['file'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']);
 		
 		// if the id is available then use that instead

@@ -52,7 +52,7 @@ function setup_movies()
 function handles_movies($file)
 {
 	$file = str_replace('\\', '/', $file);
-	if(setting('use_alias') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+	if(setting('admin_alias_enable') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 	
 	// parse through the file path and try to find a zip
 	$paths = split('/', $file);

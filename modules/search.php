@@ -33,58 +33,10 @@ function register_search()
  */
 function dependency_search($settings)
 {
-	if(dependency('database') == false || setting_use_database() == false)
-		return false;
-	if(setting('use_alias') == false)
+	if(setting('admin_alias_enable') == false)
 		return array('database');
 	else
 		return array('database', 'admin_alias');
-}
-
-/**
- * Implementation of status
- * @ingroup status
- */
-function status_search($settings)
-{
-	$status = array();
-
-	if(dependency('search'))
-	{
-		$status['search'] = array(
-			'name' => lang('search status title', 'Search'),
-			'status' => '',
-			'description' => array(
-				'list' => array(
-					lang('search status description', 'Search is available because the database is installed.'),
-				),
-			),
-			'value' => array(
-				'text' => array(
-					'Search available',
-				),
-			),
-		);
-	}
-	else
-	{
-		$status['search'] = array(
-			'name' => lang('search status title', 'Search'),
-			'status' => 'fail',
-			'description' => array(
-				'list' => array(
-					lang('search status description', 'Search is NOT available because the database is not configured.'),
-				),
-			),
-			'value' => array(
-				'text' => array(
-					'Search disabled',
-				),
-			),
-		);
-	}
-	
-	return $status;
 }
 
 /**
@@ -296,7 +248,7 @@ function alter_query_search($request, $props)
 			$search = substr($search, 1, -1);
 		
 		// incase an aliased path is being searched for replace it here too!
-		if(setting('use_alias') == true && isset($GLOBALS['alias_regexp']))
+		if(setting('admin_alias_enable') == true && isset($GLOBALS['alias_regexp']))
 			$search = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $search);
 		
 		if($type == 'normal')

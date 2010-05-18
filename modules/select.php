@@ -275,7 +275,7 @@ function output_select($request)
 	$order_keys_values = array();
 	
 	// the ids handler will do the replacement of the ids
-	if(setting_use_database() == true)
+	if(setting('database_enable') == true)
 	{
 		if(count($files) > 0)
 		{
@@ -347,7 +347,7 @@ function output_select($request)
 	
 	// only order it if the database is not already going to order it
 	// this will unlikely be used when the database is in use
-	if(setting_use_database() == false)
+	if(setting('database_enable') == false)
 	{
 		if(isset($order_keys_values[0]) && is_numeric($order_keys_values[0]))
 			$sorting = SORT_NUMERIC;

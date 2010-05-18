@@ -11,25 +11,26 @@ function register_admin_modules()
 		'description' => lang('modules description', 'Display a list of modules and allow for enabling and disabling.'),
 		'privilage' => 10,
 		'path' => __FILE__,
-		'settings' => array(),
-		'depends on' => array('admin', 'admin_tools', 'settings')
+		'settings' => 'admin_modules',
+		'depends on' => array('admin', 'admin_tools')
 	);
 }
 
 /**
- * Implementation of setup
- * @ingroup setup
+ * Implementation of setting
+ * @ingroup setting
  */
-function setup_admin_modules()
+function setting_admin_modules()
 {
-	$module_func = array();
+	$settings = array();
 	foreach($GLOBALS['modules'] as $module => $config)
 	{
-		$module_func[] = $module . '_enable';
-		$GLOBALS['setting_' . $module . '_enable'] = create_function('$request', 'return setting_module_enable($request, \'' . $module . '\');');
+		$settings[] = $module . '_enable';
+		if(!function_exists('setting_' . $module . '_enable'))
+			$GLOBALS['setting_' . $module . '_enable'] = create_function('$request', 'return setting_module_enable($request, \'' . $module . '\');');
 	}
 	
-	$GLOBALS['modules']['admin_modules']['settings'] = $module_func;
+	return $settings;
 }
 
 /**
@@ -49,12 +50,12 @@ function dependency_writable_settings_file($settings)
  */
 function status_admin_modules($settings)
 {
-	$options = array();
+	$status = array();
 	
 	// settings permission
 	if(dependency('writable_settings_file'))
 	{
-		$options['writable_settings_file'] = array(
+		$status['writable_settings_file'] = array(
 			'name' => lang('settings access title', 'Access to Settings'),
 			'status' => '',
 			'description' => array(
@@ -69,7 +70,7 @@ function status_admin_modules($settings)
 	}
 	else
 	{
-		$options['writable_settings_file'] = array(
+		$status['writable_settings_file'] = array(
 			'name' => lang('settings access title', 'Access to Settings'),
 			'status' => 'fail',
 			'description' => array(
@@ -84,7 +85,7 @@ function status_admin_modules($settings)
 		);
 	}
 	
-	return $options;
+	return $status;
 }
 
 /**
@@ -93,6 +94,11 @@ function status_admin_modules($settings)
  */
 function setting_module_enable($settings, $module)
 {
+	// always return true if module is required
+	if(in_array($module, get_required_modules()))
+		return true;
+		
+	// check boolean value
 	if(isset($settings[$module . '_enable']))
 	{
 		if($settings[$module . '_enable'] === false || $settings[$module . '_enable'] === 'false')
@@ -104,13 +110,20 @@ function setting_module_enable($settings, $module)
 }
 
 /**
+ * Helper function
+ */
+function get_required_modules()
+{
+	return array('core', 'index', 'users', 'select');
+}
+
+/**
  * Implementation of configure
  * @ingroup configure
  */
-function configure_admin_modules($settings)
+function configure_admin_modules($settings, $request)
 {
 	$recommended = array('select', 'list', 'search');
-	$required = array('core', 'index', 'users', 'select');
 	
 	$options = array();
 	
@@ -120,10 +133,14 @@ function configure_admin_modules($settings)
 	$disabled = lang('modules enable option 4', 'Disabled');
 	$description_1 = lang('modules enable description 1', 'Choose whether or not to enable the module.');
 	$description_2 = lang('modules enable description 2', 'Click configure to configure additional options for a specific module.');
+	$description_fail = lang('modules enable fail description', 'This module has been forcefully disabled because of dependency issues.');
 	
 	foreach($GLOBALS['modules'] as $module => $config)
 	{
+		// get the enabled setting
 		$settings[$module . '_enable'] = setting_module_enable($settings, $module);
+		
+		// set up config for this module
 		$options[$module . '_enable'] = array(
 			'name' => $GLOBALS['modules'][$module]['name'],
 			'status' => '',
@@ -135,10 +152,19 @@ function configure_admin_modules($settings)
 				),
 			),
 			'type' => 'boolean',
-			'value' => in_array($module, $required)?true:$settings[$module . '_enable'],
+			'value' => in_array($module, get_required_modules())?true:$settings[$module . '_enable'],
 		);
 		
-		if(in_array($module, $required))
+		// add some extra info for failed dependencies
+		if(dependency($module) == false)
+		{
+			$options[$module . '_enable']['status'] = 'fail';
+			if(!in_array($module, get_required_modules())) $options[$module . '_enable']['description']['list'][] = $description_fail;
+			$options[$module . '_enable']['disabled'] = true;
+		}
+		
+		// set up the options for the modules based on required or recommended lists
+		if(in_array($module, get_required_modules()))
 		{
 			$options[$module . '_enable']['options'] = array(
 				$required_str,
@@ -191,121 +217,165 @@ function validate_configure_module($request)
 }
 
 /**
+ * Implementation of validate
+ * @ingroup validate
+ */
+function validate_save_configuration($request)
+{
+	if(isset($request['save_configuration']))
+		return true;
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ */
+function validate_reset_configuration($request)
+{
+	if(isset($request['reset_configuration']))
+		return true;
+}
+
+/**
  * Implementation of output
  * @ingroup output
  */
 function output_admin_modules($request)
 {
-	// check for new settings by looping through the request 
-	//  and if there is a variable that has a setting function validate and save it
-	$settings_changed = false;
-	$new_settings = array();
-	foreach($request as $setting => $value)
-	{
-		// check that the input is in fact and attempted setting
-		if(substr($setting, 0, 8) == 'setting_')
-		{
-			$new_settings[substr($setting, 8)] = $value;
-		}
-	}
+	// get which module to ouput the configuration for
+	$request['configure_module'] = validate_configure_module($request);
+	$request['save_configuration'] = validate_save_configuration($request);
+	$request['reset_configuration'] = validate_reset_configuration($request);
 
-	foreach($new_settings as $setting => $value)
+	if(isset($request['save_configuration']))
 	{
-		// validate the attempted setting
-		if(function_exists('setting_' . $setting))
-			$new_setting = call_user_func_array('setting_' . $setting, array(array_merge($GLOBALS['settings'], $new_settings)));
-		elseif(isset($GLOBALS['setting_' . $setting]) && is_callable($GLOBALS['setting_' . $setting]))
-			$new_setting = $GLOBALS['setting_' . $setting](array_merge($GLOBALS['settings'], $new_settings));
-		else
-			PEAR::raiseError('Setting_ function for \'' . $setting . '\' does not exist!', E_DEBUG);
-			
-		// make sure the new setting is different from the current setting
-		if(isset($new_setting) && $new_setting != setting($setting))
+		// check for new settings by looping through the request 
+		//  and if there is a variable that has a setting function validate and save it
+		$settings_changed = false;
+		$new_settings = array();
+		foreach($request as $setting => $value)
 		{
-			$GLOBALS['settings'][$setting] = $new_setting;
-			$settings_changed = true;
-		}
-	}
-
-	if($settings_changed == true)
-	{
-		// if we are using a database store the settings in the administrators profile
-		if(setting_use_database())
-		{
-		}
-		
-		// if the settings file is writable, put the new setting in it
-		if(setting('writable_settings_file'))
-		{
-			PEAR::raiseError('The settings file is writeable!', E_DEBUG|E_WARN);
-			
-			$defaults = settings_get_defaults(array());
-			
-			$fh = fopen(setting('settings_file'), 'w');
-			
-			if($fh !== false)
+			// check that the input is in fact and attempted setting
+			if(substr($setting, 0, 8) == 'setting_')
 			{
+				$new_settings[substr($setting, 8)] = $value;
+			}
+		}
+	
+		foreach($new_settings as $setting => $value)
+		{
+			// validate the attempted setting
+			if(function_exists('setting_' . $setting))
+				$new_setting = call_user_func_array('setting_' . $setting, array(array_merge($GLOBALS['settings'], $new_settings)));
+			elseif(isset($GLOBALS['setting_' . $setting]) && is_callable($GLOBALS['setting_' . $setting]))
+				$new_setting = $GLOBALS['setting_' . $setting](array_merge($GLOBALS['settings'], $new_settings));
+			else
+				PEAR::raiseError('Setting_ function for \'' . $setting . '\' does not exist!', E_DEBUG);
 				
-				// only write the settings that are not the default
-				foreach($GLOBALS['settings'] as $setting => $value)
+			// make sure the new setting is different from the current setting
+			if(isset($new_setting) && $new_setting != setting($setting))
+			{
+				$GLOBALS['settings'][$setting] = $new_setting;
+				$settings_changed = true;
+			}
+		}
+	
+		if($settings_changed == true)
+		{
+			// if we are using a database store the settings in the administrators profile
+			if(setting('database_enable'))
+			{
+			}
+			
+			// if the settings file is writable, put the new setting in it
+			if(dependency('writable_settings_file'))
+			{
+				PEAR::raiseError('The settings file is writeable!', E_DEBUG|E_WARN);
+				
+				$defaults = settings_get_defaults(array());
+				
+				$fh = fopen(setting('settings_file'), 'w');
+				$settings = '';
+				
+				if($fh !== false)
 				{
-					if(setting($setting) != $defaults['settings'])
+					
+					// only write the settings that are not the default
+					foreach($GLOBALS['settings'] as $setting => $value)
 					{
-						fwrite($fh, $setting . ' = ' . setting($setting) . "\n");
+						if(is_string($value) && (!isset($defaults[$setting]) || $value != $defaults[$setting]))
+						{
+							$settings .= $setting . ' = ' . $value . "\n";
+						}
 					}
+					
+					// only write the settings that are not the default
+					foreach($GLOBALS['settings'] as $setting => $value)
+					{
+						if(is_array($value))
+						{
+							$settings .= "\n[" . $setting . "]\n";
+							foreach($value as $subsetting => $subvalue)
+							{
+								$settings .= $subsetting . ' = ' . $subvalue . "\n";
+							}
+						}
+					}
+					
+					fwrite($fh, $settings);
+					fclose($fh);
+					
+					PEAR::raiseError('The settings have been saved', E_NOTE);
 				}
-				
-				PEAR::raiseError('The settings have been saved', E_NOTE);
-				
-				fclose($fh);
+				else
+				{
+					PEAR::raiseError('There was a problem with saving the settings in the settings file.', E_USER);
+				}
 			}
 			else
 			{
-				PEAR::raiseError('There was a problem with saving the settings in the settings file.', E_USER);
+				PEAR::raiseError('Cannot save settings, the settings file is not writable!', E_USER);
 			}
-		}
-		else
-		{
-			PEAR::raiseError('Cannot save settings, the settings file is not writable!', E_USER);
 		}
 	}
 	
 	// output error if can't write to settings
 	if(dependency('writable_settings_file') == false)
 		PEAR::raiseError('Cannot save changes made on this page, the settings file is not writable!', E_USER);
+
+	// output configuration page
+	$options = call_user_func_array('configure_' . $request['configure_module'], array($GLOBALS['settings'], $request));
 	
-	// get which module to ouput the configuration for
-	$request['configure_module'] = validate_configure_module($request);
-	
-	if(function_exists('configure_' . $request['configure_module']))
+	// add status to configuration
+	if(function_exists('status_' . $request['configure_module']))
 	{
-		// output configuration page
-		$options = call_user_func_array('configure_' . $request['configure_module'], array($GLOBALS['settings']));
-		
-		// find invalid parameters
-		if(isset($GLOBALS['modules'][$request['configure_module']]))
-		{
-			$missing_settings = array_diff($GLOBALS['modules'][$request['configure_module']]['settings'], array_keys($options));
-			$in_settings_not_in_config = array_intersect($missing_settings, $GLOBALS['modules'][$request['configure_module']]['settings']);
-		}
-		else
-		{
-			$missing_settings = array_diff($GLOBALS['handlers'][$request['configure_module']]['settings'], array_keys($options));
-			$in_settings_not_in_config = array_intersect($missing_settings, $GLOBALS['handlers'][$request['configure_module']]['settings']);
-		}
-		
-		// print out errors for incorrect configuration
-		$in_config_not_in_settings = array_intersect($missing_settings, array_keys($options));
-		foreach($in_settings_not_in_config as $i => $key)
-		{
-			PEAR::raiseError('Option \'' . $key . '\' listed in settings for ' . $request['configure_module'] . ' but not listed in the output options configuration!', E_DEBUG);
-		}
-		foreach($in_config_not_in_settings as $i => $key)
-		{
-			PEAR::raiseError('Option \'' . $key . '\' listed in the output options for ' . $request['configure_module'] . ' but not listed in the module config!', E_DEBUG);
-		}
-		
-		register_output_vars('options', $options);
-		register_output_vars('configure_module', $request['configure_module']);
+		$status = call_user_func_array('status_' . $request['configure_module'], array($GLOBALS['settings']));
+		register_output_vars('status', $status);
 	}
+	
+	// find invalid parameters
+	if(isset($GLOBALS['modules'][$request['configure_module']]))
+	{
+		$missing_settings = array_diff($GLOBALS['modules'][$request['configure_module']]['settings'], array_keys($options));
+		$in_settings_not_in_config = array_intersect($missing_settings, $GLOBALS['modules'][$request['configure_module']]['settings']);
+	}
+	else
+	{
+		$missing_settings = array_diff($GLOBALS['handlers'][$request['configure_module']]['settings'], array_keys($options));
+		$in_settings_not_in_config = array_intersect($missing_settings, $GLOBALS['handlers'][$request['configure_module']]['settings']);
+	}
+	
+	// print out errors for incorrect configuration
+	$in_config_not_in_settings = array_intersect($missing_settings, array_keys($options));
+	foreach($in_settings_not_in_config as $i => $key)
+	{
+		PEAR::raiseError('Option \'' . $key . '\' listed in settings for ' . $request['configure_module'] . ' but not listed in the output options configuration!', E_DEBUG);
+	}
+	foreach($in_config_not_in_settings as $i => $key)
+	{
+		PEAR::raiseError('Option \'' . $key . '\' listed in the output options for ' . $request['configure_module'] . ' but not listed in the module config!', E_DEBUG);
+	}
+	
+	register_output_vars('options', $options);
+	register_output_vars('configure_module', $request['configure_module']);
 }

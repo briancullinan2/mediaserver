@@ -18,14 +18,6 @@ function register_list()
 }
 
 /**
- * Implementation of status
- * @ingroup status
- */
-function status_list()
-{
-}
-
-/**
  * Set up a list of different types of lists that can be outputted from any theme at any time
  * @ingroup setup
  */

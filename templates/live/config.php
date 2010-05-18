@@ -158,11 +158,22 @@ function print_form_objects($form)
 			continue;
 		}
 		
+		if(isset($config['help']))
+		{
+			?><span style="width:100px; display:block; text-align:left;"><?php
+			// show help before the object
+			print_info_objects($config['help']);
+			?>: </span><?php
+		}
+		
 		switch($config['type'])
 		{
+			case 'set':
+				// This provides an API for submitting multiple fields to an associative array
+				print_form_objects($config['options']);
+			break;
 			case 'radio':
 			case 'checkbox':
-				print $config['name'] . ':<br />';
 				// check if array is associative or not
 				if(array_keys($config['options']) === array_keys(array_keys($config['options'])))
 				{
@@ -251,6 +262,9 @@ function print_form_objects($form)
 			break;
 			case 'submit':
 				?><input type="submit" <?php print (isset($config['disabled']) && $config['disabled'] == true)?'disabled="disabled"':'';?> name="<?php print $field_name; ?>" value="<?php print $config['value']; ?>" /><?php
+			break;
+			case 'hidden':
+				?><input type="hidden" name="<?php print $field_name; ?>" value="<?php print $config['value']; ?>" /><?php
 			break;
 		}
 	}

@@ -20,7 +20,8 @@ function register_settings()
 		'name' => 'Settings',
 		'description' => 'This allows users to save theme and site settings.',
 		'privilage' => 1,
-		'path' => __FILE__
+		'path' => __FILE__,
+		'depends on' => 'settings',
 	);
 }
 
@@ -34,8 +35,19 @@ function setup_settings()
 	if(!isset($GLOBALS['settings']))
 		$GLOBALS['settings'] = array();
 	
+	// loop through the modules and call settings functions on them if they are set to callbacks
+	foreach($GLOBALS['modules'] as $module => $config)
+	{
+		if(isset($config['settings']) && is_string($config['settings']) && 
+			$config['settings'] == $module && function_exists('setting_' . $module)
+		)
+			$GLOBALS['modules'][$module]['settings'] = call_user_func_array('setting_' . $module, array($GLOBALS['settings']));
+	}
+	
 	// merge everything with the default settings
 	$GLOBALS['settings'] = array_merge(settings_get_defaults($GLOBALS['settings']), $GLOBALS['settings']);
+	
+	$GLOBALS['modules']['settings']['settings'] = &$GLOBALS['settings'];
 }
 
 /**
@@ -56,6 +68,31 @@ function setting_settings_file()
 	// add handling for multiple domains like drupal does
 	
 	return dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'settings.ini';
+}
+
+/**
+ * Implementation of dependency
+ * Get all the dependencies based on what settings must be set up first
+ * @ingroup dependency
+ */
+function dependency_settings($settings)
+{
+	// this is a hack to return empty array after the setup has been done
+	if(is_array($GLOBALS['modules']['settings']['depends on']))
+		return array();
+
+	$depends = array();
+	// loop through all the modules and look for config settings set to the module name
+	// those modules must be set up before settings tries to load their default values
+	foreach($GLOBALS['modules'] as $module => $config)
+	{
+		if(isset($config['settings']) && is_string($config['settings']) && 
+			$config['settings'] == $module && function_exists('setting_' . $module)
+		)
+			$depends[] = $module;
+	}
+
+	return $depends;
 }
 
 /**

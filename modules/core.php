@@ -33,7 +33,7 @@ function register_core()
 		'depends on' => array(
 			'memory_limit', 'writable_system_files', 'pear_installed',
 			// move these to the proper handlers when it is implemented
-			'getid3_installed', 'snoopy_installed', 'geshi_installed', 'extjs_installed'
+			'getid3_installed', 'snoopy_installed', 'extjs_installed'
 		),
 		'always output' => 'core_variables',
 	);
@@ -125,13 +125,6 @@ function flatten_module_dependencies($modules, $already_added = array())
 				$depends_on = call_user_func_array('dependency_' . $module, array($GLOBALS['settings']));
 			else
 				$depends_on = $GLOBALS['modules'][$module]['depends on'];
-			
-			// if it is not an array send debug message and reset it
-			if(!isset($depends_on) || !is_array($depends_on))
-			{
-				$depends_on = array();
-				PEAR::raiseError('Something has failed while calling dependecy_' . $module . ', it did not return an array.', E_DEBUG);
-			}
 			
 			// call flatten based on modules dependencies first
 			$new_modules = array_merge($new_modules, flatten_module_dependencies($depends_on, $already_added));
@@ -279,7 +272,7 @@ function setting_installed()
 {
 	$settings = setting_settings_file();
 	// make sure the database isn't being used and failed
-	return (file_exists($settings) && is_readable($settings) && (setting_use_database() == false || dependency('database') != false));
+	return (file_exists($settings) && is_readable($settings) && (setting('database_enable') == false || dependency('database') != false));
 }
 
 /**
@@ -442,51 +435,53 @@ function dependency($dependency, $already_checked = array())
 	{
 		$config = $GLOBALS['handlers'][$dependency];
 	}
-		
+
 	if(isset($config))
-	{
-		// they are trying to check a module for informational purposes
-		if(!isset($config['depends on']))
-			// the module has no dependencies, hard to believe
-			return true;
-			
-		if(is_string($config['depends on']) && $config['depends on'] == $dependency &&
-			function_exists('dependency_' . $config['depends on'])
-		)
-		{
-			return call_user_func_array('dependency_' . $dependency, array($GLOBALS['settings']));
+	{	
+		// if the depends on field is a string, call the function and use that as the list of dependencies
+		if(isset($config['depends on']) && is_string($config['depends on']))
+		{	
+			if($config['depends on'] == $dependency && function_exists('dependency_' . $config['depends on']))
+			{
+				$config['depends on'] = call_user_func_array('dependency_' . $dependency, array($GLOBALS['settings']));
+			}
+			else
+			{
+				PEAR::raiseError('Function dependency_\'' . $dependency . '\' is specified but the function does not exist.', E_DEBUG);
+			}
 		}
-		elseif(is_string($config['depends on']))
-		{
-			PEAR::raiseError('Something has failed while calling dependecy_' . $dependency . ', it did not return an array.', E_DEBUG);
-			//return false;
-		}
-	
-		if(count($config['depends on']) == 0)
-			return true;
 		
-		// now loop through the modules dependencies only, and make sure they are all met
-		foreach($config['depends on'] as $i => $depend)
+		if(isset($config['depends on']) && is_array($config['depends on']))
 		{
-			//  uses a backup check to prevent recursion and errors if there is
-			if(in_array($depend, $already_checked))
+			// now loop through the modules dependencies only, and make sure they are all met
+			foreach($config['depends on'] as $i => $depend)
 			{
-				// log the repitition
-				PEAR::raiseError('The dependency \'' . $depend . '\' has already been verified when checking the dependencies of \'' . $dependency . '\'!', E_DEBUG);
+				//  uses a backup check to prevent recursion and errors if there is
+				if(in_array($depend, $already_checked))
+				{
+					// log the repitition
+					PEAR::raiseError('The dependency \'' . $depend . '\' has already been verified when checking the dependencies of \'' . $dependency . '\'!', E_DEBUG);
+					
+					// checking it twice is unnessicary since it should have failed already
+					continue;
+				}
 				
-				// checking it twice is unnessicary since it should have failed already
-				continue;
-			}
-			
-			// check for false strictly, anything else should be taken as status information
-			//  this is also recursive so that if one module fails everything that depends on it will fail
-			$already_checked[] = $depend;
-			if(dependency($depend, $already_checked) === false)
-			{
-				// no need to continue as it only takes 1 to fail
-				return false;
+				// check for false strictly, anything else should be taken as status information
+				//  this is also recursive so that if one module fails everything that depends on it will fail
+				$already_checked[] = $depend;
+				if(dependency($depend, $already_checked) === false)
+				{
+					// no need to continue as it only takes 1 to fail
+					return false;
+				}
 			}
 		}
+		
+		// return false if a module is disabled
+		if(isset($GLOBALS['settings'][$dependency . '_enable']) && $GLOBALS['settings'][$dependency . '_enable'] == false)
+			return false;
+		
+		// if it has gotten this far through all the disproofs then it must be satisfied
 		return true;
 	}
 	
@@ -562,17 +557,6 @@ function dependency_snoopy_installed($settings)
 /**
  * Implementation of dependency
  * @ingroup dependency
- * @return true or false if geshi is in the include directory
- */
-function dependency_geshi_installed($settings)
-{
-	$settings['local_root'] = setting_local_root($settings);
-	return file_exists($settings['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'geshi' . DIRECTORY_SEPARATOR . 'geshi.php');
-}
-
-/**
- * Implementation of dependency
- * @ingroup dependency
  * @return true or false if EXT JS library is installed in the plain templates directory for use by other templates
  */
 function dependency_extjs_installed($settings)
@@ -595,7 +579,7 @@ function dependency_extjs_installed($settings)
 /**
  * Implementation of configure
  */
-function configure_index($settings)
+function configure_index($settings, $request)
 {
 	$settings['html_root'] = setting_html_root($settings);
 	$settings['html_domain'] = setting_html_domain($settings);
@@ -957,42 +941,6 @@ function status_core($settings)
 			),
 		);
 	}
-	
-	if(dependency('geshi_installed'))
-	{
-		$status['geshi_installed'] = array(
-			'name' => 'Geshi (Generic Syntax Highlighter)',
-			'status' => '',
-			'description' => array(
-				'list' => array(
-					'The system has detected that the Geshi Library is installed in the includes directory.',
-					'Geshi is used to highlight a variety of source code files.',
-				),
-			),
-			'type' => 'label',
-			'value' => 'Geshi detected',
-		);
-	}
-	else
-	{
-		$status['geshi_installed'] = array(
-			'name' => 'Geshi (Generic Syntax Highlighter) Missing',
-			'status' => 'fail',
-			'description' => array(
-				'list' => array(
-					'The system has detected that the Geshi Library is NOT INSTALLED.',
-					'The Geshi root directory must be placed in &lt;site root&gt;/include/',
-					'Geshi is used to highlight a variety of source code files.',
-				),
-			),
-			'value' => array(
-				'link' => array(
-					'url' => 'http://qbnz.com/highlighter/',
-					'text' => 'Get Geshi',
-				),
-			),
-		);
-	}
 
 	if(dependency('extjs_installed'))
 	{
@@ -1042,7 +990,7 @@ function status_core($settings)
  * Implementation of configure. Checks for convert path
  * @ingroup configure
  */
-function configure_core($settings)
+function configure_core($settings, $request)
 {
 	$settings['system_type'] = setting_system_type($settings);
 	$settings['local_root'] = setting_local_root($settings);
@@ -1140,8 +1088,11 @@ function setup_validate()
 		// if it is an attempted setting, keep it for now and let the configure modules module handle it
 		elseif(substr($key, 0, 8) == 'setting_')
 			$_REQUEST[$key] = $_REQUEST[$key];
-		// if there is no validator
 		else
+			$_REQUEST[$key] = NULL;
+		
+		// if there is no validator
+		if(!isset($_REQUEST[$key]))
 		{
 			// unset it to prevent anything from using the input
 			unset($_REQUEST[$key]);
@@ -1572,7 +1523,7 @@ function validate_cat($request)
 	if(isset($request['cat']) && in_array($request['cat'], array_keys($GLOBALS['handlers'])))
 		return $request['cat'];
 	else
-		return (setting_use_database() && dependency('database'))?'files':'filesystem';
+		return (setting('database_enable') && dependency('database'))?'files':'filesystem';
 }
 
 /**

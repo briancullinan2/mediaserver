@@ -25,9 +25,26 @@ function register_database()
 		'description' => lang('database description', 'Wrapper module for displaying database configuration'),
 		'privilage' => 10,
 		'path' => dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'database.php',
-		'settings' => array('use_database', 'db_connect', 'db_type', 'db_server', 'db_user', 'db_pass', 'db_name'),
+		'settings' => array('db_connect', 'db_type', 'db_server', 'db_user', 'db_pass', 'db_name'),
 		'depends on' => array('adodb_installed', 'valid_connection')
 	);
+}
+
+/**
+ * Implementation of setting, validate all module_enable settings
+ * @ingroup setting
+ */
+function setting_database_enable($settings)
+{
+	// check boolean value
+	if(isset($settings['database_enable']))
+	{
+		if($settings['database_enable'] === false || $settings['database_enable'] === 'false')
+			return false;
+		elseif($settings['database_enable'] === true || $settings['database_enable'] === 'true')
+			return true;
+	}
+	return true;
 }
 
 /**
@@ -110,24 +127,6 @@ function status_database($settings)
 	}
 	
 	return $status;
-}
-
-/**
- * Implementation of setting
- * @ingroup setting
- * @return true by default
- */
-function setting_use_database($settings = array())
-{
-	// can't use database if the database dependencies are not met
-	if(isset($settings['use_database']))
-	{
-		if($settings['use_database'] === true || $settings['use_database'] === 'true')
-			return true;
-		elseif($settings['use_database'] === false || $settings['use_database'] === 'false')
-			return false;
-	}
-	return true;
 }
 
 /**
@@ -235,10 +234,9 @@ function validate_dberror($request)
  * Implementation of configure
  * @ingroup configure
  */
-function configure_database($settings)
+function configure_database($settings, $request)
 {
 	$settings['db_connect'] = setting_db_connect($settings);
-	$settings['use_alias'] = setting_use_alias($settings);
 	$settings['dberror'] = validate_dberror($settings);
 	
 	$options = array();

@@ -82,7 +82,7 @@ function is_internal($handler)
 function is_wrapper($handler)
 {
 	// fs_ handlers are never wrappers
-	if(setting_use_database() == false)
+	if(setting('database_enable') == false)
 		return false;
 	if($handler == 'files')
 		return false;
@@ -107,7 +107,7 @@ function is_wrapper($handler)
 function handles_files($file)
 {
 	$file = str_replace('\\', '/', $file);
-	if(setting('use_alias') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+	if(setting('admin_alias_enable') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 	
 	if((is_dir(str_replace('/', DIRECTORY_SEPARATOR, $file)) || (is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)) && $file[strlen($file)-1] != '/')) && !in_array($file, $GLOBALS['ignored']))
 	{
@@ -225,7 +225,7 @@ function output_files($file, $handler)
 {
 	$file = str_replace('\\', '/', $file);
 	
-	if(setting('use_alias') == true)
+	if(setting('admin_alias_enable') == true)
 		$file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 	
 	// check to make sure file is valid
@@ -317,7 +317,7 @@ function get_files($request, &$count, $handler)
 		foreach($files as $index => $file)
 		{
 			// do alias replacement on every file path
-			if(setting('use_alias') == true)
+			if(setting('admin_alias_enable') == true)
 			{
 				if(isset($file['Filepath']))
 					$files[$index]['Filepath'] = preg_replace($GLOBALS['paths_regexp'], $GLOBALS['alias'], $file['Filepath']);
@@ -465,7 +465,7 @@ function cleanup($handler = NULL)
 				// if using aliases then only add the revert from the watch directory to the alias
 				// ex. Watch = /home/share/Pictures/, Alias = /home/share/ => /Shared/
 				//     only /home/share/ is added here
-				if((!setting('use_alias') || in_array($curr_dir, $GLOBALS['paths']) !== false))
+				if((!setting('admin_alias_enable') || in_array($curr_dir, $GLOBALS['paths']) !== false))
 				{
 					// this allows for us to make sure that at least the beginning 
 					//   of the path is an aliased path
@@ -474,13 +474,13 @@ function cleanup($handler = NULL)
 					if(!in_array($curr_dir, $directories))
 					{
 						$directories[] = $curr_dir;
-						// if the setting('use_alias') is true this will only add the folder
+						// if the setting('admin_alias_enable') is true this will only add the folder
 						//    if it is in the list of aliases
 						$watched_to_where .= ' Filepath != "' . addslashes($curr_dir) . '" AND';
 					}
 				}
 				// but make an exception for folders between an alias and the watch path
-				elseif(setting('use_alias') && $between && !in_array($curr_dir, $directories))
+				elseif(setting('admin_alias_enable') && $between && !in_array($curr_dir, $directories))
 				{
 					$directories[] = $curr_dir;
 					

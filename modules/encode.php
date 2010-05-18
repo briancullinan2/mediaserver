@@ -18,56 +18,10 @@ function register_encode()
 }
 
 /**
- * Implementation of status
- * @ingroup status
- */
-function status_encode()
-{
-	$status = array();
-
-	if(dependency('encoder') != false)
-	{
-		$status['encode'] = array(
-			'name' => lang('encode status title', 'Encode'),
-			'status' => '',
-			'description' => array(
-				'list' => array(
-					lang('encode status description', 'Encoding is available.'),
-				),
-			),
-			'value' => array(
-				'text' => array(
-					'Encoding available',
-				),
-			),
-		);
-	}
-	else
-	{
-		$status['encode'] = array(
-			'name' => lang('encode status title', 'Users'),
-			'status' => 'fail',
-			'description' => array(
-				'list' => array(
-					lang('encode status fail description', 'Encoding is forceably disabled because the specified encoder does not exist.'),
-				),
-			),
-			'value' => array(
-				'text' => array(
-					'Encoding disabled',
-				),
-			),
-		);
-	}
-	
-	return $status;
-}
-
-/**
  * Checks for encode path
  * @ingroup configure
  */
-function configure_encode($settings)
+function configure_encode($settings, $request)
 {
 	$settings['encode_path'] = setting_encode_path($settings);
 	$settings['encode_args'] = setting_encode_args($settings);

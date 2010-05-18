@@ -18,14 +18,6 @@ function register_bt()
 }
 
 /**
- * Implementation of status
- * @ingroup status
- */
-function status_bt()
-{
-}
-
-/**
  * Implementation of validate
  * @ingroup validate
  * @return announce if 'bt' is set in the request, otherwise returns 'bencode'
@@ -148,7 +140,7 @@ function output_bt($request)
 			$torrent['info']['files'] = array();
 			foreach($files as $index => &$file)
 			{
-				if(setting('use_alias') == true) $files[$index]['Filepath'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file['Filepath']);
+				if(setting('admin_alias_enable') == true) $files[$index]['Filepath'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file['Filepath']);
 				if(!file_exists($files[$index]['Filepath']))
 					continue;
 				$file_info = array();

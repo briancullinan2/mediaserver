@@ -20,7 +20,7 @@ function register_image_browser()
 function handles_image_browser($file)
 {
 	$file = str_replace('\\', '/', $file);
-	if(setting('use_alias') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+	if(setting('admin_alias_enable') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 			
 	// get file extension
 	$type = getExtType($file);

@@ -11,8 +11,7 @@ function register_admin_handlers()
 		'description' => lang('handlers description', 'Display a list of file handlers and allow for enabling and disabling.'),
 		'privilage' => 10,
 		'path' => __FILE__,
-		'settings' => array(),
-		'depends on' => array('settings')
+		'settings' => 'admin_handlers',
 	);
 }
 
@@ -69,21 +68,6 @@ function setup_admin_handlers()
 	// reorganize handlers to reflect heirarchy
 	$GLOBALS['handlers'] = array_merge(array_flip(flatten_handler_dependencies(array_keys($GLOBALS['handlers']))), $GLOBALS['handlers']);
 	
-	// create additional functions for handling enabling
-	$handler_func = array();
-	foreach($GLOBALS['handlers'] as $handler => $config)
-	{
-		// do not allow for enabling of internet handlers
-		if(is_internal($handler))
-			continue;
-
-		// add the functions to allow for enabling of handlers
-		$handler_func[] = $handler . '_enable';
-		$GLOBALS['setting_' . $handler . '_enable'] = create_function('$request', 'return setting_handler_enable($request, \'' . $handler . '\');');
-	}
-	
-	$GLOBALS['modules']['admin_handlers']['settings'] = $handler_func;
-	
 	// always make the handler list available to templates
 	register_output_vars('handlers', $GLOBALS['handlers']);
 	
@@ -91,6 +75,28 @@ function setup_admin_handlers()
 	register_output_vars('columns', getAllColumns());
 }
 
+/**
+ * Implementation of setting
+ * @ingroup setting
+ */
+function setting_admin_handlers()
+{
+	$settings = array();
+	
+	// create additional functions for handling enabling
+	foreach($GLOBALS['handlers'] as $handler => $config)
+	{
+		// do not allow for enabling of internal handlers
+		if(is_internal($handler))
+			continue;
+
+		// add the functions to allow for enabling of handlers
+		$settings[] = $handler . '_enable';
+		$GLOBALS['setting_' . $handler . '_enable'] = create_function('$request', 'return setting_handler_enable($request, \'' . $handler . '\');');
+	}
+	
+	return $settings;
+}
 
 /**
  * Creates a list of handlers with the order of their dependencies first
@@ -117,6 +123,15 @@ function flatten_handler_dependencies($handlers)
  */
 function setting_handler_enable($settings, $handler)
 {
+	// always enable the internal handlers
+	if(is_internal($handler))
+		return true;
+		
+	// always enable the requred handlers
+	if(in_array($handler, get_required_handlers()))
+		return true;
+	
+	// parse boolean value
 	if(isset($settings[$handler . '_enable']))
 	{
 		if($settings[$handler . '_enable'] === false || $settings[$handler . '_enable'] === 'false')
@@ -125,6 +140,14 @@ function setting_handler_enable($settings, $handler)
 			return true;
 	}
 	return true;
+}
+
+/**
+ * Helper function
+ */
+function get_required_handlers()
+{
+	return array('files');
 }
 
 /**
@@ -170,19 +193,20 @@ function status_admin_handlers($settings)
  * Implementation of configure
  * @ingroup configure
  */
-function configure_admin_handlers($settings)
+function configure_admin_handlers($settings, $request)
 {
-	$recommended = array('db_audio', 'db_image', 'db_video');
-	$required = array('db_file');
+	$recommended = array('audio', 'image', 'video');
 	
 	$options = array();
 	
+	$description_fail = lang('handlers enable fail description', 'This handler has been forcefully disabled because of dependency issues.');
+	
 	foreach($GLOBALS['handlers'] as $handler => $config)
 	{
-		if(is_internal($handler))
-			continue;
-			
+		// get the enabled setting
 		$settings[$handler . '_enable'] = setting_module_enable($settings, $handler);
+		
+		// set up config for this module
 		$options[$handler . '_enable'] = array(
 			'name' => $GLOBALS['handlers'][$handler]['name'],
 			'status' => '',
@@ -192,10 +216,19 @@ function configure_admin_handlers($settings)
 				),
 			),
 			'type' => 'boolean',
-			'value' => in_array($handler, $required)?true:$settings[$handler . '_enable'],
+			'value' => in_array($handler, get_required_handlers())?true:$settings[$handler . '_enable'],
 		);
 		
-		if(in_array($handler, $required))
+		// add some extra info for failed dependencies
+		if(dependency($handler) == false)
+		{
+			$options[$handler . '_enable']['status'] = 'fail';
+			if(!in_array($handler, get_required_handlers())) $options[$handler . '_enable']['description']['list'][] = $description_fail;
+			$options[$handler . '_enable']['disabled'] = true;
+		}
+		
+		// set up the options for the handlers based on required or recommended lists
+		if(in_array($handler, get_required_handlers()) || is_internal($handler))
 		{
 			$options[$handler . '_enable']['options'] = array(
 				'Enabled (Required)',

@@ -96,7 +96,7 @@ function theme_live_debug_block()
 		}
 	</script>
 	<?php
-	if($GLOBALS['templates']['vars']['user']['Username'] != 'guest' || !setting_use_database())
+	if($GLOBALS['templates']['vars']['user']['Username'] != 'guest' || !setting('database_enable'))
 	{
 		?><div id="debug" class="debug hide"><?php
 		foreach($GLOBALS['debug_errors'] as $i => $error)

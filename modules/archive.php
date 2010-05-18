@@ -11,7 +11,7 @@ function register_archive()
 		'description' => lang('archive description', 'Convert sets of files to an archive using a command line program.'),
 		'privilage' => 1,
 		'path' => __FILE__,
-		'depends on' => array('archiver'),
+		'depends on' => array('archiver', 'search'),
 		'settings' => array('archiver'),
 		'database' => array(
 			'Filepath' 		=> 'TEXT',
@@ -59,56 +59,10 @@ function dependency_archiver($settings)
 }
 
 /**
- * Implementation of status
- * @ingroup status
- */
-function status_archive()
-{
-	$status = array();
-
-	if(dependency('archiver') != false)
-	{
-		$status['archive'] = array(
-			'name' => lang('archive status title', 'Archive'),
-			'status' => '',
-			'description' => array(
-				'list' => array(
-					lang('archive status description', 'Archive creation and analyzing available.'),
-				),
-			),
-			'value' => array(
-				'text' => array(
-					'Archiving available',
-				),
-			),
-		);
-	}
-	else
-	{
-		$status['archive'] = array(
-			'name' => lang('archive status title', 'Archive'),
-			'status' => 'fail',
-			'description' => array(
-				'list' => array(
-					lang('archive status fail description', 'Archive analyzing not available.'),
-				),
-			),
-			'value' => array(
-				'text' => array(
-					'Archiving disabled',
-				),
-			),
-		);
-	}
-	
-	return $status;
-}
-
-/**
  * Implementation of configure
  * @ingroup configure
  */
-function configure_archive($settings)
+function configure_archive($settings, $request)
 {
 	$settings['archiver'] = setting_archiver($settings);
 	
@@ -178,7 +132,7 @@ function setting_archiver($settings)
 function handles_archive($file)
 {
 	$file = str_replace('\\', '/', $file);
-	if(setting('use_alias') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+	if(setting('admin_alias_enable') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 	
 	// parse through the file path and try to find a zip
 	parseInner($file, $last_path, $inside_path);
@@ -394,7 +348,7 @@ function output_archive($file)
 {
 	$file = str_replace('\\', '/', $file);
 	
-	if(setting('use_alias') == true)
+	if(setting('admin_alias_enable') == true)
 		$file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 		
 	$files = $GLOBALS['database']->query(array('SELECT' => 'archive', 'WHERE' => 'Filepath = "' . addslashes($file) . '"', 'LIMIT' => 1), true);
@@ -419,7 +373,7 @@ function get_archive($request, &$count)
 	if(isset($request['dir']) && handles($request['dir'], 'archive'))
 	{
 		$request['dir'] = str_replace('\\', '/', $request['dir']);
-		if(setting('use_alias') == true) $request['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
+		if(setting('admin_alias_enable') == true) $request['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
 
 		parseInner($request['dir'], $last_path, $inside_path);
 		if(strlen($inside_path) == 0 || $inside_path[0] != '/') $inside_path = '/' . $inside_path;

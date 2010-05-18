@@ -21,7 +21,7 @@ function register_convert()
  * Checks for convert path
  * @ingroup configure
  */
-function configure_convert($settings)
+function configure_convert($settings, $request)
 {
 	$settings['convert_path'] = setting_convert_path($settings);
 	$settings['convert_args'] = setting_convert_args($settings);
@@ -89,52 +89,6 @@ function dependency_converter($settings)
 {
 	$settings['convert_path'] = setting_convert_path($settings);
 	return file_exists($settings['convert_path']);
-}
-
-/**
- * Implementation of status
- * @ingroup status
- */
-function status_convert()
-{
-	$status = array();
-
-	if(dependency('converter') != false)
-	{
-		$status['convert'] = array(
-			'name' => lang('convert status title', 'Convert'),
-			'status' => '',
-			'description' => array(
-				'list' => array(
-					lang('convert status description', 'Image conversion is available.'),
-				),
-			),
-			'value' => array(
-				'text' => array(
-					'Converting available',
-				),
-			),
-		);
-	}
-	else
-	{
-		$status['convert'] = array(
-			'name' => lang('convert status title', 'Convert'),
-			'status' => 'fail',
-			'description' => array(
-				'list' => array(
-					lang('convert status fail description', 'Image conversion is not available because there is no valid converter specified.'),
-				),
-			),
-			'value' => array(
-				'text' => array(
-					'Converting disabled',
-				),
-			),
-		);
-	}
-	
-	return $status;
 }
 
 /**

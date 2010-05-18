@@ -18,7 +18,7 @@ function register_template()
 		'path' => __FILE__,
 		'session' => array('template'),
 		'notemplate' => true,
-		'settings' => array('local_base', 'local_default', 'local_template'),
+		'settings' => 'template', // this is to trick the settings in to waiting until after it loads
 		'always output' => 'template_variables',
 	);
 }
@@ -81,10 +81,19 @@ function setup_template()
 }
 
 /**
+ * Implementation of setting
+ * @ingroup setting
+ */
+function setting_template()
+{
+	return array('local_base', 'local_default', 'local_template');
+}
+
+/**
  * Configure all template options
  * @ingroup configure
  */
-function configure_template($settings)
+function configure_template($settings, $request)
 {
 	$settings['local_root'] = setting_local_root($settings);
 	$settings['local_base'] = setting_local_base($settings);

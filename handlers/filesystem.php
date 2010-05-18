@@ -83,7 +83,7 @@ function output_filesystem($file)
 {
 	// double check to make sure the database is not in use
 	// don't ever output files if the system is not installed
-	if(!setting_use_database() && setting_installed())
+	if(!setting('database_enable') && setting_installed())
 	{
 		// replace path
 		$file = str_replace('\\', '/', $file);

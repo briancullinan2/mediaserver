@@ -23,7 +23,7 @@ function register_updates()
 function handles_updates($dir, $file = NULL)
 {
 	$dir = str_replace('\\', '/', $dir);
-	if(setting('use_alias') == true) $dir = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $dir);
+	if(setting('admin_alias_enable') == true) $dir = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $dir);
 
 	if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $dir)))
 	{

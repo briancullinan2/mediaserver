@@ -44,7 +44,7 @@ function setup_diskimage()
 function handles_diskimage($file)
 {
 	$file = str_replace('\\', '/', $file);
-	if(setting('use_alias') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+	if(setting('admin_alias_enable') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 	
 	// parse through the file path and try to find a zip
 	parseInner($file, $last_path, $inside_path);
@@ -221,7 +221,7 @@ function output_diskimage($file)
 {
 	$file = str_replace('\\', '/', $file);
 	
-	if(setting('use_alias') == true)
+	if(setting('admin_alias_enable') == true)
 		$file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 		
 	$files = $GLOBALS['database']->query(array('SELECT' => 'diskimage', 'WHERE' => 'Filepath = "' . addslashes($file) . '"', 'LIMIT' => 1), true);
@@ -245,7 +245,7 @@ function get_diskimage($request, &$count)
 	if(isset($request['dir']) && handles($request['dir'], 'diskimage'))
 	{
 		$request['dir'] = str_replace('\\', '/', $request['dir']);
-		if(setting('use_alias') == true) $request['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
+		if(setting('admin_alias_enable') == true) $request['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
 
 		parseInner($request['dir'], $last_path, $inside_path);
 		if(strlen($inside_path) == 0 || $inside_path[0] != '/') $inside_path = '/' . $inside_path;

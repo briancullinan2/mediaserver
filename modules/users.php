@@ -14,7 +14,7 @@
 function setup_users()
 {
 	// check if user is logged in
-	if( isset($_SESSION['users']['username']) && isset($_SESSION['users']['password']) && setting_installed() && setting_use_database() )
+	if( isset($_SESSION['users']['username']) && isset($_SESSION['users']['password']) && setting_installed() && setting('database_enable') )
 	{
 		// lookup username in table
 		$db_user = $GLOBALS['database']->query(array(
@@ -49,7 +49,7 @@ function setup_users()
 		}
 	}
 	// use guest information
-	elseif(setting_installed() && setting_use_database())
+	elseif(setting_installed() && setting('database_enable'))
 	{
 		$db_user = $GLOBALS['database']->query(array(
 				'SELECT' => 'users',
@@ -74,7 +74,14 @@ function setup_users()
 			);
 		}
 	}
-	
+	else
+	{
+		$_SESSION['user'] = array(
+			'Username' => 'guest',
+			'Privilage' => 1
+		);
+	}
+
 	// this will hold a cached list of the users that were looked up
 	$GLOBALS['user_cache'] = array();
 	
@@ -110,12 +117,6 @@ function setup_users()
  */
 function register_users()
 {
-	$_SESSION['user'] = array(
-		'Username' => 'guest',
-		'Privilage' => 1
-	);
-	register_output_vars('user', $_SESSION['user']);
-	
 	return array(
 		'name' => 'Users',
 		'description' => 'Allows for managing and displaying users.',
@@ -123,7 +124,7 @@ function register_users()
 		'path' => __FILE__,
 		'session' => array('username'),
 		'settings' => array('local_users', 'username_validation'),
-		'depends on' => array('template', 'database'),
+		'depends on' => 'users',
 		'database' => array(
 			'Username' 		=> 'TEXT',
 			'Password' 		=> 'TEXT',
@@ -137,6 +138,14 @@ function register_users()
 	);
 }
 
+function dependency_users($settings)
+{
+	if(setting('database_enable') == false)
+		return array('template');
+	else
+		return array('template', 'database');
+}
+
 /**
  * Implementation of status
  * @ingroup status
@@ -145,7 +154,7 @@ function status_users()
 {
 	$status = array();
 
-	if(dependency('database') != false && setting_use_database() == true)
+	if(dependency('database') != false && setting('database_enable') == true)
 	{
 		$status['users'] = array(
 			'name' => lang('users status title', 'Users'),
@@ -186,13 +195,14 @@ function status_users()
 /**
  * Implementation of configure
  */
-function configure_users($settings)
+function configure_users($settings, $request)
 {
 	$settings['local_users'] = setting_local_users($settings);
+	$settings['username_validation'] = setting_username_validation($settings);
 	
 	$options = array();
 	
-	if(is_writable($request['local_users']))
+	if(is_writable($settings['local_users']))
 	{
 		$options['local_users'] = array(
 			'name' => 'User Files',
@@ -221,6 +231,19 @@ function configure_users($settings)
 			'value' => $settings['local_users'],
 		);
 	}
+
+	$options['username_validation'] = array(
+		'name' => 'Username Validation',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'This option allows you to customize the regular expression that accepts usernames in the registration.',
+				'This is usefull if you want your usernames to be in a specific format when users register.'
+			),
+		),
+		'type' => 'text',
+		'value' => $settings['username_validation'],
+	);
 	
 	return $options;
 }
@@ -328,7 +351,7 @@ function validate_required_priv($request)
 function handles_users($file)
 {
 	$file = str_replace('\\', '/', $file);
-	if(setting('use_alias') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+	if(setting('admin_alias_enable') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 	
 	// handle directories found in the setting('local_users') directory
 	//  automatically create a user entry in the database for those directories
@@ -418,7 +441,7 @@ function get_users($request, &$count, $files = array())
 			{
 				// replace virtual paths
 				$path = str_replace('\\', '/', $file['Filepath']);
-				if(setting('use_alias') == true) $path = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $path);
+				if(setting('admin_alias_enable') == true) $path = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $path);
 				
 				if(substr($path, 0, strlen(setting('local_users'))) == setting('local_users'))
 				{
@@ -470,7 +493,7 @@ function get_users($request, &$count, $files = array())
 		
 		// modify the file variable to use username instead
 		$file = str_replace('\\', '/', $request['file']);
-		if(setting('use_alias') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+		if(setting('admin_alias_enable') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 		
 		if(substr($file, 0, strlen(setting('local_users'))) == setting('local_users'))
 		{

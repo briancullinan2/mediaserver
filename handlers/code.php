@@ -4,7 +4,7 @@
  * Implementation of register_handler
  * @ingroup register_handler
  */
-function register_db_code()
+function register_code()
 {
 	return array(
 		'name' => 'Code',
@@ -25,9 +25,146 @@ function register_db_code()
  * Implementation of setup_handler
  * @ingroup setup_handler
  */
-function setup_db_code()
+function setup_code()
 {
 	include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'geshi' . DIRECTORY_SEPARATOR . 'geshi.php';
+}
+
+/**
+ * Implementation of dependency
+ * @ingroup dependency
+ */
+function dependency_highlighter($settings)
+{
+	// get the archiver it is set to
+	$settings['highlighter'] = setting_highlighter($settings);
+	$settings['local_root'] = setting_local_root($settings);
+
+	// if that archiver is not installed, return false
+	if($settings['archiver'] == 'pear' && dependency('pear_installed') != false && include_path('Text/Highlighter.php') !== false)
+		return true;
+	elseif($settings['archiver'] == 'gheshi' && 
+		file_exists($settings['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'geshi' . DIRECTORY_SEPARATOR . 'geshi.php'))
+		return true;
+	else
+		return false;
+}
+
+/**
+ * Implementation of status
+ * @ingroup status
+ */
+function status_code()
+{
+	$status = array();
+
+	if(dependency('highlighter') != false)
+	{
+		$status['code'] = array(
+			'name' => lang('code status title', 'Code'),
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					lang('code status description', 'Code highlighting and searching is available.'),
+				),
+			),
+			'value' => array(
+				'text' => array(
+					'Code highlighting available',
+				),
+			),
+		);
+	}
+	else
+	{
+		$status['code'] = array(
+			'name' => lang('code status title', 'Code'),
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					lang('code status fail description', 'Code highlighting not available.'),
+				),
+			),
+			'value' => array(
+				'text' => array(
+					'Code highlighting disabled',
+				),
+			),
+		);
+	}
+	
+	return $status;
+}
+
+/**
+ * Implementation of configure
+ * @ingroup configure
+ */
+function configure_code($settings, $request)
+{
+	$settings['highlighter'] = setting_highlighter($settings);
+	
+	$options = array();
+	
+	if(dependency('highlighter'))
+	{
+		$options['highlighter'] = array(
+			'name' => lang('highlighter title', 'Highlighter'),
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					lang('highlighter description 1', 'This script comes equiped with 2 code highlighting tools.'),
+					lang('highlighter description 2', 'PEAR::Text_Highlighter may be used, or the popular GeSHi highlighter.'),
+				),
+			),
+			'type' => 'select',
+			'value' => $settings['highlighter'],
+			'options' => array(
+				'pear' => 'PEAR Text_Highlighter Extension',
+				'geshi' => 'GeSHi Highligher',
+			),
+		);
+	}
+	else
+	{
+		$options['highlighter'] = array(
+			'name' => lang('highlighter title', 'Highlighter Not Installed'),
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					lang('highlighter description fail 1', 'Either there is no highlighter installed, or the chosen highlighter is missing.'),
+					lang('highlighter description fail 2', 'PEAR::Text_Highlighter may be used, or the popular GeSHi highlighter.'),
+				),
+			),
+			/*'value' => array(
+				'link' => array(
+					'url' => 'http://qbnz.com/highlighter/',
+					'text' => 'Get Geshi',
+				),
+			),*/
+			'type' => 'select',
+			'value' => $settings['highlighter'],
+			'options' => array(
+				'pear' => 'PEAR Text_Highlighter Extension',
+				'geshi' => 'GeSHi Highligher',
+			),
+		);
+	}
+	
+	return $options;
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ * @return returns pear by default
+ */
+function setting_highlighter($settings)
+{
+	if(isset($settings['highlighter']) && in_array($settings['highlighter'], array('pear', 'geshi')))
+		return $settings['highlighter'];
+	else
+		return 'geshi';
 }
 
 // read in code files and cache the hilighted version
@@ -41,7 +178,7 @@ function setup_db_code()
 function handles_db_code($file)
 {
 	$file = str_replace('\\', '/', $file);
-	if(setting('use_alias') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+	if(setting('admin_alias_enable') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 	
 	$type = getExtType($file);
 	
@@ -327,7 +464,7 @@ function output_db_code($file)
 {
 	$file = str_replace('\\', '/', $file);
 	
-	if(setting('use_alias') == true)
+	if(setting('admin_alias_enable') == true)
 		$file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 	
 	header('Content-Disposition: ');

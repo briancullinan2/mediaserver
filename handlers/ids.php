@@ -120,7 +120,7 @@ function add_ids($file, $force = false, $ids = array())
  */
 function get_ids($request, &$count, $files = array())
 {
-	if(!setting_use_database())
+	if(!setting('database_enable'))
 	{
 		PEAR::raiseError('db_ids' . '::get() called by mistake, use_database is set to false', E_DEBUG);
 		$count = 0;

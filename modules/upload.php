@@ -87,7 +87,7 @@ function status_upload($settings)
 /**
  * Implementation of configure
  */
-function configure_upload($settings)
+function configure_upload($settings, $request)
 {
 	$settings['tmp_dir'] = setting_tmp_dir($settings);
 

@@ -11,7 +11,6 @@ function register_admin_alias()
 		'description' => lang('alias description', 'Alias the paths from the filesystem to display as differen/less complicated paths when shown to the users.'),
 		'privilage' => 10,
 		'path' => __FILE__,
-		'settings' => array('use_alias'),
 		'depends on' => array('database'),
 		'database' => array(
 			'Filepath' 		=> 'TEXT',
@@ -29,6 +28,37 @@ function register_admin_alias()
  */
 function status_admin_alias()
 {
+	$status = array();
+		
+	if(dependency('admin_alias'))
+	{
+		$status['use_alias'] = array(
+			'name' => 'Aliasing',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'Aliasing is enabled.',
+				),
+			),
+			'value' => 'Aliases enabled',
+		);
+	}
+	else
+	{
+		$status['use_alias'] = array(
+			'name' => 'Aliasing',
+			'status' => 'warn',
+			'description' => array(
+				'list' => array(
+					'Aliasing is turned off, and therefore people could see the actual paths to files on the filesystem.',
+				),
+			),
+			'value' => 'Aliases disabled',
+		);
+	}
+	
+	return $status;
+
 }
 
 /**
@@ -47,7 +77,7 @@ function setup_admin_alias()
 	if(dependency('admin_alias') == false)
 		return;
 	
-	if(setting('use_alias') == true)
+	if(setting('admin_alias_enable') == true)
 	{
 		$aliases = $GLOBALS['database']->query(array('SELECT' => 'admin_alias'), false);
 		if($aliases !== false)
@@ -76,66 +106,4 @@ function get_admin_alias($request)
 	$files = $GLOBALS['database']->query($props, false);
 	
 	return $files;
-}
-
-/**
- * Implementation of setting
- * @ingroup setting
- * @return true by default
- */
-function setting_use_alias($settings)
-{
-	// can't use alias is not using database
-	$settings['use_database'] = setting_use_database($settings);
-	if($settings['use_database'] == false)
-		return false;
-	
-	if(isset($settings['use_alias']))
-	{
-		if($settings['use_alias'] === true || $settings['use_alias'] === 'true')
-			return true;
-		elseif($settings['use_alias'] === false || $settings['use_alias'] === 'false')
-			return false;
-	}
-	return true;
-}
-
-/**
- * Implementation of configure
- * @ingroup configure
- */
-function configure_admin_alias($settings)
-{
-	$settings['use_alias'] = setting_use_alias($settings);
-	
-	$options = array();
-		
-	$options['use_alias'] = array(
-		'name' => 'Aliasing',
-		'status' => '',
-		'description' => array(
-			'list' => array(
-				'Path aliasing is used to disguise the location of files on your file system.  Aliases can be set up to convert a path such as /home/share/ to /Shared/.',
-			),
-		),
-		'type' => 'boolean',
-		'value' => $settings['use_alias'],
-		'options' => array(
-			'Use Aliased Paths',
-			'Display Actual Path to Users',
-		),
-	);
-
-	
-	return $options;
-
-}
-
-/**
- * Implementation of output
- * @ingroup output
- */
-function output_admin_alias($request)
-{
-	// nothing to do here yet
 }

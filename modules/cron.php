@@ -37,7 +37,7 @@ function status_cron()
 {
 	$status = array();
 
-	if(dependency('database') != false && setting_use_database() == true)
+	if(dependency('database') != false && setting('database_enable') == true)
 	{
 		$status['cron'] = array(
 			'name' => lang('cron status title', 'Cron'),
@@ -79,7 +79,7 @@ function status_cron()
  * Implementation of configure
  * @ingroup configure
  */
-function configure_cron($settings)
+function configure_cron($settings, $request)
 {
 	$settings['dir_seek_time'] = setting_dir_seek_time($settings);
 	$settings['file_seek_time'] = setting_file_seek_time($settings);
@@ -156,7 +156,7 @@ function configure_cron($settings)
 			),
 		),
 		'type' => 'text',
-		'value' => $settings['cleanup_theashold'],
+		'value' => $settings['cleanup_threashold'],
 	);
 	
 	return $options;
@@ -446,7 +446,7 @@ function read_files()
 		if(count($db_dirs) > 0)
 		{
 			$dir = $db_dirs[0]['Filepath'];
-			if(setting('use_alias') == true)
+			if(setting('admin_alias_enable') == true)
 				$dir = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $dir);
 			$status = scan_dir($dir);
 			
@@ -528,7 +528,7 @@ function output_cron($request)
 	PEAR::raiseError('Cron Script: ' . VERSION . '_' . VERSION_NAME, E_DEBUG);
 	
 	// the cron script is useless if it has nowhere to store the information it reads
-	if(setting_use_database() == false || count($GLOBALS['watched']) == 0)
+	if(setting('database_enable') == false || count($GLOBALS['watched']) == 0)
 	{
 		@fclose($log_fp);
 		exit;
@@ -639,7 +639,7 @@ function output_cron($request)
 				// if using aliases then only add the revert from the watch directory to the alias
 				// ex. Watch = /home/share/Pictures/, Alias = /home/share/ => /Shared/
 				//     only /home/share/ is added here
-				if(!setting('use_alias') || in_array($curr_dir, $GLOBALS['paths']) !== false)
+				if(!setting('admin_alias_enable') || in_array($curr_dir, $GLOBALS['paths']) !== false)
 				{
 					// this allows for us to make sure that at least the beginning 
 					//   of the path is an aliased path
@@ -649,13 +649,13 @@ function output_cron($request)
 					if(!in_array($curr_dir, $directories))
 					{
 						$directories[] = $curr_dir;
-						// if the setting('use_alias') is true this will only add the folder
+						// if the setting('admin_alias_enable') is true this will only add the folder
 						//    if it is in the list of aliases
 						handle_file($curr_dir);
 					}
 				}
 				// but make an exception for folders between an alias and the watch path
-				elseif(setting('use_alias') && $between && !in_array($curr_dir, $directories))
+				elseif(setting('admin_alias_enable') && $between && !in_array($curr_dir, $directories))
 				{
 					$directories[] = $curr_dir;
 					
