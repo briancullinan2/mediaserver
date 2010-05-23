@@ -23,4 +23,31 @@ function register_admin()
  */
 function output_admin($request)
 {
+	// check for dependency problems so we can show an error
+	foreach($GLOBALS['modules'] as $module => $config)
+	{
+		// skip the modules that don't depend on anything
+		if(!isset($config['depends on']))
+			continue;
+			
+		// output configuration page
+		if(function_exists('status_' . $module))
+		{
+			$module_status = call_user_func_array('status_' . $module, array($GLOBALS['settings']));
+			
+			if(is_array($module_status))
+			{
+				foreach($module_status as $key => $status)
+				{
+					if(isset($status['status']) && $status['status'] == 'fail')
+					{
+						// all it takes is one
+						PEAR::raiseError('There is an error in the site status!', E_USER);
+						
+						return;
+					}
+				}
+			}
+		}
+	}
 }

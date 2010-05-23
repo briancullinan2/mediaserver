@@ -28,14 +28,15 @@ function theme_live_tools()
 			<a href="<?php print url('module=admin_tools_' . $name); ?>" style="font-size:14px;"><?php print $tool['name']; ?></a><br />
 			Description: <?php print $tool['description']; ?><br /><br />
 			<?php
-			foreach($tool['subtools'] as $i => $subtool)
+			if(isset($tool['subtools']))
 			{
-				?><a href="<?php print url('module=admin_tools_' . $name . '&subtool=' . $i); ?>" style="margin:5px;"><?php print $subtool['name']; ?></a><?php
+				foreach($tool['subtools'] as $i => $subtool)
+				{
+					?><a href="<?php print url('module=admin_tools_' . $name . '&subtool=' . $i); ?>" style="margin:5px;"><?php print $subtool['name']; ?></a><?php
+				}
+				?><br /><br /><?php
 			}
-			?>
-			<br /><br />
-		</div>
-		<?php
+			?></div><?php
 	}
 	
 	?><div class="titlePadding"></div>

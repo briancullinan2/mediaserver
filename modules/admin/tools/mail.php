@@ -1,10 +1,31 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>Untitled Document</title>
-</head>
+<?php
 
-<body>
-</body>
-</html>
+/**
+ * Implementation of register
+ * @ingroup register
+ */
+function register_admin_tools_mail()
+{
+	$tools = array(
+		'name' => 'Mailing',
+		'description' => 'Send out messages to site users notifying them of changes on the site.',
+		'privilage' => 10,
+		'path' => __FILE__,
+	);
+	
+	return $tools;
+}
+
+/**
+ * Implementation of output
+ * @ingroup output
+ */
+function output_admin_tools_mail($request)
+{
+	$request['subtool'] = validate_subtool($request);
+	$infos = array();
+	
+	if(isset($request['subtool'])) register_output_vars('subtool', $request['subtool']);
+	register_output_vars('infos', $infos);
+}
+

@@ -75,8 +75,7 @@ Add bttracker install script to admin/install.php to fully bootstrap the install
 ------------- ADMIN TOOLS -------------
 Howabout a nifty little remote RPC admin tool or a debug tool
 Port all Jamu stuff from MythTV to PHP admin tools
-Work on tools.php module for admin
-	Provide useful information in tools section about missing songs (music.php tool?)
+Work on music tool
 Add netflix movie checker to admin tools
 Add show renamer to admin tools
 ------------- Module TODO -------------

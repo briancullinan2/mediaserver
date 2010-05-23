@@ -64,13 +64,6 @@ function output_live()
 		case 'admin_template':
 			theme('template');
 		break;
-		case 'admin_tools':
-			theme('tools');
-		break;
-		case 'admin_tools_statistics':
-		case 'admin_tools_filetools':
-			theme('tools_subtools');
-		break;
 		default:
 			theme('default');
 	}

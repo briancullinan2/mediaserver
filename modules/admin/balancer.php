@@ -120,7 +120,7 @@ function setting_balance_server($settings, $index)
 function setting_balance_rule($settings, $index)
 {
 	// don't continue with this if stuff is missing
-	if(!isset($settings['balance_rule_' . $index]) || !isset()
+	if(!isset($settings['balance_rule_' . $index])
 	)
 		return;
 		
