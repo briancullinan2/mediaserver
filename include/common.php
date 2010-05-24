@@ -112,7 +112,7 @@ $GLOBALS['warn_errors'] = isset($_SESSION['errors']['warn'])?$_SESSION['errors']
 $GLOBALS['debug_errors'] = isset($_SESSION['errors']['debug'])?$_SESSION['errors']['debug']:array();
 /** stores a list of all notices and friendly messages */
 $GLOBALS['note_errors'] = isset($_SESSION['errors']['note'])?$_SESSION['errors']['note']:array();
-set_error_handler('php_to_PEAR_Error', E_ALL);
+//set_error_handler('php_to_PEAR_Error', E_ALL);
 /** always begin the session */
 
 /** set up all the GLOBAL variables needed throughout the site */

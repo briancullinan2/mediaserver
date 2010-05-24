@@ -172,6 +172,6 @@ function settings_get_defaults($settings)
  */
 function output_settings($request)
 {
-	//if(isset($_SESSION['user']['Settings']))
+	//if(isset($_SESSION['users']['Settings']))
 }
 

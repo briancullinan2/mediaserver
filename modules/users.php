@@ -13,102 +13,36 @@
  */
 function setup_users()
 {
-	// check if user is logged in
-	if( isset($_SESSION['users']['username']) && isset($_SESSION['users']['password']) && setting_installed() && setting('database_enable') )
-	{
-		// lookup username in table
-		$db_user = $GLOBALS['database']->query(array(
-				'SELECT' => 'users',
-				'WHERE' => 'Username = "' . addslashes($_SESSION['users']['username']) . '"',
-				'LIMIT' => 1
-			)
-		, false);
-		
-		if( count($db_user) > 0 )
-		{
-			if($_SESSION['users']['password'] == $db_user[0]['Password'])
-			{
-				// just incase a template wants to access the rest of the information; include the user
-				unset($db_user[0]['Password']);
-				
-				$_SESSION['user'] = $db_user[0];
-				
-				// deserialize settings
-				$_SESSION['user']['Settings'] = unserialize($_SESSION['user']['Settings']);
-			}
-			else
-			{
-				unset($_SESSION['users']);
-				PEAR::raiseError('Invalid password.', E_USER);
-			}
-		}
-		else
-		{
-			unset($_SESSION['users']);
-			PEAR::raiseError('Invalid username.', E_USER);
-		}
-	}
-	// use guest information
-	elseif(setting_installed() && setting('database_enable'))
-	{
-		$db_user = $GLOBALS['database']->query(array(
-				'SELECT' => 'users',
-				'WHERE' => 'id = -2',
-				'LIMIT' => 1
-			)
-		, false);
-		
-		if(is_array($db_user) && count($db_user) > 0)
-		{
-			// just incase a template wants to access the rest of the information; include the user
-			unset($db_user[0]['Password']);
-			
-			$_SESSION['user'] = $db_user[0];
-			$_SESSION['user']['Settings'] = unserialize($_SESSION['user']['Settings']);
-		}
-		else
-		{
-			$_SESSION['user'] = array(
-				'Username' => 'guest',
-				'Privilage' => 1
-			);
-		}
-	}
-	else
-	{
-		$_SESSION['user'] = array(
-			'Username' => 'guest',
-			'Privilage' => 1
-		);
-	}
+	// prepare the session that stores user information
+	if(!isset($_SESSION['users']) && !isset($_REQUEST['username']))
+		$_REQUEST['username'] = 'guest';
 
 	// this will hold a cached list of the users that were looked up
 	$GLOBALS['user_cache'] = array();
 	
 	// get users associated with the keys
-	if(isset($_SESSION['user']['Settings']['keys']))
+	if(isset($_SESSION['users']['Settings']['keys']))
 	{
 		$return = $GLOBALS['database']->query(array(
 				'SELECT' => 'users',
-				'WHERE' => 'PrivateKey = "' . join('" OR PrivateKey = "', $_SESSION['user']['Settings']['keys']) . '"',
-				'LIMIT' => count($_SESSION['user']['Settings']['keys'])
+				'WHERE' => 'PrivateKey = "' . join('" OR PrivateKey = "', $_SESSION['users']['Settings']['keys']) . '"',
+				'LIMIT' => count($_SESSION['users']['Settings']['keys'])
 			)
 		, false);
 		
-		$_SESSION['user']['Settings']['keys_usernames'] = array();
+		$_SESSION['users']['Settings']['keys_usernames'] = array();
 		foreach($return as $index => $user)
 		{
-			$_SESSION['user']['Settings']['keys_usernames'][] = $user['Username'];
+			$_SESSION['users']['Settings']['keys_usernames'][] = $user['Username'];
 			
 			unset($return[$index]['Password']);
 		}
 		
-		$_SESSION['user']['Settings']['keys_users'] = $return;
+		$_SESSION['users']['Settings']['keys_users'] = $return;
 	}
 	
 	// output the user so template can print out login or logout stuff
-	register_output_vars('user', $_SESSION['user']);
-	
+	if(isset($_SESSION['users'])) register_output_vars('user', $_SESSION['users']);
 }
 
 /**
@@ -559,8 +493,6 @@ function cleanup_users()
  */
 function session_users($request)
 {
-	$save = array();
-	
 	// only save it to the session if the user is logging in
 	$request['users'] = validate_users($request);
 	if($request['users'] == 'login')
@@ -568,7 +500,9 @@ function session_users($request)
 		// double check the referrer here
 		$referer_check = parse_url($_SERVER['HTTP_REFERER']);
 		$server_host = parse_url($_SERVER['HTTP_HOST']);
-		if(!isset($server_host['host']) || $server_host['host'] != $referer_check['host'])
+		if(!isset($server_host['host']))
+			$server_host['host'] = $server_host['path'];
+		if($server_host['host'] != $referer_check['host'])
 		{
 			// if the referrer is not itself, then the password must be base64 encoded
 			if(!isset($request['password']) || ($password = base64_decode($request['password'], true)) === false)
@@ -579,15 +513,78 @@ function session_users($request)
 				return array();
 			}
 			
-			$save['username'] = $request['username'];
-			$save['password'] = $password;
+			$request['password'] = $password;
+		}
+	}
+	
+	// validate username and password
+	$request['username'] = validate_username($request);
+
+	// check if user is logged in
+	if( isset($request['username']) && isset($request['password']) && setting_installed() && setting('database_enable') )
+	{
+		// lookup username in table
+		$db_user = $GLOBALS['database']->query(array(
+				'SELECT' => 'users',
+				'WHERE' => 'Username = "' . addslashes($request['username']) . '"',
+				'LIMIT' => 1
+			)
+		, false);
+		
+		if( count($db_user) > 0 )
+		{
+			if($request['password'] == $db_user[0]['Password'])
+			{
+				// just incase a template wants to access the rest of the information; include the user
+				unset($db_user[0]['Password']);
+				
+				$save = $db_user[0];
+				
+				// deserialize settings
+				$save['Settings'] = unserialize($save['Settings']);
+			}
+			else
+			{
+				PEAR::raiseError('Invalid password.', E_USER);
+			}
 		}
 		else
 		{
-			$save['username'] = $request['username'];
-			$save['password'] = $request['password'];
+			PEAR::raiseError('Invalid username.', E_USER);
 		}
 	}
+	// use guest information
+	elseif(setting_installed() && setting('database_enable'))
+	{
+		// get guest user
+		$db_user = $GLOBALS['database']->query(array(
+				'SELECT' => 'users',
+				'WHERE' => 'id = -2',
+				'LIMIT' => 1
+			)
+		, false);
+		
+		if(is_array($db_user) && count($db_user) > 0)
+		{
+			// just incase a template wants to access the rest of the information; include the user
+			unset($db_user[0]['Password']);
+			
+			$save = $db_user[0];
+			$save['Settings'] = unserialize($save['Settings']);
+		}
+	}
+	
+	// if the save variable hasn't been set yet, use quest account
+	if(!isset($save))
+	{
+		$save = array(
+			'Username' => 'guest',
+			'Privilage' => 1
+		);
+	}
+	
+	// output the user so template can print out login or logout stuff
+	register_output_vars('user', $save);
 	
 	return $save;
 }
@@ -685,7 +682,8 @@ function output_users($request)
 		break;
 		// cache a users login information so they may access the site
 		case 'login':
-			if( $_SESSION['user']['Username'] != 'guest' )
+			$request['required_priv'] = validate_required_priv($request);
+			if( $_SESSION['users']['Username'] != 'guest' )
 			{
 				if( isset($request['return']) && (!isset($request['required_priv']) || $_SESSION['user']['Privilage'] >= $request['required_priv']))
 				{
@@ -694,8 +692,7 @@ function output_users($request)
 				else
 					PEAR::raiseError('Already logged in!', E_USER);
 			}
-			$request['required_priv'] = validate_required_priv($request);
-			if(isset($request['required_priv']) && $request['required_priv'] > $_SESSION['user']['Privilage'])
+			if(isset($request['required_priv']) && $request['required_priv'] > $_SESSION['users']['Privilage'])
 			{
 				PEAR::raiseError('You do not have sufficient privilages to view this page!', E_USER);
 			}

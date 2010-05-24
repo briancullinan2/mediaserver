@@ -585,7 +585,7 @@ class database
 			$where_security = 'LEFT(Filepath, ' . strlen(setting('local_users')) . ') != "' . addslashes(setting('local_users')) . '" OR ' . 
 								'Filepath = "' . addslashes(setting('local_users')) . '" OR ' . 
 								'(LEFT(Filepath, ' . strlen(setting('local_users')) . ') = "' . addslashes(setting('local_users')) . '" AND LOCATE("/", Filepath, ' . (strlen(setting('local_users')) + 1) . ') = LENGTH(Filepath)) OR ' . 
-								'LEFT(Filepath, ' . strlen(setting('local_users') . $_SESSION['user']['Username'] . '/') . ') = "' . addslashes(setting('local_users') . $_SESSION['user']['Username'] . '/') . '" OR ' . 
+								'LEFT(Filepath, ' . strlen(setting('local_users') . $_SESSION['users']['Username'] . '/') . ') = "' . addslashes(setting('local_users') . $_SESSION['users']['Username'] . '/') . '" OR ' . 
 								'SUBSTR(Filepath, ' . strlen(setting('local_users')) . ' + LOCATE("/", SUBSTR(Filepath, ' . (strlen(setting('local_users')) + 1) . ')), 8) = "/public/"';
 			if(isset($_SESSION['settings']['keys_usernames']) && count($_SESSION['settings']['keys_usernames']) > 0)
 			{

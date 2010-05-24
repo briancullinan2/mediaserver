@@ -21,6 +21,7 @@ function register_video()
 			'FrameRate'		=> 'INT',
 			'Resolution'	=> 'TEXT'
 		),
+		'depends on' => array('getid3_installed'),
 	);
 }
 

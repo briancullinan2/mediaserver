@@ -21,6 +21,7 @@ function register_image()
 			'Author'		=> 'TEXT',
 			'ExposureTime'	=> 'TEXT'
 		),
+		'depends on' => array('getid3_installed'),
 	);
 }
 

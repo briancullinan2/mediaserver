@@ -123,10 +123,6 @@ function flatten_handler_dependencies($handlers)
  */
 function setting_handler_enable($settings, $handler)
 {
-	// always enable the internal handlers
-	if(is_internal($handler))
-		return true;
-		
 	// always enable the requred handlers
 	if(in_array($handler, get_required_handlers()))
 		return true;

@@ -21,7 +21,7 @@ if(isset($GLOBALS['modules'][$_REQUEST['module']]))
 	// check if the current user has access to the module
 
 	// make sure user is logged in
-	if(setting_installed() && isset($GLOBALS['modules'][$_REQUEST['module']]['privilage']) && $_SESSION['user']['Privilage'] < $GLOBALS['modules'][$_REQUEST['module']]['privilage'])
+	if(setting_installed() && isset($GLOBALS['modules'][$_REQUEST['module']]['privilage']) && $_SESSION['users']['Privilage'] < $GLOBALS['modules'][$_REQUEST['module']]['privilage'])
 	{
 		// redirect to login page
 		goto(array(

@@ -26,6 +26,7 @@ function register_movies()
 			'AspectRatio' => 'DOUBLE',
 			'Filepath' => 'TEXT',
 		),
+		'depends on' => array('video', 'getid3_installed'),
 	);
 }
 

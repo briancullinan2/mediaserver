@@ -109,7 +109,16 @@ function handles_files($file)
 	$file = str_replace('\\', '/', $file);
 	if(setting('admin_alias_enable') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 	
-	if((is_dir(str_replace('/', DIRECTORY_SEPARATOR, $file)) || (is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)) && $file[strlen($file)-1] != '/')) && !in_array($file, $GLOBALS['ignored']))
+	if(
+		(
+			is_dir(str_replace('/', DIRECTORY_SEPARATOR, $file)) || 
+			(
+				is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)) && $file[strlen($file)-1] != '/'
+			)
+		) && 
+		setting('database_enable') != false && 
+		!in_array($file, $GLOBALS['ignored'])
+	)
 	{
 		$filename = basename($file);
 

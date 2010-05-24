@@ -244,30 +244,40 @@ function setup_template_files($template_config)
 	{
 		foreach($template_config['files'] as $file)
 		{
-			include setting('local_root') . 'templates' . DIRECTORY_SEPARATOR . $template_name . DIRECTORY_SEPARATOR . $file . '.php';
-			if(function_exists('register_' . $template_name . '_' . $file))
+			if(is_file(setting('local_root') . 'templates' . DIRECTORY_SEPARATOR . $template_name . DIRECTORY_SEPARATOR . $file . '.php'))
 			{
-				$template = call_user_func_array('register_' . $template_name . '_' . $file, array());
-				if(isset($template['scripts']))
-				{
-					if(is_array($template['scripts']))
-					{
-						foreach($template['scripts'] as $script)
-							register_script($script);
-					}
-					elseif(is_string($template['scripts']))
-						register_script($template['scripts']);
-				}
+				// make sure file exists
+				include setting('local_root') . 'templates' . DIRECTORY_SEPARATOR . $template_name . DIRECTORY_SEPARATOR . $file . '.php';
 				
-				if(isset($template['styles']))
+				// if the register function exists then call that
+				if(function_exists('register_' . $template_name . '_' . $file))
 				{
-					if(is_array($template['styles']))
+					// register the template files
+					$template = call_user_func_array('register_' . $template_name . '_' . $file, array());
+					
+					// register any scripts
+					if(isset($template['scripts']))
 					{
-						foreach($template['styles'] as $style)
-							register_style($style);
+						if(is_array($template['scripts']))
+						{
+							foreach($template['scripts'] as $script)
+								register_script($script);
+						}
+						elseif(is_string($template['scripts']))
+							register_script($template['scripts']);
 					}
-					elseif(is_string($template['styles']))
-						register_style($template['styles']);
+					
+					// register any styles
+					if(isset($template['styles']))
+					{
+						if(is_array($template['styles']))
+						{
+							foreach($template['styles'] as $style)
+								register_style($style);
+						}
+						elseif(is_string($template['styles']))
+							register_style($template['styles']);
+					}
 				}
 			}
 		}
@@ -458,8 +468,8 @@ function template_variables($request)
 	if(isset($_REQUEST['extra'])) register_output_vars('extra', $_REQUEST['extra']);
 	
 	// register user settings for this template
-	if(isset($_SESSION['user']['settings']['templates'][$request['template']]))
-		register_output_vars('settings', $_SESSION['user']['settings']['templates'][$request['template']]);
+	if(isset($_SESSION['users']['settings']['templates'][$request['template']]))
+		register_output_vars('settings', $_SESSION['users']['settings']['templates'][$request['template']]);
 	// go through and set the defaults
 	elseif(isset($GLOBALS['templates'][$request['template']]['settings']))
 	{
