@@ -24,10 +24,17 @@ function register_admin_balancer()
 function setup_admin_balancer()
 {
 	// add wrapper functions for validating a server entry
-	for($i = 0; $i < 5; $i++)
+	for($i = 0; $i < 10; $i++)
 	{
 		$GLOBALS['setting_balance_server_' . $i] = create_function('$settings', 'return setting_balance_server($settings, \'' . $i . '\');');
 		$GLOBALS['modules']['admin_balancer']['settings'][] = 'balance_server_' . $i;
+	}
+	
+	// add wrapper functions for validating a server entry
+	for($i = 0; $i < 100; $i++)
+	{
+		$GLOBALS['setting_balance_rule_' . $i] = create_function('$settings', 'return setting_balance_rule($settings, \'' . $i . '\');');
+		$GLOBALS['modules']['admin_balancer']['settings'][] = 'balance_rule_' . $i;
 	}
 	
 	// include snoopy to download pages
@@ -57,6 +64,26 @@ function validate_remove_server($request)
 			
 		if(is_numeric($request['remove_server']) && $request['remove_server'] >= 0)
 			return $request['remove_server'];
+	}
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ */
+function validate_remove_rule($request)
+{
+	if(isset($request['remove_rule']))
+	{
+		// if it is an array because the button value is set to text instead of the index
+		if(is_array($request['remove_rule']))
+		{
+			$keys = array_keys($request['remove_rule']);
+			$request['remove_rule'] = $keys[0];
+		}
+			
+		if(is_numeric($request['remove_rule']) && $request['remove_rule'] >= 0)
+			return $request['remove_rule'];
 	}
 }
 
@@ -168,6 +195,8 @@ function setting_balance_rule($settings, $index)
 	// input must be specified if it is the last 2 conditions
 	if(($rule['condition'] == 'request' || $rule['condition'] == 'server') && $rule['input'] == '')
 		return;
+	elseif($rule['condition'] == 'percent')
+		unset($rule['input']);
 	
 	// value can be anything
 	
@@ -496,7 +525,7 @@ function configure_admin_balancer($settings, $request)
 				'type' => 'hidden',
 				'value' => $rule['condition'],
 			);
-			if(isset($server['nickname']))
+			if(isset($rule['input']))
 			{
 				$balence_options['setting_balance_rule_' . $i . '[input]'] = array(
 					'type' => 'hidden',

@@ -12,6 +12,12 @@ Now, if a template function does not exist in the theme, a default template func
 		If the theme fully supports that module
 	As a result:
 		theme_plain_ampache has be placed back in to the ampache module as theme_ampache, no template parameter is necissary
+Worked on balancer
+	Finished forms, need to implement session transfer and redirects
+Admin page now shows an error if there are dependency problems
+Status page now marks module as warn if it is manually disabled
+	dependency() function supports a $ignore_setting field, which allows for comparing the setting to the dependencies
+Fixed monolithicmedia.org download page putting out old copies and no .htaccess file
 
 2010-05-15
 Worked out some more advanced forms functionality in the admin_balancer module

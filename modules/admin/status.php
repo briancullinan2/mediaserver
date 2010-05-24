@@ -48,24 +48,45 @@ function output_admin_status($request)
 		}
 		else
 		{
-			// show default status line
-			if(dependency($module) != false)
+			// show default status line, ignore the setting part of the dependency
+			if(dependency($module, true) != false)
 			{
-				$module_status[$module] = array(
-					'name' => $config['name'],
-					'status' => '',
-					'description' => array(
-						'list' => array(
-							$module_description,
-							$config['description'],
+				if(setting($module . '_enable') == false)
+				{
+					$module_status[$module] = array(
+						'name' => $config['name'],
+						'status' => 'warn',
+						'description' => array(
+							'list' => array(
+								$module_description,
+								$config['description'],
+							),
 						),
-					),
-					'value' => array(
-						'text' => array(
-							$config['name'] . ' is available for use',
+						'value' => array(
+							'text' => array(
+								$config['name'] . ' has been manually disabled',
+							),
 						),
-					),
-				);
+					);
+				}
+				else
+				{
+					$module_status[$module] = array(
+						'name' => $config['name'],
+						'status' => '',
+						'description' => array(
+							'list' => array(
+								$module_description,
+								$config['description'],
+							),
+						),
+						'value' => array(
+							'text' => array(
+								$config['name'] . ' is available for use',
+							),
+						),
+					);
+				}
 			}
 			else
 			{

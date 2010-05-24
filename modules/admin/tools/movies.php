@@ -41,5 +41,6 @@ function output_admin_tools_movies($request)
 	
 	if(isset($request['subtool'])) register_output_vars('subtool', $request['subtool']);
 	register_output_vars('infos', $infos);
+	
 }
 

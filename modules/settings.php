@@ -145,7 +145,7 @@ function settings_get_defaults($settings)
 	// loop through each module and get the default settings
 	foreach($GLOBALS['modules'] as $module => $config)
 	{
-		if(isset($config['settings']))
+		if(isset($config['settings']) && is_array($config['settings']))
 		{
 			foreach($config['settings'] as $i => $setting)
 			{

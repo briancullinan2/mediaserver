@@ -15,3 +15,35 @@ function register_webdav()
 		'depends on' => array('pear', 'pear_webdav'),
 	);
 }
+
+/**
+ * Implementation of dependency
+ * @ingroup dependency
+ */
+function dependency_pear_webdav()
+{
+	if(dependency('pear_installed') != false && include_path('HTTP/WebDAV/Server.php') !== false)
+		return true;
+	else
+		return false;
+}
+
+/**
+ * Implementation of setup
+ * @ingroup setup
+ */
+function setup_webdav()
+{
+	include_once "HTTP/WebDAV/Server.php";
+	
+	$GLOBALS['webdav'] = new WebDAV_Server_Monolith();
+}
+
+/**
+ * Implentation of output
+ * @ingroup output
+ */
+function output_webdav($request)
+{
+	$server->ServeRequest(dirname(__FILE__) . "/data");
+}

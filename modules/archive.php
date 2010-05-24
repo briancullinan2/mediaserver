@@ -11,7 +11,7 @@ function register_archive()
 		'description' => lang('archive description', 'Convert sets of files to an archive using a command line program.'),
 		'privilage' => 1,
 		'path' => __FILE__,
-		'depends on' => array('archiver', 'search'),
+		'depends on' => array('archiver'),
 		'settings' => array('archiver'),
 		'database' => array(
 			'Filepath' 		=> 'TEXT',

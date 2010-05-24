@@ -1,15 +1,12 @@
 ------------- MONOLITHICMEDIA TODO -------------
-Monolithic site is not outputting the htaccess file because it is hidden from the tar command
 ------------- GENERAL TODO -------------
+Cron is not running properly again...
 IMPORTANT!  Convert all call_user_func_array usage to the standard callable method
-Create a dav module that allows files to be uploaded and access using the web dav protocol.  This is already mostly supported by PEAR.
-Change all use_database settings over to database_enable and enable and disable database the same way as modules
-	Make sure modules can still be enabled on the configure_modules page
-Alter query needs a way to affect the $request
-	If a selection is being done and an ID is specified then search and file and dir are no longer relevant to the query
+Finish webdav module that allows files to be uploaded and access using the web dav protocol.  This is already mostly supported by PEAR.
 Come up with a good way to detect modrewrite
 Install from scratch until all the errors are gone
 Look at drupal and find out if there is a better way to save errors to the session at the end of a script
+	Consider printing and clearing all possible errors up until the error print out, then save the rest
 If a modules dependencies fail, output a standard error page, such as ampache plugin
 Add module called balancer used for load balancing
 	Basically it allows the administrator to set different conditions for when to use a different subdomain for accessing media
@@ -17,17 +14,12 @@ Add module called balancer used for load balancing
 	This will allow multiple computers running identical set ups to output files and transcode more efficiently
 	Enter username and password for each remote services and download the remote load balancing information to check for conflicts and easy reference
 	Maybe this modules could help with hard and soft links?
+	Make sure remote balancer is enabled and dependencies are met, add a status print out to the output function of balancer
 Install script is severely broken
 Add a register script to the install process that allows users to register a username, password, and domain for their site, with the monolithicmedia drupal site.
 	Include a key that is unique to every download, to prevent spamming.
 Finish implementing dependencies
 	Many modules and handlers depend on getID3()
-	If any dependency fails, show an error on admin page
-		Only if the module is not manually disabled, this will be tricky to track since they are force disabled if there is a missing dependency
-Finish setting() function in settings.php plugin
-	Settings should also be loadable from the database
-	Save module settings in database
-	Cache all loaded module files in settings database (possibly storing in admin settings and deserializing would be efficient?)
 Make validate_return actually validate the return path
 Remove all occurances on props['WHERE'] being set to a string
 	It should be set to an array from now on, so that we can differentiate between each query_alter_
@@ -51,6 +43,7 @@ Get ranges working in encode module
 	only allow the option if the argument can read from stdin and read the input from the handler and write it to the input stream
 Figure out a way of doing this with files even if stdin is not being used in the command, if fopen is writing to a file, does it file feof when reading from the same file simulaneously?
 Make convert.php module recognize video thumbnails and use vlc to extract them
+Add support for encode and convert to be configured based on individual file extensions
 ------------- LANGUAGE MODULE -------------
 Start implementing lang() calls
 	If the page has language variables that are not known
@@ -84,6 +77,10 @@ Finish users.php module
 Work on settings.php module
 	Global settings such as default template to use for each device logged in the to account
 	Template settings, must provide specification in template config, use database for storing fields?
+Finish setting() function in settings.php plugin
+	Settings should also be loadable from the database
+	Save module settings in database
+	Cache all loaded module files in settings database (possibly storing in admin settings and deserializing would be efficient?)
 Make a sync module in admin section for syncing between two databases and pulling out differences
 	Use musicbrainz to sync music
 ------------- Handler TODO -------------
@@ -93,7 +90,7 @@ Make a discography handler that parses out wikipedia discographys, store album i
 	It handles artists, when an album count changes or doesn't exist it updates the database
 Work on playlist handler, use hard links to help find files
 HIGH-PRIORITY: Fix all fs_ functionality in new handler system
-Work on db_movies, use cUrl to download movie information from imdb, use the volume decriptor for lookup, this shouldn't change even if they edited an image
+Work on db_movies, use cUrl to download movie information from tmdb, use the volume decriptor for lookup, this shouldn't change even if they edited an image
 	Look up movies on amazon, and see if that will help with searching IMDb
 	Research the video_ts.ifo file, there must be a way of getting the full name from a DVD image, windows media center projects can do it, so can we
 ------------- All Template TODO -------------
@@ -130,5 +127,4 @@ Make players resize to Player window
 ------------- LIVE -------------
 Fix javascript select and right click in all browsers
 Fix appearance in IE and Chrome
-	In IE the search box is messed up again, whitespace?
 	Chrome, the module list doesn't wrap, whitespace:nowrap?

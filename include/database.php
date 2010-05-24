@@ -594,8 +594,10 @@ class database
 					$where_security .= ' OR LEFT(Filepath, ' . strlen(setting('local_users') . $username . '/') . ') = "' . addslashes(setting('local_users') . $username . '/') . '"';
 				}
 			}
-			if(is_string($props['WHERE']))
+			if(isset($props['WHERE']) && is_string($props['WHERE']))
 				$props['WHERE'] = array($props['WHERE']);
+			elseif(!isset($props['WHERE']))
+				$props['WHERE'] = array();
 			$props['WHERE'][] = $where_security;
 		}
 

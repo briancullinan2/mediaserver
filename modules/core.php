@@ -125,6 +125,10 @@ function flatten_module_dependencies($modules, $already_added = array())
 				$depends_on = call_user_func_array('dependency_' . $module, array($GLOBALS['settings']));
 			else
 				$depends_on = $GLOBALS['modules'][$module]['depends on'];
+				
+			// if it is not an array debug message
+			if(!is_array($depends_on))
+				$depends_on = array();
 			
 			// call flatten based on modules dependencies first
 			$new_modules = array_merge($new_modules, flatten_module_dependencies($depends_on, $already_added));
@@ -423,7 +427,7 @@ function setting_modrewrite($settings)
  * @param dependency Either the name of a module, or the name of a dependency
  * @return A dependency, unless the input is a module, then it returns true or false if the module's dependencies are all satisfied
  */
-function dependency($dependency, $already_checked = array())
+function dependency($dependency, $ignore_setting = false, $already_checked = array())
 {
 	// check if the caller is trying to verify the dependencies of another module
 	if(isset($GLOBALS['modules'][$dependency]))
@@ -469,7 +473,8 @@ function dependency($dependency, $already_checked = array())
 				// check for false strictly, anything else should be taken as status information
 				//  this is also recursive so that if one module fails everything that depends on it will fail
 				$already_checked[] = $depend;
-				if(dependency($depend, $already_checked) === false)
+				// only ignore first dependency request
+				if(dependency($depend, false, $already_checked) === false)
 				{
 					// no need to continue as it only takes 1 to fail
 					return false;
@@ -478,7 +483,7 @@ function dependency($dependency, $already_checked = array())
 		}
 		
 		// return false if a module is disabled
-		if(isset($GLOBALS['settings'][$dependency . '_enable']) && $GLOBALS['settings'][$dependency . '_enable'] == false)
+		if(isset($GLOBALS['settings'][$dependency . '_enable']) && $GLOBALS['settings'][$dependency . '_enable'] == false && $ignore_setting == false)
 			return false;
 		
 		// if it has gotten this far through all the disproofs then it must be satisfied
