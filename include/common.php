@@ -187,6 +187,8 @@ function setup()
 	if(isset($_SESSION['last_request']))
 	{
 		$_REQUEST = $_SESSION['last_request'];
+		// set the method just for reference
+		$_SERVER['REQUEST_METHOD'] = 'POST';
 		unset($_SESSION['last_request']);
 	}
 

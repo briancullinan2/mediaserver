@@ -240,6 +240,8 @@ function status_admin_balancer($settings)
 	$GLOBALS['snoopy']->read_timeout = 2;
 	$GLOBALS['snoopy']->_fp_timeout = 2;
 	
+	$additional_info = lang('balence server status description', 'This server is up and running and ready for balancing.');
+	
 	// loop through each server and check status
 	foreach($settings['balance_servers'] as $i => $server)
 	{
@@ -249,15 +251,26 @@ function status_admin_balancer($settings)
 		if($GLOBALS['snoopy']->status != 200)
 		{
 			$get_status = 'fail';
+			$additional_info = lang('balance server status fail request status', 'The connection to the balance server has failed either because the request did not return a status 200 OK, instead it returned ' . $GLOBALS['snoopy']->status . '.');
 		}
 		else
 		{
 			$get_status = '';
+			$other_settings = split("\n", $GLOBALS['snoopy']->results);
 			
 			// check contents to make sure it is a config
-			$contents = $GLOBALS['snoopy']->results;
+			if(preg_match('/version ?= ?.+/i', $other_settings[0]) == 0)
+			{
+				$get_status = 'fail';
+				$additional_info = lang('balance server status fail parse ini', 'The balancer could not parse this servers settings, there may be a problem with the path to the balancing server.');
+			}
 			
-			print_r($contents);
+			// check the versions are the same
+			elseif(preg_match('/version ?= ?' . preg_quote(VERSION) . '/i', $other_settings[0])  == 0)
+			{
+				$get_status = 'fail';
+				$additional_info = lang('balance server status fail version', 'This balence server is not the same version as the current server.');
+			}
 		}
 			
 		
@@ -268,7 +281,7 @@ function status_admin_balancer($settings)
 			'status' => $get_status,
 			'description' => array(
 				'list' => array(
-					lang('balence server status description', 'This server is up and running and ready for balancing.'),
+					$additional_info,
 				),
 			),
 			'value' => $server['protocol'] . '://' . $server['address'],

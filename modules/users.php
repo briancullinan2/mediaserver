@@ -213,15 +213,12 @@ function setting_username_validation($settings)
 /**
  * Implementation of validate
  * @ingroup validate
- * @return 'login' by default
+ * @return NULL by default
  */
 function validate_users($request)
 {
-	if(!isset($request['users']) || !in_array($request['users'], array('register', 'remove', 'modify', 'login', 'logout', 'list', 'view')))
-		return 'login';
-	else
+	if(isset($request['users']) && in_array($request['users'], array('register', 'remove', 'modify', 'login', 'logout', 'list', 'view')))
 		return $request['users'];
-	
 }
 
 /**
@@ -231,6 +228,15 @@ function validate_users($request)
  */
 function validate_password($request)
 {
+	// if the request method is a get then the password must be base64 encoded
+	if(isset($request['password']) && strtoupper($_SERVER['REQUEST_METHOD']) != 'POST' && ($request['password'] = base64_decode($request['password'], true)) === false)
+	{
+		// if the previous conditions are not met, then flip the fuck out
+		PEAR::raiseError('Password not properly encoded, referrer is not this site!', E_DEBUG|E_USER|E_FATAL);
+		
+		return array();
+	}
+
 	if(isset($request['password']))
 		return md5(setting('db_secret') . $request['password']);
 }
@@ -493,30 +499,6 @@ function cleanup_users()
  */
 function session_users($request)
 {
-	// only save it to the session if the user is logging in
-	$request['users'] = validate_users($request);
-	if($request['users'] == 'login')
-	{
-		// double check the referrer here
-		$referer_check = parse_url($_SERVER['HTTP_REFERER']);
-		$server_host = parse_url($_SERVER['HTTP_HOST']);
-		if(!isset($server_host['host']))
-			$server_host['host'] = $server_host['path'];
-		if($server_host['host'] != $referer_check['host'])
-		{
-			// if the referrer is not itself, then the password must be base64 encoded
-			if(!isset($request['password']) || ($password = base64_decode($request['password'], true)) === false)
-			{
-				// if the previous conditions are not met, then flip the fuck out
-				PEAR::raiseError('Password not properly encoded, referrer is not this site!', E_DEBUG|E_USER|E_FATAL);
-				
-				return array();
-			}
-			
-			$request['password'] = $password;
-		}
-	}
-	
 	// validate username and password
 	$request['username'] = validate_username($request);
 
