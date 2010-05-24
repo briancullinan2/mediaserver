@@ -12,8 +12,9 @@ function register_list()
 		'description' => 'Allow users to download different types of lists of files they have selected, such as RSS, XML, and M3U.',
 		'privilage' => 1,
 		'path' => __FILE__,
-		'notemplate' => true,
+		'template' => false,
 		'depends on' => array('template'),
+		'template' => true,
 	);
 }
 

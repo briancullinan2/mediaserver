@@ -11,7 +11,7 @@ function register_admin_install()
 		'description' => lang('install description', 'Install the system.'),
 		'privilage' => 10,
 		'path' => __FILE__,
-		'notemplate' => true,
+		'template' => false,
 		'session' => array('install_next', 'install_save')
 	);
 }

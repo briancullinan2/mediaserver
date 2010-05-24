@@ -18,6 +18,7 @@ function register_admin_watch()
 		),
 		'internal' => true,
 		'depends on' => array('database', 'search', 'admin_handlers'),
+		'template' => true,
 	);
 }
 

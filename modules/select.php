@@ -14,7 +14,7 @@ function register_select()
 		'privilage' => 1,
 		'path' => __FILE__,
 		'session' => array('item', 'on', 'off', 'selected', 'id'),
-		'alter query' => array('selected')
+		'alter query' => array('selected'),
 	);
 }
 

@@ -12,7 +12,7 @@ function register_bt()
 		'description' => lang('bt description', 'Bittorrent module that creates torrents for files or directories so users can share downloads with each other.'),
 		'privilage' => 1,
 		'path' => __FILE__,
-		'notemplate' => true,
+		'template' => false,
 		'depends on' => array('bttracker_installed', 'seeder'),
 	);
 }

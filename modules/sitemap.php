@@ -11,7 +11,7 @@ function register_sitemap()
 		'description' => 'Prints out a list of pages that Bots like Google should access.',
 		'privilage' => 1,
 		'path' => __FILE__,
-		'notemplate' => true
+		'template' => false
 	);
 }
 

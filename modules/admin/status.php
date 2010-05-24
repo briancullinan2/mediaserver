@@ -11,6 +11,7 @@ function register_admin_status()
 		'description' => lang('status description', 'View the site status reported by all the modules.'),
 		'privilage' => 10,
 		'path' => __FILE__,
+		'template' => true,
 	);
 }
 

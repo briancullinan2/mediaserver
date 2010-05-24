@@ -22,6 +22,7 @@ function register_settings()
 		'privilage' => 1,
 		'path' => __FILE__,
 		'depends on' => 'settings',
+		'template' => true,
 	);
 }
 

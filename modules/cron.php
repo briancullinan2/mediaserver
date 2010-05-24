@@ -23,7 +23,7 @@ function register_cron()
 		'description' => lang('cron description', 'Update the database to match the file system.'),
 		'privilage' => 1,
 		'path' => __FILE__,
-		'notemplate' => true,
+		'template' => false,
 		'settings' => array('dir_seek_time', 'file_seek_time', 'cleanup_buffer_time', 'cleanup_threashold'),
 		'depends on' => array('database', 'cron_last_run'),
 	);

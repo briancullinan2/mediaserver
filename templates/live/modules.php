@@ -7,7 +7,7 @@ function register_live_modules()
 	);
 }
 
-function theme_live_modules()
+function theme_live_admin_modules()
 {
 	
 	theme('header');
@@ -120,7 +120,7 @@ function theme_live_modules()
 }
 
 
-function theme_live_status()
+function theme_live_admin_status()
 {
 	
 	theme('header');

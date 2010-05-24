@@ -24,6 +24,7 @@ function register_search()
 		'alter query' => array('search'),
 		'always output' => array('search'),
 		'depends on' => 'search',
+		'template' => true,
 	);
 }
 

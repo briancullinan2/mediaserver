@@ -7,12 +7,13 @@
 function register_admin_modules()
 {
 	return array(
-		'name' => lang('modules title', 'Configure Modules'),
+		'name' => lang('modules title', 'Modules'),
 		'description' => lang('modules description', 'Display a list of modules and allow for enabling and disabling.'),
 		'privilage' => 10,
 		'path' => __FILE__,
 		'settings' => 'admin_modules',
-		'depends on' => array('admin', 'admin_tools')
+		'depends on' => array('admin', 'admin_tools'),
+		'template' => true,
 	);
 }
 

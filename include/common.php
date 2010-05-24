@@ -112,7 +112,7 @@ $GLOBALS['warn_errors'] = isset($_SESSION['errors']['warn'])?$_SESSION['errors']
 $GLOBALS['debug_errors'] = isset($_SESSION['errors']['debug'])?$_SESSION['errors']['debug']:array();
 /** stores a list of all notices and friendly messages */
 $GLOBALS['note_errors'] = isset($_SESSION['errors']['note'])?$_SESSION['errors']['note']:array();
-//set_error_handler('php_to_PEAR_Error', E_ALL);
+set_error_handler('php_to_PEAR_Error', E_ALL);
 /** always begin the session */
 
 /** set up all the GLOBAL variables needed throughout the site */
@@ -245,13 +245,33 @@ function output($request)
 	// otherwise just show template for disabled modules
 	call_user_func_array('output_' . $request['module'], array($request));
 	
-	// only display a template for the current module if there is one
-	if(!isset($GLOBALS['modules'][$GLOBALS['module']]['notemplate']) || 
-			$GLOBALS['modules'][$GLOBALS['module']]['notemplate'] == false
-		)
-	{
+	// just return because the output function was already called
+	if(isset($GLOBALS['modules'][$GLOBALS['module']]['template']) && 
+		$GLOBALS['modules'][$GLOBALS['module']]['template'] == false
+	)
+		return;
+	
+	// if it is set to a callable function to determine the template, then call that
+	elseif(isset($GLOBALS['modules'][$GLOBALS['module']]['template']) &&
+		is_callable($GLOBALS['modules'][$GLOBALS['module']]['template'])
+	)
+		call_user_func_array($GLOBALS['modules'][$GLOBALS['module']]['template'], array($request));
+		
+	// if it is set to a string then that must be the theme handler for it
+	elseif(isset($GLOBALS['modules'][$GLOBALS['module']]['template']) &&
+		is_string($GLOBALS['modules'][$GLOBALS['module']]['template'])
+	)
+		theme($GLOBALS['modules'][$GLOBALS['module']]['template']);
+		
+	// call the default template based on the module name
+	elseif(isset($GLOBALS['modules'][$GLOBALS['module']]['template']) &&
+		$GLOBALS['modules'][$GLOBALS['module']]['template'] == true
+	)
+		theme($GLOBALS['module']);
+		
+	// if there isn't anything else, call the theme function and maybe it will just display the default blank page
+	else
 		theme();
-	}
 	
 	// translate the language buffer
 	//$lang = validate_language($_REQUEST);

@@ -27,42 +27,9 @@ function output_live()
 {
 	switch($GLOBALS['templates']['vars']['module'])
 	{
-		case 'ampache':
-			theme('ampache');
-		break;
 		case 'index':
 		case 'select':
 			theme('index');
-		break;
-		case 'list':
-			theme('list');
-		break;
-		case 'search':
-			theme('search');
-		break;
-		case 'settings':
-			theme('settings');
-		break;
-		case 'users':
-			theme('users');
-		break;
-		case 'admin':
-			theme('admin');
-		break;
-		case 'admin_alias':
-			theme('alias');
-		break;
-		case 'admin_watch':
-			theme('watch');
-		break;
-		case 'admin_modules':
-			theme('modules');
-		break;
-		case 'admin_status':
-			theme('status');
-		break;
-		case 'admin_template':
-			theme('template');
 		break;
 		default:
 			theme('default');
@@ -153,7 +120,7 @@ function print_form_objects($form)
 		
 		if(isset($config['help']))
 		{
-			?><span style="width:100px; display:block; text-align:left;"><?php
+			?><span style="display:block; text-align:left;"><?php
 			// show help before the object
 			print_info_objects($config['help']);
 			?>: </span><?php

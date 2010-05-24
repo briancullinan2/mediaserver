@@ -17,7 +17,7 @@ function register_template()
 		'privilage' => 1,
 		'path' => __FILE__,
 		'session' => array('template'),
-		'notemplate' => true,
+		'template' => false,
 		'settings' => 'template', // this is to trick the settings in to waiting until after it loads
 		'always output' => 'template_variables',
 	);
@@ -412,6 +412,13 @@ function theme($request = '')
 			call_user_func_array('theme_' . $request['template'] . '_' . $request['tfile'], $args);
 			return true;
 		}
+		// check if a default function exists for the theme
+		elseif(function_exists('theme_' . $request['tfile']))
+		{
+			// call the function and be done with it
+			call_user_func_array('theme_' . $request['tfile'], $args);
+			return true;
+		}
 		else
 			PEAR::raiseError('Theme function \'theme_' . $request['template'] . '_' . $request['tfile'] . '\' was not found.', E_DEBUG|E_WARN);
 	}
@@ -422,6 +429,12 @@ function theme($request = '')
 		if(function_exists('theme_' . validate_template(array('template' => setting('local_template'))) . '_' . $request))
 		{
 			call_user_func_array('theme_' . validate_template(array('template' => setting('local_template'))) . '_' . $request, $args);
+			return true;
+		}
+		// check if a default function exists for the theme
+		elseif(function_exists('theme_' . $request))
+		{
+			call_user_func_array('theme_' . $request, $args);
 			return true;
 		}
 		// it is possible the whole request

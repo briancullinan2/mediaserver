@@ -135,6 +135,7 @@ function register_users()
 			'LastLogin'		=> 'DATETIME'
 		),
 		'internal' => true,
+		'template' => true,
 	);
 }
 
@@ -564,8 +565,28 @@ function session_users($request)
 	$request['users'] = validate_users($request);
 	if($request['users'] == 'login')
 	{
-		$save['username'] = $request['username'];
-		$save['password'] = @$request['password'];
+		// double check the referrer here
+		$referer_check = parse_url($_SERVER['HTTP_REFERER']);
+		$server_host = parse_url($_SERVER['HTTP_HOST']);
+		if(!isset($server_host['host']) || $server_host['host'] != $referer_check['host'])
+		{
+			// if the referrer is not itself, then the password must be base64 encoded
+			if(!isset($request['password']) || ($password = base64_decode($request['password'], true)) === false)
+			{
+				// if the previous conditions are not met, then flip the fuck out
+				PEAR::raiseError('Password not properly encoded, referrer is not this site!', E_DEBUG|E_USER|E_FATAL);
+				
+				return array();
+			}
+			
+			$save['username'] = $request['username'];
+			$save['password'] = $password;
+		}
+		else
+		{
+			$save['username'] = $request['username'];
+			$save['password'] = $request['password'];
+		}
 	}
 	
 	return $save;

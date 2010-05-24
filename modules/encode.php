@@ -11,7 +11,7 @@ function register_encode()
 		'description' => 'Encode video files to the selected output.',
 		'privilage' => 1,
 		'path' => __FILE__,
-		'notemplate' => true,
+		'template' => false,
 		'settings' => array('encode_path', 'encode_args'),
 		'depends on' => array('encoder', 'select', 'template'),
 	);

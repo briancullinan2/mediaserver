@@ -19,6 +19,7 @@ function register_admin_alias()
 			'Alias_regexp'	=> 'TEXT'
 		),
 		'internal' => true,
+		'template' => true,
 	);
 }
 

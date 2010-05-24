@@ -12,7 +12,7 @@ function register_admin_upgrade()
 		'description' => lang('upgrade description', 'Upgrade the system from a previous version.'),
 		'privilage' => 10,
 		'path' => __FILE__,
-		'notemplate' => true,
+		'template' => false,
 		'depends on' => array('database')
 	);
 }

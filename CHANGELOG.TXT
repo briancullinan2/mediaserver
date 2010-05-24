@@ -1,3 +1,18 @@
+2010-05-23
+Created modules for a bunch of new functionality in the Tools section
+Notemplate in the module config is now replaced with template
+	template can be left unset and the output_template function will be called to determine the template
+	template can be set to true, in which case a default template should be provided and the modules name will be used to determine the theme function
+	template can be set to a valid callback function to determine the template
+	it can be set to false, in which case the output function is resposible for all output
+	it can be set to a string which can be used to locate the proper template function
+Now, if a template function does not exist in the theme, a default template function can be specified
+	by not using the theme name in the title of the function
+	This will allow modules to come with supporting template functions, as well as overriding them
+		If the theme fully supports that module
+	As a result:
+		theme_plain_ampache has be placed back in to the ampache module as theme_ampache, no template parameter is necissary
+
 2010-05-15
 Worked out some more advanced forms functionality in the admin_balancer module
 Reorganized dependency() function in core to allow the dependency functions to always be called

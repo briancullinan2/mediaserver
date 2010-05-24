@@ -13,7 +13,7 @@ function register_admin_balancer()
 		'path' => __FILE__,
 		'settings' => array(),
 		'depends on' => array('settings', 'snoopy_installed'),
-		'session' => array('add_server', 'remove_server', 'reset_configuration'),
+		'session' => array('add_server', 'remove_server', 'add_rule', 'remove_rule', 'reset_configuration'),
 	);
 }
 
@@ -30,7 +30,11 @@ function setup_admin_balancer()
 		$GLOBALS['modules']['admin_balancer']['settings'][] = 'balance_server_' . $i;
 	}
 	
-	// use snoopy to download config from remote sites
+	// include snoopy to download pages
+	include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'Snoopy.class.php';
+	
+	// set up id3 reader incase any files need it
+	$GLOBALS['snoopy'] = new Snoopy();
 
 	// execute redirect here, so as not to waste anymore time
 	
@@ -71,6 +75,24 @@ function validate_add_server($request)
 		'username' => isset($request['add_server']['username'])?$request['add_server']['username']:'',
 		'password' => isset($request['add_server']['password'])?$request['add_server']['password']:'',
 		'nickname' => isset($request['add_server']['nickname'])?$request['add_server']['nickname']:'',
+	);
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ */
+function validate_add_rule($request)
+{
+	if(!isset($request['add_rule']['save']))
+		return;
+		
+	return array(
+		'module' => $request['add_rule']['module'],
+		'condition' => isset($request['add_rule']['condition'])?$request['add_rule']['condition']:'',
+		'input' => isset($request['add_rule']['input'])?$request['add_rule']['input']:'',
+		'value' => isset($request['add_rule']['value'])?$request['add_rule']['value']:'',
+		'server' => isset($request['add_rule']['server'])?$request['add_rule']['server']:'',
 	);
 }
 
@@ -120,13 +142,39 @@ function setting_balance_server($settings, $index)
 function setting_balance_rule($settings, $index)
 {
 	// don't continue with this if stuff is missing
-	if(!isset($settings['balance_rule_' . $index])
+	if(!isset($settings['balance_rule_' . $index]) || !isset($settings['balance_rule_' . $index]['module']) || 
+		!isset($settings['balance_rule_' . $index]['condition']) || !isset($settings['balance_rule_' . $index]['value']) || 
+		!isset($settings['balance_rule_' . $index]['server'])
 	)
 		return;
 		
 	// copy values
 	$rule = array(
+		'module' => $settings['balance_rule_' . $index]['module'],
+		'condition' => $settings['balance_rule_' . $index]['condition'],
+		'input' => isset($settings['balance_rule_' . $index]['input'])?$settings['balance_rule_' . $index]['input']:'',
+		'value' => $settings['balance_rule_' . $index]['value'],
+		'server' => intval($settings['balance_rule_' . $index]['server']),
 	);
+
+	// must provide a valid modules
+	if(!isset($GLOBALS['modules'][$rule['module']]))
+		return;
+	
+	// must be one of the 3 conditions
+	if(!in_array($rule['condition'], array('percent', 'request', 'server')))
+		return;
+	
+	// input must be specified if it is the last 2 conditions
+	if(($rule['condition'] == 'request' || $rule['condition'] == 'server') && $rule['input'] == '')
+		return;
+	
+	// value can be anything
+	
+	// must be a valid server
+	$settings['balance_servers'] = setting_balance_servers($settings);
+	if(!isset($settings['balance_servers'][$rule['server']]))
+		return;
 		
 	return $rule;
 }
@@ -181,21 +229,43 @@ function status_admin_balancer($settings)
 	
 	// check servers are up and running, get configurations
 	$status = array();
-
-	// display new server
-	if(isset($_SESSION['balancer']['add']))
+	
+	// load servers from session
+	if(isset($_SESSION['balancer']['servers']))
 	{
-		foreach($_SESSION['balancer']['add'] as $i => $server)
-		{
-			$settings['balance_servers'][] = setting_balance_server(array('balance_server_' . count($settings['balance_servers']) => $server), count($settings['balance_servers']));
-		}
+		$settings['balance_servers'] = $_SESSION['balancer']['servers'];
 	}
 	
+	// make this quick, only a second or 2 timeout
+	$GLOBALS['snoopy']->read_timeout = 2;
+	$GLOBALS['snoopy']->_fp_timeout = 2;
+	
+	// loop through each server and check status
 	foreach($settings['balance_servers'] as $i => $server)
 	{
+		// use snoopy to check if sites are running and download config,
+		$url = $server['protocol'] . '://' . $server['address'] . '?module=admin&get_settings=true&users=login&username=' . $server['username'] . '&password=' . base64_encode($server['password']);
+		$GLOBALS['snoopy']->fetch($url);
+		if($GLOBALS['snoopy']->status != 200)
+		{
+			$get_status = 'fail';
+		}
+		else
+		{
+			$get_status = '';
+			
+			// check contents to make sure it is a config
+			$contents = $GLOBALS['snoopy']->results;
+			
+			print_r($contents);
+		}
+			
+		
+		
+		// output status
 		$status['balance_server_' . $i] = array(
 			'name' => isset($server['nickname'])?$server['nickname']:('Balance Server ' . $i),
-			'status' => '',
+			'status' => $get_status,
 			'description' => array(
 				'list' => array(
 					lang('balence server status description', 'This server is up and running and ready for balancing.'),
@@ -204,6 +274,10 @@ function status_admin_balancer($settings)
 			'value' => $server['protocol'] . '://' . $server['address'],
 		);
 	}
+	
+	// reset global snoopy
+	$GLOBALS['snoopy']->read_timeout = 0;
+	$GLOBALS['snoopy']->_fp_timeout = 30;
 	
 	return $status;
 }
@@ -215,7 +289,7 @@ function status_admin_balancer($settings)
 function session_admin_balancer($request)
 {
 	if(!isset($_SESSION['balancer']) || isset($request['reset_configuration']))
-		$save = array('servers' => setting('balance_servers'));
+		$save = array('servers' => setting('balance_servers'), 'rules' => setting('balance_rules'));
 	else
 		$save = $_SESSION['balancer'];
 
@@ -230,6 +304,20 @@ function session_admin_balancer($request)
 	{
 		unset($save['servers'][$request['remove_server']]);
 		$save['servers'] = array_values($save['servers']);
+	}
+
+	if(isset($request['add_rule']))
+	{
+		// must also pass in servers from session
+		$new_rule = setting_balance_rule(array('balance_rule_0' => $request['add_rule'], 'balance_servers' => $save['servers']), 0);
+		if(isset($new_rule))
+			$save['rules'][] = $new_rule;
+	}
+
+	if(isset($request['remove_rule']))
+	{
+		unset($save['rules'][$request['remove_rule']]);
+		$save['rules'] = array_values($save['rules']);
 	}
 	
 	return $save;
@@ -248,6 +336,12 @@ function configure_admin_balancer($settings, $request)
 	if(isset($_SESSION['balancer']['servers']))
 	{
 		$settings['balance_servers'] = $_SESSION['balancer']['servers'];
+	}
+	
+	// load rules from session
+	if(isset($_SESSION['balancer']['rules']))
+	{
+		$settings['balance_rules'] = $_SESSION['balancer']['rules'];
 	}
 	
 	$options = array();
@@ -367,6 +461,60 @@ function configure_admin_balancer($settings, $request)
 	if(count($settings['balance_rules']) > 0)
 	{
 		// display all rules
+		$options['manage_rules'] = array(
+			'name' => 'Manage Rules',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'Manage the balancing rules.',
+				),
+			),
+			'type' => 'set',
+		);
+		
+		$balence_options = array();
+		foreach($settings['balance_rules'] as $i => $rule)
+		{
+			$balence_options['setting_balance_rule_' . $i . '[module]'] = array(
+				'type' => 'hidden',
+				'value' => $rule['module'],
+			);
+			$balence_options['setting_balance_rule_' . $i . '[condition]'] = array(
+				'type' => 'hidden',
+				'value' => $rule['condition'],
+			);
+			if(isset($server['nickname']))
+			{
+				$balence_options['setting_balance_rule_' . $i . '[input]'] = array(
+					'type' => 'hidden',
+					'value' => $rule['input'],
+				);
+			}
+			$balence_options['setting_balance_rule_' . $i . '[value]'] = array(
+				'type' => 'hidden',
+				'value' => $rule['value'],
+			);
+			$balence_options['setting_balance_rule_' . $i . '[server]'] = array(
+				'type' => 'hidden',
+				'value' => $rule['server'],
+			);
+			$balence_options['edit_rule[' . $i . ']'] = array(
+				'type' => 'submit',
+				'value' => 'Edit',
+				'help' => 'Rule module: ' . $GLOBALS['modules'][$rule['module']]['name'] . '<br />' . 
+					'Condition: ' . $rule['condition'] . '<br />' . 
+					(isset($rule['input'])?'Input: ' . $rule['input'] . '<br />':'') . 
+					'Value: ' . $rule['value'] . '<br />' . 
+					'Server: ' . (isset($settings['balance_servers'][$rule['server']]['nickname'])?$settings['balance_servers'][$rule['server']]['nickname']:('Balance Server ' . $rule['server'])),
+			);
+			$balence_options['remove_rule[' . $i . ']'] = array(
+				'type' => 'submit',
+				'value' => 'Remove',
+			);
+			$balence_options[] = array('value' => '<br />');
+		}
+		
+		$options['manage_rules']['options'] = $balence_options;
 	}
 	elseif(count($settings['balance_servers']) > 0)
 	{
@@ -406,9 +554,9 @@ function configure_admin_balancer($settings, $request)
 	$servers = array();
 	foreach($settings['balance_servers'] as $i => $server)
 	{
-		$servers[$i] = isset($server['nickname'])?$server['nickname']:('Balance Server ' . $i);
+		$servers[$i . ' '] = isset($server['nickname'])?$server['nickname']:('Balance Server ' . $i);
 	}
-	
+
 	$options['balance_rules'] = array(
 		'name' => 'Add Rule',
 		'status' => '',
@@ -423,7 +571,7 @@ function configure_admin_balancer($settings, $request)
 		),
 		'type' => 'set',
 		'options' => array(
-			'balance_rules[module]' => array(
+			'add_rule[module]' => array(
 				'type' => 'select',
 				'options' => $modules,
 				'value' => 'encode',
@@ -432,28 +580,36 @@ function configure_admin_balancer($settings, $request)
 			array(
 				'value' => '<br />'
 			),
-			'balance_rules[condition]' => array(
+			'add_rule[condition]' => array(
 				'type' => 'select',
 				'options' => array(
 					'percent' => 'Percentage of Users',
 					'request' => 'Request Variable',
 					'server' => 'Server Variable',
 				),
-				'value' => 'percent',
+				'value' => 'request',
 				'help' => 'Condition',
 			),
 			array(
 				'value' => '<br />'
 			),
-			'balance_rules[value]' => array(
+			'add_rule[input]' => array(
 				'type' => 'text',
-				'value' => '50',
+				'value' => 'dir',
+				'help' => 'Input',
+			),
+			array(
+				'value' => '<br />'
+			),
+			'add_rule[value]' => array(
+				'type' => 'text',
+				'value' => '/Share/Music/',
 				'help' => 'Value',
 			),
 			array(
 				'value' => '<br />'
 			),
-			'balance_rules[server]' => array(
+			'add_rule[server]' => array(
 				'type' => 'select',
 				'options' => $servers,
 				'value' => 0,
@@ -462,7 +618,7 @@ function configure_admin_balancer($settings, $request)
 			array(
 				'value' => '<br />'
 			),
-			array(
+			'add_rule[save]' => array(
 				'type' => 'submit',
 				'value' => 'Add Rule',
 			),

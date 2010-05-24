@@ -11,7 +11,7 @@ function register_convert()
 		'description' => lang('convert description', 'Convert images to different formats.'),
 		'privilage' => 1,
 		'path' => __FILE__,
-		'notemplate' => true,
+		'template' => false,
 		'settings' => array('convert_path', 'convert_args'),
 		'depends on' => array('converter'),
 	);

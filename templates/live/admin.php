@@ -97,7 +97,7 @@ function theme_live_template()
 	theme('footer');
 }
 
-function theme_live_watch()
+function theme_live_admin_watch()
 {
 	theme('header');
 	
@@ -149,7 +149,7 @@ function theme_live_watch()
 	theme('footer');
 }
 
-function theme_live_alias()
+function theme_live_admin_alias()
 {
 	theme('header');
 	

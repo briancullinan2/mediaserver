@@ -16,7 +16,7 @@ function register_file()
 		'description' => 'Allow users to download files from the database, this module supports HTTP-Ranges.',
 		'privilage' => 1,
 		'path' => __FILE__,
-		'notemplate' => true,
+		'template' => false,
 		'alter query' => array('dir', 'file'),
 		'depends on' => array('files', 'filesystem', 'template'),
 		'always output' => 'file_variables',

@@ -1,6 +1,7 @@
 ------------- MONOLITHICMEDIA TODO -------------
 Monolithic site is not outputting the htaccess file because it is hidden from the tar command
 ------------- GENERAL TODO -------------
+IMPORTANT!  Convert all call_user_func_array usage to the standard callable method
 Create a dav module that allows files to be uploaded and access using the web dav protocol.  This is already mostly supported by PEAR.
 Change all use_database settings over to database_enable and enable and disable database the same way as modules
 	Make sure modules can still be enabled on the configure_modules page
@@ -100,6 +101,8 @@ HIGH-PRIORITY: Check all usage of setting(local_template), setting(local_base), 
 	Templates should refer to themselves only
 	Templates should have functions for outputting their own files instead of using the file output stream in the output_template() function, make this obsolete
 	Never include path in template reference, the validate_ function always removes the path
+Convert the plain template over to default template functions within the module
+	Find a way to get rid of the plain template and the need for local_base variable
 Set variables to default specified by template if they are not set because of an improper input
 Figure out how template_path and modules_path is used in the javascript in the WMP and EXT JS templates
 Test modifications to extjs and wmp template script and link includes
