@@ -113,7 +113,7 @@ function handles_movies($file)
  * Implementation of handle
  * @ingroup handle
  */
-function handle_movies($file, $force = false)
+function add_movies($file, $force = false)
 {
 	return false;
 }
@@ -126,24 +126,15 @@ function get_movie_info($filename)
 	return array();
 }
 
-function out($file)
+function output_movies($file)
 {
-}
-
-/** 
- * Implementation of get_handler
- * @ingroup get_handler
- */
-function get_db_movies($request, &$count)
-{
-	return get_db_file($request, $count, 'db_movies');
 }
 
 /** 
  * Implementation of remove_handler
  * @ingroup remove_handler
  */
-function remove_db_movies($file)
+function remove_movies($file)
 {
 	//parent::remove($file, 'db_movies');
 }
@@ -152,7 +143,7 @@ function remove_db_movies($file)
  * Implementation of cleanup_handler
  * @ingroup cleanup_handler
  */
-function cleanup_db_movies()
+function cleanup_movies()
 {
 	// call default cleanup function
 	//db_file::cleanup('db_movies');

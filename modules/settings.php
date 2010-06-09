@@ -35,6 +35,24 @@ function setup_settings()
 	// if there isn't by chance already a setting global set it up here
 	if(!isset($GLOBALS['settings']))
 		$GLOBALS['settings'] = array();
+		
+	// load settings from database
+	$return = $GLOBALS['database']->query(array(
+			'SELECT' => 'users',
+			'WHERE' => 'id = -1',
+			'LIMIT' => 1
+		)
+	, false);
+	
+	// make sure the query succeeded
+	if(is_array($return) && count($return) > 0)
+	{
+		// merge the settings from the database
+		$db_settings = unserialize($return[0]['Settings']);
+		$GLOBALS['settings'] = array_merge($db_settings, $GLOBALS['settings']);
+	}
+	else
+		PEAR::raiseError('There was an error getting the administrative settings from the database!', E_DEBUG);
 	
 	// loop through the modules and call settings functions on them if they are set to callbacks
 	foreach($GLOBALS['modules'] as $module => $config)
@@ -83,6 +101,7 @@ function dependency_settings($settings)
 		return array();
 
 	$depends = array();
+	
 	// loop through all the modules and look for config settings set to the module name
 	// those modules must be set up before settings tries to load their default values
 	foreach($GLOBALS['modules'] as $module => $config)
@@ -92,6 +111,10 @@ function dependency_settings($settings)
 		)
 			$depends[] = $module;
 	}
+	
+	// always load database first if it is being used
+	if(dependency('database') !== false)
+		$depends[] = 'database';
 
 	return $depends;
 }

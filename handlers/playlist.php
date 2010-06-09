@@ -60,7 +60,7 @@ function add_playlist($file, $force = false)
 {
 	$file = str_replace('\\', '/', $file);
 	
-	if(handles($file, 'db_playlist'))
+	if(handles($file, 'playlist'))
 	{
 		// check to see if it is in the database
 		$db_playlist = $GLOBALS['database']->query(array(
@@ -218,7 +218,7 @@ function get_playlist_info($file)
 			}
 
 			// search for file using terms
-			$result = get_db_video(array('search' => join(' ', $valid_pieces), 'limit' => 1, 'cat' => 'video'), $tmp_count, 'video');
+			$result = get_video(array('search' => join(' ', $valid_pieces), 'limit' => 1, 'cat' => 'video'), $tmp_count, 'video');
 			if($tmp_count > 0)
 			{
 				$paths[] = array('id' => $result[0]['id'], 'Filepath' => $result[0]['Filepath']);
@@ -226,7 +226,7 @@ function get_playlist_info($file)
 			}
 			
 			// search for file using terms
-			$result = get_db_file(array('search' => join(' ', $valid_pieces), 'limit' => 1, 'cat' => 'files'), $tmp_count, 'files');
+			$result = get_files(array('search' => join(' ', $valid_pieces), 'limit' => 1, 'cat' => 'files'), $tmp_count, 'files');
 			if($tmp_count > 0)
 			{
 				$paths[] = array('id' => $result[0]['id'], 'Filepath' => $result[0]['Filepath']);

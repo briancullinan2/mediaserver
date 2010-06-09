@@ -89,7 +89,7 @@ function output_admin_tools_filetools($request)
 	
 			if(count($files) > 0)
 			{
-				$files = get_db_ids(array('cat' => 'db_file'), $tmp_count, $files);
+				$files = get_ids(array('cat' => 'db_file'), $tmp_count, $files);
 				
 				$directories = array();
 				$mv_files = array();

@@ -24,7 +24,7 @@ function register_admin_handlers()
 function setup_admin_handlers()
 {
 	// include the handlers
-	$files = get_filesystem(array('dir' => setting_local_root() . 'handlers' . DIRECTORY_SEPARATOR, 'limit' => 32000), $count);
+	$files = get_files(array('dir' => setting_local_root() . 'handlers' . DIRECTORY_SEPARATOR, 'limit' => 32000), $count, true);
 	foreach($files as $i => $file)
 	{
 		// get file name

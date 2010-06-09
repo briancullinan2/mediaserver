@@ -167,7 +167,7 @@ function diskimage_add($file, $image_id = NULL)
 	}
 
 	// Add diskimage first so if it fails then it won't try to read it again
-	$fileinfo = get_filesystem_info($last_path);
+	$fileinfo = get_files_info($last_path);
 	
 	// print status
 	if( $image_id == NULL )
@@ -204,7 +204,7 @@ function diskimage_add($file, $image_id = NULL)
 	}
 	
 	// add root file which is the filepath but with a / for compatibility
-	$fileinfo = get_filesystem_info($last_path);
+	$fileinfo = get_files_info($last_path);
 	if(substr($fileinfo['Filepath'], -1) != '/') $fileinfo['Filepath'] .= '/';
 	
 	PEAR::raiseError('Adding file in diskimage: ' . stripslashes($fileinfo['Filepath']), E_DEBUG);

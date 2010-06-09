@@ -6,6 +6,7 @@ Finish webdav module that allows files to be uploaded and access using the web d
 Come up with a good way to detect modrewrite
 Install from scratch until all the errors are gone
 Look at drupal and find out if there is a better way to save errors to the session at the end of a script
+	Fix session problems with storing errors
 	Consider printing and clearing all possible errors up until the error print out, then save the rest
 If a modules dependencies fail, output a standard error page, such as ampache plugin
 Add module called balancer used for load balancing
@@ -15,16 +16,13 @@ Add module called balancer used for load balancing
 	Enter username and password for each remote services and download the remote load balancing information to check for conflicts and easy reference
 	Maybe this modules could help with hard and soft links?
 	Make sure remote balancer is enabled and dependencies are met, add a status print out to the output function of balancer
+	The depends on for balancer should take in to account the session setup
+		Redirection based on percentage will not be possible if it cannot count the sessions\
+		If a database is set up load that first and use that for session comparing
 Install script is severely broken
 Add a register script to the install process that allows users to register a username, password, and domain for their site, with the monolithicmedia drupal site.
 	Include a key that is unique to every download, to prevent spamming.
-Finish implementing dependencies
-	Many modules and handlers depend on getID3()
 Make validate_return actually validate the return path
-Remove all occurances on props['WHERE'] being set to a string
-	It should be set to an array from now on, so that we can differentiate between each query_alter_
-	Same with all the other variables
-Speed testing with new User queries
 Store the remote_address in the session, and if it doesn't match up with what is in the session then kill the session and die
 Create a unique id and insert it into forms, this is required when the form is submitted
 Make hard links and soft links, hard links are replaced when they are put in to the database, soft links are replaced when they are read from the database, this will allow us to do more network stuff
@@ -39,11 +37,12 @@ Interface with mediatomb and support UPnP protocol
 Test and find a fix for some media dropping off the network
 	Check to see if the file exists in the archive handler before trying to analyze it
 Set up conditions for when the streams are used based on if %OF and %IF are used in the command arguments
+	Verify these settings in the status for encode and convert
+Add support for encode and convert to be configured based on individual file extensions
 Get ranges working in encode module
 	only allow the option if the argument can read from stdin and read the input from the handler and write it to the input stream
 Figure out a way of doing this with files even if stdin is not being used in the command, if fopen is writing to a file, does it file feof when reading from the same file simulaneously?
 Make convert.php module recognize video thumbnails and use vlc to extract them
-Add support for encode and convert to be configured based on individual file extensions
 ------------- LANGUAGE MODULE -------------
 Start implementing lang() calls
 	If the page has language variables that are not known
@@ -61,7 +60,7 @@ Start implementing lang() calls
 		submitting the translations back to the server for caching
 		Or pulling out the translations for later use
 ------------- BITTORRENT MODULE -------------
-FIX bt.php module to work with command line torrent seeder on windows
+FIX bt.php module to work with command line torrent seeder on Windows
 bt module should have a configurable ctorrent settings that uses %IF for the torrent file to start seeding server side
 	Should also check dependencies for bttracker and ctorrent
 Check for bt module in install.php script
@@ -72,6 +71,8 @@ Port all Jamu stuff from MythTV to PHP admin tools
 Work on music tool
 Add netflix movie checker to admin tools
 Add show renamer to admin tools
+Make a sync module in admin section for syncing between two databases and pulling out differences
+	Use musicbrainz to sync music
 ------------- Module TODO -------------
 Finish users.php module
 Work on settings.php module
@@ -81,25 +82,20 @@ Finish setting() function in settings.php plugin
 	Settings should also be loadable from the database
 	Save module settings in database
 	Cache all loaded module files in settings database (possibly storing in admin settings and deserializing would be efficient?)
-Make a sync module in admin section for syncing between two databases and pulling out differences
-	Use musicbrainz to sync music
 ------------- Handler TODO -------------
 Make a discography handler that parses out wikipedia discographys, store album information, and return links to Full Discography, and Partial Discography
 	Base discography handler on discogs.com
 	this will list out each artist with full or missing albums
 	It handles artists, when an album count changes or doesn't exist it updates the database
 Work on playlist handler, use hard links to help find files
-HIGH-PRIORITY: Fix all fs_ functionality in new handler system
 Work on db_movies, use cUrl to download movie information from tmdb, use the volume decriptor for lookup, this shouldn't change even if they edited an image
 	Look up movies on amazon, and see if that will help with searching IMDb
 	Research the video_ts.ifo file, there must be a way of getting the full name from a DVD image, windows media center projects can do it, so can we
 ------------- All Template TODO -------------
-HIGH-PRIORITY: Check all usage of setting(local_template), setting(local_base), setting(html_template)
+HIGH-PRIORITY: Check all usage of setting(local_template), setting(html_template)
 	Templates should refer to themselves only
 	Templates should have functions for outputting their own files instead of using the file output stream in the output_template() function, make this obsolete
 	Never include path in template reference, the validate_ function always removes the path
-Convert the plain template over to default template functions within the module
-	Find a way to get rid of the plain template and the need for local_base variable
 Set variables to default specified by template if they are not set because of an improper input
 Figure out how template_path and modules_path is used in the javascript in the WMP and EXT JS templates
 Test modifications to extjs and wmp template script and link includes

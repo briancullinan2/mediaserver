@@ -7,8 +7,8 @@
 function register_admin_tools_sync()
 {
 	$tools = array(
-		'name' => 'Syncronize',
-		'description' => 'Use the functionality below to syncronize with another media server.',
+		'name' => 'Synchronize',
+		'description' => 'Use the functionality below to synchronize with another media server.',
 		'privilage' => 10,
 		'path' => __FILE__,
 	);

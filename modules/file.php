@@ -147,13 +147,13 @@ function alter_query_file($request, $props)
 			$request['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
 			
 		// maybe the dir is not loaded yet, this part is costly but it is a good way to do it
-		if(setting('recursive_get') && handles($request['dir'], 'db_watch_list'))
+		if(setting('recursive_get') && handles($request['dir'], 'updates'))
 		{
 			scan_dir($request['dir']);
 		}
 		
 		// make sure file exists if we are using the file handler
-		if($request['cat'] != 'db_file' || is_dir(realpath($request['dir'])) !== false)
+		if($request['cat'] != 'files' || is_dir(realpath($request['dir'])) !== false)
 		{
 		
 			// make sure directory is in the database
@@ -219,22 +219,20 @@ function alter_query_file($request, $props)
 		// if the id is available then use that instead
 		if(isset($request[$request['cat'] . '_id']) && $request[$request['cat'] . '_id'] != 0)
 		{
-			if(!isset($props['WHERE'])) $props['WHERE'] = '';
-			elseif($props['WHERE'] != '') $props['WHERE'] .= ' AND ';
+			if(!isset($props['WHERE'])) $props['WHERE'] = array();
 			
 			// add single id to where
-			$props['WHERE'] .= ' id = ' . $request[$request['cat'] . '_id'];					
+			$props['WHERE'][] = 'id = ' . $request[$request['cat'] . '_id'];					
 		}
 		else
 		{
 			// make sure file exists if we are using the file handler
-			if($request['cat'] != 'db_file' || file_exists(realpath($request['file'])) !== false)
+			if($request['cat'] != 'files' || file_exists(realpath($request['file'])) !== false)
 			{					
-				if(!isset($props['WHERE'])) $props['WHERE'] = '';
-				elseif($props['WHERE'] != '') $props['WHERE'] .= ' AND ';
+				if(!isset($props['WHERE'])) $props['WHERE'] = array();
 				
 				// add file to where
-				$props['WHERE'] .= ' Filepath = "' . addslashes($request['file']) . '"';
+				$props['WHERE'][] = 'Filepath = "' . addslashes($request['file']) . '"';
 			}
 			else
 			{

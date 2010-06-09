@@ -39,7 +39,9 @@ if(isset($GLOBALS['modules'][$_REQUEST['module']]))
 }
 
 // save the errors in the session until they can be printed out
+/*
 $_SESSION['errors']['user'] = $GLOBALS['user_errors'];
 $_SESSION['errors']['warn'] = $GLOBALS['warn_errors'];
 $_SESSION['errors']['debug'] = $GLOBALS['debug_errors'];
 $_SESSION['errors']['note'] = $GLOBALS['note_errors'];
+*/

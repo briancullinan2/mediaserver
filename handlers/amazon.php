@@ -144,9 +144,9 @@ function add_amazon($file, $force = false)
 {
 	$file = str_replace('\\', '/', $file);
 	
-	if(handles_db_amazon($file))
+	if(handles($file, 'amazon'))
 	{
-		if(handles($file, 'db_audio') || is_dir($file))
+		if(handles($file, 'audio') || is_dir($file))
 		{
 			if(is_dir($file))
 			{
@@ -198,7 +198,7 @@ function add_amazon($file, $force = false)
 				return $amazon[0]['id'];
 			}
 		}
-		elseif(handles($file, 'db_movies'))
+		elseif(handles($file, 'movies'))
 		{
 			// get information from database
 			// try and get information from file
@@ -382,7 +382,7 @@ function get_amazon_music_info($artist, $album)
 	return $fileinfo;
 }
 
-function db_amazon_add_music($artist, $album)
+function amazon_add_music($artist, $album)
 {
 	
 	// pull information from $info
@@ -396,7 +396,7 @@ function db_amazon_add_music($artist, $album)
 	return $id;
 }
 
-function db_amazon_add_movie($title)
+function amazon_add_movie($title)
 {
 	// pull information from $info
 	$fileinfo = db_amazon_getMovieInfo($title);
@@ -419,7 +419,7 @@ function get_amazon($request, &$count)
 	// modify the request
 	if(isset($request['file']))
 	{
-		if(handles($request['file'], 'db_audio'))
+		if(handles($request['file'], 'audio'))
 		{
 			$audio = get_files(array('file' => $request['file'], 'audio_id' => (isset($request['audio_id'])?$request['audio_id']:0)), $tmp_count, 'audio');
 			if(count($audio) > 0)
@@ -436,7 +436,7 @@ function get_amazon($request, &$count)
 				$files = array();
 			}
 		}
-		elseif(handles($request['file'], 'db_movies'))
+		elseif(handles($request['file'], 'movies'))
 		{
 			$movie = get_files(array('file' => $request['file'], 'video_id' => (isset($request['video_id'])?$request['video_id']:0)), $tmp_count, 'audio');
 			if(count($movie) > 0)
@@ -532,7 +532,7 @@ function get_amazon($request, &$count)
 			if(!isset($request['search_AmazonId']))
 				$request['search_AmazonId'] = '/[a-z0-9]+/';
 			// get files
-			$files = get_db_files($request, $count, 'db_amazon');
+			$files = get_files($request, $count, 'amazon');
 		}
 	}
 	
@@ -555,7 +555,7 @@ function get_amazon($request, &$count)
  * Implementation of handler_remove
  * @ingroup handler_remove
  */
-function remove_db_amazon($file, $handler = NULL)
+function remove_amazon($file, $handler = NULL)
 {
 	// remove the amazon entry for whatever is passed in
 	//  but only if the artist/album doesn't exist in the database anymore

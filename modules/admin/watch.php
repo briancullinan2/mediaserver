@@ -119,7 +119,7 @@ function add_admin_watch($file)
 			$id = $GLOBALS['database']->query(array('INSERT' => 'admin_watch', 'VALUES' => $fileinfo), false);
 			
 			// add to watch_list and to files database
-			handle_db_watch_list(substr($file, 1));
+			add_updates(substr($file, 1));
 			
 			handle_file(substr($file, 1));
 			
@@ -128,7 +128,7 @@ function add_admin_watch($file)
 		else
 		{
 			// just pass the first directories to watch_list handler
-			return handle_db_watch_list(substr($file, 1));
+			return add_updates(substr($file, 1));
 		}
 		
 	}
@@ -219,7 +219,7 @@ function output_admin_watch($request)
 		'start' => validate_start($request),
 		'limit' => 32000,
 		'dirs_only' => true,
-	), &$total_count, 'filesystem');
+	), &$total_count, true);
 
 	$request = validate_start($request);
 
@@ -237,3 +237,56 @@ function output_admin_watch($request)
 	register_output_vars('ignored', $GLOBALS['ignored']);
 }
 
+
+function theme_watch()
+{
+	?>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+	<meta http-equiv="Pragma" content="no-cache">
+	<meta http-equiv="Expires" content="-1">
+	<title><?php echo setting('html_name')?>: Watch Editor</title>
+</head>
+<body>
+
+This is a list of folders on the server to watch for media files:<br />
+<?php
+if( count($GLOBALS['user_errors']) > 0 )
+{
+?>
+	<span style="color:#990000; font-weight:bold;"><?php foreach($GLOBALS['templates']['vars']['user_errors'] as $i => $error) { echo $error->message . '<br />'; } ?></span><br />
+<?php
+}
+?>
+	<form action="" method="post">
+		<select name="wremove" size="10">
+		
+		<?php
+			foreach($GLOBALS['templates']['vars']['ignored'] as $i => $watch)
+			{
+			?>
+				<option value="<?php echo $watch['id']; ?>">ignore: <?php echo $watch['Filepath']; ?></option>
+			<?php
+			}
+			foreach($GLOBALS['templates']['vars']['watched'] as $i => $watch)
+			{
+			?>
+				<option value="<?php echo $watch['id']; ?>">watch: <?php echo $watch['Filepath']; ?></option>
+			<?php
+			}
+		?>
+		</select>
+		<br />
+		<input type="submit" value="Remove" />
+	</form>
+	<form action="" method="post">
+		<input type="text" name="waddpath" size="50" value="<?php echo (isset($GLOBALS['templates']['vars']['waddpath'])?$GLOBALS['templates']['vars']['waddpath']:"")?>" />
+		<input type="submit" value="Add" />
+		<br />
+	</form>
+</body>
+</html>
+<?php
+
+}

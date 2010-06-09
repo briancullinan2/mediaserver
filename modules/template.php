@@ -33,7 +33,7 @@ function setup_template()
 
 	// get the list of templates
 	$GLOBALS['templates'] = array();
-	$files = get_filesystem(array('dir' => setting('local_root') . 'templates' . DIRECTORY_SEPARATOR, 'limit' => 32000), $count);
+	$files = get_files(array('dir' => setting('local_root') . 'templates' . DIRECTORY_SEPARATOR, 'limit' => 32000), $count, true);
 	if(is_array($files))
 	{
 		foreach($files as $i => $file)
@@ -86,7 +86,7 @@ function setup_template()
  */
 function setting_template()
 {
-	return array('local_base', 'local_default', 'local_template');
+	return array('local_default', 'local_template');
 }
 
 /**
@@ -96,45 +96,10 @@ function setting_template()
 function configure_template($settings, $request)
 {
 	$settings['local_root'] = setting_local_root($settings);
-	$settings['local_base'] = setting_local_base($settings);
 	$settings['local_default'] = setting_local_default($settings);
 	$settings['local_template'] = setting_local_template($settings);
 	
 	$options = array();
-	
-	if(file_exists(setting('local_root') . 'templates' . DIRECTORY_SEPARATOR . $settings['local_base']))
-	{
-		$options['local_base'] = array(
-			'name' => 'Template Base',
-			'status' => '',
-			'description' => array(
-				'list' => array(
-					'The template base provides a backup/default set of template files. This template supports all possible functionality, in the simplest way.',
-					'Default functionality includes things like printing out an XML file, or an M3U playlist instead of a vieable HTML list of files.',
-					'The server reports that ' . $settings['local_root'] . 'template' . DIRECTORY_SEPARATOR . $settings['local_base'] . ' does, in fact, exist.',
-				),
-			),
-			'type' => 'text',
-			'value' => $settings['local_base'],
-		);
-	}
-	else
-	{
-		$options['local_base'] = array(
-			'name' => 'Template Base',
-			'status' => 'fail',
-			'description' => array(
-				'list' => array(
-					'The system has detected that the local basic template files are not where they are expected to be.',
-					'The template base provides a backup/default set of template files. This template supports all possible functionality, in the simplest way.',
-					'Default functionality includes things like printing out an XML file, or an M3U playlist instead of a vieable HTML list of files.',
-					'The server reports that ' . $settings['local_root'] . 'template' . DIRECTORY_SEPARATOR . $settings['local_base'] . ' does NOT EXIST.',
-				),
-			),
-			'type' => 'text',
-			'value' => $settings['convert_path'],
-		);
-	}
 	
 	$templates = array();
 	foreach($GLOBALS['templates'] as $template => $config)
@@ -169,19 +134,6 @@ function configure_template($settings, $request)
 	);
 
 	return $options;
-}
-
-/**
- * Implementation of setting
- * @ingroup setting
- * @return The plain template by default
- */
-function setting_local_base($settings)
-{
-	if(isset($settings['local_base']) && in_array(basename($settings['local_base']), array_keys($GLOBALS['templates'])))
-		return basename($settings['local_base']);
-	else
-		return 'plain';
 }
 
 /**
@@ -583,4 +535,20 @@ function output_template($request)
 		// close file handles and return succeeded
 		fclose($fp);
 	}
+}
+
+function theme_template_block()
+{
+	foreach($GLOBALS['templates'] as $name => $template)
+	{
+		if(isset($template['name']))
+		{
+			?><a href="<?php print url('template=' . $name, false, true); ?>"><?php print $template['name']; ?></a><br /><?php
+		}
+	}
+}
+
+function theme_template()
+{
+	theme('template_block');
 }

@@ -15,6 +15,7 @@ function register_select()
 		'path' => __FILE__,
 		'session' => array('item', 'on', 'off', 'selected', 'id'),
 		'alter query' => array('selected'),
+		'template' => true,
 	);
 }
 
@@ -366,11 +367,182 @@ function output_select($request)
 	register_output_vars('image_count', $image_count);
 	register_output_vars('files_count', $files_count);
 	
-	// support paging
-	register_output_vars('start', $request['start']);
-	register_output_vars('limit', $request['limit']);
-	
 	// register selected files for templates to use
 	if(isset($_SESSION['select']['selected'])) register_output_vars('selected', $_SESSION['select']['selected']);
+}
+
+
+function theme_files()
+{
+	if(count($GLOBALS['templates']['vars']['files']) == 0)
+	{
+		?><b>There are no files to display</b><?php
+	}
+	else
+	{
+		$column_lengths = array();
+		if($GLOBALS['templates']['vars']['settings']['view'] == 'mono')
+		{
+			// go through files ahead of time and make them monospaced
+			foreach($GLOBALS['templates']['vars']['files'] as $i => $file)
+			{
+				// find the longest string for each column
+				foreach($file as $column => $value)
+				{
+					if(!isset($column_lengths[$column]) || strlen($value) > $column_lengths[$column])
+						$column_lengths[$column] = strlen($value);
+				}
+			}
+			?><code><?php
+			
+			?><input type="checkbox" name="item" value="All" /> <?php
+			print str_replace(' ', '&nbsp;', sprintf('%-' . ($column_lengths['Filepath']+2) . 's', 'Filepath'));
+			foreach($GLOBALS['templates']['vars']['settings']['columns'] as $i => $column)
+			{
+				print ' | ' . str_replace(' ', '&nbsp;', sprintf('%-' . ($column_lengths[$column]+2) . 's', $column));
+			}
+			?> | Download<br /><?php
+		}
+		elseif($GLOBALS['templates']['vars']['settings']['view'] == 'table')
+		{
+			?><table cellpadding="10" cellspacing="0" border="1"><tr><td><?php
+		}
+		
+		foreach($GLOBALS['templates']['html']['files'] as $i => $file)
+		{
+			$file = alter_file($file, $column_lengths);
+			$GLOBALS['templates']['html']['files'][$i] = $file;
+			// make links browsable
+			if(handles($GLOBALS['templates']['vars']['files'][$i]['Filepath'], 'archive')) $cat = 'archive';
+			elseif(handles($GLOBALS['templates']['vars']['files'][$i]['Filepath'], 'playlist')) $cat = 'playlist';
+			elseif(handles($GLOBALS['templates']['vars']['files'][$i]['Filepath'], 'diskimage')) $cat = 'diskimage';
+			else $cat = $GLOBALS['templates']['vars']['cat'];
+			
+			if($GLOBALS['templates']['vars']['cat'] != $cat || $GLOBALS['templates']['vars']['files'][$i]['Filetype'] == 'FOLDER') $new_cat = $cat;
+			
+			$link = isset($new_cat)?url('module=select&cat=' . $new_cat . '&dir=' . urlencode($GLOBALS['templates']['vars']['files'][$i]['Filepath'])):url('module=file&cat=' . $cat . '&id=' . $file['id'] . '&filename=' . urlencode($GLOBALS['templates']['vars']['files'][$i]['Filename']));
+			?>
+			<input type="checkbox" name="item[]" value="<?php print $file['id']; ?>" <?php print isset($GLOBALS['templates']['vars']['selected'])?(in_array($GLOBALS['templates']['vars']['files'][$i]['id'], $GLOBALS['templates']['vars']['selected'])?'checked="checked"':''):''; ?> />
+			<a href="<?php print $link; ?>"><?php print trim($file['Filepath'], '&nbsp;'); ?></a><?php print substr($file['Filepath'], strlen(trim($file['Filepath'], '&nbsp;'))); ?>
+			<?php
+			
+			foreach($GLOBALS['templates']['vars']['settings']['columns'] as $j => $column)
+			{
+				if($GLOBALS['templates']['vars']['settings']['view'] == 'mono')
+					print ' | ';
+				elseif($GLOBALS['templates']['vars']['settings']['view'] == 'table')
+					print '</td><td>';
+				else
+					print ' - ';
+				
+				if(isset($file[$column]))
+				{
+					print $file[$column];
+				}
+			}
+			
+			if($GLOBALS['templates']['vars']['settings']['view'] == 'mono')
+			{
+				print ' | ';
+			}
+			elseif($GLOBALS['templates']['vars']['settings']['view'] == 'table')
+			{
+				print '</td><td>';
+			}
+			else
+			{
+				?> - Download: <?php
+			}
+			?>
+			<a href="<?php print url(array(
+							'module' => 'zip',
+							'cat' => $GLOBALS['templates']['vars']['cat'],
+							'id' => $file['id'],
+							'filename' => 'Files.zip'
+						)); ?>">zip</a> :
+			<a href="<?php print url(array(
+							'module' => 'torrent',
+							'cat' => $GLOBALS['templates']['vars']['cat'],
+							'id' => $file['id'],
+							'filename' => 'Files.torrent'
+						)); ?>">torrent</a>
+			<?php
+			if(handles($GLOBALS['templates']['vars']['files'][$i]['Filepath'], 'video'))
+			{
+				?>
+				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'mp4', 'cat' => $GLOBALS['templates']['vars']['cat'],
+								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">MP4</a>
+				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'mpg', 'cat' => $GLOBALS['templates']['vars']['cat'],
+								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">MPG</a>
+				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'wmv', 'cat' => $GLOBALS['templates']['vars']['cat'],
+								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">WMV</a>
+				<?php
+			}
+			if(handles($GLOBALS['templates']['vars']['files'][$i]['Filepath'], 'audio'))
+			{
+				?>
+				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'mp4a', 'cat' => $GLOBALS['templates']['vars']['cat'],
+								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">MP4</a>
+				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'mp3', 'cat' => $GLOBALS['templates']['vars']['cat'],
+								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">MP3</a>
+				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'wma', 'cat' => $GLOBALS['templates']['vars']['cat'],
+								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">WMA</a>
+				<?php
+			}
+			if(handles($GLOBALS['templates']['vars']['files'][$i]['Filepath'], 'image'))
+			{
+				?>
+				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'jpg', 'cat' => $GLOBALS['templates']['vars']['cat'],
+								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">JPG</a>
+				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'gif', 'cat' => $GLOBALS['templates']['vars']['cat'],
+								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">GIF</a>
+				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'png', 'cat' => $GLOBALS['templates']['vars']['cat'],
+								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">PNG</a>
+				<?php
+			}
+			if(handles($GLOBALS['templates']['vars']['files'][$i]['Filepath'], 'code'))
+			{
+				?>
+				: <a href="<?php print url(array('module' => 'code', 'cat' => $GLOBALS['templates']['vars']['cat'],
+								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">view</a>
+				<?php
+			}
+			
+			if($GLOBALS['templates']['vars']['settings']['view'] == 'table')
+			{
+				if($i < count($GLOBALS['templates']['vars']['files']) - 1)
+				{
+					?></td></tr><tr><td><?php
+				}
+			}
+			else
+			{
+				?><br /><?php
+			}
+		}
+		if($GLOBALS['templates']['vars']['settings']['view'] == 'mono')
+		{
+			?></code><?php
+		}
+		if($GLOBALS['templates']['vars']['settings']['view'] == 'table')
+		{
+			?></td></tr></table><?php
+		}
+	}
+}
+
+function alter_file($file, $column_lengths = NULL)
+{
+	foreach($file as $column => $value)
+	{
+		if(isset($column_lengths[$column]))
+			$file[$column] = sprintf('%-' . ($column_lengths[$column]+2) . 's', $value);
+		if(isset($GLOBALS['templates']['vars']['search_regexp']) && 
+			isset($GLOBALS['templates']['vars']['search_regexp'][$column]))
+			$file[$column] = preg_replace($GLOBALS['templates']['vars']['search_regexp'][$column], '\'<strong style="background-color:#990;">\' . str_replace(\' \', \'&nbsp;\', htmlspecialchars(\'$0\')) . \'</strong>\'', $file[$column]);
+		else
+			$file[$column] = str_replace(' ', '&nbsp;', htmlspecialchars($file[$column]));
+	}
+	return $file;
 }
 

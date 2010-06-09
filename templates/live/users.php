@@ -20,6 +20,22 @@ function theme_live_login()
 	<?php
 }
 
+function theme_live_login_block()
+{
+	if(isset($GLOBALS['templates']['vars']['return']))
+		$return = $GLOBALS['templates']['vars']['return'];
+	else
+		$return = $GLOBALS['templates']['vars']['get'];
+	?>
+	<form action="<?php echo url('module=users&users=login&return=' . urlencode($return)); ?>" method="post">
+		<input class="stndsize" type="text" onmouseout="if(this.value=='' && !this.hasfocus) document.getElementById('username').style.visibility='visible'" onblur="this.hasfocus=false; this.onmouseout();" onfocus="this.hasfocus=true" name="username" value="<?php print isset($GLOBALS['templates']['vars']['username'])?$GLOBALS['templates']['vars']['username']:''; ?>" />
+		<input class="stndsize" type="password" onmouseout="if(this.value=='' && !this.hasfocus) document.getElementById('password').style.visibility='visible'" onblur="this.hasfocus=false; this.onmouseout();" onfocus="this.hasfocus=true" name="password" value="" />
+		<input type="submit" value="Login" />
+		<span id="username" onmouseover="this.style.visibility='hidden'">Username</span>
+		<span id="password" onmouseover="this.style.visibility='hidden'">Password</span>
+	</form>
+	<?php
+}
 function theme_live_users()
 {
 	if($GLOBALS['templates']['vars']['users'] == 'login')

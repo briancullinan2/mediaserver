@@ -97,6 +97,7 @@ function is_wrapper($handler)
  * @{
  */
 
+
 /**
  * Check if a handler handles a certain type of files
  * this is a useful call for templates to use because it provides short syntax
@@ -104,30 +105,46 @@ function is_wrapper($handler)
  * @param handler The handler to check if it handles the specified file
  * @return true if the specified handler handles the specified file, false if the handler does not handle that file
  */
-function handles_files($file)
+function handles($file, $handler)
 {
-	$file = str_replace('\\', '/', $file);
-	if(setting('admin_alias_enable') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+	if($handler == 'files')
+	{
+		$file = str_replace('\\', '/', $file);
+		if(setting('admin_alias_enable') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 	
-	if(
-		(
+		if(
 			is_dir(str_replace('/', DIRECTORY_SEPARATOR, $file)) || 
 			(
 				is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)) && $file[strlen($file)-1] != '/'
 			)
-		) && 
-		setting('database_enable') != false && 
-		!in_array($file, $GLOBALS['ignored'])
-	)
-	{
-		$filename = basename($file);
-
-		// make sure it isn't a hidden file
-		if(strlen($filename) > 0 && $filename[0] != '.')
-			return true;
-		else
+		)
+		{
+			$filename = basename($file);
+	
+			// make sure it isn't a hidden file
+			if(strlen($filename) > 0 && $filename[0] != '.')
+				return true;
+			else
+				return false;
+		} else {
 			return false;
-	} else {
+		}
+	}
+	// wrappers are never handlers because they don't have their own database
+	elseif(is_wrapper($handler))
+	{
+		return false;
+	}
+	// check if there is a handle function
+	elseif(function_exists('handles_' . $handler))
+	{
+		return call_user_func_array('handles_' . $handler, array($file));
+	}
+	// no handler specified, show debug error
+	else
+	{
+		PEAR::raiseError('Handles called with \'' . $handler . '\' but no \'handles_\' function exists!', E_DEBUG);
+		
 		return false;
 	}
 }
@@ -135,6 +152,26 @@ function handles_files($file)
 /**
  * @}
  */
+
+/**
+ * this is a common function for handlers, just abstracting the information about a file
+ * @param file The file to get the info for
+ * @return an associative array of information that can be inserted directly in to the database
+ */
+function get_files_info($file)
+{
+	$file = str_replace('/', DIRECTORY_SEPARATOR, $file);
+	
+	$fileinfo = array();
+	$fileinfo['Filepath'] = addslashes(str_replace('\\', '/', $file));
+	$fileinfo['Filename'] = basename($file);
+	$fileinfo['Filesize'] = filesize($file);
+	$fileinfo['Filemime'] = getMime($file);
+	$fileinfo['Filedate'] = date("Y-m-d h:i:s", filemtime($file));
+	$fileinfo['Filetype'] = getFileType($file);
+	
+	return $fileinfo;
+}
 
 /**
  * @defgroup handle Handle File Functions
@@ -148,56 +185,70 @@ function handles_files($file)
 /**
  * Implementation of handle
  */
-function add_files($file, $force = false)
+function add($file, $force = false, $handler = 'files')
 {
 	$file = str_replace('\\', '/', $file);
 	
+	// if there is an add_handler function specified use that instead
+	if(function_exists('add_' . $handler))
+		call_user_func_array('add_' . $handler, array($file, $force));
+	
 	// files always qualify, we are going to log every single one!
-	if(handles($file, 'db_file'))
+	if(!handles($file, 'files'))
+		return false;
+	
+	// check if it is in the database
+	$db_file = $GLOBALS['database']->query(array(
+			'SELECT' => 'files',
+			'COLUMNS' => array('id', 'Filedate'),
+			'WHERE' => 'Filepath = "' . addslashes($file) . '"',
+			'LIMIT' => 1
+		)
+	, false);
+	
+	if( count($db_file) == 0 )
 	{
+		// get file information
+		$fileinfo = call_user_func_array('get_' . $handler . '_info', array($file));
 		
-		// check if it is in the database
-		$db_file = $GLOBALS['database']->query(array(
-				'SELECT' => 'files',
-				'COLUMNS' => array('id', 'Filedate'),
-				'WHERE' => 'Filepath = "' . addslashes($file) . '"',
-				'LIMIT' => 1
-			)
-		, false);
+		// always add to file database
+		PEAR::raiseError('Adding ' . $handler . ': ' . $file, E_DEBUG);
 		
-		if( count($db_file) == 0 )
+		// add to database
+		return $GLOBALS['database']->query(array('INSERT' => $handler, 'VALUES' => $fileinfo), false);
+	}
+	// not dependent on force because it checks for modification
+	elseif($handler == 'files')
+	{
+		// get file information
+		$fileinfo = get_files_info($file);
+		
+		// update file if modified date has changed
+		if( date("Y-m-d h:i:s", filemtime($file)) != $db_file[0]['Filedate'] )
 		{
-			// get file information
-			$fileinfo = get_file_info($file);
+			PEAR::raiseError('Modifying file: ' . $file, E_DEBUG);
 			
-			// always add to file database
-			PEAR::raiseError('Adding file: ' . $file, E_DEBUG);
-			
-			// add to database
-			return $GLOBALS['database']->query(array('INSERT' => 'files', 'VALUES' => $fileinfo), false);
+			// update database
+			return $GLOBALS['database']->query(array('UPDATE' => 'files', 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $db_file[0]['id']), false);
 		}
-		// not dependent on force because it checks for modification
 		else
 		{
-			// get file information
-			$fileinfo = get_file_info($file);
-			
-			// update file if modified date has changed
-			if( date("Y-m-d h:i:s", filemtime($file)) != $db_file[0]['Filedate'] )
-			{
-				PEAR::raiseError('Modifying file: ' . $file, E_DEBUG);
-				
-				// update database
-				return $GLOBALS['database']->query(array('UPDATE' => 'files', 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $db_file[0]['id']), false);
-			}
-			else
-			{
-				PEAR::raiseError('Skipping file: ' . $file, E_DEBUG);
-			}
-			
+			PEAR::raiseError('Skipping file: ' . $file, E_DEBUG);
 		}
 		
 	}
+	elseif($force == true)
+	{
+		PEAR::raiseError('Modifying ' . $handler . ': ' . $file, E_DEBUG);
+		
+		// update database
+		return $GLOBALS['database']->query(array('UPDATE' => $handler, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $db_file[0]['id']), false);
+	}
+	else
+	{
+		PEAR::raiseError('Skipping ' . $handler . ': ' . $file, E_DEBUG);
+	}
+		
 	return false;
 }
 
@@ -237,8 +288,23 @@ function output_files($file, $handler)
 	if(setting('admin_alias_enable') == true)
 		$file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 	
+	// load file from file system
+	if(!setting('database_enable') && setting_installed())
+	{
+		// replace path
+		$file = str_replace('\\', '/', $file);
+		
+		// check to make sure file is valid
+		if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)))
+		{
+			if($fp = @fopen($file, 'rb'))
+			{
+				return $fp;
+			}
+		}
+	}
 	// check to make sure file is valid
-	if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)))
+	elseif(is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)))
 	{
 		$files = $GLOBALS['database']->query(array(
 			'SELECT' => $handler,
@@ -276,8 +342,22 @@ function output_files($file, $handler)
  * - this is a very generalized handler to provide a template for overriding, or for other handlers to modify the $request and pass to this one
  *   - other handlers are responsible for any validation of input that is not listed here, like making sure files exist on the filesystem
  */
-function get_files($request, &$count, $handler)
+function get_files($request, &$count, $handler_or_internal)
 {
+	// for security, check the handler imediately
+	if(is_bool($handler_or_internal))
+	{
+		// set the internal handler
+		$internal = $handler_or_internal;
+		$handler = 'files';
+	}
+	else
+	{
+		// internal use defaults to false, set handler to input variable
+		$internal = false;
+		$handler = $handler_or_internal;
+	}
+	
 	// if the handler is set, call that instead
 	if($handler != 'files' && function_exists('get_' . $handler))
 		return call_user_func_array('get_' . $handler, array($request, $count));
@@ -285,12 +365,138 @@ function get_files($request, &$count, $handler)
 		return get_files($GLOBALS['handlers'][$handler]['wrapper']);
 	elseif($handler != 'files')
 	{
-		PEAR::raiseError('get_files() called with handler \'' . $handler . '\' but no get_ handler function exists! Defaulting to db_file', E_DEBUG);
+		PEAR::raiseError('get_files() called with handler \'' . $handler . '\' but no get_ handler function exists! Defaulting to files', E_DEBUG);
 		
 		// set the cat in the request to the provided handler
 		$request['cat'] = validate_cat(array('cat' => $handler));
 	}
+	
+	// if using the database and this isn't an internal request
+	if(dependency('database') && !$internal)
+	{
+		return _get_database_files($request, $count, $handler);
+	}
+	// if NOT using the database or it IS and internal request
+	elseif(!setting('database_enable') || $internal == true)
+	{
+		return _get_local_files($request, $count, $handler);
+	}
+	// if USING the database and NOT and internal request
+	else
+	{
+		// there is probably just something wrong with some code, report it and exit
+		PEAR::raiseError('get_files() called without any acceptable intention!', E_DEBUG);
 		
+		return array();
+	}
+}
+
+/** 
+ * Implementation of get_handler
+ * the mysql can be left null to get the files from a directory, in which case a directory must be specified
+ * if the mysql is provided, then the file listings will be loaded from the database
+ * don't use $internals = true
+ * @ingroup get_handler
+ */
+function _get_local_files($request, &$count, $handler)
+{
+	$files = array();
+
+	// do validation! for the fields we use
+	$request['start'] = validate_start($request);
+	$request['limit'] = validate_limit($request);
+
+	if(isset($request['selected']) && count($request['selected']) > 0 )
+	{
+		$request['selected'] = validate_selected($request);
+		foreach($request['selected'] as $i => $id)
+		{
+			$file = str_replace('\\', '/', @pack('H*', $id));
+			if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)))
+			{
+				if(call_user_func($handler . '::handles', $file))
+				{
+					$info = call_user_func($handler . '::getInfo', $file);
+					$info['id'] = bin2hex($request['file']);
+					$info['Filepath'] = stripslashes($info['Filepath']);
+					
+					// make some modifications
+					if($info['Filetype'] == 'FOLDER') $info['Filepath'] .= '/';
+					$files[] = $info;
+				}
+			}
+		}
+	}
+	
+	if(isset($request['file']))
+	{
+		$request['cat'] = validate_cat($request);
+		$request['file'] = str_replace('\\', '/', $request['file']);
+		if(file_exists(str_replace('/', DIRECTORY_SEPARATOR, $request['file'])))
+		{
+			if(handles($request['file'], $request['cat']))
+			{
+				if(function_exists('get_' . $request['cat'] . '_info'))
+					$info = call_user_func('get_' . $request['cat'] . '_info', $request['file']);
+				
+				$info['id'] = bin2hex($request['file']);
+				$info['Filepath'] = stripslashes($info['Filepath']);
+			}
+			else{ PEAR::raiseError('Invalid file!', E_USER); }
+		}
+		else{ PEAR::raiseError('File does not exist!', E_USER); }
+	}
+	else
+	{
+
+		// set a directory if one isn't set already
+		if(!isset($request['dir']))
+			$request['dir'] = realpath('/');
+		$request['dir'] = str_replace('\\', '/', $request['dir']);
+			
+		// check to make sure is it a valid directory before continuing
+		if (is_dir(str_replace('/', DIRECTORY_SEPARATOR, $request['dir'])))
+		{
+			// scandir - read in a list of the directory content
+			$tmp_files = scandir(str_replace('/', DIRECTORY_SEPARATOR, $request['dir']));
+			$count = count($tmp_files);
+			
+			// parse out all the files that this handler doesn't handle, just like a filter
+			//  but only if we are not called by internals
+			for($j = 0; $j < $count; $j++)
+				if(!handles($request['dir'] . $tmp_files[$j], 'files') || (isset($request['dirs_only']) && $request['dirs_only'] == true && !is_dir($request['dir'] . $tmp_files[$j]))) unset($tmp_files[$j]);
+
+			// get the values again, this will reset all the indices
+			$tmp_files = array_values($tmp_files);
+			
+			// set the count to the total length of the file list
+			$count = count($tmp_files);
+			
+			// start the information getting and combining of file info
+			for($i = $request['start']; $i < min($request['start']+$request['limit'], $count); $i++)
+			{
+				// get the information from the handler for 1 file
+				$info = call_user_func('get_files_info', $request['dir'] . $tmp_files[$i]);
+				$info['id'] = bin2hex($request['dir'] . $tmp_files[$i]);
+				$info['Filepath'] = stripslashes($info['Filepath']);
+				
+				// make some modifications
+				if($info['Filetype'] == 'FOLDER') $info['Filepath'] .= '/';
+				
+				// set the informations in the total list of files
+				$files[] = $info;
+			}
+			
+			return $files;
+		}
+		else{ PEAR::raiseError('Directory does not exist!', E_USER); return false; }
+	}
+		
+	return $files;
+}
+
+function _get_database_files($request, &$count, $handler)
+{
 	// handle the request using default functionality
 	$files = array();
 
@@ -320,65 +526,65 @@ function get_files($request, &$count, $handler)
 	// get directory from database
 	$files = $GLOBALS['database']->query($props, true);
 	
-	if($files !== false)
+	// return here if the query did not work
+	if($files === false)
+		return array();
+
+	// now make some changes
+	foreach($files as $index => $file)
 	{
-		// now make some changes
-		foreach($files as $index => $file)
+		// do alias replacement on every file path
+		if(setting('admin_alias_enable') == true)
 		{
-			// do alias replacement on every file path
-			if(setting('admin_alias_enable') == true)
+			if(isset($file['Filepath']))
+				$files[$index]['Filepath'] = preg_replace($GLOBALS['paths_regexp'], $GLOBALS['alias'], $file['Filepath']);
+			$alias_flipped = array_flip($GLOBALS['alias']);
+			// check if the replaced path was the entire alias path
+			// in this case we want to replace the filename with the alias name
+			if(isset($file['Filepath']) && isset($alias_flipped[$file['Filepath']]))
 			{
-				if(isset($file['Filepath']))
-					$files[$index]['Filepath'] = preg_replace($GLOBALS['paths_regexp'], $GLOBALS['alias'], $file['Filepath']);
-				$alias_flipped = array_flip($GLOBALS['alias']);
-				// check if the replaced path was the entire alias path
-				// in this case we want to replace the filename with the alias name
-				if(isset($file['Filepath']) && isset($alias_flipped[$file['Filepath']]))
-				{
-					$index = $alias_flipped[$file['Filepath']];
-					$files[$index]['Filename'] = substr($GLOBALS['alias'][$index], 1, strlen($GLOBALS['alias'][$index]) - 2);
-				}
+				$index = $alias_flipped[$file['Filepath']];
+				$files[$index]['Filename'] = substr($GLOBALS['alias'][$index], 1, strlen($GLOBALS['alias'][$index]) - 2);
 			}
 		}
-		
+	}
+	
 //---------------------------------------- Get Count ----------------------------------------\\
-		// only get count if the query is not limited by the limit field
-		//  get count if limit is not set, which is should always be because of validate()
-		//  get count if it is greater than or equal to the limit, even though it will always be equal to or less then limit
-		//  if it is less, only get count if start is set
-		if(!isset($request['limit']) || count($files) >= $request['limit'] || (isset($request['start']) && $request['start'] > 0))
+	// only get count if the query is not limited by the limit field
+	//  get count if limit is not set, which is should always be because of validate()
+	//  get count if it is greater than or equal to the limit, even though it will always be equal to or less then limit
+	//  if it is less, only get count if start is set
+	if(!isset($request['limit']) || count($files) >= $request['limit'] || (isset($request['start']) && $request['start'] > 0))
+	{
+		// this is how we get the count of all the items
+		//  unset the limit to count it
+		unset($props['LIMIT']);
+		unset($props['ORDER']);
+		$props['COLUMNS'] = '*';
+		
+		// if where is not set then there is no reason to count the entire database
+		if(!isset($props['WHERE']) && !isset($props['GROUP']))
 		{
-			// this is how we get the count of all the items
-			//  unset the limit to count it
-			unset($props['LIMIT']);
-			unset($props['ORDER']);
-			$props['COLUMNS'] = '*';
-			
-			// if where is not set then there is no reason to count the entire database
-			if(!isset($props['WHERE']) && !isset($props['GROUP']))
-			{
-				$props = array('SELECT' => $request['cat']);
-			}
-			else
-			{
-				// count the last query
-				$props = array('SELECT' => '(' . database::statement_builder($props, true) . ') AS db_to_count');
-			}
-			$props['COLUMNS'] = 'count(*)';
-			
-			$result = $GLOBALS['database']->query($props, false);
-			
-			$count = intval($result[0]['count(*)']);
+			$props = array('SELECT' => $request['cat']);
 		}
-		// set the count to whatever the number of files is
 		else
 		{
-			$count = count($files);
+			// count the last query
+			$props = array('SELECT' => '(' . database::statement_builder($props, true) . ') AS db_to_count');
 		}
+		$props['COLUMNS'] = 'count(*)';
+		
+		$result = $GLOBALS['database']->query($props, false);
+		
+		$count = intval($result[0]['count(*)']);
+	}
+	// set the count to whatever the number of files is
+	else
+	{
+		$count = count($files);
 	}
 		
 	return $files;
-	
 }
 
 /**
@@ -400,7 +606,7 @@ function remove($file, $handler = NULL)
 {
 	if( $handler == NULL )
 	{
-		$handler = 'db_file';
+		$handler = 'files';
 	}
 	
 	$file = str_replace('\\', '/', $file);
@@ -415,7 +621,7 @@ function remove($file, $handler = NULL)
 	$GLOBALS['database']->query(array('DELETE' => $handler, 'WHERE' => 'Filepath = "' . addslashes($file) . '" OR LEFT(Filepath, ' . strlen($file_dir) . ') = "' . addslashes($file_dir) . '"'), false);	
 
 	// delete ids
-	remove_db_ids($file, $handler);
+	remove_ids($file, $handler);
 }
 
 /**
@@ -433,13 +639,13 @@ function remove($file, $handler = NULL)
 /**
  * Implementation of cleanup_handler
  */
-function cleanup($handler = NULL)
+function cleanup($handler = 'files')
 {
-	if( $handler == NULL )
-	{
-		$handler = 'db_file';
-	}
+	// if there is a cleanup_handler function use that instead
+	if(function_exists('cleanup_' . $handler))
+		call_user_func_array('cleanup_' . $handler, array());
 
+	/*
 	// first clear all the items that are no longer in the watch list
 	// since the watch is resolved all the items in watch have to start with the watched path
 	$watched_where = '';
@@ -504,7 +710,7 @@ function cleanup($handler = NULL)
 	$where_str = $watched_to_where . ' AND ' . $watched_where;
 	
 	// remove items that aren't in where directories
-	$GLOBALS['database']->query(array('DELETE' => $handler, 'WHERE' => $where_str), false);
+	$GLOBALS['database']->query(array('DELETE' => $handler, 'WHERE' => array($where_str)), true);
 	
 	if(count($GLOBALS['ignored']) > 0)
 	{
@@ -520,8 +726,9 @@ function cleanup($handler = NULL)
 		$ignored_where = substr($ignored_where, 0, strlen($ignored_where)-2);
 		
 		// remove items that are ignored
-		$GLOBALS['database']->query(array('DELETE' => $handler, 'WHERE' => $ignored_where), false);
+		$GLOBALS['database']->query(array('DELETE' => $handler, 'WHERE' => array($ignored_where)), true);
 	}
+	*/
 	
 	// remove any duplicates
 	$files = $GLOBALS['database']->query(array(
@@ -530,14 +737,22 @@ function cleanup($handler = NULL)
 			'GROUP' => 'Filepath',
 			'HAVING' => 'num > 1'
 		)
-	, false);
+	, true);
 
-	// remove first item from all duplicates
-	foreach($files as $i => $file)
+	// if files is not an array something must have gone wrong
+	if(!is_array($files))
 	{
-		PEAR::raiseError('Removing Duplicate ' . $GLOBALS['handlers'][$handler]['name'] . ': ' . $file['Filepath'], E_DEBUG);
-		
-		$GLOBALS['database']->query(array('DELETE' => $handler, 'WHERE' => 'id=' . $file['id']), false);
+		PEAR::raiseError('There was a problem when trying to remove duplicate files.', E_DEBUG);
+	}
+	else
+	{
+		// remove first item from all duplicates
+		foreach($files as $i => $file)
+		{
+			PEAR::raiseError('Removing Duplicate ' . $GLOBALS['handlers'][$handler]['name'] . ': ' . $file['Filepath'], E_DEBUG);
+			
+			$GLOBALS['database']->query(array('DELETE' => $handler, 'WHERE' => 'id=' . $file['id']), false);
+		}
 	}
 	
 	PEAR::raiseError('Cleanup: for ' . $GLOBALS['handlers'][$handler]['name'] . ' complete.', E_DEBUG);

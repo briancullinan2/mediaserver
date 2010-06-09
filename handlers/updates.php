@@ -68,7 +68,7 @@ function handles_updates($dir, $file = NULL)
 					// count files
 					while (($file = readdir($dh)) !== false)
 					{
-						if(handles($dir . $file, 'db_file'))
+						if(handles($dir . $file, 'files'))
 						{
 							if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $dir . $file . '/')))
 							{
@@ -140,13 +140,13 @@ function is_watched($dir)
  * Implementation of handle
  * @ingroup handle
  */
-function handle_updates($dir)
+function add_updates($dir)
 {
 	$dir = str_replace('\\', '/', $dir);
 	
-	if(handles($dir, 'db_watch_list'))
+	if(handles($dir, 'updates'))
 	{
-		$db_watch_list = $GLOBALS['database']->query(array(
+		$update = $GLOBALS['database']->query(array(
 				'SELECT' => 'admin_watch',
 				'COLUMNS' => array('id'),
 				'WHERE' => 'Filepath = "' . addslashes($dir) . '"',
@@ -154,11 +154,18 @@ function handle_updates($dir)
 			)
 		, false);
 		
-		if( count($db_watch_list) == 0 )
+		if( count($update) == 0 )
 		{
 			// add directory to scan queue
-			$id = db_watch_list_add($dir);
+			$fileinfo = array();
+			$fileinfo['Filepath'] = addslashes($dir);
+		
+			PEAR::raiseError('Queueing directory: ' . $dir, E_DEBUG);
 			
+			// add to database
+			$id = $GLOBALS['database']->query(array('INSERT' => 'updates', 'VALUES' => $fileinfo), false);
+			
+			return $id;
 		}
 	}
 	
@@ -180,7 +187,7 @@ function scan_dir($dir)
 	PEAR::raiseError('Scanning directory: ' . $dir, E_DEBUG);
 	
 	// search all the files in the directory
-	$files = get_files(array('dir' => $dir, 'limit' => 32000), $count, 'filesystem');
+	$files = get_files(array('dir' => $dir, 'limit' => 32000), $count, true);
 	
 	// send new/changed files to other handlers
 	$paths = array();
@@ -265,7 +272,7 @@ function handle_dir($dir, $current = '')
 	{
 		PEAR::raiseError('Looking for changes in: ' . $current, E_DEBUG);
 	
-		$files = get_files(array('dir' => $current, 'limit' => 32000), $count, 'filesystem');
+		$files = get_files(array('dir' => $current, 'limit' => 32000), $count, true);
 		$has_resumed = false;
 		// keep going until all files in directory have been read
 		foreach($files as $i => $file)
@@ -296,7 +303,7 @@ function handle_dir($dir, $current = '')
 				$file['Filepath'] = str_replace('\\', '/', $file['Filepath']);
 				
 				$current_dir = true;
-				if(handles($file['Filepath'], 'db_watch_list'))
+				if(handles($file['Filepath'], 'updates'))
 
 				{
 					$db_watch_list = $GLOBALS['database']->query(array(
@@ -311,7 +318,7 @@ function handle_dir($dir, $current = '')
 					
 					if( count($db_watch_list) == 0 )
 					{
-						$id = add_db_watch_list($file['Filepath']);
+						$id = add_updates($file['Filepath']);
 					}
 				}
 				
@@ -339,9 +346,9 @@ function handle_dir($dir, $current = '')
 function handle_file($file)
 {
 	$ids = array();
-	
+
 	// since we are only dealing with files that actually exist
-	$skipped = handle_db_file($file);
+	$skipped = add($file);
 	
 	//   modify ids if something was added
 	$added = false;
@@ -353,48 +360,18 @@ function handle_file($file)
 	
 	// if the file is skipped the only pass it to other handlers for adding, not modifing
 	//   if the file was modified or added the information could have changed, so the handlers must modify it, if it is already added
-	foreach($GLOBALS['handlers'] as $i => $handler)
+	foreach($GLOBALS['handlers'] as $handler => $config)
 	{
 		// never pass it to fs_file, it is only used to internals in this case
 		// db_file and db_ids are handled independently
 		// skip db_watch and db_watch_list to prevent recursion
-		if($handler != 'db_file' && is_internal($handler) == false && is_wrapper($handler) == false)
+		if($handler != 'files' && is_internal($handler) == false && is_wrapper($handler) == false)
 		{
 			// get the file information and add it to the database
-			if(!function_exists('handle_' . $handler) && handles($file, $handler))
+			if(handles($file, $handler))
 			{
-				// check to see if it is in the database
-				$files = $GLOBALS['database']->query(array(
-						'SELECT' => $handler,
-						'COLUMNS' => 'id',
-						'WHERE' => 'Filepath = "' . addslashes($file) . '"',
-						'LIMIT' => 1
-					)
-				, false);
-					
-				if( count($files) == 0 )
-				{
-					$fileinfo = call_user_func_array('get_' . $handler . '_info', array($file));
-
-					PEAR::raiseError('Adding ' . $handler . ': ' . $file, E_DEBUG);
-					
-					// add to database
-					$id = $GLOBALS['database']->query(array('INSERT' => $handler, 'VALUES' => $fileinfo), false);
-				}
-				elseif($skipped !== false)
-				{
-					$fileinfo = get_audio_info($file);
-
-					PEAR::raiseError('Modifying ' . $handler . ': ' . $file, E_DEBUG);
-					
-					// update database
-					$id = $GLOBALS['database']->query(array('UPDATE' => $handler, 'VALUES' => $fileinfo, 'WHERE' => 'id = ' . $files[0]['id']), false);
-				}
-			}
-			else
-			{
-				// call another function to add to the database
-				$result = call_user_func_array('handle_' . $handler, array($file, ($skipped !== false)));
+				// call function to add to the database
+				$result = add($file, ($skipped !== false), $handler);
 				if($result !== false)
 				{
 					$added = true;
@@ -413,23 +390,6 @@ function handle_file($file)
 }
 
 /** 
- * Helper function
- */
-function add_updates($file)
-{
-	// pull information from $info
-	$fileinfo = array();
-	$fileinfo['Filepath'] = addslashes($file);
-
-	PEAR::raiseError('Queueing directory: ' . $file, E_DEBUG);
-	
-	// add to database
-	$id = $GLOBALS['database']->query(array('INSERT' => 'updates', 'VALUES' => $fileinfo), false);
-	
-	return $id;
-}
-
-/** 
  * Implementation of get_handler
  * @ingroup get_handler
  */
@@ -441,7 +401,7 @@ function get_updates($request, &$count)
 	if(isset($request['file']))
 		return array();
 	
-	return get_files($request, $count, 'updates');
+	return get_files($request, $count, 'files');
 }
 	
 

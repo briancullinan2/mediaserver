@@ -71,6 +71,7 @@ function setup_core()
 				'debug_mode', 'recursive_get', 'no_bots', 'buffer_size', 'verbose'
 			),
 			'depends on' => array('template'),
+			'template' => true,
 		),
 		'database' => register_database(),
 	);
@@ -148,7 +149,7 @@ function flatten_module_dependencies($modules, $already_added = array())
  */
 function setup_register_modules($path)
 {
-	$files = get_filesystem(array('dir' => setting_local_root() . $path, 'limit' => 32000), $count, true);
+	$files = get_files(array('dir' => setting_local_root() . $path, 'limit' => 32000), $count, true);
 	
 	$modules = array();
 	
@@ -1356,6 +1357,10 @@ function core_variables($request)
 	// set a couple more that are used a lot
 	$request['module'] = validate_module($request);
 	$request['cat'] = validate_cat($request);
+	$request['group_by'] = validate_group_by($request);
+	$request['group_index'] = validate_group_index($request);
+	$request['start'] = validate_start($request);
+	$request['limit'] = validate_limit($request);
 	
 	// the entire site depends on this
 	register_output_vars('module', $request['module']);
@@ -1365,6 +1370,12 @@ function core_variables($request)
 	
 	// some templates would like to submit to their own page, generate a string based on the current get variable
 	register_output_vars('get', url($_GET, true));
+	
+	// some request variables used primarily by the database
+	register_output_vars('group_by', $request['group_by']);
+	register_output_vars('group_index', $request['group_index']);
+	register_output_vars('start', $request['start']);
+	register_output_vars('limit', $request['limit']);
 }
 
 /**
@@ -1520,15 +1531,27 @@ function validate_errors_only($request)
 
 /**
  * Implementation of #setup_validate()
- * @return db_file/fs_file handler by default
+ * @return files handler by default, accepts any valid handler is database is used, or any valid handler that contains a get_handler_info() function if database is not used
  */
 function validate_cat($request)
 {
 	// check if it exists
 	if(isset($request['cat']) && in_array($request['cat'], array_keys($GLOBALS['handlers'])))
-		return $request['cat'];
+	{
+		// if the database is not used, then to only categories that can be used for processing
+		//   are the ones with a get_handler_info() function attached, this rules out, but is not limited to
+		//   handlers that only operate on some other database such as wrappers
+		if(setting('database_enable') == false && function_exists('get_' . $request['cat'] . '_info'))
+			return $request['cat'];
+		// the database is used, so return any valid handler
+		elseif(setting('database_enable') != false)
+			return $request['cat'];
+		// the database is not used, and there is not get_handler_info function, return default
+		else
+			return 'files';
+	}
 	else
-		return (setting('database_enable') && dependency('database'))?'files':'filesystem';
+		return 'files';
 }
 
 /**
@@ -1607,7 +1630,26 @@ function validate_group_by($request)
 		else
 			return join(',', $columns);
 	}
-	return $request['group_by'];
+	elseif(isset($request['group_by']))
+		return $request['group_by'];
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return false by default
+ */
+function validate_group_index($request)
+{
+	if(isset($request['group_index']))
+	{
+		if($request['group_index'] === true || $request['group_index'] === 'true')
+			return true;
+		elseif($request['group_index'] === false || $request['group_index'] === 'false')
+			return false;
+		elseif(is_string($request['group_index']))
+			return strtolower($request['group_index'][0]);
+	}
 }
 
 /**
@@ -1890,7 +1932,20 @@ function alter_query_core($request, $props)
 	
 	$props['LIMIT'] = $request['start'] . ',' . $request['limit'];
 	
-	if(isset($request['group_by'])) $props['GROUP'] = validate_group_by($request);
+	if(isset($request['group_by'])) 
+	{
+		$props['GROUP'] = validate_group_by($request);
+		
+		if(isset($request['group_index']) && $request['group_index'] === true)
+		{
+			$props['GROUP'] = 'SUBSTRING(' . $props['GROUP'] . ', 1, 1)';
+		}
+		elseif(isset($request['group_index']) && is_string($request['group_index']))
+		{
+			$props['WHERE'][] = 'LEFT(' . $props['GROUP'] . ', 1) = "' . addslashes($request['group_index']) . '"';
+			unset($props['GROUP']);
+		}
+	}
 
 	// relevance is handled below
 	if($request['order_by'] == 'Relevance')
@@ -1968,3 +2023,124 @@ function output_core($request)
 /**
  * @}
  */
+
+function theme_index()
+{
+	?>
+	There are <?php print $GLOBALS['templates']['html']['total_count']; ?> result(s).<br />
+	Displaying items <?php print $GLOBALS['templates']['html']['start']; ?> to <?php print $GLOBALS['templates']['html']['start'] + $GLOBALS['templates']['html']['limit']; ?>.
+	<br />
+	<?php
+	if(count($GLOBALS['user_errors']) > 0)
+	{
+		?><span style="color:#C00"><?php
+		foreach($GLOBALS['user_errors'] as $i => $error)
+		{
+			?><b><?php print $error->message; ?></b><br /><?php
+		}
+		?></span><?php
+	}
+	
+	theme('pages');
+	?>
+	<br />
+	<form name="select" action="{$get}" method="post">
+		<input type="submit" name="select" value="All" />
+		<input type="submit" name="select" value="None" />
+		<p style="white-space:nowrap">
+		Select<br />
+		On : Off<br />
+		<?php
+		theme('files');
+		?>
+		<input type="submit" value="Save" /><input type="reset" value="Reset" /><br />
+	</form>
+	<?php
+		
+	theme('pages');
+	
+	?>
+	<br /><br />Select a Template:<br />
+	<?php
+	
+	theme('template_block');
+}
+
+function theme_pages()
+{
+	$item_count = count($GLOBALS['templates']['vars']['files']);
+	$page_int = $GLOBALS['templates']['vars']['start'] / $GLOBALS['templates']['vars']['limit'];
+	$lower = $page_int - 8;
+	$upper = $page_int + 8;
+	$GLOBALS['templates']['vars']['total_count']--;
+	$pages = floor($GLOBALS['templates']['vars']['total_count'] / $GLOBALS['templates']['vars']['limit']);
+	$prev_page = $GLOBALS['templates']['vars']['start'] - $GLOBALS['templates']['vars']['limit'];
+	if($pages > 0)
+	{
+		if($lower < 0)
+		{
+			$upper = $upper - $lower;
+			$lower = 0;
+		}
+		if($upper > $pages)
+		{
+			$lower -= $upper - $pages;
+			$upper = $pages;
+		}
+		
+		if($lower < 0)
+			$lower = 0;
+		
+		if($GLOBALS['templates']['vars']['start'] > 0)
+		{
+			if($GLOBALS['templates']['vars']['start'] > $GLOBALS['templates']['vars']['limit'])
+			{
+			?>
+			<a class="pageLink" href="<?php print url($GLOBALS['templates']['vars']['get'] . '&start=0'); ?>">First</a>
+			<a class="pageLink" href="<?php print url($GLOBALS['templates']['vars']['get'] . '&start=' . $prev_page); ?>">Prev</a>
+			<?php
+			}
+			else
+			{
+			?>
+			<a class="pageLink" href="<?php print url($GLOBALS['templates']['vars']['get'] . '&start=0'); ?>">First</a>
+			<?php
+			}
+			?> | <?php
+		}
+		
+		for($i = $lower; $i < $upper + 1; $i++)
+		{
+			if($i == $page_int)
+			{
+				?><b><?php print $page_int + 1; ?></b><?
+			}
+			else
+			{
+				?>
+				<a class="pageLink" href="<?php print url($GLOBALS['templates']['vars']['get'] . '&start=' . ($i * $GLOBALS['templates']['vars']['limit'])); ?>"><?php print $i + 1; ?></a>
+				<?php
+			}
+		}
+		
+		if($GLOBALS['templates']['vars']['start'] <= $GLOBALS['templates']['vars']['total_count'] - $GLOBALS['templates']['vars']['limit'])
+		{
+			?> | <?php
+			$last_page = floor($GLOBALS['templates']['vars']['total_count'] / $GLOBALS['templates']['vars']['limit']) * $GLOBALS['templates']['vars']['limit'];
+			$next_page = $GLOBALS['templates']['vars']['start'] + $GLOBALS['templates']['vars']['limit'];
+			if($GLOBALS['templates']['vars']['start'] < $GLOBALS['templates']['vars']['total_count'] - 2 * $GLOBALS['templates']['vars']['limit'])
+			{
+				?>
+				<a class="pageLink" href="<?php print url($GLOBALS['templates']['vars']['get'] . '&start=' . $next_page); ?>">Next</a>
+				<a class="pageLink" href="<?php print url($GLOBALS['templates']['vars']['get'] . '&start=' . $last_page); ?>">Last</a>
+				<?php
+			}
+			else
+			{
+				?>
+				<a class="pageLink" href="<?php print url($GLOBALS['templates']['vars']['get'] . '&start=' . $last_page); ?>">Last</a>
+				<?php
+			}
+		}
+	}
+}

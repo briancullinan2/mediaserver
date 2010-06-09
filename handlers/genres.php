@@ -20,7 +20,7 @@ function register_genres()
  */
 function get_genres($request, &$count)
 {
-		
+	$request['cat'] = validate_cat(array('cat' => 'audio'));
 	// modify some request stuff
 	if(isset($request['dir']))
 	{
@@ -33,14 +33,14 @@ function get_genres($request, &$count)
 		$request['columns'] = 'Genre';
 		unset($request['dir']);
 		
-		$files = get_db_file($request, $count, 'db_audio');
+		$files = get_files($request, $count, 'files');
 	}
 	else
 	{
 		$request['order_by'] = 'Genre';
 		$request['group_by'] = 'Genre';
 		
-		$files = get_db_file($request, $count, 'db_audio');
+		$files = get_files($request, $count, 'files');
 		
 		// make some changes
 		foreach($files as $i => $file)

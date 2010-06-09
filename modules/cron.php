@@ -37,7 +37,7 @@ function status_cron()
 {
 	$status = array();
 
-	if(dependency('database') != false && setting('database_enable') == true)
+	if(dependency('database'))
 	{
 		$status['cron'] = array(
 			'name' => lang('cron status title', 'Cron'),
@@ -389,7 +389,7 @@ function read_changed($request)
 			}
 			
 			// scan the directory
-			$current_dir = handle_db_watch('^' . $request['scan_dir']);
+			$current_dir = add_admin_watch('^' . $request['scan_dir']);
 		
 			// if exited because of time, then save state
 			if( $current_dir !== true )
@@ -441,7 +441,7 @@ function read_files()
 	do
 	{
 		// get 1 folder from the database to search the files for
-		$db_dirs = get_db_watch_list(array('limit' => 1, 'order_by' => 'id', 'direction' => 'ASC'), $count);
+		$db_dirs = get_updates(array('limit' => 1, 'order_by' => 'id', 'direction' => 'ASC'), $count);
 		
 		if(count($db_dirs) > 0)
 		{
@@ -587,7 +587,7 @@ function output_cron($request)
 	
 	// clean up the watch_list and remove stuff that doesn't exist in watch anymore
 	if($should_clean !== 0)
-		cleanup_db_watch_list();
+		cleanup('updates');
 	
 	// now scan some files
 	$GLOBALS['tm_start'] = array_sum(explode(' ', microtime()));
@@ -612,9 +612,12 @@ function output_cron($request)
 	
 	PEAR::raiseError("Phase 3: Cleaning up", E_DEBUG);
 	
-	foreach($GLOBALS['handlers'] as $i => $handler)
+	// clean up each database
+	foreach($GLOBALS['handlers'] as $handler => $config)
 	{
-		call_user_func_array('cleanup_' . $handler, array());
+		// only clean up the modules that have databases of their own
+		if(is_wrapper($handler) == false)
+			cleanup($handler);
 	}
 	
 	// read all the folders that lead up to the watched folder

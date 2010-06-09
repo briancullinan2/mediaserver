@@ -14,7 +14,6 @@ function register_plain()
 		'description' => 'Default plain text template with base files.',
 		'privilage' => 1,
 		'path' => __FILE__,
-		'files' => array('ampache', 'index', 'm3u', 'users', 'watch'),
 		'settings' => array(
 			'view' => array(
 				'name' => 'View Options',
@@ -41,17 +40,9 @@ function output_plain()
 {
 	switch($GLOBALS['templates']['vars']['module'])
 	{
-		case 'ampache':
-			theme('ampache');
-		break;
-		case 'list':
-			theme('list');
-		break;
 		case 'select':
 		case 'index':
 			theme('index');
-		break;
-		case 'login':
 		break;
 	}
 }

@@ -449,6 +449,7 @@ function output_encode($request)
 		return;
 	}
 	
+	// validate all the variables used
 	$request['encode'] = validate_encode($request);
 	$request['vcodec'] = validate_vcodec($request);
 	$request['acodec'] = validate_acodec($request);
@@ -468,7 +469,7 @@ function output_encode($request)
 	if(count($files) > 0)
 	{
 		// the ids handler will do the replacement of the ids
-		$files = get_db_ids(array('cat' => $_REQUEST['cat']), $tmp_count, $files);
+		$files = get_ids(array('cat' => $_REQUEST['cat']), $tmp_count, $files);
 		
 		$tmp_request = array();
 		$tmp_request['file'] = $files[0]['Filepath'];

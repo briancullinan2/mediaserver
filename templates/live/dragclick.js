@@ -63,16 +63,6 @@ function init()
 		if(tmp_name.substring(0, 4) == 'file')
 		{
 			// get the width of a file
-			if(file_height == null)
-			{
-				if(IE) {
-					file_height = objs[i].offsetHeight;
-					file_width = objs[i].offsetWidth;
-				} else {
-					file_height = objs[i].clientHeight;
-					file_width = objs[i].clientWidth;
-				}
-			}
 			count++;
 		}
 	}
@@ -328,7 +318,6 @@ function selectUnder()
 	// select all files underneath the selector
 	for(i = 0; i < file_obj.length; i++)
 	{
-		
 		// always select origin
 		if(startY <= file_top[i]+file_height && startY >= file_top[i] && startX <= file_left[i]+file_width && startX >= file_left[i] && file_changed[i] == false)
 		{

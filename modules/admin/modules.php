@@ -28,7 +28,12 @@ function setting_admin_modules()
 	{
 		$settings[] = $module . '_enable';
 		if(!function_exists('setting_' . $module . '_enable'))
-			$GLOBALS['setting_' . $module . '_enable'] = create_function('$request', 'return setting_module_enable($request, \'' . $module . '\');');
+		{
+			if(!in_array($module, get_required_modules()))
+				$GLOBALS['setting_' . $module . '_enable'] = create_function('$request', 'return setting_module_enable($request, \'' . $module . '\');');
+			else
+				$GLOBALS['setting_' . $module . '_enable'] = create_function('$request', 'return true;');
+		}
 	}
 	
 	return $settings;
@@ -283,59 +288,82 @@ function output_admin_modules($request)
 	
 		if($settings_changed == true)
 		{
+			// get default settings so they are not included in the save
+			$defaults = settings_get_defaults(array());
+				
 			// if we are using a database store the settings in the administrators profile
-			if(setting('database_enable'))
+			if(dependency('database'))
 			{
-			}
-			
-			// if the settings file is writable, put the new setting in it
-			if(dependency('writable_settings_file'))
-			{
-				PEAR::raiseError('The settings file is writeable!', E_DEBUG|E_WARN);
-				
-				$defaults = settings_get_defaults(array());
-				
-				$fh = fopen(setting('settings_file'), 'w');
-				$settings = '';
-				
-				if($fh !== false)
+				// only write the settings that are not the default
+				$new_settings = array();
+				foreach($GLOBALS['settings'] as $setting => $value)
 				{
-					
-					// only write the settings that are not the default
-					foreach($GLOBALS['settings'] as $setting => $value)
+					if(!isset($defaults[$setting]) || $value != $defaults[$setting])
 					{
-						if(is_string($value) && (!isset($defaults[$setting]) || $value != $defaults[$setting]))
-						{
-							$settings .= $setting . ' = ' . $value . "\n";
-						}
+						$new_settings[$setting] = $value;
 					}
-					
-					// only write the settings that are not the default
-					foreach($GLOBALS['settings'] as $setting => $value)
-					{
-						if(is_array($value))
-						{
-							$settings .= "\n[" . $setting . "]\n";
-							foreach($value as $subsetting => $subvalue)
-							{
-								$settings .= $subsetting . ' = ' . $subvalue . "\n";
-							}
-						}
-					}
-					
-					fwrite($fh, $settings);
-					fclose($fh);
-					
-					PEAR::raiseError('The settings have been saved', E_NOTE);
 				}
-				else
-				{
-					PEAR::raiseError('There was a problem with saving the settings in the settings file.', E_USER);
-				}
+				
+				// store in database
+				$result = $GLOBALS['database']->query(array(
+						'UPDATE' => 'users',
+						'WHERE' => 'id = -1',
+						'VALUES' => array(
+							'Settings' => addslashes(serialize($new_settings)),
+						),
+					)
+				, false);
+				
+				PEAR::raiseError('The settings have been saved', E_NOTE);
 			}
 			else
 			{
-				PEAR::raiseError('Cannot save settings, the settings file is not writable!', E_USER);
+				// if the settings file is writable, put the new setting in it
+				if(dependency('writable_settings_file'))
+				{
+					PEAR::raiseError('The settings file is writeable!', E_DEBUG|E_WARN);
+					
+					$fh = fopen(setting('settings_file'), 'w');
+					$settings = '';
+					
+					if($fh !== false)
+					{
+						// only write the settings that are not the default
+						foreach($GLOBALS['settings'] as $setting => $value)
+						{
+							if(is_string($value) && (!isset($defaults[$setting]) || $value != $defaults[$setting]))
+							{
+								$settings .= $setting . ' = ' . $value . "\n";
+							}
+						}
+						
+						// only write the settings that are not the default
+						foreach($GLOBALS['settings'] as $setting => $value)
+						{
+							if(is_array($value))
+							{
+								$settings .= "\n[" . $setting . "]\n";
+								foreach($value as $subsetting => $subvalue)
+								{
+									$settings .= $subsetting . ' = ' . $subvalue . "\n";
+								}
+							}
+						}
+						
+						fwrite($fh, $settings);
+						fclose($fh);
+						
+						PEAR::raiseError('The settings have been saved', E_NOTE);
+					}
+					else
+					{
+						PEAR::raiseError('There was a problem with saving the settings in the settings file.', E_USER);
+					}
+				}
+				else
+				{
+					PEAR::raiseError('Cannot save settings, the settings file is not writable!', E_USER);
+				}
 			}
 		}
 	}

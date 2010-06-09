@@ -148,8 +148,8 @@ function get_ids($request, &$count, $files = array())
 				'LIMIT' => count($files)
 			)
 		, true);
-		
-		if(count($files) == 0)
+
+		if(count($return) == 0)
 			return $return;
 		
 		// replace key for easy lookup
@@ -266,14 +266,14 @@ function remove_ids($file, $handler = NULL)
  */
 function cleanup_ids()
 {
-	cleanup_db_file('db_ids');
+	cleanup('files');
 	
 	// remove empty ids
 	$where = '';
 	foreach($GLOBALS['handlers'] as $handler => $config)
 	{
-		if(!is_wrapper($handler) && !is_internal($handler))
-			$where .= $db . '_id=0 AND';
+		if(!is_wrapper($handler) && !is_internal($handler) && isset($config['database']))
+			$where .= ' ' . $handler . '_id=0 AND';
 	}
 	$where = substr($where, 0, strlen($where) - 3);
 

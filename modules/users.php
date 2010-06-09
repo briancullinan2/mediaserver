@@ -66,7 +66,8 @@ function register_users()
 			'Settings' 		=> 'TEXT',
 			'Privilage'		=> 'INT',
 			'PrivateKey'	=> 'TEXT',
-			'LastLogin'		=> 'DATETIME'
+			'LastLogin'		=> 'DATETIME',
+			'Filepath' 		=> 'TEXT'
 		),
 		'internal' => true,
 		'template' => true,
@@ -89,7 +90,7 @@ function status_users()
 {
 	$status = array();
 
-	if(dependency('database') != false && setting('database_enable') == true)
+	if(dependency('database'))
 	{
 		$status['users'] = array(
 			'name' => lang('users status title', 'Users'),
@@ -705,3 +706,35 @@ function output_users($request)
 	if(isset($request['return'])) register_output_vars('return', $request['return']);
 }
 
+
+function theme_login()
+{
+	?>	
+	<form action="<?php echo url('module=users&users=login' . (isset($GLOBALS['templates']['vars']['return'])?('&return=' . urlencode($GLOBALS['templates']['vars']['return'])):'')); ?>" method="post">
+	
+		Username: <input type="text" name="username" value="<?php print isset($GLOBALS['templates']['vars']['username'])?$GLOBALS['templates']['vars']['username']:''; ?>" /><br />
+		Password: <input type="password" name="password" value="" /><br />
+		<input type="submit" value="Login" /><input type="reset" value="Reset" />
+		
+	</form>
+	<?php
+}
+
+function theme_register()
+{
+	?>	
+	<form action="<?php echo url('module=users&users=register'); ?>" method="post">
+	
+		Username: <input type="text" name="username" value="<?php print isset($GLOBALS['templates']['vars']['username'])?$GLOBALS['templates']['vars']['username']:''; ?>" /><br />
+		E-mail: <input type="text" name="email" value="<?php print isset($GLOBALS['templates']['vars']['email'])?$GLOBALS['templates']['vars']['email']:''; ?>" /><br />
+		Password: <input type="password" name="password" value="" /><br />
+		<input type="submit" value="Register" /><input type="reset" value="Reset" />
+		
+	</form>
+	<?php
+}
+
+function theme_confirmation()
+{
+	?>Thanks for signing up!<?php
+}

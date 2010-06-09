@@ -219,6 +219,9 @@ function alter_query_search($request, $props)
 	$request['selected'] = validate_selected($request);
 	if(isset($request['selected']) && count($request['selected']) > 0 ) return $props;
 	
+	// some other variables we need
+	$request['order_by'] = validate_order_by($request);
+	
 	// they can specify multiple columns to search for the same string
 	if(isset($request['columns']))
 	{

@@ -115,7 +115,7 @@ function theme_live_debug_block()
 		// clear debug errors
 		$GLOBALS['debug_errors'] = array();
 		?>
-		<a id="hide_link" href="javascript:return true;" onClick="if(this.hidden == false) { document.getElementById('debug').className='debug hide'; this.hidden=true; this.innerHTML = 'Un Hide'; } else { document.getElementById('debug').className='debug'; this.hidden=false; this.innerHTML = 'Hide'; }">Un Hide</a>
+		<a id="hide_link" href="javascript:return true;" onClick="if(this.hidden == false) { document.getElementById('debug').className='debug hide'; this.hidden=true; this.innerHTML = 'Show'; } else { document.getElementById('debug').className='debug'; this.hidden=false; this.innerHTML = 'Hide'; }">Show</a>
 		</div>
 		<?php
 	}
@@ -251,7 +251,7 @@ function theme_live_body()
 {
 	$theme = live_get_theme_color();
 ?>
-<body onLoad="init();" onmousemove="setSelector()" onmousedown="return startDrag(event);" onmouseup="endDrag();return false;">
+<body onLoad="init();" onmousemove="setSelector()">
 <?php theme('list_block'); ?>
 <div id="bodydiv">
 	<div id="sizer">
@@ -281,7 +281,7 @@ theme('breadcrumbs');
 						</td>
 					</tr>
 				</table>
-				<div id="content" onmousedown="return selector_off;">
+				<div id="content" onmousedown="return startDrag(event);" onmouseup="endDrag();return false;">
 					<div id="selector" style="display:none;"></div>
 					<ul class="menu" id="menu">
 						<li id="option_download"><a href="#" onMouseOut="this.className = '';" onMouseOver="this.className = 'itemSelect';"><b>Download File</b></a></li>

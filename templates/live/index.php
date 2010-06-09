@@ -234,49 +234,6 @@ function theme_live_errors()
 
 function theme_live_index()
 {
-	theme('header');
-	
-	$current = isset($GLOBALS['template']['html']['dir'])?basename($GLOBALS['templates']['html']['dir']):'';
-	
-	?>
-	<div class="contentSpacing">
-			<h1 class="title"><?php print ($current == '')?setting('html_name'):$current; ?></h1>
-			<span class="subText"><?php print lang('live select description', 'Click to browse files. Drag to select files, and right click for download options.'); ?></span>
-	<?php
-	if (count($GLOBALS['user_errors']) == 0 && count($GLOBALS['templates']['vars']['files']) > 0)
-	{
-		?>
-		<span class="subText">Displaying items
-			<?php print $GLOBALS['templates']['html']['start']+1; ?>
-			through <?php print $GLOBALS['templates']['vars']['start'] + $GLOBALS['templates']['vars']['limit']; ?>
-			<?php print ($GLOBALS['templates']['vars']['total_count'] > $GLOBALS['templates']['vars']['limit'])?(' out of ' . $GLOBALS['templates']['html']['total_count']):' file(s)'; ?>.
-		</span>
-		<?php
-	}
-	
-	theme('errors');
-	
-	theme('pages');
-	
-	?>
-	<div class="titlePadding"></div>
-	<?php
-	
-	theme('files');
-
-	theme('pages');
-	
-	theme('info');
-
-	?>
-<script language="javascript">
-loaded = true;
-if(document.getElementById("debug")) {
-	header_height = document.getElementById("header").clientHeight + document.getElementById("debug").clientHeight;
-} else {
-	header_height = document.getElementById("header").clientHeight;}
-</script>
-<?php
-	theme('footer');
+	theme_live_select();
 }
 

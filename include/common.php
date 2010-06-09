@@ -139,6 +139,7 @@ function setup()
 	
 	// always include fs_file handler
 	include_once setting_local_root() . 'handlers' . DIRECTORY_SEPARATOR . 'filesystem.php';
+	include_once setting_local_root() . 'handlers' . DIRECTORY_SEPARATOR . 'files.php';
 	
 	// register all modules
 	setup_core();

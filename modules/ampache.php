@@ -73,6 +73,8 @@ function output_ampache($request)
 	fwrite($fp, var_export($_SERVER, true));
 	fclose($fp);
 
+	// just incase this matters
+	$request['cat'] = validate_cat(array('cat' => 'audio'));
 	$request['action'] = validate_action($request);
 	$request['auth'] = validate_auth($request);
 	$request['start'] = validate_start($request);
@@ -331,7 +333,7 @@ function output_ampache($request)
 			
 			// the ids handler will do the replacement of the ids
 			if(count($files) > 0)
-				$files = get_db_ids(array('cat' => 'db_audio'), $tmp_count, $files);
+				$files = get_ids(array('cat' => 'audio'), $tmp_count, $files);
 					
 			// set the variables in the template		
 			register_output_vars('files', $files);
@@ -348,7 +350,7 @@ function output_ampache($request)
 			
 			// the ids handler will do the replacement of the ids
 			if(count($files) > 0)
-				$files = get_db_ids(array('cat' => 'db_audio'), $tmp_count, $files);
+				$files = get_ids(array('cat' => 'audio'), $tmp_count, $files);
 					
 			// set the variables in the template		
 			register_output_vars('files', $files);
@@ -372,7 +374,7 @@ function output_ampache($request)
 			
 			// the ids handler will do the replacement of the ids
 			if(count($files) > 0)
-				$files = get_db_ids(array('cat' => 'db_audio'), $tmp_count, $files);
+				$files = get_ids(array('cat' => 'audio'), $tmp_count, $files);
 					
 			// set the variables in the template		
 			register_output_vars('files', $files);
@@ -396,7 +398,7 @@ function output_ampache($request)
 			
 			// the ids handler will do the replacement of the ids
 			if(count($files) > 0)
-				$files = get_db_ids(array('cat' => 'db_audio'), $tmp_count, $files);
+				$files = get_ids(array('cat' => 'audio'), $tmp_count, $files);
 					
 			// set the variables in the template		
 			register_output_vars('files', $files);
@@ -407,11 +409,11 @@ function output_ampache($request)
 				'start' => $request['start'],
 				'search' => $request['search']
 			);
-			$files = get_db_audio($request, $count);
+			$files = get_files($request, $count, 'audio');
 								   
 			// the ids handler will do the replacement of the ids
 			if(count($files) > 0)
-				$files = get_db_ids(array('cat' => 'db_audio'), $tmp_count, $files);
+				$files = get_ids(array('cat' => 'audio'), $tmp_count, $files);
 				
 			// replace file path is actual path
 			foreach($files as $i => $file)
@@ -530,7 +532,7 @@ function theme_ampache()
 	<track><?php echo $song['Track']; ?></track>
 	<time><?php echo $song['Length']; ?></time>
 	<url><![CDATA[<?php echo url('encode=mp3&id=' . $song['id'] . '&cat=db_audio&module=encode', true, true); ?>]]></url>
-	<size><?php echo filesize($song['Filepath']); ?></size>
+	<size><?php echo file_exists($song['Filepath'])?filesize($song['Filepath']):0; ?></size>
 	<art><![CDATA[]]></art>
 	</song>
 	<?php

@@ -13,8 +13,28 @@ function register_bt()
 		'privilage' => 1,
 		'path' => __FILE__,
 		'template' => false,
-		'depends on' => array('bttracker_installed', 'seeder'),
+		'depends on' => array('bttracker_installed', 'bttracker_database_installed', 'seeder'),
+		'settings' => array('seeder_path', 'seeder_args'),
 	);
+}
+
+/**
+ * Implementation of dependency
+ * @ingroup dependency
+ */
+function dependency_seeder($settings)
+{
+	$settings['seeder_path'] = setting_seeder_path($settings);
+	return file_exists($settings['seeder_path']);
+}
+
+/**
+ * Implementation of dependency
+ * @ingroup dependency
+ */
+function dependency_bttracker_installed($settings)
+{
+	return (include_path('bttracker/config.php') !== false);
 }
 
 /**
@@ -41,6 +61,113 @@ function validate_bt_request($request)
 }
 
 /**
+ * implementation of status
+ * @ingroup status
+ */
+function status_bt($settings)
+{
+	$status = array();
+
+	if(dependency('bttracker_installed'))
+	{
+		$status['bttracker_installed'] = array(
+			'name' => 'PHP BTTracker+ Installed',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'The system has detected that bttracker is installed.',
+					'Bttracker is an open source torrent tracker.',
+				),
+			),
+			'type' => 'label',
+			'value' => 'Bttracker detected',
+		);
+	}
+	else
+	{
+		$status['bttracker_installed'] = array(
+			'name' => 'PHP BTTracker+ Missing',
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					'The system has detected that bttracker is NOT INSTALLED.',
+					'The root of the bttracker must be placed in &lt;site root&gt;/include/bttracker/',
+					'Bttracker is an open source torrent tracker.',
+				),
+			),
+			'value' => array(
+				'link' => array(
+					'url' => 'http://phpbttrkplus.sourceforge.net/',
+					'text' => 'Get PHP BTTracker+',
+				),
+			),
+		);
+	}
+	
+	return $status;
+}
+
+/**
+ * Implementation of configure
+ * @ingroup configure
+ */
+function configure_bt($settings)
+{
+	$settings['seeder_path'] = setting_seeder_path($settings);
+	
+	$options = array();
+	
+	if(dependency('seeder'))
+	{
+		$options['seeder_path'] = array(
+			'name' => lang('seeder title', 'Seeder'),
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					lang('seeder description', 'This script requires that a seeder be installed.'),
+				),
+			),
+			'type' => 'text',
+			'value' => $settings['seeder_path'],
+		);
+	}
+	else
+	{
+		$options['seeder_path'] = array(
+			'name' => lang('seeder title', 'Seeder'),
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					lang('seeder description fail', 'The seeder specified is not installed or cannot be run.'),
+				),
+			),
+			'type' => 'text',
+			'value' => $settings['seeder_path'],
+		);
+	}
+	
+	return $options;
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ * @return The default install path for VLC on windows or linux based on validate_SYSTEM_TYPE
+ */
+function setting_seeder_path($settings)
+{
+	if(isset($settings['seeder_path']) && is_file($settings['seeder_path']))
+		return $settings['seeder_path'];
+	else
+	{
+		if(setting_system_type($settings) == 'win')
+			return 'C:\Program Files\VideoLAN\VLC\vlc.exe';
+		else
+			return '/bin/ctorrent';
+	}
+}
+
+/**
  * Implementation of output
  * @ingroup output
  */
@@ -61,7 +188,7 @@ function output_bt($request)
 			)
 		, false);
 	
-		include_once setting('local_root') . 'modules' . DIRECTORY_SEPARATOR . 'bttracker' . DIRECTORY_SEPARATOR . 'config.php';
+		include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'bttracker' . DIRECTORY_SEPARATOR . 'config.php';
 		$admin_user = $admin[0]['Username'];
 		$admin_pass = $admin[0]['Password'];
 		
@@ -71,13 +198,13 @@ function output_bt($request)
 		$dbpass = $parsed_dsn['password'];
 		$database = $parsed_dsn['database'];
 	
-		include setting('local_root') . 'modules' . DIRECTORY_SEPARATOR . 'bttracker' . DIRECTORY_SEPARATOR . 'announce.php';
+		include setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'bttracker' . DIRECTORY_SEPARATOR . 'announce.php';
 		
 	}
 	else
 	{
-		include_once setting('local_root') . 'modules' . DIRECTORY_SEPARATOR . 'bttracker' . DIRECTORY_SEPARATOR . 'BEncode.php';
-		include_once setting('local_root') . 'modules' . DIRECTORY_SEPARATOR . 'bttracker' . DIRECTORY_SEPARATOR . 'funcsv2.php';
+		include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'bttracker' . DIRECTORY_SEPARATOR . 'BEncode.php';
+		include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'bttracker' . DIRECTORY_SEPARATOR . 'funcsv2.php';
 	
 		$request['cat'] = validate_cat($request);
 		
@@ -88,7 +215,7 @@ function output_bt($request)
 		
 		// the ids handler will do the replacement of the ids
 		if(count($files) > 0)
-			$files = get_db_ids(array('cat' => $request['cat']), $tmp_count, $files);
+			$files = get_ids(array('cat' => $request['cat']), $tmp_count, $files);
 		
 		// get all the other information from other handlers
 		for($index = 0; $index < $files_length; $index++)

@@ -7,7 +7,7 @@
 function register_archive()
 {
 	return array(
-		'name' => lang('archive title', 'Archive Generator'),
+		'name' => lang('archive title', 'Archives'),
 		'description' => lang('archive description', 'Convert sets of files to an archive using a command line program.'),
 		'privilage' => 1,
 		'path' => __FILE__,
@@ -269,6 +269,10 @@ function get_archive_info($file)
  */
 function add_archive($file, $archive_id = NULL)
 {
+	// files always qualify, we are going to log every single one!
+	if(!handles($file, 'archive'))
+		return false;
+
 	// pull information from $info
 	parseInner($file, $last_path, $inside_path);
 	
@@ -281,7 +285,7 @@ function add_archive($file, $archive_id = NULL)
 	}
 
 	// Add archive first so if it fails then it won't try to read it again
-	$fileinfo = get_filesystem_info($last_path);
+	$fileinfo = get_files_info($last_path);
 	$fileinfo['Compressed'] = $fileinfo['Filesize'];
 	$fileinfo['Filesize'] = 0;
 	
@@ -322,7 +326,7 @@ function add_archive($file, $archive_id = NULL)
 	}
 	
 	// add root file which is the filepath but with a / for compatibility
-	$fileinfo = get_filesystem_info($last_path);
+	$fileinfo = get_files_info($last_path);
 	$fileinfo['Compressed'] = $fileinfo['Filesize'];
 	$fileinfo['Filesize'] = $total_size;
 	if(substr($fileinfo['Filepath'], -1) != '/') $fileinfo['Filepath'] .= '/';

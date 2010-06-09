@@ -1,0 +1,27 @@
+/* CSS Document */
+
+html, body
+{
+	background-color:#000;
+	height:100%;
+	width:100%;
+}
+
+div.file
+{
+	display:block;
+	height:60px;
+	font-size:36px;
+	white-space:nowrap;
+}
+
+a
+{
+	color:inherit;
+}
+
+#debug
+{
+	background-color:#FF0;
+	position:absolute;
+}

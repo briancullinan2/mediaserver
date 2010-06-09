@@ -175,7 +175,7 @@ function setting_highlighter($settings)
  * Handles all text files, and all extensions supported by the get language function
  * @ingroup handles
  */
-function handles_db_code($file)
+function handles_code($file)
 {
 	$file = str_replace('\\', '/', $file);
 	if(setting('admin_alias_enable') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
@@ -345,7 +345,7 @@ function add_code($file, $force = false)
 {
 	$file = str_replace('\\', '/', $file);
 	
-	if(handles($file, 'db_code'))
+	if(handles($file, 'code'))
 	{
 		// check to see if it is in the database
 		$db_code = $GLOBALS['database']->query(array(
@@ -460,7 +460,7 @@ function get_code_html($lines, $lang)
  * Implementation of output_handler
  * @ingroup output_handler
  */
-function output_db_code($file)
+function output_code($file)
 {
 	$file = str_replace('\\', '/', $file);
 	
@@ -475,9 +475,10 @@ function output_db_code($file)
  * Implementation of get_handler
  * @ingroup get_handler
  */
-function get_db_code($request, &$count)
+function get_code($request, &$count)
 {
-	$files = get_db_file($request, $count, 'db_code');
+	$request['cat'] = validate_cat(array('cat' => 'code'));
+	$files = get_files($request, $count, 'files');
 	
 	foreach($files as $i => $file)
 	{
@@ -485,24 +486,6 @@ function get_db_code($request, &$count)
 	}
 	
 	return $files;
-}
-
-/** 
- * Implementation of remove_handler
- * @ingroup remove_handler
- */
-function remove_db_code($file)
-{
-	remove_db_file($file, 'db_code');
-}
-
-/** 
- * Implementation of cleanup_handler
- * @ingroup cleanup_handler
- */
-function cleanup_db_code()
-{
-	cleanup_db_file('db_code');
 }
 
 // source code handler

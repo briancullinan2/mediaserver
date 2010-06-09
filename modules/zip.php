@@ -27,12 +27,12 @@ function output_zip($request)
 	$request['cat'] = validate_cat($request['cat']);
 
 	// make select call
-	$files = call_user_func_array('get_' . $request['cat'], array($request, &$count));
+	$files = get_files($request, &$count, $request['cat']);
 	$files_length = count($files);
 
 	// the ids handler will do the replacement of the ids
 	if(count($files) > 0)
-		$files = get_db_ids(array('cat' => $request['cat']), $tmp_count, $files);
+		$files = get_ids(array('cat' => $request['cat']), $tmp_count, $files);
 
 	// get all the other information from other handlers
 	for($index = 0; $index < $files_length; $index++)
@@ -48,7 +48,7 @@ function output_zip($request)
 		if(count(array_intersect_key($file, getIDKeys())) == 0)
 		{
 			// use the handler_id column to look up keys
-			$ids = get_db_ids(array('file' => $file['Filepath'], $request['cat'] . '_id' => $file['id']), $tmp_count);
+			$ids = get_ids(array('file' => $file['Filepath'], $request['cat'] . '_id' => $file['id']), $tmp_count);
 			if(count($ids) > 0)
 			{
 				$files[$index] = array_merge($ids[0], $files[$index]);
@@ -58,7 +58,7 @@ function output_zip($request)
 		}
 	
 		// merge all the other information to each file
-		foreach($GLOBALS['handlers'] as $i => $handler)
+		foreach($GLOBALS['handlers'] as $handler => $config)
 		{
 			if($handler != $request['cat'] && is_internal($handler) == false && handles($file['Filepath'], $handler))
 			{
@@ -71,7 +71,10 @@ function output_zip($request)
 		if(isset($file['Filetype']) && $file['Filetype'] == 'FOLDER')
 		{
 			// get all files in directory
-			$props = array('dir' => $file['Filepath']);
+			$props = array(
+				'dir' => $file['Filepath'],
+				//'search_Filetype' => '',
+			);
 			$sub_files = get_files($props, &$tmp_count, $request['cat']);
 		
 			// put these files on the end of the array so they also get processed

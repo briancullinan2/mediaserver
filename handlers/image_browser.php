@@ -53,7 +53,7 @@ function output_image_browser($file)
 {
 	// check to make sure file is valid
 	header('Content-Disposition: ');
-	return output_db_file($file);
+	return output_files($file);
 }
 
 /** 

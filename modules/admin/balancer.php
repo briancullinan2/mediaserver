@@ -12,7 +12,7 @@ function register_admin_balancer()
 		'privilage' => 10,
 		'path' => __FILE__,
 		'settings' => array(),
-		'depends on' => array('settings', 'snoopy_installed'),
+		'depends on' => array('settings', 'snoopy_installed', 'session'),
 		'session' => array('add_server', 'remove_server', 'add_rule', 'remove_rule', 'reset_configuration'),
 	);
 }

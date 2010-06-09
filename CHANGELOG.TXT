@@ -1,3 +1,23 @@
+2010-06-05
+Fixed a bunch of minor bugs, like reference to setting('use_database') which was changed in the 2010-05-05 update
+Worked on cron module
+
+2010-06-04
+Changed some of the dependency('database') instances to just using that fuction because the setting('database_enable') is verified in that function 
+	unless specified otherwise in the 2010-05-23 update
+Merged functionality of filesystem with files
+	Decided to keep it seperate from the file module because there is so much important code in both modules already
+Validate_cat() function is database aware and only accepts handlers that have get_handler_info() functions if the database is not used
+
+2010-05-31
+Fixed props['WHERE'] being set to string
+	Default functionality is not to set it to an array for organization which can be combined by the statement_builder() function
+Speed appears to be fine with the addition of user directories
+Fixed some bugs in ampache module
+Removed the use of local_base from the system
+Removed plain template from system
+	It is now just used as a place holder for the functionality that comes with each module
+
 2010-05-23
 Created modules for a bunch of new functionality in the Tools section
 Notemplate in the module config is now replaced with template
@@ -36,7 +56,7 @@ Modules are disabled when the dependencies are not met
 Made lots of changes regarding the handlers
 	Handlers register themselves just like any other module
 	All that is required different from modules is the database field in the config
-Handlers can now changes what database they are using by specifying a database in the $request['cat'] and passing it to the get_files() function
+Handlers can now change what database they are using by specifying a database in the $request['cat'] and passing it to the get_files() function
 	The 3rd parameter should be set to 'files' to use default database get functionality
 fs_ handlers now merged with the database handlers and some have been consolidated back in to modules
 If dependencies fail on a module, it is disabled
