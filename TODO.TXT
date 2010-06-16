@@ -1,5 +1,6 @@
 ------------- MONOLITHICMEDIA TODO -------------
 ------------- GENERAL TODO -------------
+Remove Snoopy from the system and just use curl requests, snoopy kind of sucks
 Cron is not running properly again...
 IMPORTANT!  Convert all call_user_func_array usage to the standard callable method
 Finish webdav module that allows files to be uploaded and access using the web dav protocol.  This is already mostly supported by PEAR.
@@ -78,10 +79,6 @@ Finish users.php module
 Work on settings.php module
 	Global settings such as default template to use for each device logged in the to account
 	Template settings, must provide specification in template config, use database for storing fields?
-Finish setting() function in settings.php plugin
-	Settings should also be loadable from the database
-	Save module settings in database
-	Cache all loaded module files in settings database (possibly storing in admin settings and deserializing would be efficient?)
 ------------- Handler TODO -------------
 Make a discography handler that parses out wikipedia discographys, store album information, and return links to Full Discography, and Partial Discography
 	Base discography handler on discogs.com

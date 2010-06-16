@@ -31,6 +31,23 @@ function validate_subtool($request)
 }
 
 /**
+ * Implementation of validate
+ * @ingroup validate
+ * @return False by default
+ */
+function validate_info_singular($request)
+{
+	if(isset($request['info_singular']))
+	{
+		if($request['info_singular'] === true || $request['info_singular'] === 'true')
+			return true;
+		elseif($request['info_singular'] === false || $request['info_singular'] === 'false')
+			return false;
+	}
+	return false;
+}
+
+/**
  * Implementation of output
  * @ingroup output
  */

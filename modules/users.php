@@ -67,7 +67,7 @@ function register_users()
 			'Privilage'		=> 'INT',
 			'PrivateKey'	=> 'TEXT',
 			'LastLogin'		=> 'DATETIME',
-			'Filepath' 		=> 'TEXT'
+			'Filepath' 		=> 'TEXT',
 		),
 		'internal' => true,
 		'template' => true,

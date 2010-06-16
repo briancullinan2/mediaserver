@@ -49,6 +49,10 @@ function print_info_objects($infos)
 		{
 			?><span><?php print $infos['label']; ?>: </span><?php
 		}
+		if(isset($infos['loading']))
+		{
+			?><img src="<?php print url('module=template&template=live&tfile=images/large-loading.gif'); ?>" alt="loading" /><?php print $infos['loading']; ?><?php
+		}
 		if(isset($infos['list']))
 		{
 			?><ul><?php
@@ -172,6 +176,29 @@ function print_form_objects($form)
 					foreach($config['options'] as $option => $text)
 					{
 						?><option value="<?php print $option; ?>" <?php print ($config['value'] == $option)?'selected="selected"':''; ?>><?php print $text; ?></option><?php
+					}
+				}
+				?></select><?php
+			break;
+			case 'multiselect':
+				?><select <?php print (isset($config['disabled']) && $config['disabled'] == true)?'disabled="disabled"':'';?> name="<?php print $field_name; ?>" size="5" multiple="multiple"><?php
+				// check if array is associative or not
+				if(!is_array($config['value']))
+					$config['value'] = array($config['value']);
+				if(array_keys($config['options']) === array_keys(array_keys($config['options'])))
+				{
+					// numeric keys
+					foreach($config['options'] as $option)
+					{
+						?><option value="<?php print $option; ?>" <?php print (in_array($option, $config['value']))?'selected="selected"':''; ?>><?php print $option; ?></option><?php
+					}
+				}
+				else
+				{
+					// named keys
+					foreach($config['options'] as $option => $text)
+					{
+						?><option value="<?php print $option; ?>" <?php print (in_array($option, $config['value']))?'selected="selected"':''; ?>><?php print $text; ?></option><?php
 					}
 				}
 				?></select><?php

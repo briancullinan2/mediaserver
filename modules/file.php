@@ -18,7 +18,7 @@ function register_file()
 		'path' => __FILE__,
 		'template' => false,
 		'alter query' => array('dir', 'file'),
-		'depends on' => array('files', 'filesystem', 'template'),
+		'depends on' => array('files', 'template'),
 		'always output' => 'file_variables',
 	);
 }

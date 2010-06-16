@@ -404,7 +404,6 @@ function output_admin_modules($request)
 	{
 		PEAR::raiseError('Option \'' . $key . '\' listed in the output options for ' . $request['configure_module'] . ' but not listed in the module config!', E_DEBUG);
 	}
-	
 	register_output_vars('options', $options);
 	register_output_vars('configure_module', $request['configure_module']);
 }

@@ -1,5 +1,4 @@
 <?php
-
 // attempt to pass all requests to the appropriate modules
 
 // load template

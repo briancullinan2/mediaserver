@@ -1138,6 +1138,37 @@ function setup_validate()
 	}
 }
 
+/**
+ * Helper function for validating all variables in a given input
+ */
+function core_validate_request($request)
+{
+	
+	// go through the rest of the request and validate all the variables with the modules they are for
+	foreach($request as $key => $value)
+	{
+		// validate every single input
+		if(function_exists('validate_' . $key))
+			$request[$key] = call_user_func_array('validate_' . $key, array($request));
+		elseif(isset($GLOBALS['validate_' . $key]) && is_callable($GLOBALS['validate_' . $key]))
+			$request[$key] = $GLOBALS['validate_' . $key]($request);
+		// if it is an attempted setting, keep it for now and let the configure modules module handle it
+		elseif(substr($key, 0, 8) == 'setting_')
+			$request[$key] = $request[$key];
+		else
+			$request[$key] = NULL;
+		
+		// if there is no validator
+		if(!isset($request[$key]))
+		{
+			// unset it to prevent anything from using the input
+			unset($request[$key]);
+		}
+	}
+	
+	return $request;
+}
+
  
 /**
  * Set up the triggers for saving a session
@@ -1875,6 +1906,7 @@ function rewrite($old_var, $new_var, &$request, &$get, &$post)
  */
 function rewrite_vars(&$request, &$get, &$post)
 {
+	// always add a module
 	$request['module'] = validate_module($request);
 	
 	if(isset($request['path_info']))

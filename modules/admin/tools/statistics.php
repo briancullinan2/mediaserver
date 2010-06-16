@@ -24,7 +24,8 @@ function register_admin_tools_statistics()
 				'privilage' => 10,
 				'path' => __FILE__
 			)
-		)
+		),
+		'template' => false,
 	);
 
 	return $tools;
@@ -382,13 +383,13 @@ function output_admin_tools_statistics($request)
 					'label' => $handler,
 					'text' => 'has ' . $result[0]['count(*)'] . ' entries',
 				);
-				if($db == 'watch_list')
+				if($handler == 'updates')
 				{
 					$new_info = array(
-						'label' => 'Watch List',
+						'label' => 'updates',
 						'text' => array(
-							'The watch list contains directories that have to be searched for files',
-							'There are ' . $result[0]['count(*)'] . ' directories in the watch list database.',
+							'The updates list contains directories that have to be searched for files',
+							'There are ' . $result[0]['count(*)'] . ' directories in the updates list database.',
 						),
 					);
 					if($result[0]['count(*)'] == 0)
@@ -407,5 +408,7 @@ function output_admin_tools_statistics($request)
 
 	if(isset($request['subtool'])) register_output_vars('subtool', $request['subtool']);
 	register_output_vars('infos', $infos);
+	
+	theme('tools_subtools');
 }
 

@@ -59,6 +59,10 @@ function theme_live_tools_subtools()
 		
 		theme('errors');
 		
+		// output configuration if it is set
+		if(isset($GLOBALS['templates']['vars']['options']))
+			theme('admin_modules_configure');
+			
 		?><div class="titlePadding"></div><?php
 
 		foreach($GLOBALS['modules'][$GLOBALS['module']]['subtools'] as $i => $subtool)
@@ -103,9 +107,18 @@ function theme_live_tools_subtools()
 		
 		theme('errors');
 		
-		?><div class="titlePadding"></div><?php
-
-		print_info_objects($GLOBALS['templates']['vars']['infos']);
+		// output configuration if it is set
+		if(isset($GLOBALS['templates']['vars']['options']))
+			theme('admin_modules_configure');
+		
+		?><div class="titlePadding"></div>
+		<table border="0" cellpadding="0" cellspacing="0" class="install">
+		<?php
+		
+		// print options
+		theme_live_tools_singular();
+		
+		?></table><?php
 	}
 	
 	?><div class="titlePadding"></div>
@@ -115,3 +128,38 @@ function theme_live_tools_subtools()
 		
 }
 
+function theme_live_tools_singular()
+{
+	// print options
+	foreach($GLOBALS['templates']['vars']['infos'] as $name => $config)
+	{
+		?>
+		<tr id="row_<?php print $name; ?>">
+			<td class="title <?php print $config['status']; ?>"><?php print $config['name']; ?> (<?php print $name; ?>)</td>
+			<td>
+			<?php print_info_objects($config); ?>
+			</td>
+			<td class="desc">
+			<?php print_info_objects($config['description']); ?>
+			</td>
+		</tr>
+		<?php
+	}
+	
+	?><script language="javascript"><?php
+	// print out singular stuff
+	foreach($GLOBALS['templates']['vars']['infos'] as $name => $config)
+	{
+		if(isset($config['singular']))
+		{
+			?>
+			$.get("<?php print $config['singular']; ?>",function(data){
+        		var table = $('#row_<?php print $name; ?>').parent();
+				$('#row_<?php print $name; ?>').remove();
+				table.append(data);
+    		},'html');
+			<?php
+		}
+	}
+	?></script><?php
+}

@@ -31,8 +31,19 @@ function theme_live_admin_modules()
 	
 	theme('errors');
 	
+	?><div class="titlePadding"></div><?php
+	
+	theme('admin_modules_configure');
+	
+	?><div class="titlePadding"></div>
+	</div><?php
+	
+	theme('footer');
+}
+
+function theme_live_admin_modules_configure()
+{
 	?>
-	<div class="titlePadding"></div>
 	<form action="<?php print url('module=admin_modules&configure_module=' . $GLOBALS['templates']['vars']['configure_module']); ?>" method="post">
 		<table border="0" cellpadding="0" cellspacing="0" class="install">
 		<?php
@@ -112,13 +123,7 @@ function theme_live_admin_modules()
 		<input type="submit" name="save_configuration" value="Save" class="button" style="float:right;" />
 	</form>
 	<?php
-	
-	?><div class="titlePadding"></div>
-	</div><?php
-	
-	theme('footer');
 }
-
 
 function theme_live_admin_status()
 {

@@ -13,7 +13,7 @@ function register_admin_balancer()
 		'path' => __FILE__,
 		'settings' => array(),
 		'depends on' => array('settings', 'snoopy_installed', 'session'),
-		'session' => array('add_server', 'remove_server', 'add_rule', 'remove_rule', 'reset_configuration'),
+		'session' => array('add_server', 'remove_server', 'add_rule', 'remove_rule', 'reset_configuration', 'module'),
 	);
 }
 
@@ -42,9 +42,6 @@ function setup_admin_balancer()
 	
 	// set up id3 reader incase any files need it
 	$GLOBALS['snoopy'] = new Snoopy();
-
-	// execute redirect here, so as not to waste anymore time
-	
 }
 
 /**
@@ -121,6 +118,21 @@ function validate_add_rule($request)
 		'value' => isset($request['add_rule']['value'])?$request['add_rule']['value']:'',
 		'server' => isset($request['add_rule']['server'])?$request['add_rule']['server']:'',
 	);
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ */
+function validate_test_rules($request)
+{
+	// this will be validated when used
+	if(isset($request['test_rules']))
+		return array(
+			'module' => $request['test_rules']['module'],
+			'request' => isset($request['test_rules']['server'])?$request['test_rules']['server']:'',
+			'server' => isset($request['test_rules']['server'])?$request['test_rules']['server']:'',
+		);
 }
 
 /**
@@ -218,7 +230,7 @@ function setting_balance_servers($settings)
 		$settings['balance_servers'] = array();
 	
 	// make sure all servers with numeric indexes are on the list
-	for($i = 0; $i < 5; $i++)
+	for($i = 0; $i < 10; $i++)
 	{
 		$balancer = setting_balance_server($settings, $i);
 		if(isset($balancer))
@@ -238,7 +250,7 @@ function setting_balance_rules($settings)
 		$settings['balance_rules'] = array();
 	
 	// make sure all servers with numeric indexes are on the list
-	for($i = 0; $i < 50; $i++)
+	for($i = 0; $i < 100; $i++)
 	{
 		$rule = setting_balance_rule($settings, $i);
 		if(isset($rule))
@@ -302,7 +314,10 @@ function status_admin_balancer($settings)
 			}
 		}
 			
+		// check general config conflicts
+		//   must handle paths the same way, admin_alias_enable, mod_rewrite_enable
 		
+		// check balencer conflicts
 		
 		// output status
 		$status['balance_server_' . $i] = array(
@@ -330,39 +345,102 @@ function status_admin_balancer($settings)
  */
 function session_admin_balancer($request)
 {
-	if(!isset($_SESSION['balancer']) || isset($request['reset_configuration']))
-		$save = array('servers' => setting('balance_servers'), 'rules' => setting('balance_rules'));
+	// check for configuration or just potenially redirecting users based on rules
+	if(isset($request['add_server']) || isset($request['remove_server']) || isset($request['add_rule']) || isset($request['remove_rule']))
+	{
+		// might be configuring the module
+		if(!isset($_SESSION['balancer']) || isset($request['reset_configuration']))
+			$save = array('servers' => setting('balance_servers'), 'rules' => setting('balance_rules'));
+		else
+			$save = $_SESSION['balancer'];
+	
+		// add server
+		if(isset($request['add_server']))
+		{
+			$new_server = setting_balance_server(array('balance_server_0' => $request['add_server']), 0);
+			if(isset($new_server))
+				$save['servers'][] = $new_server;
+		}
+	
+		// remove server
+		if(isset($request['remove_server']))
+		{
+			unset($save['servers'][$request['remove_server']]);
+			$save['servers'] = array_values($save['servers']);
+		}
+	
+		// add rule
+		if(isset($request['add_rule']))
+		{
+			// must also pass in servers from session
+			$new_rule = setting_balance_rule(array('balance_rule_0' => $request['add_rule'], 'balance_servers' => $save['servers']), 0);
+			if(isset($new_rule))
+				$save['rules'][] = $new_rule;
+		}
+	
+		// remove rule
+		if(isset($request['remove_rule']))
+		{
+			unset($save['rules'][$request['remove_rule']]);
+			$save['rules'] = array_values($save['rules']);
+		}
+	
+		return $save;
+	}
+	// must just want to redirect users
 	else
-		$save = $_SESSION['balancer'];
-
-	if(isset($request['add_server']))
 	{
-		$new_server = setting_balance_server(array('balance_server_0' => $request['add_server']), 0);
-		if(isset($new_server))
-			$save['servers'][] = $new_server;
+		// execute redirect here, so as not to waste anymore time
+		$new_server = balancer_get_server($request, $_SERVER);
+		
+		// check if server has changed
+		if($new_server != NULL)
+		{
+			// redirect session information and user
+			header('Location: ' . $new_server['protocol'] . '://' . $new_server['address'] . substr(url($request, true), 1));
+			
+			exit;
+		}
 	}
+}
 
-	if(isset($request['remove_server']))
+/**
+ * Helper function for retreiving the new server
+ */
+function balancer_get_server($request, $server)
+{
+	$settings = $GLOBALS['settings'];
+	$settings['balance_servers'] = setting_balance_servers($settings);
+	$settings['balance_rules'] = setting_balance_rules($settings);
+	
+	$new_server = NULL;
+	foreach($settings['balance_rules'] as $i => $rule)
 	{
-		unset($save['servers'][$request['remove_server']]);
-		$save['servers'] = array_values($save['servers']);
-	}
-
-	if(isset($request['add_rule']))
-	{
-		// must also pass in servers from session
-		$new_rule = setting_balance_rule(array('balance_rule_0' => $request['add_rule'], 'balance_servers' => $save['servers']), 0);
-		if(isset($new_rule))
-			$save['rules'][] = $new_rule;
-	}
-
-	if(isset($request['remove_rule']))
-	{
-		unset($save['rules'][$request['remove_rule']]);
-		$save['rules'] = array_values($save['rules']);
+		// in the order of the rules, try to prove the user should be transfered
+		// first check the module is being used
+		if($rule['module'] == $request['module'])
+		{
+			// check the condition
+			if($rule['condition'] == 'percent')
+			{
+				// check the percentage of users and redirect
+				if($rule['value'] == 100)
+					$new_server = $settings['balance_servers'][$rule['server']];
+			}
+			elseif($rule['condition'] == 'request')
+			{
+				if(isset($request[$rule['input']]) && $request[$rule['input']] == $rule['value'])
+					$new_server = $settings['balance_servers'][$rule['server']];
+			}
+			elseif($rule['condition'] == 'server')
+			{
+				if(isset($_SERVER[$rule['input']]) && $_SERVER[$rule['input']] == $rule['value'])
+					$new_server = $settings['balance_servers'][$rule['server']];
+			}
+		}
 	}
 	
-	return $save;
+	return $new_server;
 }
 
 /**
@@ -667,6 +745,91 @@ function configure_admin_balancer($settings, $request)
 		),
 	);
 	
+	// check if rules were tested on last run
+	if(isset($request['test_rules']))
+	{
+		// run tests
+		$tmp_request = core_validate_request(url($request['test_rules']['request'], false, false, true));
+		$tmp_request['module'] = validate_module($tmp_request + array('module' => $request['test_rules']['module']));
+
+		$new_server = balancer_get_server($tmp_request, url($request['test_rules']['server'], false, false, true));
+		$options['test_results'] = array(
+			'name' => 'Test Results',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'The rules were tested and the server the user would be redirected to is displayed.',
+				),
+			),
+			'value' => array(
+				'list' => array(
+					'Module: ' . $request['test_rules']['module'],
+					'Request Input: ' . $request['test_rules']['request'],
+					'Server Input: ' . $request['test_rules']['server'],
+					'Result: ' . (($new_server != NULL)?($new_server['protocol'] . '://' . $new_server['address']):'Current Location'),
+				)
+			)
+		);
+	}
+	
+	// get list of all rule inputs for convenience
+	$test_request = '';
+	$test_server = '';
+	foreach($settings['balance_rules'] as $i => $rule)
+	{
+		if($rule['condition'] == 'request')
+			$test_request .= $rule['input'] . '=&';
+		elseif($rule['condition'] == 'server')
+			$test_server .= $rule['input'] . '=&';
+	}
+	// remove last ampersand
+	$test_request = substr($test_request, 0, -1);
+	$test_server = substr($test_server, 0, -1);
+	
+	$options['test'] = array(
+		'name' => 'Test Rules',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Use this form to test redirection.',
+				'Enter the request and server variables needed to test the rules.',
+				'The default input values are inserted for you.'
+			),
+		),
+		'type' => 'set',
+		'options' => array(
+			'test_rules[module]' => array(
+				'type' => 'select',
+				'options' => $modules,
+				'value' => 'encode',
+				'help' => 'Module',
+			),
+			array(
+				'value' => '<br />'
+			),
+			'test_rules[request]' => array(
+				'type' => 'text',
+				'value' => $test_request,
+				'help' => 'Request Variables',
+			),
+			array(
+				'value' => '<br />'
+			),
+			'test_rules[server]' => array(
+				'type' => 'text',
+				'value' => $test_server,
+				'help' => 'Server Variables',
+			),
+			array(
+				'value' => '<br />'
+			),
+			'test_rules[test]' => array(
+				'type' => 'submit',
+				'value' => 'Test Rules',
+			),
+		),
+	);
+		
 	return $options;
 }
 

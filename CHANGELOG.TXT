@@ -1,3 +1,12 @@
+2010-06-15
+Worked a lot on the television tool, and enhancing the API
+Worked on Balancer
+	Now performs redirects in the session_balancer() function
+Worked on tools
+
+2010-06-08
+Settings now save and load from the database
+
 2010-06-05
 Fixed a bunch of minor bugs, like reference to setting('use_database') which was changed in the 2010-05-05 update
 Worked on cron module
