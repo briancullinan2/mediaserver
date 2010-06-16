@@ -155,8 +155,7 @@ function theme_live_tools_singular()
 			?>
 			$.get("<?php print $config['singular']; ?>",function(data){
         		var table = $('#row_<?php print $name; ?>').parent();
-				$('#row_<?php print $name; ?>').remove();
-				table.append(data);
+				$('#row_<?php print $name; ?>').replaceWith($('#row_<?php print $name; ?>', data).html);
     		},'html');
 			<?php
 		}

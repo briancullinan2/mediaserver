@@ -110,8 +110,8 @@ function validate_info_singular_step_television($request)
  */
 function validate_episode($request)
 {
-	if(isset($request['episode_number']) && is_numeric($request['episode_number']))
-		return $request['episode_number'];
+	if(isset($request['episode']) && is_numeric($request['episode']))
+		return $request['episode'];
 }
 
 /**
@@ -120,8 +120,18 @@ function validate_episode($request)
  */
 function validate_season($request)
 {
-	if(isset($request['season_number']) && is_numeric($request['season_number']))
-		return $request['season_number'];
+	if(isset($request['season']) && is_numeric($request['season']))
+		return $request['season'];
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ */
+function validate_show_index($request)
+{
+	if(isset($request['show_index']) && is_numeric($request['show_index']))
+		return $request['show_index'];
 }
 
 /**
@@ -132,6 +142,16 @@ function validate_showname($request)
 {
 	if(isset($request['showname']))
 		return $request['showname'];
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ */
+function validate_show_status($request)
+{
+	if(isset($request['show_status']))
+		return $request['show_status'];
 }
 
 /**
@@ -172,8 +192,8 @@ function setting_nzbservices($settings)
 
 	$settings['nzbservice_0'] = array_merge(isset($settings['nzbservice_0'])?$settings['nzbservice_0']:array(), array(
 		'name' => 'NZB Matrix',
-		'match' => '/<a href="(http://nzbmatrix.com/nzb-download.php?[^"]*?)"/i',
-		'search' => 'http://nzbmatrix.com/nzb-search.php?cat=6&search=%s',
+		'match' => '/<a href="(http:\/\/nzbmatrix.com\/nzb-download.php?[^"]*?)"/i',
+		'search' => 'http://nzbmatrix.com/nzb-search.php?cat=6&search=%s%%20s%02de%02d',
 		'login' => 'http://nzbmatrix.com/account-login.php',
 	));
 	
@@ -482,16 +502,15 @@ function output_admin_tools_television($request)
 		output_admin_modules($request);
 	
 		// perform television downloading
-		if(dependency('snoopy_installed') == false)
+		if(dependency('curl_installed') == false)
 		{
-			$infos['snoopy_installed'] = array(
-				'name' => 'Snoopy Not Installed',
+			$infos['curl_installed'] = array(
+				'name' => 'cUrl Not Installed',
 				'status' => 'fail',
 				'description' => array(
 					'list' => array(
-						'The system has detected that Snoopy cUrl API is NOT INSTALLED.',
-						'The Snoopy class (Snoopy.class.php) must be placed in &lt;site root&gt;/include/',
-						'Snoopy is used to download content from myepisodes.com, and the specified NZB services.',
+						'The system has detected that cUrl API is NOT INSTALLED.',
+						'cUrl is used to download content from myepisodes.com, and the specified NZB services.',
 					),
 				),
 				'value' => array(
@@ -534,6 +553,10 @@ function output_admin_tools_television($request)
 	theme('tools_subtools');
 }
 
+/**
+ * Helper function for outputting a single piece of the infos
+ * @param request the request to process
+ */
 function output_admin_tools_television_singular($request)
 {
 	$request['info_singular_step_television'] = validate_info_singular_step_television($request);
@@ -541,8 +564,8 @@ function output_admin_tools_television_singular($request)
 	
 	if($request['info_singular_step_television'] == 'login')
 	{
-		television_myepisodes_login();
-		if($GLOBALS['snoopy']->status != 200)
+		$result = television_myepisodes_login();
+		if($result['status'] != 200)
 		{
 			$infos['myepisodes_login'] = array(
 				'name' => 'MyEpisodes Login',
@@ -624,9 +647,14 @@ function output_admin_tools_television_singular($request)
 				'text' => array(
 					'loading' => 'Searching for NZB...'
 				),
-				'singular' => url('module=admin_tools_television&subtool=2&info_singular=true&info_singular_step_television=download&episode=' . $shows['new_episodes']['episodes'][$i] . '&showname=' . $show . '&season=' . $shows['new_episodes']['seasons'][$i], true),
+				'singular' => url('module=admin_tools_television&subtool=2&info_singular=true&info_singular_step_television=download' . 
+					'&episode=' . $shows['new_episodes']['episodes'][$i] . 
+					'&showname=' . $show . 
+					'&season=' . $shows['new_episodes']['seasons'][$i] . 
+					'&show_status=' . $shows['new_episodes']['status'][$i] . 
+					'&show_index=' . $i
+				, true),
 			);
-			break;
 		}
 	}
 	elseif($request['info_singular_step_television'] == 'download')
@@ -634,8 +662,53 @@ function output_admin_tools_television_singular($request)
 		$request['showname'] = validate_showname($request);
 		$request['season'] = validate_season($request);
 		$request['episode'] = validate_episode($request);
+		$request['show_status'] = validate_show_status($request);
+		$request['show_index'] = validate_show_index($request);
 		
 		$status = television_fetch_nzb($request['showname'], $request['season'], $request['episode']);
+		
+		if($status === -1)
+		{
+			$infos['myepisodes_shows_' . $request['show_index']] = array(
+				'name' => 'Failed to save ' . $request['showname'],
+				'status' => 'fail',
+				'description' => array(
+					'list' => array(
+						'Failed to save the file, but the episode ' . $request['showname'] . ' ' . $request['season'] . 'x' . $request['episode'] . ' was found successfully.',
+					),
+				),
+				'text' => 'Failed to save.',
+			);
+		}
+		elseif($status === false)
+		{
+			$infos['myepisodes_shows_' . $request['show_index']] = array(
+				'name' => 'Failed to find ' . $request['showname'],
+				'status' => 'warn',
+				'description' => array(
+					'list' => array(
+						'Failed to find the episode for ' . $request['showname'] . ' ' . $request['season'] . 'x' . $request['episode'] . '.',
+					),
+				),
+				'text' => 'Failed to find.',
+			);
+		}
+		else
+		{
+			$infos['myepisodes_shows_' . $request['show_index']] = array(
+				'name' => 'Downloaded ' . $request['showname'],
+				'status' => '',
+				'description' => array(
+					'list' => array(
+						'The episode for ' . $request['showname'] . ' ' . $request['season'] . 'x' . $request['episode'] . ' was successfully downloaded.',
+					),
+				),
+				'text' => 'Downloaded ' . $request['showname'] . '.',
+			);
+			
+			// save in myepisodes
+			television_myepisodes_save_status($request['show_status']);
+		}
 	}
 	
 	register_output_vars('infos', $infos);
@@ -643,98 +716,133 @@ function output_admin_tools_television_singular($request)
 	theme('tools_singular');
 }
 
+/**
+ * Helper function for performing searches and downloading NZBs
+ * @param showname the name of the show to search for
+ * @param season the season number
+ * @param episode the episode number
+ * @return a status indicating if the file has been downloaded successfully
+ */
 function television_fetch_nzb($showname, $season, $episode)
 {
 	$services = setting('nzbservices');
-	$GLOBALS['snoopy']->agent = 'Mozilla/5.0 (compatible; MSIE 6.0; Windows NT 5.1)';
 	
 	// loop through NZB services until we find the show
 	foreach($services as $i => $config)
 	{
-		// already logged in
-		if(isset($_SESSION['television_service_' . $i]) || !$config['login'])
-		{
-			// load cookies from session
-			$GLOBALS['snoopy']->cookies = $_SESSION['television_service_' . $i];
-		}
-		else
-		{
-			$GLOBALS['snoopy']->accept = 'text/html';
-			$GLOBALS['snoopy']->fetch($config['login']);
+		// login
+		//if(!isset($_SESSION['television_service_' . $i]))
+		//{
+			$result = fetch($config['login']);
 			
-			television_save_session();
+			// save session info
+			if($result['status'] == 200) $_SESSION['television_service_' . $i] = $result['cookies'];
 			
 			// extract form elements
-			$result = preg_match_all('/<input.*?name=(["\'])([^\1]*?)\1/i', $GLOBALS['snoopy']->results, $names);
-			$result = preg_match_all('/<input.*?value=(["\'])([^\1]*?)\1/i', $GLOBALS['snoopy']->results, $values);
+			$result = preg_match_all('/<input.*?name=(["\'])([^\1]*?)\1.*?>/i', $result['content'], $names);
+			$result = preg_match_all('/<input.*?value=(["\'])([^\1]*?)\1/i', $result['content'], $values);
+			
+			$post = array();
+			foreach($names[2] as $i => $name)
+			{
+				if(isset($values[2][$i]))
+					$post[$name] = $values[2][$i];
+				else
+					$post[$name] = '';
+			}
+			$post['username'] = $config['username'];
+			$post['password'] = $config['password'];
 			
 			// submit
-			$GLOBALS['snoopy']->httpmethod = 'POST';
-			$GLOBALS['snoopy']->submit($config['login'], array(
-				'username' => $config['username'],
-				'password' => $config['password'],
-				'action' => 'Login',
-			));
+			$result = fetch($config['login'], $post, array(), array(), isset($_SESSION['television_service_' . $i])?$_SESSION['television_service_' . $i]:array());
 			
-			print_r($GLOBALS['snoopy']->headers);
-		}
+			// save session info
+			if($result['status'] == 200) $_SESSION['television_service_' . $i] = $result['cookies'];
+		//}
 		
 		// run query
-		//$GLOBALS['snoopy']->fetch($shows_url);
+		$result = fetch(sprintf($config['search'], urlencode($showname), $season, $episode), array(), array(), $_SESSION['television_service_' . $i]);
 		
 		// match nzbs
+		$count = preg_match_all($config['match'], $result['content'], $matches);
 		
-		// download and save
+		if($count > 0)
+		{
+			// download and save
+			$result = fetch($matches[1][0], array(), array(), $_SESSION['television_service_' . $i]);
+			
+			$path = setting('nzbpath');
+			if(substr($path, -1) != '/') $path .= '/';
+			if(isset($result['headers']['Content-disposition']) && strpos($result['headers']['Content-disposition'], 'filename=') !== false)
+			{
+				$start = strpos($result['headers']['Content-disposition'], 'filename=') + 9;
+				$filename = substr($result['headers']['Content-disposition'], $start);
+				if($filename[0] == '"') $filename = trim(substr($filename, 1));
+				if($filename[strlen($filename)-1] == '"') $filename = trim(substr($filename, 0, -1));
+			}
+			else
+			{
+				$filename = $showname . ' Season ' . $season . ' Episode ' . $episode;
+			}
+			$path .= $filename;
+			
+			if($fh = fopen($path, 'w'))
+			{
+				fwrite($fh, $result['content']);
+				fclose($fh);
+				
+				return true;
+			}
+			else
+				return -1;
+		}
 	}
+	
+	return false;
 }
 
+/**
+ * Helper function for logging in to myepisodes
+ */
 function television_myepisodes_login()
 {
 	$myepisodes = setting('myepisodes');
 	$login_url = 'http://myepisodes.com/login.php?u=views.php';
-	$GLOBALS['snoopy']->fetch($login_url);
+	$result = fetch($login_url);
 	
-	television_save_session();
+	$_SESSION['television_cookies'] = $result['cookies'];
 	
 	// login
-	$GLOBALS['snoopy']->referer = $login_url;
-	$GLOBALS['snoopy']->httpmethod = 'POST';
-	$GLOBALS['snoopy']->submit($login_url, array(
+	$result = fetch($login_url, array(
 		'username' => $myepisodes['username'],
 		'password' => $myepisodes['password'],
 		'action' => 'Login',
-	));
+	), array('referer' => $login_url), $_SESSION['television_cookies']);
 	
 	// store all cookies
-	$_SESSION['television_cookies'] = $GLOBALS['snoopy']->cookies;
-}
-
-function television_save_session()
-{
-	// store session id in current cookies
-	foreach($GLOBALS['snoopy']->headers as $i => $header)
-	{
-		if(strtolower(substr($header, 0, 11)) == 'set-cookie:')
-		{
-			$cookie = split(';', substr($header, 12));
-			$cookie_name_val = split('=', $cookie[0]);
-			$GLOBALS['snoopy']->cookies[$cookie_name_val[0]] = $cookie_name_val[1];
-		}
-	}
+	$_SESSION['television_cookies'] = $result['cookies'];
 	
+	return $result;
 }
 
+/**
+ * Helper function for fetching the list of shows from myepisodes
+ * @return an associative array consistion of a list of all shows and a list of shows to download
+ */
 function television_myepisodes_fetch_shows()
 {
 	// try to fetch shows with current cookies
-	$shows_url = 'http://myepisodes.com/views.php';
-	$GLOBALS['snoopy']->agent = 'Mozilla/5.0 (compatible; MSIE 6.0; Windows NT 5.1)';
-	$GLOBALS['snoopy']->cookies = $_SESSION['television_cookies'];
-	$GLOBALS['snoopy']->fetch($shows_url);
+	$result = fetch('http://myepisodes.com/views.php', array(), array(), $_SESSION['television_cookies']);
+	
+	// save cookies
+	$_SESSION['television_cookies'] = $result['cookies'];
 
 	// match shows
-	$result = preg_match_all('/<td class="date">.*?>([^<]*?)<[\s\S]*?<td class="showname">.*?>([^<]*?)<[\s\S]*?<td class="longnumber">([^<]*?)</i', $GLOBALS['snoopy']->results, $matches);
-	
+	$result = preg_match_all('/<td class="date">.*?>([^<]*?)<[\s\S]*?' . 
+		'<td class="showname">.*?>([^<]*?)<[\s\S]*?' . 
+		'<td class="longnumber">([^<]*?)<[\s\S]*?' . 
+		'<td class="status">.*?name="([^"]*?)"( checked)*.*?>/i', $result['content'], $matches);
+		
 	$all_shows = array();
 	$new_episodes = array(
 		'times' => array(),
@@ -742,12 +850,13 @@ function television_myepisodes_fetch_shows()
 		'seasons' => array(),
 		'episodes' => array(),
 		'combined' => array(),
+		'status' => array(),
 	);
 	foreach($matches[0] as $i => $match)
 	{
 		$all_shows[] = $matches[2][$i];
 		$time = strtotime($matches[1][$i]);
-		if($time < time())
+		if($time < time() )
 		{
 			$new_episodes['times'][] = $matches[1][$i];
 			$new_episodes['shows'][] = $matches[2][$i];
@@ -755,6 +864,7 @@ function television_myepisodes_fetch_shows()
 			$new_episodes['seasons'][] = intval($season_episode[0]);
 			$new_episodes['episodes'][] = intval($season_episode[1]);
 			$new_episodes['combined'][] = $matches[2][$i] . ' ' . $matches[3][$i];
+			$new_episodes['status'][] = $matches[4][$i];
 		}
 	}
 	$all_shows = array_unique($all_shows);
@@ -763,4 +873,15 @@ function television_myepisodes_fetch_shows()
 		'all_shows' => $all_shows,
 		'new_episodes' => $new_episodes,
 	);
+}
+
+function television_myepisodes_save_status($show_status)
+{
+	// try to fetch shows with current cookies
+	$result = fetch('http://myepisodes.com/views.php?type=save', array(
+		$show_status => 'on',
+		'checkboxes' => substr($show_status, 1),
+		'action' => 'Save Status',
+		'returnaddress' => '/views.php?',
+	), array(), $_SESSION['television_cookies']);
 }

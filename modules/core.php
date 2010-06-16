@@ -554,10 +554,9 @@ function dependency_getid3_installed($settings)
  * @ingroup dependency
  * @return true or false if snoopy library is installed in the include directory
  */
-function dependency_snoopy_installed($settings)
+function dependency_curl_installed($settings)
 {
-	$settings['local_root'] = setting_local_root($settings);
-	return file_exists($settings['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'Snoopy.class.php');
+	return function_exists('curl_init');
 }
 
 /**
