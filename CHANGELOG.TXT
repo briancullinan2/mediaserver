@@ -1,3 +1,24 @@
+2010-06-17
+Worked on movies tool
+	Finished netflix checker
+Abstracted nzb configuration from television into a new module
+
+2010-06-16
+Finished NZB downloader in television
+Removed snoopy from system
+	Now uses curl and a common fetch() function
+Fixed some bugs in Balancer
+	It was not removing entires when saved because it was not printing out an empty field
+Fixed bugs in session() function in core.php
+	Was overwriting session information even if the function returned NULL
+	It should only replace session save if there is something to be saved
+Fixed ampache.php, was not getting IDs properly
+Fixed ids.php, it was returning in the get_ids() function when it should have been creating new IDs
+Fixed encode, was not using new API for get_files()
+Fixed admin_modules
+	Was not saving when a setting was removed or reset
+Fixed conver.php not using new API
+
 2010-06-15
 Worked a lot on the television tool, and enhancing the API
 Worked on Balancer

@@ -12,7 +12,7 @@ function register_admin_balancer()
 		'privilage' => 10,
 		'path' => __FILE__,
 		'settings' => array(),
-		'depends on' => array('settings', 'snoopy_installed', 'session'),
+		'depends on' => array('settings', 'curl_installed', 'session'),
 		'session' => array('add_server', 'remove_server', 'add_rule', 'remove_rule', 'reset_configuration', 'module'),
 	);
 }
@@ -36,12 +36,6 @@ function setup_admin_balancer()
 		$GLOBALS['setting_balance_rule_' . $i] = create_function('$settings', 'return setting_balance_rule($settings, \'' . $i . '\');');
 		$GLOBALS['modules']['admin_balancer']['settings'][] = 'balance_rule_' . $i;
 	}
-	
-	// include snoopy to download pages
-	include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'Snoopy.class.php';
-	
-	// set up id3 reader incase any files need it
-	$GLOBALS['snoopy'] = new Snoopy();
 }
 
 /**
@@ -126,6 +120,9 @@ function validate_add_rule($request)
  */
 function validate_test_rules($request)
 {
+	if(!isset($request['test_rules']['test']))
+		return;
+		
 	// this will be validated when used
 	if(isset($request['test_rules']))
 		return array(
@@ -277,10 +274,6 @@ function status_admin_balancer($settings)
 		$settings['balance_servers'] = $_SESSION['balancer']['servers'];
 	}
 	
-	// make this quick, only a second or 2 timeout
-	$GLOBALS['snoopy']->read_timeout = 2;
-	$GLOBALS['snoopy']->_fp_timeout = 2;
-	
 	$additional_info = lang('balence server status description', 'This server is up and running and ready for balancing.');
 	
 	// loop through each server and check status
@@ -288,16 +281,18 @@ function status_admin_balancer($settings)
 	{
 		// use snoopy to check if sites are running and download config,
 		$url = $server['protocol'] . '://' . $server['address'] . '?module=admin&get_settings=true&users=login&username=' . $server['username'] . '&password=' . base64_encode($server['password']);
-		$GLOBALS['snoopy']->fetch($url);
-		if($GLOBALS['snoopy']->status != 200)
+		
+		// make this quick, only a second or 2 timeout
+		$result = fetch($url, array(), array('timeout' => 2), array());
+		if($result['status'] != 200)
 		{
 			$get_status = 'fail';
-			$additional_info = lang('balance server status fail request status', 'The connection to the balance server has failed either because the request did not return a status 200 OK, instead it returned ' . $GLOBALS['snoopy']->status . '.');
+			$additional_info = lang('balance server status fail request status', 'The connection to the balance server has failed either because the request did not return a status 200 OK, instead it returned ' . $result['status'] . '.');
 		}
 		else
 		{
 			$get_status = '';
-			$other_settings = split("\n", $GLOBALS['snoopy']->results);
+			$other_settings = split("\n", $result['content']);
 			
 			// check contents to make sure it is a config
 			if(preg_match('/version ?= ?.+/i', $other_settings[0]) == 0)
@@ -332,10 +327,6 @@ function status_admin_balancer($settings)
 		);
 	}
 	
-	// reset global snoopy
-	$GLOBALS['snoopy']->read_timeout = 0;
-	$GLOBALS['snoopy']->_fp_timeout = 30;
-	
 	return $status;
 }
 
@@ -346,7 +337,9 @@ function status_admin_balancer($settings)
 function session_admin_balancer($request)
 {
 	// check for configuration or just potenially redirecting users based on rules
-	if(isset($request['add_server']) || isset($request['remove_server']) || isset($request['add_rule']) || isset($request['remove_rule']))
+	if(isset($request['add_server']) || 
+		isset($request['remove_server']) || isset($request['add_rule']) || 
+		isset($request['remove_rule']) || isset($request['reset_configuration']))
 	{
 		// might be configuring the module
 		if(!isset($_SESSION['balancer']) || isset($request['reset_configuration']))
@@ -384,7 +377,7 @@ function session_admin_balancer($request)
 			unset($save['rules'][$request['remove_rule']]);
 			$save['rules'] = array_values($save['rules']);
 		}
-	
+		
 		return $save;
 	}
 	// must just want to redirect users
@@ -409,9 +402,8 @@ function session_admin_balancer($request)
  */
 function balancer_get_server($request, $server)
 {
-	$settings = $GLOBALS['settings'];
-	$settings['balance_servers'] = setting_balance_servers($settings);
-	$settings['balance_rules'] = setting_balance_rules($settings);
+	$settings['balance_servers'] = setting('balance_servers');
+	$settings['balance_rules'] = setting('balance_rules');
 	
 	$new_server = NULL;
 	foreach($settings['balance_rules'] as $i => $rule)
@@ -451,6 +443,10 @@ function configure_admin_balancer($settings, $request)
 {
 	$settings['balance_servers'] = setting_balance_servers($settings);
 	$settings['balance_rules'] = setting_balance_rules($settings);
+	
+	// store count for unsetting
+	$server_count = count($settings['balance_servers']);
+	$rule_count = count($settings['balance_rules']);
 	
 	// load servers from session
 	if(isset($_SESSION['balancer']['servers']))
@@ -577,6 +573,15 @@ function configure_admin_balancer($settings, $request)
 			),
 		),
 	);
+	
+	// add unsettings
+	for($i = 0; $i < $server_count - count($settings['balance_servers']); $i++)
+	{
+		$options['balance_servers']['options']['setting_balance_server_' . (count($settings['balance_servers']) + $i)] = array(
+			'type' => 'hidden',
+			'value' => '',
+		);
+	}
 	
 	if(count($settings['balance_rules']) > 0)
 	{
@@ -744,6 +749,15 @@ function configure_admin_balancer($settings, $request)
 			),
 		),
 	);
+
+	// add unsettings
+	for($i = 0; $i < $rule_count - count($settings['balance_rules']); $i++)
+	{
+		$options['balance_rules']['options']['setting_balance_rule_' . (count($settings['balance_rules']) + $i)] = array(
+			'type' => 'hidden',
+			'value' => '',
+		);
+	}
 	
 	// check if rules were tested on last run
 	if(isset($request['test_rules']))

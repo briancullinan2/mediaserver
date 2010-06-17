@@ -531,7 +531,7 @@ function theme_ampache()
 	<genre id="<?php echo $song['id']; ?>"><![CDATA[<?php echo $song['Genre']; ?>]]></genre>
 	<track><?php echo $song['Track']; ?></track>
 	<time><?php echo $song['Length']; ?></time>
-	<url><![CDATA[<?php echo url('encode=mp3&id=' . $song['id'] . '&cat=db_audio&module=encode', true, true); ?>]]></url>
+	<url><![CDATA[<?php echo url('encode=mp3&id=' . $song['id'] . '&cat=audio&module=encode', true, true); ?>]]></url>
 	<size><?php echo file_exists($song['Filepath'])?filesize($song['Filepath']):0; ?></size>
 	<art><![CDATA[]]></art>
 	</song>

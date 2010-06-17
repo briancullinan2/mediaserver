@@ -33,7 +33,7 @@ function register_core()
 		'depends on' => array(
 			'memory_limit', 'writable_system_files', 'pear_installed',
 			// move these to the proper handlers when it is implemented
-			'getid3_installed', 'snoopy_installed', 'extjs_installed'
+			'getid3_installed', 'curl_installed', 'extjs_installed'
 		),
 		'always output' => 'core_variables',
 	);
@@ -911,37 +911,36 @@ function status_core($settings)
 		);
 	}
 	
-	if(dependency('snoopy_installed'))
+	if(dependency('curl_installed'))
 	{
-		$status['snoopy_installed'] = array(
-			'name' => 'Snoopy cUrl API',
+		$status['curl_installed'] = array(
+			'name' => 'cUrl API',
 			'status' => '',
 			'description' => array(
 				'list' => array(
-					'The system has detected that the Scoopy cUrl API is installed in the includes directory.',
-					'Snoopy is an API for making connections to other sites and downloading web pages and files, this is used by the db_amazon module.',
+					'The system has detected that the cUrl API is installed in the includes directory.',
+					'cUrl is an API for making connections to other sites and downloading web pages and files, this is used by the db_amazon module.',
 				),
 			),
 			'type' => 'label',
-			'value' => 'Snoopy detected',
+			'value' => 'cUrl detected',
 		);
 	}
 	else
 	{
-		$status['snoopy_installed'] = array(
-			'name' => 'Snoopy cUrl API Missing',
+		$status['curl_installed'] = array(
+			'name' => 'cUrl API Missing',
 			'status' => 'fail',
 			'description' => array(
 				'list' => array(
-					'The system has detected that Snoopy cUrl API is NOT INSTALLED.',
-					'The Snoopy class (Snoopy.class.php) must be placed in &lt;site root&gt;/include/',
-					'Snoopy is an API for making connections to other sites and downloading web pages and files, this is used by the db_amazon module.',
+					'The system has detected that the cUrl API is NOT INSTALLED.',
+					'cUrl is an API for making connections to other sites and downloading web pages and files, this is used by the db_amazon module.',
 				),
 			),
 			'value' => array(
 				'link' => array(
-					'url' => 'http://sourceforge.net/projects/snoopy/',
-					'text' => 'Get Snoopy',
+					'url' => 'http://php.net/manual/en/book.curl.php',
+					'text' => 'Get cUrl',
 				),
 			),
 		);
@@ -1182,7 +1181,10 @@ function setup_session($request = array())
 		{
 			foreach($GLOBALS['triggers']['session'][$key] as $module => $function)
 			{
-				$_SESSION[$module] = call_user_func_array($function, array($request));
+				$save = call_user_func_array($function, array($request));
+				// only save when something has changed
+				if(isset($save))
+					$_SESSION[$module] = $save;
 			}
 		}
 	}
@@ -2031,7 +2033,7 @@ function output_index($request)
 		$_SESSION['errors']['user'] = array();
 		$_SESSION['errors']['warn'] = array();
 		$_SESSION['errors']['note'] = array();
-		
+
 		theme('errors');
 		
 		exit;

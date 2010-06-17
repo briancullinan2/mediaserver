@@ -1030,7 +1030,16 @@ function fetch($url, $post = array(), $headers = array(), $cookies = array())
 		
 		// setup basics
 		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+		
+		// setup timeout
+		if(isset($headers['timeout']))
+		{
+			curl_setopt($ch, CURLOPT_TIMEOUT, $headers['timeout']);
+			unset($headers['timeout']);
+		}
+		else
+			curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+			
 		curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
@@ -1042,9 +1051,9 @@ function fetch($url, $post = array(), $headers = array(), $cookies = array())
 			unset($headers['agent']);
 		}
 		else
-		{
 			curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1');
-		}
+			
+		// setup referer
 		if(isset($headers['referer']))
 		{
 			curl_setopt($ch, CURLOPT_REFERER, $headers['referer']);

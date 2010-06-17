@@ -209,7 +209,7 @@ function output_bt($request)
 		$request['cat'] = validate_cat($request);
 		
 		// make select call
-		$files = call_user_func_array('get_' . $request['cat'], array($request, &$count));
+		$files = get_files($request, $count, $request['cat']);
 		
 		$files_length = count($files);
 		
@@ -232,7 +232,7 @@ function output_bt($request)
 			{
 				if($handler != $request['cat'] && is_internal($handler) == false && handles($file['Filepath'], $handler))
 				{
-					$return = call_user_func_array('get_' . $handler, array($tmp_request, &$tmp_count));
+					$return = get_files($tmp_request, $tmp_count, $handler);
 					if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
 				}
 			}
@@ -242,7 +242,7 @@ function output_bt($request)
 			{
 				// get all files in directory
 				$props = array('dir' => $file['Filepath']);
-				$sub_files = call_user_func_array('get_' . $request['cat'], array($props, &$tmp_count));
+				$sub_files = get_files($props, $tmp_count, $request['cat']);
 				
 				// put these files on the end of the array so they also get processed
 				$files = array_merge($files, $sub_files);

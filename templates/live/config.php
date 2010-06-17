@@ -139,7 +139,7 @@ function print_form_objects($form)
 			case 'radio':
 			case 'checkbox':
 				// check if array is associative or not
-				if(array_keys($config['options']) === array_keys(array_keys($config['options'])))
+				if(array_keys($config['options']) === array_keys(array_keys($config['options'])) && (!isset($config['force_numeric']) || $config['force_numeric'] == false))
 				{
 					// numeric keys
 					foreach($config['options'] as $option)
@@ -162,7 +162,7 @@ function print_form_objects($form)
 			case 'select':
 				?><select <?php print (isset($config['disabled']) && $config['disabled'] == true)?'disabled="disabled"':'';?> name="<?php print $field_name; ?>"><?php
 				// check if array is associative or not
-				if(array_keys($config['options']) === array_keys(array_keys($config['options'])))
+				if(array_keys($config['options']) === array_keys(array_keys($config['options'])) && (!isset($config['force_numeric']) || $config['force_numeric'] == false))
 				{
 					// numeric keys
 					foreach($config['options'] as $option)
@@ -185,7 +185,7 @@ function print_form_objects($form)
 				// check if array is associative or not
 				if(!is_array($config['value']))
 					$config['value'] = array($config['value']);
-				if(array_keys($config['options']) === array_keys(array_keys($config['options'])))
+				if(array_keys($config['options']) === array_keys(array_keys($config['options'])) && (!isset($config['force_numeric']) || $config['force_numeric'] == false))
 				{
 					// numeric keys
 					foreach($config['options'] as $option)

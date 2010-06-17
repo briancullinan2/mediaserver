@@ -261,7 +261,7 @@ function output_admin_modules($request)
 		$new_settings = array();
 		foreach($request as $setting => $value)
 		{
-			// check that the input is in fact and attempted setting
+			// check that the input is in fact an attempted setting
 			if(substr($setting, 0, 8) == 'setting_')
 			{
 				$new_settings[substr($setting, 8)] = $value;
@@ -279,11 +279,11 @@ function output_admin_modules($request)
 				PEAR::raiseError('Setting_ function for \'' . $setting . '\' does not exist!', E_DEBUG);
 				
 			// make sure the new setting is different from the current setting
-			if(isset($new_setting) && $new_setting != setting($setting))
+			if($new_setting != setting($setting))
 			{
-				$GLOBALS['settings'][$setting] = $new_setting;
 				$settings_changed = true;
 			}
+			$GLOBALS['settings'][$setting] = $new_setting;
 		}
 	
 		if($settings_changed == true)

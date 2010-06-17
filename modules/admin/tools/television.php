@@ -11,8 +11,7 @@ function register_admin_tools_television()
 		'description' => 'Tools for downloading TV information and reorganizing TV show files.',
 		'privilage' => 10,
 		'path' => __FILE__,
-		'settings' => array('myepisodes', 'nzbpath'),
-		'session' => array('add_service', 'remove_service', 'reset_configuration'),
+		'settings' => array('myepisodes'),
 		'subtools' => array(
 			array(
 				'name' => 'Show Renamer',
@@ -40,7 +39,7 @@ function register_admin_tools_television()
 }
 
 /**
- * Set up the list of aliases from the database
+ * Set up the list of settings
  * @ingroup setup
  */
 function setup_admin_tools_television()
@@ -48,48 +47,44 @@ function setup_admin_tools_television()
 	// add wrapper functions for validating a service entry
 	for($i = 0; $i < 10; $i++)
 	{
-		$GLOBALS['setting_nzbservice_' . $i] = create_function('$settings', 'return setting_nzbservice($settings, \'' . $i . '\');');
-		$GLOBALS['modules']['admin_tools_television']['settings'][] = 'nzbservice_' . $i;
+		$GLOBALS['setting_television_search_' . $i] = create_function('$settings', 'return setting_television_search($settings, \'' . $i . '\');');
+		$GLOBALS['modules']['admin_tools_television']['settings'][] = 'television_search_' . $i;
 	}
 }
 
 /**
- * Implementation of validate
- * @ingroup validate
+ * Implementation of setting
+ * @ingroup setting
  */
-function validate_add_service($request)
+function setting_myepisodes($settings)
 {
-	if(!isset($request['add_service']['save']))
-		return;
-		
+	if(isset($settings['myepisodes']) && isset($settings['myepisodes']['username']) &&
+		isset($settings['myepisodes']['password']))
+		return array(
+			'username' => $settings['myepisodes']['username'],
+			'password' => $settings['myepisodes']['password'],
+		);
 	return array(
-		'name' => $request['add_service']['name'],
-		'match' => isset($request['add_service']['match'])?$request['add_service']['match']:'',
-		'search' => isset($request['add_service']['search'])?$request['add_service']['search']:'',
-		'login' => isset($request['add_service']['login'])?$request['add_service']['login']:'',
-		'username' => isset($request['add_service']['username'])?$request['add_service']['username']:'',
-		'password' => isset($request['add_service']['password'])?$request['add_service']['password']:'',
+		'username' => '',
+		'password' => '',
 	);
 }
 
 /**
- * Implementation of validate
- * @ingroup validate
+ * Implementation of setting
+ * @ingroup setting
  */
-function validate_remove_service($request)
+function setting_television_search($settings, $index)
 {
-	if(isset($request['remove_service']))
-	{
-		// if it is an array because the button value is set to text instead of the index
-		if(is_array($request['remove_service']))
-		{
-			$keys = array_keys($request['remove_service']);
-			$request['remove_service'] = $keys[0];
-		}
-			
-		if(is_numeric($request['remove_service']) && $request['remove_service'] >= 1)
-			return $request['remove_service'];
-	}
+	// return the same static service as listed in the nzbservice module
+	if($index == 0)
+		return 'http://nzbmatrix.com/nzb-search.php?cat=6&search=%s%%20s%02de%02d';
+
+	// don't continue with this if stuff is missing
+	if(isset($settings['television_search_' . $index]) && 
+		$settings['television_search_' . $index] != ''
+	)
+		return $settings['television_search_' . $index];
 }
 
 /**
@@ -153,120 +148,6 @@ function validate_show_status($request)
 	if(isset($request['show_status']))
 		return $request['show_status'];
 }
-
-/**
- * Implementation of setting
- * @ingroup setting
- */
-function setting_nzbservice($settings, $index)
-{
-	// don't continue with this if stuff is missing
-	if(!isset($settings['nzbservice_' . $index]) || !isset($settings['nzbservice_' . $index]['name']) || 
-		!isset($settings['nzbservice_' . $index]['match']) || !isset($settings['nzbservice_' . $index]['search'])
-	)
-		return;
-
-	// copy values
-	$service = array(
-		'name' => $settings['nzbservice_' . $index]['name'],
-		'match' => $settings['nzbservice_' . $index]['match'],
-		'search' => $settings['nzbservice_' . $index]['search'],
-		'login' => isset($settings['nzbservice_' . $index]['login'])?$settings['nzbservice_' . $index]['login']:'',
-		'username' => isset($settings['nzbservice_' . $index]['username'])?$settings['nzbservice_' . $index]['username']:'',
-		'password' => isset($settings['nzbservice_' . $index]['password'])?$settings['nzbservice_' . $index]['password']:'',
-	);
-	
-	// make sure there is valid regular expression
-	
-	return $service;
-}
-
-/**
- * Implementation of setting
- * @ingroup setting
- */
-function setting_nzbservices($settings)
-{
-	if(!isset($settings['nzbservices']))
-		$settings['nzbservices'] = array();
-
-	$settings['nzbservice_0'] = array_merge(isset($settings['nzbservice_0'])?$settings['nzbservice_0']:array(), array(
-		'name' => 'NZB Matrix',
-		'match' => '/<a href="(http:\/\/nzbmatrix.com\/nzb-download.php?[^"]*?)"/i',
-		'search' => 'http://nzbmatrix.com/nzb-search.php?cat=6&search=%s%%20s%02de%02d',
-		'login' => 'http://nzbmatrix.com/account-login.php',
-	));
-	
-	// make sure all servers with numeric indexes are on the list
-	for($i = 0; $i < 10; $i++)
-	{
-		$service = setting_nzbservice($settings, $i);
-		if(isset($service))
-			$settings['nzbservices'][$i] = $service;
-	}
-
-	return array_values($settings['nzbservices']);
-}
-
-/**
- * Implementation of setting
- * @ingroup setting
- */
-function setting_myepisodes($settings)
-{
-	if(isset($settings['myepisodes']) && isset($settings['myepisodes']['username']) &&
-		isset($settings['myepisodes']['password']))
-		return array(
-			'username' => $settings['myepisodes']['username'],
-			'password' => $settings['myepisodes']['password'],
-		);
-	return array(
-		'username' => '',
-		'password' => '',
-	);
-}
-
-/**
- * Implementation of setting
- * @ingroup setting
- */
-function setting_nzbpath($settings)
-{
-	if(isset($settings['nzbpath']) && is_dir($settings['nzbpath']))
-		return $settings['nzbpath'];
-	else
-		return '';
-}
-
-/**
- * Implementation of session
- * @ingroup session
- */
-function session_admin_tools_television($request)
-{
-	// might be configuring the module
-	if(!isset($_SESSION['television']) || isset($request['reset_configuration']))
-		$save = array('services' => setting('nzbservices'));
-	else
-		$save = $_SESSION['television'];
-
-	// add server
-	if(isset($request['add_service']))
-	{
-		$new_service = setting_nzbservice(array('nzbservice_0' => $request['add_service']), 0);
-		if(isset($new_service))
-			$save['services'][] = $new_service;
-	}
-
-	// remove server
-	if(isset($request['remove_service']))
-	{
-		unset($save['services'][$request['remove_service']]);
-		$save['services'] = array_values($save['services']);
-	}
-	
-	return $save;
-}
 	
 /**
  * Implementation of configure
@@ -275,14 +156,6 @@ function session_admin_tools_television($request)
 function configure_admin_tools_television($settings)
 {
 	$settings['myepisodes'] = setting_myepisodes($settings);
-	$settings['nzbservices'] = setting_nzbservices($settings);
-	$settings['nzbpath'] = setting_nzbpath($settings);
-	
-	// load services from session
-	if(isset($_SESSION['television']['services']))
-	{
-		$settings['nzbservices'] = $_SESSION['television']['services'];
-	}
 	
 	$options = array();
 	
@@ -312,167 +185,21 @@ function configure_admin_tools_television($settings)
 		),
 	);
 	
-	$service_options = array();
+	// add nzb services
+	$options = array_merge($options, configure_admin_tools_nzbservices($settings));
+	
+	// alter the nzbservices form to use television search queries instead
+	$settings['nzbservices'] = setting_nzbservices($settings);
 	foreach($settings['nzbservices'] as $i => $config)
 	{
-		$service_options[$i] = $config['name'];
-	}
-	
-	$options['nzbservices'] = array(
-		'name' => 'NZB Service',
-		'status' => '',
-		'description' => array(
-			'list' => array(
-				'Select an NZB service to search and download from.',
-				'Select multiple services to search if there are no NZBs found.',
-			),
-		),
-		'type' => 'set',
-		'options' => array(
-			'setting_nzbservices' => array(
-				'type' => 'multiselect',
-				'options' => $service_options,
-				'value' => $settings['nzbservices'],
-			),
-		),
-	);
-
-	foreach($settings['nzbservices'] as $i => $config)
-	{
-		if($config['login'] != '' || $config['username'] != '')
-		{
-			$options['nzbservices']['options']['setting_nzbservice_' . $i . '[name]'] = array(
-				'type' => 'hidden',
-				'value' => $config['name'],
-			);
-			$options['nzbservices']['options']['setting_nzbservice_' . $i . '[search]'] = array(
-				'type' => 'hidden',
-				'value' => $config['search'],
-			);
-			$options['nzbservices']['options']['setting_nzbservice_' . $i . '[match]'] = array(
-				'type' => 'hidden',
-				'value' => $config['match'],
-			);
-			$options['nzbservices']['options']['setting_nzbservice_' . $i . '[login]'] = array(
-				'type' => 'hidden',
-				'value' => $config['login'],
-			);
-			$options['nzbservices']['options'][] = array(
-				'value' => '<br />'
-			);
-			$options['nzbservices']['options']['setting_nzbservice_' . $i . '[username]'] = array(
-				'type' => 'text',
-				'value' => $config['username'],
-				'help' => $config['name'] . ' Username',
-			);
-			$options['nzbservices']['options'][] = array(
-				'value' => '<br />'
-			);
-			$options['nzbservices']['options']['setting_nzbservice_' . $i . '[password]'] = array(
-				'type' => 'text',
-				'value' => $config['password'],
-				'help' => $config['name'] . ' Password',
-			);
-		}
-	}
-	
-	$options['custom_nzbservice'] = array(
-		'name' => 'Add a NZB Service',
-		'status' => '',
-		'description' => array(
-			'list' => array(
-				'Add a custom NZB service.',
-				'The search query is the path to a search path, with %s as the search text.',
-				'The file match is the regular expression to match the links to download files.',
-				'The login url is used before performing the search query.',
-			),
-		),
-		'type' => 'set',
-		'options' => array(
-			'add_service[name]' => array(
-				'type' => 'text',
-				'help' => 'Name',
-				'value' => 'NZBClub',
-			),
-			array(
-				'value' => '<br />'
-			),
-			'add_service[search]' => array(
-				'type' => 'text',
-				'help' => 'Search',
-				'value' => 'http://www.nzbclub.com/nzbsearch.aspx?ss=%s&rpp=25&rs=1&sa=1',
-			),
-			array(
-				'value' => '<br />'
-			),
-			'add_service[match]' => array(
-				'type' => 'text',
-				'help' => 'Match Files',
-				'value' => '/<a href="(/nzb_download.aspx?[^"]*?)"/i',
-			),
-			array(
-				'value' => '<br />'
-			),
-			'add_service[login]' => array(
-				'type' => 'text',
-				'help' => 'Login URL',
-				'value' => '',
-			),
-			array(
-				'value' => '<br />'
-			),
-			'add_service[username]' => array(
-				'type' => 'text',
-				'help' => 'Username',
-				'value' => '',
-			),
-			array(
-				'value' => '<br />'
-			),
-			'add_service[password]' => array(
-				'type' => 'text',
-				'help' => 'Password',
-				'value' => '',
-			),
-			array(
-				'value' => '<br />'
-			),
-			'add_service[save]' => array(
-				'type' => 'submit',
-				'value' => 'Add Service',
-			),
-		),
-	);
-	
-	if($settings['nzbpath'] == '' || is_writable($settings['nzbpath']))
-	{
-		$options['nzbpath'] = array(
-			'name' => 'NZB Save path',
-			'status' => '',
-			'description' => array(
-				'list' => array(
-					'Select a path to save the NZB files to.',
-					'Some NZB download programs such as SABnzbd or NewzLeecher can automatically search a directory for new NZB files.'
-				),
-			),
-			'type' => 'text',
-			'value' => $settings['nzbpath'],
+		// add television search query to form
+		$options['nzbservices']['options'][] = array(
+			'value' => '<br />'
 		);
-	}
-	else
-	{
-		$options['nzbpath'] = array(
-			'name' => 'NZB Save path',
-			'status' => 'fail',
-			'description' => array(
-				'list' => array(
-					'The selected path is not writable!',
-					'Select a path to save the NZB files to.',
-					'Some NZB download programs such as SABnzbd or NewzLeecher can automatically search a directory for new NZB files.'
-				),
-			),
+		$options['nzbservices']['options']['setting_television_search_' . $i] = array(
 			'type' => 'text',
-			'value' => $settings['nzbpath'],
+			'value' => setting_television_search($settings, $i),
+			'help' => $config['name'] . ' Television Search',
 		);
 	}
 	
@@ -497,9 +224,8 @@ function output_admin_tools_television($request)
 	}
 	if(isset($request['subtool']) && $request['subtool'] == 2)
 	{
-		// output configuration on same page as tool output
-		$request['configure_module'] = validate_configure_module(array('configure_module' => 'admin_tools_television'));
-		output_admin_modules($request);
+		// output configuration link
+		PEAR::raiseError('You may need to <a href="' . url('module=admin_modules&configure_module=admin_tools_television') . '">configure</a> this tool in order to use it properly.', E_WARN);
 	
 		// perform television downloading
 		if(dependency('curl_installed') == false)
@@ -515,8 +241,8 @@ function output_admin_tools_television($request)
 				),
 				'value' => array(
 					'link' => array(
-						'url' => 'http://sourceforge.net/projects/snoopy/',
-						'text' => 'Get Snoopy',
+						'url' => 'http://php.net/manual/en/book.curl.php',
+						'text' => 'Get cUrl',
 					),
 				),
 			);
@@ -524,12 +250,12 @@ function output_admin_tools_television($request)
 		else
 		{
 			// log in to myepisodes
-			$infos['myepisodes_login'] = array(
-				'name' => 'MyEpisodes Login',
+			$infos['television_login'] = array(
+				'name' => 'MyEpisodes, Service Login',
 				'status' => '',
 				'description' => array(
 					'list' => array(
-						'Loggin in to myepisodes.com.',
+						'Logging in to myepisodes.com and the configured NZB services.',
 					),
 				),
 				'text' => array(
@@ -537,12 +263,6 @@ function output_admin_tools_television($request)
 				),
 				'singular' => url('module=admin_tools_television&subtool=2&info_singular=true&info_singular_step_television=login', true),
 			);
-			
-			// parse TV show names
-		
-			// loop through each show and search on the specified services
-			
-			// save NZB to specified directory
 		}
 	}
 	
@@ -564,10 +284,11 @@ function output_admin_tools_television_singular($request)
 	
 	if($request['info_singular_step_television'] == 'login')
 	{
+		// log in to my episodes first
 		$result = television_myepisodes_login();
 		if($result['status'] != 200)
 		{
-			$infos['myepisodes_login'] = array(
+			$infos['television_login'] = array(
 				'name' => 'MyEpisodes Login',
 				'status' => 'fail',
 				'description' => array(
@@ -580,7 +301,8 @@ function output_admin_tools_television_singular($request)
 		}
 		else
 		{
-			$infos['myepisodes_login'] = array(
+			// login succeeded
+			$infos['television_login'] = array(
 				'name' => 'MyEpisodes Login',
 				'status' => '',
 				'description' => array(
@@ -590,6 +312,39 @@ function output_admin_tools_television_singular($request)
 				),
 				'text' => 'Login Succeeded!'
 			);
+			
+			// log in to services here
+			$results = nzbservices_login();
+			$services = setting('nzbservices');
+			foreach($results as $i => $result)
+			{
+				if($result != 200)
+				{
+					$infos['nzbservice_' . $i] = array(
+						'name' => $services[$i]['name'] . ' Login Failed',
+						'status' => 'fail',
+						'description' => array(
+							'list' => array(
+								'Login to ' . $services[$i]['login'] . ' for ' . $services[$i]['name'] . ' failed!',
+							),
+						),
+						'text' => 'Login Failed!'
+					);
+				}
+				else
+				{
+					$infos['nzbservice_' . $i] = array(
+						'name' => $services[$i]['name'] . ' Login',
+						'status' => '',
+						'description' => array(
+							'list' => array(
+								'Login to ' . $services[$i]['login'] . ' for ' . $services[$i]['name'] . ' successful!',
+							),
+						),
+						'text' => 'Login Succeeded!'
+					);
+				}
+			}
 			
 			// download episode list
 			$infos['myepisodes_shows'] = array(
@@ -609,6 +364,7 @@ function output_admin_tools_television_singular($request)
 	}
 	elseif($request['info_singular_step_television'] == 'shows')
 	{
+		// get list of shows
 		$shows = television_myepisodes_fetch_shows();
 		
 		$infos['myepisodes_shows'] = array(
@@ -622,6 +378,7 @@ function output_admin_tools_television_singular($request)
 			'text' => 'TV Shows:<br />' . implode('<br />', $shows['all_shows'])
 		);
 		
+		// list of shows to download
 		$infos['myepisodes_episodes'] = array(
 			'name' => 'New Episodes',
 			'status' => '',
@@ -665,8 +422,10 @@ function output_admin_tools_television_singular($request)
 		$request['show_status'] = validate_show_status($request);
 		$request['show_index'] = validate_show_index($request);
 		
+		// fetch nzb files
 		$status = television_fetch_nzb($request['showname'], $request['season'], $request['episode']);
 		
+		// nzb file was found but something went terribly wrong
 		if($status === -1)
 		{
 			$infos['myepisodes_shows_' . $request['show_index']] = array(
@@ -680,6 +439,7 @@ function output_admin_tools_television_singular($request)
 				'text' => 'Failed to save.',
 			);
 		}
+		// nzb was not found
 		elseif($status === false)
 		{
 			$infos['myepisodes_shows_' . $request['show_index']] = array(
@@ -693,6 +453,7 @@ function output_admin_tools_television_singular($request)
 				'text' => 'Failed to find.',
 			);
 		}
+		// nzb was found and saved to disk
 		else
 		{
 			$infos['myepisodes_shows_' . $request['show_index']] = array(
@@ -725,76 +486,25 @@ function output_admin_tools_television_singular($request)
  */
 function television_fetch_nzb($showname, $season, $episode)
 {
+	// construct search arguments
+	$args = func_get_args();
+	
 	$services = setting('nzbservices');
 	
 	// loop through NZB services until we find the show
 	foreach($services as $i => $config)
 	{
-		// login
-		//if(!isset($_SESSION['television_service_' . $i]))
-		//{
-			$result = fetch($config['login']);
-			
-			// save session info
-			if($result['status'] == 200) $_SESSION['television_service_' . $i] = $result['cookies'];
-			
-			// extract form elements
-			$result = preg_match_all('/<input.*?name=(["\'])([^\1]*?)\1.*?>/i', $result['content'], $names);
-			$result = preg_match_all('/<input.*?value=(["\'])([^\1]*?)\1/i', $result['content'], $values);
-			
-			$post = array();
-			foreach($names[2] as $i => $name)
-			{
-				if(isset($values[2][$i]))
-					$post[$name] = $values[2][$i];
-				else
-					$post[$name] = '';
-			}
-			$post['username'] = $config['username'];
-			$post['password'] = $config['password'];
-			
-			// submit
-			$result = fetch($config['login'], $post, array(), array(), isset($_SESSION['television_service_' . $i])?$_SESSION['television_service_' . $i]:array());
-			
-			// save session info
-			if($result['status'] == 200) $_SESSION['television_service_' . $i] = $result['cookies'];
-		//}
+		$search = setting('television_search_' . $i);
 		
-		// run query
-		$result = fetch(sprintf($config['search'], urlencode($showname), $season, $episode), array(), array(), $_SESSION['television_service_' . $i]);
+		// run query, using television search strings
+		$result = fetch(sprintf($search, urlencode($showname), urlencode($season), urlencode($episode)), array(), array(), $_SESSION['nzbservices_' . $i]);
 		
 		// match nzbs
 		$count = preg_match_all($config['match'], $result['content'], $matches);
 		
 		if($count > 0)
 		{
-			// download and save
-			$result = fetch($matches[1][0], array(), array(), $_SESSION['television_service_' . $i]);
-			
-			$path = setting('nzbpath');
-			if(substr($path, -1) != '/') $path .= '/';
-			if(isset($result['headers']['Content-disposition']) && strpos($result['headers']['Content-disposition'], 'filename=') !== false)
-			{
-				$start = strpos($result['headers']['Content-disposition'], 'filename=') + 9;
-				$filename = substr($result['headers']['Content-disposition'], $start);
-				if($filename[0] == '"') $filename = trim(substr($filename, 1));
-				if($filename[strlen($filename)-1] == '"') $filename = trim(substr($filename, 0, -1));
-			}
-			else
-			{
-				$filename = $showname . ' Season ' . $season . ' Episode ' . $episode;
-			}
-			$path .= $filename;
-			
-			if($fh = fopen($path, 'w'))
-			{
-				fwrite($fh, $result['content']);
-				fclose($fh);
-				
-				return true;
-			}
-			else
-				return -1;
+			return nzbservices_fetch_nzb($matches[1][0]);
 		}
 	}
 	
@@ -856,7 +566,7 @@ function television_myepisodes_fetch_shows()
 	{
 		$all_shows[] = $matches[2][$i];
 		$time = strtotime($matches[1][$i]);
-		if($time < time() )
+		if($time < time() && $matches[5][$i] == '')
 		{
 			$new_episodes['times'][] = $matches[1][$i];
 			$new_episodes['shows'][] = $matches[2][$i];

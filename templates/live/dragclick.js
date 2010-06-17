@@ -1,5 +1,4 @@
 // JavaScript Document
-
 var IE = document.all?true:false
 
 var selectOffset = 0;

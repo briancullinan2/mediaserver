@@ -149,14 +149,14 @@ function get_ids($request, &$count, $files = array())
 			)
 		, true);
 
-		if(count($return) == 0)
-			return $return;
-		
-		// replace key for easy lookup
-		$ids = array();
-		foreach($return as $i => $id)
+		if(count($return) > 0)
 		{
-			$ids[$id[$request['cat'] . '_id']] = $id;
+			// replace key for easy lookup
+			$ids = array();
+			foreach($return as $i => $id)
+			{
+				$ids[$id[$request['cat'] . '_id']] = $id;
+			}
 		}
 		
 		// add id information to file

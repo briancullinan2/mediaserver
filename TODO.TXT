@@ -1,6 +1,5 @@
 ------------- MONOLITHICMEDIA TODO -------------
 ------------- GENERAL TODO -------------
-Remove Snoopy from the system and just use curl requests, snoopy kind of sucks
 Cron is not running properly again...
 IMPORTANT!  Convert all call_user_func_array usage to the standard callable method
 Finish webdav module that allows files to be uploaded and access using the web dav protocol.  This is already mostly supported by PEAR.
@@ -11,10 +10,6 @@ Look at drupal and find out if there is a better way to save errors to the sessi
 	Consider printing and clearing all possible errors up until the error print out, then save the rest
 If a modules dependencies fail, output a standard error page, such as ampache plugin
 Add module called balancer used for load balancing
-	Basically it allows the administrator to set different conditions for when to use a different subdomain for accessing media
-		It will forward the use to the other domain with the exact same request information based on the conditions
-	This will allow multiple computers running identical set ups to output files and transcode more efficiently
-	Enter username and password for each remote services and download the remote load balancing information to check for conflicts and easy reference
 	Maybe this modules could help with hard and soft links?
 	Make sure remote balancer is enabled and dependencies are met, add a status print out to the output function of balancer
 	The depends on for balancer should take in to account the session setup
@@ -28,6 +23,7 @@ Store the remote_address in the session, and if it doesn't match up with what is
 Create a unique id and insert it into forms, this is required when the form is submitted
 Make hard links and soft links, hard links are replaced when they are put in to the database, soft links are replaced when they are read from the database, this will allow us to do more network stuff
 ------------- MEDIA MODULES -------------
+Add torrent services module modeled after nzbservices
 Search module could be configured to use a different algorithm for searching, possibly an external site 
 	like Google could display results or one of those cool database searching services that cost money
 Add 'guess' parameter to list module to allow randomly selected files from the same genre

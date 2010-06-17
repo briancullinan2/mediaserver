@@ -66,7 +66,7 @@ function setup_settings()
 	// merge everything with the default settings
 	$GLOBALS['settings'] = array_merge(settings_get_defaults($GLOBALS['settings']), $GLOBALS['settings']);
 	
-	$GLOBALS['modules']['settings']['settings'] = &$GLOBALS['settings'];
+	$GLOBALS['modules']['settings']['settings'] = array_keys($GLOBALS['settings']);
 }
 
 /**

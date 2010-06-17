@@ -17,7 +17,7 @@ function register_amazon()
 			'Matches' 		=> 'TEXT',
 			'Thumbnail' 	=> 'BLOB',
 		),
-		'depends on' => array('getid3_installed', 'snoopy_installed', 'valid_amazon_config'),
+		'depends on' => array('getid3_installed', 'curl_installed', 'valid_amazon_config'),
 		'settings' => array('amazon_dev_key', 'amazon_server'),
 	);
 }
@@ -95,12 +95,6 @@ function setup_amazon($settings)
 	
 	// set up id3 reader incase any files need it
 	$GLOBALS['getID3'] = new getID3();
-	
-	// include snoopy to download pages
-	include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'Snoopy.class.php';
-	
-	// set up id3 reader incase any files need it
-	$GLOBALS['snoopy'] = new Snoopy();
 }
 
 /**
@@ -229,23 +223,20 @@ function get_amazon_music_info($artist, $album)
 		$tmp_some_tokens = array_unique(array_merge($artist_tokens['Some'], $album_tokens['Some']));
 		$url = 'http://' . AMAZON_SERVER . '/onca/xml?Service=AWSECommerceService&Version=2005-03-23&Operation=ItemSearch&ContentType=text%2Fxml&SubscriptionId=' . AMAZON_DEV_KEY;
 		$url .= '&SearchIndex=Music&Keywords=' . urlencode(join(' ', $tmp_some_tokens)) . '&ResponseGroup=Images,Similarities,Small,Tracks';
-		$GLOBALS['snoopy']->fetch($url);
-		$contents = $GLOBALS['snoopy']->results;
+		$result = fetch($url);
 	}
 	else
 	{
 		$url = 'http://' . AMAZON_SERVER . '/onca/xml?Service=AWSECommerceService&Version=2005-03-23&Operation=ItemSearch&ContentType=text%2Fxml&SubscriptionId=' . AMAZON_DEV_KEY;
 		$url .= '&SearchIndex=Music&Artist=' . urlencode(join(' ', $artist_tokens['Some'])) . '&Title=' . urlencode(join(' ', $album_tokens['Few'])) . '&ResponseGroup=Images,Similarities,Small,Tracks';
 		
-		$GLOBALS['snoopy']->fetch($url);
-		$contents = $GLOBALS['snoopy']->results;
+		$result = fetch($url);
 		
 		if(preg_match('/\<Errors\>/i', $contents) !== 0)
 		{
 			$url = 'http://' . AMAZON_SERVER . '/onca/xml?Service=AWSECommerceService&Version=2005-03-23&Operation=ItemSearch&ContentType=text%2Fxml&SubscriptionId=' . AMAZON_DEV_KEY;
 			$url .= '&SearchIndex=Music&Keywords=' . urlencode(join(' ', $artist_tokens['Some'])) . '&Title=' . urlencode(join(' ', $album_tokens['Few'])) . '&ResponseGroup=Images,Similarities,Small,Tracks';
-			$GLOBALS['snoopy']->fetch($url);
-			$contents = $GLOBALS['snoopy']->results;
+			$result = fetch($url);
 		}
 		
 		if(preg_match('/\<Errors\>/i', $contents) !== 0)
@@ -253,13 +244,12 @@ function get_amazon_music_info($artist, $album)
 			$tmp_some_tokens = array_unique(array_merge($artist_tokens['Some'], $album_tokens['Some']));
 			$url = 'http://' . AMAZON_SERVER . '/onca/xml?Service=AWSECommerceService&Version=2005-03-23&Operation=ItemSearch&ContentType=text%2Fxml&SubscriptionId=' . AMAZON_DEV_KEY;
 			$url .= '&SearchIndex=Music&Keywords=' . urlencode(join(' ', $tmp_some_tokens)) . '&ResponseGroup=Images,Similarities,Small,Tracks';
-			$GLOBALS['snoopy']->fetch($url);
-			$contents = $GLOBALS['snoopy']->results;
+			$result = fetch($url);
 		}
 	}
 	
 	// check if it was found
-	if(preg_match('/\<Errors\>/i', $contents) !== 0)
+	if(preg_match('/\<Errors\>/i', $result['content']) !== 0)
 	{
 		return $fileinfo;
 	}
@@ -373,8 +363,8 @@ function get_amazon_music_info($artist, $album)
 			$match = preg_match('/\<LargeImage\>\<URL\>(.*)\<\/URL\>/i', $best, $matches);
 			if(isset($matches[1]))
 			{
-				$GLOBALS['snoopy']->fetch($matches[1]);
-				$fileinfo['Thumbnail'] = addslashes($GLOBALS['snoopy']->results);
+				$result = fetch($matches[1]);
+				$fileinfo['Thumbnail'] = addslashes($result['content']);
 			}
 		}
 	}

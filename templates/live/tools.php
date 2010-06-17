@@ -118,7 +118,12 @@ function theme_live_tools_subtools()
 		// print options
 		theme_live_tools_singular();
 		
-		?></table><?php
+		?></table>
+		<br />
+		<br />
+		<br />
+		<input type="button" name="reload" value="Reload" onclick="window.location.reload();" class="button" style="float:right;" />
+		<?php
 	}
 	
 	?><div class="titlePadding"></div>
@@ -153,10 +158,9 @@ function theme_live_tools_singular()
 		if(isset($config['singular']))
 		{
 			?>
-			$.get("<?php print $config['singular']; ?>",function(data){
-        		var table = $('#row_<?php print $name; ?>').parent();
-				$('#row_<?php print $name; ?>').replaceWith($('#row_<?php print $name; ?>', data).html);
-    		},'html');
+			$.get('<?php print $config['singular']; ?>',function(data){
+				$('#row_<?php print $name; ?>').replaceWith(data);
+    		}, 'text');
 			<?php
 		}
 	}

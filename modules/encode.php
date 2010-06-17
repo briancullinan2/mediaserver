@@ -464,7 +464,7 @@ function output_encode($request)
 	$request['cat'] = validate_cat($request);
 
 	// get the file path from the database
-	$files = call_user_func_array('get_' . $request['cat'], array($request, &$count));
+	$files = get_files($request, $count, $request['cat']);
 	
 	if(count($files) > 0)
 	{
@@ -478,11 +478,11 @@ function output_encode($request)
 		$tmp_request = array_merge(array_intersect_key($files[0], getIDKeys()), $tmp_request);
 	
 		// get all the information incase we need to use it
-		foreach($GLOBALS['handlers'] as $i => $handler)
+		foreach($GLOBALS['handlers'] as $handler => $config)
 		{
 			if($handler != $request['cat'] && is_internal($handler) == false && handles($files[0]['Filepath'], $handler))
 			{
-				$return = call_user_func_array('get_' . $handler, array($tmp_request, &$tmp_count));
+				$return = get_files($tmp_request, $tmp_count, $handler);
 				if(isset($return[0])) $files[0] = array_merge($return[0], $files[0]);
 			}
 		}
