@@ -19,7 +19,7 @@ function theme_live_list()
 			<span class="subText">Select the type of list you would like to view below.</span>
 	<?php
 	
-	theme('errors');
+	theme('errors_block');
 	
 	?><div class="titlePadding"></div><?php
 	

@@ -382,10 +382,9 @@ class database
 	{
 		if(function_exists('ADONewConnection'))
 		{
-			$this->db_conn = ADONewConnection($connect_str);  # no need for Connect()
+			$this->db_conn = @ADONewConnection($connect_str);  # no need for Connect()
 			if($this->db_conn !== false) $this->db_conn->SetFetchMode(ADODB_FETCH_ASSOC);
 		}
-		
 		if(!isset($this->db_conn) || $this->db_conn === false)
 		{
 			$GLOBALS['settings']['use_database'] = false;

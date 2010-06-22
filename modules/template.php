@@ -539,6 +539,9 @@ function output_template($request)
 
 function theme_template_block()
 {
+	?>
+	<br /><br />Select a Template:<br />
+	<?php
 	foreach($GLOBALS['templates'] as $name => $template)
 	{
 		if(isset($template['name']))
@@ -550,5 +553,9 @@ function theme_template_block()
 
 function theme_template()
 {
+	theme('header');
+	
 	theme('template_block');
+
+	theme('footer');
 }

@@ -12,7 +12,7 @@ function register_admin_tools_nzbservices()
 		'privilage' => 10,
 		'path' => __FILE__,
 		'settings' => array('nzbpath'),
-		'session' => array('add_service', 'remove_service', 'reset_configuration'),
+		'session' => array('add_service', 'remove_service', 'reset_configuration', 'save_configuration'),
 	);
 	
 	return $tools;
@@ -45,6 +45,7 @@ function validate_add_service($request)
 		'name' => $request['add_service']['name'],
 		'match' => isset($request['add_service']['match'])?$request['add_service']['match']:'',
 		'search' => isset($request['add_service']['search'])?$request['add_service']['search']:'',
+		'image' => '',
 		'login' => isset($request['add_service']['login'])?$request['add_service']['login']:'',
 		'username' => isset($request['add_service']['username'])?$request['add_service']['username']:'',
 		'password' => isset($request['add_service']['password'])?$request['add_service']['password']:'',
@@ -88,12 +89,31 @@ function setting_nzbservice($settings, $index)
 		'name' => $settings['nzbservice_' . $index]['name'],
 		'match' => $settings['nzbservice_' . $index]['match'],
 		'search' => $settings['nzbservice_' . $index]['search'],
+		'image' => isset($settings['nzbservice_' . $index]['image'])?$settings['nzbservice_' . $index]['image']:'',
 		'login' => isset($settings['nzbservice_' . $index]['login'])?$settings['nzbservice_' . $index]['login']:'',
 		'username' => isset($settings['nzbservice_' . $index]['username'])?$settings['nzbservice_' . $index]['username']:'',
 		'password' => isset($settings['nzbservice_' . $index]['password'])?$settings['nzbservice_' . $index]['password']:'',
 	);
 	
+	// validate name
+	if(!($service['name'] = generic_validate_all_safe(array('service_name' => $service['name']), 'service_name')))
+		return;
+
 	// make sure there is valid regular expression
+	if(!($service['match'] = generic_validate_regexp(array('service_match' => $service['match']), 'service_match')))
+		return;
+		
+	$service['image'] = generic_validate_all_safe(array('service_image' => $service['image']), 'service_image');
+	
+	// validate search
+	if(!($service['search'] = generic_validate_url(array('service_search' => $service['search']), 'service_search')))
+		return;
+		
+	$service['login'] = generic_validate_url(array('service_login' => $service['login']), 'service_login');
+	
+	// validate username and password
+	$service['username'] = generic_validate_all_safe(array('service_username' => $service['username']), 'service_username');
+	$service['password'] = generic_validate_all_safe(array('service_password' => $service['password']), 'service_password');
 	
 	return $service;
 }
@@ -109,10 +129,18 @@ function setting_nzbservices($settings)
 
 	$settings['nzbservice_0'] = array_merge(isset($settings['nzbservice_0'])?$settings['nzbservice_0']:array(), array(
 		'name' => 'NZB Matrix',
-		'match' => '/<a href="(http:\/\/nzbmatrix.com\/nzb-download.php?[^"]*?)"/i',
+		'match' => '/<a href="(http:\/\/nzbmatrix.com\/nzb-download.php?[^"]*?)&amp;nozip=1"/i',
 		'search' => 'http://nzbmatrix.com/nzb-search.php?search=%s',
 		'login' => 'http://nzbmatrix.com/account-login.php',
 	));
+	
+	$settings['nzbservice_1'] = array_merge(isset($settings['nzbservice_1'])?$settings['nzbservice_1']:array(), array(
+		'name' => 'Newzbin',
+		'match' => '/<a.*?href="(\/browse\/post\/[0-9]*?\/nzb)">/i',
+		'search' => 'http://www.newzbin.com/search/query/?searchaction=Go&q=%s',
+		'login' => 'http://www.newzbin.com/account/login/',
+	));
+	
 	
 	// make sure all servers with numeric indexes are on the list
 	for($i = 0; $i < 10; $i++)
@@ -143,6 +171,10 @@ function setting_nzbpath($settings)
  */
 function session_admin_tools_nzbservices($request)
 {
+	// reset session if it was saved
+	if(isset($request['save_configuration']))
+		return array();
+	
 	// might be configuring the module
 	if(!isset($_SESSION['nzbservices']) || isset($request['reset_configuration']))
 		$save = array('services' => setting('nzbservices'));
@@ -213,20 +245,35 @@ function configure_admin_tools_nzbservices($settings)
 
 	foreach($settings['nzbservices'] as $i => $config)
 	{
+		if($config['image'] == '')
+		{
+			if($address = generic_validate_hostname(array('address' => $config['search']), 'address'))
+				$result = fetch($address . '/favicon.ico');
+				
+			if(isset($result) && $result['status'] == 200)
+			{
+				$config['image'] = 'data:;base64,' . base64_encode($result['content']);
+			}
+		}
+		
+		$options['nzbservices']['options']['setting_nzbservice_' . $i . '[name]'] = array(
+			'type' => 'hidden',
+			'value' => $config['name'],
+		);
+		$options['nzbservices']['options']['setting_nzbservice_' . $i . '[search]'] = array(
+			'type' => 'hidden',
+			'value' => $config['search'],
+		);
+		$options['nzbservices']['options']['setting_nzbservice_' . $i . '[match]'] = array(
+			'type' => 'hidden',
+			'value' => $config['match'],
+		);
+		$options['nzbservices']['options']['setting_nzbservice_' . $i . '[image]'] = array(
+			'type' => 'hidden',
+			'value' => $config['image'],
+		);
 		if($config['login'] != '' || $config['username'] != '')
 		{
-			$options['nzbservices']['options']['setting_nzbservice_' . $i . '[name]'] = array(
-				'type' => 'hidden',
-				'value' => $config['name'],
-			);
-			$options['nzbservices']['options']['setting_nzbservice_' . $i . '[search]'] = array(
-				'type' => 'hidden',
-				'value' => $config['search'],
-			);
-			$options['nzbservices']['options']['setting_nzbservice_' . $i . '[match]'] = array(
-				'type' => 'hidden',
-				'value' => $config['match'],
-			);
 			$options['nzbservices']['options']['setting_nzbservice_' . $i . '[login]'] = array(
 				'type' => 'hidden',
 				'value' => $config['login'],
@@ -248,6 +295,10 @@ function configure_admin_tools_nzbservices($settings)
 				'help' => $config['name'] . ' Password',
 			);
 		}
+		$options['nzbservices']['options']['setting_nzbservice_image_' . $i] = array(
+			'value' => '<img src="' . $config['image'] . '" alt="" />',
+			'help' => $config['name'] . ' Image',
+		);
 	}
 	
 	$options['custom_nzbservice'] = array(
@@ -266,7 +317,7 @@ function configure_admin_tools_nzbservices($settings)
 			'add_service[name]' => array(
 				'type' => 'text',
 				'help' => 'Name',
-				'value' => 'NZBClub',
+				'value' => '',
 			),
 			array(
 				'value' => '<br />'
@@ -274,7 +325,7 @@ function configure_admin_tools_nzbservices($settings)
 			'add_service[search]' => array(
 				'type' => 'text',
 				'help' => 'Search',
-				'value' => 'http://www.nzbclub.com/nzbsearch.aspx?ss=%s&rpp=25&rs=1&sa=1',
+				'value' => '',
 			),
 			array(
 				'value' => '<br />'
@@ -282,7 +333,7 @@ function configure_admin_tools_nzbservices($settings)
 			'add_service[match]' => array(
 				'type' => 'text',
 				'help' => 'Match Files',
-				'value' => '/<a href="(/nzb_download.aspx?[^"]*?)"/i',
+				'value' => '',
 			),
 			array(
 				'value' => '<br />'
@@ -430,7 +481,7 @@ function nzbservices_search_nzb($search)
 		
 		if($count > 0)
 		{
-			return nzbservices_fetch_nzb($matches[1][0]);
+			return nzbservices_fetch_nzb($matches[1][0], $_SESSION['nzbservices_' . $i]);
 		}
 	}
 	
@@ -441,26 +492,40 @@ function nzbservices_search_nzb($search)
  * Helper function for retrieving nzb files
  * @return true if the file was saved, -1 if there was an error saving the file
  */
-function nzbservices_fetch_nzb($file)
+function nzbservices_fetch_nzb($file, $cookies, $filename = '')
 {
 	// download and save
-	$result = fetch($file, array(), array(), $_SESSION['nzbservices_' . $i]);
+	$result = fetch($file, array(), array(), $cookies);
 	
+	// get the save path
 	$path = setting('nzbpath');
 	if(substr($path, -1) != '/') $path .= '/';
-	if(isset($result['headers']['Content-disposition']) && strpos($result['headers']['Content-disposition'], 'filename=') !== false)
+	
+	// try creating a file name based on what is reported in the headers
+	if($filename == '' && 
+		isset($result['headers']['Content-disposition']) && 
+		strpos($result['headers']['Content-disposition'], 'filename=') !== false)
 	{
 		$start = strpos($result['headers']['Content-disposition'], 'filename=') + 9;
 		$filename = substr($result['headers']['Content-disposition'], $start);
 		if($filename[0] == '"') $filename = trim(substr($filename, 1));
 		if($filename[strlen($filename)-1] == '"') $filename = trim(substr($filename, 0, -1));
 	}
-	else
+	// try creating the filename based on the name in the link
+	if($filename == '' && strrpos($file, '.') > strrpos($file, '/'))
 	{
-		$filename = $showname . ' Season ' . $season . ' Episode ' . $episode;
+		$filename = basename($file);
 	}
+	// if all else fails, make something up
+	if($filename == '')
+	{
+		$filename = 'selected_' . time() . '.nzb';
+	}
+	
+	// add filename to save path
 	$path .= $filename;
 	
+	// save the file
 	if($fh = fopen($path, 'w'))
 	{
 		fwrite($fh, $result['content']);

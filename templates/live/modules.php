@@ -29,7 +29,7 @@ function theme_live_admin_modules()
 		<?php
 	}
 	
-	theme('errors');
+	theme('errors_block');
 	
 	?><div class="titlePadding"></div><?php
 	
@@ -136,7 +136,7 @@ function theme_live_admin_status()
 			<span class="subText"><?php print $GLOBALS['modules']['admin_status']['description']; ?></span>
 	<?php
 	
-	theme('errors');
+	theme('errors_block');
 	
 	?>
 	<div class="titlePadding"></div>

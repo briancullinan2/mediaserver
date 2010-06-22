@@ -292,7 +292,7 @@ function output_admin_modules($request)
 			$defaults = settings_get_defaults(array());
 				
 			// if we are using a database store the settings in the administrators profile
-			if(dependency('database'))
+			if(dependency('database') && false)
 			{
 				// only write the settings that are not the default
 				$new_settings = array();
@@ -324,7 +324,7 @@ function output_admin_modules($request)
 					PEAR::raiseError('The settings file is writeable!', E_DEBUG|E_WARN);
 					
 					$fh = fopen(setting('settings_file'), 'w');
-					$settings = '';
+					$settings = ';<?php die(); ?>' . "\n";
 					
 					if($fh !== false)
 					{
@@ -333,7 +333,7 @@ function output_admin_modules($request)
 						{
 							if(is_string($value) && (!isset($defaults[$setting]) || $value != $defaults[$setting]))
 							{
-								$settings .= $setting . ' = ' . $value . "\n";
+								$settings .= $setting . ' = "' . urlencode($value) . "\"\n";
 							}
 						}
 						
@@ -345,7 +345,7 @@ function output_admin_modules($request)
 								$settings .= "\n[" . $setting . "]\n";
 								foreach($value as $subsetting => $subvalue)
 								{
-									$settings .= $subsetting . ' = ' . $subvalue . "\n";
+									$settings .= $subsetting . ' = "' . urlencode($subvalue) . "\"\n";
 								}
 							}
 						}

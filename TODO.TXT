@@ -1,5 +1,6 @@
 ------------- MONOLITHICMEDIA TODO -------------
 ------------- GENERAL TODO -------------
+IMPORTANT: Convert print_form_objects and print_info_objects to use 'html' copy where necissary
 Cron is not running properly again...
 IMPORTANT!  Convert all call_user_func_array usage to the standard callable method
 Finish webdav module that allows files to be uploaded and access using the web dav protocol.  This is already mostly supported by PEAR.
@@ -23,6 +24,7 @@ Store the remote_address in the session, and if it doesn't match up with what is
 Create a unique id and insert it into forms, this is required when the form is submitted
 Make hard links and soft links, hard links are replaced when they are put in to the database, soft links are replaced when they are read from the database, this will allow us to do more network stuff
 ------------- MEDIA MODULES -------------
+Test playing using http://flowplayer.org/demos/index.html and hopefully be more successfull than JW Player (Mike)
 Add torrent services module modeled after nzbservices
 Search module could be configured to use a different algorithm for searching, possibly an external site 
 	like Google could display results or one of those cool database searching services that cost money

@@ -71,7 +71,7 @@ function setup_core()
 				'debug_mode', 'recursive_get', 'no_bots', 'buffer_size', 'verbose'
 			),
 			'depends on' => array('template'),
-			'template' => true,
+			'template' => false, // calls it's own template
 		),
 		'database' => register_database(),
 	);
@@ -1206,13 +1206,56 @@ function session($varname)
 {
 	$args = func_get_args();
 	
-	if(count($args = 2))
+	if(count($args) > 1)
 	{
 		// they must be trying to set a value to the session
+		/*
+		$value = $args[count($args)-1];
+		$args[count($args)-1] = NULL;
+		
+		// allow for cascading calls
+		$current = &$_SESSION;
+		foreach($args as $i => $varname)
+		{
+			if(isset($current[$varname]) && $varname !== NULL)
+				$current = &$current[$varname];
+			// don't return anything if the address it wrong
+			else
+				return;
+		}
+		
+		// set the value
+		$current = $value;
+		*/
+		$_SESSION[$varname] = $args[1];
 	}
 	
 	if(isset($_SESSION[$varname]))
 		return $_SESSION[$varname];
+}
+
+/**
+ * Helper function for getting cascading session information
+ */
+function session_get($varname)
+{
+	$args = func_get_args();
+	
+	// don't return anything if it does not exist
+	if(!isset($_SESSION[$varname]))
+		return;
+
+	// allow for cascading calls
+	$current = &$_SESSION;
+	foreach($args as $i => $varname)
+	{
+		if(isset($current[$varname]) && $varname !== NULL)
+			$current = &$current[$varname];
+		else
+			break;
+	}
+	
+	return $current;
 }
 
 /**
@@ -1353,7 +1396,7 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 	if($not_special)
 		return $link;
 	else
-		return htmlspecialchars($link);
+		return htmlspecialchars($link, ENT_QUOTES);
 }
 
 /**
@@ -1375,9 +1418,16 @@ function goto($request)
 			header('Location: ' . url($request, true));
 		}
 		
-		// exit now so the page is redirected
-		exit;
 	}
+	else
+	{
+		register_output_vars('redirect', url($request, true));
+	
+		theme('redirect');	
+	}
+	
+	// exit now so the page is redirected
+	exit;
 }
 
 /**
@@ -1489,7 +1539,7 @@ function set_output_vars()
 function traverse_array($input)
 {
 	if(is_string($input))
-		return htmlspecialchars($input);
+		return htmlspecialchars($input, ENT_QUOTES);
 	elseif(is_array($input))
 	{
 		foreach($input as $key => $value)
@@ -1499,7 +1549,7 @@ function traverse_array($input)
 		return $input;
 	}
 	else
-		return htmlspecialchars((string)$input);
+		return htmlspecialchars((string)$input, ENT_QUOTES);
 }
 
 /**
@@ -1509,7 +1559,30 @@ function traverse_array($input)
  * @return NULL if the input is invalid and there is no default, the default value if the input is invalid, the input if it is valid
  * @{
  */
- 
+
+/**
+ * Validate request variables for use
+ * @param name name of the variable to be validate
+ * @param request the request input containing the information to be validated
+ * @return the validated variable value
+ */
+function validate($name, $request)
+{
+	// assemble arguments
+	$args = func_get_args();
+	
+	// pop off name, pass everything else to function
+	array_pop($args);
+	
+	// call function
+	if(function_exists('validate_' . $name))
+		return call_user_func_array('validate_' . $name, $args);
+	elseif(isset($GLOBALS['validate_' . $name]) && is_callable($GLOBALS['validate_' . $name]))
+		return call_user_func_array($GLOBALS['validate_' . $name], $args);
+	else
+		PEAR::raiseError('Validate function validate_' . $name . ' not found!');
+}
+
 /**
  * Implementation of #setup_validate()
  * @return The index module by default, also checks for compatibility based on other request information
@@ -1545,20 +1618,164 @@ function validate_module($request)
 }
 
 /**
+ * Generic validator
+ */
+function generic_validate_boolean($request, $index)
+{
+	return validate_boolean_true($request, $index);
+}
+
+/**
+ * Generic validator
+ */
+function generic_validate_boolean_true($request, $index)
+{
+	if(isset($request[$index]))
+	{
+		if($request[$index] === true || $request[$index] === 'true')
+			return true;
+		elseif($request[$index] === false || $request[$index] === 'false')
+			return false;
+	}
+	return true;
+}
+
+/**
+ * Generic validator
+ */
+function generic_validate_boolean_false($request, $index)
+{
+	if(isset($request[$index]))
+	{
+		if($request[$index] === true || $request[$index] === 'true')
+			return true;
+		elseif($request[$index] === false || $request[$index] === 'false')
+			return false;
+	}
+	return false;
+}
+
+/**
+ * Generic validator
+ */
+function generic_validate_numeric($request, $index)
+{
+	if( isset($request[$index]) && is_numeric($request[$index]))
+		return $request[$index];
+}
+
+/**
+ * Generic validator
+ */
+function generic_validate_numeric_zero($request, $index)
+{
+	if( isset($request[$index]) && is_numeric($request[$index]) && $request[$index] >= 0 )
+		return $request[$index];
+	return 0;
+}
+
+/**
+ * Generic validator
+ */
+function generic_validate_numeric_default($request, $index, $default)
+{
+	if( isset($request[$index]) && is_numeric($request[$index]) && $request[$index] >= 0 )
+		return $request[$index];
+	return $default;
+}
+
+/**
+ * Generic validator
+ */
+function generic_validate_numeric_lower($request, $index, $default, $lower)
+{
+	if( isset($request[$index]) && is_numeric($request[$index]) && $request[$index] >= $lower )
+		return $request[$index];
+	return $default;
+}
+
+/**
+ * Generic validator
+ */
+function generic_validate_url($request, $index)
+{
+	if(isset($request[$index]) && $request[$index] != '' && @parse_url($request[$index]) !== false)
+		return $request[$index];
+}
+
+/**
+ * Generic validator
+ */
+function generic_validate_regexp($request, $index)
+{
+	if(isset($request[$index]) && $request[$index] != '' && @preg_match($request[$index], 'test') !== false)
+		return $request[$index];
+}
+
+/**
+ * Generic validator
+ */
+function generic_validate_email($request, $index)
+{
+	if(isset($request[$index]) && $request[$index] != '' && preg_match('/[a-z0-9!#$%&\'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&\'*+\/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/i', $request[$index]) != 0)
+		return $request[$index];
+}
+
+/**
+ * Generic validator
+ */
+function generic_validate_alphanumeric($request, $index)
+{
+	if(isset($request[$index]) && $request[$index] != '' && preg_match('/^[a-z0-9]*$/i', $request[$index]) != 0)
+		return $request[$index];
+}
+
+/**
+ * Generic validator, prevents breakout bits, accepts all printable characters
+ */
+function generic_validate_all_safe($request, $index)
+{
+	if(isset($request[$index]) && $request[$index] != '' && preg_match('/^[\x20-\x7E]*$/i', $request[$index]) != 0)
+		return $request[$index];
+}
+
+/**
+ * Generic validator, replaces all invalid windows characters with an underscore
+ */
+function generic_validate_filename($request, $index)
+{
+	if(isset($request[$index]))
+	{
+		// replace all invalid characters
+		$request[$index] = str_replace(array('/', '\\', ':', '*', '?', '"', '<', '>', '|'), '_', $request[$index]);
+		if($request[$index] != '')
+			return $request[$index];
+	}
+}
+
+/**
+ * Generic validate
+ */
+function generic_validate_hostname($request, $index)
+{
+	if(isset($request[$index]) && $request[$index] != '' && preg_match(
+				'/^
+				[a-z][a-z0-9+\-.]*:\/\/               # Scheme
+				([a-z0-9\-._~%!$&\'()*+,;=]+@)?      # User
+				(?P<host>[a-z0-9\-._~%]+             # Named or IPv4 host
+				|\[[a-z0-9\-._~%!$&\'()*+,;=:]+\])   # IPv6+ host
+				/ix', 
+			$request[$index], $matches) != 0)
+		return $matches[0];
+}
+
+/**
  * Implementation of validate
- * @ingroup validate
  * @return false by default
  */
 function validate_errors_only($request)
 {
-	if(isset($request['errors_only']))
-	{
-		if($request['errors_only'] === true || $request['errors_only'] === 'true')
-			return true;
-		elseif($request['errors_only'] === false || $request['errors_only'] === 'false')
-			return false;
-	}
-	return false;
+	return generic_validate_boolean_false($request, 'errors_only');
 }
 
 /**
@@ -1592,9 +1809,7 @@ function validate_cat($request)
  */
 function validate_start($request)
 {
-	if( !isset($request['start']) || !is_numeric($request['start']) || $request['start'] < 0 )
-		return 0;
-	return $request['start'];
+	return generic_validate_numeric_zero($request, 'start');
 }
 
 /**
@@ -1603,9 +1818,7 @@ function validate_start($request)
  */
 function validate_limit($request)
 {
-	if( !isset($request['limit']) || !is_numeric($request['limit']) || $request['limit'] < 0 )
-		return 15;
-	return $request['limit'];
+	return generic_validate_numeric_default($request, 'limit', 15);
 }
 
 /**
@@ -1729,8 +1942,7 @@ function validate_columns($request)
  */
 function validate_extra($request)
 {
-	if(isset($request['extra']))
-		return $request['extra'];
+	return generic_validate_all_safe($request, 'extra');
 }
 
 /**
@@ -2025,20 +2237,25 @@ function status_index()
  */
 function output_index($request)
 {
+	// output any index like information
 	if(isset($request['errors_only']) && $request['errors_only'] == true)
 	{
 		register_output_vars('errors_only', true);
+
+		theme('errors_block');
 		
 		// remove old errors from session
-		$_SESSION['errors']['user'] = array();
-		$_SESSION['errors']['warn'] = array();
-		$_SESSION['errors']['note'] = array();
-
-		theme('errors');
+		$GLOBALS['user_errors'] = array();
+		$GLOBALS['warn_errors'] = array();
+		$GLOBALS['debug_errors'] = array();
+		$GLOBALS['note_errors'] = array();
 		
-		exit;
+		return;
 	}
+	
 	output_core($request);
+	
+	theme('index');
 }
 
 /**
@@ -2047,8 +2264,6 @@ function output_index($request)
  */
 function output_core($request)
 {
-	// output any index like information
-	
 	// perform a select so files can show up on the index page
 	output_select($request);
 }
@@ -2059,44 +2274,7 @@ function output_core($request)
 
 function theme_index()
 {
-	?>
-	There are <?php print $GLOBALS['templates']['html']['total_count']; ?> result(s).<br />
-	Displaying items <?php print $GLOBALS['templates']['html']['start']; ?> to <?php print $GLOBALS['templates']['html']['start'] + $GLOBALS['templates']['html']['limit']; ?>.
-	<br />
-	<?php
-	if(count($GLOBALS['user_errors']) > 0)
-	{
-		?><span style="color:#C00"><?php
-		foreach($GLOBALS['user_errors'] as $i => $error)
-		{
-			?><b><?php print $error->message; ?></b><br /><?php
-		}
-		?></span><?php
-	}
-	
-	theme('pages');
-	?>
-	<br />
-	<form name="select" action="{$get}" method="post">
-		<input type="submit" name="select" value="All" />
-		<input type="submit" name="select" value="None" />
-		<p style="white-space:nowrap">
-		Select<br />
-		On : Off<br />
-		<?php
-		theme('files');
-		?>
-		<input type="submit" value="Save" /><input type="reset" value="Reset" /><br />
-	</form>
-	<?php
-		
-	theme('pages');
-	
-	?>
-	<br /><br />Select a Template:<br />
-	<?php
-	
-	theme('template_block');
+	theme('select');
 }
 
 function theme_pages()
@@ -2176,4 +2354,53 @@ function theme_pages()
 			}
 		}
 	}
+}
+
+
+function theme_redirect()
+{
+	theme('header');
+	
+	?>You are being redirected...<?php
+	
+	theme('footer');
+}
+
+function theme_redirect_block()
+{
+	if(isset($GLOBALS['templates']['html']['redirect']))
+	{
+		?><META HTTP-EQUIV="refresh" CONTENT="1;URL=<?php print $GLOBALS['templates']['html']['redirect']; ?>"><?php
+	}
+}
+
+function theme_header()
+{
+	?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<?php theme('redirect_block'); ?>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title><?php print setting('html_name'); ?> : <?php print htmlspecialchars($GLOBALS['modules'][$GLOBALS['templates']['vars']['module']]['name']); ?></title>
+</head>
+
+<body>
+	<?php
+}
+
+function theme_footer()
+{
+	?>
+</body>
+</html>
+	<?php
+}
+
+function theme_errors()
+{
+}
+
+function theme_errors_block()
+{
 }

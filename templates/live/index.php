@@ -10,6 +10,7 @@ function register_live_index()
 function live_get_info_count()
 {
 	$biggest = 0;
+	if(!isset($GLOBALS['templates']['vars']['files'])) return $biggest;
 	foreach($GLOBALS['templates']['vars']['files'] as $file)
 	{
 		$info_count = 0;
@@ -45,7 +46,10 @@ function theme_live_pages()
 					<tr>
 						<td>
 	<?php
-	$item_count = count($GLOBALS['templates']['vars']['files']);
+	if(!isset($GLOBALS['templates']['vars']['files']))
+		$item_count = 0;
+	else
+		$item_count = count($GLOBALS['templates']['vars']['files']);
 	$page_int = $GLOBALS['templates']['vars']['start'] / $GLOBALS['templates']['vars']['limit'];
 	$lower = $page_int - 8;
 	$upper = $page_int + 8;
@@ -157,7 +161,7 @@ function live_alter_file($file)
 	return $file;
 }
 
-function theme_live_errors()
+function theme_live_errors_block()
 {
 	if(!isset($GLOBALS['templates']['vars']['errors_only']) || $GLOBALS['templates']['vars']['errors_only'] == false)
 	{

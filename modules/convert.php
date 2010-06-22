@@ -183,10 +183,7 @@ function validate_cformat($request)
  */
 function validate_cheight($request)
 {
-	if(!isset($request['cheight']) || !is_numeric($request['cheight']) || $request['cheight'] <= 0)
-		return 512;
-	else
-		return $request['cheight'];
+	return generic_validate_numeric_default($request, 'cheight', 512);
 }
 
 /**
@@ -196,10 +193,7 @@ function validate_cheight($request)
  */
 function validate_cwidth($request)
 {
-	if(!isset($request['cwidth']) || !is_numeric($request['cwidth']) || $request['cwidth'] <= 0)
-		return 512;
-	else
-		return $request['cwidth'];
+	return generic_validate_numeric_default($request, 'cwidth', 512);
 }
 
 /**

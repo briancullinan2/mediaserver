@@ -1,3 +1,10 @@
+2010-06-21
+Worked on movies tool
+Changed settings to use include/settings.php and urlencoded all of the settings to prevent security issues
+
+2010-06-18
+Created and implemented generic_validate functions for things like numbers and boolean values
+
 2010-06-17
 Worked on movies tool
 	Finished netflix checker

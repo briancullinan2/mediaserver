@@ -159,14 +159,17 @@ function setting_balance_server($settings, $index)
 		return;
 		
 	// validate address
-	if(preg_match('/\b((?#domain)[-A-Z0-9.]+)((?#file)\/[-A-Z0-9+&@#\/%=~_|!:,.;]*)?((?#parameters)\?[A-Z0-9+&@#\/%=~_|!:,.;]*)?/i', $server['address']) === false)
+	if(!($server['address'] = generic_validate_url(array('server_address' => $server['address']), 'server_address')))
 		return;
 	
 	// username and password will be validated when used
+	if(!($server['username'] = generic_validate_all_safe(array('server_username' => $server['username']), 'server_username')))
+		return;
+	if(!($server['password'] = generic_validate_all_safe(array('server_password' => $server['password']), 'server_password')))
+		return;
 	
 	// make sure nickname isn't blank
-	if(isset($server['nickname']) && $server['nickname'] == '')
-		unset($server['nickname']);
+	if(!($server['nickname'] = generic_validate_all_safe(array('server_nickname' => $server['nickname']), 'server_nickname')))
 		
 	return $server;
 }
@@ -280,7 +283,7 @@ function status_admin_balancer($settings)
 	foreach($settings['balance_servers'] as $i => $server)
 	{
 		// use snoopy to check if sites are running and download config,
-		$url = $server['protocol'] . '://' . $server['address'] . '?module=admin&get_settings=true&users=login&username=' . $server['username'] . '&password=' . base64_encode($server['password']);
+		$url = $server['protocol'] . '://' . $server['address'] . '?module=admin&get_settings=true&users=login&username=' . urlencode($server['username']) . '&password=' . urlencode(base64_encode($server['password']));
 		
 		// make this quick, only a second or 2 timeout
 		$result = fetch($url, array(), array('timeout' => 2), array());
@@ -390,9 +393,7 @@ function session_admin_balancer($request)
 		if($new_server != NULL)
 		{
 			// redirect session information and user
-			header('Location: ' . $new_server['protocol'] . '://' . $new_server['address'] . substr(url($request, true), 1));
-			
-			exit;
+			goto($new_server['protocol'] . '://' . $new_server['address'] . substr(url($request, true), 1));
 		}
 	}
 }

@@ -66,7 +66,7 @@ function theme_live_install()
 		
 		<?php
 		
-		theme('errors');
+		theme('errors_block');
 	}
 
 	if(!is_float($GLOBALS['templates']['vars']['install_step']))

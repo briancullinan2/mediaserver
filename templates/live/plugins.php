@@ -20,7 +20,7 @@ function theme_live_plugins()
 			<span class="subText"><?php print $GLOBALS['plugins']['admin_plugins']['description']; ?></span>
 	<?php
 	
-	theme('errors');
+	theme('errors_block');
 	
 	?>
 	<div class="titlePadding"></div>

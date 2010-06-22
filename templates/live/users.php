@@ -48,7 +48,7 @@ function theme_live_users()
 				<span class="subText">Enter your username and password to log in.</span>
 		<?php
 		
-		theme('errors');
+		theme('errors_block');
 		
 		?><div class="titlePadding"></div><?php
 		
@@ -69,7 +69,7 @@ function theme_live_users()
 				<span class="subText">Fill out the form below to gain access to additional site features.</span>
 		<?php
 		
-		theme('errors');
+		theme('errors_block');
 		
 		?><div class="titlePadding"></div><?php
 		
@@ -82,4 +82,6 @@ function theme_live_users()
 		
 		theme('footer');
 	}
+	else
+		theme('default');
 }

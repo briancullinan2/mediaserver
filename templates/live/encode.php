@@ -19,7 +19,7 @@ function theme_live_encode()
 			<span class="subText">Use the form below to select the encoding options for a given file.</span>
 	<?php
 	
-	theme('errors');
+	theme('errors_block');
 	
 	?><div class="titlePadding"></div><?php
 

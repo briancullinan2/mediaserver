@@ -40,7 +40,7 @@ function validate_filename($request)
 			$request['filename'] = substr($request['filename'], -strrpos($request['filename'], '\\') + 1);
 		
 		// return the filename
-		return $request['filename'];
+		return generic_validate_filename($request, 'filename');
 	}
 }
 
@@ -105,14 +105,7 @@ function validate_file($request)
  */
 function validate_dirs_only($request)
 {
-	if(isset($request['dirs_only']))
-	{
-		if($request['dirs_only'] === true || $request['dirs_only'] === 'true')
-			return true;
-		elseif($request['dirs_only'] === false || $request['dirs_only'] === 'false')
-			return false;
-	}
-	return true;
+	return generic_validate_boolean_true($request, 'dirs_only');
 }
 
 /**

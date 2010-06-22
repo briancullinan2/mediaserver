@@ -114,8 +114,7 @@ function validate_item($request)
  */
 function validate_id($request)
 {
-	if(isset($request['id']) && is_numeric($request['id']))
-		return $request['id'];
+	return generic_validate_numeric($request, 'id');
 }
 
 /**
@@ -167,14 +166,7 @@ function validate_off($request)
  */
 function validate_short($request)
 {
-	if(isset($request['short']))
-	{
-		if($request['short'] === true || $request['short'] === 'true')
-			return true;
-		elseif($request['short'] === false || $request['short'] === 'false')
-			return false;
-	}
-	return false;
+	return generic_validate_boolean_false($request, 'short');
 }
  
 /**
@@ -371,6 +363,49 @@ function output_select($request)
 	if(isset($_SESSION['select']['selected'])) register_output_vars('selected', $_SESSION['select']['selected']);
 }
 
+function theme_select()
+{
+	theme('header');
+
+	theme('search_block');
+
+	?>
+	There are <?php print $GLOBALS['templates']['html']['total_count']; ?> result(s).<br />
+	Displaying items <?php print $GLOBALS['templates']['html']['start']; ?> to <?php print $GLOBALS['templates']['html']['start'] + $GLOBALS['templates']['html']['limit']; ?>.
+	<br />
+	<?php
+	if(count($GLOBALS['user_errors']) > 0)
+	{
+		?><span style="color:#C00"><?php
+		foreach($GLOBALS['user_errors'] as $i => $error)
+		{
+			?><b><?php print $error->message; ?></b><br /><?php
+		}
+		?></span><?php
+	}
+	
+	theme('pages');
+	?>
+	<br />
+	<form name="select" action="{$get}" method="post">
+		<input type="submit" name="select" value="All" />
+		<input type="submit" name="select" value="None" />
+		<p style="white-space:nowrap">
+		Select<br />
+		On : Off<br />
+		<?php
+		theme('files');
+		?>
+		<input type="submit" value="Save" /><input type="reset" value="Reset" /><br />
+	</form>
+	<?php
+		
+	theme('pages');
+	
+	theme('template_block');
+
+	theme('footer');
+}
 
 function theme_files()
 {

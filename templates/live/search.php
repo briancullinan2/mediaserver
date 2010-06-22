@@ -65,7 +65,7 @@ function theme_live_search()
 		To look for fields that are equal to the search query use an equal sign (=) on both sides.<br />
 		Finally, to include terms preceed the term with a plus sign (+) and to exclude use a minus sign (-).</span>
 		<?php
-		theme('errors');
+		theme('errors_block');
 		?>
 		<div class="titlePadding"></div>
 		<form action="<?php print url(''); ?>" method="get">

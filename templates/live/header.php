@@ -54,8 +54,9 @@ function theme_live_head()
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
+<?php theme('redirect_block'); ?>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title><?php print setting('html_name'); ?> : <?php print $GLOBALS['modules'][$GLOBALS['templates']['vars']['module']]['name'];?></title>
+<title><?php print setting('html_name'); ?> : <?php print htmlspecialchars($GLOBALS['modules'][$GLOBALS['templates']['vars']['module']]['name']); ?></title>
 <meta name="google-site-verification" content="K3Em8a7JMI3_1ry5CNVKIHIWofDt-2C3ohovDq3N2cQ" />
 <?php theme('styles', $GLOBALS['templates']['vars']['styles']); ?>
 <?php theme('scripts', $GLOBALS['templates']['vars']['scripts']); ?>
@@ -142,7 +143,7 @@ function theme_live_breadcrumbs()
 		<li><img src="<?php print url('module=template&tfile=images/carat.gif&template=' . setting('local_template')); ?>" class="crumbsep"></li>
 		<?php
 		// break up the module by the underscores
-		$crumbs = split('_', $GLOBALS['module']);
+		$crumbs = split('_', $GLOBALS['templates']['vars']['module']);
 		$current = '';
 		foreach($crumbs as $i => $crumb)
 		{
@@ -203,7 +204,7 @@ function theme_live_template_block()
 	{
 		if(isset($template['name']))
 		{
-			?><a href="<?php print url('template=' . $name, false, true); ?>"><?php print $template['name']; ?></a><?php
+			?><a href="<?php print url('module=index&template=' . $name, false, true); ?>"><?php print $template['name']; ?></a><?php
 		}
 	}
 	?></div><?php

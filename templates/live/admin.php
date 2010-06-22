@@ -17,7 +17,7 @@ function theme_live_admin()
 			<span class="subText">Select the administration module you would like to use below.</span>
 	<?php
 	
-	theme('errors');
+	theme('errors_block');
 	
 	?><div class="titlePadding"></div><?php
 
@@ -59,7 +59,7 @@ function theme_live_template()
 			<span class="subText"><?php print $GLOBALS['modules']['admin_template']['description']; ?></span>
 	<?php
 	
-	theme('errors');
+	theme('errors_block');
 	
 	?><div class="titlePadding"></div><?php
 
@@ -107,7 +107,7 @@ function theme_live_admin_watch()
 			<span class="subText"><?php print $GLOBALS['modules']['admin_watch']['description']; ?></span>
 	<?php
 	
-	theme('errors');
+	theme('errors_block');
 	
 	?><div class="titlePadding"></div><?php
 
@@ -159,7 +159,7 @@ function theme_live_admin_alias()
 			<span class="subText"><?php print $GLOBALS['modules']['admin_alias']['description']; ?></span>
 	<?php
 	
-	theme('errors');
+	theme('errors_block');
 	
 	?><div class="titlePadding"></div><?php
 	

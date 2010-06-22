@@ -79,6 +79,8 @@ function setting_television_search($settings, $index)
 	// return the same static service as listed in the nzbservice module
 	if($index == 0)
 		return 'http://nzbmatrix.com/nzb-search.php?cat=6&search=%s%%20s%02de%02d';
+	if($index == 1)
+		return 'http://www.newzbin.com/search/query/?searchaction=Go&category=8&q=%s%%20%dx%02d';
 
 	// don't continue with this if stuff is missing
 	if(isset($settings['television_search_' . $index]) && 
@@ -105,8 +107,7 @@ function validate_info_singular_step_television($request)
  */
 function validate_episode($request)
 {
-	if(isset($request['episode']) && is_numeric($request['episode']))
-		return $request['episode'];
+	return generic_validate_numeric($request, 'episode');
 }
 
 /**
@@ -115,8 +116,7 @@ function validate_episode($request)
  */
 function validate_season($request)
 {
-	if(isset($request['season']) && is_numeric($request['season']))
-		return $request['season'];
+	return generic_validate_numeric($request, 'season');
 }
 
 /**
@@ -125,8 +125,7 @@ function validate_season($request)
  */
 function validate_show_index($request)
 {
-	if(isset($request['show_index']) && is_numeric($request['show_index']))
-		return $request['show_index'];
+	return generic_validate_numeric($request, 'show_index');
 }
 
 /**
@@ -135,8 +134,7 @@ function validate_show_index($request)
  */
 function validate_showname($request)
 {
-	if(isset($request['showname']))
-		return $request['showname'];
+	return generic_validate_all_safe($request, 'showname');
 }
 
 /**
@@ -145,7 +143,7 @@ function validate_showname($request)
  */
 function validate_show_status($request)
 {
-	if(isset($request['show_status']))
+	if(isset($request['show_status']) && $request['show_status'] != '' && preg_match('/^[a-z0-9-]*$/i', $request['show_status']) != 0)
 		return $request['show_status'];
 }
 	
@@ -405,10 +403,10 @@ function output_admin_tools_television_singular($request)
 					'loading' => 'Searching for NZB...'
 				),
 				'singular' => url('module=admin_tools_television&subtool=2&info_singular=true&info_singular_step_television=download' . 
-					'&episode=' . $shows['new_episodes']['episodes'][$i] . 
-					'&showname=' . $show . 
-					'&season=' . $shows['new_episodes']['seasons'][$i] . 
-					'&show_status=' . $shows['new_episodes']['status'][$i] . 
+					'&episode=' . urlencode($shows['new_episodes']['episodes'][$i]) . 
+					'&showname=' . urlencode($show) . 
+					'&season=' . urlencode($shows['new_episodes']['seasons'][$i]) . 
+					'&show_status=' . urlencode($shows['new_episodes']['status'][$i]) . 
 					'&show_index=' . $i
 				, true),
 			);
@@ -425,6 +423,10 @@ function output_admin_tools_television_singular($request)
 		// fetch nzb files
 		$status = television_fetch_nzb($request['showname'], $request['season'], $request['episode']);
 		
+		$show_title = htmlspecialchars($request['showname']) . ' ' . 
+			htmlspecialchars($request['season']) . 'x' . 
+			htmlspecialchars($request['episode']);
+		
 		// nzb file was found but something went terribly wrong
 		if($status === -1)
 		{
@@ -433,7 +435,7 @@ function output_admin_tools_television_singular($request)
 				'status' => 'fail',
 				'description' => array(
 					'list' => array(
-						'Failed to save the file, but the episode ' . $request['showname'] . ' ' . $request['season'] . 'x' . $request['episode'] . ' was found successfully.',
+						'Failed to save the file, but the episode ' . $show_title . ' was found successfully.',
 					),
 				),
 				'text' => 'Failed to save.',
@@ -442,15 +444,24 @@ function output_admin_tools_television_singular($request)
 		// nzb was not found
 		elseif($status === false)
 		{
+			$services = setting('nzbservices');
+			$links = '';
+			foreach($services as $i => $config)
+			{
+				$search = setting('television_search_' . $i);
+				if($search == '')
+					$search = $config['search'];
+				$links .= '<a href="' . sprintf($search, urlencode($request['showname']), urlencode($request['season']), urlencode($request['episode'])) . '">Search for ' . $request['showname'] . ' on ' . $config['name'] . '</a><br />';
+			}
 			$infos['myepisodes_shows_' . $request['show_index']] = array(
 				'name' => 'Failed to find ' . $request['showname'],
 				'status' => 'warn',
 				'description' => array(
 					'list' => array(
-						'Failed to find the episode for ' . $request['showname'] . ' ' . $request['season'] . 'x' . $request['episode'] . '.',
+						'Failed to find the episode for ' . $show_title . '.',
 					),
 				),
-				'text' => 'Failed to find.',
+				'text' => 'Failed to find:<br />' . $links,
 			);
 		}
 		// nzb was found and saved to disk
@@ -461,10 +472,10 @@ function output_admin_tools_television_singular($request)
 				'status' => '',
 				'description' => array(
 					'list' => array(
-						'The episode for ' . $request['showname'] . ' ' . $request['season'] . 'x' . $request['episode'] . ' was successfully downloaded.',
+						'The episode for ' . $show_title . ' was successfully downloaded.',
 					),
 				),
-				'text' => 'Downloaded ' . $request['showname'] . '.',
+				'text' => 'Downloaded ' . htmlspecialchars($request['showname']) . '.',
 			);
 			
 			// save in myepisodes
@@ -495,6 +506,8 @@ function television_fetch_nzb($showname, $season, $episode)
 	foreach($services as $i => $config)
 	{
 		$search = setting('television_search_' . $i);
+		if($search == '')
+			$search = $config['search'];
 		
 		// run query, using television search strings
 		$result = fetch(sprintf($search, urlencode($showname), urlencode($season), urlencode($episode)), array(), array(), $_SESSION['nzbservices_' . $i]);
@@ -504,7 +517,46 @@ function television_fetch_nzb($showname, $season, $episode)
 		
 		if($count > 0)
 		{
-			return nzbservices_fetch_nzb($matches[1][0]);
+			if($address = generic_validate_hostname(array('address' => $matches[1][0]), 'address'))
+				$file = $matches[1][0];
+			else
+			{
+				if($address = generic_validate_hostname(array('address' => $config['search']), 'address'))
+					$file = $address . $matches[1][0];
+				else
+					$file = $matches[1][0];
+			}
+				
+			// download and save
+			$result = fetch($file, array(), array(), $_SESSION['nzbservices_' . $i]);
+			
+			if(strlen($result['content']) == 0)
+				return false;
+			
+			$path = setting('nzbpath');
+			if(substr($path, -1) != '/') $path .= '/';
+			if(isset($result['headers']['Content-disposition']) && strpos($result['headers']['Content-disposition'], 'filename=') !== false)
+			{
+				$start = strpos($result['headers']['Content-disposition'], 'filename=') + 9;
+				$filename = substr($result['headers']['Content-disposition'], $start);
+				if($filename[0] == '"') $filename = trim(substr($filename, 1));
+				if($filename[strlen($filename)-1] == '"') $filename = trim(substr($filename, 0, -1));
+			}
+			else
+			{
+				$filename = $showname . ' Season ' . $season . ' Episode ' . $episode . '.nzb';
+			}
+			$path .= $filename;
+
+			if($fh = fopen($path, 'w'))
+			{
+				fwrite($fh, $result['content']);
+				fclose($fh);
+				
+				return true;
+			}
+			else
+				return -1;
 		}
 	}
 	

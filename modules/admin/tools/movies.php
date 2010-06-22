@@ -71,6 +71,12 @@ function setting_netflix_xml($settings)
  */
 function setting_movie_search($settings, $index)
 {
+	// return the same static service as listed in the nzbservice module
+	if($index == 0)
+		return 'http://nzbmatrix.com/nzb-search.php?cat=movies-all&search=%s';
+	if($index == 1)
+		return 'http://www.newzbin.com/search/query/?searchaction=Go&category=6&q=%s';
+
 	// don't continue with this if stuff is missing
 	if(isset($settings['movie_search_' . $index]) && 
 		$settings['movie_search_' . $index] != ''
@@ -110,7 +116,7 @@ function setting_movie_folders($settings)
 			$settings['movie_folders'][$i] = $folder;
 	}
 	
-	if(setting('database_enable'))
+	if(setting_installed() && setting('database_enable'))
 	{
 		// add folders in the watch list that include the word movie
 		foreach($GLOBALS['watched'] as $i => $watch)
@@ -161,6 +167,15 @@ function validate_info_singular_step_movies($request)
 		in_array($request['info_singular_step_movies'], array('login', 'netflix', 'search'))
 	)
 		return $request['info_singular_step_movies'];
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ */
+function validate_movie_index($request)
+{
+	return generic_validate_numeric_zero($request, 'movie_index');
 }
 
 /**
@@ -449,7 +464,7 @@ function output_admin_tools_movies_singular($request)
 					'These are all the Movies on your Q.',
 				),
 			),
-			'text' => 'Movies:<br />' . implode(', ', $movies['all_movies'])
+			'text' => 'Movies:<br />There are ' . count($movies['all_movies']) . ' movies on your Netflix Q'
 		);
 		
 		// get intersections
@@ -529,7 +544,102 @@ function output_admin_tools_movies_singular($request)
 		}
 		
 		// perform searches
+		$count = 0;
+		$query = '';
+		session('all_movies', $movies['all_movies']);
+		session('descriptions', $movies['descriptions']);
+	
+		// cancel options
+		$infos['netflix_movies_null'] = array(
+			'name' => 'Movie Search',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'A movie can be entered to search for, and the cancel function can be used at any time to stop the automatic search.',
+				),
+			),
+			'type' => 'set',
+			'options' => array(
+				'manual_search[text]' => array(
+					'type' => 'text',
+					'value' => '',
+					'help' => 'Manual Search'
+				),
+				'manual_search[search]' => array(
+					'type' => 'submit',
+					'value' => 'Search',
+				),
+				array(
+					'value' => '<br />'
+				),
+				array(
+					'type' => 'button',
+					'value' => 'Cancel',
+					'action' => 'singular_cancel=true;',
+					'help' => 'Automatic Search',
+				),
+			),
+		);
 		
+		// construct first movie singular
+		$infos['netflix_movies_0'] = array(
+			'name' => 'Movies in your Q available for Download',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'Searching for movies.',
+				),
+			),
+			'text' => array(
+				'loading' => 'Loading...'
+			),
+			'singular' => url('module=admin_tools_movies&subtool=0&info_singular=true&info_singular_step_movies=search&movie_index=0', true),
+		);
+	}
+	elseif($request['info_singular_step_movies'] == 'search')
+	{
+		$services = setting('nzbservices');
+		$all_movies = session('all_movies');
+		$descriptions = session('descriptions');
+		$request['movie_index'] = validate_movie_index($request);
+		if(isset($request['movie_index']))
+		{
+			// search for movies
+			$results = movies_fetch_nzb($all_movies[$request['movie_index']]);
+			
+			if(count($results) > 0)
+			{
+				$infos['netflix_movies_' . $request['movie_index']] = array(
+					'name' => 'Searched for ' . $all_movies[$request['movie_index']],
+					'status' => '',
+					'description' => array(
+						'list' => array(
+							'This movie has been searched for, and results were found.',
+							htmlspecialchars_decode($descriptions[$request['movie_index']]),
+						),
+					),
+					'text' => 'Services:<br />' . implode('<br />', $results),
+				);
+			}
+	
+			if($request['movie_index'] < count($all_movies))
+			{
+				// construct singular
+				$infos['netflix_movies_' . ($request['movie_index']+1)] = array(
+					'name' => 'Movies in your Q available for Downloads',
+					'status' => '',
+					'description' => array(
+						'list' => array(
+							'Searching for movies.',
+						),
+					),
+					'text' => array(
+						'loading' => 'Loading...'
+					),
+					'singular' => url('module=admin_tools_movies&subtool=0&info_singular=true&info_singular_step_movies=search&movie_index=' . ($request['movie_index']+1), true),
+				);
+			}
+		}
 	}
 	
 	register_output_vars('infos', $infos);
@@ -537,6 +647,44 @@ function output_admin_tools_movies_singular($request)
 	theme('tools_singular');
 }
 
+/**
+ * Helper function for fetching a list of movies available for download
+ */
+function movies_fetch_nzb($movie)
+{
+	// construct search arguments
+	$args = func_get_args();
+	
+	$services = setting('nzbservices');
+	
+	$downloads = array();
+	
+	// loop through NZB services until we find the show
+	foreach($services as $i => $config)
+	{
+		$search = setting('movie_search_' . $i);
+		if($search == '')
+			$search = $config['search'];
+			
+		// run query, using television search strings
+		$result = fetch(sprintf($search, urlencode($movie)), array(), array(), $_SESSION['nzbservices_' . $i]);
+		
+		// match nzbs
+		$count = preg_match_all($config['match'], $result['content'], $matches);
+		if($count > 0)
+		{
+			// return list of downloads
+			$downloads[$i] = '<a href="' . sprintf($search, urlencode($movie)) . '">' . htmlspecialchars($movie) . ' on ' . htmlspecialchars($config['name']) . ' (' . $count . ') <img src="' . $config['image'] . '" alt="icon" /></a><br />';
+		}
+	}
+
+	return $downloads;
+}
+
+/**
+ * Helper function for getting the tokens for all the movies
+ @return an associative array contains movie names and tokens
+ */
 function movies_get_movie_tokens()
 {
 	// get movie folders
@@ -635,19 +783,21 @@ function movies_netflix_fetch_movies()
 	$result = fetch('http://rss.netflix.com/QueueRSS?id=' . urlencode($id), array(), array(), array());
 	
 	// parse movies
-	$count = preg_match_all('/\<title\>([0-9]{3})- ([^\<]*)\<\/title\>\s*<link>([^\<]*)<\/link>/i', $result['content'], $matches);
+	$count = preg_match_all('/\<title\>([0-9]{3})- ([^\<]*)\<\/title\>\s*<link>([^\<]*)<\/link>[\s\S]*?<description>([^\<]*)</i', $result['content'], $matches);
 	
 	// loop through movies and build array
 	$movies = array(
 		'all_movies' => array(),
 		'movies' => array(),
 		'tokens' => array(),
+		'descriptions' => array(),
 	);
 	foreach($matches[0] as $i => $movie)
 	{
 		$tmp_tokens = tokenize($matches[2][$i]);
 		$movies['all_movies'][] = $matches[2][$i];
 		$movies['tokens'][] = $tmp_tokens['Most'];
+		$movies['descriptions'][] = $matches[4][$i];
 
 		$movies['movies'][] = array(
 			'q_pos' => $matches[1][$i],

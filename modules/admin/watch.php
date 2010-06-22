@@ -63,8 +63,7 @@ function validate_waddpath($request)
  */
 function validate_wremove($request)
 {
-	if(isset($request['wremove']) && is_numeric($request['wremove']) && $request['wremove'] >= 0)
-		return $request['wremove'];
+	return generic_validate_numeric_zero($request, 'wremove');
 }
 
 /** 
@@ -240,16 +239,9 @@ function output_admin_watch($request)
 
 function theme_watch()
 {
+	theme('header');
+	
 	?>
-<html>
-<head>
-	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-	<meta http-equiv="Pragma" content="no-cache">
-	<meta http-equiv="Expires" content="-1">
-	<title><?php echo setting('html_name')?>: Watch Editor</title>
-</head>
-<body>
-
 This is a list of folders on the server to watch for media files:<br />
 <?php
 if( count($GLOBALS['user_errors']) > 0 )
@@ -285,8 +277,7 @@ if( count($GLOBALS['user_errors']) > 0 )
 		<input type="submit" value="Add" />
 		<br />
 	</form>
-</body>
-</html>
 <?php
 
+	theme('footer');
 }

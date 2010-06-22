@@ -20,7 +20,8 @@ if(isset($GLOBALS['modules'][$_REQUEST['module']]))
 	// check if the current user has access to the module
 
 	// make sure user is logged in
-	if(setting_installed() && isset($GLOBALS['modules'][$_REQUEST['module']]['privilage']) && $_SESSION['users']['Privilage'] < $GLOBALS['modules'][$_REQUEST['module']]['privilage'])
+	$user = session('users');
+	if(setting_installed() && isset($GLOBALS['modules'][$_REQUEST['module']]['privilage']) && $user['Privilage'] < $GLOBALS['modules'][$_REQUEST['module']]['privilage'])
 	{
 		// redirect to login page
 		goto(array(
@@ -29,8 +30,6 @@ if(isset($GLOBALS['modules'][$_REQUEST['module']]))
 			'return' => urlencode(url($_GET, true)),
 			'required_priv' => $GLOBALS['modules'][$_REQUEST['module']]['privilage']
 		));
-		
-		exit();
 	}
 	
 	// output the module
@@ -38,7 +37,9 @@ if(isset($GLOBALS['modules'][$_REQUEST['module']]))
 }
 
 // save the errors in the session until they can be printed out
-$_SESSION['errors']['user'] = $GLOBALS['user_errors'];
-$_SESSION['errors']['warn'] = $GLOBALS['warn_errors'];
-$_SESSION['errors']['debug'] = $GLOBALS['debug_errors'];
-$_SESSION['errors']['note'] = $GLOBALS['note_errors'];
+session('errors', array(
+	'user' => $GLOBALS['user_errors'],
+	'warn' => $GLOBALS['warn_errors'],
+	'debug' => $GLOBALS['debug_errors'],
+	'note' => $GLOBALS['note_errors'],
+));

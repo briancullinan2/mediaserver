@@ -13,36 +13,40 @@
  */
 function setup_users()
 {
+	$session_user = session('users');
 	// prepare the session that stores user information
-	if(!isset($_SESSION['users']) && !isset($_REQUEST['username']))
+	if($session_user == false && !isset($_REQUEST['username']))
 		$_REQUEST['username'] = 'guest';
 
 	// this will hold a cached list of the users that were looked up
 	$GLOBALS['user_cache'] = array();
 	
 	// get users associated with the keys
-	if(isset($_SESSION['users']['Settings']['keys']))
+	if(isset($session_user['Settings']['keys']))
 	{
 		$return = $GLOBALS['database']->query(array(
 				'SELECT' => 'users',
-				'WHERE' => 'PrivateKey = "' . join('" OR PrivateKey = "', $_SESSION['users']['Settings']['keys']) . '"',
-				'LIMIT' => count($_SESSION['users']['Settings']['keys'])
+				'WHERE' => 'PrivateKey = "' . join('" OR PrivateKey = "', $session_user['Settings']['keys']) . '"',
+				'LIMIT' => count($session_user['Settings']['keys'])
 			)
 		, false);
 		
-		$_SESSION['users']['Settings']['keys_usernames'] = array();
+		$session_user['Settings']['keys_usernames'] = array();
 		foreach($return as $index => $user)
 		{
-			$_SESSION['users']['Settings']['keys_usernames'][] = $user['Username'];
+			$session_user['Settings']['keys_usernames'][] = $user['Username'];
 			
 			unset($return[$index]['Password']);
 		}
 		
-		$_SESSION['users']['Settings']['keys_users'] = $return;
+		$session_user['Settings']['keys_users'] = $return;
+		
+		// save the session user after retrieving keys
+		session('users', $session_user);
 	}
 	
 	// output the user so template can print out login or logout stuff
-	if(isset($_SESSION['users'])) register_output_vars('user', $_SESSION['users']);
+	if(isset($session_user)) register_output_vars('user', $session_user);
 }
 
 /**
@@ -76,7 +80,7 @@ function register_users()
 
 function dependency_users($settings)
 {
-	if(setting('database_enable') == false)
+	if(setting_installed() == false || setting('database_enable') == false)
 		return array('template');
 	else
 		return array('template', 'database');
@@ -249,8 +253,7 @@ function validate_password($request)
  */
 function validate_email($request)
 {
-	if(isset($request['email']))
-		return $request['email'];
+	return generic_validate_email($request, 'email');
 }
 
 /**
@@ -260,8 +263,8 @@ function validate_email($request)
  */
 function validate_username($request)
 {
-	if(isset($request['username']))
-		return $request['username'];
+	// a little lax here because it will run through the username validator when registering
+	return generic_validate_all_safe($request, 'username');
 }
 
 /**
@@ -271,8 +274,7 @@ function validate_username($request)
  */
 function validate_return($request)
 {
-	if(isset($request['return']))
-		return $request['return'];
+	return generic_validate_url($request, 'return');
 }
 
 /**
@@ -686,6 +688,7 @@ function output_users($request)
 			session_destroy();
 			
 			// login cookies become irrelevant
+			$_COOKIE = array();
 			
 			// create new session
 			session_start();
@@ -709,6 +712,15 @@ function output_users($request)
 
 function theme_login()
 {
+	theme('header');
+	
+	theme('login_block');
+	
+	theme('footer');
+}
+
+function theme_login_block()
+{
 	?>	
 	<form action="<?php echo url('module=users&users=login' . (isset($GLOBALS['templates']['vars']['return'])?('&return=' . urlencode($GLOBALS['templates']['vars']['return'])):'')); ?>" method="post">
 	
@@ -722,6 +734,8 @@ function theme_login()
 
 function theme_register()
 {
+	theme('header');
+	
 	?>	
 	<form action="<?php echo url('module=users&users=register'); ?>" method="post">
 	
@@ -732,9 +746,15 @@ function theme_register()
 		
 	</form>
 	<?php
+	
+	theme('footer');
 }
 
 function theme_confirmation()
 {
+	theme('header');
+	
 	?>Thanks for signing up!<?php
+	
+	theme('footer');
 }

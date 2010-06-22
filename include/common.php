@@ -42,11 +42,23 @@ define('E_NOTE',					16);
 //	include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.nix.php';
 //else
 /** require the settings */
-if(file_exists(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.ini'))
+if(file_exists(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.php'))
 {
-	if($GLOBALS['settings'] = parse_ini_file(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.ini', true))
+	if($GLOBALS['settings'] = parse_ini_file(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.php', true))
 	{
 		// awesome settings are loaded properly
+		foreach($GLOBALS['settings'] as $name => $value)
+		{
+			if(is_array($value))
+			{
+				foreach($value as $subsetting => $subvalue)
+				{
+					$GLOBALS['settings'][$name][$subsetting] = urldecode($subvalue);
+				}
+			}
+			else
+				$GLOBALS['settings'][$name] = urldecode($value);
+		}
 	}
 	else
 	{
@@ -56,6 +68,8 @@ if(file_exists(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.ini'))
 
 if(!isset($GLOBALS['settings']))
 {
+	$GLOBALS['settings'] = array();
+	
 	// try and forward them to the install page
 	if(!isset($_REQUEST['module'])) $_REQUEST['module'] = 'admin_install';
 }
@@ -97,23 +111,12 @@ else
 	}
 }
 //session_cache_limiter('public');
+/** always begin the session */
 session_start();
 
 /** Set the error handler to use our custom function for storing errors */
 error_reporting(E_ALL);
 PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'error_callback');
-/** stores a list of all errors */
-$GLOBALS['errors'] = array();
-/** stores a list of all user errors */
-$GLOBALS['user_errors'] = isset($_SESSION['errors']['user'])?$_SESSION['errors']['user']:array();
-/** stores a list of all warnings */
-$GLOBALS['warn_errors'] = isset($_SESSION['errors']['warn'])?$_SESSION['errors']['warn']:array();
-/** stores a list of all debug information */
-$GLOBALS['debug_errors'] = isset($_SESSION['errors']['debug'])?$_SESSION['errors']['debug']:array();
-/** stores a list of all notices and friendly messages */
-$GLOBALS['note_errors'] = isset($_SESSION['errors']['note'])?$_SESSION['errors']['note']:array();
-//set_error_handler('php_to_PEAR_Error', E_ALL);
-/** always begin the session */
 
 /** set up all the GLOBAL variables needed throughout the site */
 setup();
@@ -136,9 +139,19 @@ function setup()
 	
 	/** require core functionality */
 	include_once dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . 'core.php';
+	/** stores a list of all errors */
+	($GLOBALS['errors'] = session('errors')) || $GLOBALS['errors'] = array();
+	/** stores a list of all user errors */
+	($GLOBALS['user_errors'] = session_get('errors', 'user')) || $GLOBALS['user_errors'] = array();
+	/** stores a list of all warnings */
+	($GLOBALS['warn_errors'] = session_get('errors', 'warn')) || $GLOBALS['warn_errors'] = array();
+	/** stores a list of all debug information */
+	($GLOBALS['debug_errors'] = session_get('errors', 'debug')) || $GLOBALS['debug_errors'] = array();
+	/** stores a list of all notices and friendly messages */
+	($GLOBALS['note_errors'] = session_get('errors', 'note')) || $GLOBALS['note_errors'] = array();
+	//set_error_handler('php_to_PEAR_Error', E_ALL);
 	
 	// always include fs_file handler
-	include_once setting_local_root() . 'handlers' . DIRECTORY_SEPARATOR . 'filesystem.php';
 	include_once setting_local_root() . 'handlers' . DIRECTORY_SEPARATOR . 'files.php';
 	
 	// register all modules
@@ -182,15 +195,15 @@ function setup()
 	//  better place for this?
 	if(isset($_POST) && count($_POST) > 0)
 	{
-		$_SESSION['last_request'] = $_REQUEST;
+		session('last_request',  $_REQUEST);
 		goto($_SERVER['REQUEST_URI']);
 	}
-	if(isset($_SESSION['last_request']))
+	if($last_request = session('last_request'))
 	{
-		$_REQUEST = $_SESSION['last_request'];
+		$_REQUEST = $last_request;
 		// set the method just for reference
 		$_SERVER['REQUEST_METHOD'] = 'POST';
-		unset($_SESSION['last_request']);
+		session('last_request', NULL);
 	}
 
 	// set up variables passed to the system in the request or post
@@ -242,6 +255,16 @@ function include_path($filename)
 function output($request)
 {
 	$GLOBALS['module'] = $request['module'];
+
+	// last line of defense
+	$user = session('users');
+	if(isset($GLOBALS['modules'][$_REQUEST['module']]['privilage']) && 
+		$user['Privilage'] < $GLOBALS['modules'][$_REQUEST['module']]['privilage'])
+	{
+		PEAR::raiseError('You do not have sufficient privilages to view this page!', E_USER);
+		
+		theme('errors');
+	}
 
 	// output module
 	// if the module is disabled, but has no template, call output function for handling disabledness
@@ -318,7 +341,8 @@ function checkAccess($file)
 	if(strpos($user, '/') !== false)
 		$user = substr($user, 0, strpos($user, '/'));
 	
-	if($user == $_SESSION['username'])
+	$session_user = session('users');
+	if($user == $session_user['Username'])
 		return true;
 	
 	// the current user can access public files
@@ -328,9 +352,9 @@ function checkAccess($file)
 	// the current user can access private files if they provided a key
 	if(substr($tmp_file, 0, strlen(setting('local_users') . $user . '/private/')) == setting('local_users') . $user . '/private/')
 	{
-		if(isset($_SESSION['settings']['keys']) && 
+		if(isset($session_user['Settings']['keys']) && 
 		   isset($file['PrivateKey']) &&
-		   in_array($file['PrivateKey'], $_SESSION['settings']['keys']) == true)
+		   in_array($file['PrivateKey'], $session_user['Settings']['keys']) == true)
 		{
 			return true;
 		}

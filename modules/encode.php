@@ -285,9 +285,7 @@ function validate_vbitrate($request)
  */
 function validate_abitrate($request)
 {
-	if(!isset($request['abitrate']) || !is_numeric($request['abitrate']) || $request['abitrate'] < 0)
-		return 160;
-	return $request['abitrate'];
+	return generic_validate_numeric_default($request, 'abitrate', 160);
 }
 
 /**
@@ -297,9 +295,7 @@ function validate_abitrate($request)
  */
 function validate_samplerate($request)
 {
-	if(!isset($request['samplerate']) || !is_numeric($request['samplerate']) || $request['samplerate'] < 0)
-		return 44100;
-	return $request['samplerate'];
+	return generic_validate_numeric_default($request, 'samplerate', 44100);
 }
 
 /**
@@ -321,9 +317,7 @@ function validate_scalar($request)
  */
 function validate_channels($request)
 {
-	if(!isset($request['channels']) || !is_numeric($request['channels']) || $request['channels'] <= 0)
-		return 2;
-	return $request['channels'];
+	return generic_validate_numeric_default($request, 'channels', 2);
 }
 
 /**
@@ -403,10 +397,7 @@ function validate_framerate($request)
  */
 function validate_timeoffset($request)
 {
-	if(isset($request['timeoffset']) && is_numeric($request['timeoffset']) && $request['timeoffset'] >= 0)
-		return $request['timeoffset'];
-	else
-		return 0;
+	return generic_validate_numeric_zero($request, 'timeoffset');
 }
 
 /**

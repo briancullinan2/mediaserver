@@ -23,14 +23,7 @@ function register_admin()
  */
 function validate_get_settings($request)
 {
-	if(isset($request['get_settings']))
-	{
-		if($request['get_settings'] === true || $request['get_settings'] === 'true')
-			return true;
-		elseif($request['get_settings'] === false || $request['get_settings'] === 'false')
-			return false;
-	}
-	return false;
+	return generic_validate_boolean_false($request, 'get_settings');
 }
 
 /**

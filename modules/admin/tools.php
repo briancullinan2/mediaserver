@@ -37,14 +37,7 @@ function validate_subtool($request)
  */
 function validate_info_singular($request)
 {
-	if(isset($request['info_singular']))
-	{
-		if($request['info_singular'] === true || $request['info_singular'] === 'true')
-			return true;
-		elseif($request['info_singular'] === false || $request['info_singular'] === 'false')
-			return false;
-	}
-	return false;
+	return generic_validate_boolean_false($request, 'info_singular');
 }
 
 /**

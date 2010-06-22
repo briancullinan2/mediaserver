@@ -94,7 +94,7 @@ function theme_live_select_block()
 
 function theme_live_files()
 {
-	if(count($GLOBALS['templates']['vars']['files']) == 0)
+	if(!isset($GLOBALS['templates']['vars']['files']) || count($GLOBALS['templates']['vars']['files']) == 0)
 	{
 		?><b>There are no files to display</b><?php
 	}
@@ -168,7 +168,7 @@ function theme_live_select()
 		<?php
 	}
 	
-	theme('errors');
+	theme('errors_block');
 	
 	theme('pages');
 	
@@ -208,6 +208,8 @@ function theme_live_info()
 <tr>
 	<td id="infoBar" style="background-color:<?php print ($theme == 'audio')?'#900':(($theme == 'image')?'#990':(($theme == 'video')?'#093':'#06A')); ?>; height:<?php print max($biggest+3, 7); ?>em;">
 	<?php
+	if(!isset($GLOBALS['templates']['vars']['files']))
+		return;
 	foreach($GLOBALS['templates']['vars']['files'] as $i => $file)
 	{
 		$info_count = 0;

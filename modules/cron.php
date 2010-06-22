@@ -321,10 +321,7 @@ function validate_scan_dir($request)
  */
 function validate_ignore_lock($request)
 {
-	if(isset($request['ignore_lock']) && ($request['ignore_lock'] == 'true' || $request['ignore_lock'] == true))
-		return true;
-	else
-		return false;
+	return generic_validate_boolean_false($request, 'ignore_lock');
 }
 
 /**
@@ -347,10 +344,7 @@ function validate_clean_count($request)
  */
 function validate_scan_skip($request)
 {
-	if(isset($request['scan_skip']) && ($request['scan_skip'] == 'true' || $request['scan_skip'] == true))
-		return true;
-	else
-		return false;
+	return generic_validate_boolean_false($request, 'scan_skip');
 }
 
 /**

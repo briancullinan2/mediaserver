@@ -31,8 +31,7 @@ function status_ampache()
  */
 function validate_auth($request)
 {
-	if(isset($request['auth']))
-		return $request['auth'];
+	return generic_validate_all_safe($request, 'auth');
 }
 
 /**
@@ -451,7 +450,7 @@ function theme_ampache()
 			}
 		}
 		?></root><?php
-		exit;
+		return;
 	}
 	
 	// do different stuff based on action
@@ -466,24 +465,24 @@ function theme_ampache()
 		break;
 		case 'handshake':
 	?>
-	<auth><![CDATA[<?php echo $GLOBALS['templates']['vars']['auth']; ?>]]></auth>
+	<auth><![CDATA[<?php print $GLOBALS['templates']['html']['auth']; ?>]]></auth>
 	<api><![CDATA[350001]]></api>
-	<update><![CDATA[<?php echo date('c'); ?>]]></update>
-	<songs><![CDATA[<?php echo $GLOBALS['templates']['vars']['song_count']; ?>]]></songs>
-	<albums><![CDATA[<?php echo $GLOBALS['templates']['vars']['album_count']; ?>]]></albums>
-	<artists><![CDATA[<?php echo $GLOBALS['templates']['vars']['artist_count']; ?>]]></artists>
-	<genres><![CDATA[<?php echo $GLOBALS['templates']['vars']['genre_count']; ?>]]></genres>
+	<update><![CDATA[<?php print date('c'); ?>]]></update>
+	<songs><![CDATA[<?php print $GLOBALS['templates']['html']['song_count']; ?>]]></songs>
+	<albums><![CDATA[<?php print $GLOBALS['templates']['html']['album_count']; ?>]]></albums>
+	<artists><![CDATA[<?php print $GLOBALS['templates']['html']['artist_count']; ?>]]></artists>
+	<genres><![CDATA[<?php print $GLOBALS['templates']['html']['genre_count']; ?>]]></genres>
 	<playlists><![CDATA[0]]></playlists>
 	<?php
 		break;
 		case 'artists':
-			foreach($GLOBALS['templates']['vars']['files'] as $i => $artist)
+			foreach($GLOBALS['templates']['html']['files'] as $i => $artist)
 			{
 	?>
-	<artist id="<?php echo $artist['id'] ; ?>"> 
-	<name><![CDATA[<?php echo $artist['Artist']; ?>]]></name>
-	<albums><?php echo $artist['AlbumCount']; ?></albums>
-	<songs><?php echo $artist['SongCount']; ?></songs>
+	<artist id="<?php print $artist['id'] ; ?>"> 
+	<name><![CDATA[<?php print $artist['Artist']; ?>]]></name>
+	<albums><?php print $artist['AlbumCount']; ?></albums>
+	<songs><?php print $artist['SongCount']; ?></songs>
 	</artist>
 	<?php
 			}
@@ -492,11 +491,11 @@ function theme_ampache()
 		case 'albums':
 		case 'artist_albums':
 			
-			foreach($GLOBALS['templates']['vars']['files'] as $i => $album)
+			foreach($GLOBALS['templates']['html']['files'] as $i => $album)
 			{
 	?>
-	<album id="<?php echo $album['id']; ?>">
-	<name><![CDATA[<?php echo $album['Album']; ?>]]></name>
+	<album id="<?php print $album['id']; ?>">
+	<name><![CDATA[<?php print $album['Album']; ?>]]></name>
 	<?php
 	if($album['ArtistCount'] != 1)
 	{
@@ -504,11 +503,11 @@ function theme_ampache()
 	}
 	else
 	{
-		?><artist id="<?php echo $album['id'] ; ?>"><![CDATA[<?php echo $album['Artist'] ; ?>]]></artist><?php
+		?><artist id="<?php print $album['id'] ; ?>"><![CDATA[<?php print $album['Artist'] ; ?>]]></artist><?php
 	}
 	?>
-	<year><?php echo $album['Year']; ?></year>
-	<tracks><?php echo $album['SongCount']; ?></tracks>
+	<year><?php print $album['Year']; ?></year>
+	<tracks><?php print $album['SongCount']; ?></tracks>
 	<disk>0</disk>
 	<art><![CDATA[]]></art>
 	</album>
@@ -521,18 +520,18 @@ function theme_ampache()
 		case 'album_songs':
 		case 'search_songs':
 		
-			foreach($GLOBALS['templates']['vars']['files'] as $i => $song)
+			foreach($GLOBALS['templates']['html']['files'] as $i => $song)
 			{
 	?>
-	<song id="<?php echo $song['id']; ?>">
-	<title><![CDATA[<?php echo $song['Title']; ?>]]></title>
-	<artist id="<?php echo $song['id']; ?>"><![CDATA[<?php echo $song['Artist']; ?>]]></artist>
-	<album id="<?php echo $song['id']; ?>"><![CDATA[<?php echo $song['Album']; ?>]]></album>
-	<genre id="<?php echo $song['id']; ?>"><![CDATA[<?php echo $song['Genre']; ?>]]></genre>
-	<track><?php echo $song['Track']; ?></track>
-	<time><?php echo $song['Length']; ?></time>
-	<url><![CDATA[<?php echo url('encode=mp3&id=' . $song['id'] . '&cat=audio&module=encode', true, true); ?>]]></url>
-	<size><?php echo file_exists($song['Filepath'])?filesize($song['Filepath']):0; ?></size>
+	<song id="<?php print $song['id']; ?>">
+	<title><![CDATA[<?php print $song['Title']; ?>]]></title>
+	<artist id="<?php print $song['id']; ?>"><![CDATA[<?php echo $song['Artist']; ?>]]></artist>
+	<album id="<?php print $song['id']; ?>"><![CDATA[<?php echo $song['Album']; ?>]]></album>
+	<genre id="<?php print $song['id']; ?>"><![CDATA[<?php echo $song['Genre']; ?>]]></genre>
+	<track><?php print $song['Track']; ?></track>
+	<time><?php print $song['Length']; ?></time>
+	<url><![CDATA[<?php print url('encode=mp3&id=' . $song['id'] . '&cat=audio&module=encode', true, true); ?>]]></url>
+	<size><?php print file_exists($song['Filepath'])?filesize($song['Filepath']):0; ?></size>
 	<art><![CDATA[]]></art>
 	</song>
 	<?php

@@ -19,7 +19,7 @@ function theme_live_settings()
 			<span class="subText">Set display options below.</span>
 	<?php
 	
-	theme('errors');
+	theme('errors_block');
 	
 	?>
 	<div class="titlePadding"></div>

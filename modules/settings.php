@@ -37,23 +37,26 @@ function setup_settings()
 		$GLOBALS['settings'] = array();
 		
 	// load settings from database
-	$return = $GLOBALS['database']->query(array(
-			'SELECT' => 'users',
-			'WHERE' => 'id = -1',
-			'LIMIT' => 1
-		)
-	, false);
-	
-	// make sure the query succeeded
-	if(is_array($return) && count($return) > 0)
+	if(setting_installed() && setting('database_enable'))
 	{
-		// merge the settings from the database
-		$db_settings = unserialize($return[0]['Settings']);
-		$GLOBALS['settings'] = array_merge($db_settings, $GLOBALS['settings']);
+		$return = $GLOBALS['database']->query(array(
+				'SELECT' => 'users',
+				'WHERE' => 'id = -1',
+				'LIMIT' => 1
+			)
+		, false);
+			
+		// make sure the query succeeded
+		if(is_array($return) && count($return) > 0)
+		{
+			// merge the settings from the database
+			$db_settings = unserialize($return[0]['Settings']);
+			$GLOBALS['settings'] = array_merge($db_settings, $GLOBALS['settings']);
+		}
+		else
+			PEAR::raiseError('There was an error getting the administrative settings from the database!', E_DEBUG);
 	}
-	else
-		PEAR::raiseError('There was an error getting the administrative settings from the database!', E_DEBUG);
-	
+
 	// loop through the modules and call settings functions on them if they are set to callbacks
 	foreach($GLOBALS['modules'] as $module => $config)
 	{
@@ -78,15 +81,15 @@ function setting_settings_file()
 {
 	// return file from where it is supposed to be
 	// check other directories if it doesn't exist there
-	if(!file_exists(dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'settings.ini'))
+	if(!file_exists(dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'settings.php'))
 	{
-		if(file_exists(dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'settings.ini'))
-			return dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'settings.ini';
+		if(file_exists(dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'settings.php'))
+			return dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'settings.php';
 	}
 	
 	// add handling for multiple domains like drupal does
 	
-	return dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'settings.ini';
+	return dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'settings.php';
 }
 
 /**
