@@ -76,7 +76,7 @@ function add_ids($file, $force = false, $ids = array())
 					if($ids[$handler . '_id'] !== false)
 						$fileinfo[$handler . '_id'] = $ids[$handler . '_id'];
 				}
-				else
+				elseif(handles($file, $handler))
 				{
 					$tmp_ids = $GLOBALS['database']->query(array(
 							'SELECT' => $handler,
@@ -137,7 +137,7 @@ function get_ids($request, &$count, $files = array())
 		$request['item'] = substr($request['item'], 0, strlen($request['item'])-1);
 	}
 
-	$request['selected'] = validate_selected($request);
+	$request['selected'] = validate($request, 'selected');
 
 	// select an array of ids!
 	if(isset($request['selected']) && count($request['selected']) > 0 )
@@ -232,7 +232,7 @@ function get_ids($request, &$count, $files = array())
 	else
 	{
 		// change the cat to the table we want to use
-		$request['cat'] = validate_cat(array('cat' => 'ids'));
+		$request['cat'] = validate(array('cat' => 'ids'), 'cat');
 	
 		$files = get_files($request, $count, 'files');
 	}

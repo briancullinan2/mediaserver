@@ -30,7 +30,7 @@ function register_admin_tools_debug()
  */
 function output_admin_tools_debug($request)
 {
-	$request['subtool'] = validate_subtool($request);
+	$request['subtool'] = validate($request, 'subtool');
 	$infos = array();
 	
 	if(isset($request['subtool'])) register_output_vars('subtool', $request['subtool']);

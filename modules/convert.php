@@ -155,7 +155,7 @@ function validate_cformat($request)
 {
 	if(!isset($request['cformat']))
 	{
-		$request['convert'] = validate_convert($request);
+		$request['convert'] = validate($request, 'convert');
 		switch($request['convert'])
 		{
 			case 'jpg':
@@ -205,11 +205,11 @@ function output_convert($request)
 	set_time_limit(0);
 	ignore_user_abort(1);
 
-	$request['convert'] = validate_convert($request);
-	$request['cheight'] = validate_cheight($request);
-	$request['cwidth'] = validate_cwidth($request);
-	$request['cformat'] = validate_cformat($request);
-	$request['cat'] = validate_cat($request);
+	$request['convert'] = validate($request, 'convert');
+	$request['cheight'] = validate($request, 'cheight');
+	$request['cwidth'] = validate($request, 'cwidth');
+	$request['cformat'] = validate($request, 'cformat');
+	$request['cat'] = validate($request, 'cat');
 
 	switch($request['convert'])
 	{

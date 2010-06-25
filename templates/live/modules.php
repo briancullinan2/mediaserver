@@ -16,7 +16,13 @@ function theme_live_admin_modules()
 	{
 		?>
 		<div class="contentSpacing">
-				<h1 class="title">Configuring: <?php print $GLOBALS['modules'][$GLOBALS['templates']['vars']['configure_module']]['name']; ?></h1>
+				<h1 class="title">Configuring: <?php print $GLOBALS['modules'][$GLOBALS['templates']['vars']['configure_module']]['name']; ?>
+				<?php
+				if(function_exists('output_' . $GLOBALS['templates']['vars']['configure_module']))
+				{
+					?>(<a href="<?php print url('module=' . $GLOBALS['templates']['vars']['configure_module']); ?>">View</a>)<?php
+				}
+				?></h1>
 				<span class="subText"><?php print $GLOBALS['modules'][$GLOBALS['templates']['vars']['configure_module']]['description']; ?></span>
 		<?php
 	}

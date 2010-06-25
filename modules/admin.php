@@ -34,7 +34,7 @@ function validate_get_settings($request)
 function output_admin($request)
 {
 	// if they are trying to get all the settings
-	$request['get_settings'] = validate_get_settings($request);
+	$request['get_settings'] = validate($request, 'get_settings');
 	if(isset($request['get_settings']) && $request['get_settings'] == true)
 	{
 		// set header to plain text

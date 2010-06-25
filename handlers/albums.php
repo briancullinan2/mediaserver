@@ -26,8 +26,8 @@ function get_albums($request)
 	}
 	
 	// change the cat to the table we want to use
-	$request['cat'] = validate_cat(array('cat' => 'audio'));
-	$request['selected'] = validate_selected($request);
+	$request['cat'] = validate(array('cat' => 'audio'), 'cat');
+	$request['selected'] = validate($request, 'selected');
 	
 	// modify some request stuff
 	if(isset($request['dir']))

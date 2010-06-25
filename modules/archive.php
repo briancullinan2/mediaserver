@@ -281,7 +281,7 @@ function add_archive($file, $archive_id = NULL)
 	if( $archive_id != NULL )
 	{
 		PEAR::raiseError('Removing archive: ' . $file, E_DEBUG);
-		remove_archive($last_path . '/');
+		remove($last_path . '/', 'archive');
 	}
 
 	// Add archive first so if it fails then it won't try to read it again
@@ -310,7 +310,7 @@ function add_archive($file, $archive_id = NULL)
 	foreach($GLOBALS['handlers'] as $handler => $config)
 	{
 		if(!is_wrapper($handler) && !is_internal($handler))
-			$ids[$table . '_id'] = false;
+			$ids[$handler . '_id'] = false;
 	}
 	
 	// add archive internal files to archive database
@@ -371,7 +371,7 @@ function output_archive($file)
 function get_archive($request, &$count)
 {
 	// change the cat to the table we want to use
-	$request['cat'] = validate_cat(array('cat' => 'archive'));
+	$request['cat'] = validate(array('cat' => 'archive'), 'cat');
 	
 	// if this module handles the directory, show the files inside the archive
 	if(isset($request['dir']) && handles($request['dir'], 'archive'))

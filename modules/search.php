@@ -34,10 +34,10 @@ function register_search()
  */
 function dependency_search($settings)
 {
-	if(setting('admin_alias_enable') == false)
-		return array('database');
-	else
+	if(dependency('admin_alias') != false)
 		return array('database', 'admin_alias');
+	else
+		return array('database');
 }
 
 /**
@@ -216,11 +216,11 @@ function search_get_pieces_query($pieces)
 function alter_query_search($request, $props)
 {
 	// do not alter the query if selected is set
-	$request['selected'] = validate_selected($request);
+	$request['selected'] = validate($request, 'selected');
 	if(isset($request['selected']) && count($request['selected']) > 0 ) return $props;
 	
 	// some other variables we need
-	$request['order_by'] = validate_order_by($request);
+	$request['order_by'] = validate($request, 'order_by');
 	
 	// they can specify multiple columns to search for the same string
 	if(isset($request['columns']))
@@ -305,8 +305,8 @@ function alter_query_search($request, $props)
 function output_search($request)
 {
 	// output search information
-	if(isset($_SESSION['search']))
-		register_output_vars('search', $_SESSION['search']);
+	if($session_search = session('search'))
+		register_output_vars('search', $session_search);
 
 	// replace search results with highlight
 	$search_regexp = array();

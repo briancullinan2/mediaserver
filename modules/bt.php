@@ -173,7 +173,7 @@ function setting_seeder_path($settings)
  */
 function output_bt($request)
 {
-	$request['bt'] = validate_bt($request);
+	$request['bt'] = validate($request, 'bt');
 	if($request['bt'] == 'announce')
 	{
 		global $admin_user, $admin_pass, $dbhost, $dbuser, $dbpass, $database;
@@ -206,7 +206,7 @@ function output_bt($request)
 		include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'bttracker' . DIRECTORY_SEPARATOR . 'BEncode.php';
 		include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'bttracker' . DIRECTORY_SEPARATOR . 'funcsv2.php';
 	
-		$request['cat'] = validate_cat($request);
+		$request['cat'] = validate($request, 'cat');
 		
 		// make select call
 		$files = get_files($request, $count, $request['cat']);

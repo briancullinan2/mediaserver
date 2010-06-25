@@ -272,10 +272,8 @@ function status_admin_balancer($settings)
 	$status = array();
 	
 	// load servers from session
-	if(isset($_SESSION['balancer']['servers']))
-	{
-		$settings['balance_servers'] = $_SESSION['balancer']['servers'];
-	}
+	if($session_balancer = session('balancer'))
+		$settings['balance_servers'] = $session_balancer['servers'];
 	
 	$additional_info = lang('balence server status description', 'This server is up and running and ready for balancing.');
 	
@@ -345,10 +343,8 @@ function session_admin_balancer($request)
 		isset($request['remove_rule']) || isset($request['reset_configuration']))
 	{
 		// might be configuring the module
-		if(!isset($_SESSION['balancer']) || isset($request['reset_configuration']))
+		if(!($save = session('balancer')) || isset($request['reset_configuration']))
 			$save = array('servers' => setting('balance_servers'), 'rules' => setting('balance_rules'));
-		else
-			$save = $_SESSION['balancer'];
 	
 		// add server
 		if(isset($request['add_server']))
@@ -449,16 +445,13 @@ function configure_admin_balancer($settings, $request)
 	$server_count = count($settings['balance_servers']);
 	$rule_count = count($settings['balance_rules']);
 	
-	// load servers from session
-	if(isset($_SESSION['balancer']['servers']))
+	if($session_balancer = session('balancer'))
 	{
-		$settings['balance_servers'] = $_SESSION['balancer']['servers'];
-	}
+		// load servers from session
+		$settings['balance_servers'] = $session_balancer['servers'];
 	
-	// load rules from session
-	if(isset($_SESSION['balancer']['rules']))
-	{
-		$settings['balance_rules'] = $_SESSION['balancer']['rules'];
+		// load rules from session
+		$settings['balance_rules'] = $session_balancer['rules'];
 	}
 	
 	$options = array();
@@ -765,7 +758,7 @@ function configure_admin_balancer($settings, $request)
 	{
 		// run tests
 		$tmp_request = core_validate_request(url($request['test_rules']['request'], false, false, true));
-		$tmp_request['module'] = validate_module($tmp_request + array('module' => $request['test_rules']['module']));
+		$tmp_request['module'] = validate($tmp_request + array('module' => $request['test_rules']['module']), 'module');
 
 		$new_server = balancer_get_server($tmp_request, url($request['test_rules']['server'], false, false, true));
 		$options['test_results'] = array(

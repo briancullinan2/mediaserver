@@ -140,15 +140,15 @@ function setup()
 	/** require core functionality */
 	include_once dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . 'core.php';
 	/** stores a list of all errors */
-	($GLOBALS['errors'] = session('errors')) || $GLOBALS['errors'] = array();
+	$GLOBALS['errors'] = array();
 	/** stores a list of all user errors */
-	($GLOBALS['user_errors'] = session_get('errors', 'user')) || $GLOBALS['user_errors'] = array();
+	if(!($GLOBALS['user_errors'] = session_get('errors', 'user'))) $GLOBALS['user_errors'] = array();
 	/** stores a list of all warnings */
-	($GLOBALS['warn_errors'] = session_get('errors', 'warn')) || $GLOBALS['warn_errors'] = array();
-	/** stores a list of all debug information */
-	($GLOBALS['debug_errors'] = session_get('errors', 'debug')) || $GLOBALS['debug_errors'] = array();
+	if(!($GLOBALS['warn_errors'] = session_get('errors', 'warn'))) $GLOBALS['warn_errors'] = array();
 	/** stores a list of all notices and friendly messages */
-	($GLOBALS['note_errors'] = session_get('errors', 'note')) || $GLOBALS['note_errors'] = array();
+	if(!($GLOBALS['note_errors'] = session_get('errors', 'note'))) $GLOBALS['note_errors'] = array();
+	/** stores a list of all debug information */
+	$GLOBALS['debug_errors'] = array();
 	//set_error_handler('php_to_PEAR_Error', E_ALL);
 	
 	// always include fs_file handler
@@ -300,7 +300,7 @@ function output($request)
 		theme();
 	
 	// translate the language buffer
-	//$lang = validate_language($_REQUEST);
+	//$lang = validate($_REQUEST, 'language');
 	//if($lang != 'en')
 	//{
 		// find a place to store this
@@ -837,37 +837,42 @@ function php_to_PEAR_Error($error_code, $error_str, $error_file, $error_line)
  */
 function error_callback($error)
 {
-	// add special error handling based on the origin of the error
-	foreach($error->backtrace as $i => $stack)
-	{
-		if($stack['function'] == 'raiseError')
-			break;
-	}
-	$i++;
-	if(isset($error->backtrace[$i]['file']))
-	{
-		if(dirname($error->backtrace[$i]['file']) == 'modules' && basename($error->backtrace[$i]['file']) == 'template.php')
-		{
-			for($i = $i; $i < count($error->backtrace); $i++)
-			{
-				if(dirname($error->backtrace[$i]['file']) != 'modules' || basename($error->backtrace[$i]['file']) != 'template.php')
-					break;
-			}
-		}
-	
-		$error->message .= ' in ' . $error->backtrace[$i]['file'] . ' on line ' . $error->backtrace[$i]['line'];
-	}
-	
+	if(count($GLOBALS['errors']) > 200)
+		return;
+		
 	if($error->code & E_USER)
-		$GLOBALS['user_errors'][] = $error;
+		$GLOBALS['user_errors'][] = $error->message;
 	if($error->code & E_WARN)
-		$GLOBALS['warn_errors'][] = $error;
+		$GLOBALS['warn_errors'][] = $error->message;
 	if($error->code & E_NOTE)
-		$GLOBALS['note_errors'][] = $error;
+		$GLOBALS['note_errors'][] = $error->message;
 	if($error->code & E_DEBUG || setting('verbose') == true)
+	{
+		// add special error handling based on the origin of the error
+		foreach($error->backtrace as $i => $stack)
+		{
+			if($stack['function'] == 'raiseError')
+				break;
+		}
+		$i++;
+		if(isset($error->backtrace[$i]['file']))
+		{
+			if(dirname($error->backtrace[$i]['file']) == 'modules' && basename($error->backtrace[$i]['file']) == 'template.php')
+			{
+				for($i = $i; $i < count($error->backtrace); $i++)
+				{
+					if(dirname($error->backtrace[$i]['file']) != 'modules' || basename($error->backtrace[$i]['file']) != 'template.php')
+						break;
+				}
+			}
+		
+			$error->message .= ' in ' . $error->backtrace[$i]['file'] . ' on line ' . $error->backtrace[$i]['line'];
+		}
+		
 		$GLOBALS['debug_errors'][] = $error;
+	}
 	
-	$GLOBALS['errors'][] = $error;
+	$GLOBALS['errors'][] = $error->message;
 }
 
 
@@ -1062,7 +1067,7 @@ function fetch($url, $post = array(), $headers = array(), $cookies = array())
 			unset($headers['timeout']);
 		}
 		else
-			curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+			curl_setopt($ch, CURLOPT_TIMEOUT, 10);
 			
 		curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -1083,6 +1088,10 @@ function fetch($url, $post = array(), $headers = array(), $cookies = array())
 			curl_setopt($ch, CURLOPT_REFERER, $headers['referer']);
 			unset($headers['referer']);
 		}
+		
+		// curl ssl
+		curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 		
 		// setup headers
 		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
@@ -1139,4 +1148,99 @@ function fetch($url, $post = array(), $headers = array(), $cookies = array())
 		
 		return array('headers' => array(), 'content' => '', 'cookies' => array(), 'status' => 0);
 	}
+}
+
+/**
+ * Helper function takes a url and a fragment and gets the full valid url
+ */
+function get_full_url($url, $fragment)
+{
+	if($address = generic_validate_hostname(array('address' => $fragment), 'address'))
+		// already is valid
+		return $fragment;
+	else
+	{
+		// check if url is valid
+		$address = generic_validate_hostname(array('address' => $url), 'address');
+		
+		// make sure there is a slash on the end
+		if(substr($address, -1) != '/') $address .= '/';
+		
+		// remove extra slashes from beginning of fragment
+		if(substr($fragment, 0, 1) == '/') $fragment = substr($fragment, 1);
+		
+		// get path to prepend to fragment
+		if($path = generic_validate_urlpath(array('path' => $url), 'path'))
+		{
+			$path = dirname($path);
+			if(substr($path, 0, 1) == '/') $path = substr($path, 1);
+			
+			return $address . $path . (($path != '')?'/':'') . $fragment;
+		}
+		else
+		{
+			return $address . $fragment;
+		}
+		
+	}
+}
+
+function get_login_form($content, $userfield = 'username')
+{
+	// get forms
+	if(preg_match_all('/<form[^>]*?action="([^"]*?)"[^>]*?>([\s\S]*?)<\/form>/i', $content, $forms) > 0)
+	{
+		// match input fields
+		foreach($forms[0] as $i => $form)
+		{
+			// extract form elements
+			if(preg_match_all('/<input[^>]*?name=(["\'])(?P<name>[^\1>]*?)\1[^>]*?>/i', $forms[2][$i], $post_vars) > 0)
+			{
+				$post = array_fill_keys($post_vars['name'], '');
+				$count = preg_match_all('/<input[^>]*?value=(["\'])(?P<value>[^\1>]*?)\1[^>]*?name=(["\'])(?P<name>[^\3>]*?)\3[^>]*?>/i', $forms[2][$i], $post_vars);
+				if($count > 0)
+					$post = array_merge($post, array_combine($post_vars['name'], $post_vars['value']));
+				$count = preg_match_all('/<input[^>]*?name=(["\'])(?P<name>[^\1>]*?)\1[^>]*?value=(["\'])(?P<value>[^\3>]*?)\3[^>]*?>/i', $forms[2][$i], $post_vars);
+				if($count > 0)
+					$post = array_merge($post, array_combine($post_vars['name'], $post_vars['value']));
+					
+				// use form with userfield in the field list
+				if(in_array($userfield, array_keys($post)))
+				{
+		
+					return array(escape_urlquery(htmlspecialchars_decode($forms[1][$i])), $post);
+				}
+			}
+		}
+	}
+}
+
+
+function escape_urlquery($request)
+{
+	if(strpos($request, '?') !== false)
+	{
+		$host = substr($request, 0, strpos($request, '?') + 1);
+		
+		$new_query = '';
+		
+		// split up the query string by amersands
+		$arr = explode('&', substr($request, strpos($request, '?') + 1));
+		if(count($arr) == 1 && $arr[0] == '')
+			$arr = array();
+		
+		// loop through all the query string and generate our new request array
+		foreach($arr as $i => $value)
+		{
+			// split each part of the query string into name value pairs
+			$x = explode('=', $value);
+			
+			// set each part of the query string in our new request array
+			$new_query .= (($new_query != '')?'&':'') . $x[0] . '=' . urlencode(isset($x[1])?$x[1]:'');
+		}
+		
+		return $host . $new_query;
+	}
+	else
+		return $request;
 }

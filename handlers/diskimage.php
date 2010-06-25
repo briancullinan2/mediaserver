@@ -163,7 +163,7 @@ function diskimage_add($file, $image_id = NULL)
 	if( $image_id != NULL )
 	{
 		PEAR::raiseError('Removing disk image: ' . $file, E_DEBUG);
-		remove_diskimage($last_path . '/');
+		remove($last_path . '/', 'diskimage');
 	}
 
 	// Add diskimage first so if it fails then it won't try to read it again
@@ -240,7 +240,7 @@ function output_diskimage($file)
 function get_diskimage($request, &$count)
 {
 	// change the cat to the table we want to use
-	$request['cat'] = validate_cat(array('cat' => 'diskimage'));
+	$request['cat'] = validate(array('cat' => 'diskimage'), 'cat');
 	
 	if(isset($request['dir']) && handles($request['dir'], 'diskimage'))
 	{

@@ -182,13 +182,13 @@ function handles_code($file)
 	
 	$type = getExtType($file);
 	
-	return ( db_code_getLanguage(basename($file)) || $type == 'text' );
+	return ( code_get_language(basename($file)) || $type == 'text' );
 }
 
 /**
  * Helper function for db_code
  */
-function db_code_getLanguage($file)
+function code_get_language($file)
 {
 	switch($file)
 	{
@@ -426,7 +426,7 @@ function get_code_info($file)
 			
 		$fileinfo['lines'] = join("\n", $lines);
 		
-		$lang = db_code_getLanguage(basename($file));
+		$lang = code_get_language(basename($file));
 		if($lang !== false && $lines != '')
 		{
 			$fileinfo['Language'] = $lang;
@@ -477,7 +477,7 @@ function output_code($file)
  */
 function get_code($request, &$count)
 {
-	$request['cat'] = validate_cat(array('cat' => 'code'));
+	$request['cat'] = validate(array('cat' => 'code'), 'cat');
 	$files = get_files($request, $count, 'files');
 	
 	foreach($files as $i => $file)

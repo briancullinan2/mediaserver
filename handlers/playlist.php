@@ -94,7 +94,7 @@ function add_playlist($file, $force = false)
 			PEAR::raiseError('Modifying playlist: ' . $file, E_DEBUG);
 			
 			// only get files if we have to
-			$paths = db_playlist_getFiles($file);
+			$paths = get_playlist_info($file);
 			
 			$fileinfo['SongCount'] = count($paths);
 			$fileinfo['Files'] = addslashes(serialize($paths));
@@ -253,7 +253,7 @@ function get_playlist($request, &$count, $handler = NULL)
 	$files = array();
 	
 	// change the cat to the table we want to use
-	$request['cat'] = validate_cat(array('cat' => 'audio'));
+	$request['cat'] = validate(array('cat' => 'audio'), 'cat');
 	
 	if(isset($request['dir']))
 	{

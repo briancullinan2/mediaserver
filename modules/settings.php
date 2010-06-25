@@ -23,6 +23,7 @@ function register_settings()
 		'path' => __FILE__,
 		'depends on' => 'settings',
 		'template' => true,
+		'settings' => array('database_reset', 'all_reset'),
 	);
 }
 
@@ -68,8 +69,6 @@ function setup_settings()
 	
 	// merge everything with the default settings
 	$GLOBALS['settings'] = array_merge(settings_get_defaults($GLOBALS['settings']), $GLOBALS['settings']);
-	
-	$GLOBALS['modules']['settings']['settings'] = array_keys($GLOBALS['settings']);
 }
 
 /**
@@ -145,7 +144,7 @@ function setting($name)
 	if(function_exists('setting_' . $name))
 		return call_user_func_array('setting_' . $name, array($GLOBALS['settings']));
 	elseif(isset($GLOBALS['setting_' . $name]) && is_callable($GLOBALS['setting_' . $name]))
-		return $GLOBALS['setting_' . $name]($GLOBALS['settings']);
+		return call_user_func_array($GLOBALS['setting_' . $name], array($GLOBALS['settings']));
 		
 	// if the setting isn't found in the configuration
 	PEAR::raiseError('Setting \'' . $name . '\' not found!', E_DEBUG);
@@ -176,11 +175,16 @@ function settings_get_defaults($settings)
 			foreach($config['settings'] as $i => $setting)
 			{
 				if(function_exists('setting_' . $setting))
-					$default_settings[$setting] = call_user_func_array('setting_' . $setting, array($settings));
+					$new_setting = call_user_func_array('setting_' . $setting, array($settings));
 				elseif(isset($GLOBALS['setting_' . $setting]) && is_callable($GLOBALS['setting_' . $setting]))
-					$default_settings[$setting] = $GLOBALS['setting_' . $setting]($settings);
+					$new_setting = $GLOBALS['setting_' . $setting]($settings);
 				else
 					PEAR::raiseError('Setting \'' . $setting . '\' is specified without a validate function in the ' . $module . ' module.', E_DEBUG);
+			
+				if(isset($new_setting))
+					$default_settings[$setting] = $new_setting;
+				else
+					unset($default_settings[$setting]);
 			}
 		}
 	}
@@ -191,6 +195,84 @@ function settings_get_defaults($settings)
 /**
  * @}
  */
+ 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ */
+function validate_setting_database_reset($request)
+{
+	if(isset($request['setting_database_reset']))
+	{
+		$result = _modules_save_db_settings(array());
+		
+		if($result)
+			PEAR::raiseError('The database settings have been reset!', E_WARN);
+		else
+			PEAR::raiseError('There was a problem while saving the settings to the database!', E_USER);
+	}
+}
+ 
+/**
+ * Implementation of validate
+ * @ingroup validate
+ */
+function validate_setting_all_reset($request)
+{
+	if(isset($request['setting_all_reset']))
+	{
+		$result = _modules_save_db_settings(array());
+		
+		if($result)
+			PEAR::raiseError('The database settings have been reset!', E_WARN);
+		else
+			PEAR::raiseError('There was a problem while saving the settings to the database!', E_USER);
+			
+		$result = _modules_save_fs_settings(array());
+		
+		if($result === -1)
+			PEAR::raiseError('Cannot save settings, the settings file is not writable!', E_USER);
+		if($result === true)
+			PEAR::raiseError('The file settings have been reset!', E_WARN);
+		else
+			PEAR::raiseError('There was a problem with saving the settings in the settings file.', E_USER);
+	}
+}
+
+/**
+ * Implementation of configure
+ * @ingroup configure
+ */
+function configure_settings($settings)
+{
+	$options = array();
+	
+	$options['database_reset'] = array(
+		'name' => 'Database Settings',
+		'status' => 'warn',
+		'description' => array(
+			'list' => array(
+				'Reset all the settings in the database, this action cannot be undone.',
+			),
+		),
+		'type' => 'submit',
+		'value' => 'Reset',
+	);
+	
+	$options['all_reset'] = array(
+		'name' => 'All Settings',
+		'status' => 'fail',
+		'description' => array(
+			'list' => array(
+				'Reset all the settings including the administrative settings (requires write access).',
+			),
+		),
+		'type' => 'submit',
+		'value' => 'Reset',
+	);
+	
+	return $options;
+}
 
 /**
  * Implementation of output

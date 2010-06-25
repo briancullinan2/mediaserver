@@ -45,7 +45,7 @@ function register_list()
  * @ingroup setup
  */
 function setup_list()
-{
+{	
 	// get all the possible types for a list from templates directory
 	foreach($GLOBALS['templates'] as $name => $template)
 	{
@@ -61,7 +61,9 @@ function setup_list()
 						PEAR::raiseError('List already defined!', E_DEBUG|E_WARN);
 					
 					if(function_exists('register_' . $name . '_' . $list))
+					{
 						$GLOBALS['modules']['list']['lists'][$list] = call_user_func_array('register_' . $name . '_' . $list, array());
+					}
 				}
 			}
 		}
@@ -87,9 +89,9 @@ function validate_list($request)
  */
 function output_list($request)
 {
-	$request['cat'] = validate_cat($request);
+	$request['cat'] = validate($request, 'cat');
 	
-	$request['list'] = validate_list($request);
+	$request['list'] = validate($request, 'list');
 	
 	// if there isn't a list specified show the list template
 	if(!isset($request['list']))
@@ -116,7 +118,11 @@ function output_list($request)
 	
 		// set some output variables
 		register_output_vars('list', $request['list']);
-		if(isset($_SESSION['select']['selected'])) register_output_vars('selected', $_SESSION['select']['selected']);
+		
+		if($session_select = session('select'))
+		{
+			$request['selected'] = $session_select['selected'];
+		}
 	
 		// use the select.php module file selector to generate a list from the request
 		//   should be the same list, and it will register the files output
@@ -127,8 +133,17 @@ function output_list($request)
 	}
 }
 
-
 function theme_list()
+{
+	theme('header');
+	
+	theme('list_block');
+	
+	theme('footer');
+}
+
+
+function theme_list_block()
 {
 	?>
     <div id="type">
@@ -136,6 +151,7 @@ function theme_list()
         <br />
         <form action="<?php print url('module=list'); ?>" method="get">
             <input type="hidden" name="cat" value="<?php print $GLOBALS['templates']['html']['cat']; ?>" />
+            <input type="hidden" name="module" value="list" />
             Type <select name="list">
             	<?php
 				foreach($GLOBALS['lists'] as $type => $list)
@@ -171,7 +187,7 @@ function theme_xml()
 		<error><?php
 		foreach($GLOBALS['user_errors'] as $i => $error)
 		{
-			print $error->message . "\n";
+			print $error . "\n";
 		}
 		?><error><?php
 	}
@@ -283,10 +299,11 @@ function theme_rss()
 }
 
 
-function theme_plain_m3u()
+function theme_m3u()
 {
 	if(!isset($GLOBALS['templates']['vars']['extra']))
 	{
+		header('Content-Type: text/html');
 		if(!isset($GLOBALS['templates']['vars']['selected']))
 		{
 			goto('list=m3u&module=list&cat=' . $_REQUEST['cat']);
@@ -294,45 +311,39 @@ function theme_plain_m3u()
 		else
 		{
 			$ids = implode(',', $GLOBALS['templates']['vars']['selected']);
+			
+			theme('header');
+			
 			?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title><?php print setting('html_name'); ?>: M3U List</title>
-</head>
-<body>
-Note: All non-media types will be filtered out using this list type.<br />
-Select your audio/video format:<br />
-<a href="<?php print url('module=list&list=m3u&cat=' . $GLOBALS['templates']['vars']['cat'] . '&selected=' . $ids . '&extra=mp3&filename=Files.m3u'); ?>">mp4</a>
-: <a href="<?php print url('module=list&list=m3u&cat=' . $GLOBALS['templates']['vars']['cat'] . '&selected=' . $ids . '&extra=mpg&filename=Files.m3u'); ?>">mpg/mp3</a>
-: <a href="<?php print url('module=list&list=m3u&cat=' . $GLOBALS['templates']['vars']['cat'] . '&selected=' . $ids . '&extra=wm&filename=Files.m3u'); ?>">wmv/wma</a>
-<br />
-Some files that will be listed: <br />
-<?php
-$count = 0;
-foreach($GLOBALS['templates']['vars']['files'] as $i => $file)
-{
-	$type = split('/', $file['Filemime']);
-	if($type[0] == 'audio' || $type[0] == 'video')
-    {
-    	print $file['Filename'] . '<br />';
-        $count++;
-    }
-    if($count == 10)
-    	break;
-}
-?>
-</body>
-</html>
-<?php
+			Note: All non-media types will be filtered out using this list type.<br />
+			Select your audio/video format:<br />
+			<a href="<?php print url('module=list&list=m3u&cat=' . $GLOBALS['templates']['vars']['cat'] . '&item=' . $ids . '&extra=mp3&filename=Files.m3u'); ?>">mp4</a>
+			: <a href="<?php print url('module=list&list=m3u&cat=' . $GLOBALS['templates']['vars']['cat'] . '&item=' . $ids . '&extra=mpg&filename=Files.m3u'); ?>">mpg/mp3</a>
+			: <a href="<?php print url('module=list&list=m3u&cat=' . $GLOBALS['templates']['vars']['cat'] . '&item=' . $ids . '&extra=wm&filename=Files.m3u'); ?>">wmv/wma</a>
+			<br />
+			Some files that will be listed: <br />
+			<?php
+			$count = 0;
+			foreach($GLOBALS['templates']['vars']['files'] as $i => $file)
+			{
+				$type = split('/', $file['Filemime']);
+				if($type[0] == 'audio' || $type[0] == 'video')
+				{
+					print $file['Filename'] . '<br />';
+					$count++;
+				}
+				if($count == 10)
+					break;
+			}
+			
+			theme('footer');
 
 			return;
 		}
 	}
-	
+
 	header('Content-Type: audio/x-mpegurl');
-	header('Content-Disposition: attachment; filename="' . (isset($_REQUEST['filename'])?$_REQUEST['filename']:$GLOBALS['handlers'][$_REQUEST['cat']]['name'] . '.m3u"')); 
+	header('Content-Disposition: attachment; filename="' . (isset($GLOBALS['templates']['vars']['filename'])?$GLOBALS['templates']['vars']['filename']:$GLOBALS['handlers'][$_REQUEST['cat']]['name'] . '.m3u"')); 
 
 	if($GLOBALS['templates']['vars']['extra'] == 'mp4')
 	{
@@ -352,22 +363,22 @@ foreach($GLOBALS['templates']['vars']['files'] as $i => $file)
 	
 	// display m3u file
 	
-	?>
-	#EXTM3U
-	<?php
+?>
+#EXTM3U
+<?php
 	foreach($GLOBALS['templates']['vars']['files'] as $i => $file)
 	{
 		$length = isset($file['Length'])?$file['Length']:0;
 		$title = (isset($file['Artist']) && isset($file['Title']))?($file['Artist'] . ' - ' . $file['Title']):basename($file['Filepath']);
 		if(handles($file['Filepath'], 'audio'))
 		{
-			?>#EXTINF:<?php print $length; ?>,<?php print $title; ?>
-			<?php print url('module=encode&cat=' . $GLOBALS['templates']['vars']['cat'] . '&id=' . $file['id'] . '&encode=' . $audio . '&filename=' . basename($file['Filepath']), true, true);
+?>#EXTINF:<?php print $length; ?>,<?php print $title . "\r\n"; ?>
+<?php print url('module=encode&cat=' . $GLOBALS['templates']['vars']['cat'] . '&id=' . $file['id'] . '&encode=' . $audio . '&filename=' . basename($file['Filepath']), true, true) . "\r\n";
 		}
 		elseif(handles($file['Filepath'], 'video'))
 		{
-			?>#EXTINF:<?php print $length; ?>,<?php print $title; ?>
-			<?php print url('module=encode&cat=' . $GLOBALS['templates']['vars']['cat'] . '&id=' . $file['id'] . '&encode=' . $video . '&filename=' . basename($file['Filepath']), true, true);
+?>#EXTINF:<?php print $length; ?>,<?php print $title . "\r\n"; ?>
+<?php print url('module=encode&cat=' . $GLOBALS['templates']['vars']['cat'] . '&id=' . $file['id'] . '&encode=' . $video . '&filename=' . basename($file['Filepath']), true, true) . "\r\n";
 		}
 	}
 }

@@ -24,7 +24,7 @@ function output_zip($request)
 	set_time_limit(0);
 	ignore_user_abort(1);
 
-	$request['cat'] = validate_cat($request['cat']);
+	$request['cat'] = validate($request['cat'], 'cat');
 
 	// make select call
 	$files = get_files($request, &$count, $request['cat']);

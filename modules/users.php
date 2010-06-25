@@ -503,7 +503,7 @@ function cleanup_users()
 function session_users($request)
 {
 	// validate username and password
-	$request['username'] = validate_username($request);
+	$request['username'] = validate($request, 'username');
 
 	// check if user is logged in
 	if( isset($request['username']) && isset($request['password']) && setting_installed() && setting('database_enable') )
@@ -581,11 +581,11 @@ function session_users($request)
 function output_users($request)
 {
 	// check for what action we should do
-	$request['users'] = validate_users($request);
-	$request['username'] = validate_username($request);
-	$request['email'] = validate_email($request);
-	$request['password'] = validate_password($request);
-	$request['return'] = validate_return($request);
+	$request['users'] = validate($request, 'users');
+	$request['username'] = validate($request, 'username');
+	$request['email'] = validate($request, 'email');
+	$request['password'] = validate($request, 'password');
+	$request['return'] = validate($request, 'return');
 	
 	// validate and display regtistration information
 	//  also send out registration e-mail here
@@ -667,17 +667,18 @@ function output_users($request)
 		break;
 		// cache a users login information so they may access the site
 		case 'login':
-			$request['required_priv'] = validate_required_priv($request);
-			if( $_SESSION['users']['Username'] != 'guest' )
+			$user = session('users');
+			$request['required_priv'] = validate($request, 'required_priv');
+			if( $user['Username'] != 'guest' )
 			{
-				if( isset($request['return']) && (!isset($request['required_priv']) || $_SESSION['user']['Privilage'] >= $request['required_priv']))
+				if( isset($request['return']) && (!isset($request['required_priv']) || $user['Privilage'] >= $request['required_priv']))
 				{
 					goto($request['return']);
 				}
 				else
 					PEAR::raiseError('Already logged in!', E_USER);
 			}
-			if(isset($request['required_priv']) && $request['required_priv'] > $_SESSION['users']['Privilage'])
+			if(isset($request['required_priv']) && $request['required_priv'] > $user['Privilage'])
 			{
 				PEAR::raiseError('You do not have sufficient privilages to view this page!', E_USER);
 			}

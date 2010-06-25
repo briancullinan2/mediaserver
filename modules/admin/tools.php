@@ -23,7 +23,7 @@ function register_admin_tools()
  */
 function validate_subtool($request)
 {
-	$request['module'] = validate_module($request);
+	$request['module'] = validate($request, 'module');
 	if(isset($request['subtool']) && is_numeric($request['subtool']) && $request['subtool'] >= 0 && 
 		$request['subtool'] < count($GLOBALS['modules'][$request['module']]['subtools'])
 	)
@@ -49,7 +49,7 @@ function output_admin_tools($request)
 	// preffered order is a list for which order the tools should be arranged in, this is completely optional and makes the toolset a little more context aware
 	$preffered_order = array('Site Information', 'Log Parser', 'Ascii File Names', 'Excessive Underscores and Periods');
 
-	$request['subtool'] = validate_subtool($request);
+	$request['subtool'] = validate($request, 'subtool');
 	
 	if(!isset($request['subtool']))
 		theme('tools');

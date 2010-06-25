@@ -63,7 +63,8 @@ function setup_template()
 		}
 	}
 	
-	$_REQUEST['template'] = validate_template($_REQUEST, isset($_SESSION['template'])?$_SESSION['template']:'');
+	$session_template = session('template');
+	$_REQUEST['template'] = validate_template($_REQUEST, isset($session_template)?$session_template:'');
 	
 	// don't use a template if they comment out this define, this enables the tiny remote version
 	if(!isset($GLOBALS['settings']['local_template']))
@@ -169,7 +170,7 @@ function validate_tfile($request)
 {
 	if(isset($request['tfile']))
 	{
-		$request['template'] = validate_template($request);
+		$request['template'] = validate($request, 'template');
 		$file = setting('local_root') . 'templates' . DIRECTORY_SEPARATOR . $request['template'] . DIRECTORY_SEPARATOR . $request['tfile'];
 		// get real path and make sure it begins with the template directory
 		if(is_file($file))
@@ -292,8 +293,8 @@ function register_style($request)
 		$request = url($request, true, false, true);
 		
 	// validate the 2 inputs needed
-	$request['template'] = validate_template($request);
-	$request['tfile'] = validate_tfile($request);
+	$request['template'] = validate($request, 'template');
+	$request['tfile'] = validate($request, 'tfile');
 
 	// only continue if bath properties are set
 	if(isset($request['template']) && isset($request['tfile']))
@@ -318,8 +319,8 @@ function register_script($request)
 		$request = url($request, true, false, true);
 		
 	// validate the 2 inputs needed
-	$request['template'] = validate_template($request);
-	$request['tfile'] = validate_tfile($request);
+	$request['template'] = validate($request, 'template');
+	$request['tfile'] = validate($request, 'tfile');
 	
 	// only continue if bath properties are set
 	if(isset($request['template']) && isset($request['tfile']))
@@ -343,7 +344,7 @@ function theme($request = '')
 	//   then call the default theme function
 	if($request == '')
 	{
-		$request['template'] = validate_template(array());
+		$request['template'] = validate(array(), 'template');
 		set_output_vars();
 		call_user_func_array('output_' . $request['template'], array());
 		return;
@@ -364,8 +365,8 @@ function theme($request = '')
 	if(is_array($request))
 	{
 		// the tfile parameter can be used to call the theme_ function
-		$request['template'] = validate_template($request);
-		$request['tfile'] = validate_tfile($request);
+		$request['template'] = validate($request, 'template');
+		$request['tfile'] = validate($request, 'tfile');
 		
 		// if the function exists call the theme_ implementation
 		if(function_exists('theme_' . $request['template'] . '_' . $request['tfile']))
@@ -390,7 +391,7 @@ function theme($request = '')
 		// check if function exists in current theme
 		if(function_exists('theme_' . validate_template(array('template' => setting('local_template'))) . '_' . $request))
 		{
-			call_user_func_array('theme_' . validate_template(array('template' => setting('local_template'))) . '_' . $request, $args);
+			call_user_func_array('theme_' . validate(array('template' => setting('local_template')), 'template') . '_' . $request, $args);
 			return true;
 		}
 		// check if a default function exists for the theme
@@ -401,7 +402,7 @@ function theme($request = '')
 		}
 		// it is possible the whole request
 		else
-			PEAR::raiseError('Theme function \'theme_' . validate_template(array('template' => setting('local_template'))) . '_' . $request . '\' was not found.', E_DEBUG|E_WARN);
+			PEAR::raiseError('Theme function \'theme_' . validate(array('template' => setting('local_template'))) . '_' . $request . '\' was not found.', E_DEBUG|E_WARN, 'template');
 	}
 	else
 		PEAR::raiseError('Theme function could not be handled because of an unrecognized argument.', E_DEBUG|E_WARN);
@@ -414,14 +415,15 @@ function theme($request = '')
  */
 function template_variables($request)
 {
-	$request['template'] = validate_template($request);
+	$request['template'] = validate($request, 'template');
 	
 	// this is just a helper variable for templates to use that only need to save 1 setting
-	if(isset($_REQUEST['extra'])) register_output_vars('extra', $_REQUEST['extra']);
+	if(isset($request['extra'])) register_output_vars('extra', $request['extra']);
 	
 	// register user settings for this template
-	if(isset($_SESSION['users']['settings']['templates'][$request['template']]))
-		register_output_vars('settings', $_SESSION['users']['settings']['templates'][$request['template']]);
+	$user = session('users');
+	if(isset($user['settings']['templates'][$request['template']]))
+		register_output_vars('settings', $user['settings']['templates'][$request['template']]);
 	// go through and set the defaults
 	elseif(isset($GLOBALS['templates'][$request['template']]['settings']))
 	{
@@ -441,8 +443,8 @@ function template_variables($request)
  */
 function output_template($request)
 {
-	$request['template'] = validate_template($request);
-	$request['tfile'] = validate_tfile($request);
+	$request['template'] = validate($request, 'template');
+	$request['tfile'] = validate($request, 'tfile');
 
 	$file = setting('local_root') . 'templates' . DIRECTORY_SEPARATOR . $request['template'] . DIRECTORY_SEPARATOR . $request['tfile'];
 

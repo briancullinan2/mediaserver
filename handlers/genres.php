@@ -20,7 +20,7 @@ function register_genres()
  */
 function get_genres($request, &$count)
 {
-	$request['cat'] = validate_cat(array('cat' => 'audio'));
+	$request['cat'] = validate(array('cat' => 'audio'), 'cat');
 	// modify some request stuff
 	if(isset($request['dir']))
 	{

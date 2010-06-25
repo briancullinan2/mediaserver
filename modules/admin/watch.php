@@ -185,8 +185,8 @@ function cleanup_admin_watch()
  */
 function output_admin_watch($request)
 {
-	$request['waddpath'] = validate_waddpath($request);
-	$request['wremove'] = validate_wremove($request);
+	$request['waddpath'] = validate($request, 'waddpath');
+	$request['wremove'] = validate($request, 'wremove');
 
 	if(isset($request['waddpath']))
 	{
@@ -220,7 +220,7 @@ function output_admin_watch($request)
 		'dirs_only' => true,
 	), &$total_count, true);
 
-	$request = validate_start($request);
+	$request = validate($request, 'start');
 
 	// support paging
 	register_output_vars('start', $request['start']);
@@ -242,15 +242,12 @@ function theme_watch()
 	theme('header');
 	
 	?>
-This is a list of folders on the server to watch for media files:<br />
-<?php
-if( count($GLOBALS['user_errors']) > 0 )
-{
-?>
-	<span style="color:#990000; font-weight:bold;"><?php foreach($GLOBALS['templates']['vars']['user_errors'] as $i => $error) { echo $error->message . '<br />'; } ?></span><br />
-<?php
-}
-?>
+	This is a list of folders on the server to watch for media files:<br />
+	<?php
+
+	theme('errors');
+
+	?>
 	<form action="" method="post">
 		<select name="wremove" size="10">
 		
@@ -277,7 +274,7 @@ if( count($GLOBALS['user_errors']) > 0 )
 		<input type="submit" value="Add" />
 		<br />
 	</form>
-<?php
+	<?php
 
 	theme('footer');
 }

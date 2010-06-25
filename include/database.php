@@ -237,7 +237,7 @@ function validate_dberror($request)
 function configure_database($settings, $request)
 {
 	$settings['db_connect'] = setting_db_connect($settings);
-	$settings['dberror'] = validate_dberror($settings);
+	$settings['dberror'] = validate($settings, 'dberror');
 	
 	$options = array();
 	
@@ -581,14 +581,15 @@ class database
 	{
 		if($require_permit)
 		{
+			$user = session('users');
 			$where_security = 'LEFT(Filepath, ' . strlen(setting('local_users')) . ') != "' . addslashes(setting('local_users')) . '" OR ' . 
 								'Filepath = "' . addslashes(setting('local_users')) . '" OR ' . 
 								'(LEFT(Filepath, ' . strlen(setting('local_users')) . ') = "' . addslashes(setting('local_users')) . '" AND LOCATE("/", Filepath, ' . (strlen(setting('local_users')) + 1) . ') = LENGTH(Filepath)) OR ' . 
-								'LEFT(Filepath, ' . strlen(setting('local_users') . $_SESSION['users']['Username'] . '/') . ') = "' . addslashes(setting('local_users') . $_SESSION['users']['Username'] . '/') . '" OR ' . 
+								'LEFT(Filepath, ' . strlen(setting('local_users') . $user['Username'] . '/') . ') = "' . addslashes(setting('local_users') . $user['Username'] . '/') . '" OR ' . 
 								'SUBSTR(Filepath, ' . strlen(setting('local_users')) . ' + LOCATE("/", SUBSTR(Filepath, ' . (strlen(setting('local_users')) + 1) . ')), 8) = "/public/"';
-			if(isset($_SESSION['settings']['keys_usernames']) && count($_SESSION['settings']['keys_usernames']) > 0)
+			if(isset($user['Settings']['keys_usernames']) && count($user['Settings']['keys_usernames']) > 0)
 			{
-				foreach($_SESSION['settings']['keys_usernames'] as $i => $username)
+				foreach($user['Settings']['keys_usernames'] as $i => $username)
 				{
 					$where_security .= ' OR LEFT(Filepath, ' . strlen(setting('local_users') . $username . '/') . ') = "' . addslashes(setting('local_users') . $username . '/') . '"';
 				}

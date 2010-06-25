@@ -218,12 +218,12 @@ function scan_dir($dir)
 			PEAR::raiseError('Removing: ' . $file['Filepath'], E_DEBUG);
 			
 			// remove file from each handler
-			foreach($GLOBALS['handlers'] as $i => $handler)
+			foreach($GLOBALS['handlers'] as $handler => $config)
 			{
 				// do not remove ids because other handlers may still use the id
 				//  allow other handlers to handle removing of ids
-				if($handler != 'db_ids')
-					call_user_func_array('remove_' . $handler, array($file['Filepath'], $handler));
+				if($handler != 'ids')
+					remove($file['Filepath'], $handler);
 			}
 		}
 		$db_paths[] = $file['Filepath'];
@@ -238,7 +238,7 @@ function scan_dir($dir)
 	{
 		if(is_dir($path) && is_watched($dir))
 		{
-			add_db_watch_list($path);
+			add_updates($path);
 		}
 	}
 	
@@ -396,7 +396,7 @@ function handle_file($file)
 function get_updates($request, &$count)
 {
 	// change the cat to the table we want to use
-	$request['cat'] = validate_cat(array('cat' => 'updates'));
+	$request['cat'] = validate(array('cat' => 'updates'), 'cat');
 	
 	if(isset($request['file']))
 		return array();

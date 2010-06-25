@@ -62,16 +62,16 @@ function theme_live_encode()
 		<?php
 		foreach(array('mp4', 'mpg', 'wmv', 'mp4a', 'mp3', 'wma') as $i => $encode)
 		{
-			$request['vcodec'] = validate_vcodec(array('encode' => $encode));
-			$request['acodec'] = validate_acodec(array('encode' => $encode));
-			$request['vbitrate'] = validate_vbitrate(array('encode' => $encode));
-			$request['abitrate'] = validate_abitrate(array('encode' => $encode));
-			$request['samplerate'] = validate_samplerate(array('encode' => $encode));
-			$request['scalar'] = validate_scalar(array('encode' => $encode));
-			$request['channels'] = validate_channels(array('encode' => $encode));
-			$request['muxer'] = validate_muxer(array('encode' => $encode));
-			$request['framerate'] = validate_framerate(array('encode' => $encode));
-			$request['timeoffset'] = validate_timeoffset(array('encode' => $encode));
+			$request['vcodec'] = validate(array('encode' => $encode), 'vcodec');
+			$request['acodec'] = validate(array('encode' => $encode), 'acodec');
+			$request['vbitrate'] = validate(array('encode' => $encode), 'vbitrate');
+			$request['abitrate'] = validate(array('encode' => $encode), 'abitrate');
+			$request['samplerate'] = validate(array('encode' => $encode), 'samplerate');
+			$request['scalar'] = validate(array('encode' => $encode), 'scalar');
+			$request['channels'] = validate(array('encode' => $encode), 'channels');
+			$request['muxer'] = validate(array('encode' => $encode), 'muxer');
+			$request['framerate'] = validate(array('encode' => $encode), 'framerate');
+			$request['timeoffset'] = validate(array('encode' => $encode), 'timeoffset');
 			
 			?><option value="<?php print $encode; ?>" onclick="set(<?php
 									print '\'' . $request['vcodec'] . '\', ' . 

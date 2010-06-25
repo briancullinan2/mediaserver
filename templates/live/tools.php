@@ -147,7 +147,7 @@ function theme_live_tools_singular()
 	{
 		?>
 		<tr id="row_<?php print $name; ?>">
-			<td class="title <?php print $config['status']; ?>"><?php print $config['name']; ?> (<?php print $name; ?>)</td>
+			<td class="title <?php print $config['status']; ?>"><?php print htmlspecialchars($config['name'], ENT_QUOTES); ?> (<?php print $name; ?>)</td>
 			<td>
 			<?php print_info_objects($config); ?>
 			</td>

@@ -183,7 +183,7 @@ function theme_live_errors_block()
 				{
 					?><div id="warn_errors" class="error hide"><?php
 				}
-				?><b><?php print $error->message; ?></b><br /><?php
+				?><b><?php print $error; ?></b><br /><?php
 			}
 			if(count($GLOBALS['warn_errors']) > 5)
 			{
@@ -203,7 +203,7 @@ function theme_live_errors_block()
 				{
 					?><div id="user_errors" class="error hide"><?php
 				}
-				?><b><?php print $error->message; ?></b><br /><?php
+				?><b><?php print $error; ?></b><br /><?php
 			}
 			if(count($GLOBALS['user_errors']) > 5)
 			{
@@ -223,7 +223,7 @@ function theme_live_errors_block()
 				{
 					?><div id="note_errors" class="error hide"><?php
 				}
-				?><b><?php print $error->message; ?></b><br /><?php
+				?><b><?php print $error; ?></b><br /><?php
 			}
 			if(count($GLOBALS['note_errors']) > 5)
 			{

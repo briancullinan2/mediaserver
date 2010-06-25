@@ -67,7 +67,7 @@ function validate_remove_service($request)
 			$request['remove_service'] = $keys[0];
 		}
 			
-		if(is_numeric($request['remove_service']) && $request['remove_service'] >= 1)
+		if(is_numeric($request['remove_service']) && $request['remove_service'] >= 2)
 			return $request['remove_service'];
 	}
 }
@@ -93,6 +93,10 @@ function setting_nzbservice($settings, $index)
 		'login' => isset($settings['nzbservice_' . $index]['login'])?$settings['nzbservice_' . $index]['login']:'',
 		'username' => isset($settings['nzbservice_' . $index]['username'])?$settings['nzbservice_' . $index]['username']:'',
 		'password' => isset($settings['nzbservice_' . $index]['password'])?$settings['nzbservice_' . $index]['password']:'',
+		'userfield' => isset($settings['nzbservice_' . $index]['userfield'])?$settings['nzbservice_' . $index]['userfield']:'',
+		'passfield' => isset($settings['nzbservice_' . $index]['passfield'])?$settings['nzbservice_' . $index]['passfield']:'',
+		'loginfail' => isset($settings['nzbservice_' . $index]['loginfail'])?$settings['nzbservice_' . $index]['loginfail']:'',
+		'exclude' => isset($settings['torservice_' . $index]['exclude'])?$settings['torservice_' . $index]['exclude']:'',
 	);
 	
 	// validate name
@@ -115,6 +119,12 @@ function setting_nzbservice($settings, $index)
 	$service['username'] = generic_validate_all_safe(array('service_username' => $service['username']), 'service_username');
 	$service['password'] = generic_validate_all_safe(array('service_password' => $service['password']), 'service_password');
 	
+	// validate extra fields
+	$service['userfield'] = generic_validate_all_safe(array('service_userfield' => $service['userfield']), 'service_userfield');
+	$service['passfield'] = generic_validate_all_safe(array('service_passfield' => $service['passfield']), 'service_passfield');
+	$service['loginfail'] = generic_validate_regexp(array('service_loginfail' => $service['loginfail']), 'service_loginfail');
+	$service['exclude'] = generic_validate_all_safe(array('service_exclude' => $service['exclude']), 'service_exclude');
+	
 	return $service;
 }
 
@@ -129,9 +139,10 @@ function setting_nzbservices($settings)
 
 	$settings['nzbservice_0'] = array_merge(isset($settings['nzbservice_0'])?$settings['nzbservice_0']:array(), array(
 		'name' => 'NZB Matrix',
-		'match' => '/<a href="(http:\/\/nzbmatrix.com\/nzb-download.php?[^"]*?)&amp;nozip=1"/i',
+		'match' => '/<a href="(http:\/\/nzbmatrix.com\/nzb-download.php?[^"]*?&amp;nozip=1)"/i',
 		'search' => 'http://nzbmatrix.com/nzb-search.php?search=%s',
 		'login' => 'http://nzbmatrix.com/account-login.php',
+		'loginfail' => '/Access Denied:/i'
 	));
 	
 	$settings['nzbservice_1'] = array_merge(isset($settings['nzbservice_1'])?$settings['nzbservice_1']:array(), array(
@@ -139,6 +150,7 @@ function setting_nzbservices($settings)
 		'match' => '/<a.*?href="(\/browse\/post\/[0-9]*?\/nzb)">/i',
 		'search' => 'http://www.newzbin.com/search/query/?searchaction=Go&q=%s',
 		'login' => 'http://www.newzbin.com/account/login/',
+		'loginfail' => '/<span>Error:<\/span>/i',
 	));
 	
 	
@@ -176,10 +188,8 @@ function session_admin_tools_nzbservices($request)
 		return array();
 	
 	// might be configuring the module
-	if(!isset($_SESSION['nzbservices']) || isset($request['reset_configuration']))
+	if(!($save = session('nzbservices')) || isset($request['reset_configuration']))
 		$save = array('services' => setting('nzbservices'));
-	else
-		$save = $_SESSION['nzbservices'];
 
 	// add server
 	if(isset($request['add_service']))
@@ -207,13 +217,13 @@ function configure_admin_tools_nzbservices($settings)
 {
 	$settings['nzbservices'] = setting_nzbservices($settings);
 	$settings['nzbpath'] = setting_nzbpath($settings);
-	
+
 	$service_count = count($settings['nzbservices']);
 	
 	// load services from session
-	if(isset($_SESSION['nzbservices']['services']))
+	if($session_services = session('nzbservices'))
 	{
-		$settings['nzbservices'] = $_SESSION['nzbservices']['services'];
+		$settings['nzbservices'] = $session_services['services'];
 	}
 	
 	$options = array();
@@ -225,7 +235,7 @@ function configure_admin_tools_nzbservices($settings)
 	}
 	
 	$options['nzbservices'] = array(
-		'name' => 'NZB Service',
+		'name' => 'Manage NZB Services',
 		'status' => '',
 		'description' => array(
 			'list' => array(
@@ -301,83 +311,6 @@ function configure_admin_tools_nzbservices($settings)
 		);
 	}
 	
-	$options['custom_nzbservice'] = array(
-		'name' => 'Add a NZB Service',
-		'status' => '',
-		'description' => array(
-			'list' => array(
-				'Add a custom NZB service.',
-				'The search query is the path to a search path, with %s as the search text.',
-				'The file match is the regular expression to match the links to download files.',
-				'The login url is used before performing the search query.',
-			),
-		),
-		'type' => 'set',
-		'options' => array(
-			'add_service[name]' => array(
-				'type' => 'text',
-				'help' => 'Name',
-				'value' => '',
-			),
-			array(
-				'value' => '<br />'
-			),
-			'add_service[search]' => array(
-				'type' => 'text',
-				'help' => 'Search',
-				'value' => '',
-			),
-			array(
-				'value' => '<br />'
-			),
-			'add_service[match]' => array(
-				'type' => 'text',
-				'help' => 'Match Files',
-				'value' => '',
-			),
-			array(
-				'value' => '<br />'
-			),
-			'add_service[login]' => array(
-				'type' => 'text',
-				'help' => 'Login URL',
-				'value' => '',
-			),
-			array(
-				'value' => '<br />'
-			),
-			'add_service[username]' => array(
-				'type' => 'text',
-				'help' => 'Username',
-				'value' => '',
-			),
-			array(
-				'value' => '<br />'
-			),
-			'add_service[password]' => array(
-				'type' => 'text',
-				'help' => 'Password',
-				'value' => '',
-			),
-			array(
-				'value' => '<br />'
-			),
-			'add_service[save]' => array(
-				'type' => 'submit',
-				'value' => 'Add Service',
-			),
-		),
-	);
-	
-	// add unsettings
-	for($i = 0; $i < $service_count - count($settings['nzbservices']); $i++)
-	{
-		$options['custom_nzbservice']['options']['setting_nzbservice_' . (count($settings['nzbservices']) + $i)] = array(
-			'type' => 'hidden',
-			'value' => '',
-		);
-	}
-
 	if($settings['nzbpath'] == '' || is_writable($settings['nzbpath']))
 	{
 		$options['nzbpath'] = array(
@@ -429,30 +362,66 @@ function nzbservices_login()
 		$result = fetch($config['login']);
 		
 		// save session info
-		$_SESSION['nzbservices_' . $i] = $result['cookies'];
+		session('nzbservices_' . $i, $result['cookies']);
 		
-		// extract form elements
-		$result = preg_match_all('/<input.*?name=(["\'])([^\1]*?)\1.*?>/i', $result['content'], $names);
-		$result = preg_match_all('/<input.*?value=(["\'])([^\1]*?)\1/i', $result['content'], $values);
-		
-		$post = array();
-		foreach($names[2] as $j => $name)
+		if(isset($config['userfield']))
 		{
-			if(isset($values[2][$j]))
-				$post[$name] = $values[2][$j];
-			else
-				$post[$name] = '';
+			list($login, $post) = get_login_form($result['content'], $config['userfield']);
+			
+			// set username
+			$post[$config['userfield']] = $config['username'];
 		}
-		$post['username'] = $config['username'];
-		$post['password'] = $config['password'];
+		else
+		{
+			list($login, $post) = get_login_form($result['content']);
+			
+			// set username
+			$post['username'] = $config['username'];
+		}
+			
+		// set password
+		if(isset($config['passfield']))
+			$post[$config['passfield']] = $config['password'];
+		else
+			$post['password'] = $config['password'];
+			
+		// remove excluded fields
+		if(isset($config['exclude']))
+		{
+			$exclude = split(',', $config['exclude']);
+			foreach($exclude as $j => $remove)
+			{
+				if(isset($post[$remove]))
+					unset($post[$remove]);
+			}
+		}
 		
 		// submit
-		$result = fetch($config['login'], $post, array(), array(), isset($_SESSION['nzbservices_' . $i])?$_SESSION['nzbservices_' . $i]:array());
+		$session_service = session('nzbservices_' . $i);
 		
+		// set second login location
+		if($login != '')
+			$config['login'] = get_full_url($config['login'], $login);
+
+		$result = fetch(get_full_url($config['login'], $login), $post, array('referer' => $config['login']), isset($session_service)?$session_service:array());
+
 		// save session info
-		$_SESSION['nzbservices_' . $i] = $result['cookies'];
-		
-		$stati[$i] = $result['status'];
+		session('nzbservices_' . $i, $result['cookies']);
+
+		// try to check if the login was successful
+		if(isset($config['loginfail']))
+		{
+			if(preg_match($config['loginfail'], $result['content']) != 0)
+				$stati[$i] = false;
+			else
+				$stati[$i] = $result['status'];
+		}
+		elseif(preg_match('/access denied|error/i', $result['content']) != 0)
+		{
+			$stati[$i] = false;
+		}
+		else
+			$stati[$i] = $result['status'];
 	}
 	
 	return $stati;
@@ -474,14 +443,14 @@ function nzbservices_search_nzb($search)
 	foreach($services as $i => $config)
 	{
 		// run query
-		$result = fetch(call_user_func_array('sprintf', array_merge(array($config['search']), $args)), array(), array(), $_SESSION['nzbservices_' . $i]);
+		$result = fetch(call_user_func_array('sprintf', array_merge(array($config['search']), $args)), array(), array(), session('nzbservices_' . $i));
 		
 		// match nzbs
 		$count = preg_match_all($config['match'], $result['content'], $matches);
 		
 		if($count > 0)
 		{
-			return nzbservices_fetch_nzb($matches[1][0], $_SESSION['nzbservices_' . $i]);
+			return nzbservices_fetch_nzb($matches[1][0], session('nzbservices_' . $i));
 		}
 	}
 	

@@ -79,7 +79,8 @@ function setup_core()
 		'session' => array(),
 		'settings' => array(),
 		'always output' => array(),
-		'alter query' => array()
+		'alter query' => array(),
+		'validates' => array(),
 	);
 	
 	// set up the mime information
@@ -220,6 +221,19 @@ function setup_register_modules($path)
 							$GLOBALS['triggers']['always output'][$i][$module] = $var;
 					}
 				}
+				
+				// reorganize alter query triggers
+				if(isset($modules[$module]['validates']) && is_array($modules[$module]['validates']))
+				{
+					// for named arrays, the key variable will call the named function
+					foreach($modules[$module]['validates'] as $i => $var)
+					{
+						if(is_numeric($i))
+							$GLOBALS['triggers']['validates'][$var][$module] = 'validate_' . $prefix . $module;
+						elseif(is_callable($var))
+							$GLOBALS['triggers']['validates'][$i][$module] = $var;
+					}
+				}
 			}
 		}
 	}
@@ -235,14 +249,7 @@ function setup_register_modules($path)
  */
 function setting_verbose($settings)
 {
-	if(isset($settings['verbose']))
-	{
-		if($settings['verbose'] === true || $settings['verbose'] === 'true')
-			return true;
-		elseif($settings['verbose'] === false || $settings['verbose'] === 'false')
-			return false;
-	}
-	return false;
+	return generic_validate_boolean_false($settings, 'verbose');
 }
 
 /**
@@ -340,14 +347,7 @@ function setting_html_name($settings)
  */
 function setting_debug_mode($settings)
 {
-	if(isset($settings['debug_mode']))
-	{
-		if($settings['debug_mode'] === true || $settings['debug_mode'] === 'true')
-			return true;
-		elseif($settings['debug_mode'] === false || $settings['debug_mode'] === 'false')
-			return false;
-	}
-	return false;
+	return generic_validate_boolean_false($settings, 'debug_mode');
 }
 
 /**
@@ -357,14 +357,7 @@ function setting_debug_mode($settings)
  */
 function setting_recursive_get($settings)
 {
-	if(isset($settings['recursive_get']))
-	{
-		if($settings['recursive_get'] === true || $settings['recursive_get'] === 'true')
-			return true;
-		elseif($settings['recursive_get'] === false || $settings['recursive_get'] === 'false')
-			return false;
-	}
-	return false;
+	return generic_validate_boolean_false($settings, 'recursive_get');
 }
 
 /**
@@ -374,14 +367,7 @@ function setting_recursive_get($settings)
  */
 function setting_no_bots($settings)
 {
-	if(isset($settings['no_bots']))
-	{
-		if($settings['no_bots'] === true || $settings['no_bots'] === 'true')
-			return true;
-		elseif($settings['no_bots'] === false || $settings['no_bots'] === 'false')
-			return false;
-	}
-	return true;
+	return generic_validate_boolean_true($settings, 'no_bots');
 }
 
 /**
@@ -1067,6 +1053,7 @@ function configure_core($settings, $request)
  * @}
  */
 
+
 /**
  * Set up input variables, everything the site needs about the request <br />
  * Validate all variables, and remove the ones that aren't validate
@@ -1084,24 +1071,9 @@ function setup_validate()
 	// go through the rest of the request and validate all the variables with the modules they are for
 	foreach($_REQUEST as $key => $value)
 	{
-		// validate every single input
-		if(function_exists('validate_' . $key))
-			$_REQUEST[$key] = call_user_func_array('validate_' . $key, array($_REQUEST));
-		elseif(isset($GLOBALS['validate_' . $key]) && is_callable($GLOBALS['validate_' . $key]))
-			$_REQUEST[$key] = $GLOBALS['validate_' . $key]($_REQUEST);
-		// if it is an attempted setting, keep it for now and let the configure modules module handle it
-		elseif(substr($key, 0, 8) == 'setting_')
-			$_REQUEST[$key] = $_REQUEST[$key];
-		else
-			$_REQUEST[$key] = NULL;
-		
-		// if there is no validator
-		if(!isset($_REQUEST[$key]))
-		{
-			// unset it to prevent anything from using the input
-			unset($_REQUEST[$key]);
-			if(isset($_GET[$key])) unset($_GET[$key]);
-		}
+		$new_value = validate($_REQUEST, $key);
+		if(isset($new_value))
+			$_REQUEST[$key] = $new_value;
 			
 		// set the get variable also, so that when url($_GET) is used it is an accurate representation of the current page
 		if(isset($_GET[$key])) $_GET[$key] = $_REQUEST[$key];
@@ -1184,7 +1156,7 @@ function setup_session($request = array())
 				$save = call_user_func_array($function, array($request));
 				// only save when something has changed
 				if(isset($save))
-					$_SESSION[$module] = $save;
+					session($module, $save);
 			}
 		}
 	}
@@ -1334,7 +1306,7 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 			$x = explode('=', $value);
 			
 			// set each part of the query string in our new request array
-			$request[$x[0]] = isset($x[1])?$x[1]:'';
+			$request[$x[0]] = urldecode(isset($x[1])?$x[1]:'');
 		}
 		
 		// if the first item contains slashes it must be a part of the directory, fix this
@@ -1350,6 +1322,14 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 				// remove the weird key
 				unset($request[$keys[0]]);
 			}
+		}
+	}
+	else
+	{
+		// remove urlencoding from array
+		foreach($request as $key => $value)
+		{
+			$request[$key] = urldecode((string)$value);
 		}
 	}
 	
@@ -1368,7 +1348,7 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 	// rebuild link
 	// always add the module to the path
 	if(!isset($request['module']))
-		$request['module'] = validate_module(array('module' => isset($GLOBALS['module'])?$GLOBALS['module']:''));
+		$request['module'] = validate(array('module' => isset($GLOBALS['module'])?$GLOBALS['module']:''), 'module');
 		
 	// if this option is available, add the path into back on to the front of the query string,
 	//   maybe it will be only path information after this step
@@ -1388,7 +1368,15 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 		// loop through each variable still existing in the reuqest and add it to the query info on the link
 		foreach($request as $key => $value)
 		{
-			$link .= (($link[strlen($link)-1] != '?')?'&':'') . $key . '=' . $value;
+			if(is_bool($value))
+			{
+				if($value)
+					$link .= (($link[strlen($link)-1] != '?')?'&':'') . $key . '=true';
+				else
+					$link .= (($link[strlen($link)-1] != '?')?'&':'') . $key . '=false';
+			}
+			else
+				$link .= (($link[strlen($link)-1] != '?')?'&':'') . $key . '=' . urlencode((string)$value);
 		}
 	}
 	
@@ -1437,12 +1425,12 @@ function goto($request)
 function core_variables($request)
 {
 	// set a couple more that are used a lot
-	$request['module'] = validate_module($request);
-	$request['cat'] = validate_cat($request);
-	$request['group_by'] = validate_group_by($request);
-	$request['group_index'] = validate_group_index($request);
-	$request['start'] = validate_start($request);
-	$request['limit'] = validate_limit($request);
+	$request['module'] = validate($request, 'module');
+	$request['cat'] = validate($request, 'cat');
+	$request['group_by'] = validate($request, 'group_by');
+	$request['group_index'] = validate($request, 'group_index');
+	$request['start'] = validate($request, 'start');
+	$request['limit'] = validate($request, 'limit');
 	
 	// the entire site depends on this
 	register_output_vars('module', $request['module']);
@@ -1482,7 +1470,7 @@ function set_output_vars()
 		{
 			foreach($GLOBALS['triggers']['always output'][$key] as $module => $function)
 			{
-				$_SESSION[$module] = call_user_func_array($function, array($_REQUEST));
+				call_user_func_array($function, array($_REQUEST));
 			}
 		}
 	}
@@ -1566,21 +1554,37 @@ function traverse_array($input)
  * @param request the request input containing the information to be validated
  * @return the validated variable value
  */
-function validate($name, $request)
+function validate($request, $key)
 {
-	// assemble arguments
-	$args = func_get_args();
-	
-	// pop off name, pass everything else to function
-	array_pop($args);
-	
 	// call function
-	if(function_exists('validate_' . $name))
-		return call_user_func_array('validate_' . $name, $args);
-	elseif(isset($GLOBALS['validate_' . $name]) && is_callable($GLOBALS['validate_' . $name]))
-		return call_user_func_array($GLOBALS['validate_' . $name], $args);
-	else
-		PEAR::raiseError('Validate function validate_' . $name . ' not found!');
+	if(function_exists('validate_' . $key))
+		return call_user_func_array('validate_' . $key, array($request));
+	elseif(isset($GLOBALS['validate_' . $key]) && is_callable($GLOBALS['validate_' . $key]))
+		return call_user_func_array($GLOBALS['validate_' . $key], array($request));
+	// if it is an attempted setting, keep it for now and let the configure modules module handle it
+	elseif(substr($key, 0, 8) == 'setting_')
+		return $request[$key];
+	
+	// validate using a multivalidator
+	if(isset($GLOBALS['triggers']['validates'][$key]) && count($GLOBALS['triggers']['validates'][$key]) > 0)
+	{
+		// check modules for vars and trigger a session save
+		foreach($GLOBALS['triggers']['validates'][$key] as $module => $function)
+		{
+			if(isset($new_value))
+				$request[$key] = $new_value;
+			$new_value = call_user_func_array($function, array($request, $key));
+		}
+		
+		// ensure that it was validate
+		if(isset($new_value))
+			return $new_value;
+		else
+			return;
+	}
+	
+	// if a validator isn't found in the configuration
+	PEAR::raiseError('Validate \'' . $key . '\' not found!', E_DEBUG);
 }
 
 /**
@@ -1622,7 +1626,7 @@ function validate_module($request)
  */
 function generic_validate_boolean($request, $index)
 {
-	return validate_boolean_true($request, $index);
+	return validate($request, $index, 'boolean_true');
 }
 
 /**
@@ -1754,7 +1758,7 @@ function generic_validate_filename($request, $index)
 }
 
 /**
- * Generic validate
+ * Generic validate for hostname part of URL
  */
 function generic_validate_hostname($request, $index)
 {
@@ -1767,6 +1771,21 @@ function generic_validate_hostname($request, $index)
 				/ix', 
 			$request[$index], $matches) != 0)
 		return $matches[0];
+}
+
+/**
+ * Generic validate for path part of URL
+ */
+function generic_validate_urlpath($request, $index)
+{
+	if(isset($request[$index]) && $request[$index] != '' && preg_match(
+				'/^
+				# Skip over scheme and authority, if any
+				([a-z][a-z0-9+\-.]*:(\/\/[^\/?#]+)?)?
+				# Path
+				(?P<path>[a-z0-9\-._~%!$&\'()*+,;=:@\/]*)/ix', 
+			$request[$index], $matches) != 0 && $matches['path'] != false)
+		return $matches['path'];
 }
 
 /**
@@ -1827,7 +1846,7 @@ function validate_limit($request)
  */
 function validate_order_by($request)
 {
-	$handler = validate_cat($request);
+	$handler = validate($request, 'cat');
 	
 	$columns = columns($handler);
 	
@@ -1857,7 +1876,7 @@ function validate_order_by($request)
  */
 function validate_group_by($request)
 {
-	$handler = validate_cat($request);
+	$handler = validate($request, 'cat');
 	
 	$columns = columns($handler);
 	
@@ -1914,7 +1933,7 @@ function validate_direction($request)
  */
 function validate_columns($request)
 {
-	$handler = validate_cat($request);
+	$handler = validate($request, 'cat');
 	
 	$columns = columns($handler);
 	
@@ -2120,7 +2139,7 @@ function rewrite($old_var, $new_var, &$request, &$get, &$post)
 function rewrite_vars(&$request, &$get, &$post)
 {
 	// always add a module
-	$request['module'] = validate_module($request);
+	$request['module'] = validate($request, 'module');
 	
 	if(isset($request['path_info']))
 	{
@@ -2135,7 +2154,7 @@ function rewrite_vars(&$request, &$get, &$post)
 	}
 		
 	// just about everything uses the cat variable so always validate and add this
-	$request['cat'] = validate_cat($request);
+	$request['cat'] = validate($request, 'cat');
 
 	// do some modifications to specific modules being used
 	if($request['module'] == 'bt')
@@ -2146,7 +2165,7 @@ function rewrite_vars(&$request, &$get, &$post)
 	if($request['module'] == 'ampache')
 	{
 		// a valid action is required for this module
-		$request['action'] = validate_action($request);
+		$request['action'] = validate($request, 'action');
 		
 		// rewrite some variables
 		if(isset($request['offset'])) rewrite('offset', 'start', $request, $get, $post);
@@ -2170,16 +2189,16 @@ function rewrite_vars(&$request, &$get, &$post)
  */
 function alter_query_core($request, $props)
 {
-	$request['limit'] = validate_limit($request);
-	$request['start'] = validate_start($request);
-	$request['order_by'] = validate_order_by($request);
-	$request['direction'] = validate_direction($request);
+	$request['limit'] = validate($request, 'limit');
+	$request['start'] = validate($request, 'start');
+	$request['order_by'] = validate($request, 'order_by');
+	$request['direction'] = validate($request, 'direction');
 	
 	$props['LIMIT'] = $request['start'] . ',' . $request['limit'];
 	
 	if(isset($request['group_by'])) 
 	{
-		$props['GROUP'] = validate_group_by($request);
+		$props['GROUP'] = validate($request, 'group_by');
 		
 		if(isset($request['group_index']) && $request['group_index'] === true)
 		{
@@ -2399,6 +2418,37 @@ function theme_footer()
 
 function theme_errors()
 {
+	if(count($GLOBALS['user_errors']) > 0)
+	{
+		?><span style="color:#C00"><?php
+		foreach($GLOBALS['user_errors'] as $i => $error)
+		{
+			?><b><?php print $error; ?></b><br /><?php
+		}
+		?></span><?php
+	}
+	if(count($GLOBALS['warn_errors']) > 0)
+	{
+		?><span style="color:#CC0"><?php
+		foreach($GLOBALS['warn_errors'] as $i => $error)
+		{
+			?><b><?php print $error; ?></b><br /><?php
+		}
+		?></span><?php
+	}
+	if(count($GLOBALS['note_errors']) > 0)
+	{
+		?><span style="color:#00C"><?php
+		foreach($GLOBALS['note_errors'] as $i => $error)
+		{
+			?><b><?php print $error; ?></b><br /><?php
+		}
+		?></span><?php
+	}
+	$GLOBALS['note_errors'] = array();
+	$GLOBALS['warn_errors'] = array();
+	$GLOBALS['user_errors'] = array();
+	$GLOBALS['debug_errors'] = array();
 }
 
 function theme_errors_block()

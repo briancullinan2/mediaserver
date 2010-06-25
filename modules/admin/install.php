@@ -21,17 +21,6 @@ function register_admin_install()
  * @ingroup validate
  * @return NULL by default
  */
-function validate_install_next($request)
-{
-	if(isset($request['install_next']))
-		return $request['install_next'];
-}
-
-/**
- * Implementation of validate
- * @ingroup validate
- * @return NULL by default
- */
 function validate_install_save($request)
 {
 	if(isset($request['install_save']))
@@ -52,19 +41,6 @@ function validate_install_image($request)
 /**
  * Implementation of validate
  * @ingroup validate
- * @return false by default
- */
-function validate_install_db($request)
-{
-	if(isset($request['install_db']) && ($request['install_db'] == 'install' || $request['install_db'] == 'test'))
-		return $request['install_db'];
-	else
-		return false;
-}
-
-/**
- * Implementation of validate
- * @ingroup validate
  * @return 1 by default, accepts numbers
  */
 function validate_install_step($request)
@@ -75,61 +51,6 @@ function validate_install_step($request)
 	else
 		return 1*$request['install_step'];
 }
-
-/**
- * Set up variables needed by install
- */
-function setup_misc_vars()
-{
-	global $required, $recommended, $supported_databases;
-	$required = array('DB_FILE_ENABLE', 'DB_IDS_ENABLE', 'DB_WATCH_ENABLE', 'DB_ALIAS_ENABLE', 'DB_USERS_ENABLE', 'DB_WATCH_LIST_ENABLE');
-	
-}
-
-/**
- * Set up the valid post variables
- */
-function setup_post_vars()
-{
-	global $post;
-	
-	// list of acceptable post variables
-	$post = array('SYSTEM_TYPE', 'ENCODE_PATH', 'CONVERT_PATH', 'LOCAL_ROOT', 'HTML_DOMAIN', 'HTML_ROOT', 'DB_TYPE', 'DB_SERVER', 'DB_USER', 'DB_PASS', 'DB_NAME');
-	
-	foreach($GLOBALS['handlers'] as $i => $handler)
-	{
-		$post[] = strtoupper($handler . '_ENABLE');
-	}
-
-	$post[] = 'HTML_NAME';
-	$post[] = 'LOCAL_BASE';
-	$post[] = 'LOCAL_DEFAULT';
-	$post[] = 'LOCAL_TEMPLATE';
-	$post[] = 'DIRECTORY_SEEK_TIME';
-	$post[] = 'FILE_SEEK_TIME';
-	$post[] = 'DEBUG_MODE';
-	$post[] = 'RECURSIVE_GET';
-	$post[] = 'NO_BOTS';
-	$post[] = 'TMP_DIR';
-	$post[] = 'LOCAL_USERS';
-	$post[] = 'BUFFER_SIZE';
-	$post[] = 'USE_ALIAS';
-	
-}
-
-// ---------------------------------- step 1 ---------------------------------
-// ---------------------------------- step 2 ---------------------------------
-
-// ---------------------------------- step 3 ---------------------------------
-
-// ---------------------------------- step 4 ---------------------------------
-
-
-// ---------------------------------- step 6 ---------------------------------
-
-// ---------------------------------- step 7 ---------------------------------
-
-// ---------------------------------- step 8 ---------------------------------
 
 /**
  * Implementation of validate
@@ -159,80 +80,14 @@ function validate_drop_tables($request)
 }
 
 /**
- * Performs a listed set of tests to find out if settings are valid
- * @param request the request to use for tests
- * @param start which test to start with
- * @param stop which test to end with
- * @return an associative array of test names set to true or false depending on if the test failed or not
- */
-function perform_tests($request, $start = 0, $stop = NULL)
-{
-	$tests = array();
-	// step 1
-	// step 2
-EOF;
-	$tests['enable_modules'] = 'return true;';
-	$tests['db_check'] = 'return false;'; // return false so it always runs the database checking
-	$tests['db_test'] = 'return false;'; // always test the database before installing
-	$tests['db_install'] = 'return false;'; // always install the database
-	$tests['save'] = <<<EOF
-		\$settings = dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'settings.php';
-		return (is_writable(\$settings));
-EOF;
-
-	if($stop == NULL)
-		$stop = count($tests);
-	$keys = array_keys($tests);
-	for($i = $start; $i < $stop; $i++)
-	{
-		// first create the function
-		$tests[$keys[$i]] = create_function('$request', $tests[$keys[$i]]);
-		
-		// now call it
-		$tests[$keys[$i]] = $tests[$keys[$i]]($request);
-	}
-	
-	return $tests;
-}
-
-/**
- * Implementation of session
- * @ingroup session
- * @return
- */
-function session_admin_install($request)
-{
-	// save the entire request in the session, except the install state
-	unset($request['install_step']);
-	unset($request['install_next']);
-	unset($request['install_save']);
-	unset($request['module']);
-
-	return $request;
-}
-
-/**
  * Implementation of output
  * @ingroup output
  */
 function output_admin_install($request)
 {
-	global $post, $required, $recommended, $supported_databases;
-	
 	register_output_vars('styles', 'module=admin_install&install_image=style');
 	
-	$request['install_step'] = validate_install_step($request);
-	
-	if(!isset($_SESSION)) session_start();
-	// get all the settings in the session
-	if(isset($_SESSION['install']))
-	{
-		foreach($_SESSION['install'] as $key => $value)
-		{
-			if(!isset($request[$key]))
-				$request[$key] = $value;
-		}
-	}
+	$request['install_step'] = validate($request, 'install_step');
 	
 	// at the bottom because it takes up a lot of room
 	if(isset($request['install_image']))
@@ -240,51 +95,12 @@ function output_admin_install($request)
 		print_image($request['install_image']);
 		exit;
 	}
-	
-	setup_misc_vars();
-	
-	setup_post_vars($request);
-
-	// validate all other post variables, this will set them to the default if they haven't been request
-	foreach($post as $i => $key)
-	{
-		if(function_exists('validate_' . $key))
-			$request[$key] = call_user_func_array('validate_' . $key, array($request));
-		elseif(isset($GLOBALS['validate_' . $key]) && is_callable($GLOBALS['validate_' . $key]))
-			$request[$key] = $GLOBALS['validate_' . $key]($request);
-	}
-	
-	if(isset($request['install_next']))
-	{
-		goto('module=admin_install&install_step=' . ($request['install_step'] + 1));
-	}
 
 	if(isset($_POST) && count($_POST) > 0)
 	{
 		if(isset($_POST['dberror'])) $_SESSION['dberror'] = $_POST['dberror'];
 		goto('module=admin_install&install_step=' . $request['install_step']);
 	}
-	
-	register_output_vars('post', $post);
-	
-	register_output_vars('install_step', $request['install_step']);
-
-	register_output_vars('tests', perform_tests($request));
-	
-	register_output_vars('request', $request);
-	
-	register_output_vars('settings', dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'settings.php');
-	
-	register_output_vars('memory_limit', ini_get('memory_limit'));
-	
-	$request['install_dberror'] = validate_install_dberror($request);
-	register_output_vars('dberror', $request['install_dberror']);
-	
-	register_output_vars('supported_databases', $supported_databases);
-	register_output_vars('required', $required);
-	register_output_vars('recommended', $recommended);
-	
-	register_output_vars('handlers', $GLOBALS['handlers']);
 	
 	theme('install');
 }

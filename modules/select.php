@@ -44,7 +44,7 @@ function validate_select($request)
 function validate_selected($request)
 {
 	if(!isset($request['selected']) || !is_array($request['selected']))
-		$selected = validate_item($request);
+		$selected = validate($request, 'item');
 	else
 		$selected = $request['selected'];
 		
@@ -54,15 +54,15 @@ function validate_selected($request)
 			unset($selected[$i]);
 	}
 	
-	$request['on'] = validate_on($request);
+	$request['on'] = validate($request, 'on');
 	
 	$selected = array_merge($selected, $request['on']);
 	$selected = array_unique($selected);
 	
-	$request['off'] = validate_off($request);
+	$request['off'] = validate($request, 'off');
 	$selected = array_diff($selected, $request['off']);
 	
-	$request['id'] = validate_id($request);
+	$request['id'] = validate($request, 'id');
 	if(isset($request['id']))
 		$selected = array($request['id']);
 	
@@ -76,8 +76,8 @@ function validate_selected($request)
  */
 function validate_item($request)
 {
-	$select = validate_select($request);
-	
+	$select = validate($request, 'select');
+
 	$selected = array();
 	
 	if(isset($request['item']) && is_string($request['item']))
@@ -180,14 +180,14 @@ function session_select($request)
 	$save['on'] = @$request['on'];
 	$save['off'] = @$request['off'];
 	$save['item'] = @$request['item'];
-	$save['selected'] = validate_selected($request);
-	
+	$save['selected'] = validate($request, 'selected');
+
 	return $save;
 }
 
 function alter_query_select($request, $props)
 {
-	$request['selected'] = validate_selected($request);
+	$request['selected'] = validate($request, 'selected');
 	
 	// select an array of ids!
 	if(isset($request['selected']) && count($request['selected']) > 0 )
@@ -243,17 +243,20 @@ function alter_query_select($request, $props)
 function output_select($request)
 {
 	// set up required request variables
-	$request['cat'] = validate_cat($request);
-	$request['start'] = validate_start($request);
-	$request['limit'] = validate_limit($request);
-	$request['order_by'] = validate_order_by($request);
-	$request['direction'] = validate_direction($request);
+	$request['cat'] = validate($request, 'cat');
+	$request['start'] = validate($request, 'start');
+	$request['limit'] = validate($request, 'limit');
+	$request['order_by'] = validate($request, 'order_by');
+	$request['direction'] = validate($request, 'direction');
 	
 	// discard selected stuff here, we want to show a full list, the selected stuff is just for saving in the session
 	//   in order to list the selected stuff only, one should use the list.php module
-	if(isset($request['selected'])) unset($request['selected']);
-	if(isset($request['item'])) unset($request['item']);
-	if(isset($request['id'])) unset($request['id']);
+	if($request['module'] == 'select')
+	{
+		if(isset($request['selected'])) unset($request['selected']);
+		if(isset($request['item'])) unset($request['item']);
+		if(isset($request['id'])) unset($request['id']);
+	}
 	
 	// make select call
 	$files = get_files($request, $total_count, $request['cat']);
@@ -360,7 +363,8 @@ function output_select($request)
 	register_output_vars('files_count', $files_count);
 	
 	// register selected files for templates to use
-	if(isset($_SESSION['select']['selected'])) register_output_vars('selected', $_SESSION['select']['selected']);
+	if($session_select = session('select'))
+		register_output_vars('selected', $session_select['selected']);
 }
 
 function theme_select()
@@ -374,20 +378,13 @@ function theme_select()
 	Displaying items <?php print $GLOBALS['templates']['html']['start']; ?> to <?php print $GLOBALS['templates']['html']['start'] + $GLOBALS['templates']['html']['limit']; ?>.
 	<br />
 	<?php
-	if(count($GLOBALS['user_errors']) > 0)
-	{
-		?><span style="color:#C00"><?php
-		foreach($GLOBALS['user_errors'] as $i => $error)
-		{
-			?><b><?php print $error->message; ?></b><br /><?php
-		}
-		?></span><?php
-	}
+	
+	theme('errors');
 	
 	theme('pages');
 	?>
 	<br />
-	<form name="select" action="{$get}" method="post">
+	<form name="select" action="<?php print $GLOBALS['templates']['html']['get']; ?>" method="post">
 		<input type="submit" name="select" value="All" />
 		<input type="submit" name="select" value="None" />
 		<p style="white-space:nowrap">
@@ -401,6 +398,8 @@ function theme_select()
 	<?php
 		
 	theme('pages');
+	
+	theme('list_block');
 	
 	theme('template_block');
 
@@ -445,7 +444,7 @@ function theme_files()
 		
 		foreach($GLOBALS['templates']['html']['files'] as $i => $file)
 		{
-			$file = alter_file($file, $column_lengths);
+			$file = alter_file($GLOBALS['templates']['vars']['files'][$i], $column_lengths);
 			$GLOBALS['templates']['html']['files'][$i] = $file;
 			// make links browsable
 			if(handles($GLOBALS['templates']['vars']['files'][$i]['Filepath'], 'archive')) $cat = 'archive';

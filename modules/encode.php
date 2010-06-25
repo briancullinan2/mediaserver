@@ -182,7 +182,7 @@ function validate_vcodec($request)
 {
 	if(!isset($request['vcodec']) || !in_array($request['vcodec'], array('mp4v', 'mpgv', 'WMV2', 'DIV3','dummy')))
 	{
-		$request['encode'] = validate_encode($request);
+		$request['encode'] = validate($request, 'encode');
 		switch($request['encode'])
 		{
 			case 'mp4':
@@ -217,7 +217,7 @@ function validate_acodec($request)
 {
 	if(!isset($request['acodec']) || !in_array($request['acodec'], array('mp4a', 'mpga', 'mp3', 'wma2', 'dummy')))
 	{
-		$request['encode'] = validate_encode($request);
+		$request['encode'] = validate($request, 'encode');
 		switch($request['encode'])
 		{
 			case 'mp4':
@@ -252,7 +252,7 @@ function validate_vbitrate($request)
 {
 	if(!isset($request['vbitrate']) || !is_numeric($request['vbitrate']) || $request['vbitrate'] < 0)
 	{
-		$request['encode'] = validate_encode($request);
+		$request['encode'] = validate($request, 'encode');
 		switch($request['encode'])
 		{
 			case 'mp4':
@@ -329,7 +329,7 @@ function validate_muxer($request)
 {
 	if(!isset($request['muxer']) || !in_array($request['muxer'], array('ts', 'ps', 'mpeg1', 'asf', 'mp4', 'ogg', 'dummy')))
 	{
-		$request['encode'] = validate_encode($request);
+		$request['encode'] = validate($request, 'encode');
 		switch($request['encode'])
 		{
 			case 'mp4':
@@ -364,7 +364,7 @@ function validate_framerate($request)
 {
 	if(!isset($request['framerate']) || !is_numeric($request['framerate']))
 	{
-		$request['encode'] = validate_encode($request);
+		$request['encode'] = validate($request, 'encode');
 		switch($request['encode'])
 		{
 			case 'mp4':
@@ -419,7 +419,6 @@ function output_encode($request)
 	{
 		// set file
 		if(isset($request['id'])) register_output_vars('id', $request['id']);
-		if(isset($request['filename'])) register_output_vars('filename', $request['filename']);
 		
 		// since we usually have to make a call to find the file, 
 		//   just call output_select so we can display a file selector
@@ -431,7 +430,7 @@ function output_encode($request)
 			'start' => validate_start($request),
 			'limit' => 54,
 		));
-		register_output_vars('start', validate_start($request));
+		register_output_vars('start', validate($request), 'start');
 		register_output_vars('limit', 54);
 		
 		// show template for manually setting encoding options
@@ -441,18 +440,18 @@ function output_encode($request)
 	}
 	
 	// validate all the variables used
-	$request['encode'] = validate_encode($request);
-	$request['vcodec'] = validate_vcodec($request);
-	$request['acodec'] = validate_acodec($request);
-	$request['vbitrate'] = validate_vbitrate($request);
-	$request['abitrate'] = validate_abitrate($request);
-	$request['samplerate'] = validate_samplerate($request);
-	$request['scalar'] = validate_scalar($request);
-	$request['channels'] = validate_channels($request);
-	$request['muxer'] = validate_muxer($request);
-	$request['framerate'] = validate_framerate($request);
-	$request['timeoffset'] = validate_timeoffset($request);
-	$request['cat'] = validate_cat($request);
+	$request['encode'] = validate($request, 'encode');
+	$request['vcodec'] = validate($request, 'vcodec');
+	$request['acodec'] = validate($request, 'acodec');
+	$request['vbitrate'] = validate($request, 'vbitrate');
+	$request['abitrate'] = validate($request, 'abitrate');
+	$request['samplerate'] = validate($request, 'samplerate');
+	$request['scalar'] = validate($request, 'scalar');
+	$request['channels'] = validate($request, 'channels');
+	$request['muxer'] = validate($request, 'muxer');
+	$request['framerate'] = validate($request, 'framerate');
+	$request['timeoffset'] = validate($request, 'timeoffset');
+	$request['cat'] = validate($request, 'cat');
 
 	// get the file path from the database
 	$files = get_files($request, $count, $request['cat']);
@@ -467,7 +466,7 @@ function output_encode($request)
 	
 		// merge with tmp_request to look up more information
 		$tmp_request = array_merge(array_intersect_key($files[0], getIDKeys()), $tmp_request);
-	
+
 		// get all the information incase we need to use it
 		foreach($GLOBALS['handlers'] as $handler => $config)
 		{
@@ -479,13 +478,13 @@ function output_encode($request)
 		}
 			
 		// fix the encode type
-		if(handles($files[0]['Filepath'], 'db_audio'))
+		if(handles($files[0]['Filepath'], 'audio'))
 		{
 			if($request['encode'] == 'mp4') $request['encode'] = 'mp4a';
 			elseif($request['encode'] == 'mpg') $request['encode'] = 'mp3';
 			elseif($request['encode'] == 'wmv') $request['encode'] = 'wma';
 		}
-		elseif(handles($files[0]['Filepath'], 'db_video'))
+		elseif(handles($files[0]['Filepath'], 'video'))
 		{
 			if($request['encode'] == 'mp4a') $request['encode'] = 'mp4';
 			elseif($request['encode'] == 'mp3') $request['encode'] = 'mpg';
@@ -494,29 +493,6 @@ function output_encode($request)
 		
 		// set the file variable
 		$request['efile'] = $files[0]['Filepath'];
-	}
-	
-	// set the headers
-	switch($request['encode'])
-	{
-		case 'mp4':
-			header('Content-Type: video/mp4');
-			break;
-		case 'mpg':
-			header('Content-Type: video/mpg');
-			break;
-		case 'wmv':
-			header('Content-Type: video/x-ms-wmv');
-			break;
-		case 'mp4a':
-			header('Content-Type: audio/mp4');
-			break;
-		case 'mp3':
-			header('Content-Type: audio/mpeg');
-			break;
-		case 'wma':
-			header('Content-Type: audio/x-ms-wma');
-			break;
 	}
 	
 	// make up some header to takes the length of the media into consideration
@@ -574,6 +550,29 @@ function output_encode($request)
 		header("Pragma: public");
 	
 		header('Content-Length: ' . ($seek_end - $seek_start + 1));
+	}
+	
+	// set the headers
+	switch($request['encode'])
+	{
+		case 'mp4':
+			header('Content-Type: video/mp4');
+			break;
+		case 'mpg':
+			header('Content-Type: video/mpg');
+			break;
+		case 'wmv':
+			header('Content-Type: video/x-ms-wmv');
+			break;
+		case 'mp4a':
+			header('Content-Type: audio/mp4');
+			break;
+		case 'mp3':
+			header('Content-Type: audio/mpeg');
+			break;
+		case 'wma':
+			header('Content-Type: audio/x-ms-wma');
+			break;
 	}
 		
 	// close session so the client can continue browsing the site

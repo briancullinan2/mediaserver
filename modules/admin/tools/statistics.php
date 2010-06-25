@@ -80,12 +80,12 @@ function validate_tools_logs($request)
  */
 function output_admin_tools_statistics($request)
 {
-	$request['subtool'] = validate_subtool($request);
+	$request['subtool'] = validate($request, 'subtool');
 	$infos = array();
 	
 	if($request['subtool'] == 0)
 	{
-		$request['tools_logs'] = validate_tools_logs($request);
+		$request['tools_logs'] = validate($request, 'tools_logs');
 		
 		// open each file and look for log information
 		// start the parsing when "Cron Script" is found

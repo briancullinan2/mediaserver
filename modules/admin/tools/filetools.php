@@ -36,7 +36,7 @@ function register_admin_tools_filetools()
  */
 function output_admin_tools_filetools($request)
 {
-	$request['subtool'] = validate_subtool($request);
+	$request['subtool'] = validate($request, 'subtool');
 	$infos = array();
 	
 	if(isset($request['subtool'])) register_output_vars('subtool', $request['subtool']);

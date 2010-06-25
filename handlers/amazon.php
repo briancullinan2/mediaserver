@@ -17,7 +17,7 @@ function register_amazon()
 			'Matches' 		=> 'TEXT',
 			'Thumbnail' 	=> 'BLOB',
 		),
-		'depends on' => array('getid3_installed', 'curl_installed', 'valid_amazon_config'),
+		'depends on' => array('getid3_installed', 'curl_installed', 'valid_amazon_config', 'audio', 'movies'),
 		'settings' => array('amazon_dev_key', 'amazon_server'),
 	);
 }
@@ -131,6 +131,33 @@ function handles_amazon($file)
 }
 
 /**
+ * Helper function
+ */
+function get_amazon_info($file)
+{
+	if(handles($file, 'audio'))
+	{
+		// get information from database
+		$audio = $GLOBALS['database']->query(array(
+				'SELECT' => 'audio',
+				'WHERE' => 'Filepath = "' . addslashes($file) . '"',
+				'LIMIT' => 1
+			)
+		, false);
+		if(count($audio) > 0)
+		{
+			$artist = $audio[0]['Artist'];
+			$album = $audio[0]['Album'];
+			
+			return get_amazon_music_info($artist, $album);
+		}
+	}
+	elseif(handles($file, 'movies'))
+	{
+	}
+}
+
+/**
  * Implementation of handle
  * @ingroup handle
  */
@@ -184,7 +211,7 @@ function add_amazon($file, $force = false)
 			
 			if( count($amazon) == 0 )
 			{
-				return db_amazon_add_music($artist, $album);
+				return amazon_add_music($artist, $album);
 			}
 			elseif($force)
 			{
@@ -221,28 +248,28 @@ function get_amazon_music_info($artist, $album)
 	if(in_array('soundtrack', $album_tokens['All']))
 	{
 		$tmp_some_tokens = array_unique(array_merge($artist_tokens['Some'], $album_tokens['Some']));
-		$url = 'http://' . AMAZON_SERVER . '/onca/xml?Service=AWSECommerceService&Version=2005-03-23&Operation=ItemSearch&ContentType=text%2Fxml&SubscriptionId=' . AMAZON_DEV_KEY;
+		$url = 'http://' . setting('amazon_server') . '/onca/xml?Service=AWSECommerceService&Version=2005-03-23&Operation=ItemSearch&ContentType=text%2Fxml&SubscriptionId=' . setting('amazon_dev_key');
 		$url .= '&SearchIndex=Music&Keywords=' . urlencode(join(' ', $tmp_some_tokens)) . '&ResponseGroup=Images,Similarities,Small,Tracks';
 		$result = fetch($url);
 	}
 	else
 	{
-		$url = 'http://' . AMAZON_SERVER . '/onca/xml?Service=AWSECommerceService&Version=2005-03-23&Operation=ItemSearch&ContentType=text%2Fxml&SubscriptionId=' . AMAZON_DEV_KEY;
+		$url = 'http://' . setting('amazon_server') . '/onca/xml?Service=AWSECommerceService&Version=2005-03-23&Operation=ItemSearch&ContentType=text%2Fxml&SubscriptionId=' . setting('amazon_dev_key');
 		$url .= '&SearchIndex=Music&Artist=' . urlencode(join(' ', $artist_tokens['Some'])) . '&Title=' . urlencode(join(' ', $album_tokens['Few'])) . '&ResponseGroup=Images,Similarities,Small,Tracks';
 		
 		$result = fetch($url);
 		
-		if(preg_match('/\<Errors\>/i', $contents) !== 0)
+		if(preg_match('/\<Errors\>/i', $result['content']) !== 0)
 		{
-			$url = 'http://' . AMAZON_SERVER . '/onca/xml?Service=AWSECommerceService&Version=2005-03-23&Operation=ItemSearch&ContentType=text%2Fxml&SubscriptionId=' . AMAZON_DEV_KEY;
+			$url = 'http://' . setting('amazon_server') . '/onca/xml?Service=AWSECommerceService&Version=2005-03-23&Operation=ItemSearch&ContentType=text%2Fxml&SubscriptionId=' . setting('amazon_dev_key');
 			$url .= '&SearchIndex=Music&Keywords=' . urlencode(join(' ', $artist_tokens['Some'])) . '&Title=' . urlencode(join(' ', $album_tokens['Few'])) . '&ResponseGroup=Images,Similarities,Small,Tracks';
 			$result = fetch($url);
 		}
 		
-		if(preg_match('/\<Errors\>/i', $contents) !== 0)
+		if(preg_match('/\<Errors\>/i', $result['content']) !== 0)
 		{
 			$tmp_some_tokens = array_unique(array_merge($artist_tokens['Some'], $album_tokens['Some']));
-			$url = 'http://' . AMAZON_SERVER . '/onca/xml?Service=AWSECommerceService&Version=2005-03-23&Operation=ItemSearch&ContentType=text%2Fxml&SubscriptionId=' . AMAZON_DEV_KEY;
+			$url = 'http://' . setting('amazon_server') . '/onca/xml?Service=AWSECommerceService&Version=2005-03-23&Operation=ItemSearch&ContentType=text%2Fxml&SubscriptionId=' . setting('amazon_dev_key');
 			$url .= '&SearchIndex=Music&Keywords=' . urlencode(join(' ', $tmp_some_tokens)) . '&ResponseGroup=Images,Similarities,Small,Tracks';
 			$result = fetch($url);
 		}
@@ -255,7 +282,7 @@ function get_amazon_music_info($artist, $album)
 	}
 	else
 	{
-		$match = preg_match('/\<Item\>(.*)\<\/Item\>/i', $contents, $matches);
+		$match = preg_match('/\<Item\>(.*)\<\/Item\>/i', $result['content'], $matches);
 		if(isset($matches[1]))
 		{
 			$items = preg_split('/\<\/Item\>\<Item\>/i', $matches[1]);

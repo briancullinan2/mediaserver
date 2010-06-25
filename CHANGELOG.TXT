@@ -1,6 +1,23 @@
+2010-06-24
+Worked on movies tools
+Worked on torservices
+	Mostly complete aside from testing
+Added validates option to module configuration
+	Modules can now validate many variables using one standard function
+
+2010-06-23
+Fixed a bunch of bugs when adding files to the database
+Fixed bugs in reading settings files, was not properly parsing boolean values
+Finished movie netflix checker script
+Improved speed by checking if a module handles the file type before looking for the ID
+	This makes it crucial that handles functions not use the database
+
 2010-06-21
 Worked on movies tool
 Changed settings to use include/settings.php and urlencoded all of the settings to prevent security issues
+Updated a lot of modules default theme functionality
+Converted all uses of $_SESSION over to the new session API
+Finished movie netflix checker script
 
 2010-06-18
 Created and implemented generic_validate functions for things like numbers and boolean values

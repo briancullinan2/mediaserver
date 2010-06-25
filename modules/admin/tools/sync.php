@@ -22,7 +22,7 @@ function register_admin_tools_sync()
  */
 function output_admin_tools_sync($request)
 {
-	$request['subtool'] = validate_subtool($request);
+	$request['subtool'] = validate($request, 'subtool');
 	$infos = array();
 	
 	if(isset($request['subtool'])) register_output_vars('subtool', $request['subtool']);

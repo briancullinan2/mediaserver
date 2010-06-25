@@ -63,7 +63,7 @@ function output_image_browser($file)
 function get_image_browser($request, &$count)
 {
 	// change the cat to the table we want to use
-	$request['cat'] = validate_cat(array('cat' => 'image'));
+	$request['cat'] = validate(array('cat' => 'image'), 'cat');
 	
 	if(isset($request['file']))
 		return array(); // nothing to add

@@ -47,8 +47,15 @@ function setup_admin_tools_television()
 	// add wrapper functions for validating a service entry
 	for($i = 0; $i < 10; $i++)
 	{
-		$GLOBALS['setting_television_search_' . $i] = create_function('$settings', 'return setting_television_search($settings, \'' . $i . '\');');
-		$GLOBALS['modules']['admin_tools_television']['settings'][] = 'television_search_' . $i;
+		$GLOBALS['setting_nzb_television_search_' . $i] = create_function('$settings', 'return setting_nzb_television_search($settings, \'' . $i . '\');');
+		$GLOBALS['modules']['admin_tools_television']['settings'][] = 'television_nzb_search_' . $i;
+	}
+	
+	// add wrapper functions for validating a service entry
+	for($i = 0; $i < 10; $i++)
+	{
+		$GLOBALS['setting_tor_television_search_' . $i] = create_function('$settings', 'return setting_tor_television_search($settings, \'' . $i . '\');');
+		$GLOBALS['modules']['admin_tools_television']['settings'][] = 'television_tor_search_' . $i;
 	}
 }
 
@@ -74,7 +81,7 @@ function setting_myepisodes($settings)
  * Implementation of setting
  * @ingroup setting
  */
-function setting_television_search($settings, $index)
+function setting_nzb_television_search($settings, $index)
 {
 	// return the same static service as listed in the nzbservice module
 	if($index == 0)
@@ -83,10 +90,39 @@ function setting_television_search($settings, $index)
 		return 'http://www.newzbin.com/search/query/?searchaction=Go&category=8&q=%s%%20%dx%02d';
 
 	// don't continue with this if stuff is missing
-	if(isset($settings['television_search_' . $index]) && 
-		$settings['television_search_' . $index] != ''
+	if(isset($settings['nzb_television_search_' . $index]) && 
+		$settings['nzb_television_search_' . $index] != ''
 	)
-		return $settings['television_search_' . $index];
+		return $settings['nzb_television_search_' . $index];
+	// use default
+	elseif(isset($settings['nzbservice_' . $index]['search']) && 
+		$settings['nzbservice_' . $index]['search'] != ''
+	)
+		return $settings['nzbservice_' . $index]['search'];
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ */
+function setting_tor_television_search($settings, $index)
+{
+	// the static services to not have movies, only tv and music
+	if($index == 0 || $index == 1)
+		return '';
+	if($index == 2)
+		return 'http://tvtorrents.com/loggedin/search.do?search=%s %d %02d';
+
+	// don't continue with this if stuff is missing
+	if(isset($settings['tor_movie_search_' . $index]) && 
+		$settings['tor_movie_search_' . $index] != ''
+	)
+		return $settings['tor_movie_search_' . $index];
+	// use default
+	elseif(isset($settings['torservice_' . $index]['search']) && 
+		$settings['torservice_' . $index]['search'] != ''
+	)
+		return $settings['torservice_' . $index]['search'];
 }
 
 /**
@@ -190,14 +226,22 @@ function configure_admin_tools_television($settings)
 	$settings['nzbservices'] = setting_nzbservices($settings);
 	foreach($settings['nzbservices'] as $i => $config)
 	{
-		// add television search query to form
-		$options['nzbservices']['options'][] = array(
-			'value' => '<br />'
+		$options['nzbservices']['options']['setting_nzb_television_search_' . $i] = array(
+			'type' => 'hidden',
+			'value' => setting_nzb_television_search($settings, $i),
 		);
-		$options['nzbservices']['options']['setting_television_search_' . $i] = array(
-			'type' => 'text',
-			'value' => setting_television_search($settings, $i),
-			'help' => $config['name'] . ' Television Search',
+	}
+	
+	// add torrent services
+	$options = array_merge($options, configure_admin_tools_torservices($settings));
+	
+	// alter the torservices form to use television search queries instead
+	$settings['torservices'] = setting_torservices($settings);
+	foreach($settings['torservices'] as $i => $config)
+	{
+		$options['torservices']['options']['setting_tor_television_search_' . $i] = array(
+			'type' => 'hidden',
+			'value' => setting_tor_television_search($settings, $i),
 		);
 	}
 	
@@ -210,8 +254,8 @@ function configure_admin_tools_television($settings)
  */
 function output_admin_tools_television($request)
 {
-	$request['subtool'] = validate_subtool($request);
-	$request['info_singular'] = validate_info_singular($request);
+	$request['subtool'] = validate($request, 'subtool');
+	$request['info_singular'] = validate($request, 'info_singular');
 	$infos = array();
 	
 	if($request['info_singular'] == true)
@@ -277,14 +321,14 @@ function output_admin_tools_television($request)
  */
 function output_admin_tools_television_singular($request)
 {
-	$request['info_singular_step_television'] = validate_info_singular_step_television($request);
+	$request['info_singular_step_television'] = validate($request, 'info_singular_step_television');
 	$infos = array();
 	
 	if($request['info_singular_step_television'] == 'login')
 	{
 		// log in to my episodes first
 		$result = television_myepisodes_login();
-		if($result['status'] != 200)
+		if($result['status'] == false)
 		{
 			$infos['television_login'] = array(
 				'name' => 'MyEpisodes Login',
@@ -414,11 +458,11 @@ function output_admin_tools_television_singular($request)
 	}
 	elseif($request['info_singular_step_television'] == 'download')
 	{
-		$request['showname'] = validate_showname($request);
-		$request['season'] = validate_season($request);
-		$request['episode'] = validate_episode($request);
-		$request['show_status'] = validate_show_status($request);
-		$request['show_index'] = validate_show_index($request);
+		$request['showname'] = validate($request, 'showname');
+		$request['season'] = validate($request, 'season');
+		$request['episode'] = validate($request, 'episode');
+		$request['show_status'] = validate($request, 'show_status');
+		$request['show_index'] = validate($request, 'show_index');
 		
 		// fetch nzb files
 		$status = television_fetch_nzb($request['showname'], $request['season'], $request['episode']);
@@ -448,9 +492,8 @@ function output_admin_tools_television_singular($request)
 			$links = '';
 			foreach($services as $i => $config)
 			{
-				$search = setting('television_search_' . $i);
-				if($search == '')
-					$search = $config['search'];
+				$search = setting('nzb_television_search_' . $i);
+				
 				$links .= '<a href="' . sprintf($search, urlencode($request['showname']), urlencode($request['season']), urlencode($request['episode'])) . '">Search for ' . $request['showname'] . ' on ' . $config['name'] . '</a><br />';
 			}
 			$infos['myepisodes_shows_' . $request['show_index']] = array(
@@ -505,12 +548,10 @@ function television_fetch_nzb($showname, $season, $episode)
 	// loop through NZB services until we find the show
 	foreach($services as $i => $config)
 	{
-		$search = setting('television_search_' . $i);
-		if($search == '')
-			$search = $config['search'];
+		$search = setting('nzb_television_search_' . $i);
 		
 		// run query, using television search strings
-		$result = fetch(sprintf($search, urlencode($showname), urlencode($season), urlencode($episode)), array(), array(), $_SESSION['nzbservices_' . $i]);
+		$result = fetch(sprintf($search, urlencode($showname), urlencode($season), urlencode($episode)), array(), array(), session('nzbservices_' . $i));
 		
 		// match nzbs
 		$count = preg_match_all($config['match'], $result['content'], $matches);
@@ -522,13 +563,13 @@ function television_fetch_nzb($showname, $season, $episode)
 			else
 			{
 				if($address = generic_validate_hostname(array('address' => $config['search']), 'address'))
-					$file = $address . $matches[1][0];
+					$file = $address . '/' . $matches[1][0];
 				else
 					$file = $matches[1][0];
 			}
 				
 			// download and save
-			$result = fetch($file, array(), array(), $_SESSION['nzbservices_' . $i]);
+			$result = fetch($file, array(), array(), session('nzbservices_' . $i));
 			
 			if(strlen($result['content']) == 0)
 				return false;
@@ -572,17 +613,17 @@ function television_myepisodes_login()
 	$login_url = 'http://myepisodes.com/login.php?u=views.php';
 	$result = fetch($login_url);
 	
-	$_SESSION['television_cookies'] = $result['cookies'];
+	session('television_cookies', $result['cookies']);
 	
 	// login
 	$result = fetch($login_url, array(
 		'username' => $myepisodes['username'],
 		'password' => $myepisodes['password'],
 		'action' => 'Login',
-	), array('referer' => $login_url), $_SESSION['television_cookies']);
+	), array('referer' => $login_url), session('television_cookies'));
 	
 	// store all cookies
-	$_SESSION['television_cookies'] = $result['cookies'];
+	session('television_cookies', $result['cookies']);
 	
 	return $result;
 }
@@ -594,10 +635,10 @@ function television_myepisodes_login()
 function television_myepisodes_fetch_shows()
 {
 	// try to fetch shows with current cookies
-	$result = fetch('http://myepisodes.com/views.php', array(), array(), $_SESSION['television_cookies']);
+	$result = fetch('http://myepisodes.com/views.php', array(), array(), session('television_cookies'));
 	
 	// save cookies
-	$_SESSION['television_cookies'] = $result['cookies'];
+	session('television_cookies', $result['cookies']);
 
 	// match shows
 	$result = preg_match_all('/<td class="date">.*?>([^<]*?)<[\s\S]*?' . 
@@ -645,5 +686,5 @@ function television_myepisodes_save_status($show_status)
 		'checkboxes' => substr($show_status, 1),
 		'action' => 'Save Status',
 		'returnaddress' => '/views.php?',
-	), array(), $_SESSION['television_cookies']);
+	), array(), session('television_cookies'));
 }

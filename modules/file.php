@@ -56,7 +56,7 @@ function validate_dir($request)
 	if(isset($request['dir']))
 	{
 		// this is needed to make sure the directory is handled by something
-		$request['cat'] = validate_cat($request);
+		$request['cat'] = validate($request, 'cat');
 		
 		// replace directory with actual path
 		if(setting('admin_alias_enable') == true && setting('database_enable') && setting_installed())
@@ -88,7 +88,7 @@ function validate_file($request)
 	//   this shouldn't cause any security risks
 	if(isset($request['file']))
 	{
-		$request['cat'] = validate_cat($request);
+		$request['cat'] = validate($request, 'cat');
 		if(setting('admin_alias_enable') == true)
 			$tmp = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']);
 		if(is_file(realpath($tmp)) || handles($request['file'], $request['cat']) == true)
@@ -116,7 +116,7 @@ function validate_dirs_only($request)
 function alter_query_file($request, $props)
 {
 	// do not alter the query if selected is set
-	$request['selected'] = validate_selected($request);
+	$request['selected'] = validate($request, 'selected');
 	if(isset($request['selected']) && count($request['selected']) > 0 ) return $props;
 	
 //---------------------------------------- Directory ----------------------------------------\\
@@ -142,6 +142,7 @@ function alter_query_file($request, $props)
 		// maybe the dir is not loaded yet, this part is costly but it is a good way to do it
 		if(setting('recursive_get') && handles($request['dir'], 'updates'))
 		{
+			$GLOBALS['tm_start'] = array_sum(explode(' ', microtime()));
 			scan_dir($request['dir']);
 		}
 		
@@ -208,7 +209,7 @@ function alter_query_file($request, $props)
 		// replace aliased path with actual path
 		if(setting('admin_alias_enable') == true)
 			$request['file'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']);
-		
+			
 		// if the id is available then use that instead
 		if(isset($request[$request['cat'] . '_id']) && $request[$request['cat'] . '_id'] != 0)
 		{
@@ -251,7 +252,10 @@ function alter_query_file($request, $props)
 function file_variables($request)
 {
 	// some templates refer to the dir to determine their own location
-	if(isset($_REQUEST['dir'])) register_output_vars('dir', $_REQUEST['dir']);
+	if(isset($request['dir'])) register_output_vars('dir', $request['dir']);
+	
+	// set filename, just a helper for templates to set content disposition
+	if(isset($request['filename'])) register_output_vars('filename', $request['filename']);
 }
 
 /**
@@ -263,8 +267,8 @@ function output_file($request)
 	set_time_limit(0);
 
 	// set up request variables
-	$request['cat'] = validate_cat($request);
-	$request['id'] = validate_id($request);
+	$request['cat'] = validate($request, 'cat');
+	$request['id'] = validate($request, 'id');
 	
 	if(!isset($request['id']))
 	{

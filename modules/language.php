@@ -127,7 +127,7 @@ function lang($keys, $text)
  */
 function output_language($request)
 {
-	$request['language'] = validate_language($request);
+	$request['language'] = validate($request, 'language');
 	
 	// always display selected language
 	register_output_vars('language', $request['language']);

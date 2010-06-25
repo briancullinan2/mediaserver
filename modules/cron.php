@@ -295,7 +295,7 @@ function validate_scan_entry($request)
  */
 function validate_scan_dir($request)
 {
-	$request['scan_entry'] = validate_scan_entry($request);
+	$request['scan_entry'] = validate($request, 'scan_entry');
 	
 	if(isset($request['scan_dir']))
 	{
@@ -355,16 +355,16 @@ function read_changed($request)
 {
 	global $should_clean;
 	
-	$request['scan_skip'] = validate_scan_skip($request);
+	$request['scan_skip'] = validate($request, 'scan_skip');
 	
 	// allow skipping of scanning and go straight to file processing
 	if($request['scan_skip'] == false)
 	{
 		PEAR::raiseError("Phase 1: Checking for modified Directories; Recursively", E_DEBUG);
 		
-		$request['scan_entry'] = validate_scan_entry($request);
-		$request['scan_dir'] = validate_scan_dir($request);
-		$request['clean_count'] = validate_clean_count($request);
+		$request['scan_entry'] = validate($request, 'scan_entry');
+		$request['scan_dir'] = validate($request, 'scan_dir');
+		$request['clean_count'] = validate($request, 'clean_count');
 		
 		$has_resumed = false;
 		// loop through each watched folder and get a list of all the files
@@ -502,7 +502,7 @@ function output_cron($request)
 
 	// lock the file so the next script can detect it
 	$lock_result = flock($log_fp, LOCK_EX+LOCK_NB, $would_lock);
-	$request['ignore_lock'] = validate_ignore_lock($request);
+	$request['ignore_lock'] = validate($request, 'ignore_lock');
 	if($lock_result === false)
 	{
 		if($request['ignore_lock'] != true)
@@ -561,8 +561,8 @@ function output_cron($request)
 		$request['clean_count'] = $state['clean_count'];
 		
 	// validate the state
-	$request['scan_dir'] = validate_scan_dir($request);
-	$request['clean_count'] = validate_clean_count($request);
+	$request['scan_dir'] = validate($request, 'scan_dir');
+	$request['clean_count'] = validate($request, 'clean_count');
 	
 	// there are a few conditions that change whether or not the database should be cleaned
 	$should_clean = false;

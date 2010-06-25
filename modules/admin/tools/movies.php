@@ -26,6 +26,7 @@ function register_admin_tools_movies()
 			),
 		),
 		'template' => false,
+		'validates' => array('add_movie_folder', 'remove_movie_folder', 'info_singular_step_movies', 'movie_index'),
 		'settings' => array('netflix_xml'),
 		'session' => array('add_movie_folder', 'remove_movie_folder', 'reset_configuration'),
 	);
@@ -39,12 +40,20 @@ function register_admin_tools_movies()
  */
 function setup_admin_tools_movies()
 {
-	// add wrapper functions for validating a service entry
+	// add wrapper functions for nzb_movie_search
 	for($i = 0; $i < 10; $i++)
 	{
-		$GLOBALS['setting_movie_search_' . $i] = create_function('$settings', 'return setting_movie_search($settings, \'' . $i . '\');');
-		$GLOBALS['modules']['admin_tools_movies']['settings'][] = 'movie_search_' . $i;
+		$GLOBALS['setting_nzb_movie_search_' . $i] = create_function('$settings', 'return setting_nzb_movie_search($settings, \'' . $i . '\');');
+		$GLOBALS['modules']['admin_tools_movies']['settings'][] = 'nzb_movie_search_' . $i;
 	}
+	
+	// add wrapper functions for tor_movie_search
+	for($i = 0; $i < 10; $i++)
+	{
+		$GLOBALS['setting_tor_movie_search_' . $i] = create_function('$settings', 'return setting_tor_movie_search($settings, \'' . $i . '\');');
+		$GLOBALS['modules']['admin_tools_movies']['settings'][] = 'tor_movie_search_' . $i;
+	}
+	
 	// movie folders
 	for($i = 0; $i < 50; $i++)
 	{
@@ -69,7 +78,7 @@ function setting_netflix_xml($settings)
  * Implementation of setting
  * @ingroup setting
  */
-function setting_movie_search($settings, $index)
+function setting_nzb_movie_search($settings, $index)
 {
 	// return the same static service as listed in the nzbservice module
 	if($index == 0)
@@ -78,10 +87,37 @@ function setting_movie_search($settings, $index)
 		return 'http://www.newzbin.com/search/query/?searchaction=Go&category=6&q=%s';
 
 	// don't continue with this if stuff is missing
-	if(isset($settings['movie_search_' . $index]) && 
-		$settings['movie_search_' . $index] != ''
+	if(isset($settings['nzb_movie_search_' . $index]) && 
+		$settings['nzb_movie_search_' . $index] != ''
 	)
-		return $settings['movie_search_' . $index];
+		return $settings['nzb_movie_search_' . $index];
+	// use default
+	elseif(isset($settings['nzbservice_' . $index]['search']) && 
+		$settings['nzbservice_' . $index]['search'] != ''
+	)
+		return $settings['nzbservice_' . $index]['search'];
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ */
+function setting_tor_movie_search($settings, $index)
+{
+	// the static services to not have movies, only tv and music
+	if($index == 0 || $index == 1 || $index == 2)
+		return '';
+
+	// don't continue with this if stuff is missing
+	if(isset($settings['tor_movie_search_' . $index]) && 
+		$settings['tor_movie_search_' . $index] != ''
+	)
+		return $settings['tor_movie_search_' . $index];
+	// use default
+	elseif(isset($settings['torservice_' . $index]['search']) && 
+		$settings['torservice_' . $index]['search'] != ''
+	)
+		return $settings['torservice_' . $index]['search'];
 }
 
 /**
@@ -136,46 +172,63 @@ function setting_movie_folders($settings)
  * Implementation of validate
  * @ingroup validate
  */
-function validate_add_movie_folder($request)
+function validate_admin_tools_movies($request, $index)
 {
-	if(!isset($request['add_movie_folder']['add']))
+	switch($index)
+	{
+		case 'add_movie_folder':
+			if(!isset($request['add_movie_folder']['add']))
+				return;
+				
+			return $request['add_movie_folder']['folder'];
+		break;
+		case 'remove_movie_folder':
+			return generic_validate_numeric($request, 'remove');
+		break;
+		case 'info_singular_step_movies':
+			if(isset($request['info_singular_step_movies']) &&
+				in_array($request['info_singular_step_movies'], array('login', 'login2', 'netflix', 'search'))
+			)
+				return $request['info_singular_step_movies'];
+		break;
+		case 'movie_index':
+			return generic_validate_numeric_zero($request, 'movie_index');
+		break;
+	}
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ */
+function validate_manual_search($request)
+{
+	if(isset($request['manual_search']) && is_string($request['manual_search']))
+		return generic_validate_all_safe($request, 'manual_search');
+	
+	if(!isset($request['manual_search']['search']))
 		return;
 		
-	return $request['add_movie_folder']['folder'];
+	if(isset($request['manual_search']['text']))
+		return $request['manual_search']['text'];
 }
 
 /**
  * Implementation of validate
  * @ingroup validate
  */
-function validate_remove_movie_folder($request)
+function validate_manual_search_torindex($request)
 {
-	if(!isset($request['remove_movie_folder']['remove']))
-		return;
-		
-	if(isset($request['remove_movie_folder']['folders']) && is_numeric($request['remove_movie_folder']['folders']))
-		return $request['remove_movie_folder']['folders'];
+	return generic_validate_numeric($request, 'manual_search_torindex');
 }
 
 /**
  * Implementation of validate
  * @ingroup validate
  */
-function validate_info_singular_step_movies($request)
+function validate_manual_search_nzbindex($request)
 {
-	if(isset($request['info_singular_step_movies']) &&
-		in_array($request['info_singular_step_movies'], array('login', 'netflix', 'search'))
-	)
-		return $request['info_singular_step_movies'];
-}
-
-/**
- * Implementation of validate
- * @ingroup validate
- */
-function validate_movie_index($request)
-{
-	return generic_validate_numeric_zero($request, 'movie_index');
+	return generic_validate_numeric($request, 'manual_search_nzbindex');
 }
 
 /**
@@ -185,10 +238,8 @@ function validate_movie_index($request)
 function session_admin_tools_movies($request)
 {
 	// might be configuring the module
-	if(!isset($_SESSION['movies']) || isset($request['reset_configuration']))
+	if(!($save = session('movies')) || isset($request['reset_configuration']))
 		$save = array('folders' => setting('movie_folders'));
-	else
-		$save = $_SESSION['movies'];
 
 	// add server
 	if(isset($request['add_movie_folder']))
@@ -223,10 +274,8 @@ function configure_admin_tools_movies($settings)
 	$folder_count = count($settings['movie_folders']);
 	
 	// load services from session
-	if(isset($_SESSION['movies']['folders']))
-	{
-		$settings['movie_folders'] = $_SESSION['movies']['folders'];
-	}
+	if($session_movies = session('movies'))
+		$settings['movie_folders'] = $session_movies['folders'];
 	
 	$options = array();
 	
@@ -251,14 +300,22 @@ function configure_admin_tools_movies($settings)
 	$settings['nzbservices'] = setting_nzbservices($settings);
 	foreach($settings['nzbservices'] as $i => $config)
 	{
-		// add movie search query to form
-		$options['nzbservices']['options'][] = array(
-			'value' => '<br />'
+		$options['nzbservices']['options']['setting_nzb_movie_search_' . $i] = array(
+			'type' => 'hidden',
+			'value' => setting_nzb_movie_search($settings, $i),
 		);
-		$options['nzbservices']['options']['setting_movie_search_' . $i] = array(
-			'type' => 'text',
-			'value' => setting_movie_search($settings, $i),
-			'help' => $config['name'] . ' Movie Search',
+	}
+	
+	// add torrent services
+	$options = array_merge($options, configure_admin_tools_torservices($settings));
+	
+	// alter the torservices form to use movie search queries instead
+	$settings['torservices'] = setting_torservices($settings);
+	foreach($settings['torservices'] as $i => $config)
+	{
+		$options['torservices']['options']['setting_tor_movie_search_' . $i] = array(
+			'type' => 'hidden',
+			'value' => setting_tor_movie_search($settings, $i),
 		);
 	}
 	
@@ -329,8 +386,14 @@ function configure_admin_tools_movies($settings)
  */
 function output_admin_tools_movies($request)
 {
-	$request['subtool'] = validate_subtool($request);
-	$request['info_singular'] = validate_info_singular($request);
+	$request['subtool'] = validate($request, 'subtool');
+	$request['info_singular'] = validate($request, 'info_singular');
+	
+	// save the manual search to use later
+	if(isset($request['manual_search']))
+		session('movies_manual_search', $request['manual_search']);
+	else
+		$request['manual_search'] = session('movies_manual_search');
 	
 	$infos = array();
 	
@@ -398,192 +461,293 @@ function output_admin_tools_movies($request)
  */
 function output_admin_tools_movies_singular($request)
 {
-	$request['info_singular_step_movies'] = validate_info_singular_step_movies($request);
+	$request['info_singular_step_movies'] = validate($request, 'info_singular_step_movies');
 	$infos = array();
 	
 	if($request['info_singular_step_movies'] == 'login')
-	{
-		// log in to services here
-		$results = nzbservices_login();
-		$services = setting('nzbservices');
-		foreach($results as $i => $result)
-		{
-			if($result != 200)
-			{
-				$infos['nzbservice_' . $i] = array(
-					'name' => $services[$i]['name'] . ' Login Failed',
-					'status' => 'fail',
-					'description' => array(
-						'list' => array(
-							'Login to ' . $services[$i]['login'] . ' for ' . $services[$i]['name'] . ' failed!',
-						),
-					),
-					'text' => 'Login Failed!'
-				);
-			}
-			else
-			{
-				$infos['nzbservice_' . $i] = array(
-					'name' => $services[$i]['name'] . ' Login',
-					'status' => '',
-					'description' => array(
-						'list' => array(
-							'Login to ' . $services[$i]['login'] . ' for ' . $services[$i]['name'] . ' successful!',
-						),
-					),
-					'text' => 'Login Succeeded!'
-				);
-			}
-		}
+		output_admin_tools_movies_singular_login($request);
+	elseif($request['info_singular_step_movies'] == 'login2')
+		output_admin_tools_movies_singular_login2($request);
+	elseif($request['info_singular_step_movies'] == 'netflix')
+		output_admin_tools_movies_singular_netflix($request);
+	elseif($request['info_singular_step_movies'] == 'search')
+		output_admin_tools_movies_singular_search($request);
+}
+
 	
-		// download netflix Q
-		$infos['netflix_movies'] = array(
-			'name' => 'Movies from Netflix',
+function output_admin_tools_movies_singular_login($request)
+{
+	$infos = array();
+	
+	// log in to services here
+	$results = nzbservices_login();
+	$services = setting('nzbservices');
+	foreach($results as $i => $result)
+	{
+		if($result == false)
+		{
+			$infos['nzbservice_' . $i] = array(
+				'name' => $services[$i]['name'] . ' Login Failed',
+				'status' => 'fail',
+				'description' => array(
+					'list' => array(
+						'Login to ' . $services[$i]['login'] . ' for ' . $services[$i]['name'] . ' failed!',
+					),
+				),
+				'text' => (is_numeric($result)?'Login Failed!':$result),
+			);
+		}
+		else
+		{
+			$infos['nzbservice_' . $i] = array(
+				'name' => $services[$i]['name'] . ' Login',
+				'status' => '',
+				'description' => array(
+					'list' => array(
+						'Login to ' . $services[$i]['login'] . ' for ' . $services[$i]['name'] . ' successful!',
+					),
+				),
+				'text' => 'Login Succeeded!'
+			);
+		}
+	}
+
+	// log in to services
+	$infos['movies_login2'] = array(
+		'name' => 'Torrent Services Login',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Logging in to torrent services.',
+			),
+		),
+		'text' => array(
+			'loading' => 'Loading...'
+		),
+		'singular' => url('module=admin_tools_movies&subtool=0&info_singular=true&info_singular_step_movies=login2', true),
+	);
+	
+	register_output_vars('infos', $infos);
+	
+	theme('tools_singular');
+}
+
+function output_admin_tools_movies_singular_login2($request)
+{
+	$infos = array();
+	
+	// log in to services here
+	$services = setting('torservices');
+	$results = torservices_login();
+	foreach($results as $i => $result)
+	{
+		if($result == false)
+		{
+			$infos['torservice_' . $i] = array(
+				'name' => $services[$i]['name'] . ' Login Failed',
+				'status' => 'fail',
+				'description' => array(
+					'list' => array(
+						'Login to ' . $services[$i]['login'] . ' for ' . $services[$i]['name'] . ' failed!',
+					),
+				),
+				'text' => (is_numeric($result)?'Login Failed!':$result),
+			);
+		}
+		else
+		{
+			$infos['torservice_' . $i] = array(
+				'name' => $services[$i]['name'] . ' Login',
+				'status' => '',
+				'description' => array(
+					'list' => array(
+						'Login to ' . $services[$i]['login'] . ' for ' . $services[$i]['name'] . ' successful!',
+					),
+				),
+				'text' => 'Login Succeeded!'
+			);
+		}
+	}
+
+
+	// download netflix Q
+	$infos['netflix_movies'] = array(
+		'name' => 'Movies from Netflix',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Downloading Netflix Q.',
+			),
+		),
+		'text' => array(
+			'loading' => 'Loading...'
+		),
+		'singular' => url('module=admin_tools_movies&subtool=0&info_singular=true&info_singular_step_movies=netflix', true),
+	);
+	
+	register_output_vars('infos', $infos);
+	
+	theme('tools_singular');
+}
+
+function output_admin_tools_movies_singular_netflix($request)
+{
+	$infos = array();
+	
+	// download netflix Q
+	$movies = movies_netflix_fetch_movies();
+	
+	$infos['netflix_movies'] = array(
+		'name' => 'Netflix Movies',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'These are all the Movies on your Q.',
+			),
+		),
+		'text' => 'Movies:<br />There are ' . count($movies['all_movies']) . ' movies on your Netflix Q'
+	);
+	
+	// get intersections
+	$disk = movies_get_movie_tokens();
+	
+	// get repeats on disk
+	$repeats_on_disk = movies_repeats_on_disk($disk);
+	
+	if(count($repeats_on_disk) > 0)
+	{
+		$disk_repeats = '';
+		foreach($repeats_on_disk as $i => $movie)
+		{
+			$disk_repeats .= '<h3>' . basename($movie[0]) . '</h3>on<br />' . $movie[0] . '<br />' . $movie[1] . '<br />';
+		}
+		
+		$infos['disk_repeat_movies'] = array(
+			'name' => 'Repeat Movies On Disk',
+			'status' => 'warn',
+			'description' => array(
+				'list' => array(
+					'There are duplicate movies on disk!',
+				),
+			),
+			'text' => 'Movies:<br />' . $disk_repeats,
+		);
+	}
+	else
+	{
+		
+		$infos['disk_repeat_movies'] = array(
+			'name' => 'Repeat Movies On Disk',
 			'status' => '',
 			'description' => array(
 				'list' => array(
-					'Downloading Netflix Q.',
+					'No duplicate movies have been found on disk.',
+				),
+			),
+			'text' => 'Movies:<br />No Duplicates found.',
+		);
+	}
+	
+	// get repeats on netflix
+	$repeats_on_netflix = movies_repeats_on_netflix($disk, $movies);
+	
+	if(count($repeats_on_netflix) > 0)
+	{
+		$netflix_repeats = '';
+		foreach($repeats_on_netflix as $i => $movie)
+		{
+			$netflix_repeats .= '<h3>' . basename($movie[0]) . '</h3>' . $movie[1] . ' - ' . $movie[2] . '<br />';
+		}
+		
+		$infos['netflix_repeat_movies'] = array(
+			'name' => 'Repeat Movies On Netflix',
+			'status' => 'warn',
+			'description' => array(
+				'list' => array(
+					'There are duplicate movies on your Netflix Q!'
+				),
+			),
+			'text' => 'Movies:<br />' . $netflix_repeats,
+		);
+	}
+	else
+	{
+		$infos['netflix_repeat_movies'] = array(
+			'name' => 'Repeat Movies On Netflix',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'There are no duplicates found.',
+				),
+			),
+			'text' => 'Movies:<br />No Duplicates found.',
+		);
+	}
+	
+	// perform searches
+	$count = 0;
+	$query = '';
+	session('all_movies', $movies['all_movies']);
+	session('descriptions', $movies['descriptions']);
+
+	// cancel options
+	$infos['netflix_movies_null'] = array(
+		'name' => 'Movie Search',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'A movie can be entered to search for, and the cancel function can be used at any time to stop the automatic search.',
+			),
+		),
+		'type' => 'set',
+		'options' => array(
+			'manual_search[text]' => array(
+				'type' => 'text',
+				'value' => (isset($request['manual_search'])?$request['manual_search']:''),
+				'help' => 'Manual Search'
+			),
+			'manual_search[search]' => array(
+				'type' => 'submit',
+				'value' => 'Search',
+			),
+		),
+	);
+	
+	// if the manual search is set, just do that one
+	if(isset($request['manual_search']))
+	{
+		// construct first movie singular
+		$infos['movies_manual_0'] = array(
+			'name' => 'Movies in your Q available for Download',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'Searching for movies.',
 				),
 			),
 			'text' => array(
 				'loading' => 'Loading...'
 			),
-			'singular' => url('module=admin_tools_movies&subtool=0&info_singular=true&info_singular_step_movies=netflix', true),
+			'singular' => url('module=admin_tools_movies&subtool=0&info_singular=true&info_singular_step_movies=search&manual_search=' . urlencode($request['manual_search']), true),
 		);
 	}
-	elseif($request['info_singular_step_movies'] == 'netflix')
+	// begin automatic search
+	elseif(count($movies['all_movies']) > 0)
 	{
-		// download netflix Q
-		$movies = movies_netflix_fetch_movies();
-		
-		$infos['netflix_movies'] = array(
-			'name' => 'Netflix Movies',
-			'status' => '',
-			'description' => array(
-				'list' => array(
-					'These are all the Movies on your Q.',
-				),
-			),
-			'text' => 'Movies:<br />There are ' . count($movies['all_movies']) . ' movies on your Netflix Q'
+		// add cancel button
+		$infos['netflix_movies_null']['options'][] = array(
+			'value' => '<br />'
 		);
-		
-		// get intersections
-		$disk = movies_get_movie_tokens();
-		
-		// get repeats on disk
-		$repeats_on_disk = movies_repeats_on_disk($disk);
-		
-		if(count($repeats_on_disk) > 0)
-		{
-			$disk_repeats = '';
-			foreach($repeats_on_disk as $i => $movie)
-			{
-				$disk_repeats .= '<h3>' . basename($movie[0]) . '</h3>on<br />' . $movie[0] . '<br />' . $movie[1] . '<br />';
-			}
-			
-			$infos['disk_repeat_movies'] = array(
-				'name' => 'Repeat Movies On Disk',
-				'status' => 'warn',
-				'description' => array(
-					'list' => array(
-						'There are duplicate movies on disk!',
-					),
-				),
-				'text' => 'Movies:<br />' . $disk_repeats,
-			);
-		}
-		else
-		{
-			
-			$infos['disk_repeat_movies'] = array(
-				'name' => 'Repeat Movies On Disk',
-				'status' => '',
-				'description' => array(
-					'list' => array(
-						'No duplicate movies have been found on disk.',
-					),
-				),
-				'text' => 'Movies:<br />No Duplicates found.',
-			);
-		}
-		
-		// get repeats on netflix
-		$repeats_on_netflix = movies_repeats_on_netflix($disk, $movies);
-		
-		if(count($repeats_on_netflix) > 0)
-		{
-			$netflix_repeats = '';
-			foreach($repeats_on_netflix as $i => $movie)
-			{
-				$netflix_repeats .= '<h3>' . basename($movie[0]) . '</h3>' . $movie[1] . ' - ' . $movie[2] . '<br />';
-			}
-			
-			$infos['netflix_repeat_movies'] = array(
-				'name' => 'Repeat Movies On Netflix',
-				'status' => 'warn',
-				'description' => array(
-					'list' => array(
-						'There are duplicate movies on your Netflix Q!'
-					),
-				),
-				'text' => 'Movies:<br />' . $netflix_repeats,
-			);
-		}
-		else
-		{
-			$infos['netflix_repeat_movies'] = array(
-				'name' => 'Repeat Movies On Netflix',
-				'status' => '',
-				'description' => array(
-					'list' => array(
-						'There are no duplicates found.',
-					),
-				),
-				'text' => 'Movies:<br />No Duplicates found.',
-			);
-		}
-		
-		// perform searches
-		$count = 0;
-		$query = '';
-		session('all_movies', $movies['all_movies']);
-		session('descriptions', $movies['descriptions']);
-	
-		// cancel options
-		$infos['netflix_movies_null'] = array(
-			'name' => 'Movie Search',
-			'status' => '',
-			'description' => array(
-				'list' => array(
-					'A movie can be entered to search for, and the cancel function can be used at any time to stop the automatic search.',
-				),
-			),
-			'type' => 'set',
-			'options' => array(
-				'manual_search[text]' => array(
-					'type' => 'text',
-					'value' => '',
-					'help' => 'Manual Search'
-				),
-				'manual_search[search]' => array(
-					'type' => 'submit',
-					'value' => 'Search',
-				),
-				array(
-					'value' => '<br />'
-				),
-				array(
-					'type' => 'button',
-					'value' => 'Cancel',
-					'action' => 'singular_cancel=true;',
-					'help' => 'Automatic Search',
-				),
-			),
+		$infos['netflix_movies_null']['options'][] = array(
+			'type' => 'button',
+			'value' => 'Cancel',
+			'action' => 'singular_cancel=true;',
+			'help' => 'Automatic Search',
 		);
 		
 		// construct first movie singular
 		$infos['netflix_movies_0'] = array(
-			'name' => 'Movies in your Q available for Download',
+			'name' => 'Manual Search Movies for Download',
 			'status' => '',
 			'description' => array(
 				'list' => array(
@@ -596,50 +760,155 @@ function output_admin_tools_movies_singular($request)
 			'singular' => url('module=admin_tools_movies&subtool=0&info_singular=true&info_singular_step_movies=search&movie_index=0', true),
 		);
 	}
-	elseif($request['info_singular_step_movies'] == 'search')
-	{
-		$services = setting('nzbservices');
-		$all_movies = session('all_movies');
-		$descriptions = session('descriptions');
-		$request['movie_index'] = validate_movie_index($request);
-		if(isset($request['movie_index']))
-		{
-			// search for movies
-			$results = movies_fetch_nzb($all_movies[$request['movie_index']]);
-			
-			if(count($results) > 0)
-			{
-				$infos['netflix_movies_' . $request['movie_index']] = array(
-					'name' => 'Searched for ' . $all_movies[$request['movie_index']],
-					'status' => '',
-					'description' => array(
-						'list' => array(
-							'This movie has been searched for, and results were found.',
-							htmlspecialchars_decode($descriptions[$request['movie_index']]),
-						),
-					),
-					'text' => 'Services:<br />' . implode('<br />', $results),
-				);
-			}
 	
-			if($request['movie_index'] < count($all_movies))
-			{
-				// construct singular
-				$infos['netflix_movies_' . ($request['movie_index']+1)] = array(
-					'name' => 'Movies in your Q available for Downloads',
-					'status' => '',
-					'description' => array(
-						'list' => array(
-							'Searching for movies.',
-						),
+	register_output_vars('infos', $infos);
+	
+	theme('tools_singular');
+}
+
+function output_admin_tools_movies_singular_search($request)
+{
+	$infos = array();
+	
+	$services = setting('nzbservices');
+	$all_movies = session('all_movies');
+	$descriptions = session('descriptions');
+	$request['movie_index'] = validate($request, 'movie_index');
+	if(isset($request['movie_index']) && isset($all_movies[$request['movie_index']]) &&
+		!isset($request['manual_search']))
+	{
+		// search for movies
+		$results = movies_fetch_movies($all_movies[$request['movie_index']]);
+		
+		if(count($results) > 0)
+		{
+			$infos['netflix_movies_' . $request['movie_index']] = array(
+				'name' => 'Searched for ' . $all_movies[$request['movie_index']],
+				'status' => '',
+				'description' => array(
+					'list' => array(
+						'This movie has been searched for, and results were found.',
+						htmlspecialchars_decode($descriptions[$request['movie_index']]),
 					),
-					'text' => array(
-						'loading' => 'Loading...'
-					),
-					'singular' => url('module=admin_tools_movies&subtool=0&info_singular=true&info_singular_step_movies=search&movie_index=' . ($request['movie_index']+1), true),
-				);
-			}
+				),
+				'text' => 'Services:<br />' . implode('<br />', $results),
+			);
 		}
+
+		if($request['movie_index'] < count($all_movies))
+		{
+			$last_query = sprintf(setting('nzb_movie_search_0'), urlencode($all_movies[$request['movie_index']]));
+			// construct singular
+			$infos['netflix_movies_' . ($request['movie_index']+1)] = array(
+				'name' => 'Movies in your Q available for Downloads',
+				'status' => '',
+				'description' => array(
+					'list' => array(
+						'Searching for movies.',
+					),
+				),
+				'text' => array(
+					'loading' => 'Loading...',
+					' Last query: <a href="' . $last_query . '">' . $last_query . '</a>',
+				),
+				'singular' => url('module=admin_tools_movies&subtool=0&info_singular=true&info_singular_step_movies=search&movie_index=' . ($request['movie_index']+1), true),
+			);
+		}
+	}
+	elseif(isset($request['manual_search']))
+	{
+		$request['manual_search_torindex'] = validate($request, 'manual_search_torindex');
+		$request['manual_search_nzbindex'] = validate($request, 'manual_search_nzbindex');
+		
+		// search for movie on each services
+		if(!isset($request['manual_search_nzbindex']) && !isset($request['manual_search_torindex']))
+			$request['manual_search_nzbindex'] = 0;
+
+		if(isset($request['manual_search_nzbindex']))
+			$results = movies_fetch_movie_service($request['manual_search'], $request['manual_search_nzbindex'], true);
+		else
+			$results = movies_fetch_movie_service($request['manual_search'], $request['manual_search_torindex'], false);
+		
+		// service movie info, only if results were found
+		if(count($results) > 0)
+		{
+			if(isset($request['manual_search_nzbindex']))
+			{
+				$index = $request['manual_search_nzbindex'];
+				$config = setting('nzbservice_' . $index);
+			}
+			else
+			{
+				$index = $request['manual_search_torindex'];
+				$config = setting('torservice_' . $index);
+			}
+			
+			$infos['movies_manual_' . $index] = array(
+				'name' => 'Searched on ' . $config['name'],
+				'status' => '',
+				'description' => array(
+					'list' => array(
+						'This movie has been searched for on ' . $config['name'] . ', and results were found.',
+					),
+				),
+				'text' => $config['name'] . ':<br />' . implode('<br />', $results),
+			);
+		}
+		
+		// do next service
+		if(isset($request['manual_search_nzbindex']) && $request['manual_search_nzbindex']+1 < count(setting('nzbservices')))
+		{
+			$config = setting('nzbservice_' . $request['manual_search_nzbindex']);
+			$infos['movies_manual_' . ($request['manual_search_nzbindex']+1)] = array(
+				'name' => 'Manual Search on ' . $config['name'],
+				'status' => '',
+				'description' => array(
+					'list' => array(
+						'Searching for movies.',
+					),
+				),
+				'text' => array(
+					'loading' => 'Loading...'
+				),
+				'singular' => url('module=admin_tools_movies&subtool=0&info_singular=true&info_singular_step_movies=search&manual_search_nzbindex=' . ($request['manual_search_nzbindex']+1) . '&manual_search=' . urlencode($request['manual_search']), true),
+			);
+		}
+		elseif(isset($request['manual_search_torindex']) && $request['manual_search_torindex']+1 < count(setting('torservices')))
+		{
+			$config = setting('torservice_' . $request['manual_search_torindex']);
+			$infos['movies_manual_' . ($request['manual_search_torindex']+1)] = array(
+				'name' => 'Manual Search on ' . $config['name'],
+				'status' => '',
+				'description' => array(
+					'list' => array(
+						'Searching for movies.',
+					),
+				),
+				'text' => array(
+					'loading' => 'Loading...'
+				),
+				'singular' => url('module=admin_tools_movies&subtool=0&info_singular=true&info_singular_step_movies=search&manual_search_torindex=' . ($request['manual_search_torindex']+1) . '&manual_search=' . urlencode($request['manual_search']), true),
+			);
+		}
+		elseif(isset($request['manual_search_nzbindex']))
+		{
+			$config = setting('torservice_0');
+			$infos['movies_manual_0'] = array(
+				'name' => 'Manual Search on ' . $config['name'],
+				'status' => '',
+				'description' => array(
+					'list' => array(
+						'Searching for movies.',
+					),
+				),
+				'text' => array(
+					'loading' => 'Loading...'
+				),
+				'singular' => url('module=admin_tools_movies&subtool=0&info_singular=true&info_singular_step_movies=search&manual_search_torindex=0&manual_search=' . urlencode($request['manual_search']), true),
+			);
+		}
+		else
+			session('manual_search', NULL);
 	}
 	
 	register_output_vars('infos', $infos);
@@ -648,13 +917,52 @@ function output_admin_tools_movies_singular($request)
 }
 
 /**
- * Helper function for fetching a list of movies available for download
+ * Helper function for fetching all movies from services
  */
-function movies_fetch_nzb($movie)
+function movies_fetch_movie_service($movie, $i, $is_nzb = true)
 {
-	// construct search arguments
-	$args = func_get_args();
+	$downloads = array();
 	
+	// get the config
+	if($is_nzb)
+		$config = setting('nzbservice_' . $i);
+	else
+		$config = setting('torservice_' . $i);
+	
+	// load search settings
+	if($is_nzb)
+		$search = setting('nzb_movie_search_' . $i);
+	else
+		$search = setting('tor_movie_search_' . $i);
+	
+	if($search != '')
+	{
+		// run query, using television search strings
+		if($is_nzb)
+			$result = fetch(sprintf($search, urlencode($movie)), array(), array(), session('nzbservices_' . $i));
+		else
+			$result = fetch(sprintf($search, urlencode($movie)), array(), array(), session('torservices_' . $i));
+		
+		// match nzbs
+		$count = preg_match_all($config['match'], $result['content'], $matches);
+		if($count > 0)
+		{
+			foreach($matches[1] as $i => $link)
+			{
+				// return list of downloads
+				$downloads[$i] = '<a href="' . $link . '">' . htmlspecialchars($movie) . '</a><br />';
+			}
+		}
+	}
+	
+	return $downloads;
+}
+
+/**
+ * Helper function for fetching all movies from services
+ */
+function movies_fetch_movies($movie)
+{
 	$services = setting('nzbservices');
 	
 	$downloads = array();
@@ -662,19 +970,44 @@ function movies_fetch_nzb($movie)
 	// loop through NZB services until we find the show
 	foreach($services as $i => $config)
 	{
-		$search = setting('movie_search_' . $i);
-		if($search == '')
-			$search = $config['search'];
+		$search = setting('nzb_movie_search_' . $i);
 			
-		// run query, using television search strings
-		$result = fetch(sprintf($search, urlencode($movie)), array(), array(), $_SESSION['nzbservices_' . $i]);
-		
-		// match nzbs
-		$count = preg_match_all($config['match'], $result['content'], $matches);
-		if($count > 0)
+		if($search != '')
 		{
-			// return list of downloads
-			$downloads[$i] = '<a href="' . sprintf($search, urlencode($movie)) . '">' . htmlspecialchars($movie) . ' on ' . htmlspecialchars($config['name']) . ' (' . $count . ') <img src="' . $config['image'] . '" alt="icon" /></a><br />';
+			// run query, using television search strings
+			$result = fetch(sprintf($search, urlencode($movie)), array(), array(), session('nzbservices_' . $i));
+			
+			// match nzbs
+			$count = preg_match_all($config['match'], $result['content'], $matches);
+			if($count > 0)
+			{
+				// return list of downloads
+				$downloads[$i] = '<a href="' . sprintf($search, urlencode($movie)) . '">' . htmlspecialchars($movie) . ' on ' . htmlspecialchars($config['name']) . ' (' . $count . ') <img src="' . $config['image'] . '" alt="icon" /></a><br />';
+			}
+		}
+	}
+	
+	$torservices = setting('torservices');
+	
+	$downloads = array();
+	
+	// loop through NZB services until we find the show
+	foreach($torservices as $i => $config)
+	{
+		$search = setting('tor_movie_search_' . $i);
+		
+		if($search != '')
+		{
+			// run query, using television search strings
+			$result = fetch(sprintf($search, urlencode($movie)), array(), array(), session('torservices_' . $i));
+			
+			// match nzbs
+			$count = preg_match_all($config['match'], $result['content'], $matches);
+			if($count > 0)
+			{
+				// return list of downloads
+				$downloads[$i] = '<a href="' . sprintf($search, urlencode($movie)) . '">' . htmlspecialchars($movie) . ' on ' . htmlspecialchars($config['name']) . ' (' . $count . ') <img src="' . $config['image'] . '" alt="icon" /></a><br />';
+			}
 		}
 	}
 

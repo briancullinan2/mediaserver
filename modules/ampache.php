@@ -73,11 +73,11 @@ function output_ampache($request)
 	fclose($fp);
 
 	// just incase this matters
-	$request['cat'] = validate_cat(array('cat' => 'audio'));
-	$request['action'] = validate_action($request);
-	$request['auth'] = validate_auth($request);
-	$request['start'] = validate_start($request);
-	$request['limit'] = validate_limit($request);
+	$request['cat'] = validate(array('cat' => 'audio'), 'cat');
+	$request['action'] = validate($request, 'action');
+	$request['auth'] = validate($request, 'auth');
+	$request['start'] = validate($request, 'start');
+	$request['limit'] = validate($request, 'limit');
 	
 	register_output_vars('action', $request['action']);
 	
@@ -181,7 +181,7 @@ function output_ampache($request)
 			
 		break;
 		case 'artist_albums':
-			$request['id'] = validate_id($request);
+			$request['id'] = validate($request, 'id');
 			
 			// get a list of albums for a particular artist
 			// first look up song by supplied ID
@@ -272,7 +272,7 @@ function output_ampache($request)
 			
 		break;
 		case 'album':
-			$request['id'] = validate_id($request);
+			$request['id'] = validate($request, 'id');
 	
 			// get a list of songs for a particular album
 			// first look up song by supplied ID
@@ -315,7 +315,7 @@ function output_ampache($request)
 			register_output_vars('files', $files);
 		break;
 		case 'song':
-			$request['id'] = validate_id($request);
+			$request['id'] = validate($request, 'id');
 	
 			// get a list of songs for a particular album
 			// first look up song by supplied ID
@@ -355,7 +355,7 @@ function output_ampache($request)
 			register_output_vars('files', $files);
 		break;
 		case 'artist_songs':
-			$request['id'] = validate_id($request);
+			$request['id'] = validate($request, 'id');
 	
 			// get a list of songs for a particular album
 			// first look up song by supplied ID
@@ -379,7 +379,7 @@ function output_ampache($request)
 			register_output_vars('files', $files);
 		break;			
 		case 'album_songs':
-			$request['id'] = validate_id($request);
+			$request['id'] = validate($request, 'id');
 	
 			// get a list of songs for a particular album
 			// first look up song by supplied ID
@@ -443,9 +443,9 @@ function theme_ampache()
 	{
 		foreach($GLOBALS['user_errors'] as $i => $error)
 		{
-			if(strpos($error->message, ':') !== false)
+			if(strpos($error, ':') !== false)
 			{
-				$err = split(':', $error->message);
+				$err = split(':', $error);
 				?><error code="<?php echo $err[0]; ?>"><![CDATA[<?php echo $err[1]; ?>]]></error><?php
 			}
 		}

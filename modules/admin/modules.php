@@ -105,14 +105,7 @@ function setting_module_enable($settings, $module)
 		return true;
 		
 	// check boolean value
-	if(isset($settings[$module . '_enable']))
-	{
-		if($settings[$module . '_enable'] === false || $settings[$module . '_enable'] === 'false')
-			return false;
-		elseif($settings[$module . '_enable'] === true || $settings[$module . '_enable'] === 'true')
-			return true;
-	}
-	return true;
+	return generic_validate_boolean_true($settings, $module . '_enable');
 }
 
 /**
@@ -120,7 +113,7 @@ function setting_module_enable($settings, $module)
  */
 function get_required_modules()
 {
-	return array('core', 'index', 'users', 'select');
+	return array('core', 'index', 'users', 'select', 'settings');
 }
 
 /**
@@ -243,128 +236,190 @@ function validate_reset_configuration($request)
 }
 
 /**
+ * Helper function for saving settings
+ */
+function modules_save_settings($settings, $force_file = false)
+{
+	// get default settings so they are not included in the save
+	$defaults = settings_get_defaults(array());
+
+	// only write the settings that are not the default
+	$new_settings = array();
+	foreach($settings as $setting => $value)
+	{
+		if(!isset($defaults[$setting]) || $value != $defaults[$setting])
+		{
+			$new_settings[$setting] = $value;
+		}
+	}
+
+	// if we are using a database store the settings in the administrators profile
+	if(dependency('database') && !$force_file)
+	{
+		$result = _modules_save_db_settings($new_settings);
+		
+		if($result)
+			PEAR::raiseError('The settings have been saved', E_NOTE);
+		else
+			PEAR::raiseError('There was a problem while saving the settings to the database!', E_USER);
+	}
+	else
+	{
+		$result = _modules_save_fs_settings($new_settings);
+		
+		if($result === -1)
+			PEAR::raiseError('Cannot save settings, the settings file is not writable!', E_USER);
+		if($result === true)
+			PEAR::raiseError('The settings have been saved', E_NOTE);
+		else
+			PEAR::raiseError('There was a problem with saving the settings in the settings file.', E_USER);
+	}
+}
+
+/**
+ * Helper function for converting an array of settings to a string
+ */
+function _modules_settings_to_string($settings)
+{
+	$new_settings = '';
+		
+	// do the non array settings first
+	foreach($settings as $setting => $value)
+	{
+		if(!is_array($value))
+		{
+			if(is_string($value))
+				$new_settings .= $setting . ' = "' . urlencode($value) . "\"\n";
+			elseif(is_bool($value))
+				$new_settings .= $setting . ' = "' . (($value)?'true':'false') . "\"\n";
+			else
+				$new_settings .= $setting . ' = "' . $value . "\"\n";
+		}
+	}
+	
+	// now list the array settings
+	foreach($settings as $setting => $value)
+	{
+		if(is_array($value))
+		{
+			$new_settings .= "\n[" . $setting . "]\n";
+			foreach($value as $subsetting => $subvalue)
+			{
+				$new_settings .= $subsetting . ' = "' . urlencode($subvalue) . "\"\n";
+			}
+		}
+	}
+	
+	return $new_settings;
+}
+
+/**
+ * Helper function for saving settings to the database
+ */
+function _modules_save_db_settings($settings)
+{
+	// store in database
+	$result = $GLOBALS['database']->query(array(
+			'UPDATE' => 'users',
+			'WHERE' => 'id = -1',
+			'VALUES' => array(
+				'Settings' => addslashes(serialize($settings)),
+			),
+		)
+	, false);
+
+	return ($result !== false);
+}
+
+/**
+ * Helper function for saving settings to the filesystem
+ */
+function _modules_save_fs_settings($settings)
+{
+	// if the settings file is writable, put the new setting in it
+	if(dependency('writable_settings_file'))
+	{
+		PEAR::raiseError('The settings file is writeable!', E_DEBUG|E_WARN);
+		
+		// convert settings input to string
+		if(is_array($settings))
+			$settings = _modules_settings_to_string($settings);
+		
+		// open settings file for writing
+		$fh = fopen(setting('settings_file'), 'w');
+	
+		if($fh !== false)
+		{
+			fwrite($fh, ';<?php die(); ?>' . "\n" . $settings);
+			fclose($fh);
+			
+			return true;
+		}
+		else
+			return false;
+	}
+	else
+		return -1;
+}
+
+/**
+ * Helper function for getting new and changed settings
+ */
+function modules_get_new_settings($request)
+{
+	// check for new settings by looping through the request 
+	//  and if there is a variable that has a setting function validate and save it
+	$settings_changed = false;
+	$new_settings = array();
+	foreach($request as $setting => $value)
+	{
+		// check that the input is in fact an attempted setting
+		if(substr($setting, 0, 8) == 'setting_')
+		{
+			$new_settings[substr($setting, 8)] = $value;
+		}
+	}
+	
+	foreach($new_settings as $setting => $value)
+	{
+		// validate the attempted setting
+		if(function_exists('setting_' . $setting))
+			$new_setting = call_user_func_array('setting_' . $setting, array(array_merge($GLOBALS['settings'], $new_settings)));
+		elseif(isset($GLOBALS['setting_' . $setting]) && is_callable($GLOBALS['setting_' . $setting]))
+			$new_setting = $GLOBALS['setting_' . $setting](array_merge($GLOBALS['settings'], $new_settings));
+		else
+			PEAR::raiseError('Setting_ function for \'' . $setting . '\' does not exist!', E_DEBUG);
+			
+		// make sure the new setting is different from the current setting
+		if($new_setting != setting($setting))
+		{
+			$settings_changed = true;
+		}
+		$GLOBALS['settings'][$setting] = $new_setting;
+	}
+	
+	return $settings_changed;
+}
+
+/**
  * Implementation of output
  * @ingroup output
  */
 function output_admin_modules($request)
 {
 	// get which module to ouput the configuration for
-	$request['configure_module'] = validate_configure_module($request);
-	$request['save_configuration'] = validate_save_configuration($request);
-	$request['reset_configuration'] = validate_reset_configuration($request);
+	$request['configure_module'] = validate($request, 'configure_module');
+	$request['save_configuration'] = validate($request, 'save_configuration');
+	$request['reset_configuration'] = validate($request, 'reset_configuration');
 
 	if(isset($request['save_configuration']))
 	{
-		// check for new settings by looping through the request 
-		//  and if there is a variable that has a setting function validate and save it
-		$settings_changed = false;
-		$new_settings = array();
-		foreach($request as $setting => $value)
-		{
-			// check that the input is in fact an attempted setting
-			if(substr($setting, 0, 8) == 'setting_')
-			{
-				$new_settings[substr($setting, 8)] = $value;
-			}
-		}
-	
-		foreach($new_settings as $setting => $value)
-		{
-			// validate the attempted setting
-			if(function_exists('setting_' . $setting))
-				$new_setting = call_user_func_array('setting_' . $setting, array(array_merge($GLOBALS['settings'], $new_settings)));
-			elseif(isset($GLOBALS['setting_' . $setting]) && is_callable($GLOBALS['setting_' . $setting]))
-				$new_setting = $GLOBALS['setting_' . $setting](array_merge($GLOBALS['settings'], $new_settings));
-			else
-				PEAR::raiseError('Setting_ function for \'' . $setting . '\' does not exist!', E_DEBUG);
-				
-			// make sure the new setting is different from the current setting
-			if($new_setting != setting($setting))
-			{
-				$settings_changed = true;
-			}
-			$GLOBALS['settings'][$setting] = $new_setting;
-		}
-	
+		// get changed settings
+		$settings_changed = modules_get_new_settings($request);
+		
 		if($settings_changed == true)
 		{
-			// get default settings so they are not included in the save
-			$defaults = settings_get_defaults(array());
-				
-			// if we are using a database store the settings in the administrators profile
-			if(dependency('database') && false)
-			{
-				// only write the settings that are not the default
-				$new_settings = array();
-				foreach($GLOBALS['settings'] as $setting => $value)
-				{
-					if(!isset($defaults[$setting]) || $value != $defaults[$setting])
-					{
-						$new_settings[$setting] = $value;
-					}
-				}
-				
-				// store in database
-				$result = $GLOBALS['database']->query(array(
-						'UPDATE' => 'users',
-						'WHERE' => 'id = -1',
-						'VALUES' => array(
-							'Settings' => addslashes(serialize($new_settings)),
-						),
-					)
-				, false);
-				
-				PEAR::raiseError('The settings have been saved', E_NOTE);
-			}
-			else
-			{
-				// if the settings file is writable, put the new setting in it
-				if(dependency('writable_settings_file'))
-				{
-					PEAR::raiseError('The settings file is writeable!', E_DEBUG|E_WARN);
-					
-					$fh = fopen(setting('settings_file'), 'w');
-					$settings = ';<?php die(); ?>' . "\n";
-					
-					if($fh !== false)
-					{
-						// only write the settings that are not the default
-						foreach($GLOBALS['settings'] as $setting => $value)
-						{
-							if(is_string($value) && (!isset($defaults[$setting]) || $value != $defaults[$setting]))
-							{
-								$settings .= $setting . ' = "' . urlencode($value) . "\"\n";
-							}
-						}
-						
-						// only write the settings that are not the default
-						foreach($GLOBALS['settings'] as $setting => $value)
-						{
-							if(is_array($value))
-							{
-								$settings .= "\n[" . $setting . "]\n";
-								foreach($value as $subsetting => $subvalue)
-								{
-									$settings .= $subsetting . ' = "' . urlencode($subvalue) . "\"\n";
-								}
-							}
-						}
-						
-						fwrite($fh, $settings);
-						fclose($fh);
-						
-						PEAR::raiseError('The settings have been saved', E_NOTE);
-					}
-					else
-					{
-						PEAR::raiseError('There was a problem with saving the settings in the settings file.', E_USER);
-					}
-				}
-				else
-				{
-					PEAR::raiseError('Cannot save settings, the settings file is not writable!', E_USER);
-				}
-			}
+			modules_save_settings($GLOBALS['settings'], true);
 		}
 	}
 	

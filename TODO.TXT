@@ -1,6 +1,5 @@
 ------------- MONOLITHICMEDIA TODO -------------
 ------------- GENERAL TODO -------------
-IMPORTANT: Convert print_form_objects and print_info_objects to use 'html' copy where necissary
 Cron is not running properly again...
 IMPORTANT!  Convert all call_user_func_array usage to the standard callable method
 Finish webdav module that allows files to be uploaded and access using the web dav protocol.  This is already mostly supported by PEAR.
@@ -65,10 +64,10 @@ bt module should have a configurable ctorrent settings that uses %IF for the tor
 Check for bt module in install.php script
 Add bttracker install script to admin/install.php to fully bootstrap the install process
 ------------- ADMIN TOOLS -------------
+Finish adding torrent support to television tool
 Howabout a nifty little remote RPC admin tool or a debug tool
 Port all Jamu stuff from MythTV to PHP admin tools
 Work on music tool
-Add netflix movie checker to admin tools
 Add show renamer to admin tools
 Make a sync module in admin section for syncing between two databases and pulling out differences
 	Use musicbrainz to sync music
