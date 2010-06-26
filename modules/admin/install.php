@@ -105,6 +105,15 @@ function output_admin_install($request)
 	theme('install');
 }
 
+function theme_install()
+{
+	theme('header');
+
+	
+
+	theme('footer');
+}
+
 function print_image($install_image)
 {
 	if($install_image == 'gradient')

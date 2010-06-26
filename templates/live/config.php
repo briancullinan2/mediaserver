@@ -8,7 +8,7 @@ function register_live()
 		'privilage' => 1,
 		'path' => __FILE__,
 		'alter request' => true,
-		'files' => array('admin', 'encode', 'footer', 'header', 'index', 'install', 'list', 'modules', 'search', 'select', 'settings', 'tools', 'users')
+		'files' => array('admin', 'encode', 'footer', 'header', 'index', 'list', 'modules', 'search', 'select', 'settings', 'tools', 'users')
 	);
 }
 

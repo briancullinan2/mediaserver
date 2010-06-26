@@ -402,7 +402,7 @@ function theme($request = '')
 		}
 		// it is possible the whole request
 		else
-			PEAR::raiseError('Theme function \'theme_' . validate(array('template' => setting('local_template'))) . '_' . $request . '\' was not found.', E_DEBUG|E_WARN, 'template');
+			PEAR::raiseError('Theme function \'theme_' . validate(array('template' => setting('local_template')), 'template') . '_' . $request . '\' was not found.', E_DEBUG|E_WARN, 'template');
 	}
 	else
 		PEAR::raiseError('Theme function could not be handled because of an unrecognized argument.', E_DEBUG|E_WARN);
