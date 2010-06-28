@@ -25,6 +25,7 @@ function validate_subtool($request)
 {
 	$request['module'] = validate($request, 'module');
 	if(isset($request['subtool']) && is_numeric($request['subtool']) && $request['subtool'] >= 0 && 
+		isset($GLOBALS['modules'][$request['module']]['subtools']) &&
 		$request['subtool'] < count($GLOBALS['modules'][$request['module']]['subtools'])
 	)
 		return $request['subtool'];

@@ -18,12 +18,6 @@ function register_admin_tools_movies()
 				'privilage' => 10,
 				'path' => __FILE__
 			),
-			array(
-				'name' => 'Metadata Downloader',
-				'description' => 'Download movie data using TMDB.',
-				'privilage' => 10,
-				'path' => __FILE__
-			),
 		),
 		'template' => false,
 		'validates' => array('add_movie_folder', 'remove_movie_folder', 'info_singular_step_movies', 'movie_index'),
@@ -82,9 +76,9 @@ function setting_nzb_movie_search($settings, $index)
 {
 	// return the same static service as listed in the nzbservice module
 	if($index == 0)
-		return 'http://nzbmatrix.com/nzb-search.php?cat=movies-all&search=%s';
+		return 'http://nzbmatrix.com/nzb-search.php?cat=1&search=%s';
 	if($index == 1)
-		return 'http://www.newzbin.com/search/query/?searchaction=Go&category=6&q=%s';
+		return 'http://www.newzbin.com/search/query/?searchaction=Go&group=alt.binaries.dvd&q=%s';
 
 	// don't continue with this if stuff is missing
 	if(isset($settings['nzb_movie_search_' . $index]) && 
@@ -387,7 +381,6 @@ function configure_admin_tools_movies($settings)
 function output_admin_tools_movies($request)
 {
 	$request['subtool'] = validate($request, 'subtool');
-	$request['info_singular'] = validate($request, 'info_singular');
 	
 	// save the manual search to use later
 	if(isset($request['manual_search']))
@@ -395,16 +388,79 @@ function output_admin_tools_movies($request)
 	else
 		$request['manual_search'] = session('movies_manual_search');
 	
-	$infos = array();
+	if(isset($request['subtool']) && $request['subtool'] == 0)
+	{
+		// output info
+		register_output_vars('subtool', $request['subtool']);
+		
+		output_admin_tools_movies_subtool_2($request);
+	}
+}
+
+
+function output_admin_tools_movies_subtool_2($request)
+{
+	$request['info_singular'] = validate($request, 'info_singular');
 	
 	if($request['info_singular'] == true)
 	{
-		output_admin_tools_movies_singular($request);
+		$request['info_singular_step_movies'] = validate($request, 'info_singular_step_movies');
+		
+		// do logins
+		if($request['info_singular_step_movies'] == 'login')
+		{
+			$infos = nzbservices_singular_result();
+			
+			// log in to services
+			$infos['movies_login2'] = array(
+				'name' => 'Torrent Services Login',
+				'status' => '',
+				'description' => array(
+					'list' => array(
+						'Logging in to torrent services.',
+					),
+				),
+				'text' => array(
+					'loading' => 'Loading...'
+				),
+				'singular' => url('module=admin_tools_movies&subtool=0&info_singular=true&info_singular_step_movies=login2', true),
+			);
+		}
+		elseif($request['info_singular_step_movies'] == 'login2')
+		{
+			// get torrent login stuff
+			$infos = torservices_singular_result();
+		
+			// download netflix Q
+			$infos['netflix_movies'] = array(
+				'name' => 'Movies from Netflix',
+				'status' => '',
+				'description' => array(
+					'list' => array(
+						'Downloading Netflix Q.',
+					),
+				),
+				'text' => array(
+					'loading' => 'Loading...'
+				),
+				'singular' => url('module=admin_tools_movies&subtool=0&info_singular=true&info_singular_step_movies=netflix', true),
+			);
+		}
+		// do other stuff
+		elseif($request['info_singular_step_movies'] == 'netflix')
+			$infos = output_admin_tools_movies_singular_netflix($request);
+		elseif($request['info_singular_step_movies'] == 'search')
+			$infos = output_admin_tools_movies_singular_search($request);
+			
+		register_output_vars('infos', $infos);
+		theme('tools_singular');
 		
 		return;
 	}
-	if(isset($request['subtool']) && $request['subtool'] == 0)
+	else
 	{
+		$infos = array();
+	
 		// output configuration link
 		PEAR::raiseError('You may need to <a href="' . url('module=admin_modules&configure_module=admin_tools_movies') . '">configure</a> this tool in order to use it properly.', E_WARN);
 	
@@ -445,149 +501,11 @@ function output_admin_tools_movies($request)
 				'singular' => url('module=admin_tools_movies&subtool=0&info_singular=true&info_singular_step_movies=login', true),
 			);
 		}
+		
+		register_output_vars('infos', $infos);
+		
+		theme('tools_subtools');
 	}
-	
-	// output info
-	if(isset($request['subtool'])) register_output_vars('subtool', $request['subtool']);
-	register_output_vars('infos', $infos);
-	
-	theme('tools_subtools');
-}
-
-
-/**
- * Helper function for outputting a single piece of the infos
- * @param request the request to process
- */
-function output_admin_tools_movies_singular($request)
-{
-	$request['info_singular_step_movies'] = validate($request, 'info_singular_step_movies');
-	$infos = array();
-	
-	if($request['info_singular_step_movies'] == 'login')
-		output_admin_tools_movies_singular_login($request);
-	elseif($request['info_singular_step_movies'] == 'login2')
-		output_admin_tools_movies_singular_login2($request);
-	elseif($request['info_singular_step_movies'] == 'netflix')
-		output_admin_tools_movies_singular_netflix($request);
-	elseif($request['info_singular_step_movies'] == 'search')
-		output_admin_tools_movies_singular_search($request);
-}
-
-	
-function output_admin_tools_movies_singular_login($request)
-{
-	$infos = array();
-	
-	// log in to services here
-	$results = nzbservices_login();
-	$services = setting('nzbservices');
-	foreach($results as $i => $result)
-	{
-		if($result == false)
-		{
-			$infos['nzbservice_' . $i] = array(
-				'name' => $services[$i]['name'] . ' Login Failed',
-				'status' => 'fail',
-				'description' => array(
-					'list' => array(
-						'Login to ' . $services[$i]['login'] . ' for ' . $services[$i]['name'] . ' failed!',
-					),
-				),
-				'text' => (is_numeric($result)?'Login Failed!':$result),
-			);
-		}
-		else
-		{
-			$infos['nzbservice_' . $i] = array(
-				'name' => $services[$i]['name'] . ' Login',
-				'status' => '',
-				'description' => array(
-					'list' => array(
-						'Login to ' . $services[$i]['login'] . ' for ' . $services[$i]['name'] . ' successful!',
-					),
-				),
-				'text' => 'Login Succeeded!'
-			);
-		}
-	}
-
-	// log in to services
-	$infos['movies_login2'] = array(
-		'name' => 'Torrent Services Login',
-		'status' => '',
-		'description' => array(
-			'list' => array(
-				'Logging in to torrent services.',
-			),
-		),
-		'text' => array(
-			'loading' => 'Loading...'
-		),
-		'singular' => url('module=admin_tools_movies&subtool=0&info_singular=true&info_singular_step_movies=login2', true),
-	);
-	
-	register_output_vars('infos', $infos);
-	
-	theme('tools_singular');
-}
-
-function output_admin_tools_movies_singular_login2($request)
-{
-	$infos = array();
-	
-	// log in to services here
-	$services = setting('torservices');
-	$results = torservices_login();
-	foreach($results as $i => $result)
-	{
-		if($result == false)
-		{
-			$infos['torservice_' . $i] = array(
-				'name' => $services[$i]['name'] . ' Login Failed',
-				'status' => 'fail',
-				'description' => array(
-					'list' => array(
-						'Login to ' . $services[$i]['login'] . ' for ' . $services[$i]['name'] . ' failed!',
-					),
-				),
-				'text' => (is_numeric($result)?'Login Failed!':$result),
-			);
-		}
-		else
-		{
-			$infos['torservice_' . $i] = array(
-				'name' => $services[$i]['name'] . ' Login',
-				'status' => '',
-				'description' => array(
-					'list' => array(
-						'Login to ' . $services[$i]['login'] . ' for ' . $services[$i]['name'] . ' successful!',
-					),
-				),
-				'text' => 'Login Succeeded!'
-			);
-		}
-	}
-
-
-	// download netflix Q
-	$infos['netflix_movies'] = array(
-		'name' => 'Movies from Netflix',
-		'status' => '',
-		'description' => array(
-			'list' => array(
-				'Downloading Netflix Q.',
-			),
-		),
-		'text' => array(
-			'loading' => 'Loading...'
-		),
-		'singular' => url('module=admin_tools_movies&subtool=0&info_singular=true&info_singular_step_movies=netflix', true),
-	);
-	
-	register_output_vars('infos', $infos);
-	
-	theme('tools_singular');
 }
 
 function output_admin_tools_movies_singular_netflix($request)
@@ -761,9 +679,7 @@ function output_admin_tools_movies_singular_netflix($request)
 		);
 	}
 	
-	register_output_vars('infos', $infos);
-	
-	theme('tools_singular');
+	return $infos;
 }
 
 function output_admin_tools_movies_singular_search($request)
@@ -911,9 +827,7 @@ function output_admin_tools_movies_singular_search($request)
 			session('manual_search', NULL);
 	}
 	
-	register_output_vars('infos', $infos);
-	
-	theme('tools_singular');
+	return $infos;
 }
 
 /**
@@ -976,9 +890,10 @@ function movies_fetch_movies($movie)
 		{
 			// run query, using television search strings
 			$result = fetch(sprintf($search, urlencode($movie)), array(), array(), session('nzbservices_' . $i));
-			
+
 			// match nzbs
 			$count = preg_match_all($config['match'], $result['content'], $matches);
+
 			if($count > 0)
 			{
 				// return list of downloads
@@ -988,8 +903,6 @@ function movies_fetch_movies($movie)
 	}
 	
 	$torservices = setting('torservices');
-	
-	$downloads = array();
 	
 	// loop through NZB services until we find the show
 	foreach($torservices as $i => $config)

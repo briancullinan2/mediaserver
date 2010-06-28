@@ -11,6 +11,7 @@ function register_admin_tools_music()
 		'description' => 'Tools for reorganizing, downloading, and renaming music files.',
 		'privilage' => 10,
 		'path' => __FILE__,
+		'template' => false,
 		'subtools' => array(
 			array(
 				'name' => 'Missing Tracks',
@@ -21,12 +22,6 @@ function register_admin_tools_music()
 			array(
 				'name' => 'Discography Completion',
 				'description' => 'Use Discogs to find missing albums and provide links to download off of popular services.',
-				'privilage' => 10,
-				'path' => __FILE__
-			),
-			array(
-				'name' => 'Tag and Rename',
-				'description' => 'Rename music files using their ID3 tags or retag music files.',
 				'privilage' => 10,
 				'path' => __FILE__
 			),

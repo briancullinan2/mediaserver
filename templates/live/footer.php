@@ -28,7 +28,7 @@ function theme_live_footer()
 										else
 											$link = 'module=' . $name;
 																		
-										?><li class="last"><a href="<?php print url($link); ?>"><?php echo $module['name']; ?></a></li><?php
+										?><li><a href="<?php print url($link); ?>"><?php echo $module['name']; ?></a></li><?php
 									}
 									?>
 									</ul>
@@ -45,7 +45,7 @@ function theme_live_footer()
 											continue;
 											
 										$name = $GLOBALS['handlers'][$handler]['name'];
-										?><li class="last"><a href="<?php print url('module=select&cat=' . $handler); ?>"><?php echo $name; ?></a></li><?php
+										?><li><a href="<?php print url('module=select&cat=' . $handler); ?>"><?php echo $name; ?></a></li><?php
 									}
 									?>
 									</ul>

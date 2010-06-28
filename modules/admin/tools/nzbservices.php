@@ -505,3 +505,48 @@ function nzbservices_fetch_nzb($file, $cookies, $filename = '')
 	else
 		return -1;
 }
+
+/**
+ * Helper function, creates a return for the singular object
+ */
+function nzbservices_singular_result()
+{
+	$infos = array();
+	
+	// log in to services here
+	$results = nzbservices_login();
+	$services = setting('nzbservices');
+	foreach($results as $i => $result)
+	{
+		if($result == false)
+		{
+			$infos['nzbservice_' . $i] = array(
+				'name' => $services[$i]['name'] . ' Login Failed',
+				'status' => 'fail',
+				'description' => array(
+					'list' => array(
+						'Login to ' . $services[$i]['login'] . ' for ' . $services[$i]['name'] . ' failed!',
+					),
+				),
+				'text' => (is_numeric($result)?'Login Failed!':$result),
+			);
+		}
+		else
+		{
+			$infos['nzbservice_' . $i] = array(
+				'name' => $services[$i]['name'] . ' Login',
+				'status' => '',
+				'description' => array(
+					'list' => array(
+						'Login to ' . $services[$i]['login'] . ' for ' . $services[$i]['name'] . ' successful!',
+					),
+				),
+				'text' => 'Login Succeeded!'
+			);
+		}
+	}
+
+	return $infos;
+}
+ 
+ 

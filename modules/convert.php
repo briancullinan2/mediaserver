@@ -205,24 +205,19 @@ function output_convert($request)
 	set_time_limit(0);
 	ignore_user_abort(1);
 
+	if(!isset($request['encode']))
+	{
+		theme('default');
+		
+		return;
+	}
+	
+	// validate all the variables used
 	$request['convert'] = validate($request, 'convert');
 	$request['cheight'] = validate($request, 'cheight');
 	$request['cwidth'] = validate($request, 'cwidth');
 	$request['cformat'] = validate($request, 'cformat');
 	$request['cat'] = validate($request, 'cat');
-
-	switch($request['convert'])
-	{
-		case 'jpg':
-			header('Content-Type: image/jpg');
-			break;
-		case 'gif':
-			header('Content-Type: image/gif');
-			break;
-		case 'png':
-			header('Content-Type: image/png');
-			break;
-	}
 
 	// get the file path from the database
 	$files = get_files($request, $count, $request['cat']);
@@ -255,6 +250,20 @@ function output_convert($request)
 			$request['cwidth'] = $files[0]['Width'];
 		
 		$request['cfile'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $files[0]['Filepath']);
+	}
+
+	// set the headers
+	switch($request['convert'])
+	{
+		case 'jpg':
+			header('Content-Type: image/jpg');
+			break;
+		case 'gif':
+			header('Content-Type: image/gif');
+			break;
+		case 'png':
+			header('Content-Type: image/png');
+			break;
 	}
 
 	// close session so the client can continue browsing the site

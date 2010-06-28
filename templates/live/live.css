@@ -645,7 +645,7 @@ body {
 	list-style-type:none;
 	margin:0;
 	padding:0;
-	white-space:nowrap;
+	display:inline;
 }
 
 #footerCtr ul li {
@@ -653,8 +653,8 @@ body {
 	border-right-width:1px;
 	float:left;
 	padding:0 8px;
-	white-space:nowrap;
 	margin:0 0 3px;
+	display:inline;
 }
 
 #footerCtr ul li a {

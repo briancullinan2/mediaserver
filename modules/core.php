@@ -2453,4 +2453,18 @@ function theme_errors()
 
 function theme_errors_block()
 {
+	theme('errors');
+}
+
+
+function theme_default()
+{
+	theme('header');
+	
+	?><h1>Module: <?php print $GLOBALS['modules'][$GLOBALS['templates']['vars']['module']]['name']; ?></h1>
+	This page requires special parameters that have not been set.  This default page is a placeholder.<?php
+	
+	theme('errors_block');
+
+	theme('footer');
 }

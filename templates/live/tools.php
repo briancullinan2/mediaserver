@@ -49,38 +49,33 @@ function theme_live_tools_subtools()
 {
 	theme('header');
 
-	if(!isset($GLOBALS['templates']['vars']['subtool']))
-	{
-		?>
-		<div class="contentSpacing">
-				<h1 class="title">Tools: <?php print $GLOBALS['modules'][$GLOBALS['module']]['name']; ?></h1>
-				<span class="subText"><?php print $GLOBALS['modules'][$GLOBALS['module']]['description']; ?></span>
-		<?php
+	?>
+	<div class="contentSpacing">
+			<h1 class="title">Tools: <?php print $GLOBALS['modules'][$GLOBALS['module']]['name']; ?></h1>
+			<span class="subText"><?php print $GLOBALS['modules'][$GLOBALS['module']]['description']; ?></span>
+	<?php
+	
+	theme('errors_block');
+	
+	// output configuration if it is set
+	if(isset($GLOBALS['templates']['vars']['options']))
+		theme('admin_modules_configure');
 		
-		theme('errors_block');
-		
-		// output configuration if it is set
-		if(isset($GLOBALS['templates']['vars']['options']))
-			theme('admin_modules_configure');
-			
-		?><div class="titlePadding"></div><?php
+	?><div class="titlePadding"></div><?php
 
-		foreach($GLOBALS['modules'][$GLOBALS['module']]['subtools'] as $i => $subtool)
-		{
-			if($subtool['privilage'] > $GLOBALS['templates']['vars']['user']['Privilage'])
-				continue;
-				
-			?>
-			<div class="nothover" onMouseOver="this.className='hover';" onMouseOut="this.className='nothover';">
-				<a href="<?php print url('module=' . $GLOBALS['module'] . '&subtool=' . $i); ?>" style="font-size:14px;"><?php print $subtool['name']; ?></a><br /><br />
-				Description: <?php print $subtool['description']; ?>
-				<br /><br />
-			</div>
-			<?php
-		}
-	}
-	else
+	foreach($GLOBALS['modules'][$GLOBALS['module']]['subtools'] as $i => $subtool)
 	{
+		if($subtool['privilage'] > $GLOBALS['templates']['vars']['user']['Privilage'])
+			continue;
+			
+		?>
+		<div class="nothover" onMouseOver="this.className='hover';" onMouseOut="this.className='nothover';">
+			<a href="<?php print url('module=' . $GLOBALS['module'] . '&subtool=' . $i); ?>" style="font-size:14px;"><?php print $subtool['name']; ?></a><br /><br />
+			Description: <?php print $subtool['description']; ?>
+			<br /><br />
+		</div>
+		<?php
+	}
 		// save this for XML output
 		// output info objects
 		/*$tool = preg_replace('/\<warning label="([^"]*)"\>/i', '<div class="warning"><span>$1: </span>', $tool);
@@ -99,44 +94,66 @@ function theme_live_tools_subtools()
 		$tool = preg_replace('/\<\/note\>/i', '</div>', $tool);
 		print $tool;
 		?></div><br /><?php*/
-		?>
-		<div class="contentSpacing">
-				<h1 class="title">Tools: <?php print $GLOBALS['modules'][$GLOBALS['module']]['subtools'][$GLOBALS['templates']['vars']['subtool']]['name']; ?></h1>
-				<span class="subText"><?php print $GLOBALS['modules'][$GLOBALS['module']]['subtools'][$GLOBALS['templates']['vars']['subtool']]['description']; ?></span>
-		<?php
-		
-		theme('errors_block');
-		
-		// output configuration if it is set
-		if(isset($GLOBALS['templates']['vars']['options']))
-			theme('admin_modules_configure');
-		
-		?><div class="titlePadding"></div>
-		<script language="javascript" type="application/javascript">
-			var singular_cancel = false;
-		</script>
-		<form action="<?php print $GLOBALS['templates']['html']['get']; ?>" method="post">
-			<table border="0" cellpadding="0" cellspacing="0" class="install">
-			<?php
-			
-			// print options
-			theme_live_tools_singular();
-			
-			?>
-			</table>
-			<br />
-			<br />
-			<br />
-			<input type="button" name="reload" value="Reload" onclick="window.location.reload();" class="button" style="float:right;" />
-		</form>
-		<?php
-	}
 	
 	?><div class="titlePadding"></div>
 	</div><?php
 
 	theme('footer');
 		
+}
+
+function theme_live_tool_info()
+{
+	theme('header');
+
+	?>
+	<div class="contentSpacing">
+    <?php
+	if(isset($GLOBALS['templates']['vars']['subtool']))
+	{
+		?>
+        <h1 class="title">Tools: <?php print $GLOBALS['modules'][$GLOBALS['module']]['subtools'][$GLOBALS['templates']['vars']['subtool']]['name']; ?></h1>
+        <span class="subText"><?php print $GLOBALS['modules'][$GLOBALS['module']]['subtools'][$GLOBALS['templates']['vars']['subtool']]['description']; ?></span>
+		<?php
+	}
+	else
+	{
+		?>
+        <h1 class="title">Tools: <?php print $GLOBALS['modules'][$GLOBALS['module']]['name']; ?></h1>
+        <span class="subText"><?php print $GLOBALS['modules'][$GLOBALS['module']]['description']; ?></span>
+       <?php
+	}
+	
+	theme('errors_block');
+	
+	// output configuration if it is set
+	if(isset($GLOBALS['templates']['vars']['options']))
+		theme('admin_modules_configure');
+	
+	?><div class="titlePadding"></div>
+	<script language="javascript" type="application/javascript">
+		var singular_cancel = false;
+	</script>
+	<form action="<?php print $GLOBALS['templates']['html']['get']; ?>" method="post">
+		<table border="0" cellpadding="0" cellspacing="0" class="install">
+		<?php
+		
+		// print options
+		theme_live_tools_singular();
+		
+		?>
+		</table>
+		<br />
+		<br />
+		<br />
+		<input type="button" name="reload" value="Reload" onclick="window.location.reload();" class="button" style="float:right;" />
+	</form>
+	<?php
+	
+	?><div class="titlePadding"></div>
+	</div><?php
+
+	theme('footer');
 }
 
 function theme_live_tools_singular()

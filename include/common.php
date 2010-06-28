@@ -269,7 +269,10 @@ function output($request)
 	// output module
 	// if the module is disabled, but has no template, call output function for handling disabledness
 	// otherwise just show template for disabled modules
-	call_user_func_array('output_' . $request['module'], array($request));
+	if(function_exists('output_' . $request['module']) && dependency($request['module']) != false)
+		call_user_func_array('output_' . $request['module'], array($request));
+	elseif(dependency($request['module']) == false)
+		PEAR::raiseError('The selected module has dependencies that are not met!', E_DEBUG|E_USER);
 	
 	// just return because the output function was already called
 	if(isset($GLOBALS['modules'][$GLOBALS['module']]['template']) && 
@@ -1110,7 +1113,14 @@ function fetch($url, $post = array(), $headers = array(), $cookies = array())
 			$cookie .= $key . '=' . $value . '; ';
 		}
 		curl_setopt($ch, CURLOPT_COOKIE, $cookie);
-		
+		// use a cookie file just because of follow_location
+		$cookie_file = tempnam('dummy', 'cookie_');
+		if($cookie_file !== false)
+		{
+			curl_setopt($ch, CURLOPT_COOKIEFILE, $cookie_file);
+			curl_setopt($ch, CURLOPT_COOKIEJAR, $cookie_file);
+		}
+	
 		// execute
 		$content = curl_exec($ch);
 		$status = curl_getinfo($ch, CURLINFO_HTTP_CODE); 	
@@ -1139,6 +1149,9 @@ function fetch($url, $post = array(), $headers = array(), $cookies = array())
 				$cookies[$cookiename] = trim(implode('=', $cookie));
 			}
 		}
+		
+		// delete cookie jar because they are saved and return in an array instead
+		if($cookie_file !== false) unlink($cookie_file);
 		
 		return array('headers' => $headers, 'content' => $content, 'cookies' => $cookies, 'status' => $status);
 	}

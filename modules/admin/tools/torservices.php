@@ -438,3 +438,47 @@ function torservices_login()
 	
 	return $stati;
 }
+ 
+/**
+ * Helper function, creates a return for singular based on the login results
+ */
+function torservices_singular_result()
+{
+	$infos = array();
+	
+	// log in to services here
+	$services = setting('torservices');
+	$results = torservices_login();
+	foreach($results as $i => $result)
+	{
+		if($result == false)
+		{
+			$infos['torservice_' . $i] = array(
+				'name' => $services[$i]['name'] . ' Login Failed',
+				'status' => 'fail',
+				'description' => array(
+					'list' => array(
+						'Login to ' . $services[$i]['login'] . ' for ' . $services[$i]['name'] . ' failed!',
+					),
+				),
+				'text' => (is_numeric($result)?'Login Failed!':$result),
+			);
+		}
+		else
+		{
+			$infos['torservice_' . $i] = array(
+				'name' => $services[$i]['name'] . ' Login',
+				'status' => '',
+				'description' => array(
+					'list' => array(
+						'Login to ' . $services[$i]['login'] . ' for ' . $services[$i]['name'] . ' successful!',
+					),
+				),
+				'text' => 'Login Succeeded!'
+			);
+		}
+	}
+
+	return $infos;
+}
+
