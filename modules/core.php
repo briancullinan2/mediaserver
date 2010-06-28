@@ -1153,7 +1153,11 @@ function setup_session($request = array())
 		{
 			foreach($GLOBALS['triggers']['session'][$key] as $module => $function)
 			{
-				$save = call_user_func_array($function, array($request));
+				if(is_callable($function))
+					$save = call_user_func_array($function, array($request));
+				else
+					PEAR::raiseError('Session functionality specified but function ' . $function . ' in not callable!', E_DEBUG);
+					
 				// only save when something has changed
 				if(isset($save))
 					session($module, $save);
@@ -1470,7 +1474,10 @@ function set_output_vars()
 		{
 			foreach($GLOBALS['triggers']['always output'][$key] as $module => $function)
 			{
-				call_user_func_array($function, array($_REQUEST));
+				if(is_callable($function))
+					call_user_func_array($function, array($_REQUEST));
+				else
+					PEAR::raiseError('Always Output functionality specified but function ' . $function . ' in not callable!', E_DEBUG);
 			}
 		}
 	}
@@ -1571,9 +1578,13 @@ function validate($request, $key)
 		// check modules for vars and trigger a session save
 		foreach($GLOBALS['triggers']['validates'][$key] as $module => $function)
 		{
+			if(is_callable($function))
+				$new_value = call_user_func_array($function, array($request, $key));
+			else
+				PEAR::raiseError('Validate functionality specified but function ' . $function . ' in not callable!', E_DEBUG);
+			
 			if(isset($new_value))
 				$request[$key] = $new_value;
-			$new_value = call_user_func_array($function, array($request, $key));
 		}
 		
 		// ensure that it was validate

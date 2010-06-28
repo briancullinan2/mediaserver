@@ -19,6 +19,42 @@ function register_bt()
 }
 
 /**
+ * Implementation of setting
+ * @ingroup setting
+ * @return The default install path for VLC on windows or linux based on validate_SYSTEM_TYPE
+ */
+function setting_seeder_path($settings)
+{
+	if(isset($settings['seeder_path']) && is_file($settings['seeder_path']))
+		return $settings['seeder_path'];
+	else
+	{
+		if(setting_system_type($settings) == 'win')
+			return '';
+		else
+			return '/usr/local/bin/ctorrent';
+	}
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ * @return The entire arg string for further validation by the configure() function
+ */
+function setting_seeder_args($settings)
+{
+	if(isset($settings['seeder_args']) && is_file($settings['seeder_args']))
+		return $settings['seeder_args'];
+	else
+	{
+		if(setting_system_type($settings) == 'win')
+			return '';
+		else
+			return '-s / "%IF"';
+	}
+}
+
+/**
  * Implementation of dependency
  * @ingroup dependency
  */
@@ -147,24 +183,6 @@ function configure_bt($settings)
 	}
 	
 	return $options;
-}
-
-/**
- * Implementation of setting
- * @ingroup setting
- * @return The default install path for VLC on windows or linux based on validate_SYSTEM_TYPE
- */
-function setting_seeder_path($settings)
-{
-	if(isset($settings['seeder_path']) && is_file($settings['seeder_path']))
-		return $settings['seeder_path'];
-	else
-	{
-		if(setting_system_type($settings) == 'win')
-			return 'C:\Program Files\VideoLAN\VLC\vlc.exe';
-		else
-			return '/bin/ctorrent';
-	}
 }
 
 /**

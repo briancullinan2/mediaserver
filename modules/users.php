@@ -78,6 +78,10 @@ function register_users()
 	);
 }
 
+/**
+ * Implementation of dependency
+ * @ingroup dependency
+ */
 function dependency_users($settings)
 {
 	if(setting_installed() == false || setting('database_enable') == false)

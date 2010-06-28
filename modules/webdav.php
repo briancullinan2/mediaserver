@@ -12,7 +12,7 @@ function register_webdav()
 		'privilage' => 5,
 		'path' => __FILE__,
 		'settings' => array(),
-		'depends on' => array('pear', 'pear_webdav'),
+		'depends on' => array('pear_installed', 'pear_webdav'),
 	);
 }
 
