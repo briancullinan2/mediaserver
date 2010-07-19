@@ -567,6 +567,10 @@ function television_myepisodes_login()
 		'password' => $myepisodes['password'],
 		'action' => 'Login',
 	), array('referer' => $login_url), session('television_cookies'));
+
+	// check for failure
+	if(preg_match('/<div class="warning">/i', $result['content']) != 0)
+		$result['status'] = false;
 	
 	// store all cookies
 	session('television_cookies', $result['cookies']);
@@ -591,7 +595,7 @@ function television_myepisodes_fetch_shows()
 		'<td class="showname">.*?>([^<]*?)<[\s\S]*?' . 
 		'<td class="longnumber">([^<]*?)<[\s\S]*?' . 
 		'<td class="status">.*?name="([^"]*?)"( checked)*.*?>/i', $result['content'], $matches);
-		
+
 	$all_shows = array();
 	$new_episodes = array(
 		'times' => array(),

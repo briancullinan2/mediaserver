@@ -113,7 +113,7 @@ function setting_module_enable($settings, $module)
  */
 function get_required_modules()
 {
-	return array('core', 'index', 'users', 'select', 'settings');
+	return array('core', 'index', 'users', 'select', 'settings', 'file');
 }
 
 /**

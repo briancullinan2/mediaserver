@@ -89,10 +89,7 @@ function setup_core()
 	// read module list and create a list of available modules	
 	setup_register_modules('modules' . DIRECTORY_SEPARATOR);
 	
-	$shuffle = array_keys($GLOBALS['modules']);
-	shuffle($shuffle);
-	
-	$GLOBALS['modules'] = array_merge(array_flip($shuffle), $GLOBALS['modules']);
+	$GLOBALS['modules'] = array_merge(array_flip(array_keys($GLOBALS['modules'])), $GLOBALS['modules']);
 	
 	// resort modules to reflect their dependencies, aka inefficient sort
 	$GLOBALS['modules'] = array_merge(array_flip(flatten_module_dependencies(array_keys($GLOBALS['modules']))), $GLOBALS['modules']);
@@ -2065,6 +2062,10 @@ function parse_path_info($path_info)
 		$dirs = split('/', $path_info);
 	else
 		$dirs = $path_info;
+	
+	// remove html_root
+	if(array_intersect_key($dirs, array_keys(split('/', setting('html_root')))) == split('/', setting('html_root')))
+		$dirs = array_slice($dirs, count(split('/', setting('html_root'))));
 	
 	// remove empty dirs
 	foreach($dirs as $i => $value)

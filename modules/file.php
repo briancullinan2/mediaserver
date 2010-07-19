@@ -280,9 +280,11 @@ function output_file($request)
 	// get the file path from the database
 	$files = get_files($request, $count, $request['cat']);
 	
-	if(count($files == 0))
+	if(count($files) == 0)
 	{
 		PEAR::raiseError('File not found!', E_USER);
+		theme();
+		return;
 	}
 
 	$tmp_request = array();

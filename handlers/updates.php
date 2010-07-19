@@ -63,7 +63,7 @@ function handles_updates($dir, $file = NULL)
 				
 				// check for file count inconsistency but don't process anything
 				$count = 1;
-				if ($dh = opendir(str_replace('/', DIRECTORY_SEPARATOR, $dir)))
+				if (is_readable(str_replace('/', DIRECTORY_SEPARATOR, $dir)) && $dh = opendir(str_replace('/', DIRECTORY_SEPARATOR, $dir)))
 				{
 					// count files
 					while (($file = readdir($dh)) !== false)
@@ -222,7 +222,7 @@ function scan_dir($dir)
 			{
 				// do not remove ids because other handlers may still use the id
 				//  allow other handlers to handle removing of ids
-				if($handler != 'ids')
+				if($handler != 'ids' && is_internal($handler) == false && is_wrapper($handler) == false)
 					remove($file['Filepath'], $handler);
 			}
 		}

@@ -1,3 +1,14 @@
+2010-07-18
+Created a module for all the bulk rename functionality
+Fixed files module, now checks is_readable in _get_local_files()
+Fixed updates.php, also check is_readable in handles_updates()
+Removed module suffling, no longer necissary for testing
+Lots of minor fixes, see repo log
+
+2010-07-15
+Fixed core.php parse_path_info() function to remove the html_root before parsing the path
+Fixed convert.php in the output function
+
 2010-06-24
 Worked on movies tools
 Worked on torservices

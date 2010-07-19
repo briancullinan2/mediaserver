@@ -272,7 +272,11 @@ function output($request)
 	if(function_exists('output_' . $request['module']) && dependency($request['module']) != false)
 		call_user_func_array('output_' . $request['module'], array($request));
 	elseif(dependency($request['module']) == false)
+	{
 		PEAR::raiseError('The selected module has dependencies that are not met!', E_DEBUG|E_USER);
+		theme();
+		return;
+	}
 	
 	// just return because the output function was already called
 	if(isset($GLOBALS['modules'][$GLOBALS['module']]['template']) && 

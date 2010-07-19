@@ -64,6 +64,9 @@ bt module should have a configurable ctorrent settings that uses %IF for the tor
 Check for bt module in install.php script
 Add bttracker install script to admin/install.php to fully bootstrap the install process
 ------------- ADMIN TOOLS -------------
+Make a movie services tool that allows you to check vudu and netflix and block buster for movies
+Make a tv services tool that allows you to use myepisodes and hulu
+Allow ranking of all available services
 Finish adding torrent support to television tool
 Howabout a nifty little remote RPC admin tool or a debug tool
 Port all Jamu stuff from MythTV to PHP admin tools

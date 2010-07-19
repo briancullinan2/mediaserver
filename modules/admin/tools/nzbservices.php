@@ -142,7 +142,7 @@ function setting_nzbservices($settings)
 		'match' => '/<a href="(http:\/\/nzbmatrix.com\/nzb-download.php?[^"]*?&amp;nozip=1)"/i',
 		'search' => 'http://nzbmatrix.com/nzb-search.php?search=%s',
 		'login' => 'http://nzbmatrix.com/account-login.php',
-		'loginfail' => '/Access Denied:/i'
+		'loginfail' => '/Access Denied:|<form method="post" action="account-login.php">/i'
 	));
 	
 	$settings['nzbservice_1'] = array_merge(isset($settings['nzbservice_1'])?$settings['nzbservice_1']:array(), array(

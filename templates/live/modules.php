@@ -81,15 +81,7 @@ function theme_live_admin_modules_configure()
 				<td>
 				<?php print_form_objects(array('setting_' . $name => $config)); ?>
 				<?php
-				if($GLOBALS['templates']['vars']['configure_module'] == 'admin_modules' &&
-					isset($GLOBALS['modules'][substr($name, 0, -7)]['settings']) && 
-					count($GLOBALS['modules'][substr($name, 0, -7)]['settings']) > 0)
-				{
-					?><input type="button" value="Configure" onclick="window.location.href='<?php print url('module=admin_modules&configure_module=' . substr($name, 0, -7)); ?>'" /><?php
-				}
-				elseif($GLOBALS['templates']['vars']['configure_module'] == 'admin_handlers' &&
-					isset($GLOBALS['handlers'][substr($name, 0, -7)]['settings']) && 
-					count($GLOBALS['handlers'][substr($name, 0, -7)]['settings']) > 0)
+				if(function_exists('configure_' . substr($name, 0, -7)))
 				{
 					?><input type="button" value="Configure" onclick="window.location.href='<?php print url('module=admin_modules&configure_module=' . substr($name, 0, -7)); ?>'" /><?php
 				}

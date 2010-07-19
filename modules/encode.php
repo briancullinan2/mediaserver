@@ -406,7 +406,6 @@ function validate_timeoffset($request)
  */
 function output_encode($request)
 {
-	
 	set_time_limit(0);
 	ignore_user_abort(1);
 	session_cache_limiter("nocache");
@@ -430,7 +429,7 @@ function output_encode($request)
 			'start' => validate_start($request),
 			'limit' => 54,
 		));
-		register_output_vars('start', validate($request), 'start');
+		register_output_vars('start', validate($request, 'start'));
 		register_output_vars('limit', 54);
 		
 		// show template for manually setting encoding options

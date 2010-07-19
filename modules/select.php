@@ -251,7 +251,7 @@ function output_select($request)
 	
 	// discard selected stuff here, we want to show a full list, the selected stuff is just for saving in the session
 	//   in order to list the selected stuff only, one should use the list.php module
-	if($request['module'] == 'select')
+	if(isset($request['module']) && $request['module'] == 'select')
 	{
 		if(isset($request['selected'])) unset($request['selected']);
 		if(isset($request['item'])) unset($request['item']);

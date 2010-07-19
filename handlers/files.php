@@ -466,7 +466,7 @@ function _get_local_files($request, &$count, $handler)
 		$request['dir'] = str_replace('\\', '/', $request['dir']);
 			
 		// check to make sure is it a valid directory before continuing
-		if (is_dir(str_replace('/', DIRECTORY_SEPARATOR, $request['dir'])))
+		if (is_dir(str_replace('/', DIRECTORY_SEPARATOR, $request['dir'])) && is_readable(str_replace('/', DIRECTORY_SEPARATOR, $request['dir'])))
 		{
 			// scandir - read in a list of the directory content
 			$tmp_files = scandir(str_replace('/', DIRECTORY_SEPARATOR, $request['dir']));
@@ -497,10 +497,8 @@ function _get_local_files($request, &$count, $handler)
 				// set the informations in the total list of files
 				$files[] = $info;
 			}
-			
-			return $files;
 		}
-		else{ PEAR::raiseError('Directory does not exist!', E_USER); return false; }
+		else{ PEAR::raiseError('Directory does not exist!', E_USER); }
 	}
 		
 	return $files;

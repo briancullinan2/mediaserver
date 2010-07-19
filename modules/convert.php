@@ -205,7 +205,7 @@ function output_convert($request)
 	set_time_limit(0);
 	ignore_user_abort(1);
 
-	if(!isset($request['encode']))
+	if(!isset($request['convert']))
 	{
 		theme('default');
 		
