@@ -117,6 +117,7 @@ session_start();
 /** Set the error handler to use our custom function for storing errors */
 error_reporting(E_ALL);
 PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'error_callback');
+set_error_handler('php_to_PEAR_Error', E_ALL | E_STRICT);
 
 /** set up all the GLOBAL variables needed throughout the site */
 setup();
@@ -261,7 +262,7 @@ function output($request)
 	if(isset($GLOBALS['modules'][$_REQUEST['module']]['privilage']) && 
 		$user['Privilage'] < $GLOBALS['modules'][$_REQUEST['module']]['privilage'])
 	{
-		PEAR::raiseError('You do not have sufficient privilages to view this page!', E_USER);
+		raise_error('You do not have sufficient privilages to view this page!', E_USER);
 		
 		theme('errors');
 	}
@@ -273,7 +274,7 @@ function output($request)
 		call_user_func_array('output_' . $request['module'], array($request));
 	elseif(dependency($request['module']) == false)
 	{
-		PEAR::raiseError('The selected module has dependencies that are not met!', E_DEBUG|E_USER);
+		raise_error('The selected module has dependencies that are not met!', E_DEBUG|E_USER);
 		theme();
 		return;
 	}
@@ -821,11 +822,7 @@ function php_to_PEAR_Error($error_code, $error_str, $error_file, $error_line)
 		{
 			$error_code = E_DEBUG|E_WARN|E_USER;
 		}
-		elseif(setting('verbose') == true)
-		{
-			$error_code = E_WARN|E_DEBUG;
-		}
-		else
+		elseif(setting('verbose'))
 		{
 			$error_code = E_DEBUG;
 		}
@@ -833,9 +830,20 @@ function php_to_PEAR_Error($error_code, $error_str, $error_file, $error_line)
 	else
 		$error_code = E_DEBUG;
 		
-	PEAR::raiseError($error_str, $error_code);
+	if(isset($error_code))
+		raise_error($error_str, $error_code);
 	
 	return true;
+}
+
+function raise_error($str, $code)
+{
+	$error = new StdClass;
+	$error->code = $code;
+	$error->message = $str;
+	$error->backtrace = debug_backtrace();
+	
+	error_callback($error);
 }
 
 /**
@@ -1161,7 +1169,7 @@ function fetch($url, $post = array(), $headers = array(), $cookies = array())
 	}
 	else
 	{
-		PEAR::raiseError('cUrl not installed!', E_DEBUG);
+		raise_error('cUrl not installed!', E_DEBUG);
 		
 		return array('headers' => array(), 'content' => '', 'cookies' => array(), 'status' => 0);
 	}

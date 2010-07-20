@@ -97,7 +97,7 @@ function add_ids($file, $force = false, $ids = array())
 		// add list of ids
 		if( count($db_ids) == 0 )
 		{
-			PEAR::raiseError('Adding id for file: ' . $file, E_DEBUG);
+			raise_error('Adding id for file: ' . $file, E_DEBUG);
 			
 			// add to database
 			return $GLOBALS['database']->query(array('INSERT' => 'ids', 'VALUES' => $fileinfo), false);
@@ -105,7 +105,7 @@ function add_ids($file, $force = false, $ids = array())
 		// update ids
 		elseif($force)
 		{
-			PEAR::raiseError('Modifying id for file: ' . $file, E_DEBUG);
+			raise_error('Modifying id for file: ' . $file, E_DEBUG);
 			
 			$id = $GLOBALS['database']->query(array('UPDATE' => 'ids', 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $db_ids[0]['id']), false);
 			return $db_ids[0]['id'];
@@ -122,7 +122,7 @@ function get_ids($request, &$count, $files = array())
 {
 	if(!setting('database_enable'))
 	{
-		PEAR::raiseError('db_ids' . '::get() called by mistake, use_database is set to false', E_DEBUG);
+		raise_error('db_ids' . '::get() called by mistake, use_database is set to false', E_DEBUG);
 		$count = 0;
 		return array();
 	}
@@ -175,7 +175,7 @@ function get_ids($request, &$count, $files = array())
 				
 				if(count($tmp_id) == 0)
 				{
-					PEAR::raiseError('There was an error getting the IDs.', E_USER);
+					raise_error('There was an error getting the IDs.', E_USER);
 					return array();
 				}
 				
@@ -224,7 +224,7 @@ function get_ids($request, &$count, $files = array())
 			
 			if(count($files) == 0)
 			{
-				PEAR::raiseError('There was an error getting the IDs.', E_USER);
+				raise_error('There was an error getting the IDs.', E_USER);
 				return array();
 			}
 		}

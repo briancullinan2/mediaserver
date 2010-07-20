@@ -48,7 +48,7 @@ function dependency_writable_settings_file($settings)
 {
 	if(setting_installed() == false)
 		return false;
-	return is_writable(settings_file($settings));
+	return is_writable(setting('settings_file'));
 }
 
 /**
@@ -71,7 +71,7 @@ function status_admin_modules($settings)
 			),
 			'type' => 'text',
 			'disabled' => true,
-			'value' => settings_file(),
+			'value' => setting('settings_file'),
 		);
 	}
 	else
@@ -87,7 +87,7 @@ function status_admin_modules($settings)
 			),
 			'type' => 'text',
 			'disabled' => true,
-			'value' => settings_file(),
+			'value' => setting('settings_file'),
 		);
 	}
 	
@@ -227,7 +227,7 @@ function validate_configure_module($request)
 	{
 		if(!function_exists('configure_' . $request['configure_module']))
 		{
-			PEAR::raiseError('Configuration function \'' . $request['configure_module'] . '\' does not exist!', E_DEBUG);
+			raise_error('Configuration function \'' . $request['configure_module'] . '\' does not exist!', E_DEBUG);
 			return 'admin_modules';
 		}
 		return $request['configure_module'];
@@ -238,7 +238,7 @@ function validate_configure_module($request)
 	{
 		if(!function_exists('configure_' . $request['configure_module']))
 		{
-			PEAR::raiseError('Configuration handler function \'' . $request['configure_module'] . '\' does not exist!', E_DEBUG);
+			raise_error('Configuration handler function \'' . $request['configure_module'] . '\' does not exist!', E_DEBUG);
 			return 'admin_modules';
 		}
 		return $request['configure_module'];
@@ -291,20 +291,20 @@ function modules_save_settings($settings, $force_file = false)
 		$result = _modules_save_db_settings($new_settings);
 		
 		if($result)
-			PEAR::raiseError('The settings have been saved', E_NOTE);
+			raise_error('The settings have been saved', E_NOTE);
 		else
-			PEAR::raiseError('There was a problem while saving the settings to the database!', E_USER);
+			raise_error('There was a problem while saving the settings to the database!', E_USER);
 	}
 	else
 	{
 		$result = _modules_save_fs_settings($new_settings);
 		
 		if($result === -1)
-			PEAR::raiseError('Cannot save settings, the settings file is not writable!', E_USER);
+			raise_error('Cannot save settings, the settings file is not writable!', E_USER);
 		if($result === true)
-			PEAR::raiseError('The settings have been saved', E_NOTE);
+			raise_error('The settings have been saved', E_NOTE);
 		else
-			PEAR::raiseError('There was a problem with saving the settings in the settings file.', E_USER);
+			raise_error('There was a problem with saving the settings in the settings file.', E_USER);
 	}
 }
 
@@ -371,14 +371,14 @@ function _modules_save_fs_settings($settings)
 	// if the settings file is writable, put the new setting in it
 	if(dependency('writable_settings_file'))
 	{
-		PEAR::raiseError('The settings file is writeable!', E_DEBUG|E_WARN);
+		raise_error('The settings file is writeable!', E_DEBUG|E_WARN);
 		
 		// convert settings input to string
 		if(is_array($settings))
 			$settings = _modules_settings_to_string($settings);
 		
 		// open settings file for writing
-		$fh = fopen(settings_file(), 'w');
+		$fh = fopen(setting('settings_file'), 'w');
 	
 		if($fh !== false)
 		{
@@ -420,7 +420,7 @@ function modules_get_new_settings($request)
 		elseif(isset($GLOBALS['setting_' . $setting]) && is_callable($GLOBALS['setting_' . $setting]))
 			$new_setting = $GLOBALS['setting_' . $setting](array_merge($GLOBALS['settings'], $new_settings));
 		else
-			PEAR::raiseError('Setting_ function for \'' . $setting . '\' does not exist!', E_DEBUG);
+			raise_error('Setting_ function for \'' . $setting . '\' does not exist!', E_DEBUG);
 			
 		// make sure the new setting is different from the current setting
 		if($new_setting != setting($setting))
@@ -457,7 +457,7 @@ function output_admin_modules($request)
 	
 	// output error if can't write to settings
 	if(dependency('writable_settings_file') == false)
-		PEAR::raiseError('Cannot save changes made on this page, the settings file is not writable!', E_USER);
+		raise_error('Cannot save changes made on this page, the settings file is not writable!', E_USER);
 
 	// output configuration page
 	$options = call_user_func_array('configure_' . $request['configure_module'], array($GLOBALS['settings'], $request));
@@ -485,11 +485,11 @@ function output_admin_modules($request)
 	$in_config_not_in_settings = array_intersect($missing_settings, array_keys($options));
 	foreach($in_settings_not_in_config as $i => $key)
 	{
-		PEAR::raiseError('Option \'' . $key . '\' listed in settings for ' . $request['configure_module'] . ' but not listed in the output options configuration!', E_DEBUG);
+		raise_error('Option \'' . $key . '\' listed in settings for ' . $request['configure_module'] . ' but not listed in the output options configuration!', E_DEBUG);
 	}
 	foreach($in_config_not_in_settings as $i => $key)
 	{
-		PEAR::raiseError('Option \'' . $key . '\' listed in the output options for ' . $request['configure_module'] . ' but not listed in the module config!', E_DEBUG);
+		raise_error('Option \'' . $key . '\' listed in the output options for ' . $request['configure_module'] . ' but not listed in the module config!', E_DEBUG);
 	}
 	register_output_vars('options', $options);
 	register_output_vars('configure_module', $request['configure_module']);

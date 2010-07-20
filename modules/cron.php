@@ -248,7 +248,7 @@ function save_state($state)
 	$fp = @fopen(setting('local_root') . "state_dirs.txt", "w");
 	if($fp === false) // try tmp dir
 	{
-		PEAR::raiseError('Error saving state in default state_dirs.txt file!', E_DEBUG);
+		raise_error('Error saving state in default state_dirs.txt file!', E_DEBUG);
 		$fp = @fopen(setting('tmp_dir') . "state_dirs.txt", "w");
 	}
 	
@@ -258,7 +258,7 @@ function save_state($state)
 		fclose($fp);
 	}
 	else
-		PEAR::raiseError('Error saving state!', E_DEBUG);
+		raise_error('Error saving state!', E_DEBUG);
 }
 
 /**
@@ -360,7 +360,7 @@ function read_changed($request)
 	// allow skipping of scanning and go straight to file processing
 	if($request['scan_skip'] == false)
 	{
-		PEAR::raiseError("Phase 1: Checking for modified Directories; Recursively", E_DEBUG);
+		raise_error("Phase 1: Checking for modified Directories; Recursively", E_DEBUG);
 		
 		$request['scan_entry'] = validate($request, 'scan_entry');
 		$request['scan_dir'] = validate($request, 'scan_dir');
@@ -377,7 +377,7 @@ function read_changed($request)
 			// check to make sure it exists so that it isn't accidentaly removed when not mounted
 			if(!file_exists(str_replace('/', DIRECTORY_SEPARATOR, $request['scan_dir'])))
 			{
-				PEAR::raiseError("Error: Directory does not exist! " . $GLOBALS['watched'][$i]['Filepath'] . " is missing!", E_DEBUG);
+				raise_error("Error: Directory does not exist! " . $GLOBALS['watched'][$i]['Filepath'] . " is missing!", E_DEBUG);
 				$should_clean = 0;
 				continue;
 			}
@@ -389,7 +389,7 @@ function read_changed($request)
 			if( $current_dir !== true )
 			{		
 				// serialize and save
-				PEAR::raiseError("Ran out of Time: State saved", E_DEBUG);
+				raise_error("Ran out of Time: State saved", E_DEBUG);
 				
 				save_state(array('clean_count' => $request['clean_count'], 'dir' => $current_dir));
 				
@@ -409,11 +409,11 @@ function read_changed($request)
 			}
 		}
 		
-		PEAR::raiseError("Phase 1: Complete!", E_DEBUG);
+		raise_error("Phase 1: Complete!", E_DEBUG);
 	}
 	else
 	{
-		PEAR::raiseError("Phase 1: Skipped because of skip_scan argument.", E_DEBUG);
+		raise_error("Phase 1: Skipped because of skip_scan argument.", E_DEBUG);
 	}
 	
 	if(connection_status()!=0)
@@ -430,7 +430,7 @@ function read_files()
 {
 	global $should_clean;
 	
-	PEAR::raiseError("Phase 2: Checking modified directories for modified files", E_DEBUG);
+	raise_error("Phase 2: Checking modified directories for modified files", E_DEBUG);
 	
 	do
 	{
@@ -456,12 +456,12 @@ function read_files()
 		$secs_total = array_sum(explode(' ', microtime())) - $GLOBALS['tm_start'];
 		
 		if($secs_total > setting('file_seek_time'))
-			PEAR::raiseError("Ran out of Time: Changed directories still in database", E_DEBUG);
+			raise_error("Ran out of Time: Changed directories still in database", E_DEBUG);
 		
 	// if the connection is lost complete current directory then quit
 	} while( $secs_total < setting('file_seek_time') && count($db_dirs) > 0 && connection_status()==0 );
 	
-	PEAR::raiseError("Phase 2: Complete!", E_DEBUG);
+	raise_error("Phase 2: Complete!", E_DEBUG);
 
 	if(connection_status()!=0)
 	{
@@ -508,18 +508,18 @@ function output_cron($request)
 		if($request['ignore_lock'] != true)
 		{
 			fclose($log_fp);
-			PEAR::raiseError('Error: Log file locked, this usually means the script is already running, override with ?ignore_lock=true in the request', E_DEBUG);
+			raise_error('Error: Log file locked, this usually means the script is already running, override with ?ignore_lock=true in the request', E_DEBUG);
 			exit;
 		}
 		else
 		{
-			PEAR::raiseError('Error: Log file locked, continuing', E_DEBUG);
+			raise_error('Error: Log file locked, continuing', E_DEBUG);
 		}
 	}
 	
 	$GLOBALS['tm_start'] = array_sum(explode(' ', microtime()));
 	
-	PEAR::raiseError('Cron Script: ' . VERSION . '_' . VERSION_NAME, E_DEBUG);
+	raise_error('Cron Script: ' . VERSION . '_' . VERSION_NAME, E_DEBUG);
 	
 	// the cron script is useless if it has nowhere to store the information it reads
 	if(setting('database_enable') == false || count($GLOBALS['watched']) == 0)
@@ -529,8 +529,8 @@ function output_cron($request)
 	}
 	
 	// get the watched directories
-	PEAR::raiseError('Ignored: ' . serialize($GLOBALS['ignored']), E_DEBUG);
-	PEAR::raiseError('Watched: ' . serialize($GLOBALS['watched']), E_DEBUG);
+	raise_error('Ignored: ' . serialize($GLOBALS['ignored']), E_DEBUG);
+	raise_error('Watched: ' . serialize($GLOBALS['watched']), E_DEBUG);
 	
 	// directories that have already been scanned used to prevent recursion
 	$GLOBALS['scan_dirs'] = array();
@@ -551,7 +551,7 @@ function output_cron($request)
 		clear_state();
 	}
 	
-	PEAR::raiseError('State: ' . serialize($state), E_DEBUG);
+	raise_error('State: ' . serialize($state), E_DEBUG);
 	
 	// set the state as part of the request
 	if(!isset($request['scan_dir']) && isset($state['dir']))
@@ -568,13 +568,13 @@ function output_cron($request)
 	$should_clean = false;
 	if($request['clean_count'] >= setting('cleanup_threashold'))
 	{
-		PEAR::raiseError("Clean Count: " . $request['clean_count'] . ', clean up will happen this time!', E_DEBUG);
+		raise_error("Clean Count: " . $request['clean_count'] . ', clean up will happen this time!', E_DEBUG);
 		
 		$should_clean = true;
 	}
 	else
 	{
-		PEAR::raiseError("Clean Count: " . $request['clean_count'], E_DEBUG);
+		raise_error("Clean Count: " . $request['clean_count'], E_DEBUG);
 	}
 	
 	read_changed($request);
@@ -592,19 +592,19 @@ function output_cron($request)
 	//  but only if we need it!
 	if($should_clean === false)
 	{
-		PEAR::raiseError("Phase 3: Skipping cleaning, count is " . $request['clean_count'], E_DEBUG);
+		raise_error("Phase 3: Skipping cleaning, count is " . $request['clean_count'], E_DEBUG);
 		@fclose($log_fp);
 		exit;
 	}
 	elseif($should_clean === 0)
 	{
-		PEAR::raiseError("Phase 3: Skipping cleaning because of error!", E_DEBUG);
+		raise_error("Phase 3: Skipping cleaning because of error!", E_DEBUG);
 		@fclose($log_fp);
 		exit;
 	}
 	//exit;
 	
-	PEAR::raiseError("Phase 3: Cleaning up", E_DEBUG);
+	raise_error("Phase 3: Cleaning up", E_DEBUG);
 	
 	// clean up each database
 	foreach($GLOBALS['handlers'] as $handler => $config)
@@ -662,7 +662,7 @@ function output_cron($request)
 		}
 	}
 	
-	PEAR::raiseError("Phase 3: Complete!", E_DEBUG);
+	raise_error("Phase 3: Complete!", E_DEBUG);
 	
 	@fclose($log_fp);
 	

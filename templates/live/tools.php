@@ -134,22 +134,33 @@ function theme_live_tool_info()
 	<script language="javascript" type="application/javascript">
 		var singular_cancel = false;
 	</script>
-	<form action="<?php print $GLOBALS['templates']['html']['get']; ?>" method="post">
-		<table border="0" cellpadding="0" cellspacing="0" class="install">
-		<?php
-		
-		// print options
-		theme_live_tools_singular();
-		
-		?>
-		</table>
-		<br />
-		<br />
-		<br />
-		<input type="button" name="reload" value="Reload" onclick="window.location.reload();" class="button" style="float:right;" />
-	</form>
 	<?php
 	
+	print_form_object(array(
+		'action' => $GLOBALS['templates']['html']['get'],
+		'options' => $GLOBALS['templates']['vars']['infos'],
+		'type' => 'form',
+	));
+	
+	?><script language="javascript"><?php
+	// print out singular stuff
+	foreach($GLOBALS['templates']['vars']['infos'] as $name => $config)
+	{
+		if(isset($config['singular']))
+		{
+			?>
+			if(!singular_cancel)
+			{
+				$.get('<?php print $config['singular']; ?>',function(data){
+					$('#row_<?php print $name; ?>').replaceWith(data);
+				}, 'text');
+			}
+			<?php
+		}
+	}
+	?></script><?php
+	$GLOBALS['debug_errors'] = array();
+
 	?><div class="titlePadding"></div>
 	</div><?php
 
@@ -158,22 +169,10 @@ function theme_live_tool_info()
 
 function theme_live_tools_singular()
 {
-	$GLOBALS['debug_errors'] = array();
-	// print options
-	foreach($GLOBALS['templates']['vars']['infos'] as $name => $config)
-	{
-		?>
-		<tr id="row_<?php print $name; ?>">
-			<td class="title <?php print $config['status']; ?>"><?php print htmlspecialchars($config['name'], ENT_QUOTES); ?> (<?php print $name; ?>)</td>
-			<td>
-			<?php print_info_objects($config); ?>
-			</td>
-			<td class="desc">
-			<?php print_info_objects($config['description']); ?>
-			</td>
-		</tr>
-		<?php
-	}
+	print_form_object(array(
+		'options' => $GLOBALS['templates']['vars']['infos'],
+		'type' => 'fieldset',
+	));
 	
 	?><script language="javascript"><?php
 	// print out singular stuff

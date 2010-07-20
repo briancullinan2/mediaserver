@@ -73,7 +73,7 @@ function validate_dir($request)
 		)
 			return $request['dir'];
 		else
-			PEAR::raiseError('Directory does not exist!', E_USER);
+			raise_error('Directory does not exist!', E_USER);
 	}
 }
 
@@ -94,7 +94,7 @@ function validate_file($request)
 		if(is_file(realpath($tmp)) || handles($request['file'], $request['cat']) == true)
 			return $request['file'];
 		else
-			PEAR::raiseError('File does not exist!', E_USER);
+			raise_error('File does not exist!', E_USER);
 	}
 }
 
@@ -189,7 +189,7 @@ function alter_query_file($request, $props)
 			}
 			else
 			{
-				PEAR::raiseError('Directory does not exist!', E_USER);
+				raise_error('Directory does not exist!', E_USER);
 				// don't ever continue after this error
 				return false;
 			}
@@ -230,7 +230,7 @@ function alter_query_file($request, $props)
 			}
 			else
 			{
-				PEAR::raiseError('File does not exist!', E_USER);
+				raise_error('File does not exist!', E_USER);
 				// don't ever continue after this error
 				return false;
 			}
@@ -272,7 +272,7 @@ function output_file($request)
 	
 	if(!isset($request['id']))
 	{
-		PEAR::raiseError('You must select a file for download!', E_USER);
+		raise_error('You must select a file for download!', E_USER);
 		theme();
 		return;
 	}
@@ -282,7 +282,7 @@ function output_file($request)
 	
 	if(count($files) == 0)
 	{
-		PEAR::raiseError('File not found!', E_USER);
+		raise_error('File not found!', E_USER);
 		theme();
 		return;
 	}
@@ -377,7 +377,7 @@ function output_file($request)
 	
 	if(!is_resource($fp) || !is_resource($op))
 	{
-		PEAR::raiseError('Cannot open file!', E_USER);
+		raise_error('Cannot open file!', E_USER);
 		theme();
 		return;
 	}

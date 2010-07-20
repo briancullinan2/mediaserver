@@ -241,7 +241,7 @@ function validate_password($request)
 	if(isset($request['password']) && strtoupper($_SERVER['REQUEST_METHOD']) != 'POST' && ($request['password'] = base64_decode($request['password'], true)) === false)
 	{
 		// if the previous conditions are not met, then flip the fuck out
-		PEAR::raiseError('Password not properly encoded, referrer is not this site!', E_DEBUG|E_USER|E_FATAL);
+		raise_error('Password not properly encoded, referrer is not this site!', E_DEBUG|E_USER|E_FATAL);
 		
 		return array();
 	}
@@ -534,12 +534,12 @@ function session_users($request)
 			}
 			else
 			{
-				PEAR::raiseError('Invalid password.', E_USER);
+				raise_error('Invalid password.', E_USER);
 			}
 		}
 		else
 		{
-			PEAR::raiseError('Invalid username.', E_USER);
+			raise_error('Invalid username.', E_USER);
 		}
 	}
 	// use guest information
@@ -610,14 +610,14 @@ function output_users($request)
 				
 				if( count($db_user) > 0 )
 				{
-					PEAR::raiseError('User already exists.', E_USER);
+					raise_error('User already exists.', E_USER);
 				}
 			
 				// validate other fields
 				// validate email
 				if(!isset($request['email']) || preg_match('/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b/', $request['email']) === false)
 				{
-					PEAR::raiseError('Invalid E-mail address.', E_USER);
+					raise_error('Invalid E-mail address.', E_USER);
 				}
 				
 				// create user folders
@@ -627,7 +627,7 @@ function output_users($request)
 				
 					if($made == false)
 					{
-						PEAR::raiseError('Cannot create user directory.', E_USER);
+						raise_error('Cannot create user directory.', E_USER);
 					}
 				}
 			
@@ -680,11 +680,11 @@ function output_users($request)
 					goto($request['return']);
 				}
 				else
-					PEAR::raiseError('Already logged in!', E_USER);
+					raise_error('Already logged in!', E_USER);
 			}
 			if(isset($request['required_priv']) && $request['required_priv'] > $user['Privilage'])
 			{
-				PEAR::raiseError('You do not have sufficient privilages to view this page!', E_USER);
+				raise_error('You do not have sufficient privilages to view this page!', E_USER);
 			}
 		break;
 		// remove all cookies and session information

@@ -432,6 +432,7 @@ function output_admin_tools_movie_downloader($request)
 			$infos = output_admin_tools_movies_singular_search($request);
 			
 		register_output_vars('infos', $infos);
+		
 		theme('tools_singular');
 		
 		return;
@@ -441,7 +442,7 @@ function output_admin_tools_movie_downloader($request)
 		$infos = array();
 	
 		// output configuration link
-		PEAR::raiseError('You may need to <a href="' . url('module=admin_modules&configure_module=admin_tools_movie_downloader') . '">configure</a> this tool in order to use it properly.', E_WARN);
+		raise_error('You may need to <a href="' . url('module=admin_modules&configure_module=admin_tools_movie_downloader') . '">configure</a> this tool in order to use it properly.', E_WARN);
 	
 		// perform television downloading
 		if(dependency('curl_installed') == false)

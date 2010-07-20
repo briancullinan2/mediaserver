@@ -56,7 +56,7 @@ function setup_database()
 	// load database stuff
 	include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb-errorpear.inc.php';
 	include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb.inc.php';
-	
+
 	$GLOBALS['database'] = new database(setting('db_connect'));
 }
 
@@ -388,7 +388,7 @@ class database
 		if(!isset($this->db_conn) || $this->db_conn === false)
 		{
 			$GLOBALS['settings']['use_database'] = false;
-			PEAR::raiseError('Something has gone wrong with the connection!', E_DEBUG|E_USER|E_FATAL);
+			raise_error('Something has gone wrong with the connection!', E_DEBUG|E_USER|E_FATAL);
 		}
 	}
 /*
@@ -694,7 +694,7 @@ class database
 	{
 		$query = DATABASE::statement_builder($props, $require_permit);
 		
-		PEAR::raiseError('DATABASE: ' . $query, E_DEBUG);
+		raise_error('DATABASE: ' . $query, E_DEBUG);
 //print $query . '<br />';
 
 		if(isset($props['CALLBACK']))

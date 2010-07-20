@@ -162,7 +162,7 @@ function diskimage_add($file, $image_id = NULL)
 	// if the image changes remove all it's inside files from the database
 	if( $image_id != NULL )
 	{
-		PEAR::raiseError('Removing disk image: ' . $file, E_DEBUG);
+		raise_error('Removing disk image: ' . $file, E_DEBUG);
 		remove($last_path . '/', 'diskimage');
 	}
 
@@ -172,14 +172,14 @@ function diskimage_add($file, $image_id = NULL)
 	// print status
 	if( $image_id == NULL )
 	{
-		PEAR::raiseError('Adding diskimage: ' . $fileinfo['Filepath'], E_DEBUG);
+		raise_error('Adding diskimage: ' . $fileinfo['Filepath'], E_DEBUG);
 		
 		// add to database
 		$image_id = $GLOBALS['database']->query(array('INSERT' => 'diskimage', 'VALUES' => $fileinfo), false);
 	}
 	else
 	{
-		PEAR::raiseError('Modifying diskimage: ' . $fileinfo['Filepath'], E_DEBUG);
+		raise_error('Modifying diskimage: ' . $fileinfo['Filepath'], E_DEBUG);
 		
 		// update database
 		$image_id = $GLOBALS['database']->query(array('UPDATE' => 'diskimage', 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $image_id), false);
@@ -197,7 +197,7 @@ function diskimage_add($file, $image_id = NULL)
 	$files = get_archive_info($last_path);
 	foreach($files as $i => $fileinfo)
 	{
-		PEAR::raiseError('Adding file in disk image: ' . stripslashes($fileinfo['Filepath']), E_DEBUG);
+		raise_error('Adding file in disk image: ' . stripslashes($fileinfo['Filepath']), E_DEBUG);
 		$id = $GLOBALS['database']->query(array('INSERT' => 'diskimage', 'VALUES' => $fileinfo), false);
 		$ids['diskimage_id'] = $id;
 		add_ids(stripslashes($fileinfo['Filepath']), true, $ids);
@@ -207,7 +207,7 @@ function diskimage_add($file, $image_id = NULL)
 	$fileinfo = get_files_info($last_path);
 	if(substr($fileinfo['Filepath'], -1) != '/') $fileinfo['Filepath'] .= '/';
 	
-	PEAR::raiseError('Adding file in diskimage: ' . stripslashes($fileinfo['Filepath']), E_DEBUG);
+	raise_error('Adding file in diskimage: ' . stripslashes($fileinfo['Filepath']), E_DEBUG);
 	$id = $GLOBALS['database']->query(array('INSERT' => 'diskimage', 'VALUES' => $fileinfo), false);
 
 	return $image_id;
@@ -254,7 +254,7 @@ function get_diskimage($request, &$count)
 		if(!is_file(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
 		{
 			unset($request['dir']);
-			PEAR::raiseError('Directory does not exist!', E_USER);
+			raise_error('Directory does not exist!', E_USER);
 		}
 	}
 	

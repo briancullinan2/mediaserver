@@ -131,7 +131,7 @@ exit;
 				foreach($extract as $i => $function)
 				{
 					if(preg_match('/function ' . $function . '\(.*?({ ( (?>[^{}]+) | (?1) )* })/', $tmp_code, $matches) == 0)
-						PEAR::raiseError('Function ' . $function . ' could not be extracted!', E_DEBUG);
+						raise_error('Function ' . $function . ' could not be extracted!', E_DEBUG);
 					else
 						$code .= $matches[0];					
 				}

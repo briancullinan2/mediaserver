@@ -11,7 +11,10 @@ function register_admin_tools()
 		'description' => lang('tools description', 'Tools for manipulating the database and viewing different types of information about the system.'),
 		'privilage' => 10,
 		'path' => __FILE__,
-		'modules' => setup_register_modules('modules' . DIRECTORY_SEPARATOR . 'admin' . DIRECTORY_SEPARATOR . 'tools' . DIRECTORY_SEPARATOR),
+		'modules' => (is_dir('modules' . DIRECTORY_SEPARATOR . 'admin' . DIRECTORY_SEPARATOR . 'tools' . DIRECTORY_SEPARATOR)?
+			setup_register_modules('modules' . DIRECTORY_SEPARATOR . 'admin' . DIRECTORY_SEPARATOR . 'tools' . DIRECTORY_SEPARATOR)
+			:
+			array()),
 		'template' => false,
 	);
 }

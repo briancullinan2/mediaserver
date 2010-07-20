@@ -217,8 +217,8 @@ function get_archive_info($file)
 	
 	if(PEAR::isError($source))
 	{
-		PEAR::raiseError('Error reading archive: ' . $last_path, E_DEBUG);
-		PEAR::raiseError($source, E_DEBUG);
+		raise_error('Error reading archive: ' . $last_path, E_DEBUG);
+		raise_error($source, E_DEBUG);
 	}
 	else
 	{
@@ -287,7 +287,7 @@ function add_archive($file, $archive_id = NULL)
 	// if the archive changes remove all it's inside files from the database
 	if( $archive_id != NULL )
 	{
-		PEAR::raiseError('Removing archive: ' . $file, E_DEBUG);
+		raise_error('Removing archive: ' . $file, E_DEBUG);
 		remove($last_path . '/', 'archive');
 	}
 
@@ -299,14 +299,14 @@ function add_archive($file, $archive_id = NULL)
 	// print status
 	if( $archive_id == NULL )
 	{
-		PEAR::raiseError('Adding archive: ' . $fileinfo['Filepath'], E_DEBUG);
+		raise_error('Adding archive: ' . $fileinfo['Filepath'], E_DEBUG);
 		
 		// add to database
 		$archive_id = $GLOBALS['database']->query(array('INSERT' => 'archive', 'VALUES' => $fileinfo), false);
 	}
 	else
 	{
-		PEAR::raiseError('Modifying archive: ' . $fileinfo['Filepath'], E_DEBUG);
+		raise_error('Modifying archive: ' . $fileinfo['Filepath'], E_DEBUG);
 		
 		// update database
 		$archive_id = $GLOBALS['database']->query(array('UPDATE' => 'archive', 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $archive_id), false);
@@ -325,7 +325,7 @@ function add_archive($file, $archive_id = NULL)
 	$total_size = 0;
 	foreach($files as $i => $fileinfo)
 	{
-		PEAR::raiseError('Adding file in archive: ' . stripslashes($fileinfo['Filepath']), E_DEBUG);
+		raise_error('Adding file in archive: ' . stripslashes($fileinfo['Filepath']), E_DEBUG);
 		$id = $GLOBALS['database']->query(array('INSERT' => 'archive', 'VALUES' => $fileinfo), false);
 		$ids['archive_id'] = $id;
 		add_ids(stripslashes($fileinfo['Filepath']), true, $ids);
@@ -338,7 +338,7 @@ function add_archive($file, $archive_id = NULL)
 	$fileinfo['Filesize'] = $total_size;
 	if(substr($fileinfo['Filepath'], -1) != '/') $fileinfo['Filepath'] .= '/';
 	
-	PEAR::raiseError('Adding file in archive: ' . stripslashes($fileinfo['Filepath']), E_DEBUG);
+	raise_error('Adding file in archive: ' . stripslashes($fileinfo['Filepath']), E_DEBUG);
 	$id = $GLOBALS['database']->query(array('INSERT' => 'archive', 'VALUES' => $fileinfo), false);
 	
 	// add ID for root file
@@ -394,7 +394,7 @@ function get_archive($request, &$count)
 		if(!is_file(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
 		{
 			unset($request['dir']);
-			PEAR::raiseError('Directory does not exist!', E_USER);
+			raise_error('Directory does not exist!', E_USER);
 		}
 	}
 	

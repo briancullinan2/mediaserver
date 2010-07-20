@@ -228,7 +228,7 @@ function alter_query_select($request, $props)
 		}
 		else
 		{
-			PEAR::raiseError('IDs not found!', E_USER);
+			raise_error('IDs not found!', E_USER);
 			return false;
 		}
 	}
@@ -263,7 +263,7 @@ function output_select($request)
 
 	if(!is_array($files))
 	{
-		PEAR::raiseError('There was an error with the query.', E_USER);
+		raise_error('There was an error with the query.', E_USER);
 		register_output_vars('files', array());
 		return;
 	}

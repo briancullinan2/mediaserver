@@ -695,58 +695,44 @@ body {
 	background-image:url(?module=template&template=live&tfile=images/button_cancel.png);
 }
 
-form .title {
+.form-title {
 	width:175px;
 	font-weight:bold;
 	font-size:10pt;
-	background-color:#6F9;
-	height:100%;
-	float:left;
-	clear:both;
+	border-bottom:1px solid #999;
 }
 
-form .input {
-	float:left;
-	width:300px;
-}
-
-form .input .input {
-	width:auto;
-	float:none;
-	display:inline;
-}
-
-form .input .title {
-	background:none;
-	clear:none;
-	float:none;
-	width:auto;
-	font-size:small;
-	font-weight:normal;
-}
-
-form .submit {
+.submit {
 	display:block;
 	clear:both;
 	padding-top:30px;
 }
 
-.title.fail {
-	background-color:#F66;
+.form-field {
+	border-bottom:1px solid #999;
+	width:320px;
 }
 
-.title.warn {
-	background-color:#FC3;
+.form-row {
+	background-color:#DDFFDD;
+	color:#002200;
 }
 
-form .desc {
+.form-row.fail {
+	background-color:#FFEEEE;
+	color:#990000;
+}
+
+.form-row.warn {
+	background-color:#FFFFCC;
+	color:#000000;
+}
+
+.form-desc {
 	width:360px;
 	border-left:1px solid #999;
-	border-bottom:1px solid #999;
 	text-align:left;
-	right:0px;
-	height:100%;
-	float:left;
+	border-bottom:1px solid #999;
 }
 
 table.install {

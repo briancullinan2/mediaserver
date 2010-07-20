@@ -53,12 +53,10 @@ function theme_live_admin_modules_configure()
 	if(isset($GLOBALS['templates']['vars']['status']))
 		print_form_objects($GLOBALS['templates']['vars']['status']);
 		
-	print_form_objects(array(
-		'setting' => array(
-			'action' => url('module=admin_modules&configure_module=' . $GLOBALS['templates']['vars']['configure_module']),
-			'options' => $GLOBALS['templates']['vars']['options'],
-			'type' => 'form',
-		),
+	print_form_object(array(
+		'action' => url('module=admin_modules&configure_module=' . $GLOBALS['templates']['vars']['configure_module']),
+		'options' => $GLOBALS['templates']['vars']['options'],
+		'type' => 'form',
 	));
 	
 }
@@ -78,24 +76,13 @@ function theme_live_admin_status()
 	
 	?>
 	<div class="titlePadding"></div>
-	<table border="0" cellpadding="0" cellspacing="0" class="install">
 	<?php
-	foreach($GLOBALS['templates']['vars']['status'] as $name => $config)
-	{
-		?>
-		<tr>
-			<td class="title <?php print $config['status']; ?>"><?php print $config['name']; ?> (<?php print $name; ?>)</td>
-			<td>
-			<?php print_form_objects(array($name => $config)); ?>
-			</td>
-			<td class="desc">
-			<?php print_info_objects($config['description']); ?>
-			</td>
-		</tr>
-		<?php
-	}
+	
+	print_form_object(array(
+		'type' => 'fieldset',
+		'options' => $GLOBALS['templates']['vars']['status']
+	));
 	?>
-	</table>
 	<br />
 	<br />
 	<br />

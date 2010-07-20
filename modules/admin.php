@@ -73,7 +73,7 @@ function output_admin($request)
 					if(isset($status['status']) && $status['status'] == 'fail')
 					{
 						// all it takes is one
-						PEAR::raiseError('There is an error in the site status!', E_USER);
+						raise_error('There is an error in the site status!', E_USER);
 						
 						return;
 					}

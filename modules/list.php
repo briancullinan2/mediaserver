@@ -58,7 +58,7 @@ function setup_list()
 					include_once setting('local_root') . 'templates' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . $list . '.php';
 					
 					if(isset($GLOBALS['lists'][$list]))
-						PEAR::raiseError('List already defined!', E_DEBUG|E_WARN);
+						raise_error('List already defined!', E_DEBUG|E_WARN);
 					
 					if(function_exists('register_' . $name . '_' . $list))
 					{

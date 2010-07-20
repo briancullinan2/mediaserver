@@ -84,7 +84,7 @@ function handles_updates($dir, $file = NULL)
 						// return if count is different from database
 						if($count > $db_files[0]['count(*)'])
 						{
-							PEAR::raiseError('Directory count inconsitency: too few files in database!', E_DEBUG);
+							raise_error('Directory count inconsitency: too few files in database!', E_DEBUG);
 							return true;
 						}
 					}
@@ -94,7 +94,7 @@ function handles_updates($dir, $file = NULL)
 				// if count if less then number of directories in database
 				if($count < $db_files[0]['count(*)'])
 				{
-					PEAR::raiseError('Directory count inconsitency: too many files in database!', E_DEBUG);
+					raise_error('Directory count inconsitency: too many files in database!', E_DEBUG);
 					return true;
 				}
 			}
@@ -160,7 +160,7 @@ function add_updates($dir)
 			$fileinfo = array();
 			$fileinfo['Filepath'] = addslashes($dir);
 		
-			PEAR::raiseError('Queueing directory: ' . $dir, E_DEBUG);
+			raise_error('Queueing directory: ' . $dir, E_DEBUG);
 			
 			// add to database
 			$id = $GLOBALS['database']->query(array('INSERT' => 'updates', 'VALUES' => $fileinfo), false);
@@ -184,7 +184,7 @@ function add_updates($dir)
  */
 function scan_dir($dir)
 {
-	PEAR::raiseError('Scanning directory: ' . $dir, E_DEBUG);
+	raise_error('Scanning directory: ' . $dir, E_DEBUG);
 	
 	// search all the files in the directory
 	$files = get_files(array('dir' => $dir, 'limit' => 32000), $count, true);
@@ -215,7 +215,7 @@ function scan_dir($dir)
 	{
 		if(!in_array($file['Filepath'], $paths))
 		{
-			PEAR::raiseError('Removing: ' . $file['Filepath'], E_DEBUG);
+			raise_error('Removing: ' . $file['Filepath'], E_DEBUG);
 			
 			// remove file from each handler
 			foreach($GLOBALS['handlers'] as $handler => $config)
@@ -270,7 +270,7 @@ function handle_dir($dir, $current = '')
 	
 	if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $current)))
 	{
-		PEAR::raiseError('Looking for changes in: ' . $current, E_DEBUG);
+		raise_error('Looking for changes in: ' . $current, E_DEBUG);
 	
 		$files = get_files(array('dir' => $current, 'limit' => 32000), $count, true);
 		$has_resumed = false;
@@ -286,7 +286,7 @@ function handle_dir($dir, $current = '')
 				{
 					if(substr($dir, 0, strlen($file['Filepath'])) != $file['Filepath'])
 						continue;
-					PEAR::raiseError('Resuming looking for changes in: ' . $file['Filepath'], E_DEBUG);
+					raise_error('Resuming looking for changes in: ' . $file['Filepath'], E_DEBUG);
 					$has_resumed = true;
 				}
 				

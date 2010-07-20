@@ -181,7 +181,7 @@ function validate_tfile($request)
 			}
 		}
 
-		PEAR::raiseError('Template file requested but could not be found!', E_DEBUG|E_WARN);
+		raise_error('Template file requested but could not be found!', E_DEBUG|E_WARN);
 	}
 }
 
@@ -303,7 +303,7 @@ function register_style($request)
 		return true;
 	}
 	else
-		PEAR::raiseError('Style could not be set because of missing arguments.', E_DEBUG|E_WARN);
+		raise_error('Style could not be set because of missing arguments.', E_DEBUG|E_WARN);
 	return false;
 }
 
@@ -329,7 +329,7 @@ function register_script($request)
 		return true;
 	}
 	else
-		PEAR::raiseError('Script could not be set because of missing arguments.', E_DEBUG|E_WARN);
+		raise_error('Script could not be set because of missing arguments.', E_DEBUG|E_WARN);
 		
 	return false;
 }
@@ -383,7 +383,7 @@ function theme($request = '')
 			return true;
 		}
 		else
-			PEAR::raiseError('Theme function \'theme_' . $request['template'] . '_' . $request['tfile'] . '\' was not found.', E_DEBUG|E_WARN);
+			raise_error('Theme function \'theme_' . $request['template'] . '_' . $request['tfile'] . '\' was not found.', E_DEBUG|E_WARN);
 	}
 	// the request is a string, this is most common
 	elseif(is_string($request))
@@ -402,10 +402,10 @@ function theme($request = '')
 		}
 		// it is possible the whole request
 		else
-			PEAR::raiseError('Theme function \'theme_' . validate(array('template' => setting('local_template')), 'template') . '_' . $request . '\' was not found.', E_DEBUG|E_WARN, 'template');
+			raise_error('Theme function \'theme_' . validate(array('template' => setting('local_template')), 'template') . '_' . $request . '\' was not found.', E_DEBUG|E_WARN, 'template');
 	}
 	else
-		PEAR::raiseError('Theme function could not be handled because of an unrecognized argument.', E_DEBUG|E_WARN);
+		raise_error('Theme function could not be handled because of an unrecognized argument.', E_DEBUG|E_WARN);
 	return false;
 }
 

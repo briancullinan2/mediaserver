@@ -40,7 +40,7 @@ function output_admin_status($request)
 			// if it is not an array, display debug error
 			if(!is_array($module_status))
 			{
-				PEAR::raiseError('Something has gone terribly wrong while trying to retrieve the status for \'' . $module . '\'!', E_DEBUG);
+				raise_error('Something has gone terribly wrong while trying to retrieve the status for \'' . $module . '\'!', E_DEBUG);
 				
 				// really not much we can do, people might suck at implementing status_
 				continue;
@@ -107,7 +107,7 @@ function output_admin_status($request)
 				);
 			}
 			
-			PEAR::raiseError('Status function not defined for \'' . $module . '\', but it has dependencies!', E_DEBUG);
+			raise_error('Status function not defined for \'' . $module . '\', but it has dependencies!', E_DEBUG);
 		}
 		
 
@@ -125,18 +125,18 @@ function output_admin_status($request)
 		// print out errors
 		foreach($in_depends_not_in_config as $i => $key)
 		{
-			PEAR::raiseError('Dependency \'' . $key . '\' listed in dependencies for ' . $module . ' but not listed in the output status configuration!', E_DEBUG);
+			raise_error('Dependency \'' . $key . '\' listed in dependencies for ' . $module . ' but not listed in the output status configuration!', E_DEBUG);
 		}
 		foreach($in_config_not_in_depends as $i => $key)
 		{
-			PEAR::raiseError('Dependency \'' . $key . '\' listed in the output status for ' . $module . ' but not listed in the module dependencies!', E_DEBUG);
+			raise_error('Dependency \'' . $key . '\' listed in the output status for ' . $module . ' but not listed in the module dependencies!', E_DEBUG);
 		}
 		
 		// error on interference in keys
 		$key_interference = array_intersect(array_keys($status), array_keys($module_status));
 		foreach($key_interference as $i => $key)
 		{
-			PEAR::raiseError('Duplicate status listing \'' . $key . '\' in ' . $module . '!', E_DEBUG);
+			raise_error('Duplicate status listing \'' . $key . '\' in ' . $module . '!', E_DEBUG);
 		}
 		
 		// merge keys to output

@@ -376,7 +376,7 @@ function get_amazon_music_info($artist, $album)
 			$match = preg_match('/\<ASIN\>([a-z0-9]*)\<\/ASIN\>/i', $best, $matches);
 			if(!isset($matches[1]))
 			{
-				PEAR::raiseError('Error reading AmazonId: ' . htmlspecialchars($best), E_DEBUG);
+				raise_error('Error reading AmazonId: ' . htmlspecialchars($best), E_DEBUG);
 			}
 			else
 			{
@@ -405,7 +405,7 @@ function amazon_add_music($artist, $album)
 	// pull information from $info
 	$fileinfo = get_amazon_music_info($artist, $album);
 
-	PEAR::raiseError('Adding Amazon Music: ' . $artist . ' - ' . $album, E_DEBUG);
+	raise_error('Adding Amazon Music: ' . $artist . ' - ' . $album, E_DEBUG);
 	
 	// add to database
 	$id = $GLOBALS['database']->query(array('INSERT' => 'amazon', 'VALUES' => $fileinfo), false);
@@ -418,7 +418,7 @@ function amazon_add_movie($title)
 	// pull information from $info
 	$fileinfo = db_amazon_getMovieInfo($title);
 
-	PEAR::raiseError('Adding Amazon Movie: ' . $title, E_DEBUG);
+	raise_error('Adding Amazon Movie: ' . $title, E_DEBUG);
 	
 	// add to database
 	$id = $GLOBALS['database']->query(array('INSERT' => 'amazon', 'VALUES' => $fileinfo), false);

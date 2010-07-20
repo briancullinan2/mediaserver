@@ -56,7 +56,7 @@ function validate_action($request)
 	)))
 		return $request['action'];
 	else
-		PEAR::raiseError('405:Invalid Request', E_USER);
+		raise_error('405:Invalid Request', E_USER);
 }
 
 /**
@@ -88,7 +88,7 @@ function output_ampache($request)
 			// report the session has expired
 			if($request['auth'] != session_id())
 			{
-				PEAR::raiseError('401:Session Expired', E_USER);
+				raise_error('401:Session Expired', E_USER);
 			}
 			
 		break;

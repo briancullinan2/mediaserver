@@ -106,7 +106,7 @@ function lang($keys, $text)
 	if(!isset($GLOBALS['language_buffer'][$keys]))
 		$GLOBALS['language_buffer'][$keys] = $text;
 	else
-		PEAR::raiseError('Warning: The input language translation \'' . $keys . '\' has already been register for translation.', E_DEBUG);
+		raise_error('Warning: The input language translation \'' . $keys . '\' has already been register for translation.', E_DEBUG);
 		
 	// use language saved in sesssion, make sure it has been set up before calling this
 	if(isset($GLOBALS['LANG_CODE']) && validate_language($_REQUEST) == 'en')

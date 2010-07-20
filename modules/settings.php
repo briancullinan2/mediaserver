@@ -55,7 +55,7 @@ function setup_settings()
 			$GLOBALS['settings'] = array_merge($db_settings, $GLOBALS['settings']);
 		}
 		else
-			PEAR::raiseError('There was an error getting the administrative settings from the database!', E_DEBUG);
+			raise_error('There was an error getting the administrative settings from the database!', E_DEBUG);
 	}
 
 	// loop through the modules and call settings functions on them if they are set to callbacks
@@ -147,7 +147,7 @@ function setting($name)
 		return call_user_func_array($GLOBALS['setting_' . $name], array($GLOBALS['settings']));
 		
 	// if the setting isn't found in the configuration
-	PEAR::raiseError('Setting \'' . $name . '\' not found!', E_DEBUG);
+	raise_error('Setting \'' . $name . '\' not found!', E_DEBUG);
 }
 
 /**
@@ -179,7 +179,7 @@ function settings_get_defaults($settings)
 				elseif(isset($GLOBALS['setting_' . $setting]) && is_callable($GLOBALS['setting_' . $setting]))
 					$new_setting = $GLOBALS['setting_' . $setting]($settings);
 				else
-					PEAR::raiseError('Setting \'' . $setting . '\' is specified without a validate function in the ' . $module . ' module.', E_DEBUG);
+					raise_error('Setting \'' . $setting . '\' is specified without a validate function in the ' . $module . ' module.', E_DEBUG);
 			
 				if(isset($new_setting))
 					$default_settings[$setting] = $new_setting;
@@ -207,9 +207,9 @@ function validate_setting_database_reset($request)
 		$result = _modules_save_db_settings(array());
 		
 		if($result)
-			PEAR::raiseError('The database settings have been reset!', E_WARN);
+			raise_error('The database settings have been reset!', E_WARN);
 		else
-			PEAR::raiseError('There was a problem while saving the settings to the database!', E_USER);
+			raise_error('There was a problem while saving the settings to the database!', E_USER);
 	}
 }
  
@@ -224,18 +224,18 @@ function validate_setting_all_reset($request)
 		$result = _modules_save_db_settings(array());
 		
 		if($result)
-			PEAR::raiseError('The database settings have been reset!', E_WARN);
+			raise_error('The database settings have been reset!', E_WARN);
 		else
-			PEAR::raiseError('There was a problem while saving the settings to the database!', E_USER);
+			raise_error('There was a problem while saving the settings to the database!', E_USER);
 			
 		$result = _modules_save_fs_settings(array());
 		
 		if($result === -1)
-			PEAR::raiseError('Cannot save settings, the settings file is not writable!', E_USER);
+			raise_error('Cannot save settings, the settings file is not writable!', E_USER);
 		if($result === true)
-			PEAR::raiseError('The file settings have been reset!', E_WARN);
+			raise_error('The file settings have been reset!', E_WARN);
 		else
-			PEAR::raiseError('There was a problem with saving the settings in the settings file.', E_USER);
+			raise_error('There was a problem with saving the settings in the settings file.', E_USER);
 	}
 }
 

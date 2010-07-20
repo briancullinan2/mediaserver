@@ -374,14 +374,14 @@ function add_code($file, $force = false)
 			
 			if(count($db_code) == 0)
 			{
-				PEAR::raiseError('Adding code: ' . $file, E_DEBUG);
+				raise_error('Adding code: ' . $file, E_DEBUG);
 				
 				// add to database
 				$id = $GLOBALS['database']->query(array('INSERT' => 'code', 'VALUES' => $fileinfo), false);
 			}
 			else
 			{
-				PEAR::raiseError('Modifying code: ' . $file, E_DEBUG);
+				raise_error('Modifying code: ' . $file, E_DEBUG);
 				
 				// update database
 				$return = $GLOBALS['database']->query(array('UPDATE' => 'code', 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $db_code[0]['id']), false);

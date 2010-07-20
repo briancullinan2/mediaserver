@@ -279,7 +279,7 @@ function setting_system_type($settings)
  */
 function setting_installed()
 {
-	$settings = setting_settings_file();
+	$settings = setting('settings_file');
 	// make sure the database isn't being used and failed
 	return (file_exists($settings) && is_readable($settings) && (setting('database_enable') == false || dependency('database') != false));
 }
@@ -435,7 +435,7 @@ function dependency($dependency, $ignore_setting = false, $already_checked = arr
 			}
 			else
 			{
-				PEAR::raiseError('Function dependency_\'' . $dependency . '\' is specified but the function does not exist.', E_DEBUG);
+				raise_error('Function dependency_\'' . $dependency . '\' is specified but the function does not exist.', E_DEBUG);
 			}
 		}
 		
@@ -448,7 +448,7 @@ function dependency($dependency, $ignore_setting = false, $already_checked = arr
 				if(in_array($depend, $already_checked))
 				{
 					// log the repitition
-					PEAR::raiseError('The dependency \'' . $depend . '\' has already been verified when checking the dependencies of \'' . $dependency . '\'!', E_DEBUG);
+					raise_error('The dependency \'' . $depend . '\' has already been verified when checking the dependencies of \'' . $dependency . '\'!', E_DEBUG);
 					
 					// checking it twice is unnessicary since it should have failed already
 					continue;
@@ -481,7 +481,7 @@ function dependency($dependency, $ignore_setting = false, $already_checked = arr
 	if(isset($GLOBALS['dependency_' . $dependency]) && is_callable($GLOBALS['dependency_' . $dependency]))
 		return $GLOBALS['dependency_' . $dependency]($GLOBALS['settings']);
 	else
-		PEAR::raiseError('Dependency \'' . $dependency . '\' not defined!', E_DEBUG);
+		raise_error('Dependency \'' . $dependency . '\' not defined!', E_DEBUG);
 		
 	return false;
 }
@@ -1153,7 +1153,7 @@ function setup_session($request = array())
 				if(is_callable($function))
 					$save = call_user_func_array($function, array($request));
 				else
-					PEAR::raiseError('Session functionality specified but function ' . $function . ' in not callable!', E_DEBUG);
+					raise_error('Session functionality specified but function ' . $function . ' in not callable!', E_DEBUG);
 					
 				// only save when something has changed
 				if(isset($save))
@@ -1246,7 +1246,7 @@ function register_output_vars($name, $value, $append = false)
 {
 	if(isset($GLOBALS['output'][$name]) && $append == false)
 	{
-		PEAR::raiseError('Variable "' . $name . '" already set!', E_DEBUG);
+		raise_error('Variable "' . $name . '" already set!', E_DEBUG);
 	}
 	if($append == false)
 		$GLOBALS['output'][$name] = $value;
@@ -1275,7 +1275,7 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 		if(parse_url($request) !== false)
 			return $request;
 		else
-			PEAR::raiseError('The path \'' . $request . '\' is invalid!', E_DEBUG);
+			raise_error('The path \'' . $request . '\' is invalid!', E_DEBUG);
 	}
 	
 	// if the link is a string, we need to convert it to an array for processing
@@ -1474,7 +1474,7 @@ function set_output_vars()
 				if(is_callable($function))
 					call_user_func_array($function, array($_REQUEST));
 				else
-					PEAR::raiseError('Always Output functionality specified but function ' . $function . ' in not callable!', E_DEBUG);
+					raise_error('Always Output functionality specified but function ' . $function . ' in not callable!', E_DEBUG);
 			}
 		}
 	}
@@ -1578,7 +1578,7 @@ function validate($request, $key)
 			if(is_callable($function))
 				$new_value = call_user_func_array($function, array($request, $key));
 			else
-				PEAR::raiseError('Validate functionality specified but function ' . $function . ' in not callable!', E_DEBUG);
+				raise_error('Validate functionality specified but function ' . $function . ' in not callable!', E_DEBUG);
 			
 			if(isset($new_value))
 				$request[$key] = $new_value;
@@ -1592,7 +1592,7 @@ function validate($request, $key)
 	}
 	
 	// if a validator isn't found in the configuration
-	PEAR::raiseError('Validate \'' . $key . '\' not found!', E_DEBUG);
+	raise_error('Validate \'' . $key . '\' not found!', E_DEBUG);
 }
 
 /**

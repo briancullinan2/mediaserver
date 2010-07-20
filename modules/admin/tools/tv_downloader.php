@@ -245,7 +245,7 @@ function output_admin_tools_tv_downloader($request)
 	}
 	
 	// output configuration link
-	PEAR::raiseError('You may need to <a href="' . url('module=admin_modules&configure_module=admin_tools_tv_downloader') . '">configure</a> this tool in order to use it properly.', E_WARN);
+	raise_error('You may need to <a href="' . url('module=admin_modules&configure_module=admin_tools_tv_downloader') . '">configure</a> this tool in order to use it properly.', E_WARN);
 
 	// perform television downloading
 	if(dependency('curl_installed') == false)

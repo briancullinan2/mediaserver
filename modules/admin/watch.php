@@ -112,7 +112,7 @@ function add_admin_watch($file)
 			$fileinfo = array();
 			$fileinfo['Filepath'] = addslashes($file);
 		
-			PEAR::raiseError('Adding watch: ' . $file, E_DEBUG);
+			raise_error('Adding watch: ' . $file, E_DEBUG);
 			
 			// add to database
 			$id = $GLOBALS['database']->query(array('INSERT' => 'admin_watch', 'VALUES' => $fileinfo), false);
@@ -197,7 +197,7 @@ function output_admin_watch($request)
 		}
 		else
 		{
-			PEAR::raiseError('Invalid path.', E_USER);
+			raise_error('Invalid path.', E_USER);
 		}
 		register_output_vars('waddpath', $request['waddpath']);
 	}

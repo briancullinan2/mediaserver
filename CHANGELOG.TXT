@@ -1,4 +1,8 @@
 2010-07-18
+Changed a lot then reverted
+site uses raise_error() custom function because it doesn't generate an E_Strict notice
+
+2010-07-18
 Created a module for all the bulk rename functionality
 Fixed files module, now checks is_readable in _get_local_files()
 Fixed updates.php, also check is_readable in handles_updates()

@@ -143,7 +143,7 @@ function handles($file, $handler)
 	// no handler specified, show debug error
 	else
 	{
-		PEAR::raiseError('Handles called with \'' . $handler . '\' but no \'handles_\' function exists!', E_DEBUG);
+		raise_error('Handles called with \'' . $handler . '\' but no \'handles_\' function exists!', E_DEBUG);
 		
 		return false;
 	}
@@ -196,7 +196,7 @@ function add($file, $force = false, $handler = 'files')
 	// return false if there is no info function
 	if(!function_exists('get_' . $handler . '_info'))
 	{
-		PEAR::raiseError('No get info function or add function exists for ' . $handler . '!', E_DEBUG);
+		raise_error('No get info function or add function exists for ' . $handler . '!', E_DEBUG);
 		
 		return false;
 	}
@@ -220,7 +220,7 @@ function add($file, $force = false, $handler = 'files')
 		$fileinfo = call_user_func_array('get_' . $handler . '_info', array($file));
 		
 		// always add to file database
-		PEAR::raiseError('Adding ' . $handler . ': ' . $file, E_DEBUG);
+		raise_error('Adding ' . $handler . ': ' . $file, E_DEBUG);
 		
 		// add to database
 		return $GLOBALS['database']->query(array('INSERT' => $handler, 'VALUES' => $fileinfo), false);
@@ -234,14 +234,14 @@ function add($file, $force = false, $handler = 'files')
 		// update file if modified date has changed
 		if( date("Y-m-d h:i:s", filemtime($file)) != $db_file[0]['Filedate'] )
 		{
-			PEAR::raiseError('Modifying file: ' . $file, E_DEBUG);
+			raise_error('Modifying file: ' . $file, E_DEBUG);
 			
 			// update database
 			return $GLOBALS['database']->query(array('UPDATE' => 'files', 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $db_file[0]['id']), false);
 		}
 		else
 		{
-			PEAR::raiseError('Skipping file: ' . $file, E_DEBUG);
+			raise_error('Skipping file: ' . $file, E_DEBUG);
 		}
 		
 	}
@@ -250,14 +250,14 @@ function add($file, $force = false, $handler = 'files')
 		// get file information
 		$fileinfo = call_user_func_array('get_' . $handler . '_info', array($file));
 		
-		PEAR::raiseError('Modifying ' . $handler . ': ' . $file, E_DEBUG);
+		raise_error('Modifying ' . $handler . ': ' . $file, E_DEBUG);
 		
 		// update database
 		return $GLOBALS['database']->query(array('UPDATE' => $handler, 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $db_file[0]['id']), false);
 	}
 	else
 	{
-		PEAR::raiseError('Skipping ' . $handler . ': ' . $file, E_DEBUG);
+		raise_error('Skipping ' . $handler . ': ' . $file, E_DEBUG);
 	}
 		
 	return false;
@@ -376,7 +376,7 @@ function get_files($request, &$count, $handler_or_internal)
 		return get_files($GLOBALS['handlers'][$handler]['wrapper']);
 	elseif($handler != 'files')
 	{
-		PEAR::raiseError('get_files() called with handler \'' . $handler . '\' but no get_ handler function exists! Defaulting to files', E_DEBUG);
+		raise_error('get_files() called with handler \'' . $handler . '\' but no get_ handler function exists! Defaulting to files', E_DEBUG);
 		
 		// set the cat in the request to the provided handler
 		$request['cat'] = validate(array('cat' => $handler), 'cat');
@@ -396,7 +396,7 @@ function get_files($request, &$count, $handler_or_internal)
 	else
 	{
 		// there is probably just something wrong with some code, report it and exit
-		PEAR::raiseError('get_files() called without any acceptable intention!', E_DEBUG);
+		raise_error('get_files() called without any acceptable intention!', E_DEBUG);
 		
 		return array();
 	}
@@ -453,9 +453,9 @@ function _get_local_files($request, &$count, $handler)
 				$info['id'] = bin2hex($request['file']);
 				$info['Filepath'] = stripslashes($info['Filepath']);
 			}
-			else{ PEAR::raiseError('Invalid file!', E_USER); }
+			else{ raise_error('Invalid file!', E_USER); }
 		}
-		else{ PEAR::raiseError('File does not exist!', E_USER); }
+		else{ raise_error('File does not exist!', E_USER); }
 	}
 	else
 	{
@@ -498,7 +498,7 @@ function _get_local_files($request, &$count, $handler)
 				$files[] = $info;
 			}
 		}
-		else{ PEAR::raiseError('Directory does not exist!', E_USER); }
+		else{ raise_error('Directory does not exist!', E_USER); }
 	}
 		
 	return $files;
@@ -625,7 +625,7 @@ function remove($file, $handler = NULL)
 	if($file[strlen($file)-1] != '/') $file_dir = $file . '/';
 	else $file_dir = $file;
 	
-	PEAR::raiseError('Removing ' . $GLOBALS['handlers'][$handler]['name'] . ': ' . $file, E_DEBUG);
+	raise_error('Removing ' . $GLOBALS['handlers'][$handler]['name'] . ': ' . $file, E_DEBUG);
 
 	// remove file(s) from database
 	$GLOBALS['database']->query(array('DELETE' => $handler, 'WHERE' => 'Filepath = "' . addslashes($file) . '" OR LEFT(Filepath, ' . strlen($file_dir) . ') = "' . addslashes($file_dir) . '"'), false);	
@@ -752,20 +752,20 @@ function cleanup($handler = 'files')
 	// if files is not an array something must have gone wrong
 	if(!is_array($files))
 	{
-		PEAR::raiseError('There was a problem when trying to remove duplicate files.', E_DEBUG);
+		raise_error('There was a problem when trying to remove duplicate files.', E_DEBUG);
 	}
 	else
 	{
 		// remove first item from all duplicates
 		foreach($files as $i => $file)
 		{
-			PEAR::raiseError('Removing Duplicate ' . $GLOBALS['handlers'][$handler]['name'] . ': ' . $file['Filepath'], E_DEBUG);
+			raise_error('Removing Duplicate ' . $GLOBALS['handlers'][$handler]['name'] . ': ' . $file['Filepath'], E_DEBUG);
 			
 			$GLOBALS['database']->query(array('DELETE' => $handler, 'WHERE' => 'id=' . $file['id']), false);
 		}
 	}
 	
-	PEAR::raiseError('Cleanup: for ' . $GLOBALS['handlers'][$handler]['name'] . ' complete.', E_DEBUG);
+	raise_error('Cleanup: for ' . $GLOBALS['handlers'][$handler]['name'] . ' complete.', E_DEBUG);
 	
 }
 

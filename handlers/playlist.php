@@ -36,7 +36,7 @@ function handles_playlist($file)
 			return true;
 		case 'txt':
 			// read in the buffer size from the file and check to see if it even contains a file path
-			if($fp = @fopen($file, 'rb'))
+			if(is_readable($file) && $fp = fopen($file, 'rb'))
 			{
 				$buffer = fread($fp, setting('buffer_size'));
 				fclose($fp);
@@ -77,7 +77,7 @@ function add_playlist($file, $force = false)
 		// try to get music information
 		if( count($db_playlist) == 0 )
 		{
-			PEAR::raiseError('Adding playlist: ' . $file, E_DEBUG);
+			raise_error('Adding playlist: ' . $file, E_DEBUG);
 			
 			// only get files if we have to
 			$paths = get_playlist_info($file);
@@ -91,7 +91,7 @@ function add_playlist($file, $force = false)
 		}
 		elseif($force)
 		{
-			PEAR::raiseError('Modifying playlist: ' . $file, E_DEBUG);
+			raise_error('Modifying playlist: ' . $file, E_DEBUG);
 			
 			// only get files if we have to
 			$paths = get_playlist_info($file);
@@ -234,7 +234,7 @@ function get_playlist_info($file)
 			}
 
 			// file can't be found
-			PEAR::raiseError('Error: Can\'t find file from playlist ' . $file, E_DEBUG);
+			raise_error('Error: Can\'t find file from playlist ' . $file, E_DEBUG);
 		}
 	}
 	
