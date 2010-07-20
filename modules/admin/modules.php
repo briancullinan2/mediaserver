@@ -48,7 +48,7 @@ function dependency_writable_settings_file($settings)
 {
 	if(setting_installed() == false)
 		return false;
-	return is_writable(setting_settings_file($settings));
+	return is_writable(settings_file($settings));
 }
 
 /**
@@ -71,7 +71,7 @@ function status_admin_modules($settings)
 			),
 			'type' => 'text',
 			'disabled' => true,
-			'value' => setting_settings_file($settings),
+			'value' => settings_file(),
 		);
 	}
 	else
@@ -87,7 +87,7 @@ function status_admin_modules($settings)
 			),
 			'type' => 'text',
 			'disabled' => true,
-			'value' => setting_settings_file($settings),
+			'value' => settings_file(),
 		);
 	}
 	
@@ -150,8 +150,13 @@ function configure_admin_modules($settings, $request)
 					$description_2,
 				),
 			),
-			'type' => 'boolean',
-			'value' => in_array($module, get_required_modules())?true:$settings[$module . '_enable'],
+			'type' => 'set',
+			'options' => array(
+				$module . '_enable' => array(
+					'type' => 'boolean',
+					'value' => in_array($module, get_required_modules())?true:$settings[$module . '_enable'],
+				),
+			)
 		);
 		
 		// add some extra info for failed dependencies
@@ -165,16 +170,43 @@ function configure_admin_modules($settings, $request)
 		// set up the options for the modules based on required or recommended lists
 		if(in_array($module, get_required_modules()))
 		{
-			$options[$module . '_enable']['options'] = array(
+			$options[$module . '_enable']['options'][$module . '_enable']['options'] = array(
 				$required_str,
 			);
-			$options[$module . '_enable']['disabled'] = true;
+			$options[$module . '_enable']['options'][$module . '_enable']['disabled'] = true;
 		}
 		else
 		{
-			$options[$module . '_enable']['options'] = array(
+			$options[$module . '_enable']['options'][$module . '_enable']['options'] = array(
 				(in_array($module, $recommended)?$recommend:$optional),
 				$disabled,
+			);
+		}
+		
+		// add configure button
+		if(function_exists('configure_' . $module))
+		{
+			$options[$module . '_enable']['options'][] = array(
+				'type' => 'button',
+				'action' => 'window.location.href=\'' . url('module=admin_modules&configure_module=' . $module) . '\'',
+				'value' => 'Configure',
+			);
+		}
+		
+		// add dependency info
+		if(isset($GLOBALS['modules'][$module]['depends on']))
+		{
+			// get dependencies
+			if(is_string($GLOBALS['modules'][$module]['depends on']) && $GLOBALS['modules'][$module]['depends on'] == $module &&
+				function_exists('dependency_' . $module)
+			)
+				$depends_on = call_user_func_array('dependency_' . $module, array($GLOBALS['settings']));
+			else
+				$depends_on = $GLOBALS['modules'][$module]['depends on'];
+				
+			// add to options
+			$options[$module . '_enable']['options'][] = array(
+				'value' => '<br />Depends on:<br />' . (is_array($depends_on)?implode(', ', $depends_on):'Failed to retrieve dependencies!'),
 			);
 		}
 	}
@@ -346,7 +378,7 @@ function _modules_save_fs_settings($settings)
 			$settings = _modules_settings_to_string($settings);
 		
 		// open settings file for writing
-		$fh = fopen(setting('settings_file'), 'w');
+		$fh = fopen(settings_file(), 'w');
 	
 		if($fh !== false)
 		{

@@ -398,7 +398,7 @@ body {
 	height:1.5em;
 	margin:0.2em 1px;
 	position:relative;
-	width:9em;
+	width:inherit;
 }
 
 .filesmall .notselected {
@@ -409,7 +409,6 @@ body {
 	left:0;
 	position:absolute;
 	top:0;
-	width:9em;
 }
 
 .filesmall .selected {
@@ -420,7 +419,7 @@ body {
 	left:0;
 	position:absolute;
 	top:0;
-	width:9em;
+	width:100%;
 }
 
 .filesmall .itemTable {
@@ -434,7 +433,6 @@ body {
 }
 
 .filesmall .itemTable td {
-	width:9em;
 	text-align:left;
 }
 
@@ -468,7 +466,6 @@ body {
 	overflow:hidden;
 	position:absolute;
 	text-align:left;
-	width:8em;
 	white-space:nowrap;
 }
 
@@ -698,11 +695,40 @@ body {
 	background-image:url(?module=template&template=live&tfile=images/button_cancel.png);
 }
 
-td.title {
+form .title {
 	width:175px;
 	font-weight:bold;
 	font-size:10pt;
 	background-color:#6F9;
+	height:100%;
+	float:left;
+	clear:both;
+}
+
+form .input {
+	float:left;
+	width:300px;
+}
+
+form .input .input {
+	width:auto;
+	float:none;
+	display:inline;
+}
+
+form .input .title {
+	background:none;
+	clear:none;
+	float:none;
+	width:auto;
+	font-size:small;
+	font-weight:normal;
+}
+
+form .submit {
+	display:block;
+	clear:both;
+	padding-top:30px;
 }
 
 .title.fail {
@@ -713,11 +739,14 @@ td.title {
 	background-color:#FC3;
 }
 
-table.install td.desc {
+form .desc {
 	width:360px;
 	border-left:1px solid #999;
 	border-bottom:1px solid #999;
 	text-align:left;
+	right:0px;
+	height:100%;
+	float:left;
 }
 
 table.install {

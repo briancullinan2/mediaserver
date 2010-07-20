@@ -78,7 +78,7 @@ if(!isset($GLOBALS['settings']))
 /** require pear for error handling */
 if(include_once 'PEAR.php')
 {
-	include_once 'MIME' . DIRECTORY_SEPARATOR . 'Type.php';
+	//include_once 'MIME' . DIRECTORY_SEPARATOR . 'Type.php';
 }
 else
 {

@@ -27,7 +27,8 @@ function register_code()
  */
 function setup_code()
 {
-	include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'geshi' . DIRECTORY_SEPARATOR . 'geshi.php';
+	if(setting('highlighter') == 'geshi')
+		include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'geshi' . DIRECTORY_SEPARATOR . 'geshi.php';
 }
 
 /**
@@ -41,9 +42,9 @@ function dependency_highlighter($settings)
 	$settings['local_root'] = setting_local_root($settings);
 
 	// if that archiver is not installed, return false
-	if($settings['archiver'] == 'pear' && dependency('pear_installed') != false && include_path('Text/Highlighter.php') !== false)
+	if($settings['highlighter'] == 'pear' && dependency('pear_installed') != false && include_path('Text/Highlighter.php') !== false)
 		return true;
-	elseif($settings['archiver'] == 'gheshi' && 
+	elseif($settings['highlighter'] == 'gheshi' && 
 		file_exists($settings['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'geshi' . DIRECTORY_SEPARATOR . 'geshi.php'))
 		return true;
 	else
@@ -161,10 +162,18 @@ function configure_code($settings, $request)
  */
 function setting_highlighter($settings)
 {
+	$settings['local_root'] = setting_local_root($settings);
 	if(isset($settings['highlighter']) && in_array($settings['highlighter'], array('pear', 'geshi')))
 		return $settings['highlighter'];
 	else
-		return 'geshi';
+	{
+		if(file_exists($settings['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'geshi' . DIRECTORY_SEPARATOR . 'geshi.php'))
+			return 'geshi';
+		elseif(dependency('pear_installed') != false && include_path('Text/Highlighter.php') !== false)
+			return 'pear';
+		else
+			return 'geshi';
+	}
 }
 
 // read in code files and cache the hilighted version

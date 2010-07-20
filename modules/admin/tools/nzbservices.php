@@ -294,7 +294,7 @@ function configure_admin_tools_nzbservices($settings)
 			$options['nzbservices']['options']['setting_nzbservice_' . $i . '[username]'] = array(
 				'type' => 'text',
 				'value' => $config['username'],
-				'help' => $config['name'] . ' Username',
+				'name' => $config['name'] . ' Username',
 			);
 			$options['nzbservices']['options'][] = array(
 				'value' => '<br />'
@@ -302,12 +302,12 @@ function configure_admin_tools_nzbservices($settings)
 			$options['nzbservices']['options']['setting_nzbservice_' . $i . '[password]'] = array(
 				'type' => 'text',
 				'value' => $config['password'],
-				'help' => $config['name'] . ' Password',
+				'name' => $config['name'] . ' Password',
 			);
 		}
 		$options['nzbservices']['options']['setting_nzbservice_image_' . $i] = array(
 			'value' => '<img src="' . $config['image'] . '" alt="" />',
-			'help' => $config['name'] . ' Image',
+			'name' => $config['name'] . ' Image',
 		);
 	}
 	

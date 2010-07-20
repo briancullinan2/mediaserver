@@ -185,7 +185,7 @@ function configure_admin_tools_tv_downloader($settings)
 		'options' => array(
 			'setting_myepisodes[username]' => array(
 				'type' => 'text',
-				'help' => 'Username',
+				'name' => 'Username',
 				'value' => $settings['myepisodes']['username'],
 			),
 			array(
@@ -193,7 +193,7 @@ function configure_admin_tools_tv_downloader($settings)
 			),
 			'setting_myepisodes[password]' => array(
 				'type' => 'text',
-				'help' => 'Password',
+				'name' => 'Password',
 				'value' => $settings['myepisodes']['password'],
 			),
 		),

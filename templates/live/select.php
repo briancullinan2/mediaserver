@@ -46,14 +46,22 @@ function theme_live_select_block()
 	}
 	else
 	{
+		// get longest filename to base widths off of
+		$length = 0;
+		foreach($GLOBALS['templates']['vars']['files'] as $i => $file)
+		{
+			if(strlen($file['Filename']) > $length)
+				$length = strlen($file['Filename']);
+		}
+		
 		?><table cellpadding="0" cellspacing="" border="0" style="height:130px;">
 			<tr>
-				<td style="vertical-align:top;"><?php
+				<td style="vertical-align:top; width:<?php print ceil($length*.75);?>em;"><?php
 		foreach($GLOBALS['templates']['vars']['files'] as $i => $file)
 		{
 			if($i > 0 && $i % 6 == 0)
 			{
-				?></td><td style="vertical-align:top;"><?php
+				?></td><td style="vertical-align:top; width:<?php print ceil($length*.75);?>em;"><?php
 			}
 			
 			// make links browsable

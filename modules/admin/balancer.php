@@ -499,7 +499,7 @@ function configure_admin_balancer($settings, $request)
 			$balence_options['edit_server[' . $i . ']'] = array(
 				'type' => 'submit',
 				'value' => 'Edit',
-				'help' => isset($server['nickname'])?$server['nickname']:('Balance Server ' . $i),
+				'name' => isset($server['nickname'])?$server['nickname']:('Balance Server ' . $i),
 			);
 			$balence_options['remove_server[' . $i . ']'] = array(
 				'type' => 'submit',
@@ -528,7 +528,7 @@ function configure_admin_balancer($settings, $request)
 					'https' => 'Secure HTTP',
 				),
 				'value' => 'https',
-				'help' => 'Server Address',
+				'name' => 'Server Address',
 			),
 			'add_server[address]' => array(
 				'type' => 'text',
@@ -539,7 +539,7 @@ function configure_admin_balancer($settings, $request)
 			),
 			'add_server[username]' => array(
 				'type' => 'text',
-				'help' => 'Username',
+				'name' => 'Username',
 				'value' => '',
 			),
 			array(
@@ -547,7 +547,7 @@ function configure_admin_balancer($settings, $request)
 			),
 			'add_server[password]' => array(
 				'type' => 'text',
-				'help' => 'Password',
+				'name' => 'Password',
 				'value' => '',
 			),
 			array(
@@ -555,7 +555,7 @@ function configure_admin_balancer($settings, $request)
 			),
 			'add_server[nickname]' => array(
 				'type' => 'text',
-				'help' => 'Nickname',
+				'name' => 'Nickname',
 				'value' => '',
 			),
 			array(
@@ -620,7 +620,7 @@ function configure_admin_balancer($settings, $request)
 			$balence_options['edit_rule[' . $i . ']'] = array(
 				'type' => 'submit',
 				'value' => 'Edit',
-				'help' => 'Rule module: ' . $GLOBALS['modules'][$rule['module']]['name'] . '<br />' . 
+				'name' => 'Rule module: ' . $GLOBALS['modules'][$rule['module']]['name'] . '<br />' . 
 					'Condition: ' . $rule['condition'] . '<br />' . 
 					(isset($rule['input'])?'Input: ' . $rule['input'] . '<br />':'') . 
 					'Value: ' . $rule['value'] . '<br />' . 
@@ -694,7 +694,7 @@ function configure_admin_balancer($settings, $request)
 				'type' => 'select',
 				'options' => $modules,
 				'value' => 'encode',
-				'help' => 'Module',
+				'name' => 'Module',
 			),
 			array(
 				'value' => '<br />'
@@ -707,7 +707,7 @@ function configure_admin_balancer($settings, $request)
 					'server' => 'Server Variable',
 				),
 				'value' => 'request',
-				'help' => 'Condition',
+				'name' => 'Condition',
 			),
 			array(
 				'value' => '<br />'
@@ -715,7 +715,7 @@ function configure_admin_balancer($settings, $request)
 			'add_rule[input]' => array(
 				'type' => 'text',
 				'value' => 'dir',
-				'help' => 'Input',
+				'name' => 'Input',
 			),
 			array(
 				'value' => '<br />'
@@ -723,7 +723,7 @@ function configure_admin_balancer($settings, $request)
 			'add_rule[value]' => array(
 				'type' => 'text',
 				'value' => '/Share/Music/',
-				'help' => 'Value',
+				'name' => 'Value',
 			),
 			array(
 				'value' => '<br />'
@@ -732,7 +732,7 @@ function configure_admin_balancer($settings, $request)
 				'type' => 'select',
 				'options' => $servers,
 				'value' => 0,
-				'help' => 'Server',
+				'name' => 'Server',
 			),
 			array(
 				'value' => '<br />'
@@ -810,7 +810,7 @@ function configure_admin_balancer($settings, $request)
 				'type' => 'select',
 				'options' => $modules,
 				'value' => 'encode',
-				'help' => 'Module',
+				'name' => 'Module',
 			),
 			array(
 				'value' => '<br />'
@@ -818,7 +818,7 @@ function configure_admin_balancer($settings, $request)
 			'test_rules[request]' => array(
 				'type' => 'text',
 				'value' => $test_request,
-				'help' => 'Request Variables',
+				'name' => 'Request Variables',
 			),
 			array(
 				'value' => '<br />'
@@ -826,7 +826,7 @@ function configure_admin_balancer($settings, $request)
 			'test_rules[server]' => array(
 				'type' => 'text',
 				'value' => $test_server,
-				'help' => 'Server Variables',
+				'name' => 'Server Variables',
 			),
 			array(
 				'value' => '<br />'

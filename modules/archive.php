@@ -31,9 +31,8 @@ function register_archive()
  */
 function setup_archive()
 {
-	// include the id handler
-	include_once 'File' . DIRECTORY_SEPARATOR . 'Archive.php';
-	
+	if(setting('archiver') == 'pear')
+		include_once 'File' . DIRECTORY_SEPARATOR . 'Archive.php';
 }
 
 /**
@@ -119,10 +118,18 @@ function configure_archive($settings, $request)
  */
 function setting_archiver($settings)
 {
+	$settings['local_root'] = setting_local_root($settings);
 	if(isset($settings['archiver']) && in_array($settings['archiver'], array('pear', 'getid3', 'php')))
 		return $settings['archiver'];
 	else
-		return 'pear';
+	{
+		if(dependency('pear_installed') != false && include_path('File/Archive.php') !== false)
+			return 'pear';
+		elseif(file_exists($settings['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'module.archive.zip.php'))
+			return 'getid3';
+		else
+			return 'pear';
+	}
 }
 
 /**

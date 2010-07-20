@@ -336,7 +336,7 @@ function configure_admin_tools_movie_downloader($settings)
 			'add_movie_folder[folder]' => array(
 				'type' => 'text',
 				'value' => '',
-				'help' => 'Add Folder',
+				'name' => 'Add Folder',
 			),
 			'add_movie_folder[add]' => array(
 				'type' => 'submit',
@@ -601,7 +601,7 @@ function output_admin_tools_movies_singular_netflix($request)
 			'manual_search[text]' => array(
 				'type' => 'text',
 				'value' => (isset($request['manual_search'])?$request['manual_search']:''),
-				'help' => 'Manual Search'
+				'name' => 'Manual Search'
 			),
 			'manual_search[search]' => array(
 				'type' => 'submit',
@@ -639,7 +639,7 @@ function output_admin_tools_movies_singular_netflix($request)
 			'type' => 'button',
 			'value' => 'Cancel',
 			'action' => 'singular_cancel=true;',
-			'help' => 'Automatic Search',
+			'name' => 'Automatic Search',
 		);
 		
 		// construct first movie singular
