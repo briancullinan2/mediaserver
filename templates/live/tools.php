@@ -136,7 +136,7 @@ function theme_live_tool_info()
 	</script>
 	<?php
 	
-	print_form_object(array(
+	print_form_object('info', array(
 		'action' => $GLOBALS['templates']['html']['get'],
 		'options' => $GLOBALS['templates']['vars']['infos'],
 		'type' => 'form',
@@ -169,7 +169,7 @@ function theme_live_tool_info()
 
 function theme_live_tools_singular()
 {
-	print_form_object(array(
+	print_form_object('info', array(
 		'options' => $GLOBALS['templates']['vars']['infos'],
 		'type' => 'fieldset',
 	));

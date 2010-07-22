@@ -1,0 +1,7 @@
+name = Settings
+description = This allows users to save theme and site settings.
+privilage = 1
+depends on = settings
+template = true
+settings = settings
+package = core

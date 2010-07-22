@@ -13,6 +13,7 @@ function register_session()
 		'path' => __FILE__,
 		'settings' => 'session',
 		'depends on' => 'session',
+		'package' => 'core',
 	);
 }
 

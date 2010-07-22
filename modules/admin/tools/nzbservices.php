@@ -304,6 +304,9 @@ function configure_admin_tools_nzbservices($settings)
 				'value' => $config['password'],
 				'name' => $config['name'] . ' Password',
 			);
+			$options['nzbservices']['options'][] = array(
+		value' => '<br />'
+			);
 		}
 		$options['nzbservices']['options']['setting_nzbservice_image_' . $i] = array(
 			'value' => '<img src="' . $config['image'] . '" alt="" />',

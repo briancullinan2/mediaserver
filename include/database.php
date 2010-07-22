@@ -694,7 +694,10 @@ class database
 	{
 		$query = DATABASE::statement_builder($props, $require_permit);
 		
-		raise_error('DATABASE: ' . $query, E_DEBUG);
+		if(isset($query))
+			raise_error('DATABASE: ' . $query, E_DEBUG);
+		else
+			return false;
 //print $query . '<br />';
 
 		if(isset($props['CALLBACK']))

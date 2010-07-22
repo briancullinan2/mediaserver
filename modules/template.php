@@ -20,6 +20,7 @@ function register_template()
 		'template' => false,
 		'settings' => 'template', // this is to trick the settings in to waiting until after it loads
 		'always output' => 'template_variables',
+		'package' => 'core',
 	);
 }
  

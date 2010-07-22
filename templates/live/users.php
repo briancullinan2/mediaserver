@@ -9,8 +9,12 @@ function register_live_users()
 
 function theme_live_login()
 {
+	if(isset($GLOBALS['templates']['vars']['return']))
+		$return = $GLOBALS['templates']['vars']['return'];
+	else
+		$return = $GLOBALS['templates']['vars']['get'];
 	?>	
-	<form action="<?php echo url('module=users&users=login' . (isset($GLOBALS['templates']['vars']['return'])?('&return=' . urlencode($GLOBALS['templates']['vars']['return'])):'')); ?>" method="post">
+	<form action="<?php echo url('module=users&users=login&return=' . urlencode($return)); ?>" method="post">
 	
 		Username: <input type="text" name="username" value="<?php print isset($GLOBALS['templates']['vars']['username'])?$GLOBALS['templates']['vars']['username']:''; ?>" /><br />
 		Password: <input type="password" name="password" value="" /><br />

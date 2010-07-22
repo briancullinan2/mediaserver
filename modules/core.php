@@ -22,7 +22,7 @@ function register_core()
 	// register the request variables we will be providing validators for
 	
 	// this module has no output
-	return array(
+	$test = array(
 		'name' => lang('core title', 'Core Functions'),
 		'description' => lang('core description', 'Adds core functionality to site that other common modules depend on.'),
 		'path' => __FILE__,
@@ -36,7 +36,10 @@ function register_core()
 			'getid3_installed', 'curl_installed', 'extjs_installed'
 		),
 		'always output' => 'core_variables',
+		'package' => 'core',
 	);
+
+	return $test;
 }
 /**
  * @}
@@ -72,6 +75,7 @@ function setup_core()
 			),
 			'depends on' => array('template'),
 			'template' => false, // calls it's own template
+			'package' => 'core',
 		),
 		'database' => register_database(),
 	);
@@ -116,19 +120,21 @@ function flatten_module_dependencies($modules, $already_added = array())
 		{
 			// add to list to prevent recursion
 			$already_added[] = $module;
-			
-			// if the dependency field is set to the module name, and a valid callback exists, call that to determine list of dependencies
-			if(is_string($GLOBALS['modules'][$module]['depends on']) && $GLOBALS['modules'][$module]['depends on'] == $module &&
-				function_exists('dependency_' . $module)
-			)
-				$depends_on = call_user_func_array('dependency_' . $module, array($GLOBALS['settings']));
+
+			// if it is not an array debug message
+			if(!isset($GLOBALS['modules'][$module]['depends on']))
+				$depends_on = array();
 			else
 				$depends_on = $GLOBALS['modules'][$module]['depends on'];
-				
-			// if it is not an array debug message
-			if(!is_array($depends_on))
-				$depends_on = array();
 			
+			// if the dependency field is set to the module name, and a valid callback exists, call that to determine list of dependencies
+			if(is_string($depends_on) && $depends_on == $module &&
+				function_exists('dependency_' . $module)
+			)
+			{
+				$depends_on = call_user_func_array('dependency_' . $module, array($GLOBALS['settings']));
+			}
+
 			// call flatten based on modules dependencies first
 			$new_modules = array_merge($new_modules, flatten_module_dependencies($depends_on, $already_added));
 		}
@@ -147,7 +153,12 @@ function flatten_module_dependencies($modules, $already_added = array())
  */
 function setup_register_modules($path)
 {
-	$files = get_files(array('dir' => setting_local_root() . $path, 'limit' => 32000), $count, true);
+	$files = get_files(array(
+		'dir' => setting_local_root() . $path,
+		'depth' => 3,
+		'limit' => 32000,
+		'match' => '/\.info$/i',
+	), $count, true);
 	
 	$modules = array();
 	
@@ -158,8 +169,6 @@ function setup_register_modules($path)
 		{
 			if(is_file($file['Filepath']))
 			{
-				include_once $file['Filepath'];
-				
 				// determin module based on path
 				$module = basename($file['Filepath']);
 				
@@ -176,11 +185,27 @@ function setup_register_modules($path)
 				$module = substr($module, 0, strrpos($module, '.'));
 				
 				// call register function
-				if(function_exists('register_' . $prefix . $module))
+				if(substr($file['Filename'], -5) == '.info')
 				{
-					$modules[$module] = call_user_func_array('register_' . $prefix . $module, array());
+					$modules[$module] = parse_ini_file($file['Filepath'], true);
 					$GLOBALS['modules'][$prefix . $module] = &$modules[$module];
+					
+					include_once dirname($file['Filepath']) . DIRECTORY_SEPARATOR . $module . '.php';
 				}
+				else
+				{
+					include_once $file['Filepath'];
+					
+					if(function_exists('register_' . $prefix . $module))
+					{
+						$modules[$module] = call_user_func_array('register_' . $prefix . $module, array());
+						$GLOBALS['modules'][$prefix . $module] = &$modules[$module];
+					}
+				}
+				
+				// set the package if it is not set already
+				if(!isset($GLOBALS['modules'][$prefix . $module]['package']) && $prefix != '')
+					$GLOBALS['modules'][$prefix . $module]['package'] = substr($prefix, 0, -1);
 				
 				// reorganize the session triggers for easy access
 				if(isset($modules[$module]['session']) && is_array($modules[$module]['session']))
@@ -447,9 +472,6 @@ function dependency($dependency, $ignore_setting = false, $already_checked = arr
 				//  uses a backup check to prevent recursion and errors if there is
 				if(in_array($depend, $already_checked))
 				{
-					// log the repitition
-					raise_error('The dependency \'' . $depend . '\' has already been verified when checking the dependencies of \'' . $dependency . '\'!', E_DEBUG);
-					
 					// checking it twice is unnessicary since it should have failed already
 					continue;
 				}
@@ -474,6 +496,9 @@ function dependency($dependency, $ignore_setting = false, $already_checked = arr
 		return true;
 	}
 	
+	// if the modules aren't loaded yet, don't call the dependency function
+	if(!isset($GLOBALS['output']['modules']))
+		return;
 	
 	// call dependency function
 	if(function_exists('dependency_' . $dependency))
@@ -1071,9 +1096,13 @@ function setup_validate()
 		$new_value = validate($_REQUEST, $key);
 		if(isset($new_value))
 			$_REQUEST[$key] = $new_value;
+		else
+			unset($_REQUEST[$key]);
 			
 		// set the get variable also, so that when url($_GET) is used it is an accurate representation of the current page
-		if(isset($_GET[$key])) $_GET[$key] = $_REQUEST[$key];
+		if(isset($_GET[$key]) && isset($_REQUEST[$key])) $_GET[$key] = $_REQUEST[$key];
+		else
+			unset($_GET[$key]);
 	}
 	
 	// call the session save functions
@@ -1766,6 +1795,19 @@ function generic_validate_filename($request, $index)
 }
 
 /**
+ * Generic validator for machine readable names like function names
+ */
+function generic_validate_machine_readable($request, $index)
+{
+	if(isset($request[$index]))
+		$request[$index] = preg_replace('/[^a-z0-9]/i', '_', $request[$index]);
+		
+	// ensure it is a valid name
+	if(preg_match('/[a-z][a-z0-9_]*/i', $request[$index]) != 0)
+		return strtolower($request[$index]);
+}
+
+/**
  * Generic validate for hostname part of URL
  */
 function generic_validate_hostname($request, $index)
@@ -2199,7 +2241,7 @@ function rewrite_vars(&$request, &$get, &$post)
  * Implementation of #alter_query()
  * Core input variables that alter database queries
  */
-function alter_query_core($request, $props)
+function alter_query_core($request, &$props)
 {
 	$request['limit'] = validate($request, 'limit');
 	$request['start'] = validate($request, 'start');
@@ -2239,8 +2281,6 @@ function alter_query_core($request, $props)
 			$props['ORDER'] = $request['order_by'] . ' ' . $request['direction'];
 		}
 	}
-	
-	return $props;
 }
 
 /**
@@ -2417,12 +2457,35 @@ function theme_header()
 </head>
 
 <body>
+<h1><?php print htmlspecialchars($GLOBALS['modules'][$GLOBALS['templates']['vars']['module']]['name']); ?></h1>
 	<?php
+	
+	theme('errors');
 }
 
 function theme_footer()
 {
+	if($GLOBALS['templates']['vars']['module'] != 'users')
+		theme('login_block');
+	
 	?>
+	Modules:
+<ul>
+<?php
+foreach($GLOBALS['modules'] as $name => $module)
+{
+	if($module['privilage'] > $GLOBALS['templates']['vars']['user']['Privilage'])
+		continue;
+										
+	if(!function_exists('output_' . $name))
+		$link = 'module=admin_modules&configure_module=' . $name;
+	else
+		$link = 'module=' . $name;
+									
+	?><li><a href="<?php print url($link); ?>"><?php echo $module['name']; ?></a></li><?php
+}
+?>
+</ul>
 </body>
 </html>
 	<?php

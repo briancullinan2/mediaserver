@@ -25,6 +25,7 @@ function register_search()
 		'always output' => array('search'),
 		'depends on' => 'search',
 		'template' => true,
+		'package' => 'core',
 	);
 }
 
@@ -213,7 +214,7 @@ function search_get_pieces_query($pieces)
  * Alter a database queries when the search variable is set in the request
  * @ingroup alter_query
  */
-function alter_query_search($request, $props)
+function alter_query_search($request, &$props)
 {
 	// do not alter the query if selected is set
 	$request['selected'] = validate($request, 'selected');
@@ -236,6 +237,7 @@ function alter_query_search($request, $props)
 	// array for each column
 	$parts = array();
 		
+	// loop through each column to compile search query
 	foreach($columns as $i => $column)
 	{
 		if(isset($request['search_' . $column]))
@@ -287,6 +289,8 @@ function alter_query_search($request, $props)
 			$parts[] = ' LOCATE("' . addslashes($search) . '", ' . $column . ')';
 		}
 	}
+	
+	// set the new props
 	if(!isset($props['WHERE']))
 		$props['WHERE'] = array();
 	if(is_string($props['WHERE']))
@@ -294,8 +298,6 @@ function alter_query_search($request, $props)
 		
 	if(count($parts) > 0)
 		$props['WHERE'][] = join((isset($request['search_operator'])?(' ' . $request['search_operator'] . ' '):' OR '), $parts);
-
-	return $props;
 }
 
 /**

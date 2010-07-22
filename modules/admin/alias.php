@@ -77,7 +77,7 @@ function setup_admin_alias()
 	// if the dependencies are not met, exit here
 	if(dependency('admin_alias') == false)
 		return;
-	
+
 	if(setting('admin_alias_enable') == true)
 	{
 		$aliases = $GLOBALS['database']->query(array('SELECT' => 'admin_alias'), false);

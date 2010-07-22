@@ -107,6 +107,11 @@ function is_wrapper($handler)
  */
 function handles($file, $handler)
 {
+	// check the module is enabled first
+	if($handler != 'files' && dependency($handler) == false)
+		return false;
+	
+	// check the handles_ function	
 	if($handler == 'files' || $handler === true)
 	{
 		$file = str_replace('\\', '/', $file);
@@ -472,10 +477,31 @@ function _get_local_files($request, &$count, $handler)
 			$tmp_files = scandir(str_replace('/', DIRECTORY_SEPARATOR, $request['dir']));
 			$count = count($tmp_files);
 			
-			// parse out all the files that this handler doesn't handle, just like a filter
-			//  but only if we are not called by internals
+			// do some filtering of files
 			for($j = 0; $j < $count; $j++)
-				if(!handles($request['dir'] . $tmp_files[$j], true) || (isset($request['dirs_only']) && $request['dirs_only'] == true && !is_dir($request['dir'] . $tmp_files[$j]))) unset($tmp_files[$j]);
+			{
+				// parse out all the files that this handler doesn't handle, just like a filter
+				//  but only if we are not called by internals
+				if(!handles($request['dir'] . $tmp_files[$j], true))
+					unset($tmp_files[$j]);
+				// if dirs only, then unset all the files	
+				elseif(
+					isset($request['dirs_only']) && $request['dirs_only'] == true &&
+					!is_dir($request['dir'] . $tmp_files[$j])
+				)
+					unset($tmp_files[$j]);
+				// if match is set, use that to parse files
+				elseif(isset($request['match']) && preg_match($request['match'], $tmp_files[$j]) == 0)
+					unset($tmp_files[$j]);
+				// if it is not unset
+				else
+				{
+					// if match is set and depth is not equal to zero then get files recursively
+					if(isset($request['match']) && is_dir($request['dir'] . $tmp_files[$j]) &&
+						isset($request['depth']) && is_numeric($request['depth']) && $request['depth'] > 0)
+						$tmp_files = array_merge($tmp_files, _get_local_files(array('dir' => $request['dir'] . $tmp_files[$j], 'depth' => $request['depth'] - 1) + $request, $tmp_count, 'files'));
+				}
+			}
 
 			// get the values again, this will reset all the indices
 			$tmp_files = array_values($tmp_files);
@@ -515,6 +541,19 @@ function _get_database_files($request, &$count, $handler)
 
 //---------------------------------------- Selection ----------------------------------------\\
 	
+	// loop through each module and call the method
+	foreach($GLOBALS['modules'] as $module => $config)
+	{
+		if(function_exists('alter_query_' . $module))
+		{
+			$result = call_user_func_array('alter_query_' . $module, array($request, &$props));
+
+			if(isset($result) && $result == false)
+				return array();
+		}
+	}
+		
+	/*
 	$props = alter_query_core($request, $props);
 
 	$props = alter_query_select($request, $props);
@@ -526,6 +565,7 @@ function _get_database_files($request, &$count, $handler)
 		return array();
 	
 	$props = alter_query_search($request, $props);
+	*/
 	
 //---------------------------------------- Query ----------------------------------------\\
 	// finally start processing query

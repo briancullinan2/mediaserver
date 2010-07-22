@@ -122,7 +122,7 @@ function get_ids($request, &$count, $files = array())
 {
 	if(!setting('database_enable'))
 	{
-		raise_error('db_ids' . '::get() called by mistake, use_database is set to false', E_DEBUG);
+		raise_error('db_ids' . '::get() called by mistake, database_enable is set to false', E_DEBUG);
 		$count = 0;
 		return array();
 	}
@@ -162,7 +162,8 @@ function get_ids($request, &$count, $files = array())
 		// add id information to file
 		foreach($files as $index => $file)
 		{
-			if(!isset($ids[$file['id']]) || $ids[$file['id']]['Filepath'] != preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file['Filepath']))
+			// look up file if it was not be retrieved by the id information
+			if(!isset($ids[$file['id']])) 
 			{
 				// handle file
 				$id = add_ids(preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file['Filepath']), true, array($request['cat'] . '_id' => $file['id']));

@@ -97,7 +97,7 @@ function theme_live_debug_block()
 		}
 	</script>
 	<?php
-	if($GLOBALS['templates']['vars']['user']['Username'] != 'guest' || setting('database_enable') == false)
+	if($GLOBALS['templates']['vars']['user']['Username'] != 'guest')
 	{
 		?><div id="debug" class="debug hide"><?php
 		foreach($GLOBALS['debug_errors'] as $i => $error)
@@ -235,19 +235,6 @@ function live_get_theme_color()
 	return $theme;
 }
 
-function theme_live_languages()
-{
-	?><div id="languages" style="float:right; margin-bottom:-40px;">
-	Language: <select name="language" onChange="window.location.href='<?php print $GLOBALS['templates']['vars']['get']; ?>?language=' + this.value;">
-	<?php
-	foreach($GLOBALS['templates']['vars']['languages'] as $code => $language)
-	{
-		?><option value="<?php print $code; ?>" <?php print ($GLOBALS['templates']['vars']['language'] == $code)?'selected="selected"':''; ?>><?php print $language; ?></option><?php
-	}
-	
-	?></select></div><?php
-}
-
 function theme_live_body()
 {
 	$theme = live_get_theme_color();
@@ -261,13 +248,13 @@ function theme_live_body()
 				<tr>
 					<td id="siteTitle"><a href="<?php print url('module=index'); ?>"><?php print setting('html_name'); ?></a></td>
 					<td>
-						<?php theme('search_block'); ?>
+						<?php if(dependency('search') != false) theme('search_block'); ?>
 					</td>
 					<td id="templates"><?php theme('template_block'); ?></td>
 				</tr>
 			</table>
 <?php if(setting('debug_mode')) theme('debug_block'); ?>
-			<?php theme('languages'); ?>
+			<?php if(dependency('language') != false) theme('language_block'); ?>
 			<div id="container">
 				<table width="100%" cellpadding="5" cellspacing="0">
 					<tr>

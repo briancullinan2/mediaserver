@@ -110,7 +110,7 @@ else
 		}
 	}
 }
-//session_cache_limiter('public');
+
 /** always begin the session */
 session_start();
 
@@ -150,7 +150,6 @@ function setup()
 	if(!($GLOBALS['note_errors'] = session_get('errors', 'note'))) $GLOBALS['note_errors'] = array();
 	/** stores a list of all debug information */
 	$GLOBALS['debug_errors'] = array();
-	//set_error_handler('php_to_PEAR_Error', E_ALL);
 	
 	// always include fs_file handler
 	include_once setting_local_root() . 'handlers' . DIRECTORY_SEPARATOR . 'files.php';
@@ -160,6 +159,7 @@ function setup()
 	
 	/** require compatibility */
 	include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'compatibility.php';
+	include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'forms.php';
 
 	// loop through modules and call setup function
 	foreach($GLOBALS['modules'] as $module => $config)
@@ -174,7 +174,7 @@ function setup()
 		elseif(dependency($module) == false)
 		{
 			// this prevents us from disabling required modules on accident
-			$GLOBALS['settings'][$module . '_enable'] = setting_module_enable(array($module . '_enable' => false), $module);
+			$GLOBALS['settings'][$module . '_enable'] = setting($module . '_enable');
 		}
 	}
 	
@@ -188,13 +188,13 @@ function setup()
 		elseif(dependency($handler) == false)
 		{
 			// this prevents us from disabling required modules on accident
-			$GLOBALS['settings'][$handler . '_enable'] = setting_handler_enable(array($handler . '_enable' => false), $handler);
+			$GLOBALS['settings'][$handler . '_enable'] = setting($handler . '_enable');
 		}
 	}
 
 	//Remove annoying POST error message with the page is refreshed 
 	//  better place for this?
-	if(isset($_POST) && count($_POST) > 0)
+	if(isset($_SERVER['REQUEST_METHOD']) && strtolower($_SERVER['REQUEST_METHOD']) == 'post')
 	{
 		session('last_request',  $_REQUEST);
 		goto($_SERVER['REQUEST_URI']);
@@ -209,11 +209,23 @@ function setup()
 
 	// set up variables passed to the system in the request or post
 	setup_validate();
+print 'hit';
+exit;
 }
 
 /**
  * @}
  */
+ 
+/**
+ * Function for invoking an API call on all modules and returning the result
+ * @param method Method to call on all modules
+ * @param list_return_values list all the return values from each module separately
+ * @return true if not listing return values and it succeeded, returns false if any module fails, returns associative array if listing each value
+ */
+function invoke_all($method)
+{
+}
 
 /**
  * Function for checking in libraries are installed, specifically PEAR which likes to use /local/share/php5/
@@ -269,12 +281,15 @@ function output($request)
 
 	// output module
 	// if the module is disabled, but has no template, call output function for handling disabledness
-	// otherwise just show template for disabled modules
 	if(function_exists('output_' . $request['module']) && dependency($request['module']) != false)
 		call_user_func_array('output_' . $request['module'], array($request));
+	// otherwise just show template for disabled modules
 	elseif(dependency($request['module']) == false)
 	{
-		raise_error('The selected module has dependencies that are not met!', E_DEBUG|E_USER);
+		raise_error('The selected module has dependencies that are not met! <a href="' . 
+			url('module=admin_modules&configure_module=' . $request['module']) . '">Configure</a> this module.'
+		, E_DEBUG|E_USER);
+		
 		theme();
 		return;
 	}
@@ -815,25 +830,17 @@ function kill9($command, $startpid, $limit = 2)
  */
 function php_to_PEAR_Error($error_code, $error_str, $error_file, $error_line)
 {
-	if($error_code & E_WARNING || $error_code & E_STRICT || $error_code & E_NOTICE)
+	if($error_code & E_STRICT)
 	{
-		// if verbose is false drop the error
-		if(setting_installed() == false)
-		{
-			$error_code = E_DEBUG|E_WARN|E_USER;
-		}
-		elseif(setting('verbose'))
-		{
+		if(setting('verbose') != false)
 			$error_code = E_DEBUG;
-		}
 	}
 	else
 		$error_code = E_DEBUG;
-		
-	if(isset($error_code))
-		raise_error($error_str, $error_code);
-	
-	return true;
+
+	raise_error('PHP ERROR: ' . $error_str, $error_code);
+
+	return false;
 }
 
 function raise_error($str, $code)

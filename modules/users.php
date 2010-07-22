@@ -6,6 +6,8 @@
  * view a user profile
  * send messages
  */
+ 
+define('PASSWORD_COMPLEXITY', '/\A(?=\S*?[A-Z])(?=\S*?[a-z])(?=\S*?[0-9])\S{6,}\z/');
 
 /**
  * Set up the current user and get their settings from the database
@@ -14,9 +16,15 @@
 function setup_users()
 {
 	$session_user = session('users');
-	// prepare the session that stores user information
-	if($session_user == false && !isset($_REQUEST['username']))
-		$_REQUEST['username'] = 'guest';
+	if(!isset($session_user))
+	{
+		// prepare the session that stores user information
+		$session_user = array(
+			'Username' => 'guest',
+			'Privilage' => 1
+		);
+		session('users', $session_user);
+	}
 
 	// this will hold a cached list of the users that were looked up
 	$GLOBALS['user_cache'] = array();
@@ -46,7 +54,7 @@ function setup_users()
 	}
 	
 	// output the user so template can print out login or logout stuff
-	if(isset($session_user)) register_output_vars('user', $session_user);
+	register_output_vars('user', $session_user);
 }
 
 /**
@@ -75,6 +83,7 @@ function register_users()
 		),
 		'internal' => true,
 		'template' => true,
+		'package' => 'core',
 	);
 }
 
@@ -213,10 +222,21 @@ function setting_local_users($settings)
  */
 function setting_username_validation($settings)
 {
-	if(isset($settings['username_validation']) && preg_match($settings['username_validation'], md5(microtime())) !== false)
+	$settings['username_validation'] = generic_validate_regexp($settings, 'username_validation');
+	if(isset($settings['username_validation']))
 		return $settings['username_validation'];
 	else
 		return '/[a-z][a-z0-9]{4}[a-z0-9]*/i';
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ */
+function setting_admin_password($settings)
+{
+	if(isset($settings['admin_password']) && preg_match(PASSWORD_COMPLEXITY, $settings['admin_password']) != 0)
+		return md5($settings['admin_password']);
 }
 
 /**
@@ -268,7 +288,8 @@ function validate_email($request)
 function validate_username($request)
 {
 	// a little lax here because it will run through the username validator when registering
-	return generic_validate_all_safe($request, 'username');
+	if(isset($request['username']) && preg_match(setting('username_validation'), $request['username']) != 0)
+		return $request['username'];
 }
 
 /**
@@ -533,14 +554,10 @@ function session_users($request)
 				$save['Settings'] = unserialize($save['Settings']);
 			}
 			else
-			{
 				raise_error('Invalid password.', E_USER);
-			}
 		}
 		else
-		{
 			raise_error('Invalid username.', E_USER);
-		}
 	}
 	// use guest information
 	elseif(setting_installed() && setting('database_enable'))
@@ -562,20 +579,36 @@ function session_users($request)
 			$save['Settings'] = unserialize($save['Settings']);
 		}
 	}
-	
-	// if the save variable hasn't been set yet, use quest account
-	if(!isset($save))
+	// use admin account defined in settings
+	elseif( isset($request['username']) && isset($request['password']) )
 	{
-		$save = array(
-			'Username' => 'guest',
-			'Privilage' => 1
-		);
+		if($request['username'] == 'admin')
+		{
+print $request['password'];
+print setting('admin_password');
+			if($request['password'] == setting('admin_password'))
+			{
+				$save = array(
+					'id' => '-1',
+					'Username' => 'admin',
+					'Privilage' => 10,
+				);
+			}
+			else
+				raise_error('Invalid password.', E_USER);
+		}
+		else
+			raise_error('Invalid username.', E_USER);
 	}
 	
-	// output the user so template can print out login or logout stuff
-	register_output_vars('user', $save);
-	
-	return $save;
+	// if the save variable hasn't been set yet, use quest account
+	if(isset($save))
+	{
+		// output the user so template can print out login or logout stuff
+		register_output_vars('user', $save);
+		
+		return $save;
+	}
 }
 
 /**
@@ -609,16 +642,15 @@ function output_users($request)
 				, false);
 				
 				if( count($db_user) > 0 )
-				{
 					raise_error('User already exists.', E_USER);
-				}
 			
 				// validate other fields
+				if(!isset($request['password']) || preg_match(PASSWORD_COMPLEXITY, $request['password']) == 0)
+					raise_error('Password not complex enough.', E_USER);
+				
 				// validate email
-				if(!isset($request['email']) || preg_match('/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b/', $request['email']) === false)
-				{
+				if(!isset($request['email']))
 					raise_error('Invalid E-mail address.', E_USER);
-				}
 				
 				// create user folders
 				if(!file_exists(setting('local_users') . $request['username']))
@@ -697,6 +729,9 @@ function output_users($request)
 			
 			// create new session
 			session_start();
+			
+			if( isset($request['return']))
+				goto($request['return']);
 		break;
 		// show a list of users, this may have different administrator requirements
 		case 'list':
@@ -714,25 +749,59 @@ function output_users($request)
 	if(isset($request['return'])) register_output_vars('return', $request['return']);
 }
 
+function theme_users()
+{
+	switch($GLOBALS['templates']['vars']['users'])
+	{
+		case 'login':
+			theme('login');
+		break;
+	}
+}
 
 function theme_login()
 {
 	theme('header');
 	
-	theme('login_block');
+	if($GLOBALS['templates']['vars']['user']['Username'] != 'guest' || setting('database_enable') == false)
+		theme('logout_block');
+	else
+		theme('login_block');
 	
 	theme('footer');
 }
 
 function theme_login_block()
 {
+	if($GLOBALS['templates']['vars']['user']['Username'] != 'guest' || setting('database_enable') == false)
+	{
+		theme('logout_block');
+		return;
+	}
+	if(isset($GLOBALS['templates']['vars']['return']))
+		$return = $GLOBALS['templates']['vars']['return'];
+	else
+		$return = $GLOBALS['templates']['vars']['get'];
 	?>	
-	<form action="<?php echo url('module=users&users=login' . (isset($GLOBALS['templates']['vars']['return'])?('&return=' . urlencode($GLOBALS['templates']['vars']['return'])):'')); ?>" method="post">
+	<form action="<?php echo url('module=users&users=login&return=' . urlencode($return)); ?>" method="post">
 	
 		Username: <input type="text" name="username" value="<?php print isset($GLOBALS['templates']['vars']['username'])?$GLOBALS['templates']['vars']['username']:''; ?>" /><br />
 		Password: <input type="password" name="password" value="" /><br />
 		<input type="submit" value="Login" /><input type="reset" value="Reset" />
 		
+	</form>
+	<?php
+}
+
+function theme_logout_block()
+{
+	if(isset($GLOBALS['templates']['vars']['return']))
+		$return = $GLOBALS['templates']['vars']['return'];
+	else
+		$return = $GLOBALS['templates']['vars']['get'];
+	?>
+	<form action="<?php echo url('module=users&users=logout&return=' . urlencode($return)); ?>" method="post">
+		<input type="submit" value="Logout" />
 	</form>
 	<?php
 }

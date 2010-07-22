@@ -17,7 +17,7 @@ function register_amazon()
 			'Matches' 		=> 'TEXT',
 			'Thumbnail' 	=> 'BLOB',
 		),
-		'depends on' => array('getid3_installed', 'curl_installed', 'valid_amazon_config', 'audio', 'movies'),
+		'depends on' => array('getid3_installed', 'curl_installed', 'audio', 'movies', 'database'),
 		'settings' => array('amazon_dev_key', 'amazon_server'),
 	);
 }
@@ -88,7 +88,7 @@ function configure_amazon($settings, $request)
  * Implementation of handler_setup
  * @ingroup handler_setup
  */
-function setup_amazon($settings)
+function setup_amazon()
 {
 	// include the id handler
 	include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.php';
@@ -432,7 +432,6 @@ function amazon_add_movie($title)
  */
 function get_amazon($request, &$count)
 {
-	
 	// modify the request
 	if(isset($request['file']))
 	{

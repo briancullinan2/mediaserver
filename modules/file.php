@@ -20,6 +20,7 @@ function register_file()
 		'alter query' => array('dir', 'file'),
 		'depends on' => array('files', 'template'),
 		'always output' => 'file_variables',
+		'package' => 'core',
 	);
 }
 
@@ -113,7 +114,7 @@ function validate_dirs_only($request)
  * Alters the query based on file and dir input variables
  * @ingroup alter_query
  */
-function alter_query_file($request, $props)
+function alter_query_file($request, &$props)
 {
 	// do not alter the query if selected is set
 	$request['selected'] = validate($request, 'selected');
@@ -241,8 +242,6 @@ function alter_query_file($request, $props)
 		unset($props['ORDER']);
 		unset($props['GROUP']);
 	}
-	
-	return $props;
 }
 
 /**

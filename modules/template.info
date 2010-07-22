@@ -1,0 +1,8 @@
+name = Template Output
+description = Display files from the templates directory. Allows for templating CSS and JS files.
+privilage = 1
+session[] = template
+template = false
+settings = template
+always output = template_variables
+package = core

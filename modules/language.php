@@ -44,6 +44,7 @@ function register_language()
 		'path' => __FILE__,
 		'session' => array('language'),
 		'always output' => true,
+		'package' => 'core',
 	);
 }
 
@@ -131,4 +132,18 @@ function output_language($request)
 	
 	// always display selected language
 	register_output_vars('language', $request['language']);
+}
+
+
+function theme_language_block()
+{
+	?><form id="language-block" action="<?php print $GLOBALS['templates']['html']['get']; ?>" method="get">
+	Language: <select name="language">
+	<?php
+	foreach($GLOBALS['templates']['vars']['languages'] as $code => $language)
+	{
+		?><option value="<?php print $code; ?>" <?php print ($GLOBALS['templates']['vars']['language'] == $code)?'selected="selected"':''; ?>><?php print $language; ?></option><?php
+	}
+	
+	?></select><input type="submit" value="Go" /></form><?php
 }

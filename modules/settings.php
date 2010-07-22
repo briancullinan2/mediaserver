@@ -23,7 +23,8 @@ function register_settings()
 		'path' => __FILE__,
 		'depends on' => 'settings',
 		'template' => true,
-		'settings' => array('database_reset', 'all_reset'),
+		'settings' => 'settings',
+		'package' => 'core',
 	);
 }
 
@@ -72,6 +73,16 @@ function setup_settings()
 }
 
 /**
+ * Implementation of settings
+ * DO NOT TOUCH!  This is how the dependency_settings() function determines when this module has been setup in setup_settings()
+ * @ingroup settings
+ */
+function setting_settings()
+{
+	return array('database_reset', 'all_reset');
+}
+
+/**
  * Implementation of setting, basic wrapper for checks
  * @ingroup setting
  * @return possible settings file paths in order of preference to the system, false if file doesn't exist anywhere
@@ -99,7 +110,7 @@ function setting_settings_file()
 function dependency_settings($settings)
 {
 	// this is a hack to return empty array after the setup has been done
-	if(is_array($GLOBALS['modules']['settings']['depends on']))
+	if(isset($GLOBALS['output']['modules']))
 		return array();
 
 	$depends = array();
@@ -136,15 +147,19 @@ function dependency_settings($settings)
  */
 function setting($name)
 {
+	// use cached setting if past the point of outputting the template
+	if(!isset($GLOBALS['templates']['vars']))
+	{
+		// if the setting is not found, try to get the default
+		if(function_exists('setting_' . $name))
+			$GLOBALS['settings'][$name] = call_user_func_array('setting_' . $name, array($GLOBALS['settings']));
+		elseif(isset($GLOBALS['setting_' . $name]) && is_callable($GLOBALS['setting_' . $name]))
+			$GLOBALS['settings'][$name] = call_user_func_array($GLOBALS['setting_' . $name], array($GLOBALS['settings']));
+	}
+	
 	// if the setting is loaded already use that
 	if(isset($GLOBALS['settings'][$name]))
 		return $GLOBALS['settings'][$name];
-		
-	// if the setting is not found, try to get the default
-	if(function_exists('setting_' . $name))
-		return call_user_func_array('setting_' . $name, array($GLOBALS['settings']));
-	elseif(isset($GLOBALS['setting_' . $name]) && is_callable($GLOBALS['setting_' . $name]))
-		return call_user_func_array($GLOBALS['setting_' . $name], array($GLOBALS['settings']));
 		
 	// if the setting isn't found in the configuration
 	raise_error('Setting \'' . $name . '\' not found!', E_DEBUG);
@@ -160,7 +175,7 @@ function settings_get_defaults($settings)
 	
 	// new settings to return
 	$default_settings = array();
-	
+
 	// load core settings first
 	foreach($GLOBALS['modules']['core']['settings'] as $i => $setting)
 	{

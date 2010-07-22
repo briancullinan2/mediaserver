@@ -243,11 +243,6 @@ function theme_watch()
 	
 	?>
 	This is a list of folders on the server to watch for media files:<br />
-	<?php
-
-	theme('errors');
-
-	?>
 	<form action="" method="post">
 		<select name="wremove" size="10">
 		

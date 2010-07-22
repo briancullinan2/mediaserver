@@ -1,0 +1,16 @@
+name = "Core Functions"
+description = "Adds core functionality to site that other common modules depend on."
+privilage = 1
+settings[] = installed
+settings[] = system_type
+settings[] = local_root
+settings[] = settings_file
+settings[] = modrewrite
+depends on[] = memory_limit
+depends on[] = writable_system_files
+depends on[] = pear_installed
+depends on[] = getid3_installed
+depends on[] = curl_installed
+depends on[] = extjs_installed
+always output = "core_variables"
+package = "core"

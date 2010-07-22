@@ -16,6 +16,7 @@ function register_select()
 		'session' => array('item', 'on', 'off', 'selected', 'id'),
 		'alter query' => array('selected'),
 		'template' => true,
+		'package' => 'core',
 	);
 }
 
@@ -185,7 +186,7 @@ function session_select($request)
 	return $save;
 }
 
-function alter_query_select($request, $props)
+function alter_query_select($request, &$props)
 {
 	$request['selected'] = validate($request, 'selected');
 	
@@ -232,8 +233,6 @@ function alter_query_select($request, $props)
 			return false;
 		}
 	}
-	
-	return $props;
 }
 
 /**
@@ -260,7 +259,6 @@ function output_select($request)
 	
 	// make select call
 	$files = get_files($request, $total_count, $request['cat']);
-
 	if(!is_array($files))
 	{
 		raise_error('There was an error with the query.', E_USER);
@@ -378,8 +376,6 @@ function theme_select()
 	Displaying items <?php print $GLOBALS['templates']['html']['start']; ?> to <?php print $GLOBALS['templates']['html']['start'] + $GLOBALS['templates']['html']['limit']; ?>.
 	<br />
 	<?php
-	
-	theme('errors');
 	
 	theme('pages');
 	?>

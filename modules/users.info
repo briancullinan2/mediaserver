@@ -1,0 +1,20 @@
+name = Users
+description = Allows for managing and displaying users.
+privilage = 1
+session[] = username
+settings[] = local_users
+settings[] = username_validation
+depends on = users
+internal = true
+template = true
+package = core
+
+[database]
+Username = TEXT
+Password = TEXT
+Email = TEXT
+Settings = TEXT
+Privilage = INT
+PrivateKey = TEXT
+LastLogin = DATETIME
+Filepath = TEXT

@@ -50,11 +50,15 @@ function theme_live_admin_modules()
 function theme_live_admin_modules_configure()
 {
 	// if the status is avaiable print that out first
-	if(isset($GLOBALS['templates']['vars']['status']))
-		print_form_objects($GLOBALS['templates']['vars']['status']);
+	/*if(isset($GLOBALS['templates']['vars']['status']))
+		print_form_object('status', array(
+			'type' => 'fieldset',
+			'options' => $GLOBALS['templates']['vars']['status']
+		));
+		*/
 		
-	print_form_object(array(
-		'action' => url('module=admin_modules&configure_module=' . $GLOBALS['templates']['vars']['configure_module']),
+	print_form_object('setting', array(
+		'action' => url('module=admin_modules&configure_module=' . $GLOBALS['templates']['vars']['configure_module'], true),
 		'options' => $GLOBALS['templates']['vars']['options'],
 		'type' => 'form',
 	));
@@ -78,7 +82,7 @@ function theme_live_admin_status()
 	<div class="titlePadding"></div>
 	<?php
 	
-	print_form_object(array(
+	print_form_object('status', array(
 		'type' => 'fieldset',
 		'options' => $GLOBALS['templates']['vars']['status']
 	));

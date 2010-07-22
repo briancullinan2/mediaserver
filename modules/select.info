@@ -1,0 +1,11 @@
+name = File Selector
+description = Allows users to select files and saves the selected files in their session and profile.
+privilage = 1
+session[] = item
+session[] = on
+session[] = off
+session[] = selected
+session[] = id
+alter query[] = selected
+template = true
+package = core

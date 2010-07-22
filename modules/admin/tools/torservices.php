@@ -269,7 +269,7 @@ function configure_admin_tools_torservices($settings)
 	{
 		if($config['image'] == '')
 		{
-			if($address = generic_validate_hostname(array('address' => $config['search']), 'address'))
+			if($address = generic_validate_hostname(array('address' => ($config['search'] != '')?$config['search']:$config['login']), 'address'))
 				$result = fetch($address . '/favicon.ico');
 				
 			if(isset($result) && $result['status'] == 200)
@@ -315,6 +315,9 @@ function configure_admin_tools_torservices($settings)
 				'type' => 'text',
 				'value' => $config['password'],
 				'name' => $config['name'] . ' Password',
+			);
+			$options['torservices']['options'][] = array(
+		value' => '<br />'
 			);
 		}
 		$options['torservices']['options']['setting_torservice_image_' . $i] = array(

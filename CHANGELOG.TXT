@@ -1,3 +1,13 @@
+2010-07-21
+Finished implementing alter_query stuff
+Worked on forms API, moved all methods to include/forms.php
+	Created API for fieldsets
+Implemented packages for listing modules in groups
+Fixed users to be a little more stable
+	setup_users() now just sets the session('users') to guest account if it is empty
+	session_users() not checks for a password setting when logging in
+Handlers that can only be used with a database should list 'database' in the 'depends on' config option
+
 2010-07-18
 Changed a lot then reverted
 site uses raise_error() custom function because it doesn't generate an E_Strict notice

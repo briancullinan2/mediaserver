@@ -13,39 +13,87 @@ function register_admin_tools_movie_downloader()
 		'path' => __FILE__,
 		'template' => false,
 		'validates' => array('add_movie_folder', 'remove_movie_folder', 'info_singular_step_movies', 'movie_index'),
-		'settings' => array('netflix_xml'),
+		'settings' => 'admin_tools_movie_downloader',
 		'session' => array('add_movie_folder', 'remove_movie_folder', 'reset_configuration'),
+		'depends on' => array('settings', 'valid_movie_service'),
 	);
 	
 	return $tools;
 }
 
 /**
+ * Implementation of dependency
+ * @ingroup dependency
+ */
+function dependency_valid_movie_service($settings)
+{
+	// check that there is services installed
+	if(dependency('admin_tools_nzbservices'))
+	{
+		// check that there is a service configured
+		$services = setting('nzbservices');
+		
+		// loop through NZB services until we find the show
+		foreach($services as $i => $config)
+		{
+			$search = setting('nzb_movie_search_' . $i);
+			
+			// all it takes is one
+			if($search != '')
+				return true;
+		}
+	}
+	
+	// check if there is a torrent service available
+	if(dependency('admin_tools_torservices'))
+	{
+		// check that there is a service configured
+		$services = setting('torservices');
+		
+		// loop through NZB services until we find the show
+		foreach($services as $i => $config)
+		{
+			$search = setting('tor_movie_search_' . $i);
+			
+			// all it takes is one
+			if($search != '')
+				return true;
+		}
+	}
+	
+	return false;
+}
+
+/**
  * Set up the list of settings
  * @ingroup setup
  */
-function setup_admin_tools_movie_downloader()
+function setting_admin_tools_movie_downloader()
 {
+	$settings = array('netflix_xml');
+	
 	// add wrapper functions for nzb_movie_search
 	for($i = 0; $i < 10; $i++)
 	{
 		$GLOBALS['setting_nzb_movie_search_' . $i] = create_function('$settings', 'return setting_nzb_movie_search($settings, \'' . $i . '\');');
-		$GLOBALS['modules']['admin_tools_movie_downloader']['settings'][] = 'nzb_movie_search_' . $i;
+		$settings[] = 'nzb_movie_search_' . $i;
 	}
 	
 	// add wrapper functions for tor_movie_search
 	for($i = 0; $i < 10; $i++)
 	{
 		$GLOBALS['setting_tor_movie_search_' . $i] = create_function('$settings', 'return setting_tor_movie_search($settings, \'' . $i . '\');');
-		$GLOBALS['modules']['admin_tools_movie_downloader']['settings'][] = 'tor_movie_search_' . $i;
+		$settings[] = 'tor_movie_search_' . $i;
 	}
 	
 	// movie folders
 	for($i = 0; $i < 50; $i++)
 	{
 		$GLOBALS['setting_movie_folder_' . $i] = create_function('$settings', 'return setting_movie_folder($settings, \'' . $i . '\');');
-		$GLOBALS['modules']['admin_tools_movie_downloader']['settings'][] = 'movie_folder_' . $i;
+		$settings[] = 'movie_folder_' . $i;
 	}
+	
+	return $settings;
 }
 
 /**

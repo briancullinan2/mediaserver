@@ -113,7 +113,7 @@ function setting_module_enable($settings, $module)
  */
 function get_required_modules()
 {
-	return array('core', 'index', 'users', 'select', 'settings', 'file');
+	return array('core', 'index', 'users', 'select', 'settings', 'file', 'template');
 }
 
 /**
@@ -139,8 +139,33 @@ function configure_admin_modules($settings, $request)
 		// get the enabled setting
 		$settings[$module . '_enable'] = setting_module_enable($settings, $module);
 		
+		$key = 'setting_' . $module . '_enable';
+		
+		// set up the package
+		if(isset($config['package']))
+			$package = $config['package'];
+		else
+			$package = 'Other';
+			
+		// if the package is core and the modules are required put them in a separate fieldset
+		if($package == 'core' && in_array($module, get_required_modules()))
+			$package = 'core_required';
+			
+		// set up the fieldset for each package
+		if(!isset($options[$package]))
+		{
+			$options[$package] = array(
+				'type' => 'fieldset',
+				'options' => array(),
+				'collapsible' => true,
+				'name' => ($package == 'core_required')?'Core (Required)':(($package == 'core')?'Core (Optional)':(isset($GLOBALS['modules'][$package])?$GLOBALS['modules'][$package]['name']:$package)),
+			);
+			if($package == 'core_required')
+				$options[$package]['collapsed'] = true;
+		}
+		
 		// set up config for this module
-		$options[$module . '_enable'] = array(
+		$new_config = array(
 			'name' => $GLOBALS['modules'][$module]['name'],
 			'status' => '',
 			'description' => array(
@@ -152,7 +177,7 @@ function configure_admin_modules($settings, $request)
 			),
 			'type' => 'set',
 			'options' => array(
-				$module . '_enable' => array(
+				$key => array(
 					'type' => 'boolean',
 					'value' => in_array($module, get_required_modules())?true:$settings[$module . '_enable'],
 				),
@@ -162,22 +187,23 @@ function configure_admin_modules($settings, $request)
 		// add some extra info for failed dependencies
 		if(dependency($module) == false)
 		{
-			$options[$module . '_enable']['status'] = 'fail';
-			if(!in_array($module, get_required_modules())) $options[$module . '_enable']['description']['list'][] = $description_fail;
-			$options[$module . '_enable']['disabled'] = true;
+			$new_config['status'] = 'fail';
+			if(!in_array($module, get_required_modules()))
+				$new_config['description']['list'][] = $description_fail;
+			$new_config['options'][$key]['disabled'] = true;
 		}
 		
 		// set up the options for the modules based on required or recommended lists
 		if(in_array($module, get_required_modules()))
 		{
-			$options[$module . '_enable']['options'][$module . '_enable']['options'] = array(
+			$new_config['options'][$key]['options'] = array(
 				$required_str,
 			);
-			$options[$module . '_enable']['options'][$module . '_enable']['disabled'] = true;
+			$new_config['options'][$key]['disabled'] = true;
 		}
 		else
 		{
-			$options[$module . '_enable']['options'][$module . '_enable']['options'] = array(
+			$new_config['options'][$key]['options'] = array(
 				(in_array($module, $recommended)?$recommend:$optional),
 				$disabled,
 			);
@@ -186,7 +212,7 @@ function configure_admin_modules($settings, $request)
 		// add configure button
 		if(function_exists('configure_' . $module))
 		{
-			$options[$module . '_enable']['options'][] = array(
+			$new_config['options'][] = array(
 				'type' => 'button',
 				'action' => 'window.location.href=\'' . url('module=admin_modules&configure_module=' . $module) . '\'',
 				'value' => 'Configure',
@@ -205,12 +231,15 @@ function configure_admin_modules($settings, $request)
 				$depends_on = $GLOBALS['modules'][$module]['depends on'];
 				
 			// add to options
-			$options[$module . '_enable']['options'][] = array(
+			$new_config['options'][] = array(
 				'value' => '<br />Depends on:<br />' . (is_array($depends_on)?implode(', ', $depends_on):'Failed to retrieve dependencies!'),
 			);
 		}
+		
+		// add new config to the fieldset
+		$options[$package]['options'][$module . '_enable'] = $new_config;
 	}
-	
+
 	return $options;
 }
 
@@ -493,4 +522,24 @@ function output_admin_modules($request)
 	}
 	register_output_vars('options', $options);
 	register_output_vars('configure_module', $request['configure_module']);
+}
+
+function theme_admin_modules()
+{
+	theme('header');
+
+	// if the status is avaiable print that out first
+	if(isset($GLOBALS['templates']['vars']['status']))
+		print_form_object('status', array(
+			'type' => 'fieldset',
+			'options' => $GLOBALS['templates']['vars']['status']
+		));
+		
+	print_form_object('setting', array(
+		'action' => url('module=admin_modules&configure_module=' . $GLOBALS['templates']['vars']['configure_module'], true),
+		'options' => $GLOBALS['templates']['vars']['options'],
+		'type' => 'form',
+	));
+	
+	theme('footer');
 }
