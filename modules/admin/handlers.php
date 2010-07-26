@@ -23,56 +23,6 @@ function register_admin_handlers()
  */
 function setup_admin_handlers()
 {
-	// include the handlers
-	$files = get_files(array('dir' => setting_local_root() . 'handlers' . DIRECTORY_SEPARATOR, 'limit' => 32000), $count, true);
-	foreach($files as $i => $file)
-	{
-		// get file name
-		$class_name = basename($file['Filepath']);
-		
-		// remove extension
-		$class_name = substr($class_name, 0, strrpos($class_name, '.'));
-		
-		// include all the handlers
-		include_once $file['Filepath'];
-		
-		// call register function
-		if(function_exists('register_' . $class_name))
-		{
-			$GLOBALS['handlers'][$class_name] = call_user_func_array('register_' . $class_name, array());
-		}
-		
-		// create a streamer if it is one
-		if(isset($GLOBALS['handlers'][$class_name]['streamer']))
-			stream_wrapper_register($GLOBALS['handlers'][$class_name]['streamer'], $GLOBALS['handlers'][$class_name]['streamer']);
-	}
-	
-	// add any handlers that come with modules
-	foreach($GLOBALS['modules'] as $module => $config)
-	{
-		if(isset($config['database']))
-		{
-			// add the module to the handlers list
-			$handler = array();
-			$handler['database'] = $config['database'];
-			$handler['name'] = $config['name'];
-			$handler['description'] = $config['description'];
-			if(isset($config['internal'])) $handler['internal'] = $config['internal'];
-			if(isset($config['settings'])) $handler['settings'] = $config['settings'];
-			if(isset($config['depends on'])) $handler['depends on'] = $config['depends on'];
-			
-			$GLOBALS['handlers'][$module] = $handler;
-		}
-	}
-	
-	// reorganize handlers to reflect heirarchy
-	$GLOBALS['handlers'] = array_merge(array_flip(flatten_handler_dependencies(array_keys($GLOBALS['handlers']))), $GLOBALS['handlers']);
-	
-	// always make the handler list available to templates
-	register_output_vars('handlers', $GLOBALS['handlers']);
-	
-	// always make the column list available to templates
-	register_output_vars('columns', getAllColumns());
 }
 
 /**
@@ -84,10 +34,10 @@ function setting_admin_handlers()
 	$settings = array();
 	
 	// create additional functions for handling enabling
-	foreach($GLOBALS['handlers'] as $handler => $config)
+	foreach($GLOBALS['modules'] as $handler => $config)
 	{
 		// do not allow for enabling of internal handlers
-		if(is_internal($handler))
+		if(!is_handler($handler) || is_internal($handler))
 			continue;
 
 		// add the functions to allow for enabling of handlers
@@ -96,25 +46,6 @@ function setting_admin_handlers()
 	}
 	
 	return $settings;
-}
-
-/**
- * Creates a list of handlers with the order of their dependencies first
- * @param handlers the list of handlers to recursively loop through
- * @return an array of handlers sorted by dependency
- */
-function flatten_handler_dependencies($handlers)
-{
-	$new_handlers = array();
-	foreach($handlers as $i => $handler)
-	{
-		if(isset($GLOBALS['handlers'][$handler]['wrapper']))
-		{
-			$new_handlers = array_merge($new_handlers, flatten_handler_dependencies(array($GLOBALS['handlers'][$handler]['wrapper'])));
-		}
-		$new_handlers[] = $handler;
-	}
-	return array_values(array_unique($new_handlers));
 }
 
 /**

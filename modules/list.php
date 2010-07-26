@@ -343,7 +343,7 @@ function theme_m3u()
 	}
 
 	header('Content-Type: audio/x-mpegurl');
-	header('Content-Disposition: attachment; filename="' . (isset($GLOBALS['templates']['vars']['filename'])?$GLOBALS['templates']['vars']['filename']:$GLOBALS['handlers'][$_REQUEST['cat']]['name'] . '.m3u"')); 
+	header('Content-Disposition: attachment; filename="' . (isset($GLOBALS['templates']['vars']['filename'])?$GLOBALS['templates']['vars']['filename']:$GLOBALS['modules'][$_REQUEST['cat']]['name'] . '.m3u"')); 
 
 	if($GLOBALS['templates']['vars']['extra'] == 'mp4')
 	{

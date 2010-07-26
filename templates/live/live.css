@@ -482,6 +482,10 @@ body {
 	width:7em;
 }
 
+.file.small {
+	height:2.5em;
+}
+
 .file .notselected {
 	visibility:hidden;
 	background:#F7FBFF url(?module=template&template=live&tfile=images/browse_select_bg.png) repeat-x scroll center bottom;
@@ -493,6 +497,10 @@ body {
 	width:7em;
 }
 
+.file.small  .notselected {
+	height:2.5em;
+}
+
 .file .selected {
 	visibility:visible;
 	background:#F7FBFF url(?module=template&template=live&tfile=images/browse_select_bg.png) repeat-x scroll center bottom;
@@ -502,6 +510,10 @@ body {
 	position:absolute;
 	top:0;
 	width:7em;
+}
+
+.file.small  .selected {
+	height:2.5em;
 }
 
 .file .itemTable {
@@ -540,7 +552,7 @@ body {
 }
 
 .file .itemLink span {
-	bottom:0;
+	bottom:0px;
 	cursor:pointer;
 	display:block;
 	height:4em;
@@ -549,6 +561,10 @@ body {
 	position:absolute;
 	text-align:center;
 	width:6em;
+}
+
+.file.small .itemLink span {
+	top:0px;
 }
 
 #infoBar {

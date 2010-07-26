@@ -1,19 +1,20 @@
 <?php
 
-/** 
- * Implementation of register_handler
- * @ingroup register_handler
+/**
+ * Implementation of setup
  */
-function register_updates()
+function setting_updates()
 {
-	return array(
-		'name' => 'Watch List',
-		'description' => 'Keeps track of changed directories and files.',
-		'database' => array(
-			'Filepath' => 'TEXT'
-		),
-		'internal' => true,
-	);
+	$settings = array();
+	
+	// add wrapper functions for validating a service entry
+	for($i = 0; $i < 128; $i++)
+	{
+		$GLOBALS['setting_watched_' . $i] = create_function('$settings', 'return setting_watched($settings, \'' . $i . '\');');
+		$settings[] = 'watched_' . $i;
+	}
+	
+	return $settings;
 }
 
 /** 
@@ -104,6 +105,70 @@ function handles_updates($dir, $file = NULL)
 	return false;
 }
 
+/**
+ * Helper function
+ */
+function setting_watched($settings, $index)
+{
+	if(isset($settings['watched_' . $index]))
+	{
+		// add prefix
+		if($settings['watched_' . $index][0] == '!')
+			$prefix = '!';
+		else
+			$prefix = '^';
+		
+		// remove leading symbol
+		if($settings['watched_' . $index][0] == '!' || $settings['watched_' . $index][0] == '^')
+			$settings['watched_' . $index] = substr($settings['watched_' . $index], 1);
+		
+		// add trailing slash
+		if(substr($settings['watched_' . $index], -1) != '/' && substr($settings['watched_' . $index], -1) != '\\')
+			$settings['watched_' . $index] .= DIRECTORY_SEPARATOR;
+		
+		// confirm that it is a directory
+		if(is_dir($settings['watched_' . $index]))
+			return $prefix . $settings['watched_' . $index];
+	}
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ */
+function setting_watches($settings)
+{
+	$watches = array();
+	
+	for($i = 0; $i < 128; $i++)
+	{
+		$watch = setting_watched($settings, $i);
+		if(isset($watch) && substr($watch, 0, 1) == '^')
+			$watches[] = get_files_info(substr($watch, 1));
+	}
+	$watches[] = get_files_info(setting('local_users'));
+	
+	return $watches;
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ */
+function setting_ignores($settings)
+{
+	$ignores = array();
+	
+	for($i = 0; $i < 128; $i++)
+	{
+		$watch = setting_watched($settings, $i);
+		if(isset($watch) && substr($watch, 0, 1) == '!')
+			$ignores[] = get_files_info(substr($watch, 1));
+	}
+	
+	return $ignores;
+}
+
 /** 
  * Checks if a directory has changed and should be added to the watch list
  */
@@ -111,14 +176,14 @@ function is_watched($dir)
 {
 	$is_ignored = false;
 	$is_watched = false;
-	foreach($GLOBALS['watched'] as $i => $watch)
+	foreach(setting('watches') as $i => $watch)
 	{
 		if(substr($dir, 0, strlen($watch['Filepath'])) == $watch['Filepath'])
 		{
 			$is_watched = true;
 		}
 	}
-	foreach($GLOBALS['ignored'] as $i => $ignore)
+	foreach(setting('ignores') as $i => $ignore)
 	{
 		if(substr($dir, 0, strlen($ignore['Filepath'])) == $ignore['Filepath'])
 		{
@@ -213,16 +278,16 @@ function scan_dir($dir)
 	$db_paths = array();
 	foreach($db_files as $j => $file)
 	{
-		if(!in_array($file['Filepath'], $paths))
+		if(!in_array($file['Filepath'], $paths) || is_watched($file['Filepath']) == false)
 		{
 			raise_error('Removing: ' . $file['Filepath'], E_DEBUG);
 			
 			// remove file from each handler
-			foreach($GLOBALS['handlers'] as $handler => $config)
+			foreach($GLOBALS['modules'] as $handler => $config)
 			{
 				// do not remove ids because other handlers may still use the id
 				//  allow other handlers to handle removing of ids
-				if($handler != 'ids' && is_internal($handler) == false && is_wrapper($handler) == false)
+				if($handler != 'ids' && is_handler($handler) && !is_internal($handler) && !is_wrapper($handler))
 					remove($file['Filepath'], $handler);
 			}
 		}
@@ -360,27 +425,21 @@ function handle_file($file)
 	
 	// if the file is skipped the only pass it to other handlers for adding, not modifing
 	//   if the file was modified or added the information could have changed, so the handlers must modify it, if it is already added
-	foreach($GLOBALS['handlers'] as $handler => $config)
+	foreach($GLOBALS['modules'] as $handler => $config)
 	{
-		// never pass it to fs_file, it is only used to internals in this case
-		// db_file and db_ids are handled independently
-		// skip db_watch and db_watch_list to prevent recursion
-		if($handler != 'files' && is_internal($handler) == false && is_wrapper($handler) == false)
+		// get the file information and add it to the database
+		if($handler != 'files' && $handler != 'ids' && handles($file, $handler))
 		{
-			// get the file information and add it to the database
-			if(handles($file, $handler))
+			// call function to add to the database
+			$result = add($file, ($skipped !== false), $handler);
+			if($result !== false)
 			{
-				// call function to add to the database
-				$result = add($file, ($skipped !== false), $handler);
-				if($result !== false)
-				{
-					$added = true;
-					$ids[$handler . '_id'] = $result;
-				}
-				elseif(!isset($ids[$handler . '_id']))
-				{
-					$ids[$handler . '_id'] = false;
-				}
+				$added = true;
+				$ids[$handler . '_id'] = $result;
+			}
+			elseif(!isset($ids[$handler . '_id']))
+			{
+				$ids[$handler . '_id'] = false;
 			}
 		}
 	}
@@ -403,5 +462,112 @@ function get_updates($request, &$count)
 	
 	return get_files($request, $count, 'files');
 }
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return accepts any positive numeric index to remove
+ */
+function validate_wremove($request)
+{
+	return generic_validate_numeric_zero($request, 'wremove');
+}
+
+/**
+ * Implementation of configure
+ */
+function configure_updates($settings, $request)
+{
+	$settings['watches'] = setting('watches');
+	$settings['ignores'] = setting('ignores');
 	
+	$options = array();
+	
+	$watched_options = array();
+	foreach($settings['watches'] as $i => $watch)
+	{
+		$watched_options[] = 'Watched: ' . $watch['Filepath'];
+	}
+	foreach($settings['ignores'] as $i => $watch)
+	{
+		$watched_options[] = 'Ignored: ' . $watch['Filepath'];
+	}
+	
+	$options['manage'] = array(
+		'name' => 'Manage Watches',
+		'type' => 'fieldset',
+		'options' => array(
+			'wremove' => array(
+				'name' => 'Remove Watch',
+				'status' => '',
+				'type' => 'set',
+				'options' => array(
+					'wremove[folder]' => array(
+						'name' => 'Current Watched Directories',
+						'type' => 'multiselect',
+						'options' => $watched_options,
+						'value' => '',
+					),
+					array(
+						'value' => '<br />',
+					),
+					'wremove[remove]' => array(
+						'type' => 'submit',
+						'value' => 'Remove'
+					),
+				),
+				'description' => array(
+					'list' => array(
+						'Watched directories are used to updating the database and determining what directories users have access too.',
+						'Use this form to manage the watched directories.'
+					)
+				)
+			),
+			'waddpath' => array(
+				'name' => 'Add Watched Directory',
+				'status' => '',
+				'type' => 'set',
+				'options' => array(
+					array(
+						'name' => 'Select a Directory',
+						'type' => 'theme',
+						'value' => 'select_block',
+					),
+					array(
+						'value' => '<br />',
+					),
+					'waddpath[folder]' => array(
+						'type' => 'text',
+						'value' => $request['dir'],
+					),
+					array(
+						'value' => '<br />',
+					),
+					'waddpath[add]' => array(
+						'type' => 'submit',
+						'value' => 'Add',
+					),
+				),
+				'description' => array(
+					'list' => array(
+						'Add a directory to the watch list.',
+						'Using a ! infront of the directory will ignore the directory.'
+					),
+				),
+			),
+		),
+	);
+	
+	// make select call for the file browser
+	$files = get_files(array(
+		'dir' => validate_dir($request),
+		'start' => validate_start($request),
+		'limit' => 32000,
+		'dirs_only' => true,
+	), &$total_count, true);
+	
+	register_output_vars('files', $files);
+	
+	return $options;
+}
 

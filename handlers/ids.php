@@ -1,18 +1,5 @@
 <?php
 
-/** 
- * Implementation of register_handler
- * @ingroup register_handler
- */
-function register_ids()
-{
-	return array(
-		'name' => 'IDs',
-		'description' => 'A list of all IDs from every Filename that exists in the database.',
-		'internal' => true,
-	);
-}
-
 
 /**
  * Implementation of setup_handler
@@ -25,13 +12,13 @@ function setup_ids()
 		'Hex'			=> 'TEXT',
 	);
 	// get all the tables for handlers
-	foreach($GLOBALS['handlers'] as $handler => $config)
+	foreach($GLOBALS['modules'] as $handler => $config)
 	{
-		if(!is_internal($handler) && !is_wrapper($handler))
+		if(is_handler($handler) && !is_internal($handler) && !is_wrapper($handler))
 			$struct[$handler . '_id'] = 'INT';
 	}
 	
-	$GLOBALS['handlers']['ids']['database'] = $struct;
+	$GLOBALS['modules']['ids']['database'] = $struct;
 }
 
 /**
@@ -67,9 +54,9 @@ function add_ids($file, $force = false, $ids = array())
 		// get all the ids from all the tables
 		$fileinfo['Filepath'] = addslashes($file);
 		$fileinfo['Hex'] = bin2hex($file);
-		foreach($GLOBALS['handlers'] as $handler => $config)
+		foreach($GLOBALS['modules'] as $handler => $config)
 		{
-			if(!is_wrapper($handler) && !is_internal($handler) && isset($config['database']))
+			if(is_handler($handler) && !is_wrapper($handler) && !is_internal($handler))
 			{
 				if(isset($ids[$handler . '_id']))
 				{
@@ -158,7 +145,7 @@ function get_ids($request, &$count, $files = array())
 				$ids[$id[$request['cat'] . '_id']] = $id;
 			}
 		}
-		
+
 		// add id information to file
 		foreach($files as $index => $file)
 		{
@@ -166,17 +153,21 @@ function get_ids($request, &$count, $files = array())
 			if(!isset($ids[$file['id']])) 
 			{
 				// handle file
-				$id = add_ids(preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file['Filepath']), true, array($request['cat'] . '_id' => $file['id']));
+				if(setting('admin_alias_enable') != false)
+					$id = add_ids(preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file['Filepath']), true, array($request['cat'] . '_id' => $file['id']));
+				else
+					$id = add_ids($file['Filepath'], true, array($request['cat'] . '_id' => $file['id']));
+				
 				$tmp_id = $GLOBALS['database']->query(array(
 						'SELECT' => 'ids',
 						'WHERE' => 'id = ' . $id,
 						'LIMIT' => 1
 					)
 				, true);
-				
-				if(count($tmp_id) == 0)
+
+				if($tmp_id == false || count($tmp_id) == 0)
 				{
-					raise_error('There was an error getting the IDs.', E_USER);
+					raise_error('There was an error getting the IDs.', E_DEBUG|E_USER);
 					return array();
 				}
 				
@@ -193,10 +184,10 @@ function get_ids($request, &$count, $files = array())
 	elseif(isset($request['file']))
 	{
 		$files = array();
-		foreach($GLOBALS['handlers'] as $handler => $config)
+		foreach($GLOBALS['modules'] as $handler => $config)
 		{
 			// skip wrappers and internal handlers
-			if(is_wrapper($handler) || is_internal($handler) || !isset($config['database']))
+			if(is_wrapper($handler) || is_internal($handler) || !is_handler($handler))
 				continue;
 				
 			// get file based on ID
@@ -215,7 +206,11 @@ function get_ids($request, &$count, $files = array())
 		// if the id is not found for the file, add it
 		if(count($files) == 0)
 		{
-			$id = add_ids(preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']), true);
+			if(setting('admin_alias_enable'))
+				$id = add_ids(preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']), true);
+			else
+				$id = add_ids($request['file']);
+			
 			$files = $GLOBALS['database']->query(array(
 					'SELECT' => 'ids',
 					'WHERE' => 'id = ' . $id,
@@ -271,9 +266,9 @@ function cleanup_ids()
 	
 	// remove empty ids
 	$where = '';
-	foreach($GLOBALS['handlers'] as $handler => $config)
+	foreach($GLOBALS['modules'] as $handler => $config)
 	{
-		if(!is_wrapper($handler) && !is_internal($handler) && isset($config['database']))
+		if(is_handler($handler) && !is_wrapper($handler) && !is_internal($handler))
 			$where .= ' ' . $handler . '_id=0 AND';
 	}
 	$where = substr($where, 0, strlen($where) - 3);

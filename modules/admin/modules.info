@@ -1,0 +1,5 @@
+name = Modules
+description = Display a list of modules and allow for enabling and disabling.
+privilage = 10
+settings = admin_modules
+template = true

@@ -26,14 +26,6 @@ function theme_live_admin_modules()
 				<span class="subText"><?php print $GLOBALS['modules'][$GLOBALS['templates']['vars']['configure_module']]['description']; ?></span>
 		<?php
 	}
-	else
-	{
-		?>
-		<div class="contentSpacing">
-				<h1 class="title">Configuring: <?php print $GLOBALS['handlers'][$GLOBALS['templates']['vars']['configure_module']]['name']; ?></h1>
-				<span class="subText"><?php print $GLOBALS['handlers'][$GLOBALS['templates']['vars']['configure_module']]['description']; ?></span>
-		<?php
-	}
 	
 	theme('errors_block');
 	

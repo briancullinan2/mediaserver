@@ -23,10 +23,11 @@ function register_database()
 	return array(
 		'name' => lang('database title', 'Database'),
 		'description' => lang('database description', 'Wrapper module for displaying database configuration'),
-		'privilage' => 10,
-		'path' => dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'database.php',
+		'privilage' => 1,
+		'path' => __FILE__,
 		'settings' => array('db_connect', 'db_type', 'db_server', 'db_user', 'db_pass', 'db_name'),
-		'depends on' => array('adodb_installed', 'valid_connection')
+		'depends on' => array('adodb_installed', 'valid_connection'),
+		'package' => 'core',
 	);
 }
 
@@ -37,14 +38,7 @@ function register_database()
 function setting_database_enable($settings)
 {
 	// check boolean value
-	if(isset($settings['database_enable']))
-	{
-		if($settings['database_enable'] === false || $settings['database_enable'] === 'false')
-			return false;
-		elseif($settings['database_enable'] === true || $settings['database_enable'] === 'true')
-			return true;
-	}
-	return true;
+	return generic_validate_boolean_true($settings, 'database_enable');
 }
 
 /**
@@ -481,7 +475,7 @@ class database
 	{
 		// create handler tables
 		$tables_created = array();
-		foreach($GLOBALS['handlers'] as $i => $handler)
+		foreach($GLOBALS['modules'] as $i => $handler)
 		{
 			$query = 'CREATE TABLE ' . $handler . ' (';
 			$struct = call_user_func($handler . '::struct');

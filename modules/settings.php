@@ -162,7 +162,7 @@ function setting($name)
 		return $GLOBALS['settings'][$name];
 		
 	// if the setting isn't found in the configuration
-	raise_error('Setting \'' . $name . '\' not found!', E_DEBUG);
+	raise_error('Setting \'' . $name . '\' not found!', E_VERBOSE);
 }
 
 /**

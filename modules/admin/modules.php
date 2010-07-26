@@ -1,23 +1,6 @@
 <?php
 
 /**
- * Implementation of register
- * @ingroup register
- */
-function register_admin_modules()
-{
-	return array(
-		'name' => lang('modules title', 'Modules'),
-		'description' => lang('modules description', 'Display a list of modules and allow for enabling and disabling.'),
-		'privilage' => 10,
-		'path' => __FILE__,
-		'settings' => 'admin_modules',
-		'depends on' => array('admin', 'admin_tools'),
-		'template' => true,
-	);
-}
-
-/**
  * Implementation of setting
  * @ingroup setting
  */
@@ -140,28 +123,36 @@ function configure_admin_modules($settings, $request)
 		$settings[$module . '_enable'] = setting_module_enable($settings, $module);
 		
 		$key = 'setting_' . $module . '_enable';
-		
-		// set up the package
-		if(isset($config['package']))
-			$package = $config['package'];
-		else
-			$package = 'Other';
 			
 		// if the package is core and the modules are required put them in a separate fieldset
-		if($package == 'core' && in_array($module, get_required_modules()))
-			$package = 'core_required';
+		if($config['package'] == 'core' && in_array($module, get_required_modules()))
+			$config['package'] = 'core_required';
 			
 		// set up the fieldset for each package
-		if(!isset($options[$package]))
+		if(!isset($options[$config['package']]))
 		{
-			$options[$package] = array(
+			$options[$config['package']] = array(
 				'type' => 'fieldset',
 				'options' => array(),
 				'collapsible' => true,
-				'name' => ($package == 'core_required')?'Core (Required)':(($package == 'core')?'Core (Optional)':(isset($GLOBALS['modules'][$package])?$GLOBALS['modules'][$package]['name']:$package)),
+				'name' => ($config['package'] == 'core_required')
+							?
+							'Core (Required)'
+							:
+							(($config['package'] == 'core')
+								?
+								'Core (Optional)'
+								:
+								(isset($GLOBALS['modules'][$config['package']])
+									?
+									$GLOBALS['modules'][$config['package']]['name']
+									:
+									ucwords($config['package'])
+								)
+							),
 			);
-			if($package == 'core_required')
-				$options[$package]['collapsed'] = true;
+			if($config['package'] == 'core_required')
+				$options[$config['package']]['collapsed'] = true;
 		}
 		
 		// set up config for this module
@@ -237,7 +228,7 @@ function configure_admin_modules($settings, $request)
 		}
 		
 		// add new config to the fieldset
-		$options[$package]['options'][$module . '_enable'] = $new_config;
+		$options[$config['package']]['options'][$module . '_enable'] = $new_config;
 	}
 
 	return $options;
@@ -257,17 +248,6 @@ function validate_configure_module($request)
 		if(!function_exists('configure_' . $request['configure_module']))
 		{
 			raise_error('Configuration function \'' . $request['configure_module'] . '\' does not exist!', E_DEBUG);
-			return 'admin_modules';
-		}
-		return $request['configure_module'];
-	}
-	elseif(isset($request['configure_module']) && isset($GLOBALS['handlers'][$request['configure_module']]) &&
-		isset($GLOBALS['handlers'][$request['configure_module']]['settings']) && count($GLOBALS['handlers'][$request['configure_module']]['settings']) > 0
-	)
-	{
-		if(!function_exists('configure_' . $request['configure_module']))
-		{
-			raise_error('Configuration handler function \'' . $request['configure_module'] . '\' does not exist!', E_DEBUG);
 			return 'admin_modules';
 		}
 		return $request['configure_module'];
@@ -514,11 +494,11 @@ function output_admin_modules($request)
 	$in_config_not_in_settings = array_intersect($missing_settings, array_keys($options));
 	foreach($in_settings_not_in_config as $i => $key)
 	{
-		raise_error('Option \'' . $key . '\' listed in settings for ' . $request['configure_module'] . ' but not listed in the output options configuration!', E_DEBUG);
+		raise_error('Option \'' . $key . '\' listed in settings for ' . $request['configure_module'] . ' but not listed in the output options configuration!', E_VERBOSE);
 	}
 	foreach($in_config_not_in_settings as $i => $key)
 	{
-		raise_error('Option \'' . $key . '\' listed in the output options for ' . $request['configure_module'] . ' but not listed in the module config!', E_DEBUG);
+		raise_error('Option \'' . $key . '\' listed in the output options for ' . $request['configure_module'] . ' but not listed in the module config!', E_VERBOSE);
 	}
 	register_output_vars('options', $options);
 	register_output_vars('configure_module', $request['configure_module']);

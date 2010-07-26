@@ -370,10 +370,10 @@ function output_admin_tools_statistics($request)
 			),
 			'type' => 'section'
 		);
-		foreach($GLOBALS['handlers'] as $handler => $config)
+		foreach($GLOBALS['modules'] as $handler => $config)
 		{
 			// skip wrappers
-			if(is_wrapper($handler))
+			if(!is_handler($handler) || is_wrapper($handler))
 				continue;
 			
 			$result = $GLOBALS['database']->query(array('SELECT' => $handler, 'COLUMNS' => 'count(*)'), false);

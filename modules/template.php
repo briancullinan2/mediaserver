@@ -201,7 +201,7 @@ function setup_template_files($template_config)
 			if(is_file(setting('local_root') . 'templates' . DIRECTORY_SEPARATOR . $template_name . DIRECTORY_SEPARATOR . $file . '.php'))
 			{
 				// make sure file exists
-				include setting('local_root') . 'templates' . DIRECTORY_SEPARATOR . $template_name . DIRECTORY_SEPARATOR . $file . '.php';
+				include_once setting('local_root') . 'templates' . DIRECTORY_SEPARATOR . $template_name . DIRECTORY_SEPARATOR . $file . '.php';
 				
 				// if the register function exists then call that
 				if(function_exists('register_' . $template_name . '_' . $file))

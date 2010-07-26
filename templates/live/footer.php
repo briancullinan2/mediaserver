@@ -20,10 +20,7 @@ function theme_live_footer()
 									<?php
 									foreach($GLOBALS['modules'] as $name => $module)
 									{
-										if($module['privilage'] > $GLOBALS['templates']['vars']['user']['Privilage'])
-											continue;
-																			
-										if(!function_exists('output_' . $name))
+										if(!function_exists('output_' . $name) && function_exists('configure_' . $name))
 											$link = 'module=admin_modules&configure_module=' . $name;
 										else
 											$link = 'module=' . $name;
@@ -39,12 +36,12 @@ function theme_live_footer()
 									Categories:<br />
 									<ul>
 									<?php
-									foreach($GLOBALS['handlers'] as $handler => $config)
+									foreach($GLOBALS['modules'] as $handler => $config)
 									{
-										if(isset($GLOBALS['handlers'][$handler]['internal']) && $GLOBALS['handlers'][$handler]['internal'] == true)
+										if(!is_handler($handler) || is_internal($handler))
 											continue;
 											
-										$name = $GLOBALS['handlers'][$handler]['name'];
+										$name = $config['name'];
 										?><li><a href="<?php print url('module=select&cat=' . $handler); ?>"><?php echo $name; ?></a></li><?php
 									}
 									?>

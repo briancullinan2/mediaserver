@@ -14,7 +14,7 @@ function print_info_objects($infos)
 		{
 			?><span><?php print $infos['label']; ?>: </span><?php
 		}
-		if(isset($infos['type']))
+		if(isset($infos['type']) && $infos['type'] != 'info')
 		{
 			print_form_objects(array($infos));
 		}
@@ -289,6 +289,8 @@ function print_form_object($field_name, $config)
 			else
 				print_info_objects($config['value']);
 		break;
+		case 'theme':
+			theme($config['value']);
 	}
 	
 	// print description

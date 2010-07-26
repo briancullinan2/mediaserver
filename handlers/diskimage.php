@@ -187,9 +187,9 @@ function diskimage_add($file, $image_id = NULL)
 
 	// set up empty ids array since we know archive_id will be the only entry
 	$ids = array();
-	foreach($GLOBALS['handlers'] as $handler => $config)
+	foreach($GLOBALS['modules'] as $module => $config)
 	{
-		if(!is_wrapper($handler) && !is_internal($handler))
+		if(is_handler($module) && !is_wrapper($handler) && !is_internal($handler))
 			$ids[$handler . '_id'] = false;
 	}
 	
@@ -227,7 +227,7 @@ function output_diskimage($file)
 	$files = $GLOBALS['database']->query(array('SELECT' => 'diskimage', 'WHERE' => 'Filepath = "' . addslashes($file) . '"', 'LIMIT' => 1), true);
 	if(count($files) > 0)
 	{				
-		return @fopen($GLOBALS['handlers']['diskimage']['streamer'] . '://' . $file, 'rb');
+		return @fopen('diskimage://' . $file, 'rb');
 	}
 
 	return false;
@@ -276,8 +276,8 @@ class diskimage
 	
     function stream_open($path, $mode, $options, &$opened_path)
     {
-		if(substr($path, 0, strlen($GLOBALS['handlers']['db_diskimage']['streamer'] . '://')) == $GLOBALS['handlers']['db_diskimage']['streamer'] . '://')
-			$path = substr($path, strlen($GLOBALS['handlers']['db_diskimage']['streamer'] . '://'));
+		if(substr($path, 0, strlen('diskimage://')) == 'diskimage://')
+			$path = substr($path, strlen('diskimage://'));
 			
 		parseInner(str_replace('/', DIRECTORY_SEPARATOR, $path), $last_path, $inside_path);
 

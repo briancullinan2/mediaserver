@@ -11,7 +11,7 @@ function register_admin_tools_nzbservices()
 		'description' => 'Provides configuration for News Groups and NZB files.',
 		'privilage' => 10,
 		'path' => __FILE__,
-		'settings' => array('nzbpath'),
+		'settings' => 'admin_tools_nzbservices',
 		'session' => array('add_service', 'remove_service', 'reset_configuration', 'save_configuration'),
 	);
 	
@@ -22,14 +22,18 @@ function register_admin_tools_nzbservices()
  * Set up the list settings
  * @ingroup setup
  */
-function setup_admin_tools_nzbservices()
+function setting_admin_tools_nzbservices()
 {
+	$settings = array('nzbpath');
+	
 	// add wrapper functions for validating a service entry
 	for($i = 0; $i < 10; $i++)
 	{
 		$GLOBALS['setting_nzbservice_' . $i] = create_function('$settings', 'return setting_nzbservice($settings, \'' . $i . '\');');
-		$GLOBALS['modules']['admin_tools_nzbservices']['settings'][] = 'nzbservice_' . $i;
+		$settings[] = 'nzbservice_' . $i;
 	}
+	
+	return $settings;
 }
 
 /**

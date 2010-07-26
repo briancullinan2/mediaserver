@@ -607,10 +607,10 @@ function output_cron($request)
 	raise_error("Phase 3: Cleaning up", E_DEBUG);
 	
 	// clean up each database
-	foreach($GLOBALS['handlers'] as $handler => $config)
+	foreach($GLOBALS['modules'] as $handler => $config)
 	{
 		// only clean up the modules that have databases of their own
-		if(is_wrapper($handler) == false)
+		if(is_handler($handler) && !is_wrapper($handler))
 			cleanup($handler);
 	}
 	

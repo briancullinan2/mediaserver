@@ -477,7 +477,7 @@ function output_code($file)
 		$file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 	
 	header('Content-Disposition: ');
-	return @fopen($GLOBALS['handlers']['db_code']['streamer'] . '://' . $file, 'rb');
+	return @fopen('code://' . $file, 'rb');
 }
 
 /** 
@@ -507,8 +507,8 @@ class code
 	
     function stream_open($path, $mode, $options, &$opened_path)
     {
-		if(substr($path, 0, strlen($GLOBALS['handlers']['db_code']['streamer'] . '://')) == $GLOBALS['handlers']['db_code']['streamer'] . '://')
-			$path = substr($path, strlen($GLOBALS['handlers']['db_code']['streamer'] . '://'));
+		if(substr($path, 0, strlen('code://')) == 'code://')
+			$path = substr($path, strlen('code://'));
 
 		$files = $GLOBALS['database']->query(array('SELECT' => 'code', 'WHERE' => 'Filepath = "' . addslashes($path) . '"', 'LIMIT' => 1), true);
 		

@@ -366,7 +366,7 @@ function output_search($request)
 
 function theme_search_block()
 {
-	print $GLOBALS['handlers'][$GLOBALS['templates']['vars']['cat']]['name']; ?> Search:<br />
+	print $GLOBALS['modules'][$GLOBALS['templates']['vars']['cat']]['name']; ?> Search:<br />
 	<form action="<?php print $GLOBALS['templates']['vars']['get']; ?>" method="get" id="search">
 		<input type="text" name="search" value="<?php print isset($GLOBALS['templates']['vars']['search']['search'])?$GLOBALS['templates']['vars']['search']['search']:''; ?>" id="searchInput" />
 		<input type="submit" value="Search" id="searchButton" /> <a href="<?php print url('module=search'); ?>">Advanced Search</a>
@@ -387,9 +387,12 @@ function theme_search()
 		<h3>Search Individual Fields:</h3>
 		Category: <select name="cat">
 		<?php
-		foreach($GLOBALS['handlers'] as $handler => $config)
+		foreach($GLOBALS['modules'] as $handler => $config)
 		{
-			?><option value="<?php print $handler; ?>" <?php print ($GLOBALS['templates']['vars']['cat'] == $handler)?'selected="selected"':''; ?>><?php print $config['name']; ?></option><?php
+			if(is_handler($handler) && !is_internal($handler))
+			{
+				?><option value="<?php print $handler; ?>" <?php print ($GLOBALS['templates']['vars']['cat'] == $handler)?'selected="selected"':''; ?>><?php print $config['name']; ?></option><?php
+			}
 		}
 		?>
 		</select><br /><br />

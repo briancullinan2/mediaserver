@@ -65,6 +65,10 @@ function validate_dir($request)
 		else
 			$tmp = $request['dir'];
 			
+		// add leading slash
+		if(substr($request['dir'], -1) != '/' && substr($request['dir'], -1) != '\\')
+			$request['dir'] .= '/';
+			
 		// this checks the input 'dir' is on the actual file system
 		if(is_dir(realpath($tmp)) || 
 			// this check the 'dir' for directories inside archives and disk images
@@ -159,7 +163,7 @@ function alter_query_file($request, &$props)
 			//  in which case the handler is responsible for validation of it's own paths
 			if(count($dirs) == 0)
 				$dirs = $GLOBALS['database']->query(array('SELECT' => 'files', 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"', 'LIMIT' => 1), true);
-				
+			
 			// top level directory / should always exist
 			if($request['dir'] == realpath('/') || count($dirs) > 0)
 			{
@@ -293,9 +297,9 @@ function output_file($request)
 	$tmp_request = array_merge(array_intersect_key($files[0], getIDKeys()), $tmp_request);
 
 	// get info from other handlers
-	foreach($GLOBALS['handlers'] as $handler => $config)
+	foreach($GLOBALS['modules'] as $handler => $config)
 	{
-		if($handler != $request['cat'] && is_internal($handler) == false && handles($files[0]['Filepath'], $handler))
+		if($handler != $request['cat'] && !is_internal($handler) && handles($files[0]['Filepath'], $handler))
 		{
 			$return = get_files($tmp_request, &$tmp_count, $handler);
 			if(isset($return[0])) $files[0] = array_merge($return[0], $files[0]);

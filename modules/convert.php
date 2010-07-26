@@ -234,9 +234,9 @@ function output_convert($request)
 		$tmp_request = array_merge(array_intersect_key($files[0], getIDKeys()), $tmp_request);
 		
 		// get all the information incase we need to use it
-		foreach($GLOBALS['handlers'] as $handler => $config)
+		foreach($GLOBALS['modules'] as $handler => $config)
 		{
-			if($handler != $request['cat'] && is_internal($handler) == false && handles($files[0]['Filepath'], $handler))
+			if($handler != $request['cat'] && !is_internal($handler) && handles($files[0]['Filepath'], $handler))
 			{
 				$return = get_files($tmp_request, $tmp_count, $handler);
 				if(isset($return[0])) $files[0] = array_merge($return[0], $files[0]);

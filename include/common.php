@@ -24,16 +24,17 @@ define('VERSION_NAME', 			'Goliath');
 //@{
 /** @enum E_DEBUG the DEBUG level error used for displaying errors in the debug template block */
 define('E_DEBUG',					1);
+define('E_VERBOSE',					2);
 /** @enum E_USER USER level errors are printed to the user by the templates */
-define('E_USER',					2);
+define('E_USER',					4);
 /** @enum E_WARN the WARN level error prints a different color in the error block, this is
  * used by parts of the site that cause problems that may not be intentional */
-define('E_WARN',					4);
+define('E_WARN',					8);
 /** @enum E_FATAL the FATAL errors are ones that cause the script to end at an unexpected point */
-define('E_FATAL',					8);
+define('E_FATAL',					16);
 /** @enum E_NOTE the NOTE error level is used for displaying positive information to users such as
  * "account has been created" */
-define('E_NOTE',					16);
+define('E_NOTE',					32);
 //@}
 
 //ini_set('include_path', '.');
@@ -117,7 +118,7 @@ session_start();
 /** Set the error handler to use our custom function for storing errors */
 error_reporting(E_ALL);
 PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'error_callback');
-set_error_handler('php_to_PEAR_Error', E_ALL | E_STRICT);
+//set_error_handler('php_to_PEAR_Error', E_ALL | E_STRICT);
 
 /** set up all the GLOBAL variables needed throughout the site */
 setup();
@@ -177,20 +178,6 @@ function setup()
 			$GLOBALS['settings'][$module . '_enable'] = setting($module . '_enable');
 		}
 	}
-	
-	// setup all the handlers
-	foreach($GLOBALS['handlers'] as $handler => $config)
-	{
-		// do not set up handlers if dependency is not met
-		if(dependency($handler) && function_exists('setup_' . $handler))
-			call_user_func_array('setup_' . $handler, array());
-		// disable the handler if the dependencies are not met
-		elseif(dependency($handler) == false)
-		{
-			// this prevents us from disabling required modules on accident
-			$GLOBALS['settings'][$handler . '_enable'] = setting($handler . '_enable');
-		}
-	}
 
 	//Remove annoying POST error message with the page is refreshed 
 	//  better place for this?
@@ -209,8 +196,6 @@ function setup()
 
 	// set up variables passed to the system in the request or post
 	setup_validate();
-print 'hit';
-exit;
 }
 
 /**
@@ -225,6 +210,67 @@ exit;
  */
 function invoke_all($method)
 {
+}
+
+/**
+ * Function for returning all the modules that match certain criteria
+ */
+function get_modules($package = NULL)
+{
+	$modules = array();
+	
+	foreach($GLOBALS['modules'] as $module => $config)
+	{
+		if($package === NULL || $config['package'] == $package)
+			$modules[$module] = $config;
+	}
+	
+	return $modules;
+}
+
+/**
+ * Function for getting all the modules that implement a specified API function
+ */
+function get_modules_implements($method)
+{
+	$modules = array();
+	
+	// check if function exists
+	foreach($GLOBALS['modules'] as $module => $config)
+	{
+		if(function_exists($method . '_' . $module))
+			$modules[$module] = $config;
+	}
+	
+	return $modules;
+}
+
+/**
+ * Function for matching properties on a module using regular expression and the serialized function
+ */
+function get_modules_match($expression)
+{
+	$modules = array();
+	
+	// if it is not an object or a string, then serialize it in order to match it against modules
+	if(!is_string($expression))
+		$expression = '/' . addslashes(serialize($expression)) . '/i';
+		
+	// make sure it is valid regular expression
+	$expression = generic_validate_regexp(array('package' => $expression), 'package');
+	
+	// if it is valid
+	if(isset($expression))
+	{
+		// loop through all the modules and match expression
+		foreach($GLOBALS['modules'] as $module => $config)
+		{
+			if(preg_match($expression, serialize($config)) != 0)
+				$modules[$module] = $config;
+		}
+	}
+	
+	return $modules;
 }
 
 /**
@@ -306,17 +352,17 @@ function output($request)
 	)
 		call_user_func_array($GLOBALS['modules'][$GLOBALS['module']]['template'], array($request));
 		
-	// if it is set to a string then that must be the theme handler for it
-	elseif(isset($GLOBALS['modules'][$GLOBALS['module']]['template']) &&
-		is_string($GLOBALS['modules'][$GLOBALS['module']]['template'])
-	)
-		theme($GLOBALS['modules'][$GLOBALS['module']]['template']);
-		
 	// call the default template based on the module name
 	elseif(isset($GLOBALS['modules'][$GLOBALS['module']]['template']) &&
 		$GLOBALS['modules'][$GLOBALS['module']]['template'] == true
 	)
 		theme($GLOBALS['module']);
+		
+	// if it is set to a string then that must be the theme handler for it
+	elseif(isset($GLOBALS['modules'][$GLOBALS['module']]['template']) &&
+		is_string($GLOBALS['modules'][$GLOBALS['module']]['template'])
+	)
+		theme($GLOBALS['modules'][$GLOBALS['module']]['template']);
 		
 	// if there isn't anything else, call the theme function and maybe it will just display the default blank page
 	else
@@ -500,12 +546,10 @@ function parseInner($file, &$last_path, &$inside_path)
  */
 function getAllColumns()
 {
-	if(!isset($GLOBALS['handlers']))
-		return array();
 	$columns = array();
-	foreach($GLOBALS['handlers'] as $handler => $config)
+	foreach($GLOBALS['modules'] as $handler => $config)
 	{
-		if(setting('database_enable') == false || is_internal($handler) == false)
+		if(setting('database_enable') == false || !is_internal($handler))
 			$columns = array_merge($columns, array_flip(columns($handler)));
 	}
 	
@@ -868,12 +912,12 @@ function error_callback($error)
 		$GLOBALS['warn_errors'][] = $error->message;
 	if($error->code & E_NOTE)
 		$GLOBALS['note_errors'][] = $error->message;
-	if($error->code & E_DEBUG || setting('verbose') == true)
+	if($error->code & E_DEBUG || $error->code & E_VERBOSE || setting('verbose') == true)
 	{
 		// add special error handling based on the origin of the error
 		foreach($error->backtrace as $i => $stack)
 		{
-			if($stack['function'] == 'raiseError')
+			if($stack['function'] == 'raise_error')
 				break;
 		}
 		$i++;
@@ -891,7 +935,9 @@ function error_callback($error)
 			$error->message .= ' in ' . $error->backtrace[$i]['file'] . ' on line ' . $error->backtrace[$i]['line'];
 		}
 		
-		$GLOBALS['debug_errors'][] = $error;
+		// only show verbose errors once in non verbose mode
+		if($error->code & E_DEBUG || setting('verbose'))
+			$GLOBALS['debug_errors'][] = $error;
 	}
 	
 	$GLOBALS['errors'][] = $error->message;

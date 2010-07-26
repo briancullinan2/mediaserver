@@ -12,35 +12,6 @@
  * @{
  */
 
-/** 
- * Implementation of register
- */
-function register_core()
-{
-	// register permission requirements
-	
-	// register the request variables we will be providing validators for
-	
-	// this module has no output
-	$test = array(
-		'name' => lang('core title', 'Core Functions'),
-		'description' => lang('core description', 'Adds core functionality to site that other common modules depend on.'),
-		'path' => __FILE__,
-		'privilage' => 1,
-		'settings' => array(
-			'installed', 'system_type', 'local_root', 'settings_file', 'modrewrite', 
-		),
-		'depends on' => array(
-			'memory_limit', 'writable_system_files', 'pear_installed',
-			// move these to the proper handlers when it is implemented
-			'getid3_installed', 'curl_installed', 'extjs_installed'
-		),
-		'always output' => 'core_variables',
-		'package' => 'core',
-	);
-
-	return $test;
-}
 /**
  * @}
  */
@@ -92,6 +63,7 @@ function setup_core()
 	
 	// read module list and create a list of available modules	
 	setup_register_modules('modules' . DIRECTORY_SEPARATOR);
+	setup_register_modules('handlers' . DIRECTORY_SEPARATOR);
 	
 	$GLOBALS['modules'] = array_merge(array_flip(array_keys($GLOBALS['modules'])), $GLOBALS['modules']);
 	
@@ -159,7 +131,7 @@ function setup_register_modules($path)
 		'limit' => 32000,
 		'match' => '/\.info$/i',
 	), $count, true);
-	
+
 	$modules = array();
 	
 	// loop through files and add modules to global list
@@ -180,6 +152,7 @@ function setup_register_modules($path)
 				
 				// remove modules_ prefix so as not to be redundant
 				if(substr($prefix, 0, 8) == 'modules_') $prefix = substr($prefix, 8);
+				if(substr($prefix, 0, 9) == 'handlers_') $prefix = substr($prefix, 9);
 				
 				// remove extension from module name
 				$module = substr($module, 0, strrpos($module, '.'));
@@ -189,6 +162,10 @@ function setup_register_modules($path)
 				{
 					$modules[$module] = parse_ini_file($file['Filepath'], true);
 					$GLOBALS['modules'][$prefix . $module] = &$modules[$module];
+					
+					// set the path to the module
+					if(!isset($modules[$module]['path']))
+						$modules[$module]['path'] = dirname($file['Filepath']) . DIRECTORY_SEPARATOR . $module . '.php';
 					
 					include_once dirname($file['Filepath']) . DIRECTORY_SEPARATOR . $module . '.php';
 				}
@@ -204,8 +181,13 @@ function setup_register_modules($path)
 				}
 				
 				// set the package if it is not set already
-				if(!isset($GLOBALS['modules'][$prefix . $module]['package']) && $prefix != '')
-					$GLOBALS['modules'][$prefix . $module]['package'] = substr($prefix, 0, -1);
+				if(!isset($GLOBALS['modules'][$prefix . $module]['package']))
+				{
+					if($prefix != '')
+						$GLOBALS['modules'][$prefix . $module]['package'] = substr($prefix, 0, -1);
+					else
+						$GLOBALS['modules'][$prefix . $module]['package'] = 'other';
+				}
 				
 				// reorganize the session triggers for easy access
 				if(isset($modules[$module]['session']) && is_array($modules[$module]['session']))
@@ -442,11 +424,6 @@ function dependency($dependency, $ignore_setting = false, $already_checked = arr
 	if(isset($GLOBALS['modules'][$dependency]))
 	{
 		$config = $GLOBALS['modules'][$dependency];
-	}
-	// check to see if the dependecy is a handler
-	elseif(isset($GLOBALS['handlers'][$dependency]))
-	{
-		$config = $GLOBALS['handlers'][$dependency];
 	}
 
 	if(isset($config))
@@ -1476,6 +1453,9 @@ function core_variables($request)
 	register_output_vars('group_index', $request['group_index']);
 	register_output_vars('start', $request['start']);
 	register_output_vars('limit', $request['limit']);
+	
+	// always make the column list available to templates
+	register_output_vars('columns', getAllColumns());
 }
 
 /**
@@ -1673,9 +1653,9 @@ function generic_validate_boolean_true($request, $index)
 {
 	if(isset($request[$index]))
 	{
-		if($request[$index] === true || $request[$index] === 'true')
+		if($request[$index] == true || $request[$index] === 'true')
 			return true;
-		elseif($request[$index] === false || $request[$index] === 'false')
+		elseif($request[$index] == false || $request[$index] === 'false')
 			return false;
 	}
 	return true;
@@ -1688,9 +1668,9 @@ function generic_validate_boolean_false($request, $index)
 {
 	if(isset($request[$index]))
 	{
-		if($request[$index] === true || $request[$index] === 'true')
+		if($request[$index] == true || $request[$index] === 'true')
 			return true;
-		elseif($request[$index] === false || $request[$index] === 'false')
+		elseif($request[$index] == false || $request[$index] === 'false')
 			return false;
 	}
 	return false;
@@ -1854,7 +1834,7 @@ function validate_errors_only($request)
 function validate_cat($request)
 {
 	// check if it exists
-	if(isset($request['cat']) && in_array($request['cat'], array_keys($GLOBALS['handlers'])))
+	if(isset($request['cat']) && is_handler($request['cat']) && !is_internal($request['cat']))
 	{
 		// if the database is not used, then to only categories that can be used for processing
 		//   are the ones with a get_handler_info() function attached, this rules out, but is not limited to

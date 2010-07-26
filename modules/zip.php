@@ -58,9 +58,9 @@ function output_zip($request)
 		}
 	
 		// merge all the other information to each file
-		foreach($GLOBALS['handlers'] as $handler => $config)
+		foreach($GLOBALS['modules'] as $handler => $config)
 		{
-			if($handler != $request['cat'] && is_internal($handler) == false && handles($file['Filepath'], $handler))
+			if($handler != $request['cat'] && !is_internal($handler) && handles($file['Filepath'], $handler))
 			{
 				$return = get_files($tmp_request, $tmp_count, $handler);
 				if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);

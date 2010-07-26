@@ -1,23 +1,6 @@
 <?php
 
 /**
- * Implementation of register
- * @ingroup register
- */
-function register_encode()
-{
-	return array(
-		'name' => 'Audio/Video Transcoder',
-		'description' => 'Encode video files to the selected output.',
-		'privilage' => 1,
-		'path' => __FILE__,
-		'template' => false,
-		'settings' => array('encode_path', 'encode_args'),
-		'depends on' => array('encoder', 'select', 'template'),
-	);
-}
-
-/**
  * Checks for encode path
  * @ingroup configure
  */
@@ -167,7 +150,7 @@ function validate_encode($request)
 	
 	$request['encode'] = strtolower($request['encode']);
 	
-	if(in_array($request['encode'], array('mp4', 'mpg', 'wmv', 'mp4a', 'mp3', 'wma')))
+	if(in_array($request['encode'], array('mp4', 'mpg', 'wmv', 'mp4a', 'mp3', 'wma', 'flv')))
 		return $request['encode'];
 	else
 		return 'mp3';
@@ -180,7 +163,7 @@ function validate_encode($request)
  */
 function validate_vcodec($request)
 {
-	if(!isset($request['vcodec']) || !in_array($request['vcodec'], array('mp4v', 'mpgv', 'WMV2', 'DIV3','dummy')))
+	if(!isset($request['vcodec']) || !in_array($request['vcodec'], array('mp4v', 'mpgv', 'WMV2', 'DIV3','dummy', 'FLV1')))
 	{
 		$request['encode'] = validate($request, 'encode');
 		switch($request['encode'])
@@ -202,6 +185,9 @@ function validate_vcodec($request)
 				break;
 			case 'wma':
 				return 'dummy';
+				break;
+			case 'flv':
+				return 'h264';
 				break;
 		}
 	}
@@ -238,6 +224,9 @@ function validate_acodec($request)
 			case 'wma':
 				return 'wma2';
 				break;
+			case 'flv':
+				return 'mp4';
+				break;
 		}
 	}
 	return $request['acodec'];
@@ -272,6 +261,9 @@ function validate_vbitrate($request)
 				break;
 			case 'wma':
 				return 0;
+				break;
+			case 'flv':
+				return 512;
 				break;
 		}
 	}
@@ -350,6 +342,9 @@ function validate_muxer($request)
 			case 'wma':
 				return 'asf';
 				break;
+			case 'flv':
+				return 'ts';
+				break;
 		}
 	}
 	return $request['muxer'];
@@ -368,13 +363,13 @@ function validate_framerate($request)
 		switch($request['encode'])
 		{
 			case 'mp4':
-				return 15;
+				return 30;
 				break;
 			case 'mpg':
-				return 0;
+				return 30;
 				break;
 			case 'wmv':
-				return 15;
+				return 30;
 				break;
 			case 'mp4a':
 				return 0;
@@ -384,6 +379,9 @@ function validate_framerate($request)
 				break;
 			case 'wma':
 				return 0;
+				break;
+			case 'flv':
+				return 30;
 				break;
 		}
 	}
@@ -467,9 +465,9 @@ function output_encode($request)
 		$tmp_request = array_merge(array_intersect_key($files[0], getIDKeys()), $tmp_request);
 
 		// get all the information incase we need to use it
-		foreach($GLOBALS['handlers'] as $handler => $config)
+		foreach($GLOBALS['modules'] as $handler => $config)
 		{
-			if($handler != $request['cat'] && is_internal($handler) == false && handles($files[0]['Filepath'], $handler))
+			if($handler != $request['cat'] && !is_internal($handler) && handles($files[0]['Filepath'], $handler))
 			{
 				$return = get_files($tmp_request, $tmp_count, $handler);
 				if(isset($return[0])) $files[0] = array_merge($return[0], $files[0]);
@@ -572,6 +570,9 @@ function output_encode($request)
 		case 'wma':
 			header('Content-Type: audio/x-ms-wma');
 			break;
+		case 'flv':
+			header('Content-Type: video/x-ts');
+			break;
 	}
 		
 	// close session so the client can continue browsing the site
@@ -610,7 +611,6 @@ function output_encode($request)
 	   1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
 	   2 => array("pipe", "w"),  // stderr is a pipe that the child will write to
 	);
-	
 	// start process
 	$process = proc_open($cmd, $descriptorspec, $pipes, dirname(setting('encode_path')), NULL); //array('binary_pipes' => true, 'bypass_shell' => true));
 	
@@ -619,6 +619,7 @@ function output_encode($request)
 	stream_set_blocking($pipes[2], 0);
 	
 	$fp = output_handler($request['efile'], $request['cat']);
+	
 	//$fp = fopen($_REQUEST['%IF'], 'rb');
 	$php_out = fopen('php://output', 'wb');
 	

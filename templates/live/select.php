@@ -10,9 +10,12 @@ function register_live_select()
 function theme_live_select_block()
 {
 	?>
-	<div class="files" style="border:1px solid #006; height:150px; width:84px; border-right:0px;">
+	<div class="files" style="border:1px solid #006; height:150px; width:84px; border-right:0px; background-color:#FFF;">
+		<div class="file FOLDER small" onmousedown="deselectAll(event);fileSelect(this, true, event);return false;" oncontextmenu="showMenu(this);return false;" id="0"><div class="notselected"></div>
+			<a class="itemLink" href="<?php print url($GLOBALS['templates']['vars']['get'] . '&dir=' . dirname($GLOBALS['templates']['vars']['dir'])); ?>" onmouseout="this.parentNode.firstChild.className = 'notselected';" onmouseover="this.parentNode.firstChild.className = 'selected';"><span>Up 1 Level</span></a>
+		</div>
 		<div class="file FOLDER" onmousedown="deselectAll(event);fileSelect(this, true, event);return false;" oncontextmenu="showMenu(this);return false;" id="0"><div class="notselected"></div>
-			<table class="itemTable" cellpadding="0" cellspacing="0" onclick="location.href = '<?php print url('module=' . $GLOBALS['module'] . '&dir=/'); ?>';">
+			<table class="itemTable" cellpadding="0" cellspacing="0" onclick="location.href = '<?php print url($GLOBALS['templates']['vars']['get'] . '&dir=/'); ?>';">
 				<tr>
 					<td>
 						<div class="thumb file_ext_FOLDER file_type_">
@@ -21,13 +24,13 @@ function theme_live_select_block()
 					</td>
 				</tr>
 			</table>
-			<a class="itemLink" href="<?php print url('module=' . $GLOBALS['module'] . '&dir=/'); ?>" onmouseout="this.parentNode.firstChild.className = 'notselected';" onmouseover="this.parentNode.firstChild.className = 'selected';"><span>Top Directory</span></a>
+			<a class="itemLink" href="<?php print url($GLOBALS['templates']['vars']['get'] . '&dir=/'); ?>" onmouseout="this.parentNode.firstChild.className = 'notselected';" onmouseover="this.parentNode.firstChild.className = 'selected';"><span>Top Directory</span></a>
 		</div>
 	</div>
-	<div class="files" id="files" style="border:1px solid #006; overflow:auto; height:150px; width:400px; float:left;"><?php
+	<div class="files" id="files" style="border:1px solid #006; overflow:auto; height:150px; width:400px; float:left; background-color:#FFF;"><?php
 	if(count($GLOBALS['templates']['vars']['files']) == 0)
 	{
-		$link = (dirname($GLOBALS['templates']['vars']['dir']) == '/')?url('module=' . $GLOBALS['module'] . '&dir=/'):url('module=' . $GLOBALS['module'] . '&dir=' . urlencode(dirname($GLOBALS['templates']['vars']['dir']) . '/'));
+		$link = (dirname($GLOBALS['templates']['vars']['dir']) == '/')?url($GLOBALS['templates']['vars']['get'] . '&dir=/'):url($GLOBALS['templates']['vars']['get'] . '&dir=' . urlencode(dirname($GLOBALS['templates']['vars']['dir']) . '/'));
 		?>
 		<b>There are no files to display</b><br />
 		<div class="filesmall FOLDER" onmousedown="deselectAll(event);fileSelect(this, true, event);return false;" oncontextmenu="showMenu(this);return false;" id="0"><div class="notselected"></div>
@@ -72,7 +75,7 @@ function theme_live_select_block()
 			
 			if($GLOBALS['templates']['vars']['cat'] != $cat || $file['Filetype'] == 'FOLDER') $new_cat = $cat;
 			
-			$link = isset($new_cat)?url('module=' . $GLOBALS['module'] . '&start=0&cat=' . $new_cat . '&dir=' . urlencode($file['Filepath'])):url($GLOBALS['templates']['vars']['get'] . '&dir=&id=' . urlencode($file['id']) . '&filename=' . urlencode($file['Filename']));
+			$link = isset($new_cat)?url($GLOBALS['templates']['vars']['get'] . '&start=0&cat=' . $new_cat . '&dir=' . urlencode($file['Filepath'])):url($GLOBALS['templates']['vars']['get'] . '&dir=&id=' . urlencode($file['id']) . '&filename=' . urlencode($file['Filename']));
 			
 			?>
 			<div class="filesmall <?php print $file['Filetype']; ?>" onmousedown="deselectAll(event);fileSelect(this, true, event);return false;" oncontextmenu="showMenu(this);return false;" id="<?php print $file['id']; ?>"><div class="notselected"></div>

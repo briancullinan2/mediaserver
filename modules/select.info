@@ -7,5 +7,5 @@ session[] = off
 session[] = selected
 session[] = id
 alter query[] = selected
-template = true
+template = 1
 package = core

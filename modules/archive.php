@@ -314,9 +314,9 @@ function add_archive($file, $archive_id = NULL)
 	
 	// set up empty ids array since we know archive_id will be the only entry
 	$ids = array();
-	foreach($GLOBALS['handlers'] as $handler => $config)
+	foreach($GLOBALS['modules'] as $handler => $config)
 	{
-		if(!is_wrapper($handler) && !is_internal($handler))
+		if(is_handler($handler) && !is_wrapper($handler) && !is_internal($handler))
 			$ids[$handler . '_id'] = false;
 	}
 	
@@ -365,7 +365,7 @@ function output_archive($file)
 	$files = $GLOBALS['database']->query(array('SELECT' => 'archive', 'WHERE' => 'Filepath = "' . addslashes($file) . '"', 'LIMIT' => 1), true);
 	if(count($files) > 0)
 	{				
-		return @fopen($GLOBALS['handlers']['db_archive']['streamer'] . '://' . $file, 'rb');
+		return @fopen('archive://' . $file, 'rb');
 	}
 
 	return false;
@@ -414,8 +414,8 @@ class archive
 	
     function stream_open($path, $mode, $options, &$opened_path)
     {
-		if(substr($path, 0, strlen($GLOBALS['handlers']['db_archive']['streamer'] . '://')) == $GLOBALS['handlers']['db_archive']['streamer'] . '://')
-			$path = substr($path, strlen($GLOBALS['handlers']['db_archive']['streamer'] . '://'));
+		if(substr($path, 0, strlen('archive://')) == 'archive://')
+			$path = substr($path, strlen('archive://'));
 			
 		parseInner(str_replace('/', DIRECTORY_SEPARATOR, $path), $last_path, $inside_path);
 		if(is_file($last_path))

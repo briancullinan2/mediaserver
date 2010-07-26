@@ -31,7 +31,7 @@ if(isset($GLOBALS['modules'][$_REQUEST['module']]))
 			'required_priv' => $GLOBALS['modules'][$_REQUEST['module']]['privilage']
 		));
 	}
-	
+
 	// output the module
 	output($_REQUEST);
 }

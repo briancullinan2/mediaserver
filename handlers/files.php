@@ -40,33 +40,32 @@ function register_files()
  */
 function columns($handler)
 {
-	if(isset($GLOBALS['handlers'][$handler]['columns']))
+	if(isset($GLOBALS['modules'][$handler]['database']))
 	{
-		return $GLOBALS['handlers'][$handler]['columns'];
+		return array_keys($GLOBALS['modules'][$handler]['database']);
 	}
-	elseif(isset($GLOBALS['handlers'][$handler]['database']))
+	elseif(isset($GLOBALS['modules'][$handler]['wrapper']))
 	{
-		return array_keys($GLOBALS['handlers'][$handler]['database']);
-	}
-	elseif(isset($GLOBALS['handlers'][$handler]['wrapper']))
-	{
-		return columns($GLOBALS['handlers'][$handler]['wrapper']);
+		return columns($GLOBALS['modules'][$handler]['wrapper']);
 	}
 	else
 	{
-		return columns('files');
+		return array_keys($GLOBALS['modules']['files']['database']);
 	}
 }
 
 function is_internal($handler)
 {
-	if(isset($GLOBALS['handlers'][$handler]['internal']))
+	if(!is_handler($handler))
+		return;
+		
+	if(isset($GLOBALS['modules'][$handler]['internal']))
 	{
-		return $GLOBALS['handlers'][$handler]['internal'];
+		return $GLOBALS['modules'][$handler]['internal'];
 	}
-	elseif(isset($GLOBALS['handlers'][$handler]['wrapper']))
+	elseif(isset($GLOBALS['modules'][$handler]['wrapper']))
 	{
-		return is_internal($GLOBALS['handlers'][$handler]['wrapper']);
+		return is_internal($GLOBALS['modules'][$handler]['wrapper']);
 	}
 	else
 	{
@@ -81,12 +80,25 @@ function is_internal($handler)
  */
 function is_wrapper($handler)
 {
+	if(!is_handler($handler))
+		return false;
+	
 	// fs_ handlers are never wrappers
 	if(setting('database_enable') == false)
 		return false;
 	if($handler == 'files')
 		return false;
-	return isset($GLOBALS['handlers'][$handler]['wrapper']);
+	return isset($GLOBALS['modules'][$handler]['wrapper']);
+}
+
+function is_handler($handler)
+{
+	if(isset($GLOBALS['modules'][$handler]['database']))
+		return true;
+	elseif(isset($GLOBALS['modules'][$handler]['wrapper']))
+		return is_handler($GLOBALS['modules'][$handler]['wrapper']);
+	else
+		return false;
 }
 
 /**
@@ -107,16 +119,20 @@ function is_wrapper($handler)
  */
 function handles($file, $handler)
 {
+	// if it isn't a handler at all, return here
+	if($handler != 'files' && $handler !== true && !is_handler($handler))
+		return false;
+	
 	// check the module is enabled first
 	if($handler != 'files' && dependency($handler) == false)
 		return false;
-	
+		
 	// check the handles_ function	
 	if($handler == 'files' || $handler === true)
 	{
 		$file = str_replace('\\', '/', $file);
 		if($handler !== true && setting('admin_alias_enable') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
-	
+
 		if(
 			is_dir(str_replace('/', DIRECTORY_SEPARATOR, $file)) || 
 			(
@@ -165,14 +181,15 @@ function handles($file, $handler)
  */
 function get_files_info($file)
 {
+	
 	$file = str_replace('/', DIRECTORY_SEPARATOR, $file);
 	
 	$fileinfo = array();
 	$fileinfo['Filepath'] = addslashes(str_replace('\\', '/', $file));
 	$fileinfo['Filename'] = basename($file);
-	$fileinfo['Filesize'] = filesize($file);
+	$fileinfo['Filesize'] = file_exists($file)?filesize($file):0;
 	$fileinfo['Filemime'] = getMime($file);
-	$fileinfo['Filedate'] = date("Y-m-d h:i:s", filemtime($file));
+	$fileinfo['Filedate'] = file_exists($file)?date("Y-m-d h:i:s", filemtime($file)):date("Y-m-d h:i:s", 0);
 	$fileinfo['Filetype'] = getFileType($file);
 	
 	return $fileinfo;
@@ -287,8 +304,8 @@ function output_handler($file, $handler)
 {
 	if(function_exists('output_' . $handler))
 		return call_user_func_array('output_' . $handler, array($file, $handler));
-	elseif(is_wrapper($handler) && function_exists('output_' . $GLOBALS['handlers'][$handler]['wrapper']))
-		return call_user_func_array('output_' . $GLOBALS['handlers'][$handler]['wrapper'], array($file, $handler));
+	elseif(is_wrapper($handler) && function_exists('output_' . $GLOBALS['modules'][$handler]['wrapper']))
+		return call_user_func_array('output_' . $GLOBALS['modules'][$handler]['wrapper'], array($file, $handler));
 	else
 		return output_files($file, $handler);
 }
@@ -378,7 +395,7 @@ function get_files($request, &$count, $handler_or_internal)
 	if($handler != 'files' && function_exists('get_' . $handler))
 		return call_user_func_array('get_' . $handler, array($request, $count));
 	elseif(is_wrapper($handler))
-		return get_files($GLOBALS['handlers'][$handler]['wrapper']);
+		return get_files($GLOBALS['modules'][$handler]['wrapper']);
 	elseif($handler != 'files')
 	{
 		raise_error('get_files() called with handler \'' . $handler . '\' but no get_ handler function exists! Defaulting to files', E_DEBUG);
@@ -466,8 +483,7 @@ function _get_local_files($request, &$count, $handler)
 	{
 
 		// set a directory if one isn't set already
-		if(!isset($request['dir']))
-			$request['dir'] = realpath('/');
+		if(!isset($request['dir'])) $request['dir'] = realpath('/');
 		$request['dir'] = str_replace('\\', '/', $request['dir']);
 			
 		// check to make sure is it a valid directory before continuing
@@ -476,45 +492,70 @@ function _get_local_files($request, &$count, $handler)
 			// scandir - read in a list of the directory content
 			$tmp_files = scandir(str_replace('/', DIRECTORY_SEPARATOR, $request['dir']));
 			$count = count($tmp_files);
-			
+
 			// do some filtering of files
+			$new_files = array();
 			for($j = 0; $j < $count; $j++)
 			{
 				// parse out all the files that this handler doesn't handle, just like a filter
 				//  but only if we are not called by internals
-				if(!handles($request['dir'] . $tmp_files[$j], true))
-					unset($tmp_files[$j]);
-				// if dirs only, then unset all the files	
-				elseif(
-					isset($request['dirs_only']) && $request['dirs_only'] == true &&
-					!is_dir($request['dir'] . $tmp_files[$j])
+				if(
+					!handles($request['dir'] . $tmp_files[$j], true) ||
+					(
+						// if dirs only, then unset all the files	
+						isset($request['dirs_only']) && $request['dirs_only'] == true &&
+						!is_dir($request['dir'] . $tmp_files[$j])
+					)
 				)
-					unset($tmp_files[$j]);
-				// if match is set, use that to parse files
-				elseif(isset($request['match']) && preg_match($request['match'], $tmp_files[$j]) == 0)
-					unset($tmp_files[$j]);
-				// if it is not unset
+				{
+					// just continue
+					continue;
+				}
+
+				// if match is set and depth is not equal to zero then get files recursively
+				if(isset($request['match']) && isset($request['depth']) &&
+					is_dir($request['dir'] . $tmp_files[$j]) &&
+					is_numeric($request['depth']) && $request['depth'] > 0
+				)
+				{
+					$sub_files = _get_local_files(array(
+							'dir' => $request['dir'] . $tmp_files[$j] . DIRECTORY_SEPARATOR,
+							'depth' => $request['depth'] - 1
+						) + $request, $tmp_count, 'files');
+
+					$count = count($tmp_files);
+					
+					// check for directory on this level
+					if(!isset($request['match']) || preg_match($request['match'], $tmp_files[$j]) > 0)
+						$new_files[] = $tmp_files[$j];
+						
+					// add sub files
+					$new_files = array_merge($new_files, $sub_files);
+				}
 				else
 				{
-					// if match is set and depth is not equal to zero then get files recursively
-					if(isset($request['match']) && is_dir($request['dir'] . $tmp_files[$j]) &&
-						isset($request['depth']) && is_numeric($request['depth']) && $request['depth'] > 0)
-						$tmp_files = array_merge($tmp_files, _get_local_files(array('dir' => $request['dir'] . $tmp_files[$j], 'depth' => $request['depth'] - 1) + $request, $tmp_count, 'files'));
+					// if match is set, use that to parse files
+					if(!isset($request['match']) || preg_match($request['match'], $tmp_files[$j]) > 0)
+						$new_files[] = $tmp_files[$j];
 				}
 			}
 
-			// get the values again, this will reset all the indices
-			$tmp_files = array_values($tmp_files);
-			
 			// set the count to the total length of the file list
-			$count = count($tmp_files);
+			$count = count($new_files);
 			
 			// start the information getting and combining of file info
 			for($i = $request['start']; $i < min($request['start']+$request['limit'], $count); $i++)
 			{
+				// skip the file if the file information is already loaded
+				if(is_array($new_files[$i]) && isset($new_files[$i]['Filepath']))
+				{
+					$files[] = $new_files[$i];
+					continue;
+				}
+				
 				// get the information from the handler for 1 file
-				$info = call_user_func('get_files_info', $request['dir'] . $tmp_files[$i]);
-				$info['id'] = bin2hex($request['dir'] . $tmp_files[$i]);
+				$info = call_user_func('get_files_info', $request['dir'] . $new_files[$i]);
+				$info['id'] = bin2hex($request['dir'] . $new_files[$i]);
 				$info['Filepath'] = stripslashes($info['Filepath']);
 				
 				// make some modifications
@@ -665,7 +706,7 @@ function remove($file, $handler = NULL)
 	if($file[strlen($file)-1] != '/') $file_dir = $file . '/';
 	else $file_dir = $file;
 	
-	raise_error('Removing ' . $GLOBALS['handlers'][$handler]['name'] . ': ' . $file, E_DEBUG);
+	raise_error('Removing ' . $GLOBALS['modules'][$handler]['name'] . ': ' . $file, E_DEBUG);
 
 	// remove file(s) from database
 	$GLOBALS['database']->query(array('DELETE' => $handler, 'WHERE' => 'Filepath = "' . addslashes($file) . '" OR LEFT(Filepath, ' . strlen($file_dir) . ') = "' . addslashes($file_dir) . '"'), false);	
@@ -799,13 +840,13 @@ function cleanup($handler = 'files')
 		// remove first item from all duplicates
 		foreach($files as $i => $file)
 		{
-			raise_error('Removing Duplicate ' . $GLOBALS['handlers'][$handler]['name'] . ': ' . $file['Filepath'], E_DEBUG);
+			raise_error('Removing Duplicate ' . $GLOBALS['modules'][$handler]['name'] . ': ' . $file['Filepath'], E_DEBUG);
 			
 			$GLOBALS['database']->query(array('DELETE' => $handler, 'WHERE' => 'id=' . $file['id']), false);
 		}
 	}
 	
-	raise_error('Cleanup: for ' . $GLOBALS['handlers'][$handler]['name'] . ' complete.', E_DEBUG);
+	raise_error('Cleanup: for ' . $GLOBALS['modules'][$handler]['name'] . ' complete.', E_DEBUG);
 	
 }
 
