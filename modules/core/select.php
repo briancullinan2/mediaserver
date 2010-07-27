@@ -2,6 +2,37 @@
 
 // handle selecting of files
 
+function rewrite_select($request)
+{
+	if(isset($request['path_info']))
+	{
+		$dirs = split('/', $request['path_info']);
+		if(isset($dirs) && $dirs[1] == 'dir')
+		{
+			unset($dirs[1]);
+			unset($dirs[0]);
+			
+			$request['dir'] = '/' . implode('/', $dirs);
+
+			return $request;
+		}
+	}
+}
+
+function url_select($request)
+{
+	if(isset($request['dir']))
+	{
+		$tmp_request = array('module' => $request['module']);
+		$path = create_path_info($tmp_request);
+		$path .= 'dir' . $request['dir'];
+		unset($request['dir']);
+		unset($request['module']);
+		return array($request, $path);
+	}
+	return array($request, '');
+}
+
 /**
  * Implementation of validate
  * @ingroup validate

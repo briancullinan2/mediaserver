@@ -33,10 +33,10 @@ function setup_core()
 	elseif($verbose === true)
 	{
 		set_error_handler('php_to_PEAR_Error', E_ALL);
-		error_reporting(0);
+		error_reporting(E_ERROR);
 	}
 	else
-		error_reporting(0);
+		error_reporting(E_ERROR);
 	
 	PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'error_callback');
 	
@@ -345,6 +345,7 @@ function setting_buffer_size($settings)
  */
 function setting_modrewrite($settings)
 {
+	return true;
 	return (isset($_REQUEST['modrewrite']) && $_REQUEST['modrewrite'] == true);
 }
 
@@ -1196,8 +1197,18 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 	// if this option is available, add the path into back on to the front of the query string,
 	//   maybe it will be only path information after this step
 	//   the request is pass by reference so the request can be altered when variables are added to the path info
-	$path_info = create_path_info($request);
+
+	// call a modules rewrite function for further rewriting
+	$result = invoke_module('url', $request['module'], $request);
+	if(count($result) == 2)
+	{
+		$request = $result[0];
+		$path_info = $result[1];
+	}
 	
+	if(!isset($path_info))
+		$path_info = create_path_info($request);
+		
 	// generate a link, with optional domain the html root and path info prepended
 	$link = (($include_domain)?setting('html_domain'):'') . 
 		setting('html_root') . 
@@ -1988,34 +1999,22 @@ function rewrite_vars(&$request, &$get, &$post)
 	if(isset($request['path_info']))
 	{
 		// get path info
-		$path = parse_path_info($request['path_info']);
+		$path_request = parse_path_info($request['path_info']);
 		
 		// merge path info with get as well as request
-		$get = array_merge($path, $get);
+		$get = array_merge($path_request, $get);
 		
 		// merge path info, but request variables take precedence
-		$request = array_merge($request, $path);
+		$request = array_merge($request, $path_request);
 	}
-		
+	
 	// just about everything uses the cat variable so always validate and add this
 	$request['cat'] = validate($request, 'cat');
 
-	// do some modifications to specific modules being used
-	if($request['module'] == 'bt')
-	{
-		// save the whole request to be used later
-		$request['bt_request'] = $request;
-	}
-	if($request['module'] == 'ampache')
-	{
-		// a valid action is required for this module
-		$request['action'] = validate($request, 'action');
-		
-		// rewrite some variables
-		if(isset($request['offset'])) rewrite('offset', 'start', $request, $get, $post);
-		if(isset($request['filter']) && $request['action'] != 'search_songs') rewrite('filter', 'id', $request, $get, $post);
-		elseif(isset($request['filter']))  rewrite('filter', 'search', $request, $get, $post);
-	}
+	// call a modules rewrite function for further rewriting
+	$result = invoke_module('rewrite', $request['module'], $request);
+	if(isset($result))
+		$request = $result;
 }
 
 /**

@@ -1,7 +1,7 @@
 ------------- MONOLITHICMEDIA TODO -------------
 ------------- GENERAL TODO -------------
+Convert all setting_() calls to go through API, even if it is it's own setting
 Running system from command line should change bootstrap options
-Under validate_request, process the module, then call rewrite_module() or rewrite_select() with the entire request, then finish validating
 Cron is not running properly again...
 IMPORTANT!  Convert all call_user_func_array usage to the standard callable method
 Finish webdav module that allows files to be uploaded and access using the web dav protocol.  This is already mostly supported by PEAR.

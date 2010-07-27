@@ -29,3 +29,13 @@ handlers are responsible for replacing Filepaths with the alias, handler::get() 
 Needs:
 A svn handler for connecting to remove or local SVN databases
 Better support on windows for running commands
+
+Next Names:
+Atlas
+Behemoth
+Colossus
+Dionysus
+Eros
+Geras
+Hermes
+Iapetos

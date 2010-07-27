@@ -12,6 +12,8 @@ Improved error API greatly
 Improved installation
 If dependencies fail, now shows standard error page
 	Setup is called even on failed required modules, it's really just for show anyways
+Added API for changing the way URLs are created and the way URLs are read
+	Basically mimicing the drupal functionality of menu call backs
 
 2010-07-21
 Finished implementing alter_query stuff

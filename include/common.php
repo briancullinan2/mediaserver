@@ -111,6 +111,20 @@ function register_trigger($trigger, $config, $module)
 		raise_error('Trigger not set in config for \'' . $module . '\'.', E_VERBOSE);
 }
 
+function invoke_module($method, $module)
+{
+	$args = func_get_args();
+	unset($args[1]);
+	unset($args[0]);
+	
+	if((dependency($module) || in_array($module, get_required_modules())) && function_exists($method . '_' . $module))
+	{
+		return call_user_func_array($method . '_' . $module, $args);
+	}
+	else
+		raise_error('Invoke \'' . $method . '\' called on \'' . $module . '\' but dependencies not met or function does not exist.', E_VERBOSE);
+}
+
 /**
  * Function for invoking an API call on all modules and returning the result
  * @param method Method to call on all modules

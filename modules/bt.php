@@ -18,6 +18,12 @@ function register_bt()
 	);
 }
 
+function rewrite_bt($request)
+{
+	// save the whole request to be used later
+	$request['bt_request'] = $request;
+}
+
 /**
  * Implementation of setting
  * @ingroup setting

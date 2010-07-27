@@ -16,6 +16,17 @@ function register_ampache()
 	);
 }
 
+function rewrite_ampache($request)
+{
+	// a valid action is required for this module
+	$request['action'] = validate($request, 'action');
+	
+	// rewrite some variables
+	if(isset($request['offset'])) rewrite('offset', 'start', $request, $get, $post);
+	if(isset($request['filter']) && $request['action'] != 'search_songs') rewrite('filter', 'id', $request, $get, $post);
+	elseif(isset($request['filter']))  rewrite('filter', 'search', $request, $get, $post);
+}
+
 /**
  * Implementation of status
  * @ingroup status
