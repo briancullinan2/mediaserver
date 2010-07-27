@@ -809,3 +809,16 @@ input.stndsize {
 	float:right;
 	margin-bottom:-40px;
 }
+
+#user_errors {
+	border:2px solid #C00;
+	background-color:#F99;
+}
+#note_errors {
+	border:2px solid #09F;
+	background-color:#CEF;
+}
+#warn_errors {
+	border:2px solid #CC0;
+	background-color:#FF9;
+}

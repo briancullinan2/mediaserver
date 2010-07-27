@@ -4,7 +4,7 @@
  * Implementation of setting
  * @ingroup setting
  */
-function setting_admin_modules()
+function setting_modules()
 {
 	$settings = array();
 	foreach($GLOBALS['modules'] as $module => $config)
@@ -37,7 +37,7 @@ function dependency_writable_settings_file($settings)
 /**
  * Implementation of dependencies
  */
-function status_admin_modules($settings)
+function status_modules($settings)
 {
 	$status = array();
 	
@@ -103,7 +103,7 @@ function get_required_modules()
  * Implementation of configure
  * @ingroup configure
  */
-function configure_admin_modules($settings, $request)
+function configure_modules($settings, $request)
 {
 	$recommended = array('select', 'list', 'search');
 	
@@ -446,7 +446,7 @@ function modules_get_new_settings($request)
  * Implementation of output
  * @ingroup output
  */
-function output_admin_modules($request)
+function output_modules($request)
 {
 	// get which module to ouput the configuration for
 	$request['configure_module'] = validate($request, 'configure_module');
@@ -504,7 +504,7 @@ function output_admin_modules($request)
 	register_output_vars('configure_module', $request['configure_module']);
 }
 
-function theme_admin_modules()
+function theme_modules()
 {
 	theme('header');
 

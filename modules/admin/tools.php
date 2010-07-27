@@ -12,7 +12,7 @@ function register_admin_tools()
 		'privilage' => 10,
 		'path' => __FILE__,
 		'modules' => (is_dir('modules' . DIRECTORY_SEPARATOR . 'admin' . DIRECTORY_SEPARATOR . 'tools' . DIRECTORY_SEPARATOR)?
-			setup_register_modules('modules' . DIRECTORY_SEPARATOR . 'admin' . DIRECTORY_SEPARATOR . 'tools' . DIRECTORY_SEPARATOR)
+			load_modules('modules' . DIRECTORY_SEPARATOR . 'admin' . DIRECTORY_SEPARATOR . 'tools' . DIRECTORY_SEPARATOR)
 			:
 			array()),
 		'template' => false,

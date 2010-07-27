@@ -3,24 +3,6 @@
 // handle selecting of files
 
 /**
- * Implementation of register
- * @ingroup register
- */
-function register_select()
-{
-	return array(
-		'name' => 'File Selector',
-		'description' => 'Allows users to select files and saves the selected files in their session and profile.',
-		'privilage' => 1,
-		'path' => __FILE__,
-		'session' => array('item', 'on', 'off', 'selected', 'id'),
-		'alter query' => array('selected'),
-		'template' => true,
-		'package' => 'core',
-	);
-}
-
-/**
  * Implementation of validate
  * @ingroup validate
  * @return None by default, All or None are valid inputs

@@ -4,5 +4,5 @@ privilage = 1
 session[] = template
 template = false
 settings = template
-always output = template_variables
+output = template_variables
 package = core

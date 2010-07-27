@@ -12,7 +12,7 @@ function register_admin_tools_movie_downloader()
 		'privilage' => 10,
 		'path' => __FILE__,
 		'template' => false,
-		'validates' => array('add_movie_folder', 'remove_movie_folder', 'info_singular_step_movies', 'movie_index'),
+		'validate' => array('add_movie_folder', 'remove_movie_folder', 'info_singular_step_movies', 'movie_index'),
 		'settings' => 'admin_tools_movie_downloader',
 		'session' => array('add_movie_folder', 'remove_movie_folder', 'reset_configuration'),
 		'depends on' => array('settings', 'valid_movie_service'),

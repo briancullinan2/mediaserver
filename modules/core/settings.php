@@ -9,23 +9,45 @@
  *   define the setting name and type in a key array
  *   types will be specified in the documentation (aligns with form types), text, int, radio, checkbox)
  */
- 
+
 /**
- * Implementation of register
- * @ingroup register
+ * Helper function
  */
-function register_settings()
+function preload_settings()
 {
-	return array(
-		'name' => 'Settings',
-		'description' => 'This allows users to save theme and site settings.',
-		'privilage' => 1,
-		'path' => __FILE__,
-		'depends on' => 'settings',
-		'template' => true,
-		'settings' => 'settings',
-		'package' => 'core',
-	);
+	// get system settings from a few different locations
+	if(file_exists(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.php'))
+	{
+		if($GLOBALS['settings'] = parse_ini_file(setting_local_root() . 'include' . DIRECTORY_SEPARATOR . 'settings.php', true))
+		{
+			// awesome settings are loaded properly
+			foreach($GLOBALS['settings'] as $name => $value)
+			{
+				if(is_array($value))
+				{
+					foreach($value as $subsetting => $subvalue)
+					{
+						$GLOBALS['settings'][$name][$subsetting] = urldecode($subvalue);
+					}
+				}
+				else
+					$GLOBALS['settings'][$name] = urldecode($value);
+			}
+		}
+		else
+		{
+			unset($GLOBALS['settings']);
+		}
+	}
+	
+	// the include must have failed
+	if(!isset($GLOBALS['settings']))
+	{
+		$GLOBALS['settings'] = array();
+		
+		// try and forward them to the install page
+		if(!isset($_REQUEST['module'])) $_REQUEST['module'] = 'admin_install';
+	}
 }
 
 /**
@@ -34,10 +56,6 @@ function register_settings()
  */
 function setup_settings()
 {
-	// if there isn't by chance already a setting global set it up here
-	if(!isset($GLOBALS['settings']))
-		$GLOBALS['settings'] = array();
-		
 	// load settings from database
 	if(setting_installed() && setting('database_enable'))
 	{
@@ -91,15 +109,15 @@ function setting_settings_file()
 {
 	// return file from where it is supposed to be
 	// check other directories if it doesn't exist there
-	if(!file_exists(dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'settings.php'))
+	if(!file_exists(setting_local_root() . 'include' . DIRECTORY_SEPARATOR . 'settings.php'))
 	{
-		if(file_exists(dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'settings.php'))
-			return dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'settings.php';
+		if(file_exists(setting_local_root() . 'settings.php'))
+			return setting_local_root() . 'settings.php';
 	}
 	
 	// add handling for multiple domains like drupal does
 	
-	return dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'settings.php';
+	return setting_local_root() . 'include' . DIRECTORY_SEPARATOR . 'settings.php';
 }
 
 /**
@@ -147,6 +165,10 @@ function dependency_settings($settings)
  */
 function setting($name)
 {
+	// if by chance settings isn't set up
+	if(!isset($GLOBALS['settings']))
+		preload_settings();
+	
 	// use cached setting if past the point of outputting the template
 	if(!isset($GLOBALS['templates']['vars']))
 	{

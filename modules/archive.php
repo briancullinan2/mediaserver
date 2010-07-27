@@ -1,31 +1,6 @@
 <?php
 
 /**
- * Implementation of register
- * @ingroup register
- */
-function register_archive()
-{
-	return array(
-		'name' => lang('archive title', 'Archives'),
-		'description' => lang('archive description', 'Convert sets of files to an archive using a command line program.'),
-		'privilage' => 1,
-		'path' => __FILE__,
-		'depends on' => array('archiver'),
-		'settings' => array('archiver'),
-		'database' => array(
-			'Filepath' 		=> 'TEXT',
-			'Filename'		=> 'TEXT',
-			'Compressed'	=> 'BIGINT',
-			'Filesize'		=> 'BIGINT',
-			'Filemime'		=> 'TEXT',
-			'Filedate'		=> 'DATETIME ',
-			'Filetype'		=> 'TEXT',
-		),
-	);
-}
-
-/**
  * Implementation of setup_handler
  * @ingroup setup_handler
  */
@@ -33,6 +8,15 @@ function setup_archive()
 {
 	if(setting('archiver') == 'pear')
 		include_once 'File' . DIRECTORY_SEPARATOR . 'Archive.php';
+	else
+	{
+		if(isset($GLOBALS['getID3']))
+			return;
+		
+		include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.php';
+		
+		$GLOBALS['getID3'] = new getID3();
+	}
 }
 
 /**
@@ -168,51 +152,59 @@ function handles_archive($file)
 /**
  * Helper function
  */
-function get_archive_info($file)
+function _archive_get_info_id3($file)
 {
 	parseInner($file, $last_path, $inside_path);
 	
 	$files = array();
 	
-	// if using getID3 archive parser
-/*		
-		$info = $GLOBALS['getID3']->analyze($last_path);
-		
-		if($inside_path != '')
+	$info = $GLOBALS['getID3']->analyze($last_path);
+	
+	if($inside_path != '')
+	{
+		if(isset($info['zip']) && isset($info['zip']['central_directory']))
 		{
-			if(isset($info['zip']) && isset($info['zip']['central_directory']))
+			foreach($info['zip']['central_directory'] as $i => $file)
 			{
-				foreach($info['zip']['central_directory'] as $i => $file)
+				if($file['filename'] == $inside_path)
 				{
-					if($file['filename'] == $inside_path)
+					$fileinfo['Filepath'] = $last_path . '/' . $file['filename'];
+					$fileinfo['Filename'] = basename($file['filename']);
+					if($file['filename'][strlen($file['filename'])-1] == '/')
 					{
-						$fileinfo['Filepath'] = $last_path . '/' . $file['filename'];
-						$fileinfo['id'] = bin2hex($fileinfo['Filepath']);
-						$fileinfo['Filename'] = basename($file['filename']);
-						if($file['filename'][strlen($file['filename'])-1] == '/')
-						{
-							$fileinfo['Filetype'] = 'FOLDER';
-							$fileinfo['Filesize'] = 0;
-							$fileinfo['Compressed'] = 0;
-						}
-						else
-						{
-							$fileinfo['Filetype'] = getExt($file['filename']);
-							$fileinfo['Filesize'] = $file['uncompressed_size'];
-							$fileinfo['Compressed'] = $file['compressed_size'];
-						}
-						if($fileinfo['Filetype'] === false)
-							$fileinfo['Filetype'] = 'FILE';
-						$fileinfo['Filemime'] = getMime($file['filename']);
-						$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
-						break;
+						$fileinfo['Filetype'] = 'FOLDER';
+						$fileinfo['Filesize'] = 0;
+						$fileinfo['Compressed'] = 0;
 					}
+					else
+					{
+						$fileinfo['Filetype'] = getExt($file['filename']);
+						$fileinfo['Filesize'] = $file['uncompressed_size'];
+						$fileinfo['Compressed'] = $file['compressed_size'];
+					}
+					if($fileinfo['Filetype'] === false)
+						$fileinfo['Filetype'] = 'FILE';
+					$fileinfo['Filemime'] = getMime($file['filename']);
+					$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
+					break;
 				}
 			}
 		}
-*/	
+	}
 	
-	// loop through files
+	return $files;
+}
+
+/**
+ * Helper function
+ */
+function _archive_get_info_pear($file)
+{
+	parseInner($file, $last_path, $inside_path);
+	
+	$files = array();
+	
+	// read archive
 	$source = File_Archive::read($last_path . '/');
 	
 	if(PEAR::isError($source))
@@ -222,6 +214,7 @@ function get_archive_info($file)
 	}
 	else
 	{
+		// loop through files
 		while($source->next())
 		{
 			$filepath = $last_path . '/' . trim($source->getFilename());
@@ -269,6 +262,18 @@ function get_archive_info($file)
 	}
 	
 	return $files;
+}
+
+/**
+ * Helper function
+ */
+function get_archive_info($file)
+{
+	// if using getID3 archive parser
+	if(setting('archiver') == 'pear')
+		return _archive_get_info_pear($file);
+	else
+		return _archive_get_info_id3($file);
 }
 
 /**

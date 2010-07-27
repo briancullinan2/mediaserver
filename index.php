@@ -2,17 +2,18 @@
 // attempt to pass all requests to the appropriate modules
 
 // load template
-include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'common.php';
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'include' . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
 // check if it is being run from the command line and display useful setting information
 if(isset($argv) && isset($argv[1]) && $argv[1] == '-conf')
 {
-	foreach($GLOBALS['settings'] as $key => $value)
-	{
-		print $key . ' = ' . $value . "\n";
-	}
-	exit;
+	$_REQUEST = array(
+		'module' => 'admin',
+		'get_settings' => true,
+	);
 }
+
+bootstrap('full');
 
 // check if module exists
 if(isset($GLOBALS['modules'][$_REQUEST['module']]))

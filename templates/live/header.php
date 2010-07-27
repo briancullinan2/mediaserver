@@ -239,7 +239,12 @@ function theme_live_body()
 {
 	$theme = live_get_theme_color();
 ?>
-<body onLoad="init();" onmousemove="setSelector()">
+<script language="javascript">
+	$(document).ready(function() {
+		init();
+	});
+</script>
+<body onmousemove="setSelector()">
 <?php theme('list_block'); ?>
 <div id="bodydiv">
 	<div id="sizer">

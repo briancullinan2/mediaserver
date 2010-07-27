@@ -58,36 +58,6 @@ function setup_users()
 }
 
 /**
- * Implementation of register
- * @ingroup register
- */
-function register_users()
-{
-	return array(
-		'name' => 'Users',
-		'description' => 'Allows for managing and displaying users.',
-		'privilage' => 1,
-		'path' => __FILE__,
-		'session' => array('username'),
-		'settings' => array('local_users', 'username_validation'),
-		'depends on' => 'users',
-		'database' => array(
-			'Username' 		=> 'TEXT',
-			'Password' 		=> 'TEXT',
-			'Email' 		=> 'TEXT',
-			'Settings' 		=> 'TEXT',
-			'Privilage'		=> 'INT',
-			'PrivateKey'	=> 'TEXT',
-			'LastLogin'		=> 'DATETIME',
-			'Filepath' 		=> 'TEXT',
-		),
-		'internal' => true,
-		'template' => true,
-		'package' => 'core',
-	);
-}
-
-/**
  * Implementation of dependency
  * @ingroup dependency
  */
@@ -229,14 +199,26 @@ function setting_username_validation($settings)
 		return '/[a-z][a-z0-9]{4}[a-z0-9]*/i';
 }
 
+function setting_secret($settings)
+{
+	if(isset($settings['secret']) && preg_match(PASSWORD_COMPLEXITY, $settings['secret']) != 0)
+		return $settings['secret'];
+}
+
 /**
  * Implementation of setting
  * @ingroup setting
  */
 function setting_admin_password($settings)
 {
-	if(isset($settings['admin_password']) && preg_match(PASSWORD_COMPLEXITY, $settings['admin_password']) != 0)
-		return md5($settings['admin_password']);
+	if(isset($settings['admin_password']))
+	{
+		if(substr($settings['admin_password'], 0, 5) == 'hash:')
+			return generic_validate_base64($settings, 'admin_password');
+			
+		elseif(preg_match(PASSWORD_COMPLEXITY, $settings['admin_password']) != 0)
+			return 'hash:' . md5(setting('secret') . $settings['admin_password']);
+	}
 }
 
 /**
@@ -263,11 +245,16 @@ function validate_password($request)
 		// if the previous conditions are not met, then flip the fuck out
 		raise_error('Password not properly encoded, referrer is not this site!', E_DEBUG|E_USER|E_FATAL);
 		
-		return array();
+		return '';
 	}
 
 	if(isset($request['password']))
-		return md5(setting('db_secret') . $request['password']);
+	{
+		if(substr($request['password'], 0, 5) == 'hash:')
+			return $request['password'];
+		else
+			return 'hash:' . md5(setting('secret') . $request['password']);
+	}
 }
 
 /**
@@ -543,7 +530,7 @@ function session_users($request)
 		
 		if( count($db_user) > 0 )
 		{
-			if($request['password'] == $db_user[0]['Password'])
+			if(substr($request['password'], 5) == $db_user[0]['Password'])
 			{
 				// just incase a template wants to access the rest of the information; include the user
 				unset($db_user[0]['Password']);
@@ -584,9 +571,7 @@ function session_users($request)
 	{
 		if($request['username'] == 'admin')
 		{
-print $request['password'];
-print setting('admin_password');
-			if($request['password'] == setting('admin_password'))
+			if(substr($request['password'], 5) == setting('admin_password'))
 			{
 				$save = array(
 					'id' => '-1',

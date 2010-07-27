@@ -4,25 +4,6 @@
  * control outputting of template files
  *  validate template variable
  */
-
-/**
- * Implementation of register
- * @ingroup register
- */
-function register_template()
-{
-	return array(
-		'name' => 'Template Output',
-		'description' => 'Display files from the templates directory. Allows for templating CSS and JS files.',
-		'privilage' => 1,
-		'path' => __FILE__,
-		'session' => array('template'),
-		'template' => false,
-		'settings' => 'template', // this is to trick the settings in to waiting until after it loads
-		'always output' => 'template_variables',
-		'package' => 'core',
-	);
-}
  
 /**
  * Generate a list of templates

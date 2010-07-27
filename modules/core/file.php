@@ -4,25 +4,6 @@
  * recognize category because that will determine what the id is refering to
  * if the type can be handled by a browser then output it, otherwise disposition it
  */
- 
-/**
- * Implementation of register
- * @ingroup register
- */
-function register_file()
-{
-	return array(
-		'name' => 'File Output',
-		'description' => 'Allow users to download files from the database, this module supports HTTP-Ranges.',
-		'privilage' => 1,
-		'path' => __FILE__,
-		'template' => false,
-		'alter query' => array('dir', 'file'),
-		'depends on' => array('files', 'template'),
-		'always output' => 'file_variables',
-		'package' => 'core',
-	);
-}
 
 /**
  * Implementation of validate

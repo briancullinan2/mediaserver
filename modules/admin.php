@@ -11,7 +11,7 @@ function register_admin()
 		'description' => lang('admin description', 'Basic instructions for getting started with the system.'),
 		'privilage' => 10,
 		'path' => __FILE__,
-		'modules' => setup_register_modules('modules' . DIRECTORY_SEPARATOR . 'admin' . DIRECTORY_SEPARATOR),
+		'modules' => load_modules('modules' . DIRECTORY_SEPARATOR . 'admin' . DIRECTORY_SEPARATOR),
 		'template' => true,
 	);
 }

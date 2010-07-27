@@ -163,76 +163,55 @@ function live_alter_file($file)
 
 function theme_live_errors_block()
 {
+	$error_list = array('warn_errors', 'user_errors', 'note_errors');
+	
+	foreach($error_list as $i => $errors)
+	{
+		if(count($GLOBALS[$errors]) > 0)
+		{
+			?><div id="<?php print (isset($GLOBALS['templates']['vars']['errors_only']) && 
+				$GLOBALS['templates']['vars']['errors_only'] == true)?($errors . '_only'):$errors; ?>"><?php
+			foreach($GLOBALS[$errors] as $i => $error)
+			{
+				if($i == 5)
+				{
+					?><div id="inner_<?php print $errors; ?>" class="error hide"><?php
+				}
+				?><b><?php print $error; ?></b><br /><?php
+			}
+			if(count($GLOBALS[$errors]) > 5)
+			{
+				?></div>
+				And <?php print count($GLOBALS[$errors]) - 5; ?> more: <a href="javascript:return true;" onClick="if(this.hidden == false) { document.getElementById('inner_<?php print $errors; ?>').className='error hide'; this.hidden=true; this.innerHTML = 'Un Hide'; } else { document.getElementById('inner_<?php print $errors; ?>').className='error'; this.hidden=false; this.innerHTML = 'Hide'; }">Un Hide</a>
+				<?php
+			}
+			?></div><?php
+		}
+	}
+
+	// clear current list because it was just outputted
+	$GLOBALS['warn_errors'] = array();
+	$GLOBALS['user_errors'] = array();
+	$GLOBALS['note_errors'] = array();
+
 	if(!isset($GLOBALS['templates']['vars']['errors_only']) || $GLOBALS['templates']['vars']['errors_only'] == false)
 	{
 		?>
-		<div id="errors"></div>
+		<div id="tmp_errors"></div>
 		<script language="javascript">
-		$("#errors").load('<?php print url('module=index&errors_only=true', true); ?>');
+			$(document).ready(function() {
+				$.get('<?php print url('module=core&errors_only=true', true); ?>',function(data, status, xhr){
+					$('#tmp_errors').html(data);
+					
+					$('#warn_errors').append($('#warn_errors_only'));
+					$('#user_errors').append($('#user_errors_only'));
+					$('#note_errors').append($('#note_errors_only'));
+					
+					$('#tmp_errors').remove();
+				}, 'html');
+			});
 		</script>
 		<?php
-	}
-	else
-	{
-		if(count($GLOBALS['warn_errors']) > 0)
-		{
-			?><div style="border:2px solid #CC0; background-color:#FF9;"><?php
-			foreach($GLOBALS['warn_errors'] as $i => $error)
-			{
-				if($i == 5)
-				{
-					?><div id="warn_errors" class="error hide"><?php
-				}
-				?><b><?php print $error; ?></b><br /><?php
-			}
-			if(count($GLOBALS['warn_errors']) > 5)
-			{
-				?></div>
-				And <?php print count($GLOBALS['warn_errors']) - 5; ?> more: <a href="javascript:return true;" onClick="if(this.hidden == false) { document.getElementById('warn_errors').className='error hide'; this.hidden=true; this.innerHTML = 'Un Hide'; } else { document.getElementById('warn_errors').className='error'; this.hidden=false; this.innerHTML = 'Hide'; }">Un Hide</a>
-				<?php
-			}
-			?></div><?php
-		}
-		
-		if(count($GLOBALS['user_errors']) > 0)
-		{
-			?><div style="border:2px solid #C00; background-color:#F99;"><?php
-			foreach($GLOBALS['user_errors'] as $i => $error)
-			{
-				if($i == 5)
-				{
-					?><div id="user_errors" class="error hide"><?php
-				}
-				?><b><?php print $error; ?></b><br /><?php
-			}
-			if(count($GLOBALS['user_errors']) > 5)
-			{
-				?></div>
-				And <?php print count($GLOBALS['user_errors']) - 5; ?> more: <a href="javascript:return true;" onClick="if(this.hidden == false) { document.getElementById('user_errors').className='error hide'; this.hidden=true; this.innerHTML = 'Un Hide'; } else { document.getElementById('user_errors').className='error'; this.hidden=false; this.innerHTML = 'Hide'; }">Un Hide</a>
-				<?php
-			}
-			?></div><?php
-		}
-	
-		if(count($GLOBALS['note_errors']) > 0)
-		{
-			?><div style="border:2px solid #09F; background-color:#CEF;"><?php
-			foreach($GLOBALS['note_errors'] as $i => $error)
-			{
-				if($i == 5)
-				{
-					?><div id="note_errors" class="error hide"><?php
-				}
-				?><b><?php print $error; ?></b><br /><?php
-			}
-			if(count($GLOBALS['note_errors']) > 5)
-			{
-				?></div>
-				And <?php print count($GLOBALS['note_errors']) - 5; ?> more: <a href="javascript:return true;" onClick="if(this.hidden == false) { document.getElementById('note_errors').className='error hide'; this.hidden=true; this.innerHTML = 'Un Hide'; } else { document.getElementById('note_errors').className='error'; this.hidden=false; this.innerHTML = 'Hide'; }">Un Hide</a>
-				<?php
-			}
-			?></div><?php
-		}
 	}
 }
 

@@ -1,5 +1,6 @@
 name = Modules
 description = Display a list of modules and allow for enabling and disabling.
 privilage = 10
-settings = admin_modules
+settings = modules
 template = true
+package = admin

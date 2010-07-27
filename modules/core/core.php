@@ -22,56 +22,45 @@
  */
 function setup_core()
 {
-	// include a couple of modules ahead of time
-	// language must be included so that we can translate module definitions
-	include_once setting_local_root() . 'modules' . DIRECTORY_SEPARATOR . 'language.php';
+	$verbose = setting('verbose');
 
-	// include the database module, because it acts like a module, but is kept in the includes directory
-	include_once setting_local_root() . 'include' . DIRECTORY_SEPARATOR . 'database.php';
-
-	// include the settings module ahead of time because it contains 1 needed function setting_settings_file()
-	include_once setting_local_root() . 'modules' . DIRECTORY_SEPARATOR . 'settings.php';
-
-	// add a couple of modules that don't have register functions, yet?
-	$GLOBALS['modules'] = array(
-		'index' => array(
-			'name' => lang('index title', 'Index'),
-			'description' => lang('index description', 'Load a module\'s output variables and display the template.'),
-			'privilage' => 1,
-			'path' => dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'index.php',
-			'alter query' => array('limit', 'start', 'direction', 'order_by', 'group_by'),
-			'settings' => array(
-				'html_domain', 'html_root', 'html_name', 'tmp_dir',
-				'debug_mode', 'recursive_get', 'no_bots', 'buffer_size', 'verbose'
-			),
-			'depends on' => array('template'),
-			'template' => false, // calls it's own template
-			'package' => 'core',
-		),
-		'database' => register_database(),
-	);
-	$GLOBALS['triggers'] = array(
-		'session' => array(),
-		'settings' => array(),
-		'always output' => array(),
-		'alter query' => array(),
-		'validates' => array(),
-	);
+	// do some extra error stuff since we made it to this point
+	if($verbose === 2)
+	{
+		set_error_handler('php_to_PEAR_Error', E_ALL | E_STRICT);
+		error_reporting(E_ALL);
+	}
+	elseif($verbose === true)
+	{
+		set_error_handler('php_to_PEAR_Error', E_ALL);
+		error_reporting(0);
+	}
+	else
+		error_reporting(0);
+	
+	PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'error_callback');
+	
+	// setup the session first thing
+	setup_session();
+	
+	//Remove annoying POST error message with the page is refreshed 
+	//  better place for this?
+	if(isset($_SERVER['REQUEST_METHOD']) && strtolower($_SERVER['REQUEST_METHOD']) == 'post')
+	{
+		session('last_request',  $_REQUEST);
+		goto($_SERVER['REQUEST_URI']);
+	}
+	if($last_request = session('last_request'))
+	{
+		$_REQUEST = $last_request;
+		// set the method just for reference
+		$_SERVER['REQUEST_METHOD'] = 'POST';
+		session('last_request', NULL);
+	}
 	
 	// set up the mime information
 	setup_mime();
-	
-	// read module list and create a list of available modules	
-	setup_register_modules('modules' . DIRECTORY_SEPARATOR);
-	setup_register_modules('handlers' . DIRECTORY_SEPARATOR);
-	
-	$GLOBALS['modules'] = array_merge(array_flip(array_keys($GLOBALS['modules'])), $GLOBALS['modules']);
-	
-	// resort modules to reflect their dependencies, aka inefficient sort
-	$GLOBALS['modules'] = array_merge(array_flip(flatten_module_dependencies(array_keys($GLOBALS['modules']))), $GLOBALS['modules']);
 
-	// always make the module list available to templates
-	register_output_vars('modules', $GLOBALS['modules']);
 }
 
 /**
@@ -82,6 +71,7 @@ function setup_core()
 function flatten_module_dependencies($modules, $already_added = array())
 {
 	$new_modules = array('core');
+
 	foreach($modules as $i => $module)
 	{
 		// only deal with modules
@@ -112,6 +102,7 @@ function flatten_module_dependencies($modules, $already_added = array())
 		}
 		$new_modules[] = $module;
 	}
+	
 	return array_values(array_unique($new_modules));
 }
 
@@ -123,7 +114,7 @@ function flatten_module_dependencies($modules, $already_added = array())
  * @param path The path to load modules from
  * @return An array containing only the modules found in the specified directory, modules loaded are also added to the GLOBAL list of modules
  */
-function setup_register_modules($path)
+function load_modules($path)
 {
 	$files = get_files(array(
 		'dir' => setting_local_root() . $path,
@@ -161,7 +152,7 @@ function setup_register_modules($path)
 				if(substr($file['Filename'], -5) == '.info')
 				{
 					$modules[$module] = parse_ini_file($file['Filepath'], true);
-					$GLOBALS['modules'][$prefix . $module] = &$modules[$module];
+					$GLOBALS['modules'][$module] = &$modules[$module];
 					
 					// set the path to the module
 					if(!isset($modules[$module]['path']))
@@ -169,78 +160,28 @@ function setup_register_modules($path)
 					
 					include_once dirname($file['Filepath']) . DIRECTORY_SEPARATOR . $module . '.php';
 				}
-				else
-				{
-					include_once $file['Filepath'];
-					
-					if(function_exists('register_' . $prefix . $module))
-					{
-						$modules[$module] = call_user_func_array('register_' . $prefix . $module, array());
-						$GLOBALS['modules'][$prefix . $module] = &$modules[$module];
-					}
-				}
 				
 				// set the package if it is not set already
-				if(!isset($GLOBALS['modules'][$prefix . $module]['package']))
+				if(!isset($GLOBALS['modules'][$module]['package']))
 				{
 					if($prefix != '')
-						$GLOBALS['modules'][$prefix . $module]['package'] = substr($prefix, 0, -1);
+						$GLOBALS['modules'][$module]['package'] = substr($prefix, 0, -1);
 					else
-						$GLOBALS['modules'][$prefix . $module]['package'] = 'other';
+						$GLOBALS['modules'][$module]['package'] = 'other';
 				}
 				
-				// reorganize the session triggers for easy access
-				if(isset($modules[$module]['session']) && is_array($modules[$module]['session']))
-				{
-					foreach($modules[$module]['session'] as $i => $var)
-					{
-						if(is_numeric($i))
-							$GLOBALS['triggers']['session'][$var][$module] = 'session_' . $prefix . $module;
-						elseif(is_callable($var))
-							$GLOBALS['triggers']['session'][$i][$module] = $var;
-					}
-				}
+				register_trigger('session', $modules[$module], $module);
 				
-				// reorganize alter query triggers
-				if(isset($modules[$module]['alter query']) && is_array($modules[$module]['alter query']))
-				{
-					foreach($modules[$module]['alter query'] as $i => $var)
-					{
-						if(is_numeric($i))
-							$GLOBALS['triggers']['alter query'][$var][$module] = 'alter_query_' . $prefix . $module;
-						elseif(is_callable($var))
-							$GLOBALS['triggers']['alter query'][$i][$module] = $var;
-					}
-				}
+				register_trigger('alter_query', $modules[$module], $module);
 				
-				// reorganize alter query triggers
-				if(isset($modules[$module]['always output']) && is_array($modules[$module]['always output']))
-				{
-					// for named arrays, the key variable will call the named function
-					foreach($modules[$module]['always output'] as $i => $var)
-					{
-						if(is_numeric($i))
-							$GLOBALS['triggers']['always output'][$var][$module] = 'output_' . $prefix . $module;
-						elseif(is_callable($var))
-							$GLOBALS['triggers']['always output'][$i][$module] = $var;
-					}
-				}
+				register_trigger('output', $modules[$module], $module);
 				
-				// reorganize alter query triggers
-				if(isset($modules[$module]['validates']) && is_array($modules[$module]['validates']))
-				{
-					// for named arrays, the key variable will call the named function
-					foreach($modules[$module]['validates'] as $i => $var)
-					{
-						if(is_numeric($i))
-							$GLOBALS['triggers']['validates'][$var][$module] = 'validate_' . $prefix . $module;
-						elseif(is_callable($var))
-							$GLOBALS['triggers']['validates'][$i][$module] = $var;
-					}
-				}
+				register_trigger('validate', $modules[$module], $module);
 			}
 		}
 	}
+
+	$GLOBALS['modules'] = array_merge(array_flip(flatten_module_dependencies(array_keys($GLOBALS['modules']))), $GLOBALS['modules']);
 	
 	return $modules;
 }
@@ -253,7 +194,12 @@ function setup_register_modules($path)
  */
 function setting_verbose($settings)
 {
-	return generic_validate_boolean_false($settings, 'verbose');
+	$verbose = generic_validate_boolean_false($settings, 'verbose');
+
+	if(isset($settings['verbose']) && ($settings['verbose'] === "2" || $settings['verbose'] === 2))
+		return 2;
+	else
+		return $verbose;
 }
 
 /**
@@ -287,8 +233,9 @@ function setting_system_type($settings)
 function setting_installed()
 {
 	$settings = setting('settings_file');
+
 	// make sure the database isn't being used and failed
-	return (file_exists($settings) && is_readable($settings) && (setting('database_enable') == false || dependency('database') != false));
+	return (file_exists($settings) && is_readable($settings) && (!isset($GLOBALS['database']) || dependency('database') != false));
 }
 
 /**
@@ -298,7 +245,7 @@ function setting_installed()
  */
 function setting_local_root()
 {
-	return dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR;
+	return dirname(dirname(dirname(__FILE__))) . DIRECTORY_SEPARATOR;
 }
 
 /**
@@ -425,7 +372,7 @@ function dependency($dependency, $ignore_setting = false, $already_checked = arr
 	{
 		$config = $GLOBALS['modules'][$dependency];
 	}
-
+	
 	if(isset($config))
 	{	
 		// if the depends on field is a string, call the function and use that as the list of dependencies
@@ -449,10 +396,12 @@ function dependency($dependency, $ignore_setting = false, $already_checked = arr
 				//  uses a backup check to prevent recursion and errors if there is
 				if(in_array($depend, $already_checked))
 				{
+					raise_error('Dependency \'' . $depend . '\' already checked when checking the dependencies of \'' . $dependency . '\'.', E_VERBOSE);
+					
 					// checking it twice is unnessicary since it should have failed already
 					continue;
 				}
-				
+
 				// check for false strictly, anything else should be taken as status information
 				//  this is also recursive so that if one module fails everything that depends on it will fail
 				$already_checked[] = $depend;
@@ -472,16 +421,12 @@ function dependency($dependency, $ignore_setting = false, $already_checked = arr
 		// if it has gotten this far through all the disproofs then it must be satisfied
 		return true;
 	}
-	
-	// if the modules aren't loaded yet, don't call the dependency function
-	if(!isset($GLOBALS['output']['modules']))
-		return;
-	
+
 	// call dependency function
 	if(function_exists('dependency_' . $dependency))
 		return call_user_func_array('dependency_' . $dependency, array($GLOBALS['settings']));
-	if(isset($GLOBALS['dependency_' . $dependency]) && is_callable($GLOBALS['dependency_' . $dependency]))
-		return $GLOBALS['dependency_' . $dependency]($GLOBALS['settings']);
+	elseif(isset($GLOBALS['dependency_' . $dependency]) && is_callable($GLOBALS['dependency_' . $dependency]))
+		return call_user_func_array($GLOBALS['dependency_' . $dependency], array($GLOBALS['settings']));
 	else
 		raise_error('Dependency \'' . $dependency . '\' not defined!', E_DEBUG);
 		
@@ -571,6 +516,8 @@ function dependency_extjs_installed($settings)
  */
 function configure_index($settings, $request)
 {
+	$settings['system_type'] = setting_system_type($settings);
+	$settings['local_root'] = setting_local_root($settings);
 	$settings['html_root'] = setting_html_root($settings);
 	$settings['html_domain'] = setting_html_domain($settings);
 	$settings['html_name'] = setting_html_name($settings);
@@ -580,6 +527,66 @@ function configure_index($settings, $request)
 	$settings['buffer_size'] = setting_buffer_size($settings);
 	
 	$options = array();
+	
+	// system type
+	$options['system_type'] = array(
+		'name' => lang('system type title', 'System Type'),
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				lang('system type description 1', 'The system has detected that you are running ' . (($settings['system_type']=='win')?'Windows':(($settings['system_type']=='nix')?'Linux or Unix':'Mac OS')) . '.'),
+				lang('system type description 2', 'If this is not correct, you must specify the system type so the media server can be optimized for your system.'),
+			),
+		),
+		'type' => 'select',
+		'value' => $settings['system_type'],
+		'options' => array(
+			'win' => 'Windows',
+			'nix' => 'Linux',
+			'mac' => 'Mac',
+		),
+	);
+	
+	if(setting_modrewrite($settings))
+	{
+		$options['modrewrite'] = array(
+			'name' => 'Mod_Rewrite Enabled',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'The system has detected that you have mod_rewrite enabled.',
+					'Mod_rewrite is used by some templates and modules to make the paths look prettier.',
+				),
+			),
+			'disabled' => true,
+			'value' => array(
+				'link' => array(
+					'url' => 'http://httpd.apache.org/docs/1.3/mod/mod_rewrite.html',
+					'text' => 'Mod_Rewrite Instructions',
+				),
+			),
+		);
+	}
+	else
+	{
+		$options['modrewrite'] = array(
+			'name' => 'Mod_Rewrite Enabled',
+			'status' => 'warn',
+			'description' => array(
+				'list' => array(
+					'The system has detected that you do not have mod_rewrite enabled.  Please follow the link for instructions on enabling mod_rewrite.',
+					'Mod_rewrite is used by some templates and modules to make the paths look prettier.',
+				),
+			),
+			'disabled' => true,
+			'value' => array(
+				'link' => array(
+					'url' => 'http://httpd.apache.org/docs/1.3/mod/mod_rewrite.html',
+					'text' => 'Mod_Rewrite Instructions',
+				),
+			),
+		);
+	}
 	
 	// domain and root
 	$options['html_domain'] = array(
@@ -689,6 +696,10 @@ function configure_index($settings, $request)
 	
 	return $options;
 }
+
+/**
+ * @}
+ */
 
 /**
  * @defgroup status Status Functions
@@ -975,90 +986,13 @@ function status_core($settings)
  * @}
  */
 
-/**
- * Implementation of configure. Checks for convert path
- * @ingroup configure
- */
-function configure_core($settings, $request)
-{
-	$settings['system_type'] = setting_system_type($settings);
-	$settings['local_root'] = setting_local_root($settings);
-	
-	$options = array();
-	
-	// system type
-	$options['system_type'] = array(
-		'name' => lang('system type title', 'System Type'),
-		'status' => '',
-		'description' => array(
-			'list' => array(
-				lang('system type description 1', 'The system has detected that you are running ' . (($settings['system_type']=='win')?'Windows':(($settings['system_type']=='nix')?'Linux or Unix':'Mac OS')) . '.'),
-				lang('system type description 2', 'If this is not correct, you must specify the system type so the media server can be optimized for your system.'),
-			),
-		),
-		'type' => 'select',
-		'value' => $settings['system_type'],
-		'options' => array(
-			'win' => 'Windows',
-			'nix' => 'Linux',
-			'mac' => 'Mac',
-		),
-	);
-	
-	if(setting_modrewrite($settings))
-	{
-		$options['modrewrite'] = array(
-			'name' => 'Mod_Rewrite Enabled',
-			'status' => '',
-			'description' => array(
-				'list' => array(
-					'The system has detected that you have mod_rewrite enabled.',
-					'Mod_rewrite is used by some templates and modules to make the paths look prettier.',
-				),
-			),
-			'disabled' => true,
-			'value' => array(
-				'link' => array(
-					'url' => 'http://httpd.apache.org/docs/1.3/mod/mod_rewrite.html',
-					'text' => 'Mod_Rewrite Instructions',
-				),
-			),
-		);
-	}
-	else
-	{
-		$options['modrewrite'] = array(
-			'name' => 'Mod_Rewrite Enabled',
-			'status' => 'warn',
-			'description' => array(
-				'list' => array(
-					'The system has detected that you do not have mod_rewrite enabled.  Please follow the link for instructions on enabling mod_rewrite.',
-					'Mod_rewrite is used by some templates and modules to make the paths look prettier.',
-				),
-			),
-			'disabled' => true,
-			'value' => array(
-				'link' => array(
-					'url' => 'http://httpd.apache.org/docs/1.3/mod/mod_rewrite.html',
-					'text' => 'Mod_Rewrite Instructions',
-				),
-			),
-		);
-	}
-	
-	return $options;
-}
-/**
- * @}
- */
-
 
 /**
  * Set up input variables, everything the site needs about the request <br />
  * Validate all variables, and remove the ones that aren't validate
  * @ingroup setup
  */
-function setup_validate()
+function validate_request()
 {
 	// first fix the REQUEST_URI and pull out what is meant to be pretty dirs
 	if(isset($_SERVER['PATH_INFO']))
@@ -1083,7 +1017,7 @@ function setup_validate()
 	}
 	
 	// call the session save functions
-	setup_session($_REQUEST);
+	trigger('session', 'session_set_conditional', $_REQUEST);
 	
 	// do not let GoogleBot perform searches or file downloads
 	if(setting('no_bots'))
@@ -1142,104 +1076,6 @@ function core_validate_request($request)
 	return $request;
 }
 
- 
-/**
- * Set up the triggers for saving a session
- * @ingroup setup
- */
-function setup_session($request = array())
-{
-	// check modules for vars and trigger a session save
-	foreach($request as $key => $value)
-	{
-		if(isset($GLOBALS['triggers']['session'][$key]))
-		{
-			foreach($GLOBALS['triggers']['session'][$key] as $module => $function)
-			{
-				if(is_callable($function))
-					$save = call_user_func_array($function, array($request));
-				else
-					raise_error('Session functionality specified but function ' . $function . ' in not callable!', E_DEBUG);
-					
-				// only save when something has changed
-				if(isset($save))
-					session($module, $save);
-			}
-		}
-	}
-}
-
-/**
- * @defgroup session Session Save Functions
- * All functions that save information to the session for later reference
- * @param request The full request array to use for saving request information to the session
- * @return An associative array to be saved to $_SESSION[&lt;module&gt;] = session_select($request);
- * @{
- */
-
-/**
- * Save and get information from the session
- * @return the session variable trying to be accessed
- */
-function session($varname)
-{
-	$args = func_get_args();
-	
-	if(count($args) > 1)
-	{
-		// they must be trying to set a value to the session
-		/*
-		$value = $args[count($args)-1];
-		$args[count($args)-1] = NULL;
-		
-		// allow for cascading calls
-		$current = &$_SESSION;
-		foreach($args as $i => $varname)
-		{
-			if(isset($current[$varname]) && $varname !== NULL)
-				$current = &$current[$varname];
-			// don't return anything if the address it wrong
-			else
-				return;
-		}
-		
-		// set the value
-		$current = $value;
-		*/
-		$_SESSION[$varname] = $args[1];
-	}
-	
-	if(isset($_SESSION[$varname]))
-		return $_SESSION[$varname];
-}
-
-/**
- * Helper function for getting cascading session information
- */
-function session_get($varname)
-{
-	$args = func_get_args();
-	
-	// don't return anything if it does not exist
-	if(!isset($_SESSION[$varname]))
-		return;
-
-	// allow for cascading calls
-	$current = &$_SESSION;
-	foreach($args as $i => $varname)
-	{
-		if(isset($current[$varname]) && $varname !== NULL)
-			$current = &$current[$varname];
-		else
-			break;
-	}
-	
-	return $current;
-}
-
-/**
- * @}
- */
 
 /**
  * Make variables available for output in the templates,
@@ -1438,9 +1274,12 @@ function core_variables($request)
 	$request['group_index'] = validate($request, 'group_index');
 	$request['start'] = validate($request, 'start');
 	$request['limit'] = validate($request, 'limit');
-	
+
 	// the entire site depends on this
 	register_output_vars('module', $request['module']);
+	
+	// always make the module list available to templates
+	register_output_vars('modules', $GLOBALS['modules']);
 	
 	// most template pieces use the category variable, so set that
 	register_output_vars('cat', $request['cat']);
@@ -1464,29 +1303,8 @@ function core_variables($request)
  */
 function set_output_vars()
 {
-	// modules can specify variables to trigger their output function if they should always be outputted, even if that module isn't being called directly
-	foreach($GLOBALS['modules'] as $module => $config)
-	{
-		if(isset($config['always output']) && $config['always output'] === true)
-			call_user_func_array('output_' . $module, array($_REQUEST));
-		elseif(isset($config['always output']) && is_callable($config['always output']))
-			call_user_func_array($config['always output'], array($_REQUEST));
-	}
-	
 	// triggers for always output can also be set
-	foreach($_REQUEST as $key => $value)
-	{
-		if(isset($GLOBALS['triggers']['always output'][$key]))
-		{
-			foreach($GLOBALS['triggers']['always output'][$key] as $module => $function)
-			{
-				if(is_callable($function))
-					call_user_func_array($function, array($_REQUEST));
-				else
-					raise_error('Always Output functionality specified but function ' . $function . ' in not callable!', E_DEBUG);
-			}
-		}
-	}
+	trigger('output', NULL, $_REQUEST);	
 
 	// do not remove these variables
 	$dont_remove = array(
@@ -1578,30 +1396,15 @@ function validate($request, $key)
 	elseif(substr($key, 0, 8) == 'setting_')
 		return $request[$key];
 	
-	// validate using a multivalidator
-	if(isset($GLOBALS['triggers']['validates'][$key]) && count($GLOBALS['triggers']['validates'][$key]) > 0)
-	{
-		// check modules for vars and trigger a session save
-		foreach($GLOBALS['triggers']['validates'][$key] as $module => $function)
-		{
-			if(is_callable($function))
-				$new_value = call_user_func_array($function, array($request, $key));
-			else
-				raise_error('Validate functionality specified but function ' . $function . ' in not callable!', E_DEBUG);
-			
-			if(isset($new_value))
-				$request[$key] = $new_value;
-		}
-		
-		// ensure that it was validate
-		if(isset($new_value))
-			return $new_value;
-		else
-			return;
-	}
+	$result = trigger('validate', NULL, array_intersect_key(array($key => array()), $request));
+	
+	if(isset($result[$key]))
+		return $result[$key];
 	
 	// if a validator isn't found in the configuration
 	raise_error('Validate \'' . $key . '\' not found!', E_DEBUG);
+	
+	return;
 }
 
 /**
@@ -1634,7 +1437,7 @@ function validate_module($request)
 		if(isset($GLOBALS['modules'][$script]))
 			return $script;
 		else
-			return 'index';
+			return 'core';
 	}
 }
 
@@ -1816,6 +1619,13 @@ function generic_validate_urlpath($request, $index)
 				(?P<path>[a-z0-9\-._~%!$&\'()*+,;=:@\/]*)/ix', 
 			$request[$index], $matches) != 0 && $matches['path'] != false)
 		return $matches['path'];
+}
+
+function generic_validate_base64($request, $index)
+{
+	if(isset($request[$index]) && 
+		preg_match('/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/', $request[$index]) != 0)
+		return $request[$index];
 }
 
 /**
@@ -2284,9 +2094,9 @@ function status_index()
 
 /**
  * Implementation of #output()
- * simply outputs the core
+ * Outputs select by default
  */
-function output_index($request)
+function output_core($request)
 {
 	// output any index like information
 	if(isset($request['errors_only']) && $request['errors_only'] == true)
@@ -2304,19 +2114,10 @@ function output_index($request)
 		return;
 	}
 	
-	output_core($request);
-	
-	theme('index');
-}
-
-/**
- * Implementation of #output()
- * Outputs select by default
- */
-function output_core($request)
-{
 	// perform a select so files can show up on the index page
 	output_select($request);
+	
+	theme('index');
 }
 
 /**

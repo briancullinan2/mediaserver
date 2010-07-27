@@ -43,7 +43,7 @@ function register_language()
 		'privilage' => 1,
 		'path' => __FILE__,
 		'session' => array('language'),
-		'always output' => true,
+		'output' => true,
 		'package' => 'core',
 	);
 }

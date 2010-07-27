@@ -11,26 +11,6 @@
  * @{
  */
 
-/** 
- * Implementation of register_handler
- */
-function register_files()
-{
-	return array(
-		'name' => 'Files',
-		'description' => 'Load information about existing files.',
-		'database' => array(
-			'id' => 'INT NOT NULL AUTO_INCREMENT, PRIMARY KEY(id)',
-			'Filename' => 'TEXT',
-			'Filemime' => 'TEXT',
-			'Filesize' => 'BIGINT',
-			'Filedate' => 'DATETIME',
-			'Filetype' => 'TEXT',
-			'Filepath' => 'TEXT'
-		),
-	);
-}
-
 /**
  * @}
  */
@@ -405,12 +385,12 @@ function get_files($request, &$count, $handler_or_internal)
 	}
 	
 	// if using the database and this isn't an internal request
-	if(dependency('database') && !$internal)
+	if(!$internal && dependency('database'))
 	{
 		return _get_database_files($request, $count, $handler);
 	}
 	// if NOT using the database or it IS and internal request
-	elseif(!setting('database_enable') || $internal == true)
+	elseif((!setting('database_enable') && setting_installed()) || $internal == true)
 	{
 		return _get_local_files($request, $count, $handler);
 	}

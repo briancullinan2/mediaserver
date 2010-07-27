@@ -18,190 +18,99 @@ define('VERSION_NAME', 			'Goliath');
 /** @} */
 
 /**
- * @name Error Levels
- * Error codes so we know which errors to print to the user and which to print to debug
- */
-//@{
-/** @enum E_DEBUG the DEBUG level error used for displaying errors in the debug template block */
-define('E_DEBUG',					1);
-define('E_VERBOSE',					2);
-/** @enum E_USER USER level errors are printed to the user by the templates */
-define('E_USER',					4);
-/** @enum E_WARN the WARN level error prints a different color in the error block, this is
- * used by parts of the site that cause problems that may not be intentional */
-define('E_WARN',					8);
-/** @enum E_FATAL the FATAL errors are ones that cause the script to end at an unexpected point */
-define('E_FATAL',					16);
-/** @enum E_NOTE the NOTE error level is used for displaying positive information to users such as
- * "account has been created" */
-define('E_NOTE',					32);
-//@}
-
-//ini_set('include_path', '.');
-
-//if(realpath('/') == '/')
-//	include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.nix.php';
-//else
-/** require the settings */
-if(file_exists(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.php'))
-{
-	if($GLOBALS['settings'] = parse_ini_file(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'settings.php', true))
-	{
-		// awesome settings are loaded properly
-		foreach($GLOBALS['settings'] as $name => $value)
-		{
-			if(is_array($value))
-			{
-				foreach($value as $subsetting => $subvalue)
-				{
-					$GLOBALS['settings'][$name][$subsetting] = urldecode($subvalue);
-				}
-			}
-			else
-				$GLOBALS['settings'][$name] = urldecode($value);
-		}
-	}
-	else
-	{
-		unset($GLOBALS['settings']);
-	}
-}
-
-if(!isset($GLOBALS['settings']))
-{
-	$GLOBALS['settings'] = array();
-	
-	// try and forward them to the install page
-	if(!isset($_REQUEST['module'])) $_REQUEST['module'] = 'admin_install';
-}
-
-
-/** require pear for error handling */
-if(include_once 'PEAR.php')
-{
-	//include_once 'MIME' . DIRECTORY_SEPARATOR . 'Type.php';
-}
-else
-{
-	class PEAR_Error
-	{
-		var $code = 0;
-		var $message = '';
-		var $backtrace = array();
-	}
-	
-	// bootstrap pear error handling but don't load any other pear dependencies
-	class PEAR
-	{
-		static function raiseError($message, $code)
-		{
-			$error = new PEAR_Error();
-			$error->code = $code;
-			$error->message = $message;
-			$error->backtrace = debug_backtrace();
-			call_user_func_array(PEAR_ERROR_CALLBACK, array($error));
-		}
-		
-		static function setErrorHandling($type, $error_func)
-		{
-			if(is_callable($error_func))
-			{
-				define('PEAR_ERROR_CALLBACK', $error_func);
-			}
-		}
-	}
-}
-
-/** always begin the session */
-session_start();
-
-/** Set the error handler to use our custom function for storing errors */
-error_reporting(E_ALL);
-PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'error_callback');
-//set_error_handler('php_to_PEAR_Error', E_ALL | E_STRICT);
-
-/** set up all the GLOBAL variables needed throughout the site */
-setup();
-
-/**
  * @defgroup setup Setup Functions
  * All functions that are used to set up necissary parts of the site
  * These functions usually specify global variables
  * @{
  */
- 
-/**
- * Setup all the GLOBAL variables used throughout the site
- */
-function setup()
-{
-	// this is where most of the initialization occurs, some global variables are set up for other pages and handlers to use
-	//  first the variables are parsed out of the path, just incase mod_rewrite isn't enabled
-	//  in order of importance, the database is set up, the handlers are loaded, the aliases and watch list are loaded, the template system is loaded
-	
-	/** require core functionality */
-	include_once dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . 'core.php';
-	/** stores a list of all errors */
-	$GLOBALS['errors'] = array();
-	/** stores a list of all user errors */
-	if(!($GLOBALS['user_errors'] = session_get('errors', 'user'))) $GLOBALS['user_errors'] = array();
-	/** stores a list of all warnings */
-	if(!($GLOBALS['warn_errors'] = session_get('errors', 'warn'))) $GLOBALS['warn_errors'] = array();
-	/** stores a list of all notices and friendly messages */
-	if(!($GLOBALS['note_errors'] = session_get('errors', 'note'))) $GLOBALS['note_errors'] = array();
-	/** stores a list of all debug information */
-	$GLOBALS['debug_errors'] = array();
-	
-	// always include fs_file handler
-	include_once setting_local_root() . 'handlers' . DIRECTORY_SEPARATOR . 'files.php';
-	
-	// register all modules
-	setup_core();
-	
-	/** require compatibility */
-	include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'compatibility.php';
-	include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'forms.php';
-
-	// loop through modules and call setup function
-	foreach($GLOBALS['modules'] as $module => $config)
-	{
-		// do not call set up if dependencies are not met, this will force strict use of modules functionality
-		// set up the modules in the right order
-		if(dependency($module) && function_exists('setup_' . $module))
-		{
-			call_user_func_array('setup_' . $module, array());
-		}
-		// disable the module if the dependencies are not met
-		elseif(dependency($module) == false)
-		{
-			// this prevents us from disabling required modules on accident
-			$GLOBALS['settings'][$module . '_enable'] = setting($module . '_enable');
-		}
-	}
-
-	//Remove annoying POST error message with the page is refreshed 
-	//  better place for this?
-	if(isset($_SERVER['REQUEST_METHOD']) && strtolower($_SERVER['REQUEST_METHOD']) == 'post')
-	{
-		session('last_request',  $_REQUEST);
-		goto($_SERVER['REQUEST_URI']);
-	}
-	if($last_request = session('last_request'))
-	{
-		$_REQUEST = $last_request;
-		// set the method just for reference
-		$_SERVER['REQUEST_METHOD'] = 'POST';
-		session('last_request', NULL);
-	}
-
-	// set up variables passed to the system in the request or post
-	setup_validate();
-}
 
 /**
  * @}
  */
  
+function disable_module($module)
+{
+	if(dependency($module) == false)
+	{
+		$GLOBALS['settings'][$module . '_enable'] = false;
+		// this prevents us from disabling required modules on accident
+		$GLOBALS['settings'][$module . '_enable'] = setting($module . '_enable');
+	}
+}
+
+function trigger($trigger, $callback = NULL, $input = array())
+{
+	$args = func_get_args();
+
+	if(isset($GLOBALS['triggers'][$trigger][NULL]))
+	{
+		// call triggers set to always go off
+		foreach($GLOBALS['triggers'][$trigger][NULL] as $module => $function)
+		{
+			// numeric indices on this level indicates always call
+			if(is_callable($function))
+			{
+				$result = call_user_func_array($function, array($input));
+				
+				if(is_callable($callback))
+					call_user_func_array($callback, array($module, $result, $args));
+			}
+			else
+				raise_error('Trigger \'' . $trigger . '\' function specified by \'' . $module . '\' but it is not callable.', E_DEBUG);
+		}
+	}
+	
+	// call triggers based on input
+	foreach($input as $key => $value)
+	{
+		if(isset($GLOBALS['triggers'][$trigger][$key]))
+		{
+			foreach($GLOBALS['triggers'][$trigger][$key] as $module => $function)
+			{
+				if(is_callable($function))
+					$result = call_user_func_array($function, array($input, $key));
+				else
+					raise_error('Trigger \'' . $trigger . '\' functionality specified in \'' . $module . '\' but ' . $function . ' in not callable!', E_DEBUG);
+				
+				if(is_callable($callback))
+					call_user_func_array($callback, array($module, $result, $args));
+				else
+					$input[$key] = $result;
+			}
+		}
+	}
+	
+	return $input;
+}
+
+function register_trigger($trigger, $config, $module)
+{
+	// reorganize alter query triggers
+	if(isset($config[$trigger]))
+	{
+		if(is_array($config[$trigger]))
+		{
+			foreach($config[$trigger] as $i => $var)
+			{
+				if(is_numeric($i))
+					$GLOBALS['triggers'][$trigger][$var][$module] = $trigger . '_' . $module;
+				elseif(is_callable($var))
+					$GLOBALS['triggers'][$trigger][$i][$module] = $var;
+			}
+		}
+		elseif(is_bool($config[$trigger]))
+		{
+			$GLOBALS['triggers'][$trigger][NULL][$module] = $trigger . '_' . $module;
+		}
+		elseif(is_callable($config[$trigger]))
+		{
+			$GLOBALS['triggers'][$trigger][NULL][$module] = $config[$trigger];
+		}
+	}
+	else
+		raise_error('Trigger not set in config for \'' . $module . '\'.', E_VERBOSE);
+}
+
 /**
  * Function for invoking an API call on all modules and returning the result
  * @param method Method to call on all modules
@@ -210,6 +119,48 @@ function setup()
  */
 function invoke_all($method)
 {
+	$args = func_get_args();
+	
+	// remove method name
+	unset($args[0]);
+	
+	raise_error('Modules invoked with \'' . $method . '\'.', E_VERBOSE);
+	
+	// loop through modules
+	foreach($GLOBALS['modules'] as $module => $config)
+	{
+		// do not call set up if dependencies are not met, this will force strict use of modules functionality
+		// set up the modules in the right order
+		if((dependency($module) || in_array($module, get_required_modules())) && function_exists($method . '_' . $module))
+		{
+			$result = call_user_func_array($method . '_' . $module, $args);
+		}
+	}
+}
+
+function invoke_all_callback($method, $callback)
+{
+	$args = func_get_args();
+	
+	// remove method name
+	unset($args[1]);
+	unset($args[0]);
+	
+	raise_error('Modules invoked with \'' . $method . '\' and a callback function supplied.', E_VERBOSE);
+	
+	// loop through modules
+	foreach($GLOBALS['modules'] as $module => $config)
+	{
+		// do not call set up if dependencies are not met, this will force strict use of modules functionality
+		// set up the modules in the right order
+		if((dependency($module) || in_array($module, get_required_modules())) && function_exists($method . '_' . $module))
+		{
+			$result = call_user_func_array($method . '_' . $module, $args);
+			
+			if(is_callable($callback))
+				call_user_func_array($callback, array($module, $result, $args));
+		}
+	}
 }
 
 /**
@@ -327,10 +278,10 @@ function output($request)
 
 	// output module
 	// if the module is disabled, but has no template, call output function for handling disabledness
-	if(function_exists('output_' . $request['module']) && dependency($request['module']) != false)
+	if(function_exists('output_' . $request['module']) && setting($request['module'] . '_enable') != false)
 		call_user_func_array('output_' . $request['module'], array($request));
 	// otherwise just show template for disabled modules
-	elseif(dependency($request['module']) == false)
+	elseif(dependency($request['module']) == false && setting($request['module'] . '_enable') == false)
 	{
 		raise_error('The selected module has dependencies that are not met! <a href="' . 
 			url('module=admin_modules&configure_module=' . $request['module']) . '">Configure</a> this module.'
@@ -874,17 +825,11 @@ function kill9($command, $startpid, $limit = 2)
  */
 function php_to_PEAR_Error($error_code, $error_str, $error_file, $error_line)
 {
-	if($error_code & E_STRICT)
-	{
-		if(setting('verbose') != false)
-			$error_code = E_DEBUG;
-	}
-	else
-		$error_code = E_DEBUG;
+	$error_code = E_DEBUG;
 
 	raise_error('PHP ERROR: ' . $error_str, $error_code);
 
-	return false;
+	return (setting('verbose') != 2);
 }
 
 function raise_error($str, $code)
@@ -905,14 +850,14 @@ function error_callback($error)
 {
 	if(count($GLOBALS['errors']) > 200)
 		return;
-		
+
 	if($error->code & E_USER)
 		$GLOBALS['user_errors'][] = $error->message;
 	if($error->code & E_WARN)
 		$GLOBALS['warn_errors'][] = $error->message;
 	if($error->code & E_NOTE)
 		$GLOBALS['note_errors'][] = $error->message;
-	if($error->code & E_DEBUG || $error->code & E_VERBOSE || setting('verbose') == true)
+	if($error->code & E_DEBUG || ($error->code & E_VERBOSE && setting('verbose') === 2))
 	{
 		// add special error handling based on the origin of the error
 		foreach($error->backtrace as $i => $stack)
@@ -935,7 +880,7 @@ function error_callback($error)
 			$error->message .= ' in ' . $error->backtrace[$i]['file'] . ' on line ' . $error->backtrace[$i]['line'];
 		}
 		
-		// only show verbose errors once in non verbose mode
+		// only show verbose errors if it is really verbose!
 		if($error->code & E_DEBUG || setting('verbose'))
 			$GLOBALS['debug_errors'][] = $error;
 	}
@@ -1075,10 +1020,10 @@ function setup_mime()
 {
 	// this will load the mime-types from a linux dist mime.types file stored in includes
 	// this will organize the types for easy lookup
-	if(file_exists(setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'mime.types'))
+	if(file_exists(setting_local_root() . 'include' . DIRECTORY_SEPARATOR . 'mime.types'))
 	{
-		$handle = fopen(setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'mime.types', 'r');
-		$mime_text = fread($handle, filesize(setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'mime.types'));
+		$handle = fopen(setting_local_root() . 'include' . DIRECTORY_SEPARATOR . 'mime.types', 'r');
+		$mime_text = fread($handle, filesize(setting_local_root() . 'include' . DIRECTORY_SEPARATOR . 'mime.types'));
 		fclose($handle);
 		
 		$mimes = split("\n", $mime_text);

@@ -32,16 +32,6 @@ function register_database()
 }
 
 /**
- * Implementation of setting, validate all module_enable settings
- * @ingroup setting
- */
-function setting_database_enable($settings)
-{
-	// check boolean value
-	return generic_validate_boolean_true($settings, 'database_enable');
-}
-
-/**
  * Implementation of setup, this is the only function called and must call others
  * @ingroup setup
  */
@@ -379,9 +369,9 @@ class database
 			$this->db_conn = @ADONewConnection($connect_str);  # no need for Connect()
 			if($this->db_conn !== false) $this->db_conn->SetFetchMode(ADODB_FETCH_ASSOC);
 		}
+		
 		if(!isset($this->db_conn) || $this->db_conn === false)
 		{
-			$GLOBALS['settings']['use_database'] = false;
 			raise_error('Something has gone wrong with the connection!', E_DEBUG|E_USER|E_FATAL);
 		}
 	}
@@ -689,10 +679,12 @@ class database
 		$query = DATABASE::statement_builder($props, $require_permit);
 		
 		if(isset($query))
-			raise_error('DATABASE: ' . $query, E_DEBUG);
+		{
+			if(setting('verbose') == true)
+				raise_error('DATABASE: ' . $query, E_DEBUG);
+		}
 		else
 			return false;
-//print $query . '<br />';
 
 		if(isset($props['CALLBACK']))
 		{
