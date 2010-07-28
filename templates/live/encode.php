@@ -54,7 +54,7 @@ function theme_live_encode()
 			
 			if(isset($GLOBALS['templates']['html']['filename']))
 				print $GLOBALS['templates']['html']['filename'];
-			?><br /><a href="<?php print url('module=encode'); ?>">Select a different file</a><?php
+			?><br /><a href="<?php print url('encode'); ?>">Select a different file</a><?php
 		}
 		
 		?><br />

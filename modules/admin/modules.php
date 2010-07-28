@@ -1,10 +1,22 @@
 <?php
 
+function menu_modules()
+{
+	return array(
+		'admin/modules' => array(
+			'callback' => 'output_admin_modules',
+		),
+		'admin/modules/%configure_module' => array(
+			'callback' => 'output_admin_modules',
+		),
+	);
+}
+
 /**
  * Implementation of setting
  * @ingroup setting
  */
-function setting_modules()
+function setting_admin_modules()
 {
 	$settings = array();
 	foreach($GLOBALS['modules'] as $module => $config)
@@ -13,7 +25,7 @@ function setting_modules()
 		if(!function_exists('setting_' . $module . '_enable'))
 		{
 			if(!in_array($module, get_required_modules()))
-				$GLOBALS['setting_' . $module . '_enable'] = create_function('$request', 'return setting_module_enable($request, \'' . $module . '\');');
+				$GLOBALS['setting_' . $module . '_enable'] = create_function('$request', 'return setting_modules_enable($request, \'' . $module . '\');');
 			else
 				$GLOBALS['setting_' . $module . '_enable'] = create_function('$request', 'return true;');
 		}
@@ -37,7 +49,7 @@ function dependency_writable_settings_file($settings)
 /**
  * Implementation of dependencies
  */
-function status_modules($settings)
+function status_admin_modules($settings)
 {
 	$status = array();
 	
@@ -78,32 +90,10 @@ function status_modules($settings)
 }
 
 /**
- * Implementation of setting, validate all module_enable settings
- * @ingroup setting
- */
-function setting_module_enable($settings, $module)
-{
-	// always return true if module is required
-	if(in_array($module, get_required_modules()))
-		return true;
-		
-	// check boolean value
-	return generic_validate_boolean_true($settings, $module . '_enable');
-}
-
-/**
- * Helper function
- */
-function get_required_modules()
-{
-	return array('core', 'index', 'users', 'select', 'settings', 'file', 'template');
-}
-
-/**
  * Implementation of configure
  * @ingroup configure
  */
-function configure_modules($settings, $request)
+function configure_admin_modules($settings, $request)
 {
 	$recommended = array('select', 'list', 'search');
 	
@@ -120,7 +110,7 @@ function configure_modules($settings, $request)
 	foreach($GLOBALS['modules'] as $module => $config)
 	{
 		// get the enabled setting
-		$settings[$module . '_enable'] = setting_module_enable($settings, $module);
+		$settings[$module . '_enable'] = setting_modules_enable($settings, $module);
 		
 		$key = 'setting_' . $module . '_enable';
 			
@@ -205,7 +195,7 @@ function configure_modules($settings, $request)
 		{
 			$new_config['options'][] = array(
 				'type' => 'button',
-				'action' => 'window.location.href=\'' . url('module=admin_modules&configure_module=' . $module) . '\'',
+				'action' => 'window.location.href=\'' . url('admin/modules/' . $module) . '\'',
 				'value' => 'Configure',
 			);
 		}
@@ -235,7 +225,7 @@ function configure_modules($settings, $request)
 }
 
 /**
- * Used to configure plugins
+ * Used to configure modules
  * @ingroup validate
  * @return admin_modules by default, accepts any module name that is configurable
  */
@@ -446,7 +436,7 @@ function modules_get_new_settings($request)
  * Implementation of output
  * @ingroup output
  */
-function output_modules($request)
+function output_admin_modules($request)
 {
 	// get which module to ouput the configuration for
 	$request['configure_module'] = validate($request, 'configure_module');
@@ -504,7 +494,7 @@ function output_modules($request)
 	register_output_vars('configure_module', $request['configure_module']);
 }
 
-function theme_modules()
+function theme_admin_modules()
 {
 	theme('header');
 
@@ -516,7 +506,7 @@ function theme_modules()
 		));
 		
 	print_form_object('setting', array(
-		'action' => url('module=admin_modules&configure_module=' . $GLOBALS['templates']['vars']['configure_module'], true),
+		'action' => url('admin/modules/' . $GLOBALS['templates']['vars']['configure_module'], true),
 		'options' => $GLOBALS['templates']['vars']['options'],
 		'type' => 'form',
 	));

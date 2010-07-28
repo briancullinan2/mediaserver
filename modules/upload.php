@@ -23,7 +23,7 @@ function register_upload()
  */
 function dependency_writable_tmp_dir($settings)
 {
-	$settings['tmp_dir'] = setting_tmp_dir($settings);
+	$settings['tmp_dir'] = setting('tmp_dir');
 	return is_writable($settings['tmp_dir']);
 }
 
@@ -49,7 +49,7 @@ function setting_tmp_dir($settings)
  */
 function status_upload($settings)
 {
-	$settings['tmp_dir'] = setting_tmp_dir($settings);
+	$settings['tmp_dir'] = setting('tmp_dir');
 
 	$status = array();
 
@@ -89,7 +89,7 @@ function status_upload($settings)
  */
 function configure_upload($settings, $request)
 {
-	$settings['tmp_dir'] = setting_tmp_dir($settings);
+	$settings['tmp_dir'] = setting('tmp_dir');
 
 	$options = array();
 

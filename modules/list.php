@@ -1,6 +1,21 @@
 <?php
 // query the database based on search stored in session
 
+function menu_list()
+{
+	return array(
+		'list/%list' => array(
+			'callback' => 'list_output',
+		),
+		'list/%list/%cat' => array(
+			'callback' => 'list_output',
+		),
+		'list/%list/%cat/%item/%extra/%filename' => array(
+			'callback' => 'list_output',
+		),
+	);
+}
+
 /**
  * Implementation of register
  * @ingroup register
@@ -149,7 +164,7 @@ function theme_list_block()
     <div id="type">
         Get the list:
         <br />
-        <form action="<?php print url('module=list'); ?>" method="get">
+        <form action="<?php print url('list'); ?>" method="get">
             <input type="hidden" name="cat" value="<?php print $GLOBALS['templates']['html']['cat']; ?>" />
             <input type="hidden" name="module" value="list" />
             Type <select name="list">
@@ -169,11 +184,11 @@ function theme_list_block()
 function theme_xml()
 {
 	$ext_icons = array();
-	$ext_icons['FOLDER'] = url('template=' . setting('local_template') . '&file=images/filetypes/folder_96x96.png');
-	$ext_icons['FILE'] = url('template=' . setting('local_template') . '&file=images/filetypes/file_96x96.png');
+	$ext_icons['FOLDER'] = url('template/live/images/filetypes/folder_96x96.png');
+	$ext_icons['FILE'] = url('template/live/images/filetypes/file_96x96.png');
 	
 	$type_icons = array();
-	$type_icons['audio'] = url('template=' . setting('local_template') . '&file=images/filetypes/music_96x96.png');
+	$type_icons['audio'] = url('template/live/images/filetypes/music_96x96.png');
 
 	print '<?xml version="1.0" encoding="utf-8"?>
 	
@@ -215,7 +230,7 @@ function theme_xml()
 			}
 			?></tip>
 			<path><?php print $file['Filepath']; ?></path>
-			<link><?php print url('module=file&cat=' . $GLOBALS['templates']['vars']['cat'] . '&id=' . $file['id'] . '&filename=' . urlencode($file['Filename']), false, true); ?></link>
+			<link><?php print url('file/' . $GLOBALS['templates']['vars']['cat'] . '/' . $file['id'] . '/' . urlencode($file['Filename']), false, true); ?></link>
 			<short><?php print htmlspecialchars(substr($GLOBALS['templates']['vars']['files'][$i]['Filename'], 0, 13)); ?>...</short>
 			<?php
 			if(handles($GLOBALS['templates']['vars']['files'][$i]['Filepath'], 'archive'))
@@ -262,7 +277,7 @@ function theme_wpl()
 				<?php
 				foreach($files as $i => $file)
 				{
-					?><media src="<?php print url('module=file&cat=' . $GLOBALS['templates']['vars']['cat'] . '&id=' . $file['id'] . '&filename=' . urlencode($file['Filename']), false, true); ?>" /><?php
+					?><media src="<?php print url('file/' . $GLOBALS['templates']['vars']['cat'] . '/' . $file['id'] . '/' . urlencode($file['Filename']), false, true); ?>" /><?php
 				}
 				?>
 			</seq>
@@ -287,7 +302,7 @@ function theme_rss()
 				?>
 				<item>
 					<title><?php print basename($file['Filepath']); ?></title>
-					<link><?php print url('module=file&cat=' . $GLOBALS['templates']['vars']['cat'] . '&id=' . $file['id'] . '&filename=' . basename($file['Filepath']), false, true); ?></link>
+					<link><?php print url('file/' . $GLOBALS['templates']['vars']['cat'] . '/' . $file['id'] . '/' . basename($file['Filepath']), false, true); ?></link>
 					<description></description>
 				</item>
                 <?php
@@ -306,7 +321,7 @@ function theme_m3u()
 		header('Content-Type: text/html');
 		if(!isset($GLOBALS['templates']['vars']['selected']))
 		{
-			goto('list=m3u&module=list&cat=' . $_REQUEST['cat']);
+			goto('list/m3u/' . $_REQUEST['cat']);
 		}
 		else
 		{
@@ -317,9 +332,9 @@ function theme_m3u()
 			?>
 			Note: All non-media types will be filtered out using this list type.<br />
 			Select your audio/video format:<br />
-			<a href="<?php print url('module=list&list=m3u&cat=' . $GLOBALS['templates']['vars']['cat'] . '&item=' . $ids . '&extra=mp3&filename=Files.m3u'); ?>">mp4</a>
-			: <a href="<?php print url('module=list&list=m3u&cat=' . $GLOBALS['templates']['vars']['cat'] . '&item=' . $ids . '&extra=mpg&filename=Files.m3u'); ?>">mpg/mp3</a>
-			: <a href="<?php print url('module=list&list=m3u&cat=' . $GLOBALS['templates']['vars']['cat'] . '&item=' . $ids . '&extra=wm&filename=Files.m3u'); ?>">wmv/wma</a>
+			<a href="<?php print url('list/m3u/' . $GLOBALS['templates']['vars']['cat'] . '/' . $ids . '/mp3/Files.m3u'); ?>">mp4</a>
+			: <a href="<?php print url('list/m3u/' . $GLOBALS['templates']['vars']['cat'] . '/' . $ids . '/mpg/Files.m3u'); ?>">mpg/mp3</a>
+			: <a href="<?php print url('list/m3u/' . $GLOBALS['templates']['vars']['cat'] . '/' . $ids . '/wm/Files.m3u'); ?>">wmv/wma</a>
 			<br />
 			Some files that will be listed: <br />
 			<?php
@@ -373,12 +388,12 @@ function theme_m3u()
 		if(handles($file['Filepath'], 'audio'))
 		{
 ?>#EXTINF:<?php print $length; ?>,<?php print $title . "\r\n"; ?>
-<?php print url('module=encode&cat=' . $GLOBALS['templates']['vars']['cat'] . '&id=' . $file['id'] . '&encode=' . $audio . '&filename=' . basename($file['Filepath']), true, true) . "\r\n";
+<?php print url('encode/' . $GLOBALS['templates']['vars']['cat'] . '/' . $file['id'] . '/' . $audio . '/' . basename($file['Filepath']), true, true) . "\r\n";
 		}
 		elseif(handles($file['Filepath'], 'video'))
 		{
 ?>#EXTINF:<?php print $length; ?>,<?php print $title . "\r\n"; ?>
-<?php print url('module=encode&cat=' . $GLOBALS['templates']['vars']['cat'] . '&id=' . $file['id'] . '&encode=' . $video . '&filename=' . basename($file['Filepath']), true, true) . "\r\n";
+<?php print url('encode/' . $GLOBALS['templates']['vars']['cat'] . '/' . $file['id'] . '/' . $video . '/' . basename($file['Filepath']), true, true) . "\r\n";
 		}
 	}
 }

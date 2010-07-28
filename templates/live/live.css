@@ -94,7 +94,7 @@ body {
 }
 
 .menu .itemSelect {
-	background:#F7FBFF url(?module=template&template=live&tfile=images/browse_select_bg.png) repeat-x scroll center bottom;
+	background:#F7FBFF url(?path_info=template/live/images/browse_select_bg.png) repeat-x scroll center bottom;
 	border:1px solid #D8F0FA;
 }
 
@@ -132,7 +132,7 @@ body {
 	font-weight:normal;
 	line-height:normal;
 	width:100%;
-	background:url(?module=template&template=live&tfile=images/headerBG_24_~HeaderGradientImageType~.png) repeat scroll center top;
+	background:url(?path_info=template/live/images/headerBG_24_~HeaderGradientImageType~.png) repeat scroll center top;
 	height:39px;
 	text-align:left;
 }
@@ -245,7 +245,7 @@ body {
 	font-weight:normal;
 	line-height:normal;
 	width:auto;
-	background:#307C0B url(?module=template&template=live&tfile=images/headerBG_24_~HeaderGradientImageType~.png) repeat scroll center center;
+	background:#307C0B url(?path_info=template/live/images/headerBG_24_~HeaderGradientImageType~.png) repeat scroll center center;
 	border:medium none;
 	color:#FFFFFF;
 	margin:0;
@@ -296,7 +296,7 @@ body {
 }
 
 .sideColumn.right {
-	background-image:url(?module=template&template=live&tfile=images/shadow.png);
+	background-image:url(?path_info=template/live/images/shadow.png);
 	background-position:0 0;
 	background-repeat:no-repeat;
 }
@@ -355,7 +355,7 @@ body {
 }
 
 .pageHighlight, .pageHighlightW {
-	background:#F7FBFF url(?module=template&template=live&tfile=images/browse_select_bg.png) repeat-x scroll center bottom;
+	background:#F7FBFF url(?path_info=template/live/images/browse_select_bg.png) repeat-x scroll center bottom;
 	border:1px solid #D8F0FA;
 	height:1.5em;
 	left:0;
@@ -373,7 +373,7 @@ body {
 }
 
 .pageLink {
-	background:transparent url(?module=template&template=live&tfile=images/transparent.gif) repeat scroll 0 0;
+	background:transparent url(?path_info=template/live/images/transparent.gif) repeat scroll 0 0;
 	color:#0066A7;
 	font-weight:inherit;
 	height:100%;
@@ -403,7 +403,7 @@ body {
 
 .filesmall .notselected {
 	visibility:hidden;
-	background:#F7FBFF url(?module=template&template=live&tfile=images/browse_select_bg.png) repeat-x scroll center bottom;
+	background:#F7FBFF url(?path_info=template/live/images/browse_select_bg.png) repeat-x scroll center bottom;
 	border:1px solid #D8F0FA;
 	height:1.5em;
 	left:0;
@@ -413,7 +413,7 @@ body {
 
 .filesmall .selected {
 	visibility:visible;
-	background:#F7FBFF url(?module=template&template=live&tfile=images/browse_select_bg.png) repeat-x scroll center bottom;
+	background:#F7FBFF url(?path_info=template/live/images/browse_select_bg.png) repeat-x scroll center bottom;
 	border:1px solid #D8F0FA;
 	height:1.5em;
 	left:0;
@@ -444,7 +444,7 @@ body {
 }
 
 .filesmall .itemLink {
-	background:transparent url(?module=template&template=live&tfile=images/transparent.gif) repeat scroll 0 0;
+	background:transparent url(?path_info=template/live/images/transparent.gif) repeat scroll 0 0;
 	height:100%;
 	left:0;
 	position:absolute;
@@ -488,7 +488,7 @@ body {
 
 .file .notselected {
 	visibility:hidden;
-	background:#F7FBFF url(?module=template&template=live&tfile=images/browse_select_bg.png) repeat-x scroll center bottom;
+	background:#F7FBFF url(?path_info=template/live/images/browse_select_bg.png) repeat-x scroll center bottom;
 	border:1px solid #D8F0FA;
 	height:9.5em;
 	left:0;
@@ -503,7 +503,7 @@ body {
 
 .file .selected {
 	visibility:visible;
-	background:#F7FBFF url(?module=template&template=live&tfile=images/browse_select_bg.png) repeat-x scroll center bottom;
+	background:#F7FBFF url(?path_info=template/live/images/browse_select_bg.png) repeat-x scroll center bottom;
 	border:1px solid #D8F0FA;
 	height:9.5em;
 	left:0;
@@ -539,7 +539,7 @@ body {
 }
 
 .file .itemLink {
-	background:transparent url(?module=template&template=live&tfile=images/transparent.gif) repeat scroll 0 0;
+	background:transparent url(?path_info=template/live/images/transparent.gif) repeat scroll 0 0;
 	height:100%;
 	left:0;
 	position:absolute;
@@ -570,7 +570,7 @@ body {
 #infoBar {
 	border-top:1px solid #E0E0E0;
 	height:64px;
-	background:transparent url(?module=template&template=live&tfile=images/middle_fade.png) repeat scroll 0 0;
+	background:transparent url(?path_info=template/live/images/middle_fade.png) repeat scroll 0 0;
 	color:#FFF;
 	width:100%;
 	line-height:normal;
@@ -684,14 +684,14 @@ body {
 	display:block;
 	border:1px solid #D8F0FA;
 	margin:5px 0px 5px 0px;
-	background: url(?module=template&template=live&tfile=images/browse_select_bg.png) repeat-x scroll center bottom #F7FBFF;
+	background: url(?path_info=template/live/images/browse_select_bg.png) repeat-x scroll center bottom #F7FBFF;
 }
 
 .hover.red {
 	display:block;
 	border:1px solid #FAF0D8;
 	margin:5px 0px 5px 0px;
-	background: url(?module=template&template=live&tfile=images/browse_select_bg_red.png) repeat-x scroll center bottom #F7FBFF;
+	background: url(?path_info=template/live/images/browse_select_bg_red.png) repeat-x scroll center bottom #F7FBFF;
 }
 
 .nothover {
@@ -708,7 +708,7 @@ body {
 	float:right;
 	height:48px;
 	width:48px;
-	background-image:url(?module=template&template=live&tfile=images/button_cancel.png);
+	background-image:url(?path_info=template/live/images/button_cancel.png);
 }
 
 .form-title {
@@ -770,7 +770,7 @@ table.install td {
 	font-variant:normal;
 	font-weight:normal;
 	line-height:normal;
-	background:url(?module=template&template=live&tfile=images/headerBG_24_~HeaderGradientImageType~.png) repeat scroll center top;
+	background:url(?path_info=template/live/images/headerBG_24_~HeaderGradientImageType~.png) repeat scroll center top;
 	height:39px;
 	text-align:left;
 	position:fixed;

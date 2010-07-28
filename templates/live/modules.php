@@ -7,7 +7,7 @@ function register_live_modules()
 	);
 }
 
-function theme_live_admin_modules()
+function theme_live_modules()
 {
 	
 	theme('header');
@@ -42,15 +42,14 @@ function theme_live_admin_modules()
 function theme_live_admin_modules_configure()
 {
 	// if the status is avaiable print that out first
-	/*if(isset($GLOBALS['templates']['vars']['status']))
+	if(isset($GLOBALS['templates']['vars']['status']))
 		print_form_object('status', array(
 			'type' => 'fieldset',
 			'options' => $GLOBALS['templates']['vars']['status']
 		));
-		*/
 		
 	print_form_object('setting', array(
-		'action' => url('module=admin_modules&configure_module=' . $GLOBALS['templates']['vars']['configure_module'], true),
+		'action' => url('module=modules&configure_module=' . $GLOBALS['templates']['vars']['configure_module'], true),
 		'options' => $GLOBALS['templates']['vars']['options'],
 		'type' => 'form',
 	));

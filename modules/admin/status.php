@@ -35,7 +35,7 @@ function output_admin_status($request)
 		// output configuration page
 		if(function_exists('status_' . $module))
 		{
-			$module_status = call_user_func_array('status_' . $module, array($GLOBALS['settings']));
+			$module_status = invoke_module('status', $module, $GLOBALS['settings']);
 			
 			// if it is not an array, display debug error
 			if(!is_array($module_status))

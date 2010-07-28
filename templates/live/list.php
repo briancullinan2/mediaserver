@@ -27,7 +27,7 @@ function theme_live_list()
 	{
 		?>
 		<div class="nothover" onMouseOver="this.className='hover';" onMouseOut="this.className='nothover';">
-			<a href="<?php print url('module=list&list=' . $type); ?>" style="font-size:14px;"><?php print $list['name']; ?></a><br /><br />
+			<a href="<?php print url('list/' . $type); ?>" style="font-size:14px;"><?php print $list['name']; ?></a><br /><br />
 			Format: <?php print $list['encoding']; ?><br />
 			Extension: <?php print $type; ?>
 			<br /><br />

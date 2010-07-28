@@ -16,7 +16,7 @@ define('T_NEW_CONTEXT', 16);
  * Implementation of setup
  * @ingroup setup
  */
-function setup_language()
+function setup_lang()
 {
 	global $LANG_CODE;
 	
@@ -35,7 +35,7 @@ function setup_language()
  * Implementation of register
  * @ingroup register
  */
-function register_language()
+function register_lang()
 {
 	return array(
 		'name' => lang('language title', 'Language Select'),
@@ -53,7 +53,7 @@ function register_language()
  * Allows the administrator to set a language for himself
  * @ingroup setting
  */
-function setting_language($settings)
+function setting_lang($settings)
 {
 	if(isset($settings['language']) && in_array($settings['language'], array_keys($GLOBALS['LANG_CODE'])))
 		return $settings['language'];
@@ -90,7 +90,7 @@ function validate_language($request)
 /**
  * Implementation of session
  */
-function session_language($request)
+function session_lang($request)
 {
 	// remove old language information
 	$_SESSION['translated'] = array();
@@ -110,7 +110,7 @@ function lang($keys, $text)
 		raise_error('Warning: The input language translation \'' . $keys . '\' has already been register for translation.', E_DEBUG);
 		
 	// use language saved in sesssion, make sure it has been set up before calling this
-	if(isset($GLOBALS['LANG_CODE']) && validate_language($_REQUEST) == 'en')
+	if(isset($GLOBALS['LANG_CODE']) && validate($_REQUEST, 'language') == 'en')
 	{
 		return $text;
 	}
@@ -126,7 +126,7 @@ function lang($keys, $text)
  * Implementation of output
  * @ingroup output
  */
-function output_language($request)
+function output_lang($request)
 {
 	$request['language'] = validate($request, 'language');
 	
@@ -135,7 +135,7 @@ function output_language($request)
 }
 
 
-function theme_language_block()
+function theme_lang_block()
 {
 	?><form id="language-block" action="<?php print $GLOBALS['templates']['html']['get']; ?>" method="get">
 	Language: <select name="language">

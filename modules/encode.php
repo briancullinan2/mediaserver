@@ -6,8 +6,8 @@
  */
 function configure_encode($settings, $request)
 {
-	$settings['encode_path'] = setting_encode_path($settings);
-	$settings['encode_args'] = setting_encode_args($settings);
+	$settings['encode_path'] = setting('encode_path');
+	$settings['encode_args'] = setting('encode_args');
 	
 	$options = array();
 	
@@ -77,7 +77,7 @@ function configure_encode($settings, $request)
  */
 function dependency_encoder($settings)
 {
-	$settings['encode_path'] = setting_encode_path($settings);
+	$settings['encode_path'] = setting('encode_path');
 	return file_exists($settings['encode_path']);
 }
 
@@ -420,11 +420,11 @@ function output_encode($request)
 		// since we usually have to make a call to find the file, 
 		//   just call output_select so we can display a file selector
 		output_select(array(
-			'dir' => validate_dir($request),
+			'dir' => validate($request, 'dir'),
 			'search_Filemime' => '/audio\/|video\//',
 			'search_operator' => 'OR',
 			'search_Filetype' => 'FOLDER',
-			'start' => validate_start($request),
+			'start' => validate($request, 'start'),
 			'limit' => 54,
 		));
 		register_output_vars('start', validate($request, 'start'));

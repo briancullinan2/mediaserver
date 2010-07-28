@@ -185,11 +185,11 @@ function setting_db_name($settings)
  */
 function setting_db_connect($settings)
 {
-	$settings['db_type'] = setting_db_type($settings);
-	$settings['db_server'] = setting_db_server($settings);
-	$settings['db_user'] = setting_db_user($settings);
-	$settings['db_pass'] = setting_db_pass($settings);
-	$settings['db_name'] = setting_db_name($settings);
+	$settings['db_type'] = setting('db_type');
+	$settings['db_server'] = setting('db_server');
+	$settings['db_user'] = setting('db_user');
+	$settings['db_pass'] = setting('db_pass');
+	$settings['db_name'] = setting('db_name');
 	
 	if(isset($settings['db_connect']) && parseDSN($settings['db_connect']) !== NULL)
 		return $settings['db_connect'];
@@ -220,7 +220,7 @@ function validate_dberror($request)
  */
 function configure_database($settings, $request)
 {
-	$settings['db_connect'] = setting_db_connect($settings);
+	$settings['db_connect'] = setting('db_connect');
 	$settings['dberror'] = validate($settings, 'dberror');
 	
 	$options = array();

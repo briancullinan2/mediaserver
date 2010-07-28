@@ -7,12 +7,12 @@ function register_live_header()
 	);
 
 	$config['styles'] = array(
-		'module=template&template=live&tfile=live.css',
-		'module=template&template=live&tfile=types.css',
+		'template/live/live.css',
+		'template/live/types.css',
 	);
 	$config['scripts'] = array(
-		'module=template&template=live&tfile=dragclick.js',
-		'module=template&template=live&tfile=jquery.js',
+		'template/live/dragclick.js',
+		'template/live/jquery.js',
 	);
 	
 	return $config;
@@ -123,7 +123,7 @@ function theme_live_debug_block()
 	else
 	{
 		?><div id="debug" class="debug">
-		<form action="<?php print url('module=users&users=login&return=' . urlencode($GLOBALS['templates']['vars']['get'])); ?>" method="post">
+		<form action="<?php print url('users/login?return=' . urlencode($GLOBALS['templates']['vars']['get'])); ?>" method="post">
 			Administrators: Log in to select debug options. Username: <input type="text" name="username" value="" />
 			Password: <input type="password" name="password" value="" />
 			<input type="submit" value="Login" />
@@ -139,8 +139,8 @@ function theme_live_breadcrumbs()
 	if($GLOBALS['templates']['vars']['module'] != 'select' && $GLOBALS['templates']['vars']['module'] != 'index')
 	{
 		?>
-		<li><a href="<?php print url('module=select&cat=' . $GLOBALS['templates']['vars']['cat'] . '&dir=' . urlencode('/')); ?>"><?php print setting('html_name'); ?></a></li>
-		<li><img src="<?php print url('module=template&tfile=images/carat.gif&template=' . setting('local_template')); ?>" class="crumbsep"></li>
+		<li><a href="<?php print url('select?cat=' . $GLOBALS['templates']['vars']['cat'] . '&dir=' . urlencode('/')); ?>"><?php print setting('html_name'); ?></a></li>
+		<li><img src="<?php print url('template/live/images/carat.gif'); ?>" class="crumbsep"></li>
 		<?php
 		// break up the module by the underscores
 		$crumbs = split('_', $GLOBALS['templates']['vars']['module']);
@@ -151,12 +151,12 @@ function theme_live_breadcrumbs()
 			if(isset($GLOBALS['modules'][$current]))
 			{
 				?>
-				<li><a href="<?php print url('module=' . $current); ?>"><?php print $GLOBALS['modules'][$current]['name']; ?></a></li>
+				<li><a href="<?php print url($current); ?>"><?php print $GLOBALS['modules'][$current]['name']; ?></a></li>
 				<?php
 				if($i != count($crumbs) - 1)
 				{
 					?>
-					<li><img src="<?php print url('module=template&tfile=images/carat.gif&template=' . setting('local_template')); ?>" class="crumbsep"></li>
+					<li><img src="<?php print url('template/images/carat.gif'); ?>" class="crumbsep"></li>
 					<?php
 				}
 			}
@@ -175,8 +175,8 @@ function theme_live_breadcrumbs()
 			if($count == 0)
 			{
 				?>
-				<li><a href="<?php print url('module=select&cat=' . (handles($path, $GLOBALS['templates']['vars']['cat'])?$GLOBALS['templates']['vars']['cat']:'files') . '&dir=' . urlencode('/')); ?>"><?php print setting('html_name'); ?></a></li>
-				<li><img src="<?php print url('module=template&tfile=images/carat.gif&template=' . setting('local_template')); ?>" class="crumbsep"></li>
+				<li><a href="<?php print url('select?cat=' . (handles($path, $GLOBALS['templates']['vars']['cat'])?$GLOBALS['templates']['vars']['cat']:'files') . '&dir=' . urlencode('/')); ?>"><?php print setting('html_name'); ?></a></li>
+				<li><img src="<?php print url('template/live/images/carat.gif'); ?>" class="crumbsep"></li>
 				<?php
 			}
 			elseif($count == count($crumbs)-1)
@@ -186,8 +186,8 @@ function theme_live_breadcrumbs()
 			else
 			{
 				?>
-				<li><a href="<?php print url('module=select&cat=' . (handles($path, $GLOBALS['templates']['vars']['cat'])?$GLOBALS['templates']['vars']['cat']:'files') . '&dir=' . urlencode($path . '/')); ?>"><?php print $text; ?></a></li>
-				<li><img src="<?php print url('module=template&tfile=images/carat.gif&template=' . setting('local_template')); ?>" class="crumbsep"></li>
+				<li><a href="<?php print url('select?cat=' . (handles($path, $GLOBALS['templates']['vars']['cat'])?$GLOBALS['templates']['vars']['cat']:'files') . '&dir=' . urlencode($path . '/')); ?>"><?php print $text; ?></a></li>
+				<li><img src="<?php print url('template/live/images/carat.gif'); ?>" class="crumbsep"></li>
 				<?php
 			}
 			$path .= '/';
@@ -204,7 +204,7 @@ function theme_live_template_block()
 	{
 		if(isset($template['name']))
 		{
-			?><a href="<?php print url('module=index&template=' . $name, false, true); ?>"><?php print $template['name']; ?></a><?php
+			?><a href="<?php print url('core?template=' . $name, false, true); ?>"><?php print $template['name']; ?></a><?php
 		}
 	}
 	?></div><?php
@@ -251,7 +251,7 @@ function theme_live_body()
 		<div id="expander">
 			<table id="header" cellpadding="0" cellspacing="0" style="background-color:<?php print ($theme == 'audio')?'#900':(($theme == 'image')?'#990':(($theme == 'video')?'#093':'#06A')); ?>;">
 				<tr>
-					<td id="siteTitle"><a href="<?php print url('module=index'); ?>"><?php print setting('html_name'); ?></a></td>
+					<td id="siteTitle"><a href="<?php print url('core'); ?>"><?php print setting('html_name'); ?></a></td>
 					<td>
 						<?php if(dependency('search') != false) theme('search_block'); ?>
 					</td>

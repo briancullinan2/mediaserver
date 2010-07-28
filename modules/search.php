@@ -369,7 +369,7 @@ function theme_search_block()
 	print $GLOBALS['modules'][$GLOBALS['templates']['vars']['cat']]['name']; ?> Search:<br />
 	<form action="<?php print $GLOBALS['templates']['vars']['get']; ?>" method="get" id="search">
 		<input type="text" name="search" value="<?php print isset($GLOBALS['templates']['vars']['search']['search'])?$GLOBALS['templates']['vars']['search']['search']:''; ?>" id="searchInput" />
-		<input type="submit" value="Search" id="searchButton" /> <a href="<?php print url('module=search'); ?>">Advanced Search</a>
+		<input type="submit" value="Search" id="searchButton" /> <a href="<?php print url('search'); ?>">Advanced Search</a>
 	</form>
 	<br />
 	<?php

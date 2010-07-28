@@ -85,7 +85,7 @@ function validate_drop_tables($request)
  */
 function output_admin_install($request)
 {
-	register_output_vars('styles', 'module=admin_install&install_image=style');
+	register_output_vars('styles', 'admin/install?install_image=style');
 	
 	$request['install_step'] = validate($request, 'install_step');
 	
@@ -99,7 +99,7 @@ function output_admin_install($request)
 	if(isset($_POST) && count($_POST) > 0)
 	{
 		if(isset($_POST['dberror'])) $_SESSION['dberror'] = $_POST['dberror'];
-		goto('module=admin_install&install_step=' . $request['install_step']);
+		goto('admin/install?install_step=' . $request['install_step']);
 	}
 	
 	theme('install');

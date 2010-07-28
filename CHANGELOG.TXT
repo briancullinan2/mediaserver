@@ -1,3 +1,10 @@
+2010-07-28
+Made big changes
+Added new menu API
+	Still needs work
+	updated all the URLs across the site
+System works mostly
+
 2010-07-27
 Made lots of changes
 Improved trigger API

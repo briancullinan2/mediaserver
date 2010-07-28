@@ -1,0 +1,6 @@
+name = Modules
+description = Interface for managing which modules are enabled.
+privilage = 10
+settings = admin_modules
+template = true
+package = admin

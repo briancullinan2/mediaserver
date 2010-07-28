@@ -67,5 +67,5 @@ function onScroll()
 	
 	var first_char = objs[start].className.substr(-1);
 	document.getElementById("debug").innerHTML = first_char;
-	$("#files div:eq(" + start + ")").load("?module=select&dir=" + directory + "&group_by=Filename&group_index=" + first_char);
+	$("#files div:eq(" + start + ")").load("select/dir/" + directory + "?group_by=Filename&group_index=" + first_char);
 }

@@ -227,8 +227,8 @@ function session_admin_tools_torservices($request)
  */
 function configure_admin_tools_torservices($settings)
 {
-	$settings['torservices'] = setting_torservices($settings);
-	$settings['torpath'] = setting_torpath($settings);
+	$settings['torservices'] = setting('torservices');
+	$settings['torpath'] = setting('torpath');
 
 	$service_count = count($settings['torservices']);
 	

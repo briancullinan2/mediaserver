@@ -23,7 +23,7 @@ function theme_live_settings()
 	
 	?>
 	<div class="titlePadding"></div>
-	<form action="<?php print url('module=settings'); ?>" method="get">
+	<form action="<?php print url('settings'); ?>" method="get">
 	<input type="hidden" name="module" value="settings" />
 	
 	<?php print_form_objects($GLOBALS['templates']['plain']['settings']); ?>

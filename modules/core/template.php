@@ -4,7 +4,17 @@
  * control outputting of template files
  *  validate template variable
  */
- 
+
+function menu_template()
+{
+	return array(
+		'template/%template/%tfile' => array(
+			'callback' => 'output_template',
+		)
+	);
+}
+
+
 /**
  * Generate a list of templates
  * @ingroup setup
@@ -78,9 +88,9 @@ function setting_template()
  */
 function configure_template($settings, $request)
 {
-	$settings['local_root'] = setting_local_root($settings);
-	$settings['local_default'] = setting_local_default($settings);
-	$settings['local_template'] = setting_local_template($settings);
+	$settings['local_root'] = setting('local_root');
+	$settings['local_default'] = setting('local_default');
+	$settings['local_template'] = setting('local_template');
 	
 	$options = array();
 	
@@ -281,7 +291,7 @@ function register_style($request)
 	// only continue if bath properties are set
 	if(isset($request['template']) && isset($request['tfile']))
 	{
-		register_output_vars('styles', 'module=template&template=' . $request['template'] . '&tfile=' . $request['tfile'], true);
+		register_output_vars('styles', 'template/' . $request['template'] . '/' . $request['tfile'], true);
 		return true;
 	}
 	else
@@ -307,7 +317,7 @@ function register_script($request)
 	// only continue if bath properties are set
 	if(isset($request['template']) && isset($request['tfile']))
 	{
-		register_output_vars('scripts', 'module=template&template=' . $request['template'] . '&tfile=' . $request['tfile'], true);
+		register_output_vars('scripts', 'template/' . $request['template'] . '/' . $request['tfile'], true);
 		return true;
 	}
 	else
@@ -371,7 +381,7 @@ function theme($request = '')
 	elseif(is_string($request))
 	{
 		// check if function exists in current theme
-		if(function_exists('theme_' . validate_template(array('template' => setting('local_template'))) . '_' . $request))
+		if(function_exists('theme_' . validate(array('template' => setting('local_template')), 'template') . '_' . $request))
 		{
 			call_user_func_array('theme_' . validate(array('template' => setting('local_template')), 'template') . '_' . $request, $args);
 			return true;

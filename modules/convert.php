@@ -23,8 +23,8 @@ function register_convert()
  */
 function configure_convert($settings, $request)
 {
-	$settings['convert_path'] = setting_convert_path($settings);
-	$settings['convert_args'] = setting_convert_args($settings);
+	$settings['convert_path'] = setting('convert_path');
+	$settings['convert_args'] = setting('convert_args');
 	
 	$options = array();
 	
@@ -87,7 +87,7 @@ function configure_convert($settings, $request)
  */
 function dependency_converter($settings)
 {
-	$settings['convert_path'] = setting_convert_path($settings);
+	$settings['convert_path'] = setting('convert_path');
 	return file_exists($settings['convert_path']);
 }
 

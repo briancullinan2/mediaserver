@@ -81,10 +81,10 @@ function status_cron()
  */
 function configure_cron($settings, $request)
 {
-	$settings['dir_seek_time'] = setting_dir_seek_time($settings);
-	$settings['file_seek_time'] = setting_file_seek_time($settings);
-	$settings['cleanup_buffer_time'] = setting_cleanup_buffer_time($settings);
-	$settings['cleanup_threashold'] = setting_cleanup_threashold($settings);
+	$settings['dir_seek_time'] = setting('dir_seek_time');
+	$settings['file_seek_time'] = setting('file_seek_time');
+	$settings['cleanup_buffer_time'] = setting('cleanup_buffer_time');
+	$settings['cleanup_threashold'] = setting('cleanup_threashold');
 	
 	$options = array();
 	

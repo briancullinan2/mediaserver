@@ -200,7 +200,7 @@ function theme_live_errors_block()
 		<div id="tmp_errors"></div>
 		<script language="javascript">
 			$(document).ready(function() {
-				$.get('<?php print url('module=core&errors_only=true', true); ?>',function(data, status, xhr){
+				$.get('<?php print url('core?errors_only=true', true); ?>',function(data, status, xhr){
 					$('#tmp_errors').html(data);
 					
 					$('#warn_errors').append($('#warn_errors_only'));

@@ -20,14 +20,7 @@ function bootstrap($mode)
 			break;
 		
 		case 'database':
-			// if the database is used, include that
-			include_once setting_local_root() . 'include' . DIRECTORY_SEPARATOR . 'database.php';
-			
-			// register the database
-			$GLOBALS['modules']['database'] = register_database();
-			
-			// add register trigger
-			// add setup trigger
+			load_modules('include' . DIRECTORY_SEPARATOR . 'database.php');
 			
 			break;
 		
@@ -36,15 +29,55 @@ function bootstrap($mode)
 			load_error_handling();
 			
 			break;
+			
+		case 'modules':
+			// add functionality from modules
+			if(!function_exists('setting_modules_enable'))
+			{
+				/**
+				 * Implementation of setting, validate all module_enable settings
+				 * @ingroup setting
+				 */
+				function setting_modules_enable($settings, $module = 'modules')
+				{
+					// always return true if module is required
+					if(in_array($module, get_required_modules()))
+						return true;
+						
+					// check boolean value
+					return generic_validate_boolean_true($settings, $module . '_enable');
+				}
+				
+				foreach($GLOBALS['modules'] as $module => $config)
+				{
+					if(!function_exists('setting_' . $module . '_enable'))
+					{
+						if(!in_array($module, get_required_modules()))
+							$GLOBALS['setting_' . $module . '_enable'] = create_function('$request', 'return setting_modules_enable($request, \'' . $module . '\');');
+						else
+							$GLOBALS['setting_' . $module . '_enable'] = create_function('$request', 'return true;');
+					}
+				}
+			}
+			
+			break;
 		
-		case 'full';
+		case 'menus':
+			load_modules('include' . DIRECTORY_SEPARATOR . 'menu.php');
+			
+			break;
+			
+		case 'full':
 			bootstrap('errors');
 			bootstrap('includes');
 			bootstrap('database');
+			bootstrap('menus');
 			
 			// read module list and create a list of available modules	
 			load_modules('modules' . DIRECTORY_SEPARATOR);
 			//load_modules('handlers' . DIRECTORY_SEPARATOR);
+			
+			bootstrap('modules');
 			
 			// set up the modules
 			invoke_all_callback('setup', 'disable_module');
@@ -65,18 +98,27 @@ function load_includes()
 	
 	/** require compatibility */
 	include_once setting_local_root() . 'include' . DIRECTORY_SEPARATOR . 'compatibility.php';
+	include_once setting_local_root() . 'include' . DIRECTORY_SEPARATOR . 'forms.php';
+
+	// include the settings module ahead of time because it contains 1 needed function setting_settings_file()
+	include_once setting_local_root() . 'modules' . DIRECTORY_SEPARATOR . 'core/settings.php';
 	
 	// always include files handler
 	include_once setting_local_root() . 'modules' . DIRECTORY_SEPARATOR . 'core' . DIRECTORY_SEPARATOR . 'files.php';
 
 	// language must be included so that we can translate module definitions
-	include_once setting_local_root() . 'include' . DIRECTORY_SEPARATOR . 'lang.php';
+	load_modules('include' . DIRECTORY_SEPARATOR . 'lang.php');
 
 	// include the database module, because it acts like a module, but is kept in the includes directory
-	include_once setting_local_root() . 'include' . DIRECTORY_SEPARATOR . 'session.php';
+	load_modules('include' . DIRECTORY_SEPARATOR . 'session.php');
+}
 
-	// include the settings module ahead of time because it contains 1 needed function setting_settings_file()
-	include_once setting_local_root() . 'modules' . DIRECTORY_SEPARATOR . 'core/settings.php';
+/**
+ * Helper function
+ */
+function get_required_modules()
+{
+	return array('core', 'index', 'users', 'select', 'settings', 'file', 'template');
 }
 
 

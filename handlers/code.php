@@ -38,8 +38,8 @@ function setup_code()
 function dependency_highlighter($settings)
 {
 	// get the archiver it is set to
-	$settings['highlighter'] = setting_highlighter($settings);
-	$settings['local_root'] = setting_local_root($settings);
+	$settings['highlighter'] = setting('highlighter');
+	$settings['local_root'] = setting('local_root');
 
 	// if that archiver is not installed, return false
 	if($settings['highlighter'] == 'pear' && dependency('pear_installed') != false && include_path('Text/Highlighter.php') !== false)
@@ -103,7 +103,7 @@ function status_code()
  */
 function configure_code($settings, $request)
 {
-	$settings['highlighter'] = setting_highlighter($settings);
+	$settings['highlighter'] = setting('highlighter');
 	
 	$options = array();
 	
@@ -162,7 +162,7 @@ function configure_code($settings, $request)
  */
 function setting_highlighter($settings)
 {
-	$settings['local_root'] = setting_local_root($settings);
+	$settings['local_root'] = setting_local_root();
 	if(isset($settings['highlighter']) && in_array($settings['highlighter'], array('pear', 'geshi')))
 		return $settings['highlighter'];
 	else

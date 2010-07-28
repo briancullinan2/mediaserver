@@ -16,6 +16,27 @@
  * @}
  */
 
+function menu_core()
+{
+	return array(
+		'core/%search' => array(
+			'callback' => 'core',
+		),
+		'core/%cat/%id' => array(
+			'callback' => 'core',
+		),
+		'core/%cat/%id/%filename' => array(
+			'callback' => 'core',
+		),
+		'core/%cat/%id/%core/%filename' => array(
+			'callback' => 'core',
+		),
+		'core/%cat/%id/%core/%extra/%filename' => array(
+			'callback' => 'core',
+		),
+	);
+}
+
 /**
  * Create a global variable for storing all the module information
  * @ingroup setup
@@ -116,12 +137,17 @@ function flatten_module_dependencies($modules, $already_added = array())
  */
 function load_modules($path)
 {
-	$files = get_files(array(
-		'dir' => setting_local_root() . $path,
-		'depth' => 3,
-		'limit' => 32000,
-		'match' => '/\.info$/i',
-	), $count, true);
+	if(is_dir(setting_local_root() . $path))
+	{
+		$files = get_files(array(
+			'dir' => setting_local_root() . $path,
+			'depth' => 3,
+			'limit' => 32000,
+			'match' => '/\.info$/i',
+		), $count, true);
+	}
+	elseif(is_file(setting_local_root() . $path))
+		$files = array(get_files_info(setting_local_root() . $path));
 
 	$modules = array();
 	
@@ -141,10 +167,6 @@ function load_modules($path)
 				// remove slashes and replace with underscores
 				$prefix = str_replace(array('/', '\\'), '_', $prefix);
 				
-				// remove modules_ prefix so as not to be redundant
-				if(substr($prefix, 0, 8) == 'modules_') $prefix = substr($prefix, 8);
-				if(substr($prefix, 0, 9) == 'handlers_') $prefix = substr($prefix, 9);
-				
 				// remove extension from module name
 				$module = substr($module, 0, strrpos($module, '.'));
 				
@@ -152,23 +174,34 @@ function load_modules($path)
 				if(substr($file['Filename'], -5) == '.info')
 				{
 					$modules[$module] = parse_ini_file($file['Filepath'], true);
-					$GLOBALS['modules'][$module] = &$modules[$module];
-					
-					// set the path to the module
-					if(!isset($modules[$module]['path']))
-						$modules[$module]['path'] = dirname($file['Filepath']) . DIRECTORY_SEPARATOR . $module . '.php';
 					
 					include_once dirname($file['Filepath']) . DIRECTORY_SEPARATOR . $module . '.php';
 				}
+				elseif(substr($file['Filename'], -4) == '.php')
+				{
+					// be a little more cautious about the buffer
+					ob_start();
+					
+					include_once $file['Filepath'];
+					
+					if(function_exists('register_' . $module))
+						$modules[$module] = call_user_func_array('register_' . $module, array());
+						
+					ob_end_clean();
+				}
 				
 				// set the package if it is not set already
-				if(!isset($GLOBALS['modules'][$module]['package']))
+				if(!isset($modules[$module]['package']))
 				{
 					if($prefix != '')
-						$GLOBALS['modules'][$module]['package'] = substr($prefix, 0, -1);
+						$modules[$module]['package'] = substr($prefix, 0, -1);
 					else
-						$GLOBALS['modules'][$module]['package'] = 'other';
+						$modules[$module]['package'] = 'other';
 				}
+				
+				// set the path to the module
+				if(!isset($modules[$module]['path']))
+					$modules[$module]['path'] = dirname($file['Filepath']) . DIRECTORY_SEPARATOR . $module . '.php';
 				
 				register_trigger('session', $modules[$module], $module);
 				
@@ -177,6 +210,9 @@ function load_modules($path)
 				register_trigger('output', $modules[$module], $module);
 				
 				register_trigger('validate', $modules[$module], $module);
+				
+				// save in globals
+				$GLOBALS['modules'][$module] = &$modules[$module];
 			}
 		}
 	}
@@ -268,8 +304,8 @@ function setting_html_domain($settings)
  */
 function setting_html_root($settings)
 {
-	$settings['html_domain'] = setting_html_domain($settings);
-	$settings['local_root'] = setting_local_root($settings);
+	$settings['html_domain'] = setting('html_domain');
+	$settings['local_root'] = setting('local_root');
 	if(substr($_SERVER['DOCUMENT_ROOT'], -1) != '/' && substr($_SERVER['DOCUMENT_ROOT'], -1) != '\\') $_SERVER['DOCUMENT_ROOT'] .= DIRECTORY_SEPARATOR;
 	
 	if(isset($settings['html_root']) && @parse_url($settings['html_domain'] . $settings['html_root']) !== false)
@@ -476,7 +512,7 @@ function dependency_pear_installed($settings)
  */
 function dependency_getid3_installed($settings)
 {
-	$settings['local_root'] = setting_local_root($settings);
+	$settings['local_root'] = setting('local_root');
 	return file_exists($settings['local_root'] . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.lib.php');
 }
 
@@ -517,15 +553,15 @@ function dependency_extjs_installed($settings)
  */
 function configure_index($settings, $request)
 {
-	$settings['system_type'] = setting_system_type($settings);
-	$settings['local_root'] = setting_local_root($settings);
-	$settings['html_root'] = setting_html_root($settings);
-	$settings['html_domain'] = setting_html_domain($settings);
-	$settings['html_name'] = setting_html_name($settings);
-	$settings['debug_mode'] = setting_debug_mode($settings);
-	$settings['recursive_get'] = setting_recursive_get($settings);
-	$settings['no_bots'] = setting_no_bots($settings);
-	$settings['buffer_size'] = setting_buffer_size($settings);
+	$settings['system_type'] = setting('system_type');
+	$settings['local_root'] = setting('local_root');
+	$settings['html_root'] = setting('html_root');
+	$settings['html_domain'] = setting('html_domain');
+	$settings['html_name'] = setting('html_name');
+	$settings['debug_mode'] = setting('debug_mode');
+	$settings['recursive_get'] = setting('recursive_get');
+	$settings['no_bots'] = setting('no_bots');
+	$settings['buffer_size'] = setting('buffer_size');
 	
 	$options = array();
 	
@@ -1029,7 +1065,7 @@ function validate_request()
 				basename($_REQUEST['module']) != 'index' &&
 				basename($_REQUEST['module']) != 'sitemap')
 			{
-				goto('module=sitemap');
+				goto('sitemap');
 			}
 			else
 			{
@@ -1124,49 +1160,20 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 	// if the link is a string, we need to convert it to an array for processing
 	if(is_string($request))
 	{
-		// if the question mark is detected, there must be some amount of path info
 		if(strpos($request, '?') !== false)
 		{
-			// split up the link into path info and query string
-			$request = explode('?', $request);
-			
-			// save the path info for later usage
-			$dirs = split('/', $request[0]);
-			
-			// set the request back to the query string for processing
-			$request = $request[1];
+			$fragment = substr($request, strpos($request, '?'));
+			$request = substr($request, 0, strpos($request, '?'));
 		}
 		
-		// split up the query string by amersands
-		$arr = explode('&', $request);
-		if(count($arr) == 1 && $arr[0] == '')
-			$arr = array();
-		$request = array();
-		
-		// loop through all the query string and generate our new request array
-		foreach($arr as $i => $value)
-		{
-			// split each part of the query string into name value pairs
-			$x = explode('=', $value);
-			
-			// set each part of the query string in our new request array
-			$request[$x[0]] = urldecode(isset($x[1])?$x[1]:'');
-		}
-		
-		// if the first item contains slashes it must be a part of the directory, fix this
-		if(count($request) > 0)
-		{
-			// make sure the keys don't contain slashes, that would be weird
-			$keys = array_keys($request);
-			if(isset($keys[0]) && strpos($keys[0], '/') !== false)
-			{
-				// set the path
-				$dirs = split('/', $keys[0]);
-				
-				// remove the weird key
-				unset($request[$keys[0]]);
-			}
-		}
+		$path = get_menu_entry($request);
+		if(!isset($path))
+			raise_error('Malformed URL!', E_DEBUG);
+	
+		if(function_exists('rewrite_' . $GLOBALS['menus'][$path]['module']))
+			$request = invoke_module('rewrite', $GLOBALS['menus'][$path]['module'], $request);
+		else
+			$request = invoke_module('rewrite', 'core', $request);
 	}
 	else
 	{
@@ -1177,62 +1184,22 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 		}
 	}
 	
-	// add the path info to the request array
-	if(isset($dirs))
-	{
-		// add the path info in this order so that the path can be used 
-		//   and any modifications to the path variables can be specified in the query string
-		$request = array_merge($request, parse_path_info($dirs));
-	}
+	// TODO process fragment
+	
 	
 	// if the caller functionality would like an array returned for further processing such as in theme() return now
 	if($return_array)
 		return $request;
 	
 	// rebuild link
-	// always add the module to the path
-	if(!isset($request['module']))
-		$request['module'] = validate(array('module' => isset($GLOBALS['module'])?$GLOBALS['module']:''), 'module');
-		
-	// if this option is available, add the path into back on to the front of the query string,
-	//   maybe it will be only path information after this step
-	//   the request is pass by reference so the request can be altered when variables are added to the path info
-
-	// call a modules rewrite function for further rewriting
-	$result = invoke_module('url', $request['module'], $request);
-	if(count($result) == 2)
-	{
-		$request = $result[0];
-		$path_info = $result[1];
-	}
-	
-	if(!isset($path_info))
-		$path_info = create_path_info($request);
+	$result = preg_match_all('/\/(%([a-z][a-z0-9_]*))/i', $path, $matches);
+	$path_info = str_replace($matches[1], array_intersect_key($request, array_flip($matches[2])), $path);
+	$request = array_diff_key($request, array_flip($matches[2]));
 		
 	// generate a link, with optional domain the html root and path info prepended
 	$link = (($include_domain)?setting('html_domain'):'') . 
 		setting('html_root') . 
-		$path_info;
-		
-	// add other variables to the query string
-	if(count($request) > 0)
-	{
-		$link .= '?';
-		
-		// loop through each variable still existing in the reuqest and add it to the query info on the link
-		foreach($request as $key => $value)
-		{
-			if(is_bool($value))
-			{
-				if($value)
-					$link .= (($link[strlen($link)-1] != '?')?'&':'') . $key . '=true';
-				else
-					$link .= (($link[strlen($link)-1] != '?')?'&':'') . $key . '=false';
-			}
-			else
-				$link .= (($link[strlen($link)-1] != '?')?'&':'') . $key . '=' . urlencode((string)$value);
-		}
-	}
+		$path_info . (isset($fragment)?$fragment:'');
 	
 	// optionally return a non html special chars converted URL
 	if($not_special)
@@ -1279,15 +1246,11 @@ function goto($request)
 function core_variables($request)
 {
 	// set a couple more that are used a lot
-	$request['module'] = validate($request, 'module');
 	$request['cat'] = validate($request, 'cat');
 	$request['group_by'] = validate($request, 'group_by');
 	$request['group_index'] = validate($request, 'group_index');
 	$request['start'] = validate($request, 'start');
 	$request['limit'] = validate($request, 'limit');
-
-	// the entire site depends on this
-	register_output_vars('module', $request['module']);
 	
 	// always make the module list available to templates
 	register_output_vars('modules', $GLOBALS['modules']);
@@ -1342,7 +1305,9 @@ function set_output_vars()
 		'tables',
 		'ext_to_mime',
 		'lists',
-		'settings'
+		'settings',
+		'triggers',
+		'menus',
 	);
 
 	// unset all other globals to prevent templates from using them
@@ -1407,10 +1372,9 @@ function validate($request, $key)
 	elseif(substr($key, 0, 8) == 'setting_')
 		return $request[$key];
 	
-	$result = trigger('validate', NULL, array_intersect_key(array($key => array()), $request));
-	
-	if(isset($result[$key]))
-		return $result[$key];
+	$result = trigger_key('validate', NULL, $request, $key);
+	if($result)
+		return $result;
 	
 	// if a validator isn't found in the configuration
 	raise_error('Validate \'' . $key . '\' not found!', E_DEBUG);
@@ -1422,6 +1386,7 @@ function validate($request, $key)
  * Implementation of #setup_validate()
  * @return The index module by default, also checks for compatibility based on other request information
  */
+/*
 function validate_module($request)
 {
 	// remove .php extension
@@ -1451,6 +1416,7 @@ function validate_module($request)
 			return 'core';
 	}
 }
+*/
 
 /**
  * Generic validator
@@ -1820,151 +1786,28 @@ function validate_extra($request)
  */
 
 /**
- * Reverse the affects of #parse_path_info() <br />
- * Use specified request variables to construct a path, that can then be understood and parsed by parse_path_info()
- * @param request the request array from the url() function
- * @return a string containing just the path info from the input request
- */
-function create_path_info(&$request)
-{
-	// use the same algorithm to rebuild the path info
-	$path = str_replace('_', '/', $request['module']) . '/';
-	
-	// do not use pretty paths before the site is configured
-	if(!setting('modrewrite'))
-		return '';
-	
-	// make sure the module doesn't actually exists on the web server
-	if(file_exists(setting_local_root() . $path))
-	{
-		// a path without all the underscores replaced would be better then no path at all
-		$path = $request['module'] . '/';
-
-		if(file_exists(setting_local_root() . $path))
-			return '';
-	}
-	
-	// construct query out of remaining variables
-	if(isset($request['cat']) && isset($request['id']) &&
-		isset($request[$request['module']]) &&
-		isset($request['extra']) && isset($request['filename']))
-	{
-		$path .= $request['cat'] . '/' . $request['id'] . '/' . 
-				$request[$request['module']] . '/' . $request['extra'] . '/' . 
-				$request['filename'];
-		unset($request['cat']);
-		unset($request['id']);
-		unset($request[$request['module']]);
-		unset($request['extra']);
-		unset($request['filename']);
-	}
-	elseif(isset($request['cat']) && isset($request['id']) &&
-			isset($request[$request['module']]) &&
-			isset($request['filename']))
-	{
-		$path .= $request['cat'] . '/' . $request['id'] . '/' . 
-				$request[$request['module']] . '/' . $request['filename'];
-		unset($request['cat']);
-		unset($request['id']);
-		unset($request[$request['module']]);
-		unset($request['filename']);
-	}
-	elseif(isset($request['cat']) && isset($request['id']) &&
-			isset($request['filename']))
-	{
-		$path .= $request['cat'] . '/' . $request['id'] . '/' . $request['filename'];
-		unset($request['cat']);
-		unset($request['id']);
-		unset($request['filename']);
-	}
-	elseif(isset($request['cat']) && isset($request['id']))
-	{
-		$path .= $request['cat'] . '/' . $request['id']; 
-		unset($request['cat']);
-		unset($request['id']);
-	}
-	elseif(isset($request['search']))
-	{
-		$path .= $request['search']; 
-		unset($request['search']);
-	}
-	unset($request['module']);
-	return $path;
-}
-
-/**
  * Parse a request from the path
  * @param path_info The part of a request that relects pretty dirs and contains slashes
  * @return all the request information retrieved from the path in an associative array
  */
-function parse_path_info($path_info)
+function rewrite_core($path_info)
 {
 	$request = array();
 
-	if(!is_array($path_info))
-		$dirs = split('/', $path_info);
-	else
-		$dirs = $path_info;
-	
-	// remove html_root
-	if(array_intersect_key($dirs, array_keys(split('/', setting('html_root')))) == split('/', setting('html_root')))
-		$dirs = array_slice($dirs, count(split('/', setting('html_root'))));
-	
-	// remove empty dirs
-	foreach($dirs as $i => $value)
+	$menu = get_menu_entry($path_info);
+
+	$dirs = split('/', $path_info);
+
+	// assign to variables based on menu entry
+	$vars = split('/', $menu);
+	foreach($vars as $i => $var)
 	{
-		if($value == '')
-			unset($dirs[$i]);
-	}
-	$dirs = array_values($dirs);
-	if(count($dirs) > 0)
-	{
-		// get module from path info
-		//   match the module until it doesn't make any more, then apply the rules below
-		// remove default module directory just like when the modules are loaded and set up
-		if($dirs[0] == 'modules')
-			unset($dirs[0]);
-		$module = '';
-		foreach($dirs as $i => $dir)
+		if(substr($var, 0, 1) == '%' && isset($dirs[$i]))
 		{
-			$module .= (($module != '')?'_':'') . $dir;
-			if(isset($GLOBALS['modules'][$module]))
-			{
-				$request['module'] = $module;
-				unset($dirs[$i]);
-			}
-			else
-				break;
+			$var = substr($var, 1);
+			$request[$var] = ($i == count($vars)-1)?implode('/', $dirs):$dirs[$i];
 		}
-		$dirs = array_values($dirs);
-		switch(count($dirs))
-		{
-			case 1:
-				$request['search'] = '"' . $dirs[0] . '"';
-				break;
-			case 2:
-				$request['cat'] = $dirs[0];
-				$request['id'] = $dirs[1];
-				break;
-			case 3:
-				$request['cat'] = $dirs[0];
-				$request['id'] = $dirs[1];
-				$request['filename'] = $dirs[2];
-				break;
-			case 4:
-				$request['cat'] = $dirs[0];
-				$request['id'] = $dirs[1];
-				$request[$request['module']] = $dirs[2];
-				$request['filename'] = $dirs[3];
-				break;
-			case 5:
-				$request['cat'] = $dirs[0];
-				$request['id'] = $dirs[1];
-				$request[$request['module']] = $dirs[2];
-				$request['extra'] = $dirs[3];
-				$request['filename'] = $dirs[4];
-				break;
-		}
+		unset($dirs[$i]);
 	}
 
 	return $request;
@@ -1993,28 +1836,25 @@ function rewrite($old_var, $new_var, &$request, &$get, &$post)
  */
 function rewrite_vars(&$request, &$get, &$post)
 {
-	// always add a module
-	$request['module'] = validate($request, 'module');
-	
-	if(isset($request['path_info']))
+	// get path info
+	$path_info = validate($request, 'path_info');
+
+	if($path = get_menu_entry($path_info))
 	{
-		// get path info
-		$path_request = parse_path_info($request['path_info']);
-		
-		// merge path info with get as well as request
-		$get = array_merge($path_request, $get);
-		
-		// merge path info, but request variables take precedence
-		$request = array_merge($request, $path_request);
+		// call a modules rewrite function for further rewriting
+		if(function_exists('rewrite_' . $GLOBALS['menus'][$path]['module']))
+			$result = invoke_module('rewrite', $GLOBALS['menus'][$path]['module'], $request['path_info']);
+		else
+			$result = invoke_module('rewrite', 'core', $request['path_info']);
+			
+		// merge result, but current request takes precedence
+		if(isset($result))
+			$request = array_merge($result, $request);
 	}
+	$request['path_info'] = $path_info;
 	
 	// just about everything uses the cat variable so always validate and add this
 	$request['cat'] = validate($request, 'cat');
-
-	// call a modules rewrite function for further rewriting
-	$result = invoke_module('rewrite', $request['module'], $request);
-	if(isset($result))
-		$request = $result;
 }
 
 /**
@@ -2075,14 +1915,6 @@ function alter_query_core($request, &$props)
 /**
  * @}
  */
-
-/**
- * Implementation of status
- * @ingroup status
- */
-function status_index()
-{
-}
 
 /**
  * @defgroup output Output Functions
@@ -2258,9 +2090,9 @@ foreach($GLOBALS['modules'] as $name => $module)
 		continue;
 										
 	if(!function_exists('output_' . $name))
-		$link = 'module=admin_modules&configure_module=' . $name;
+		$link = 'admin/modules/' . $name;
 	else
-		$link = 'module=' . $name;
+		$link = $name;
 									
 	?><li><a href="<?php print url($link); ?>"><?php echo $module['name']; ?></a></li><?php
 }

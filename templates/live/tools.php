@@ -25,14 +25,14 @@ function theme_live_tools()
 	{
 		?>
 		<div class="nothover" onMouseOver="this.className='hover';" onMouseOut="this.className='nothover';">
-			<a href="<?php print url('module=admin_tools_' . $name); ?>" style="font-size:14px;"><?php print $tool['name']; ?></a><br />
+			<a href="<?php print url('admin/tools/' . $name); ?>" style="font-size:14px;"><?php print $tool['name']; ?></a><br />
 			Description: <?php print $tool['description']; ?><br /><br />
 			<?php
 			if(isset($tool['subtools']))
 			{
 				foreach($tool['subtools'] as $i => $subtool)
 				{
-					?><a href="<?php print url('module=admin_tools_' . $name . '&subtool=' . $i); ?>" style="margin:5px;"><?php print $subtool['name']; ?></a><?php
+					?><a href="<?php print url('admin/tools/' . $name . '?subtool=' . $i); ?>" style="margin:5px;"><?php print $subtool['name']; ?></a><?php
 				}
 				?><br /><br /><?php
 			}
@@ -70,7 +70,7 @@ function theme_live_tools_subtools()
 			
 		?>
 		<div class="nothover" onMouseOver="this.className='hover';" onMouseOut="this.className='nothover';">
-			<a href="<?php print url('module=' . $GLOBALS['module'] . '&subtool=' . $i); ?>" style="font-size:14px;"><?php print $subtool['name']; ?></a><br /><br />
+			<a href="<?php print url($GLOBALS['module'] . '?subtool=' . $i); ?>" style="font-size:14px;"><?php print $subtool['name']; ?></a><br /><br />
 			Description: <?php print $subtool['description']; ?>
 			<br /><br />
 		</div>

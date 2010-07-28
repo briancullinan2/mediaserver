@@ -6,7 +6,6 @@
  */
 function register_session()
 {
-	die('this needs to be fixed');
 	return array(
 		'name' => lang('session title', 'Session Storage'),
 		'description' => lang('session description', 'Control all session functionality and provide a database.'),
@@ -24,14 +23,16 @@ function register_session()
  */
 function setup_session($request = array())
 {
-	/** always begin the session */
-	session_start();
-
-	// restore errors if there are errors
-	$GLOBALS['user_errors'] = array_merge($GLOBALS['user_errors'], session_get('errors', 'user'));
-	$GLOBALS['warn_errors'] = array_merge($GLOBALS['warn_errors'], session_get('errors', 'warn'));
-	$GLOBALS['note_errors'] = array_merge($GLOBALS['note_errors'], session_get('errors', 'note'));
-
+	if(!isset($_SESSION))
+	{
+		/** always begin the session */
+		session_start();
+	
+		// restore errors if there are errors
+		$GLOBALS['user_errors'] = array_merge($GLOBALS['user_errors'], session_get('errors', 'user'));
+		$GLOBALS['warn_errors'] = array_merge($GLOBALS['warn_errors'], session_get('errors', 'warn'));
+		$GLOBALS['note_errors'] = array_merge($GLOBALS['note_errors'], session_get('errors', 'note'));
+	}
 }
 
 function session_set_conditional($module, $result)

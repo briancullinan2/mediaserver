@@ -219,8 +219,8 @@ function session_admin_tools_nzbservices($request)
  */
 function configure_admin_tools_nzbservices($settings)
 {
-	$settings['nzbservices'] = setting_nzbservices($settings);
-	$settings['nzbpath'] = setting_nzbpath($settings);
+	$settings['nzbservices'] = setting('nzbservices');
+	$settings['nzbpath'] = setting('nzbpath');
 
 	$service_count = count($settings['nzbservices']);
 	
@@ -309,7 +309,7 @@ function configure_admin_tools_nzbservices($settings)
 				'name' => $config['name'] . ' Password',
 			);
 			$options['nzbservices']['options'][] = array(
-		value' => '<br />'
+				'value' => '<br />'
 			);
 		}
 		$options['nzbservices']['options']['setting_nzbservice_image_' . $i] = array(

@@ -213,7 +213,7 @@ function setting_balance_rule($settings, $index)
 	// value can be anything
 	
 	// must be a valid server
-	$settings['balance_servers'] = setting_balance_servers($settings);
+	$settings['balance_servers'] = setting('balance_servers');
 	if(!isset($settings['balance_servers'][$rule['server']]))
 		return;
 		
@@ -266,7 +266,7 @@ function setting_balance_rules($settings)
  */
 function status_admin_balancer($settings)
 {
-	$settings['balance_servers'] = setting_balance_servers($settings);
+	$settings['balance_servers'] = setting('balance_servers');
 	
 	// check servers are up and running, get configurations
 	$status = array();
@@ -281,7 +281,7 @@ function status_admin_balancer($settings)
 	foreach($settings['balance_servers'] as $i => $server)
 	{
 		// use snoopy to check if sites are running and download config,
-		$url = $server['protocol'] . '://' . $server['address'] . '?module=admin&get_settings=true&users=login&username=' . urlencode($server['username']) . '&password=' . urlencode(base64_encode($server['password']));
+		$url = $server['protocol'] . '://' . $server['address'] . 'admin?get_settings=true&users=login&username=' . urlencode($server['username']) . '&password=' . urlencode(base64_encode($server['password']));
 		
 		// make this quick, only a second or 2 timeout
 		$result = fetch($url, array(), array('timeout' => 2), array());
@@ -438,8 +438,8 @@ function balancer_get_server($request, $server)
  */
 function configure_admin_balancer($settings, $request)
 {
-	$settings['balance_servers'] = setting_balance_servers($settings);
-	$settings['balance_rules'] = setting_balance_rules($settings);
+	$settings['balance_servers'] = setting('balance_servers');
+	$settings['balance_rules'] = setting('balance_rules');
 	
 	// store count for unsetting
 	$server_count = count($settings['balance_servers']);

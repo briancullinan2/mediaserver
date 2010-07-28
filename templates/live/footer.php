@@ -15,20 +15,9 @@ function theme_live_footer()
 						<table id="footerCtr">
 							<tr>
 								<td>
-									Modules:<br />
-									<ul>
 									<?php
-									foreach($GLOBALS['modules'] as $name => $module)
-									{
-										if(!function_exists('output_' . $name) && function_exists('configure_' . $name))
-											$link = 'module=admin_modules&configure_module=' . $name;
-										else
-											$link = 'module=' . $name;
-																		
-										?><li><a href="<?php print url($link); ?>"><?php echo $module['name']; ?></a></li><?php
-									}
+										theme('menu_block');
 									?>
-									</ul>
 								</td>
 							</tr>
 							<tr>
@@ -42,7 +31,7 @@ function theme_live_footer()
 											continue;
 											
 										$name = $config['name'];
-										?><li><a href="<?php print url('module=select&cat=' . $handler); ?>"><?php echo $name; ?></a></li><?php
+										?><li><a href="<?php print url('select/' . $handler); ?>"><?php echo $name; ?></a></li><?php
 									}
 									?>
 									</ul>

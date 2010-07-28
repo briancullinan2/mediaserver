@@ -15,27 +15,8 @@ if(isset($argv) && isset($argv[1]) && $argv[1] == '-conf')
 
 bootstrap('full');
 
-// check if module exists
-if(isset($GLOBALS['modules'][$_REQUEST['module']]))
-{
-	// check if the current user has access to the module
-
-	// make sure user is logged in
-	$user = session('users');
-	if(setting_installed() && isset($GLOBALS['modules'][$_REQUEST['module']]['privilage']) && $user['Privilage'] < $GLOBALS['modules'][$_REQUEST['module']]['privilage'])
-	{
-		// redirect to login page
-		goto(array(
-			'module' => 'users',
-			'users' => 'login',
-			'return' => urlencode(url($_GET, true)),
-			'required_priv' => $GLOBALS['modules'][$_REQUEST['module']]['privilage']
-		));
-	}
-
-	// output the module
-	output($_REQUEST);
-}
+// output the module
+invoke_menu($_REQUEST);
 
 // save the errors in the session until they can be printed out
 session('errors', array(

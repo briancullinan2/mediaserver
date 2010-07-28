@@ -66,7 +66,7 @@ function setting_seeder_args($settings)
  */
 function dependency_seeder($settings)
 {
-	$settings['seeder_path'] = setting_seeder_path($settings);
+	$settings['seeder_path'] = setting('seeder_path');
 	return file_exists($settings['seeder_path']);
 }
 
@@ -155,7 +155,7 @@ function status_bt($settings)
  */
 function configure_bt($settings)
 {
-	$settings['seeder_path'] = setting_seeder_path($settings);
+	$settings['seeder_path'] = setting('seeder_path');
 	
 	$options = array();
 	
@@ -350,7 +350,7 @@ function output_bt($request)
 			}
 			$torrent['info']['pieces'] = $output;
 			
-			$torrent['announce'] = url('bt=announce&module=bt', true, true);
+			$torrent['announce'] = url('bt/announce', true, true);
 			$torrent['creation date'] = time();
 			$torrent['comment'] = setting('html_name');
 			$torrent['created by'] = setting('html_name');

@@ -131,7 +131,7 @@ function configure_admin_handlers($settings, $request)
 	foreach($GLOBALS['handlers'] as $handler => $config)
 	{
 		// get the enabled setting
-		$settings[$handler . '_enable'] = setting_module_enable($settings, $handler);
+		$settings[$handler . '_enable'] = setting_modules_enable($settings, $handler);
 		
 		// set up config for this module
 		$options[$handler . '_enable'] = array(
@@ -180,7 +180,7 @@ function configure_admin_handlers($settings, $request)
 		{
 			$options[$handler . '_enable']['options'][] = array(
 				'type' => 'button',
-				'action' => 'window.location.href=\'' . url('module=admin_modules&configure_module=' . $handler) . '\'',
+				'action' => 'window.location.href=\'' . url('admin/modules/' . $handler) . '\'',
 				'value' => 'Configure',
 			);
 		}

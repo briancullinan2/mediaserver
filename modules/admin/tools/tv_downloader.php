@@ -169,7 +169,7 @@ function validate_show_status($request)
  */
 function configure_admin_tools_tv_downloader($settings)
 {
-	$settings['myepisodes'] = setting_myepisodes($settings);
+	$settings['myepisodes'] = setting('myepisodes');
 	
 	$options = array();
 	
@@ -203,7 +203,7 @@ function configure_admin_tools_tv_downloader($settings)
 	$options = array_merge($options, configure_admin_tools_nzbservices($settings));
 	
 	// alter the nzbservices form to use television search queries instead
-	$settings['nzbservices'] = setting_nzbservices($settings);
+	$settings['nzbservices'] = setting('nzbservices');
 	foreach($settings['nzbservices'] as $i => $config)
 	{
 		$options['nzbservices']['options']['setting_nzb_television_search_' . $i] = array(
@@ -216,7 +216,7 @@ function configure_admin_tools_tv_downloader($settings)
 	$options = array_merge($options, configure_admin_tools_torservices($settings));
 	
 	// alter the torservices form to use television search queries instead
-	$settings['torservices'] = setting_torservices($settings);
+	$settings['torservices'] = setting('torservices');
 	foreach($settings['torservices'] as $i => $config)
 	{
 		$options['torservices']['options']['setting_tor_television_search_' . $i] = array(
@@ -245,7 +245,7 @@ function output_admin_tools_tv_downloader($request)
 	}
 	
 	// output configuration link
-	raise_error('You may need to <a href="' . url('module=admin_modules&configure_module=admin_tools_tv_downloader') . '">configure</a> this tool in order to use it properly.', E_WARN);
+	raise_error('You may need to <a href="' . url('admin/modules/admin_tools_tv_downloader') . '">configure</a> this tool in order to use it properly.', E_WARN);
 
 	// perform television downloading
 	if(dependency('curl_installed') == false)
@@ -281,7 +281,7 @@ function output_admin_tools_tv_downloader($request)
 			'text' => array(
 				'loading' => 'Loading...'
 			),
-			'singular' => url('module=admin_tools_tv_downloader&info_singular=true&info_singular_step_television=login', true),
+			'singular' => url('admin/tools/tv_downloader?info_singular=true&info_singular_step_television=login', true),
 		);
 	}
 	
@@ -346,7 +346,7 @@ function output_admin_tools_television_singular($request)
 				'text' => array(
 					'loading' => 'Loading...'
 				),
-				'singular' => url('module=admin_tools_tv_downloader&info_singular=true&info_singular_step_television=shows', true),
+				'singular' => url('admin/tools/tv_downloader?info_singular=true&info_singular_step_television=shows', true),
 			);
 		}
 	}
@@ -392,7 +392,7 @@ function output_admin_tools_television_singular($request)
 				'text' => array(
 					'loading' => 'Searching for NZB...'
 				),
-				'singular' => url('module=admin_tools_tv_downloader&info_singular=true&info_singular_step_television=download' . 
+				'singular' => url('admin/tools/tv_downloader?info_singular=true&info_singular_step_television=download' . 
 					'&episode=' . urlencode($shows['new_episodes']['episodes'][$i]) . 
 					'&showname=' . urlencode($show) . 
 					'&season=' . urlencode($shows['new_episodes']['seasons'][$i]) . 

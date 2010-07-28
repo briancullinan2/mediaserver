@@ -19,7 +19,7 @@ function theme_live_select_block()
 				<tr>
 					<td>
 						<div class="thumb file_ext_FOLDER file_type_">
-							<img src="<?php print url('module=template&tfile=images/s.gif&template=' . setting('local_template')); ?>" alt="FOLDER" height="48" width="48">
+							<img src="<?php print url('template/live/images/s.gif'); ?>" alt="FOLDER" height="48" width="48">
 						</div>
 					</td>
 				</tr>
@@ -38,7 +38,7 @@ function theme_live_select_block()
 				<tr>
 					<td>
 						<div class="thumbsmall file_ext_FOLDER file_type_">
-							<img src="<?php print url('module=template&tfile=images/s.gif&template=' . setting('local_template')); ?>" alt="FOLDER" height="48" width="48">
+							<img src="<?php print url('template/live/images/s.gif'); ?>" alt="FOLDER" height="48" width="48">
 						</div>
 					</td>
 				</tr>
@@ -83,7 +83,7 @@ function theme_live_select_block()
 					<tr>
 						<td>
 							<div class="thumbsmall file_ext_<?php print $file['Filetype']; ?> file_type_<?php print str_replace('/', ' file_type_', $file['Filemime']); ?>">
-								<img src="<?php print url('module=template&tfile=images/s.gif&template=' . setting('local_template')); ?>" alt="<?php print $file['Filetype']; ?>" height="16" width="16">
+								<img src="<?php print url('template/live/images/s.gif'); ?>" alt="<?php print $file['Filetype']; ?>" height="16" width="16">
 							</div>
 						</td>
 					</tr>
@@ -127,7 +127,12 @@ function theme_live_files()
 				if(substr($file['Filepath'], -1) != '/') $file['Filepath'] .= '/';
 				$new_cat = $cat;
 			}
-			$link = isset($new_cat)?url('module=select&cat=' . $new_cat . '&dir=' . urlencode($file['Filepath'])):url('module=file&cat=' . $cat . '&id=' . $file['id'] . '&filename=' . $file['Filename']);
+			if(isset($new_cat))
+			{
+				$link = url('select?cat=' . $new_cat . '&dir=' . urlencode($file['Filepath']));
+			}
+			else
+				$link = url('file/' . $cat . '/' . $file['id'] . '/' . $file['Filename']);
 			unset($new_cat);
 			?>
 			<div class="file <?php print $file['Filetype']; ?>" onmousedown="deselectAll(event);fileSelect(this, true, event);return false;" oncontextmenu="showMenu(this);return false;" id="<?php print $file['id']; ?>"><div class="notselected"></div>
@@ -138,11 +143,11 @@ function theme_live_files()
 								<?php
 								if(handles($file['Filepath'], 'image'))
 								{
-									?><img src="<?php print url('module=template&tfile=images/s.gif&template=' . setting('local_template')); ?>" alt="<?php print $file['Filetype']; ?>" style="background-image:url(<?php print url('module=convert&convert=png&cheight=56&cwidth=56&id=' . $file['id']); ?>);" height="48" width="48"><?php
+									?><img src="<?php print url('template/live/images/s.gif'); ?>" alt="<?php print $file['Filetype']; ?>" style="background-image:url(<?php print url('convert/png?cheight=56&cwidth=56&id=' . $file['id']); ?>);" height="48" width="48"><?php
 								}
 								else
 								{
-									?><img src="<?php print url('module=template&tfile=images/s.gif&template=' . setting('local_template')); ?>" alt="<?php print $file['Filetype']; ?>" height="48" width="48"><?php
+									?><img src="<?php print url('template/live/images/s.gif'); ?>" alt="<?php print $file['Filetype']; ?>" height="48" width="48"><?php
 								}
 								?>
 							</div>
@@ -245,7 +250,7 @@ function theme_live_info()
 						<tr>
 							<td>
 								<div class="thumb file_ext_<?php print $file['Filetype']; ?> file_type_<?php print isset($file['Filemime'])?str_replace('/', ' file_type_', $file['Filemime']):''; ?>">
-									<img src="<?php print url('module=template&tfile=images/s.gif&template=' . setting('local_template')); ?>" height="48" width="48">
+									<img src="<?php print url('template/live/images/s.gif'); ?>" height="48" width="48">
 								</div>
 							</td>
 							<td class="infoCell">

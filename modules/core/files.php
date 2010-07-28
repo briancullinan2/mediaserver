@@ -427,7 +427,7 @@ function _get_local_files($request, &$count, $handler)
 			$file = str_replace('\\', '/', @pack('H*', $id));
 			if(is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)))
 			{
-				if(call_user_func($handler . '::handles', $file))
+				if(handles($file, $handler))
 				{
 					$info = call_user_func($handler . '::getInfo', $file);
 					$info['id'] = bin2hex($request['file']);
@@ -677,8 +677,8 @@ function remove($file, $handler = NULL)
 	if( $handler == NULL )
 		$handler = 'files';
 	
-	if($handler != 'files' && function_exists('remove_' . $handler))
-		return call_user_func_array('remove_' . $handler, array($file));
+	if($handler != 'files')
+		module_invoke('remove', $handler, $file);
 	
 	$file = str_replace('\\', '/', $file);
 	
@@ -713,8 +713,7 @@ function remove($file, $handler = NULL)
 function cleanup($handler = 'files')
 {
 	// if there is a cleanup_handler function use that instead
-	if(function_exists('cleanup_' . $handler))
-		call_user_func_array('cleanup_' . $handler, array());
+	module_invoke('cleanup', $handler);
 
 	/*
 	// first clear all the items that are no longer in the watch list

@@ -38,6 +38,38 @@ function disable_module($module)
 	}
 }
 
+function trigger_key($trigger, $callback, $input, $key)
+{
+	$args = func_get_args();
+	
+	if(isset($GLOBALS['triggers'][$trigger][$key]) && count($GLOBALS['triggers'][$trigger][$key]) > 0)
+	{
+		foreach($GLOBALS['triggers'][$trigger][$key] as $module => $function)
+		{
+			unset($result);
+			
+			if(is_callable($function))
+				$result = call_user_func_array($function, array($input, $key));
+			else
+				raise_error('Trigger \'' . $trigger . '\' functionality specified in \'' . $module . '\' but ' . $function . ' in not callable!', E_DEBUG);
+			
+			if(is_callable($callback))
+				call_user_func_array($callback, array($module, $result, $args));
+			elseif(isset($result))
+			{
+				$return = $result;
+				// also set it here so it can be passed to next validator
+				$input[$key] = $result;
+			}
+		}
+		
+		if(isset($return))
+			return $return;
+	}
+	
+	return;
+}
+
 function trigger($trigger, $callback = NULL, $input = array())
 {
 	$args = func_get_args();
@@ -47,6 +79,8 @@ function trigger($trigger, $callback = NULL, $input = array())
 		// call triggers set to always go off
 		foreach($GLOBALS['triggers'][$trigger][NULL] as $module => $function)
 		{
+			unset($result);
+			
 			// numeric indices on this level indicates always call
 			if(is_callable($function))
 			{
@@ -54,6 +88,8 @@ function trigger($trigger, $callback = NULL, $input = array())
 				
 				if(is_callable($callback))
 					call_user_func_array($callback, array($module, $result, $args));
+				elseif(isset($result))
+					$input[$key] = $result;
 			}
 			else
 				raise_error('Trigger \'' . $trigger . '\' function specified by \'' . $module . '\' but it is not callable.', E_DEBUG);
@@ -63,21 +99,7 @@ function trigger($trigger, $callback = NULL, $input = array())
 	// call triggers based on input
 	foreach($input as $key => $value)
 	{
-		if(isset($GLOBALS['triggers'][$trigger][$key]))
-		{
-			foreach($GLOBALS['triggers'][$trigger][$key] as $module => $function)
-			{
-				if(is_callable($function))
-					$result = call_user_func_array($function, array($input, $key));
-				else
-					raise_error('Trigger \'' . $trigger . '\' functionality specified in \'' . $module . '\' but ' . $function . ' in not callable!', E_DEBUG);
-				
-				if(is_callable($callback))
-					call_user_func_array($callback, array($module, $result, $args));
-				else
-					$input[$key] = $result;
-			}
-		}
+		$input[$key] = trigger_key($trigger, $callback, $input, $key);
 	}
 	
 	return $input;
@@ -117,7 +139,7 @@ function invoke_module($method, $module)
 	unset($args[1]);
 	unset($args[0]);
 	
-	if((dependency($module) || in_array($module, get_required_modules())) && function_exists($method . '_' . $module))
+	if(function_exists($method . '_' . $module))
 	{
 		return call_user_func_array($method . '_' . $module, $args);
 	}
@@ -271,76 +293,6 @@ function include_path($filename)
 	return false;
 }
 
-
-/**
- * Output a module
- * @ingroup output
- */
-function output($request)
-{
-	$GLOBALS['module'] = $request['module'];
-
-	// last line of defense
-	$user = session('users');
-	if(isset($GLOBALS['modules'][$_REQUEST['module']]['privilage']) && 
-		$user['Privilage'] < $GLOBALS['modules'][$_REQUEST['module']]['privilage'])
-	{
-		raise_error('You do not have sufficient privilages to view this page!', E_USER);
-		
-		theme('errors');
-	}
-
-	// output module
-	// if the module is disabled, but has no template, call output function for handling disabledness
-	if(function_exists('output_' . $request['module']) && setting($request['module'] . '_enable') != false)
-		call_user_func_array('output_' . $request['module'], array($request));
-	// otherwise just show template for disabled modules
-	elseif(dependency($request['module']) == false && setting($request['module'] . '_enable') == false)
-	{
-		raise_error('The selected module has dependencies that are not met! <a href="' . 
-			url('module=admin_modules&configure_module=' . $request['module']) . '">Configure</a> this module.'
-		, E_DEBUG|E_USER);
-		
-		theme();
-		return;
-	}
-	
-	// just return because the output function was already called
-	if(isset($GLOBALS['modules'][$GLOBALS['module']]['template']) && 
-		$GLOBALS['modules'][$GLOBALS['module']]['template'] == false
-	)
-		return;
-	
-	// if it is set to a callable function to determine the template, then call that
-	elseif(isset($GLOBALS['modules'][$GLOBALS['module']]['template']) &&
-		is_callable($GLOBALS['modules'][$GLOBALS['module']]['template'])
-	)
-		call_user_func_array($GLOBALS['modules'][$GLOBALS['module']]['template'], array($request));
-		
-	// call the default template based on the module name
-	elseif(isset($GLOBALS['modules'][$GLOBALS['module']]['template']) &&
-		$GLOBALS['modules'][$GLOBALS['module']]['template'] == true
-	)
-		theme($GLOBALS['module']);
-		
-	// if it is set to a string then that must be the theme handler for it
-	elseif(isset($GLOBALS['modules'][$GLOBALS['module']]['template']) &&
-		is_string($GLOBALS['modules'][$GLOBALS['module']]['template'])
-	)
-		theme($GLOBALS['modules'][$GLOBALS['module']]['template']);
-		
-	// if there isn't anything else, call the theme function and maybe it will just display the default blank page
-	else
-		theme();
-	
-	// translate the language buffer
-	//$lang = validate($_REQUEST, 'language');
-	//if($lang != 'en')
-	//{
-		// find a place to store this
-	//	$_SESSION['translated'] = array_merge($_SESSION['translated'], array_combine(array_keys($GLOBALS['language_buffer']), translate($GLOBALS['language_buffer'], $lang)));
-	//}
-}
 
 /**
  * Get the url of the server

@@ -26,8 +26,8 @@ function setup_archive()
 function dependency_archiver($settings)
 {
 	// get the archiver it is set to
-	$settings['archiver'] = setting_archiver($settings);
-	$settings['local_root'] = setting_local_root($settings);
+	$settings['archiver'] = setting('archiver');
+	$settings['local_root'] = setting('local_root');
 
 	// if that archiver is not installed, return false
 	if($settings['archiver'] == 'pear' && dependency('pear_installed') != false && include_path('File/Archive.php') !== false)
@@ -47,7 +47,7 @@ function dependency_archiver($settings)
  */
 function configure_archive($settings, $request)
 {
-	$settings['archiver'] = setting_archiver($settings);
+	$settings['archiver'] = setting('archiver');
 	
 	$options = array();
 	
@@ -102,7 +102,7 @@ function configure_archive($settings, $request)
  */
 function setting_archiver($settings)
 {
-	$settings['local_root'] = setting_local_root($settings);
+	$settings['local_root'] = setting('local_root');
 	if(isset($settings['archiver']) && in_array($settings['archiver'], array('pear', 'getid3', 'php')))
 		return $settings['archiver'];
 	else

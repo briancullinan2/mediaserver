@@ -9,6 +9,15 @@
  
 define('PASSWORD_COMPLEXITY', '/\A(?=\S*?[A-Z])(?=\S*?[a-z])(?=\S*?[0-9])\S{6,}\z/');
 
+function menu_users()
+{
+	return array(
+		'users/%users' => array(
+			'callback' => 'output_users',
+		),
+	);
+}
+
 /**
  * Set up the current user and get their settings from the database
  * @ingroup setup
@@ -120,8 +129,8 @@ function status_users()
  */
 function configure_users($settings, $request)
 {
-	$settings['local_users'] = setting_local_users($settings);
-	$settings['username_validation'] = setting_username_validation($settings);
+	$settings['local_users'] = setting('local_users');
+	$settings['username_validation'] = setting('username_validation');
 	
 	$options = array();
 	
@@ -178,7 +187,7 @@ function configure_users($settings, $request)
  */
 function setting_local_users($settings)
 {
-	$settings['local_root'] = setting_local_root($settings);
+	$settings['local_root'] = setting('local_root');
 	
 	if(isset($settings['local_users']) && is_dir($settings['local_users']))
 		return $settings['local_users'];
@@ -768,7 +777,7 @@ function theme_login_block()
 	else
 		$return = $GLOBALS['templates']['vars']['get'];
 	?>	
-	<form action="<?php echo url('module=users&users=login&return=' . urlencode($return)); ?>" method="post">
+	<form action="<?php echo url('users/login?return=' . urlencode($return)); ?>" method="post">
 	
 		Username: <input type="text" name="username" value="<?php print isset($GLOBALS['templates']['vars']['username'])?$GLOBALS['templates']['vars']['username']:''; ?>" /><br />
 		Password: <input type="password" name="password" value="" /><br />
@@ -785,7 +794,7 @@ function theme_logout_block()
 	else
 		$return = $GLOBALS['templates']['vars']['get'];
 	?>
-	<form action="<?php echo url('module=users&users=logout&return=' . urlencode($return)); ?>" method="post">
+	<form action="<?php echo url('users/logout?return=' . urlencode($return)); ?>" method="post">
 		<input type="submit" value="Logout" />
 	</form>
 	<?php
@@ -796,7 +805,7 @@ function theme_register()
 	theme('header');
 	
 	?>	
-	<form action="<?php echo url('module=users&users=register'); ?>" method="post">
+	<form action="<?php echo url('users/register'); ?>" method="post">
 	
 		Username: <input type="text" name="username" value="<?php print isset($GLOBALS['templates']['vars']['username'])?$GLOBALS['templates']['vars']['username']:''; ?>" /><br />
 		E-mail: <input type="text" name="email" value="<?php print isset($GLOBALS['templates']['vars']['email'])?$GLOBALS['templates']['vars']['email']:''; ?>" /><br />

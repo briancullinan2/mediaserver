@@ -20,7 +20,7 @@ function print_info_objects($infos)
 		}
 		if(isset($infos['loading']))
 		{
-			?><img src="<?php print url('module=template&template=live&tfile=images/large-loading.gif'); ?>" alt="loading" /><?php print $infos['loading']; ?><?php
+			?><img src="<?php print url('template/template=live&tfile=images/large-loading.gif'); ?>" alt="loading" /><?php print $infos['loading']; ?><?php
 		}
 		if(isset($infos['image']))
 		{
@@ -118,46 +118,49 @@ function print_form_object($field_name, $config)
 			<?php
 		break;
 		case 'fieldset':
-			?><fieldset><?php
-			
-			if(isset($config['name']))
+			if(isset($config['name']) || count($config['options']) > 0)
 			{
-				?><legend><?php
-				if(isset($config['collapsible']) && $config['collapsible'] == true)
+				?><fieldset><?php
+				
+				if(isset($config['name']))
 				{
-					$id = htmlspecialchars($field_name, ENT_QUOTES);
-					$script = "if($('#fieldset_" . $id . "').css('display')=='none'){" . 
-						"$('#fieldset_" . $id . "').slideDown('fast');" . 
-					"}else{" .
-						"$('#fieldset_" . $id . "').slideUp('fast');" . 
-					"}return false;";
-					?><a href="#" onclick="<?php print $script; ?>"><?php print $config['name']; ?></a><?php
+					?><legend><?php
+					if(isset($config['collapsible']) && $config['collapsible'] == true)
+					{
+						$id = htmlspecialchars($field_name, ENT_QUOTES);
+						$script = "if($('#fieldset_" . $id . "').css('display')=='none'){" . 
+							"$('#fieldset_" . $id . "').slideDown('fast');" . 
+						"}else{" .
+							"$('#fieldset_" . $id . "').slideUp('fast');" . 
+						"}return false;";
+						?><a href="#" onclick="<?php print $script; ?>"><?php print $config['name']; ?></a><?php
+					}
+					else
+					{
+						print $config['name'];
+					}
+					?></legend><?php
 				}
-				else
+				
+				?><table id="fieldset_<?php print $id; ?>" <?php print (isset($config['collapsed']) && $config['collapsed'] == true)?'style="display:none;"':''; ?> border="0" cellpadding="0" cellspacing="0"><?php
+	
+				foreach($config['options'] as $name => $field)
 				{
-					print $config['name'];
+					?>
+					<tr class="form-row <?php print $field['status']; ?>" id="row_<?php print $name; ?>">
+						<td class="form-title"><?php print $field['name']; ?></td>
+						<td class="form-field">
+						<?php print_form_objects(array($name => array('name' => NULL, 'description' => NULL) + $field)); ?>
+						</td>
+						<td class="form-desc">
+						<?php print_info_objects($field['description']); ?>
+						</td>
+					</tr>
+					<?php
 				}
-				?></legend><?php
+				
+				?></table></fieldset><?php
 			}
-			
-			?><table id="fieldset_<?php print $id; ?>" <?php print (isset($config['collapsed']) && $config['collapsed'] == true)?'style="display:none;"':''; ?> border="0" cellpadding="0" cellspacing="0"><?php
-
-			foreach($config['options'] as $name => $field)
-			{
-				?>
-				<tr class="form-row <?php print $field['status']; ?>" id="row_<?php print $name; ?>">
-					<td class="form-title"><?php print $field['name']; ?></td>
-					<td class="form-field">
-					<?php print_form_objects(array($name => array('name' => NULL, 'description' => NULL) + $field)); ?>
-					</td>
-					<td class="form-desc">
-					<?php print_info_objects($field['description']); ?>
-					</td>
-				</tr>
-				<?php
-			}
-			
-			?></table></fieldset><?php
 		break;
 		case 'set':
 			// This provides an API for submitting multiple fields to an associative array

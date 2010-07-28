@@ -52,8 +52,8 @@ function setting_amazon_server($settings)
  */
 function configure_amazon($settings, $request)
 {
-	$settings['amazon_dev_key'] = setting_amazon_dev_key($settings);
-	$settings['amazon_server'] = setting_amazon_server($settings);
+	$settings['amazon_dev_key'] = setting('amazon_dev_key');
+	$settings['amazon_server'] = setting('amazon_server');
 	
 	$options = array();
 	

@@ -27,9 +27,9 @@ function theme_live_admin()
 			continue;
 			
 		if(!function_exists('output_admin_' . $name))
-			$link = 'module=admin_modules&configure_module=admin_' . $name;
+			$link = 'admin/modules/admin_' . $name;
 		else
-			$link = 'module=admin_' . $name;
+			$link = $name;
 			
 		?>
 		<div class="nothover" onMouseOver="this.className='hover';" onMouseOut="this.className='nothover';">
@@ -76,7 +76,7 @@ function theme_live_template()
 				?><a href="" class="disablebtn" onmouseover="this.parentNode.className='hover red';" onmouseout="this.parentNode.className='hover'">&nbsp;</a><?php
 			}
 			?>
-			<a href="<?php print url('template=' . $key); ?>" style="font-size:14px;"><?php print $template['name']; ?></a><?php print in_array($key, $required)?' (Required)':(in_array($key, $recommended)?' (Recommended)':''); ?><br /><br />
+			<a href="<?php print url('?template=' . $key); ?>" style="font-size:14px;"><?php print $template['name']; ?></a><?php print in_array($key, $required)?' (Required)':(in_array($key, $recommended)?' (Recommended)':''); ?><br /><br />
 			Description: <?php print $template['description']; ?><br />
 			Other Files:<br />
 			<?php

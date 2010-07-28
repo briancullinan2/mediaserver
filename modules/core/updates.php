@@ -1,5 +1,14 @@
 <?php
 
+function menu_updates()
+{
+	return array(
+		'admin/updates' => array(
+			'callback' => 'configure',
+		)
+	);
+}
+
 /**
  * Implementation of setup
  */
@@ -560,8 +569,8 @@ function configure_updates($settings, $request)
 	
 	// make select call for the file browser
 	$files = get_files(array(
-		'dir' => validate_dir($request),
-		'start' => validate_start($request),
+		'dir' => validate($request, 'dir'),
+		'start' => validate($request, 'start'),
 		'limit' => 32000,
 		'dirs_only' => true,
 	), &$total_count, true);

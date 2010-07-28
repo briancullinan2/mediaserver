@@ -302,8 +302,8 @@ function session_admin_tools_movie_downloader($request)
  */
 function configure_admin_tools_movie_downloader($settings)
 {
-	$settings['netflix_xml'] = setting_netflix_xml($settings);
-	$settings['movie_folders'] = setting_movie_folders($settings);
+	$settings['netflix_xml'] = setting('netflix_xml');
+	$settings['movie_folders'] = setting('movie_folders');
 	
 	$folder_count = count($settings['movie_folders']);
 	
@@ -331,7 +331,7 @@ function configure_admin_tools_movie_downloader($settings)
 	$options = array_merge($options, configure_admin_tools_nzbservices($settings));
 	
 	// alter the nzbservices form to use movie search queries instead
-	$settings['nzbservices'] = setting_nzbservices($settings);
+	$settings['nzbservices'] = setting('nzbservices');
 	foreach($settings['nzbservices'] as $i => $config)
 	{
 		$options['nzbservices']['options']['setting_nzb_movie_search_' . $i] = array(
@@ -344,7 +344,7 @@ function configure_admin_tools_movie_downloader($settings)
 	$options = array_merge($options, configure_admin_tools_torservices($settings));
 	
 	// alter the torservices form to use movie search queries instead
-	$settings['torservices'] = setting_torservices($settings);
+	$settings['torservices'] = setting('torservices');
 	foreach($settings['torservices'] as $i => $config)
 	{
 		$options['torservices']['options']['setting_tor_movie_search_' . $i] = array(
@@ -450,7 +450,7 @@ function output_admin_tools_movie_downloader($request)
 				'text' => array(
 					'loading' => 'Loading...'
 				),
-				'singular' => url('module=admin_tools_movie_downloader&info_singular=true&info_singular_step_movies=login2', true),
+				'singular' => url('admin/tools/movie_downloader?info_singular=true&info_singular_step_movies=login2', true),
 			);
 		}
 		elseif($request['info_singular_step_movies'] == 'login2')
@@ -470,7 +470,7 @@ function output_admin_tools_movie_downloader($request)
 				'text' => array(
 					'loading' => 'Loading...'
 				),
-				'singular' => url('module=admin_tools_movie_downloader&info_singular=true&info_singular_step_movies=netflix', true),
+				'singular' => url('admin/tools/movie_downloader?info_singular=true&info_singular_step_movies=netflix', true),
 			);
 		}
 		// do other stuff
@@ -490,7 +490,7 @@ function output_admin_tools_movie_downloader($request)
 		$infos = array();
 	
 		// output configuration link
-		raise_error('You may need to <a href="' . url('module=admin_modules&configure_module=admin_tools_movie_downloader') . '">configure</a> this tool in order to use it properly.', E_WARN);
+		raise_error('You may need to <a href="' . url('admin/modules/admin_tools_movie_downloader') . '">configure</a> this tool in order to use it properly.', E_WARN);
 	
 		// perform television downloading
 		if(dependency('curl_installed') == false)
@@ -526,7 +526,7 @@ function output_admin_tools_movie_downloader($request)
 				'text' => array(
 					'loading' => 'Loading...'
 				),
-				'singular' => url('module=admin_tools_movie_downloader&info_singular=true&info_singular_step_movies=login', true),
+				'singular' => url('admin/tools/movie_downloader?info_singular=true&info_singular_step_movies=login', true),
 			);
 		}
 		
@@ -674,7 +674,7 @@ function output_admin_tools_movies_singular_netflix($request)
 			'text' => array(
 				'loading' => 'Loading...'
 			),
-			'singular' => url('module=admin_tools_movies&info_singular=true&info_singular_step_movies=search&manual_search=' . urlencode($request['manual_search']), true),
+			'singular' => url('admin/tools/movie_downloader?info_singular=true&info_singular_step_movies=search&manual_search=' . urlencode($request['manual_search']), true),
 		);
 	}
 	// begin automatic search
@@ -703,7 +703,7 @@ function output_admin_tools_movies_singular_netflix($request)
 			'text' => array(
 				'loading' => 'Loading...'
 			),
-			'singular' => url('module=admin_tools_movie_downloader&info_singular=true&info_singular_step_movies=search&movie_index=0', true),
+			'singular' => url('admin/tools/movie_downloader?info_singular=true&info_singular_step_movies=search&movie_index=0', true),
 		);
 	}
 	
@@ -755,7 +755,7 @@ function output_admin_tools_movies_singular_search($request)
 					'loading' => 'Loading...',
 					' Last query: <a href="' . $last_query . '">' . $last_query . '</a>',
 				),
-				'singular' => url('module=admin_tools_movie_downloader&info_singular=true&info_singular_step_movies=search&movie_index=' . ($request['movie_index']+1), true),
+				'singular' => url('admin/tools/movie_downloader?info_singular=true&info_singular_step_movies=search&movie_index=' . ($request['movie_index']+1), true),
 			);
 		}
 	}
@@ -814,7 +814,7 @@ function output_admin_tools_movies_singular_search($request)
 				'text' => array(
 					'loading' => 'Loading...'
 				),
-				'singular' => url('module=admin_tools_movie_downloader&info_singular=true&info_singular_step_movies=search&manual_search_nzbindex=' . ($request['manual_search_nzbindex']+1) . '&manual_search=' . urlencode($request['manual_search']), true),
+				'singular' => url('admin/tools/movie_downloader?info_singular=true&info_singular_step_movies=search&manual_search_nzbindex=' . ($request['manual_search_nzbindex']+1) . '&manual_search=' . urlencode($request['manual_search']), true),
 			);
 		}
 		elseif(isset($request['manual_search_torindex']) && $request['manual_search_torindex']+1 < count(setting('torservices')))
@@ -831,7 +831,7 @@ function output_admin_tools_movies_singular_search($request)
 				'text' => array(
 					'loading' => 'Loading...'
 				),
-				'singular' => url('module=admin_tools_movie_downloader&info_singular=true&info_singular_step_movies=search&manual_search_torindex=' . ($request['manual_search_torindex']+1) . '&manual_search=' . urlencode($request['manual_search']), true),
+				'singular' => url('admin_tools_movie_downloader?info_singular=true&info_singular_step_movies=search&manual_search_torindex=' . ($request['manual_search_torindex']+1) . '&manual_search=' . urlencode($request['manual_search']), true),
 			);
 		}
 		elseif(isset($request['manual_search_nzbindex']))
@@ -848,7 +848,7 @@ function output_admin_tools_movies_singular_search($request)
 				'text' => array(
 					'loading' => 'Loading...'
 				),
-				'singular' => url('module=admin_tools_movie_downloader&info_singular=true&info_singular_step_movies=search&manual_search_torindex=0&manual_search=' . urlencode($request['manual_search']), true),
+				'singular' => url('admin/tools/movie_downloader?info_singular=true&info_singular_step_movies=search&manual_search_torindex=0&manual_search=' . urlencode($request['manual_search']), true),
 			);
 		}
 		else

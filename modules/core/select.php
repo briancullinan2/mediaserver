@@ -1,19 +1,36 @@
 <?php
 
 // handle selecting of files
+function menu_select()
+{
+	return array(
+		'select' => 'Files', // this is the default item
+		'select/dir' => array(
+			'callback' => 'output_select',
+		),
+	);
+}
+
 
 function rewrite_select($request)
 {
+	return rewrite_core($request);
 	if(isset($request['path_info']))
 	{
 		$dirs = split('/', $request['path_info']);
-		if(isset($dirs) && $dirs[1] == 'dir')
+		if(count($dirs) > 2)
 		{
-			unset($dirs[1]);
-			unset($dirs[0]);
-			
-			$request['dir'] = '/' . implode('/', $dirs);
-
+			if($dirs[1] == 'dir')
+			{
+				unset($dirs[1]);
+				unset($dirs[0]);
+				$request['dir'] = '/' . implode('/', $dirs);
+			}
+			/*elseif($dirs[1] == 'dirid')
+			{
+				$request['id'] = $dirs[2];
+			}*/
+	
 			return $request;
 		}
 	}
@@ -25,12 +42,21 @@ function url_select($request)
 	{
 		$tmp_request = array('module' => $request['module']);
 		$path = create_path_info($tmp_request);
-		$path .= 'dir' . $request['dir'];
+		/*if(strlen($request['dir']) > 100)
+		{
+			$path .= 'dirid/' . $request['id'];
+			unset($request['id']);
+		}
+		else*/
+			$path .= 'dir' . $request['dir'];
+			
+		// TODO: this may give an unwanted effect, since id overrides any other request variable
+		unset($request['id']);
 		unset($request['dir']);
 		unset($request['module']);
 		return array($request, $path);
 	}
-	return array($request, '');
+	return array($request);
 }
 
 /**
@@ -463,7 +489,7 @@ function theme_files()
 			
 			if($GLOBALS['templates']['vars']['cat'] != $cat || $GLOBALS['templates']['vars']['files'][$i]['Filetype'] == 'FOLDER') $new_cat = $cat;
 			
-			$link = isset($new_cat)?url('module=select&cat=' . $new_cat . '&dir=' . urlencode($GLOBALS['templates']['vars']['files'][$i]['Filepath'])):url('module=file&cat=' . $cat . '&id=' . $file['id'] . '&filename=' . urlencode($GLOBALS['templates']['vars']['files'][$i]['Filename']));
+			$link = isset($new_cat)?url('select?cat=' . $new_cat . '&dir=' . urlencode($GLOBALS['templates']['vars']['files'][$i]['Filepath'])):url('file/' . $cat . '/' . $file['id'] . '/' . urlencode($GLOBALS['templates']['vars']['files'][$i]['Filename']));
 			?>
 			<input type="checkbox" name="item[]" value="<?php print $file['id']; ?>" <?php print isset($GLOBALS['templates']['vars']['selected'])?(in_array($GLOBALS['templates']['vars']['files'][$i]['id'], $GLOBALS['templates']['vars']['selected'])?'checked="checked"':''):''; ?> />
 			<a href="<?php print $link; ?>"><?php print trim($file['Filepath'], '&nbsp;'); ?></a><?php print substr($file['Filepath'], strlen(trim($file['Filepath'], '&nbsp;'))); ?>
