@@ -192,7 +192,7 @@ function configure_admin_handlers($settings, $request)
 			if(is_string($GLOBALS['handlers'][$handler]['depends on']) && $GLOBALS['handlers'][$handler]['depends on'] == $handler &&
 				function_exists('dependency_' . $handler)
 			)
-				$depends_on = call_user_func_array('dependency_' . $handler, array($GLOBALS['settings']));
+				$depends_on = invoke_module('dependency', $handler, array($GLOBALS['settings']));
 			else
 				$depends_on = $GLOBALS['handlers'][$handler]['depends on'];
 				

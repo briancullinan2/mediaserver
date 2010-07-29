@@ -1,30 +1,28 @@
 <?php
 
-/**
- * Implementation of register
- * @ingroup register
- */
-function register_ampache()
+function menu_ampache()
 {
 	return array(
-		'name' => lang('ampache title', 'Ampache Compatibility'),
-		'description' => lang('ampache description', 'Compatibility support for the Ampache XMLRPC protocol.'),
-		'privilage' => 1,
-		'path' => __FILE__,
-		'depends on' => array('database'),
-		'template' => true,
+		'server/xml.server.php' => array(
+			'callback' => 'output_ampache',
+		),
 	);
 }
 
-function rewrite_ampache($request)
+function rewrite_ampache($path_info, $request)
 {
-	// a valid action is required for this module
-	$request['action'] = validate($request, 'action');
+	$return = invoke_module('rewrite', 'core', array($path_info));
 	
 	// rewrite some variables
-	if(isset($request['offset'])) rewrite('offset', 'start', $request, $get, $post);
-	if(isset($request['filter']) && $request['action'] != 'search_songs') rewrite('filter', 'id', $request, $get, $post);
-	elseif(isset($request['filter']))  rewrite('filter', 'search', $request, $get, $post);
+	if(isset($request['offset']))
+		$return['start'] = $request['offset'];
+	
+	if(isset($request['filter']) && $request['action'] != 'search_songs')
+		$return['id'] = $request['filter'];
+	elseif(isset($request['filter']))
+		$return['search'] = $request['filter'];
+	
+	return $return;
 }
 
 /**
@@ -452,15 +450,14 @@ function theme_ampache()
 	// if there is an error print that out and exit
 	if(count($GLOBALS['user_errors']) > 0)
 	{
-		foreach($GLOBALS['user_errors'] as $i => $error)
+		$error = $GLOBALS['user_errors'][0];
+		if(strpos($error, ':') !== false)
 		{
-			if(strpos($error, ':') !== false)
-			{
-				$err = split(':', $error);
-				?><error code="<?php echo $err[0]; ?>"><![CDATA[<?php echo $err[1]; ?>]]></error><?php
-			}
+			$err = split(':', $error);
+			?><error code="<?php echo $err[0]; ?>"><![CDATA[<?php echo $err[1]; ?>]]></error><?php
 		}
 		?></root><?php
+		$GLOBALS['user_errors'] = array();
 		return;
 	}
 	

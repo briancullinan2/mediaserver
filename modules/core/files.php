@@ -139,7 +139,7 @@ function handles($file, $handler)
 	// check if there is a handle function
 	elseif(function_exists('handles_' . $handler))
 	{
-		return call_user_func_array('handles_' . $handler, array($file));
+		return invoke_module('handles', $handler, array($file));
 	}
 	// no handler specified, show debug error
 	else
@@ -193,7 +193,7 @@ function add($file, $force = false, $handler = 'files')
 	
 	// if there is an add_handler function specified use that instead
 	if(function_exists('add_' . $handler))
-		call_user_func_array('add_' . $handler, array($file, $force));
+		invoke_module('add', $handler, array($file, $force));
 	
 	// return false if there is no info function
 	if(!function_exists('get_' . $handler . '_info'))
@@ -283,9 +283,9 @@ function add($file, $force = false, $handler = 'files')
 function output_handler($file, $handler)
 {
 	if(function_exists('output_' . $handler))
-		return call_user_func_array('output_' . $handler, array($file, $handler));
+		return invoke_module('output', $handler, array($file, $handler));
 	elseif(is_wrapper($handler) && function_exists('output_' . $GLOBALS['modules'][$handler]['wrapper']))
-		return call_user_func_array('output_' . $GLOBALS['modules'][$handler]['wrapper'], array($file, $handler));
+		return invoke_module('output', $GLOBALS['modules'][$handler]['wrapper'], array($file, $handler));
 	else
 		return output_files($file, $handler);
 }
@@ -373,7 +373,7 @@ function get_files($request, &$count, $handler_or_internal)
 	
 	// if the handler is set, call that instead
 	if($handler != 'files' && function_exists('get_' . $handler))
-		return call_user_func_array('get_' . $handler, array($request, $count));
+		return invoke_movule('get', $handler, $request, $count);
 	elseif(is_wrapper($handler))
 		return get_files($GLOBALS['modules'][$handler]['wrapper']);
 	elseif($handler != 'files')
@@ -418,6 +418,7 @@ function _get_local_files($request, &$count, $handler)
 	// do validation! for the fields we use
 	$request['start'] = validate($request, 'start');
 	$request['limit'] = validate($request, 'limit');
+	$request['cat'] = validate($request, 'cat');
 
 	if(isset($request['selected']) && count($request['selected']) > 0 )
 	{
@@ -429,7 +430,7 @@ function _get_local_files($request, &$count, $handler)
 			{
 				if(handles($file, $handler))
 				{
-					$info = call_user_func($handler . '::getInfo', $file);
+					$info = call_user_func_array('get_' . $handler . '_info', array($file));
 					$info['id'] = bin2hex($request['file']);
 					$info['Filepath'] = stripslashes($info['Filepath']);
 					
@@ -443,7 +444,6 @@ function _get_local_files($request, &$count, $handler)
 	
 	if(isset($request['file']))
 	{
-		$request['cat'] = validate($request, 'cat');
 		$request['file'] = str_replace('\\', '/', $request['file']);
 		if(file_exists(str_replace('/', DIRECTORY_SEPARATOR, $request['file'])))
 		{
@@ -534,7 +534,7 @@ function _get_local_files($request, &$count, $handler)
 				}
 				
 				// get the information from the handler for 1 file
-				$info = call_user_func('get_files_info', $request['dir'] . $new_files[$i]);
+				$info = call_user_func_array('get_' . $request['cat'] . '_info', array($request['dir'] . $new_files[$i]));
 				$info['id'] = bin2hex($request['dir'] . $new_files[$i]);
 				$info['Filepath'] = stripslashes($info['Filepath']);
 				
@@ -567,8 +567,8 @@ function _get_database_files($request, &$count, $handler)
 	{
 		if(function_exists('alter_query_' . $module))
 		{
-			$result = call_user_func_array('alter_query_' . $module, array($request, &$props));
-
+			$result = invoke_module('alter_query', $module, array($request, &$props));
+			
 			if(isset($result) && $result == false)
 				return array();
 		}

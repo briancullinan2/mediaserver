@@ -113,8 +113,10 @@ function theme_live_debug_block()
 			</div>
 			<?php
 		}
+		
 		// clear debug errors
 		$GLOBALS['debug_errors'] = array();
+		
 		?>
 		<a id="hide_link" href="javascript:return true;" onClick="if(this.hidden == false) { document.getElementById('debug').className='debug hide'; this.hidden=true; this.innerHTML = 'Show'; } else { document.getElementById('debug').className='debug'; this.hidden=false; this.innerHTML = 'Hide'; }">Show</a>
 		</div>

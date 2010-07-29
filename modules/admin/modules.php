@@ -3,10 +3,10 @@
 function menu_modules()
 {
 	return array(
-		'admin/modules' => array(
+		'admin/modules/%configure_module' => array(
 			'callback' => 'output_admin_modules',
 		),
-		'admin/modules/%configure_module' => array(
+		'admin/modules' => array(
 			'callback' => 'output_admin_modules',
 		),
 	);
@@ -207,7 +207,7 @@ function configure_admin_modules($settings, $request)
 			if(is_string($GLOBALS['modules'][$module]['depends on']) && $GLOBALS['modules'][$module]['depends on'] == $module &&
 				function_exists('dependency_' . $module)
 			)
-				$depends_on = call_user_func_array('dependency_' . $module, array($GLOBALS['settings']));
+				$depends_on = invoke_module('dependency', $module, array($GLOBALS['settings']));
 			else
 				$depends_on = $GLOBALS['modules'][$module]['depends on'];
 				
@@ -459,14 +459,12 @@ function output_admin_modules($request)
 		raise_error('Cannot save changes made on this page, the settings file is not writable!', E_USER);
 
 	// output configuration page
-	$options = call_user_func_array('configure_' . $request['configure_module'], array($GLOBALS['settings'], $request));
+	$options = invoke_module('configure', $request['configure_module'], array($GLOBALS['settings'], $request));
 	
 	// add status to configuration
-	if(function_exists('status_' . $request['configure_module']))
-	{
-		$status = call_user_func_array('status_' . $request['configure_module'], array($GLOBALS['settings']));
+	$status = invoke_module('status', $request['configure_module'], array($GLOBALS['settings']));
+	if(isset($status))
 		register_output_vars('status', $status);
-	}
 	
 	// find invalid parameters
 	if(isset($GLOBALS['modules'][$request['configure_module']]))

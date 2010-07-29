@@ -83,7 +83,7 @@ function setup_settings()
 		if(isset($config['settings']) && is_string($config['settings']) && 
 			$config['settings'] == $module && function_exists('setting_' . $module)
 		)
-			$GLOBALS['modules'][$module]['settings'] = call_user_func_array('setting_' . $module, array($GLOBALS['settings']));
+			$GLOBALS['modules'][$module]['settings'] = invoke_module('setting', $module, array($GLOBALS['settings']));
 	}
 	
 	// merge everything with the default settings

@@ -133,12 +133,18 @@ function register_trigger($trigger, $config, $module)
 		raise_error('Trigger not set in config for \'' . $module . '\'.', E_VERBOSE);
 }
 
-function invoke_module($method, $module)
+function invoke_module($method, $module, $args)
 {
-	$args = func_get_args();
-	unset($args[1]);
-	unset($args[0]);
-	
+	/*$args = array();
+	for($i = 0; $i < func_num_args(); $i++)
+	{
+		if($i > 1)
+			$args[] = &func_get_arg($i);
+	}
+	*/
+	//$args = func_get_args();
+	//unset($args[1]);
+	//unset($args[0]);
 	if(function_exists($method . '_' . $module))
 	{
 		return call_user_func_array($method . '_' . $module, $args);
@@ -187,6 +193,9 @@ function invoke_all_callback($method, $callback)
 	// loop through modules
 	foreach($GLOBALS['modules'] as $module => $config)
 	{
+		// keep track of error count and report which module fired it
+		list($user_count, $warn_count, $note_count) = array(count($GLOBALS['user_errors']), count($GLOBALS['warn_errors']), count($GLOBALS['note_errors']));
+		
 		// do not call set up if dependencies are not met, this will force strict use of modules functionality
 		// set up the modules in the right order
 		if((dependency($module) || in_array($module, get_required_modules())) && function_exists($method . '_' . $module))
@@ -196,6 +205,14 @@ function invoke_all_callback($method, $callback)
 			if(is_callable($callback))
 				call_user_func_array($callback, array($module, $result, $args));
 		}
+		
+		// send debug information to console
+		if($user_count > count($GLOBALS['user_errors']))
+			raise_error('User error affected by \'' . $module . '\'.', E_DEBUG);
+		if($user_count > count($GLOBALS['user_errors']))
+			raise_error('User error affected by \'' . $module . '\'.', E_DEBUG);
+		if($user_count > count($GLOBALS['user_errors']))
+			raise_error('User error affected by \'' . $module . '\'.', E_DEBUG);
 	}
 }
 
@@ -823,7 +840,13 @@ function error_callback($error)
 		$GLOBALS['warn_errors'][] = $error->message;
 	if($error->code & E_NOTE)
 		$GLOBALS['note_errors'][] = $error->message;
-	if($error->code & E_DEBUG || ($error->code & E_VERBOSE && setting('verbose') === 2))
+	if($error->code & E_DEBUG || 
+		(
+			(
+				$error->code & E_VERBOSE || 
+				$error->code & E_USER
+			) && setting('verbose') === 2)
+		)
 	{
 		// add special error handling based on the origin of the error
 		foreach($error->backtrace as $i => $stack)

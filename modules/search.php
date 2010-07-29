@@ -9,12 +9,6 @@
 function register_search()
 {
 	// create functions for searching
-	$columns = getAllColumns();
-	foreach($columns as $column)
-	{
-		$GLOBALS['validate_search_' . $column] = create_function('$request', 'return validate_search($request, \'' . $column . '\');');
-	}
-	
 	return array(
 		'name' => 'Database Search',
 		'description' => 'Search for files.',
@@ -27,6 +21,16 @@ function register_search()
 		'template' => true,
 		'package' => 'core',
 	);
+}
+
+function setup_search()
+{
+	$columns = getAllColumns();
+	foreach($columns as $column)
+	{
+		$GLOBALS['validate_search_' . $column] = create_function('$request', 'return validate_search($request, \'' . $column . '\');');
+	}
+	
 }
 
 /**

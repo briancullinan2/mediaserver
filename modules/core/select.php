@@ -4,36 +4,21 @@
 function menu_select()
 {
 	return array(
-		'select' => 'Files', // this is the default item
-		'select/dir' => array(
+		'select/dir/%dir' => array(
 			'callback' => 'output_select',
 		),
+		'select' => 'Files', // this is the default item
 	);
 }
 
 
-function rewrite_select($request)
+function rewrite_select($path_info)
 {
-	return rewrite_core($request);
-	if(isset($request['path_info']))
-	{
-		$dirs = split('/', $request['path_info']);
-		if(count($dirs) > 2)
-		{
-			if($dirs[1] == 'dir')
-			{
-				unset($dirs[1]);
-				unset($dirs[0]);
-				$request['dir'] = '/' . implode('/', $dirs);
-			}
-			/*elseif($dirs[1] == 'dirid')
-			{
-				$request['id'] = $dirs[2];
-			}*/
-	
-			return $request;
-		}
-	}
+	$request = invoke_module('rewrite', 'core', array($path_info));
+	// make root correction
+	if(isset($request['dir']) && substr($request['dir'], 0, 1) != '/')
+		$request['dir'] = '/' . $request['dir'];
+	return $request;
 }
 
 function url_select($request)

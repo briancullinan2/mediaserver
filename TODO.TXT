@@ -1,6 +1,12 @@
 ------------- MONOLITHICMEDIA TODO -------------
 ------------- GENERAL TODO -------------
-Convert all setting_() calls to go through API, even if it is it's own setting
+Rewrite_vars in core.php breaks the rule that variables shouldn't be added in rewrite_functions only process the information that is already available
+Also caused a problem because raise_error was being called from a validate function
+	Raise_error maybe shouldn't be called from validate or setting or dependency functions because the functions can be called at any time from anywhere and the errors stack up
+	Maybe errors of the exact same type should be filtered
+	Maybe errors displayed to the user should only be available after output has been called, so only output functions can raise errors
+	Maybe some functions like invoke and trigger and expecting more specific results and should consider that might corrupt those functions
+Consider Revising the don't remove API
 Running system from command line should change bootstrap options
 Cron is not running properly again...
 IMPORTANT!  Convert all call_user_func_array usage to the standard callable method
@@ -18,7 +24,6 @@ Add module called balancer used for load balancing
 Install script is severely broken
 Add a register script to the install process that allows users to register a username, password, and domain for their site, with the monolithicmedia drupal site.
 	Include a key that is unique to every download, to prevent spamming.
-Make validate_return actually validate the return path
 Store the remote_address in the session, and if it doesn't match up with what is in the session then kill the session and die
 Create a unique id and insert it into forms, this is required when the form is submitted
 Make hard links and soft links, hard links are replaced when they are put in to the database, soft links are replaced when they are read from the database, this will allow us to do more network stuff

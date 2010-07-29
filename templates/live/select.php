@@ -129,7 +129,7 @@ function theme_live_files()
 			}
 			if(isset($new_cat))
 			{
-				$link = url('select?cat=' . $new_cat . '&dir=' . urlencode($file['Filepath']));
+				$link = url('select/dir' . $GLOBALS['templates']['html']['files'][$i]['Filepath'] . '?cat=' . $new_cat);
 			}
 			else
 				$link = url('file/' . $cat . '/' . $file['id'] . '/' . $file['Filename']);
@@ -282,14 +282,6 @@ function theme_live_info()
 							else
 								print $GLOBALS['templates']['html']['files'][$i]['Filepath'];
 						}
-						elseif($column == 'Filesize')
-							print roundFileSize($file['Filesize']);
-						elseif($column == 'Compressed')
-							print roundFileSize($file['Compressed']);
-						elseif($column == 'Bitrate')
-							print round($file['Bitrate'] / 1000, 1) . ' kbs';
-						elseif($column == 'Length')
-							print floor($file['Length'] / 60) . ' minutes ' . floor($file['Length'] % 60) . ' seconds';
 						else
 							print $GLOBALS['templates']['html']['files'][$i][$column];
 						?>

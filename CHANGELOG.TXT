@@ -1,4 +1,10 @@
 2010-07-28
+Debugged menu system
+Debbuged a bunch of stuff
+Now I can add new features
+Made improvements to url() API
+
+2010-07-27
 Made big changes
 Added new menu API
 	Still needs work

@@ -64,10 +64,6 @@ function setup_template()
 		$GLOBALS['settings']['local_template'] = $_REQUEST['template'];
 	}
 	
-	// call the request alter
-	if(isset($GLOBALS['templates'][$_REQUEST['template']]['alter request']) && $GLOBALS['templates'][$_REQUEST['template']]['alter request'] == true)
-		$_REQUEST = call_user_func_array('alter_request_' . $_REQUEST['template'], array($_REQUEST));
-	
 	// assign some shared variables
 	register_output_vars('templates', $GLOBALS['templates']);
 	

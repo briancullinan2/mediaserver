@@ -69,6 +69,15 @@ function get_menu_entry($path)
 	}
 }
 
+function get_path(&$request, $index)
+{
+	// rebuild link
+	$result = preg_match_all('/\/(%([a-z][a-z0-9_]*))/i', $index, $matches);
+	$path_info = str_replace($matches[1], array_intersect_key($request, array_flip($matches[2])), $index);
+	$request = array_diff_key($request, array_flip($matches[2]));
+	return $path_info;
+}
+
 
 function invoke_menu($request, $template = false)
 {
@@ -88,6 +97,7 @@ function invoke_menu($request, $template = false)
 			raise_error('Access Denied!', E_USER);
 			
 			theme('errors');
+			return;
 		}
 		// permissions are ok
 		else
@@ -161,13 +171,14 @@ function add_menu($module, $menus)
 
 function output_menu($request)
 {
-	if(isset($request['path_info']))
+	if($path = get_menu_entry($request['path_info']))
 	{
 		// the entire site depends on this
-		register_output_vars('module', $GLOBALS['menus'][$request['path_info']]['module']);
+		register_output_vars('module', $GLOBALS['menus'][$path]['module']);
 	}
 	register_output_vars('menus', $GLOBALS['menus']);
 }
+
 
 function theme_menu_block()
 {
@@ -180,7 +191,11 @@ function theme_menu_block()
 		
 		foreach($GLOBALS['templates']['vars']['menus'] as $path => $config)
 		{
-			?><li><a href="<?php print url($path); ?>"><?php echo $config['name']; ?></a></li><?php
+			// this path actually leads to output as is, no need to validate it by using url()
+			if(strpos($path, '%') === false)
+			{
+				?><li><a href="<?php print $path; ?>"><?php echo $config['name']; ?></a></li><?php
+			}
 		}
 		
 		?></ul><?php

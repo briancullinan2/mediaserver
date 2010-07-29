@@ -19,19 +19,19 @@
 function menu_core()
 {
 	return array(
-		'core/%search' => array(
-			'callback' => 'core',
-		),
-		'core/%cat/%id' => array(
-			'callback' => 'core',
-		),
-		'core/%cat/%id/%filename' => array(
+		'core/%cat/%id/%core/%extra/%filename' => array(
 			'callback' => 'core',
 		),
 		'core/%cat/%id/%core/%filename' => array(
 			'callback' => 'core',
 		),
-		'core/%cat/%id/%core/%extra/%filename' => array(
+		'core/%cat/%id/%filename' => array(
+			'callback' => 'core',
+		),
+		'core/%cat/%id' => array(
+			'callback' => 'core',
+		),
+		'core/%search' => array(
 			'callback' => 'core',
 		),
 	);
@@ -63,21 +63,6 @@ function setup_core()
 	
 	// setup the session first thing
 	setup_session();
-	
-	//Remove annoying POST error message with the page is refreshed 
-	//  better place for this?
-	if(isset($_SERVER['REQUEST_METHOD']) && strtolower($_SERVER['REQUEST_METHOD']) == 'post')
-	{
-		session('last_request',  $_REQUEST);
-		goto($_SERVER['REQUEST_URI']);
-	}
-	if($last_request = session('last_request'))
-	{
-		$_REQUEST = $last_request;
-		// set the method just for reference
-		$_SERVER['REQUEST_METHOD'] = 'POST';
-		session('last_request', NULL);
-	}
 	
 	// set up the mime information
 	setup_mime();
@@ -115,7 +100,7 @@ function flatten_module_dependencies($modules, $already_added = array())
 				function_exists('dependency_' . $module)
 			)
 			{
-				$depends_on = call_user_func_array('dependency_' . $module, array($GLOBALS['settings']));
+				$depends_on = invoke_module('dependency', $module, array($GLOBALS['settings']));
 			}
 
 			// call flatten based on modules dependencies first
@@ -185,7 +170,7 @@ function load_modules($path)
 					include_once $file['Filepath'];
 					
 					if(function_exists('register_' . $module))
-						$modules[$module] = call_user_func_array('register_' . $module, array());
+						$modules[$module] = invoke_module('register', $module);
 						
 					ob_end_clean();
 				}
@@ -417,7 +402,7 @@ function dependency($dependency, $ignore_setting = false, $already_checked = arr
 		{	
 			if($config['depends on'] == $dependency && function_exists('dependency_' . $config['depends on']))
 			{
-				$config['depends on'] = call_user_func_array('dependency_' . $dependency, array($GLOBALS['settings']));
+				$config['depends on'] = invoke_module('dependency', $dependency, array($GLOBALS['settings']));
 			}
 			else
 			{
@@ -1031,6 +1016,21 @@ function status_core($settings)
  */
 function validate_request()
 {
+	//Remove annoying POST error message with the page is refreshed 
+	//  better place for this?
+	if(isset($_SERVER['REQUEST_METHOD']) && strtolower($_SERVER['REQUEST_METHOD']) == 'post')
+	{
+		session('last_request',  $_REQUEST);
+		goto($_SERVER['REQUEST_URI']);
+	}
+	if($last_request = session('last_request'))
+	{
+		$_REQUEST = $last_request;
+		// set the method just for reference
+		$_SERVER['REQUEST_METHOD'] = 'POST';
+		session('last_request', NULL);
+	}
+	
 	// first fix the REQUEST_URI and pull out what is meant to be pretty dirs
 	if(isset($_SERVER['PATH_INFO']))
 		$_REQUEST['path_info'] = $_SERVER['PATH_INFO'];
@@ -1038,9 +1038,11 @@ function validate_request()
 	// call rewrite_vars in order to set some request variables
 	rewrite_vars($_REQUEST, $_GET, $_POST);
 	
+	$GLOBALS['validated'] = array();
 	// go through the rest of the request and validate all the variables with the modules they are for
 	foreach($_REQUEST as $key => $value)
 	{
+		$GLOBALS['validated'][] = $key;
 		$new_value = validate($_REQUEST, $key);
 		if(isset($new_value))
 			$_REQUEST[$key] = $new_value;
@@ -1160,20 +1162,44 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 	// if the link is a string, we need to convert it to an array for processing
 	if(is_string($request))
 	{
-		if(strpos($request, '?') !== false)
+		// get query part if there it one for processing
+		$query = generic_validate_query_str(array('query' => $request), 'query');
+		
+		// get the path part of the request
+		$path = generic_validate_urlpath(array('path' => $request), 'path');		
+	
+		// get the menu path
+		$menu = get_menu_entry($request);
+
+		// if path is not set, show an error so it can be fixed
+		if(!isset($menu))
 		{
-			$fragment = substr($request, strpos($request, '?'));
-			$request = substr($request, 0, strpos($request, '?'));
+			$menu = 'core';
+			raise_error('Malformed URL!', E_DEBUG);
 		}
 		
-		$path = get_menu_entry($request);
-		if(!isset($path))
-			raise_error('Malformed URL!', E_DEBUG);
-	
-		if(function_exists('rewrite_' . $GLOBALS['menus'][$path]['module']))
-			$request = invoke_module('rewrite', $GLOBALS['menus'][$path]['module'], $request);
+		// invoke rewriting
+		if(function_exists('rewrite_' . $GLOBALS['menus'][$menu]['module']))
+			$request = invoke_module('rewrite', $GLOBALS['menus'][$menu]['module'], array($path));
 		else
-			$request = invoke_module('rewrite', 'core', $request);
+			$request = invoke_module('rewrite', 'core', array($path));
+		
+		// process the query part
+		//   this is done here because fragment takes precedence over path
+		//   this allows for calling an output function modified request input
+		$arr = explode('&', $query);
+		if(count($arr) == 1 && $arr[0] == '')
+			$arr = array();
+		
+		// loop through all the query string and generate our new request array
+		foreach($arr as $i => $value)
+		{
+			// split each part of the query string into name value pairs
+			$x = explode('=', $value);
+			
+			// set each part of the query string in our new request array
+			$request[$x[0]] = urldecode(isset($x[1])?$x[1]:'');
+		}
 	}
 	else
 	{
@@ -1184,22 +1210,27 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 		}
 	}
 	
-	// TODO process fragment
-	
-	
 	// if the caller functionality would like an array returned for further processing such as in theme() return now
 	if($return_array)
 		return $request;
 	
-	// rebuild link
-	$result = preg_match_all('/\/(%([a-z][a-z0-9_]*))/i', $path, $matches);
-	$path_info = str_replace($matches[1], array_intersect_key($request, array_flip($matches[2])), $path);
-	$request = array_diff_key($request, array_flip($matches[2]));
-		
+	// check with mod rewrite if paths can actually be printed out as directories
+	if(setting('modrewrite') == true && isset($path))
+		$path_info = get_path($request, $menu);
+	else
+		$path_info = '';
+
+	// generate query string
+	$query = '?';
+	foreach($request as $key => $value)
+	{
+		$query .= (($query != '?')?'&':'') . $key . '=' . urlencode($value);
+	}
+	
 	// generate a link, with optional domain the html root and path info prepended
 	$link = (($include_domain)?setting('html_domain'):'') . 
 		setting('html_root') . 
-		$path_info . (isset($fragment)?$fragment:'');
+		$path_info . (($query != '?')?$query:'');
 	
 	// optionally return a non html special chars converted URL
 	if($not_special)
@@ -1308,6 +1339,7 @@ function set_output_vars()
 		'settings',
 		'triggers',
 		'menus',
+		'validated',
 	);
 
 	// unset all other globals to prevent templates from using them
@@ -1363,6 +1395,10 @@ function traverse_array($input)
  */
 function validate($request, $key)
 {
+	// call debug error if validate is being called before the request has been validated
+	if(!isset($GLOBALS['validated']))
+		raise_error('Validate \'' . $key . '\' being called before the request has been validated!', E_DEBUG);
+	
 	// call function
 	if(function_exists('validate_' . $key))
 		return call_user_func_array('validate_' . $key, array($request));
@@ -1563,7 +1599,7 @@ function generic_validate_machine_readable($request, $index)
 		$request[$index] = preg_replace('/[^a-z0-9]/i', '_', $request[$index]);
 		
 	// ensure it is a valid name
-	if(preg_match('/[a-z][a-z0-9_]*/i', $request[$index]) != 0)
+	if(preg_match('/^[a-z][a-z0-9_]*$/i', $request[$index]) != 0)
 		return strtolower($request[$index]);
 }
 
@@ -1596,6 +1632,13 @@ function generic_validate_urlpath($request, $index)
 				(?P<path>[a-z0-9\-._~%!$&\'()*+,;=:@\/]*)/ix', 
 			$request[$index], $matches) != 0 && $matches['path'] != false)
 		return $matches['path'];
+}
+
+function generic_validate_query_str($request, $index)
+{
+	if(isset($request[$index]) &&
+		preg_match('/^[^?#]+\?([^#]+)/i', $request[$index], $matches) != 0)
+		return $matches[1];
 }
 
 function generic_validate_base64($request, $index)
@@ -1837,25 +1880,62 @@ function rewrite($old_var, $new_var, &$request, &$get, &$post)
 function rewrite_vars(&$request, &$get, &$post)
 {
 	// get path info
-	$path_info = validate($request, 'path_info');
+	$request['path_info'] = validate($request, 'path_info');
 
-	if($path = get_menu_entry($path_info))
+	if($path = get_menu_entry($request['path_info']))
 	{
 		// call a modules rewrite function for further rewriting
 		if(function_exists('rewrite_' . $GLOBALS['menus'][$path]['module']))
-			$result = invoke_module('rewrite', $GLOBALS['menus'][$path]['module'], $request['path_info']);
+			$result = invoke_module('rewrite', $GLOBALS['menus'][$path]['module'], array($request['path_info'], $request));
 		else
-			$result = invoke_module('rewrite', 'core', $request['path_info']);
+			$result = invoke_module('rewrite', 'core', array($request['path_info'], $request));
 			
 		// merge result, but current request takes precedence
 		if(isset($result))
 			$request = array_merge($result, $request);
 	}
-	$request['path_info'] = $path_info;
 	
 	// just about everything uses the cat variable so always validate and add this
 	$request['cat'] = validate($request, 'cat');
+
+/**
+	// do some modifications to specific modules being used
+	if($request['module'] == 'bt')
+	{
+		// save the whole request to be used later
+		$request['bt_request'] = $request;
+	}
+	*/
 }
+
+/**
+ * Implementation of #setup_validate()
+ * @return The index module by default, also checks for compatibility based on other request information
+function validate_module($request)
+{
+	// remove .php extension
+	if(isset($request['module']) && substr($request['module'], -4) == '.php')
+		$request['module'] = substr($request['module'], 0, -4);
+		
+	// replace slashes
+	if(isset($request['module'])) $request['module'] = str_replace(array('/', '\\'), '_', $request['module']);
+	
+	// if the module is set then return right away
+	if(isset($request['module']) && isset($GLOBALS['modules'][$request['module']]))
+	{
+		return $request['module'];
+	}
+	else
+	{
+		$script = basename($_SERVER['SCRIPT_NAME']);
+		$script = substr($script, 0, strpos($script, '.'));
+		if(isset($GLOBALS['modules'][$script]))
+			return $script;
+		else
+			return 'core';
+	}
+}
+ */
 
 /**
  * @defgroup alter_query Alter Query Functions

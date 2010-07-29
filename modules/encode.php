@@ -1,5 +1,14 @@
 <?php
 
+function menu_encode()
+{
+	return array(
+		'encode/%encode/%id/%cat' => array(
+			'callback' => 'output_encode',
+		),
+	);
+}
+
 /**
  * Checks for encode path
  * @ingroup configure

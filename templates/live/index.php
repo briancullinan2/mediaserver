@@ -153,10 +153,31 @@ function live_alter_file($file)
 {
 	foreach($file as $column => $value)
 	{
-		if(isset($GLOBALS['templates']['vars']['search_regexp']) && 
-			isset($GLOBALS['templates']['vars']['search_regexp'][$column]))
+		if($column == 'Filepath')
+		{
+			$dirs = explode('/', $file['Filepath']);
+			array_walk($dirs, create_function('&$item,$key', '$item = urlencode($item);'));
+			$file['Filepath'] = implode('/', $dirs);
+		}
+		elseif(isset($GLOBALS['templates']['vars']['search_regexp']) && 
+			isset($GLOBALS['templates']['vars']['search_regexp'][$column])
+		)
+		{
 			$file[$column] = preg_replace($GLOBALS['templates']['vars']['search_regexp'][$column], '\'<strong style="background-color:#990;">\' . htmlspecialchars(\'$0\') . \'</strong>\'', $file[$column]);
+		
+			continue;
+		}
 		//$file[$column] = preg_replace('/([^ ]{25})/i', '$1<br />', $file[$column]);
+		elseif($column == 'Filesize')
+			$file['Filesize'] = roundFileSize($file['Filesize']);
+		elseif($column == 'Compressed')
+			$file['Compressed'] = roundFileSize($file['Compressed']);
+		elseif($column == 'Bitrate')
+			$file['Bitrate'] = round($file['Bitrate'] / 1000, 1) . ' kbs';
+		elseif($column == 'Length')
+			$file['Length'] = floor($file['Length'] / 60) . ' minutes ' . floor($file['Length'] % 60) . ' seconds';
+		else
+			$file[$column] = htmlspecialchars($value);
 	}
 	return $file;
 }
@@ -187,12 +208,10 @@ function theme_live_errors_block()
 			}
 			?></div><?php
 		}
+		
+		// clear current list because it was just outputted
+		$GLOBALS[$errors] = array();
 	}
-
-	// clear current list because it was just outputted
-	$GLOBALS['warn_errors'] = array();
-	$GLOBALS['user_errors'] = array();
-	$GLOBALS['note_errors'] = array();
 
 	if(!isset($GLOBALS['templates']['vars']['errors_only']) || $GLOBALS['templates']['vars']['errors_only'] == false)
 	{
@@ -214,9 +233,3 @@ function theme_live_errors_block()
 		<?php
 	}
 }
-
-function theme_live_index()
-{
-	theme_live_select();
-}
-

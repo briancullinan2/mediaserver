@@ -39,7 +39,7 @@ function dependency_highlighter($settings)
 {
 	// get the archiver it is set to
 	$settings['highlighter'] = setting('highlighter');
-	$settings['local_root'] = setting('local_root');
+	$settings['local_root'] = setting_local_root();
 
 	// if that archiver is not installed, return false
 	if($settings['highlighter'] == 'pear' && dependency('pear_installed') != false && include_path('Text/Highlighter.php') !== false)
