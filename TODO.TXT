@@ -6,10 +6,15 @@ Also caused a problem because raise_error was being called from a validate funct
 	Maybe errors of the exact same type should be filtered
 	Maybe errors displayed to the user should only be available after output has been called, so only output functions can raise errors
 	Maybe some functions like invoke and trigger and expecting more specific results and should consider that might corrupt those functions
-Consider Revising the don't remove API
+Maybe errors shouldn't happen in the validate function, maybe there should be a better place to report bad input to the user
+	Maybe when the register_output_vars function is called and there is nothing there, then the error should be created
+	Maybe there should be a better way of detecting if a variable has been removed from the request
+		This would be useful in the situation where we want to confirm a change on the configuration pages
+IMPORTANT: Finish the configuaration for updates.php and implement new method of reporting changes like described above
+	See configure_balancer for more information
+Consider Revising the don't remove API in set_output_vars
 Running system from command line should change bootstrap options
 Cron is not running properly again...
-IMPORTANT!  Convert all call_user_func_array usage to the standard callable method
 Finish webdav module that allows files to be uploaded and access using the web dav protocol.  This is already mostly supported by PEAR.
 Come up with a good way to detect modrewrite
 Look at drupal and find out if there is a better way to save errors to the session at the end of a script

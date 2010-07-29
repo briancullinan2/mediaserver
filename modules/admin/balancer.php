@@ -511,6 +511,11 @@ function configure_admin_balancer($settings, $request)
 		$options['manage_servers']['options'] = $balence_options;
 	}
 	
+	// TODO: put add server removed from request here
+	//   using GLOBALS['validated'] == false
+	//  raise_error('Server was not added due to errors')
+	//  put original values back in?
+	
 	$options['balance_servers'] = array(
 		'name' => 'Add Server',
 		'status' => '',
