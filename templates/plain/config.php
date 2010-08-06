@@ -2,7 +2,7 @@
 
 function register_plain()
 {
-	$tmp_columns = getAllColumns();
+	$tmp_columns = get_all_columns();
 	$columns = array();
 	foreach($tmp_columns as $i => $column)
 	{

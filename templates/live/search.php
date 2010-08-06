@@ -32,12 +32,9 @@ function theme_live_search()
 	
 	var cat_columns = [];
 	<?php
-	foreach($GLOBALS['modules'] as $handler => $config)
+	foreach(get_handlers() as $handler => $config)
 	{
-		if(is_handler($handler) && !is_internal($handler))
-		{
-			?>cat_columns['<?php print $handler; ?>'] = new Array('<?php print join('\', \'', columns($handler)); ?>');<?php
-		}
+		?>cat_columns['<?php print $handler; ?>'] = new Array('<?php print join('\', \'', get_columns($handler)); ?>');<?php
 	}
 	?>
 	function makeVisible(cat)
@@ -78,12 +75,9 @@ function theme_live_search()
 			<h3>Search Individual Fields:</h3>
 			Category: <select name="cat" onchange="makeVisible(this.value)">
 			<?php
-			foreach($GLOBALS['modules'] as $handler => $config)
+			foreach(get_handlers() as $handler => $config)
 			{
-				if(is_handler($handler) && !is_internal($handler))
-				{
-					?><option value="<?php print $handler; ?>" <?php print ($GLOBALS['templates']['vars']['cat'] == $handler)?'selected="selected"':''; ?>><?php print $config['name']; ?></option><?php
-				}
+				?><option value="<?php print $handler; ?>" <?php print ($GLOBALS['templates']['vars']['cat'] == $handler)?'selected="selected"':''; ?>><?php print $config['name']; ?></option><?php
 			}
 			?>
 			</select><br /><br />

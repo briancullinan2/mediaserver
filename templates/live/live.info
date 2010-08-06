@@ -1,0 +1,15 @@
+name = Live
+description = Live theme, based on Microsoft Live.
+privilage = 1
+files[] = admin
+files[] = encode
+files[] = footer
+files[] = header
+files[] = index
+files[] = list
+files[] = modules
+files[] = search
+files[] = select
+files[] = settings
+files[] = tools
+files[] = users

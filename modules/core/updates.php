@@ -292,12 +292,11 @@ function scan_dir($dir)
 			raise_error('Removing: ' . $file['Filepath'], E_DEBUG);
 			
 			// remove file from each handler
-			foreach($GLOBALS['modules'] as $handler => $config)
+			foreach(get_handlers(false, false) as $handler => $config)
 			{
 				// do not remove ids because other handlers may still use the id
 				//  allow other handlers to handle removing of ids
-				if($handler != 'ids' && is_handler($handler) && !is_internal($handler) && !is_wrapper($handler))
-					remove($file['Filepath'], $handler);
+				remove($file['Filepath'], $handler);
 			}
 		}
 		$db_paths[] = $file['Filepath'];
@@ -434,7 +433,7 @@ function handle_file($file)
 	
 	// if the file is skipped the only pass it to other handlers for adding, not modifing
 	//   if the file was modified or added the information could have changed, so the handlers must modify it, if it is already added
-	foreach($GLOBALS['modules'] as $handler => $config)
+	foreach(get_handlers(false, false) as $handler => $config)
 	{
 		// get the file information and add it to the database
 		if($handler != 'files' && $handler != 'ids' && handles($file, $handler))

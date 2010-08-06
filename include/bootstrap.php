@@ -22,6 +22,9 @@ function bootstrap($mode)
 		case 'database':
 			load_modules('include' . DIRECTORY_SEPARATOR . 'database.php');
 			
+			// add setup trigger so we don't need a register function
+			
+			
 			break;
 		
 		case 'errors':
@@ -48,8 +51,11 @@ function bootstrap($mode)
 					return generic_validate_boolean_true($settings, $module . '_enable');
 				}
 				
+				// create functions for checking module_enable
 				foreach($GLOBALS['modules'] as $module => $config)
 				{
+					// if the module supplys it's own function for checking if it is enabled
+					//   this is useful if the enable state depends on more then the dependencies and needs logic to figure it out
 					if(!function_exists('setting_' . $module . '_enable'))
 					{
 						if(!in_array($module, get_required_modules()))
@@ -76,7 +82,7 @@ function bootstrap($mode)
 			// read module list and create a list of available modules	
 			load_modules('modules' . DIRECTORY_SEPARATOR);
 			//load_modules('handlers' . DIRECTORY_SEPARATOR);
-			
+
 			bootstrap('modules');
 			
 			// set up the modules
@@ -92,12 +98,23 @@ function load_includes()
 {
 
 	// load all the required includes for the system to work
+	include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'module.php';
+	include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'triggers.php';
+	setup_triggers();
 	
 	/** require core functionality */
 	include_once dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . 'core' . DIRECTORY_SEPARATOR . 'core.php';
 	
-	/** require compatibility */
+	// require compatibility
 	include_once setting_local_root() . 'include' . DIRECTORY_SEPARATOR . 'compatibility.php';
+
+	// language must be included so that we can translate module definitions
+	include_once setting_local_root() . 'include' . DIRECTORY_SEPARATOR . 'lang.php';
+
+	// include the database module, because it acts like a module, but is kept in the includes directory
+	include_once setting_local_root() . 'include' . DIRECTORY_SEPARATOR . 'session.php';
+	
+	// load forms for modules to use for generation
 	include_once setting_local_root() . 'include' . DIRECTORY_SEPARATOR . 'forms.php';
 
 	// include the settings module ahead of time because it contains 1 needed function setting_settings_file()
@@ -105,20 +122,6 @@ function load_includes()
 	
 	// always include files handler
 	include_once setting_local_root() . 'modules' . DIRECTORY_SEPARATOR . 'core' . DIRECTORY_SEPARATOR . 'files.php';
-
-	// language must be included so that we can translate module definitions
-	load_modules('include' . DIRECTORY_SEPARATOR . 'lang.php');
-
-	// include the database module, because it acts like a module, but is kept in the includes directory
-	load_modules('include' . DIRECTORY_SEPARATOR . 'session.php');
-}
-
-/**
- * Helper function
- */
-function get_required_modules()
-{
-	return array('core', 'index', 'users', 'select', 'settings', 'file', 'template');
 }
 
 

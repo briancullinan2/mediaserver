@@ -1,5 +1,7 @@
 ------------- MONOLITHICMEDIA TODO -------------
 ------------- GENERAL TODO -------------
+Fix the location of templates adding scripts and styles from the setup_template_files() function
+	This should be done before the template it outputted
 Rewrite_vars in core.php breaks the rule that variables shouldn't be added in rewrite_functions only process the information that is already available
 Also caused a problem because raise_error was being called from a validate function
 	Raise_error maybe shouldn't be called from validate or setting or dependency functions because the functions can be called at any time from anywhere and the errors stack up

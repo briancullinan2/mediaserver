@@ -55,7 +55,7 @@ function output_admin($request)
 	}
 	
 	// check for dependency problems so we can show an error
-	foreach($GLOBALS['modules'] as $module => $config)
+	foreach(get_modules() as $module => $config)
 	{
 		// skip the modules that don't depend on anything
 		if(!isset($config['depends on']))

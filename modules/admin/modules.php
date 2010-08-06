@@ -19,7 +19,7 @@ function menu_modules()
 function setting_admin_modules()
 {
 	$settings = array();
-	foreach($GLOBALS['modules'] as $module => $config)
+	foreach(get_modules() as $module => $config)
 	{
 		$settings[] = $module . '_enable';
 		if(!function_exists('setting_' . $module . '_enable'))
@@ -107,7 +107,7 @@ function configure_admin_modules($settings, $request)
 	$description_2 = lang('modules enable description 2', 'Click configure to configure additional options for a specific module.');
 	$description_fail = lang('modules enable fail description', 'This module has been forcefully disabled because of dependency issues.');
 	
-	foreach($GLOBALS['modules'] as $module => $config)
+	foreach(get_modules() as $module => $config)
 	{
 		// get the enabled setting
 		$settings[$module . '_enable'] = setting_modules_enable($settings, $module);

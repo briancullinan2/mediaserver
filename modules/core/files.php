@@ -18,7 +18,7 @@
 /**
  * Gets the columns from the specified handler
  */
-function columns($handler)
+function get_columns($handler)
 {
 	if(isset($GLOBALS['modules'][$handler]['database']))
 	{
@@ -26,12 +26,56 @@ function columns($handler)
 	}
 	elseif(isset($GLOBALS['modules'][$handler]['wrapper']))
 	{
-		return columns($GLOBALS['modules'][$handler]['wrapper']);
+		return get_columns($GLOBALS['modules'][$handler]['wrapper']);
 	}
 	else
 	{
 		return array_keys($GLOBALS['modules']['files']['database']);
 	}
+}
+
+/**
+ * get all columns from every handlers
+ * @return a list of all the columns combined from every handler installed
+ */
+function get_all_columns()
+{
+	$columns = array();
+	foreach(get_handlers() as $handler => $config)
+	{
+		$columns = array_merge($columns, array_flip(get_columns($handler)));
+	}
+	
+	$columns = array_keys($columns);
+
+	return $columns;
+}
+
+function get_handlers($get_wrappers = true, $get_internals = false, $wrappers_only = false, $internals_only = false)
+{
+	// get all combos of handlers
+	$handlers = array_filter(array_keys($GLOBALS['modules']), 'is_handler');
+	$wrappers = array_filter($handlers, 'is_wrapper');
+	$internals = array_filter($handlers, 'is_internal');
+	
+	// remove the handlers set to false
+	if(!$get_internals && !$internals_only)
+		$handlers = array_diff($handlers, $internals);
+	if(!$get_wrappers && !$wrappers_only)
+		$handlers = array_diff($handlers, $wrappers);
+	
+	// if they only want certain types of handlers
+	if($wrappers_only && $internals_only)
+		$handlers = array_intersect($handlers, array_merge($wrappers, $internals));
+	elseif($wrappers_only)
+		$handlers = array_intersect($handlers, $wrappers);
+	elseif($internals_only)
+		$handlers = array_intersect($handlers, $internals);
+	
+	// flip keys back and remerge module configs
+	$handlers = array_flip($handlers);
+
+	return array_intersect_key($GLOBALS['modules'], $handlers);
 }
 
 function is_internal($handler)
@@ -81,6 +125,19 @@ function is_handler($handler)
 		return false;
 }
 
+
+function handles_count($files)
+{
+	$modules = array();
+	
+	foreach(get_handlers() as $handler => $config)
+	{
+		$modules[$handler . '_count'] = array_sum(array_map('handles', $files, array_fill(0, count($files), $handler)));
+	}
+	
+	return $modules;
+}
+
 /**
  * @defgroup handles 'Is A Handler For' Functions
  * Functions that specify if a file handler handles a particular file.
@@ -105,6 +162,14 @@ function handles($file, $handler)
 	
 	// check the module is enabled first
 	if($handler != 'files' && dependency($handler) == false)
+		return false;
+		
+	// is an array is passed in it could be the entire $file array
+	if(is_array($file) && isset($file['Filepath']))
+		$file = $file['Filepath'];
+
+	// if it is not a string there is nothing more we can do
+	if(!is_string($file))
 		return false;
 		
 	// check the handles_ function	
@@ -373,7 +438,7 @@ function get_files($request, &$count, $handler_or_internal)
 	
 	// if the handler is set, call that instead
 	if($handler != 'files' && function_exists('get_' . $handler))
-		return invoke_movule('get', $handler, $request, $count);
+		return invoke_module('get', $handler, $request, $count);
 	elseif(is_wrapper($handler))
 		return get_files($GLOBALS['modules'][$handler]['wrapper']);
 	elseif($handler != 'files')
@@ -416,9 +481,9 @@ function _get_local_files($request, &$count, $handler)
 	$files = array();
 
 	// do validation! for the fields we use
-	$request['start'] = validate($request, 'start');
-	$request['limit'] = validate($request, 'limit');
-	$request['cat'] = validate($request, 'cat');
+	$request['start'] = validate_start($request);
+	$request['limit'] = validate_limit($request);
+	$request['cat'] = validate_cat($request);
 
 	if(isset($request['selected']) && count($request['selected']) > 0 )
 	{
@@ -563,7 +628,7 @@ function _get_database_files($request, &$count, $handler)
 //---------------------------------------- Selection ----------------------------------------\\
 	
 	// loop through each module and call the method
-	foreach($GLOBALS['modules'] as $module => $config)
+	foreach(get_modules() as $module => $config)
 	{
 		if(function_exists('alter_query_' . $module))
 		{
@@ -573,20 +638,6 @@ function _get_database_files($request, &$count, $handler)
 				return array();
 		}
 	}
-		
-	/*
-	$props = alter_query_core($request, $props);
-
-	$props = alter_query_select($request, $props);
-	if($props == false)
-		return array();
-
-	$props = alter_query_file($request, $props);
-	if($props == false)
-		return array();
-	
-	$props = alter_query_search($request, $props);
-	*/
 	
 //---------------------------------------- Query ----------------------------------------\\
 	// finally start processing query
@@ -600,11 +651,12 @@ function _get_database_files($request, &$count, $handler)
 	if($files === false)
 		return array();
 
-	// now make some changes
-	foreach($files as $index => $file)
+	// now make some changes:
+	
+	// do alias replacement on every file path
+	if(setting('admin_alias_enable') == true)
 	{
-		// do alias replacement on every file path
-		if(setting('admin_alias_enable') == true)
+		foreach($files as $index => $file)
 		{
 			if(isset($file['Filepath']))
 				$files[$index]['Filepath'] = preg_replace($GLOBALS['paths_regexp'], $GLOBALS['alias'], $file['Filepath']);
@@ -621,10 +673,11 @@ function _get_database_files($request, &$count, $handler)
 	
 //---------------------------------------- Get Count ----------------------------------------\\
 	// only get count if the query is not limited by the limit field
-	//  get count if limit is not set, which is should always be because of validate()
+	//  get count if limit is not set, which is should never be because of validate()
 	//  get count if it is greater than or equal to the limit, even though it will always be equal to or less then limit
 	//  if it is less, only get count if start is set
-	if(!isset($request['limit']) || count($files) >= $request['limit'] || (isset($request['start']) && $request['start'] > 0))
+	if(!isset($request['limit']) || count($files) >= $request['limit'] || 
+		(isset($request['start']) && $request['start'] > 0))
 	{
 		// this is how we get the count of all the items
 		//  unset the limit to count it

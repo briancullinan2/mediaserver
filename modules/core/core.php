@@ -70,145 +70,6 @@ function setup_core()
 }
 
 /**
- * Creates a list of modules with the order of their dependencies first
- * @param modules the list of modules to recursively loop through
- * @return an array of modules sorted by dependency
- */
-function flatten_module_dependencies($modules, $already_added = array())
-{
-	$new_modules = array('core');
-
-	foreach($modules as $i => $module)
-	{
-		// only deal with modules
-		if(!isset($GLOBALS['modules'][$module]))
-			continue;
-		
-		if(isset($GLOBALS['modules'][$module]['depends on']) && !in_array($module, $already_added))
-		{
-			// add to list to prevent recursion
-			$already_added[] = $module;
-
-			// if it is not an array debug message
-			if(!isset($GLOBALS['modules'][$module]['depends on']))
-				$depends_on = array();
-			else
-				$depends_on = $GLOBALS['modules'][$module]['depends on'];
-			
-			// if the dependency field is set to the module name, and a valid callback exists, call that to determine list of dependencies
-			if(is_string($depends_on) && $depends_on == $module &&
-				function_exists('dependency_' . $module)
-			)
-			{
-				$depends_on = invoke_module('dependency', $module, array($GLOBALS['settings']));
-			}
-
-			// call flatten based on modules dependencies first
-			$new_modules = array_merge($new_modules, flatten_module_dependencies($depends_on, $already_added));
-		}
-		$new_modules[] = $module;
-	}
-	
-	return array_values(array_unique($new_modules));
-}
-
-/**
- * Abstracted from setup_modules <br />
- * Generates a list of modules from a specified directory <br />
- * This allows for modules to load more modules, such as admin_tools
- * @ingroup setup
- * @param path The path to load modules from
- * @return An array containing only the modules found in the specified directory, modules loaded are also added to the GLOBAL list of modules
- */
-function load_modules($path)
-{
-	if(is_dir(setting_local_root() . $path))
-	{
-		$files = get_files(array(
-			'dir' => setting_local_root() . $path,
-			'depth' => 3,
-			'limit' => 32000,
-			'match' => '/\.info$/i',
-		), $count, true);
-	}
-	elseif(is_file(setting_local_root() . $path))
-		$files = array(get_files_info(setting_local_root() . $path));
-
-	$modules = array();
-	
-	// loop through files and add modules to global list
-	if(is_array($files))
-	{
-		foreach($files as $i => $file)
-		{
-			if(is_file($file['Filepath']))
-			{
-				// determin module based on path
-				$module = basename($file['Filepath']);
-				
-				// functional prefix so there can be multiple modules with the same name
-				$prefix = substr($file['Filepath'], strlen(setting_local_root()), -strlen($module));
-				
-				// remove slashes and replace with underscores
-				$prefix = str_replace(array('/', '\\'), '_', $prefix);
-				
-				// remove extension from module name
-				$module = substr($module, 0, strrpos($module, '.'));
-				
-				// call register function
-				if(substr($file['Filename'], -5) == '.info')
-				{
-					$modules[$module] = parse_ini_file($file['Filepath'], true);
-					
-					include_once dirname($file['Filepath']) . DIRECTORY_SEPARATOR . $module . '.php';
-				}
-				elseif(substr($file['Filename'], -4) == '.php')
-				{
-					// be a little more cautious about the buffer
-					ob_start();
-					
-					include_once $file['Filepath'];
-					
-					if(function_exists('register_' . $module))
-						$modules[$module] = invoke_module('register', $module);
-						
-					ob_end_clean();
-				}
-				
-				// set the package if it is not set already
-				if(!isset($modules[$module]['package']))
-				{
-					if($prefix != '')
-						$modules[$module]['package'] = substr($prefix, 0, -1);
-					else
-						$modules[$module]['package'] = 'other';
-				}
-				
-				// set the path to the module
-				if(!isset($modules[$module]['path']))
-					$modules[$module]['path'] = dirname($file['Filepath']) . DIRECTORY_SEPARATOR . $module . '.php';
-				
-				register_trigger('session', $modules[$module], $module);
-				
-				register_trigger('alter_query', $modules[$module], $module);
-				
-				register_trigger('output', $modules[$module], $module);
-				
-				register_trigger('validate', $modules[$module], $module);
-				
-				// save in globals
-				$GLOBALS['modules'][$module] = &$modules[$module];
-			}
-		}
-	}
-
-	$GLOBALS['modules'] = array_merge(array_flip(flatten_module_dependencies(array_keys($GLOBALS['modules']))), $GLOBALS['modules']);
-	
-	return $modules;
-}
-
-
-/**
  * Implementation of setting
  * @ingroup setting
  * @return false by default, set to true to record all notices
@@ -1299,7 +1160,7 @@ function core_variables($request)
 	register_output_vars('limit', $request['limit']);
 	
 	// always make the column list available to templates
-	register_output_vars('columns', getAllColumns());
+	register_output_vars('columns', get_all_columns());
 }
 
 /**
@@ -1708,7 +1569,7 @@ function validate_order_by($request)
 {
 	$handler = validate($request, 'cat');
 	
-	$columns = columns($handler);
+	$columns = get_columns($handler);
 	
 	if( !isset($request['order_by']) || !in_array($request['order_by'], $columns) )
 	{
@@ -1719,7 +1580,7 @@ function validate_order_by($request)
 		$columns = split(',', (isset($request['order_by'])?$request['order_by']:''));
 		foreach($columns as $i => $column)
 		{
-			if(!in_array($column, columns($handler)))
+			if(!in_array($column, get_columns($handler)))
 				unset($columns[$i]);
 		}
 		if(count($columns) == 0)
@@ -1738,7 +1599,7 @@ function validate_group_by($request)
 {
 	$handler = validate($request, 'cat');
 	
-	$columns = columns($handler);
+	$columns = get_columns($handler);
 	
 	if( isset($request['group_by']) && !in_array($request['group_by'], $columns) )
 	{
@@ -1746,7 +1607,7 @@ function validate_group_by($request)
 		$columns = split(',', $request['group_by']);
 		foreach($columns as $i => $column)
 		{
-			if(!in_array($column, columns($handler)))
+			if(!in_array($column, get_columns($handler)))
 				unset($columns[$i]);
 		}
 		if(count($columns) == 0)
@@ -1795,7 +1656,7 @@ function validate_columns($request)
 {
 	$handler = validate($request, 'cat');
 	
-	$columns = columns($handler);
+	$columns = get_columns($handler);
 	
 	// which columns to search
 	if( isset($request['columns']) && !in_array($request['columns'], $columns) )
@@ -1804,7 +1665,7 @@ function validate_columns($request)
 		if(!is_array($request['columns'])) $request['columns'] = split(',', $request['columns']);
 		foreach($request['columns'] as $i => $column)
 		{
-			if(!in_array($column, columns($handler)))
+			if(!in_array($column, get_columns($handler)))
 				unset($columns[$i]);
 		}
 		if(count($request['columns']) == 0)
@@ -2164,7 +2025,7 @@ function theme_footer()
 	Modules:
 <ul>
 <?php
-foreach($GLOBALS['modules'] as $name => $module)
+foreach(get_modules() as $name => $module)
 {
 	if($module['privilage'] > $GLOBALS['templates']['vars']['user']['Privilage'])
 		continue;

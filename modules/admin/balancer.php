@@ -11,7 +11,7 @@ function register_admin_balancer()
 		'description' => lang('balancer description', 'Allows configuring of mirror servers running and moving connections from one server to another.'),
 		'privilage' => 10,
 		'path' => __FILE__,
-		'settings' => array(),
+		'settings' => 'admin_balancer',
 		'depends on' => array('settings', 'curl_installed', 'session'),
 		'session' => array('add_server', 'remove_server', 'add_rule', 'remove_rule', 'reset_configuration', 'module'),
 	);
@@ -21,21 +21,25 @@ function register_admin_balancer()
  * Set up the list of aliases from the database
  * @ingroup setup
  */
-function setup_admin_balancer()
+function setting_admin_balancer()
 {
+	$settings = array();
+	
 	// add wrapper functions for validating a server entry
 	for($i = 0; $i < 10; $i++)
 	{
 		$GLOBALS['setting_balance_server_' . $i] = create_function('$settings', 'return setting_balance_server($settings, \'' . $i . '\');');
-		$GLOBALS['modules']['admin_balancer']['settings'][] = 'balance_server_' . $i;
+		$settings[] = 'balance_server_' . $i;
 	}
 	
 	// add wrapper functions for validating a server entry
 	for($i = 0; $i < 100; $i++)
 	{
 		$GLOBALS['setting_balance_rule_' . $i] = create_function('$settings', 'return setting_balance_rule($settings, \'' . $i . '\');');
-		$GLOBALS['modules']['admin_balancer']['settings'][] = 'balance_rule_' . $i;
+		$settings[] = 'balance_rule_' . $i;
 	}
+	
+	return $settings;
 }
 
 /**
@@ -670,7 +674,7 @@ function configure_admin_balancer($settings, $request)
 	}
 	
 	$modules = array();
-	foreach($GLOBALS['modules'] as $module => $config)
+	foreach(get_modules() as $module => $config)
 	{
 		$modules[$module] = $config['name'];
 	}

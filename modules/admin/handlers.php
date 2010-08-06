@@ -34,12 +34,8 @@ function setting_admin_handlers()
 	$settings = array();
 	
 	// create additional functions for handling enabling
-	foreach($GLOBALS['modules'] as $handler => $config)
+	foreach(get_handlers() as $handler => $config)
 	{
-		// do not allow for enabling of internal handlers
-		if(!is_handler($handler) || is_internal($handler))
-			continue;
-
 		// add the functions to allow for enabling of handlers
 		$settings[] = $handler . '_enable';
 		$GLOBALS['setting_' . $handler . '_enable'] = create_function('$request', 'return setting_handler_enable($request, \'' . $handler . '\');');

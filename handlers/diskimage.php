@@ -187,10 +187,9 @@ function diskimage_add($file, $image_id = NULL)
 
 	// set up empty ids array since we know archive_id will be the only entry
 	$ids = array();
-	foreach($GLOBALS['modules'] as $module => $config)
+	foreach(get_handlers(false) as $module => $config)
 	{
-		if(is_handler($module) && !is_wrapper($handler) && !is_internal($handler))
-			$ids[$handler . '_id'] = false;
+		$ids[$module . '_id'] = false;
 	}
 	
 	// add archive internal files to archive database

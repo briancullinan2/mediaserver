@@ -25,7 +25,7 @@ function register_search()
 
 function setup_search()
 {
-	$columns = getAllColumns();
+	$columns = get_all_columns();
 	foreach($columns as $column)
 	{
 		$GLOBALS['validate_search_' . $column] = create_function('$request', 'return validate_search($request, \'' . $column . '\');');
@@ -235,7 +235,7 @@ function alter_query_search($request, &$props)
 	// search every column for the same string
 	else
 	{
-		$columns = columns($request['cat']);
+		$columns = get_columns($request['cat']);
 	}
 		
 	// array for each column
@@ -318,9 +318,9 @@ function output_search($request)
 	$search_regexp = array();
 
 	// get columns being searched
-	$columns = columns($request['cat']);
+	$columns = get_columns($request['cat']);
 	
-	$all_columns = getAllColumns();
+	$all_columns = get_all_columns();
 	
 	// replace each column with search match
 	foreach($all_columns as $i => $column)
@@ -391,12 +391,9 @@ function theme_search()
 		<h3>Search Individual Fields:</h3>
 		Category: <select name="cat">
 		<?php
-		foreach($GLOBALS['modules'] as $handler => $config)
+		foreach(get_handlers() as $handler => $config)
 		{
-			if(is_handler($handler) && !is_internal($handler))
-			{
-				?><option value="<?php print $handler; ?>" <?php print ($GLOBALS['templates']['vars']['cat'] == $handler)?'selected="selected"':''; ?>><?php print $config['name']; ?></option><?php
-			}
+			?><option value="<?php print $handler; ?>" <?php print ($GLOBALS['templates']['vars']['cat'] == $handler)?'selected="selected"':''; ?>><?php print $config['name']; ?></option><?php
 		}
 		?>
 		</select><br /><br />

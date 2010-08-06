@@ -109,7 +109,7 @@ function alter_query_file($request, &$props)
 	// add dir filter to where
 	if(isset($request['dir']))
 	{
-		$columns = columns($request['cat']);
+		$columns = get_columns($request['cat']);
 				
 		if($request['dir'] == '') $request['dir'] = '/';
 		
@@ -136,6 +136,8 @@ function alter_query_file($request, &$props)
 		if($request['cat'] != 'files' || is_dir(realpath($request['dir'])) !== false)
 		{
 		
+			// require_permit below so the user can't see files that don't belong to them
+			
 			// make sure directory is in the database
 			$dirs = $GLOBALS['database']->query(array('SELECT' => $request['cat'], 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"', 'LIMIT' => 1), true);
 			
@@ -278,9 +280,9 @@ function output_file($request)
 	$tmp_request = array_merge(array_intersect_key($files[0], getIDKeys()), $tmp_request);
 
 	// get info from other handlers
-	foreach($GLOBALS['modules'] as $handler => $config)
+	foreach(get_handlers() as $handler => $config)
 	{
-		if($handler != $request['cat'] && !is_internal($handler) && handles($files[0]['Filepath'], $handler))
+		if($handler != $request['cat'] && handles($files[0]['Filepath'], $handler))
 		{
 			$return = get_files($tmp_request, &$tmp_count, $handler);
 			if(isset($return[0])) $files[0] = array_merge($return[0], $files[0]);

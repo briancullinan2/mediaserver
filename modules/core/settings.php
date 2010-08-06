@@ -78,7 +78,7 @@ function setup_settings()
 	}
 
 	// loop through the modules and call settings functions on them if they are set to callbacks
-	foreach($GLOBALS['modules'] as $module => $config)
+	foreach(get_modules() as $module => $config)
 	{
 		if(isset($config['settings']) && is_string($config['settings']) && 
 			$config['settings'] == $module && function_exists('setting_' . $module)
@@ -135,7 +135,7 @@ function dependency_settings($settings)
 	
 	// loop through all the modules and look for config settings set to the module name
 	// those modules must be set up before settings tries to load their default values
-	foreach($GLOBALS['modules'] as $module => $config)
+	foreach(get_modules() as $module => $config)
 	{
 		if(isset($config['settings']) && is_string($config['settings']) && 
 			$config['settings'] == $module && function_exists('setting_' . $module)
@@ -205,7 +205,7 @@ function settings_get_defaults($settings)
 	}
 	
 	// loop through each module and get the default settings
-	foreach($GLOBALS['modules'] as $module => $config)
+	foreach(get_modules() as $module => $config)
 	{
 		if(isset($config['settings']) && is_array($config['settings']))
 		{

@@ -319,10 +319,9 @@ function add_archive($file, $archive_id = NULL)
 	
 	// set up empty ids array since we know archive_id will be the only entry
 	$ids = array();
-	foreach($GLOBALS['modules'] as $handler => $config)
+	foreach(get_handlers(false) as $handler => $config)
 	{
-		if(is_handler($handler) && !is_wrapper($handler) && !is_internal($handler))
-			$ids[$handler . '_id'] = false;
+		$ids[$handler . '_id'] = false;
 	}
 	
 	// add archive internal files to archive database

@@ -25,11 +25,8 @@ function theme_live_footer()
 									Categories:<br />
 									<ul>
 									<?php
-									foreach($GLOBALS['modules'] as $handler => $config)
+									foreach(get_handlers() as $handler => $config)
 									{
-										if(!is_handler($handler) || is_internal($handler))
-											continue;
-											
 										$name = $config['name'];
 										?><li><a href="<?php print url('select/' . $handler); ?>"><?php echo $name; ?></a></li><?php
 									}

@@ -21,29 +21,6 @@ function rewrite_select($path_info)
 	return $request;
 }
 
-function url_select($request)
-{
-	if(isset($request['dir']))
-	{
-		$tmp_request = array('module' => $request['module']);
-		$path = create_path_info($tmp_request);
-		/*if(strlen($request['dir']) > 100)
-		{
-			$path .= 'dirid/' . $request['id'];
-			unset($request['id']);
-		}
-		else*/
-			$path .= 'dir' . $request['dir'];
-			
-		// TODO: this may give an unwanted effect, since id overrides any other request variable
-		unset($request['id']);
-		unset($request['dir']);
-		unset($request['module']);
-		return array($request, $path);
-	}
-	return array($request);
-}
-
 /**
  * Implementation of validate
  * @ingroup validate
@@ -290,31 +267,22 @@ function output_select($request)
 		return;
 	}
 	
-	$order_keys_values = array();
-	
 	// the ids handler will do the replacement of the ids
-	if(setting('database_enable') == true)
+	if(count($files) > 0)
 	{
-		if(count($files) > 0)
+		// wrappers for parent databases do not get IDs!
+		if(!is_wrapper($request['cat']))
 		{
-			// wrappers for parent databases do not get IDs!
-			if(!is_wrapper($request['cat']))
-			{
-				$files = get_ids(array('cat' => $request['cat']), $tmp_count, $files);
-			}
-			else
-			{
-				$files = get_ids(array('cat' => $GLOBALS['modules'][$request['cat']]['wrapper']), $tmp_count, $files);
-			}
-			$files = get_users(array(), $tmp_count, $files);
+			$files = get_ids(array('cat' => $request['cat']), $tmp_count, $files);
 		}
+		else
+		{
+			$files = get_ids(array('cat' => $GLOBALS['modules'][$request['cat']]['wrapper']), $tmp_count, $files);
+		}
+		$files = get_users(array(), $tmp_count, $files);
 	}
 	
-	// count a few types of media for templates to use
-	$files_count = 0;
-	$image_count = 0;
-	$video_count = 0;
-	$audio_count = 0;
+	$order_keys_values = array();
 	
 	// get all the other information from other handlers
 	foreach($files as $index => $file)
@@ -329,26 +297,13 @@ function output_select($request)
 		if(!isset($request['short']) || $request['short'] == false)
 		{
 			// merge all the other information to each file
-			foreach($GLOBALS['modules'] as $handler => $config)
+			foreach(get_handlers() as $handler => $config)
 			{
-				if($handler != $request['cat'] && !is_internal($handler) && handles($file['Filepath'], $handler))
+				if($handler != $request['cat'] && handles($file['Filepath'], $handler))
 				{
 					$return = get_files($tmp_request, $tmp_count, $handler);
 					if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
-					
-					// do some counting
-					if($handler == 'audio')
-						$audio_count++;
-					elseif($handler == 'video')
-						$video_count++;
-					elseif($handler == 'image') 
-						$image_count++;
-					elseif($handler == 'files')
-						$files_count++;
 				}
-				// this will help with our counting
-				elseif($handler == $request['cat'])
-					$files_count++;
 			}
 		}
 			
@@ -377,12 +332,9 @@ function output_select($request)
 
 	register_output_vars('files', $files);
 	
-	// set counts
+	// count a few types of media for templates to use
 	register_output_vars('total_count', $total_count);
-	register_output_vars('audio_count', $audio_count);
-	register_output_vars('video_count', $video_count);
-	register_output_vars('image_count', $image_count);
-	register_output_vars('files_count', $files_count);
+	register_output_vars('file_counts', handles_count($files));
 	
 	// register selected files for templates to use
 	if($session_select = session('select'))

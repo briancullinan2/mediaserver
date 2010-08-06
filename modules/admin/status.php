@@ -26,12 +26,8 @@ function output_admin_status($request)
 	$module_description_fail = lang('module status fail description', 'This module is disabled either due to a manual setting or failed dependencies.');
 	
 	$status = array();
-	foreach($GLOBALS['modules'] as $module => $config)
+	foreach(get_modules() as $module => $config)
 	{
-		// skip the modules that don't depend on anything
-		if(!isset($config['depends on']))
-			continue;
-			
 		// output configuration page
 		if(function_exists('status_' . $module))
 		{
@@ -46,7 +42,8 @@ function output_admin_status($request)
 				continue;
 			}
 		}
-		else
+		// skip the modules that don't depend on anything
+		elseif(isset($config['depends on']))
 		{
 			// show default status line, ignore the setting part of the dependency
 			if(dependency($module, true) != false)

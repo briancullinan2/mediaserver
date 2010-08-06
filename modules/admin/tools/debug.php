@@ -64,7 +64,7 @@ function output_admin_tools_debug($request)
 	if(isset($request['subtool']) && $request['subtool'] == 1)
 	{
 		$modules = array();
-		foreach($GLOBALS['modules'] as $module => $config)
+		foreach(get_modules() as $module => $config)
 		{
 			$modules[$module] = $config['name'];
 		}

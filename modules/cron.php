@@ -607,11 +607,10 @@ function output_cron($request)
 	raise_error("Phase 3: Cleaning up", E_DEBUG);
 	
 	// clean up each database
-	foreach($GLOBALS['modules'] as $handler => $config)
+	foreach(get_handlers(false, true) as $handler => $config)
 	{
 		// only clean up the modules that have databases of their own
-		if(is_handler($handler) && !is_wrapper($handler))
-			cleanup($handler);
+		cleanup($handler);
 	}
 	
 	// read all the folders that lead up to the watched folder

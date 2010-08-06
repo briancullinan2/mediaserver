@@ -56,7 +56,7 @@ function theme_live_head()
 <head>
 <?php theme('redirect_block'); ?>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title><?php print setting('html_name'); ?> : <?php print htmlspecialchars($GLOBALS['modules'][$GLOBALS['templates']['vars']['module']]['name']); ?></title>
+<title><?php print htmlspecialchars($GLOBALS['modules'][$GLOBALS['templates']['vars']['module']]['name']); ?> : <?php print setting('html_name'); ?></title>
 <meta name="google-site-verification" content="K3Em8a7JMI3_1ry5CNVKIHIWofDt-2C3ohovDq3N2cQ" />
 <?php theme('styles', $GLOBALS['templates']['vars']['styles']); ?>
 <?php theme('scripts', $GLOBALS['templates']['vars']['scripts']); ?>

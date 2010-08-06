@@ -12,10 +12,9 @@ function setup_ids()
 		'Hex'			=> 'TEXT',
 	);
 	// get all the tables for handlers
-	foreach($GLOBALS['modules'] as $handler => $config)
+	foreach(get_handlers(false, false) as $handler => $config)
 	{
-		if(is_handler($handler) && !is_internal($handler) && !is_wrapper($handler))
-			$struct[$handler . '_id'] = 'INT';
+		$struct[$handler . '_id'] = 'INT';
 	}
 	
 	$GLOBALS['modules']['ids']['database'] = $struct;
@@ -52,35 +51,33 @@ function add_ids($file, $force = false, $ids = array())
 	if(count($db_ids) == 0 || $force == true)
 	{
 		// get all the ids from all the tables
-		$fileinfo['Filepath'] = addslashes($file);
-		$fileinfo['Hex'] = bin2hex($file);
-		foreach($GLOBALS['modules'] as $handler => $config)
+		foreach(get_handlers(false, false) as $handler => $config)
 		{
-			if(is_handler($handler) && !is_wrapper($handler) && !is_internal($handler))
+			if(isset($ids[$handler . '_id']))
 			{
-				if(isset($ids[$handler . '_id']))
-				{
-					if($ids[$handler . '_id'] !== false)
-						$fileinfo[$handler . '_id'] = $ids[$handler . '_id'];
-				}
-				elseif(handles($file, $handler))
-				{
-					$tmp_ids = $GLOBALS['database']->query(array(
-							'SELECT' => $handler,
-							'COLUMNS' => 'id',
-							'WHERE' => 'Filepath = "' . addslashes($file) . '"',
-							'LIMIT' => 1
-						)
-					, false);
-					if(isset($tmp_ids[0])) $fileinfo[$handler . '_id'] = $tmp_ids[0]['id'];
-				}
+				if($ids[$handler . '_id'] !== false)
+					$fileinfo[$handler . '_id'] = $ids[$handler . '_id'];
+			}
+			elseif(handles($file, $handler))
+			{
+				$tmp_ids = $GLOBALS['database']->query(array(
+						'SELECT' => $handler,
+						'COLUMNS' => 'id',
+						'WHERE' => 'Filepath = "' . addslashes($file) . '"',
+						'LIMIT' => 1
+					)
+				, false);
+				if(isset($tmp_ids[0])) $fileinfo[$handler . '_id'] = $tmp_ids[0]['id'];
 			}
 		}
 	}
 	
 	// only add to database if the filepath exists in another table
-	if(count($fileinfo) > 2)
+	if(count($fileinfo) > 0)
 	{
+		$fileinfo['Filepath'] = addslashes($file);
+		$fileinfo['Hex'] = bin2hex($file);
+		
 		// add list of ids
 		if( count($db_ids) == 0 )
 		{
@@ -149,7 +146,7 @@ function get_ids($request, &$count, $files = array())
 		// add id information to file
 		foreach($files as $index => $file)
 		{
-			// look up file if it was not be retrieved by the id information
+			// look up file if it was not retrieved by the id information
 			if(!isset($ids[$file['id']])) 
 			{
 				// handle file
@@ -184,12 +181,9 @@ function get_ids($request, &$count, $files = array())
 	elseif(isset($request['file']))
 	{
 		$files = array();
-		foreach($GLOBALS['modules'] as $handler => $config)
+		// skip wrappers and internal handlers
+		foreach(get_handlers(false, false) as $handler => $config)
 		{
-			// skip wrappers and internal handlers
-			if(is_wrapper($handler) || is_internal($handler) || !is_handler($handler))
-				continue;
-				
 			// get file based on ID
 			if(isset($request[$handler . '_id']) && is_numeric($request[$handler . '_id']))
 			{
@@ -266,10 +260,9 @@ function cleanup_ids()
 	
 	// remove empty ids
 	$where = '';
-	foreach($GLOBALS['modules'] as $handler => $config)
+	foreach(get_handlers(false, false) as $handler => $config)
 	{
-		if(is_handler($handler) && !is_wrapper($handler) && !is_internal($handler))
-			$where .= ' ' . $handler . '_id=0 AND';
+		$where .= ' ' . $handler . '_id=0 AND';
 	}
 	$where = substr($where, 0, strlen($where) - 3);
 

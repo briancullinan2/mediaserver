@@ -56,6 +56,9 @@ function validate_path_info($request)
 
 function get_menu_entry($path)
 {
+	if(!isset($GLOBALS['menus']))
+		setup_menu();
+	
 	$dirs = split('/', $path);
 
 	// find the menu entry that matches the most
