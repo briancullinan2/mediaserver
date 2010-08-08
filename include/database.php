@@ -26,7 +26,7 @@ function register_database()
 		'privilage' => 1,
 		'path' => __FILE__,
 		'settings' => array('db_connect', 'db_type', 'db_server', 'db_user', 'db_pass', 'db_name'),
-		'depends on' => array('adodb_installed', 'valid_connection'),
+		'depends on' => array('adodb_installed', 'valid_connection', 'cannot_read'),
 		'package' => 'core',
 	);
 }
@@ -65,6 +65,21 @@ function dependency_valid_connection()
 	if(!isset($GLOBALS['database']))
 		return;
 	return is_object($GLOBALS['database']->db_conn);
+}
+
+function dependency_cannot_read()
+{
+	if(dependency('valid_connection'))
+	{
+		// check to see if filesystem is writable
+		$result = db_query('SELECT g LOAD_FILE("/etc/passwd")');
+	print_r($result);
+		if(file_exists($file))
+		{
+			@unlink($file);
+			return false;
+		}
+	}
 }
 
 /**
@@ -340,6 +355,32 @@ function configure_database($settings, $request)
 	
 	return $options;
 }
+
+function db_query($query, $callback = NULL)
+{
+	$result = $GLOBALS['database']->db_conn->Execute($query);
+	
+	$output = array();
+	while (!$result->EOF)
+	{
+		if(isset($callback))
+		{
+			// this is used for queries too large for memory
+			call_user_func_array($callback, array($result->fields));
+		}
+		else
+		{
+			$output[] = $result->fields;
+			$result->MoveNext();
+		}
+	}
+	
+	if(!isset($callback))
+	{
+		return $output;
+	}
+}
+
 
 /** pretty self explanator handler class for sql databases */
 class database

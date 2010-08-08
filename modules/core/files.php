@@ -404,6 +404,18 @@ function output_files($file, $handler)
  * @}
  */
 
+function merge_files_info($files, $default_cat)
+{
+	// loop through handlers and get extra file information
+	foreach(get_handlers() as $handler => $config)
+	{
+		// do not get the same file information that is already available, skip default_cat
+		if($handler != $default_cat && handles($file['Filepath'], $handler))
+		{
+		}
+	}
+}
+
 /**
  * @defgroup get_handler Handler 'Get' Functions
  * Functions that return a list of files for the specific handler

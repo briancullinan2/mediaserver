@@ -138,12 +138,7 @@ function get_amazon_info($file)
 	if(handles($file, 'audio'))
 	{
 		// get information from database
-		$audio = $GLOBALS['database']->query(array(
-				'SELECT' => 'audio',
-				'WHERE' => 'Filepath = "' . addslashes($file) . '"',
-				'LIMIT' => 1
-			)
-		, false);
+		$audio = db_query('SELECT * FROM audio WHERE Filepath = "?" ' . users_db() . ' LIMIT 1', array($file));
 		if(count($audio) > 0)
 		{
 			$artist = $audio[0]['Artist'];

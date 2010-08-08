@@ -204,7 +204,7 @@ function alter_query_file($request, &$props)
 			if(!isset($props['WHERE'])) $props['WHERE'] = array();
 			
 			// add single id to where
-			$props['WHERE'][] = 'id = ' . $request[$request['cat'] . '_id'];					
+			$props['WHERE'][] = 'id = ' . $request[$request['cat'] . '_id'] . ' OR Filepath = "' . addslashes($request['file']) . '"';					
 		}
 		else
 		{
