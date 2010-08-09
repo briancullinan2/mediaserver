@@ -41,12 +41,10 @@ function setup_users()
 	// get users associated with the keys
 	if(isset($session_user['Settings']['keys']))
 	{
-		$return = $GLOBALS['database']->query(array(
-				'SELECT' => 'users',
-				'WHERE' => 'PrivateKey = "' . join('" OR PrivateKey = "', $session_user['Settings']['keys']) . '"',
-				'LIMIT' => count($session_user['Settings']['keys'])
-			)
-		, false);
+		$return = db_query('SELECT * FROM users WHERE PrivateKey = "' . 
+			implode('" OR PrivateKey = "', array_fill(0, count($session_user['Settings']['keys']), '?')) . 
+			'" LIMIT ' . count($session_user['Settings']['keys'])
+		, $session_user['Settings']['keys']);
 		
 		$session_user['Settings']['keys_usernames'] = array();
 		foreach($return as $index => $user)
@@ -358,27 +356,20 @@ function add_users($file, $force = false)
 		$username = basename($file);
 		
 		// check if it is in the database
-		$db_user = $GLOBALS['database']->query(array(
-				'SELECT' => 'users',
-				'WHERE' => 'Username = "' . addslashes($username) . '"',
-				'LIMIT' => 1
-			)
-		, false);
+		$db_user = db_query('SELECT * FROM users WHERE Username = "?" LIMIT 1', array(
+			$username,
+		));
 		
 		if( count($db_user) == 0 )
 		{
 			// just set up the user with default information
 			//   if they don't use the module, this creates a system user
-			return $GLOBALS['database']->query(array('INSERT' => 'users', 'VALUES' => array(
-						'Username' => addslashes($username),
-						'Password' => '',
-						'Email' => '',
-						'Settings' => serialize(array()),
-						'Privilage' => 1,
-						'PrivateKey' => md5(microtime())
-					)
-				)
-			, false);
+			return qb_query('INSERT INTO users (Username, Settings, Privilage, PrivateKey) VALUES ("?", "?", "?", "?")', array(
+				$username,
+				serialize(array()),
+				1,
+				md5(microtime()),
+			));
 		}
 		elseif($force)
 		{
@@ -428,12 +419,10 @@ function get_users($request, &$count, $files = array())
 		// perform query to get all the needed users
 		if(count($users) > 0)
 		{
-			$return = $GLOBALS['database']->query(array(
-					'SELECT' => 'users',
-					'WHERE' => 'Username = "' . join('" OR Username = "', $users) . '"',
-					'LIMIT' => count($users)
-				)
-			, false);
+			$return = db_query('SELECT * FROM users WHERE Username = "' . 
+				implode('" OR Username = "', array_fill(0, count($users), '?')) . 
+				'" LIMIT ' . count($users)
+			, $users);
 			
 			// replace get for easy lookup
 			foreach($return as $i => $user)
@@ -499,6 +488,24 @@ function get_users($request, &$count, $files = array())
 	return $files;
 }
 
+function sql_users($request)
+{
+	$user = session('users');
+	$sql = ' LEFT(Filepath, ' . strlen(setting('local_users')) . ') != "' . addslashes(setting('local_users')) . '" OR ' . 
+						'Filepath = "' . addslashes(setting('local_users')) . '" OR ' . 
+						'(LEFT(Filepath, ' . strlen(setting('local_users')) . ') = "' . addslashes(setting('local_users')) . '" AND LOCATE("/", Filepath, ' . (strlen(setting('local_users')) + 1) . ') = LENGTH(Filepath)) OR ' . 
+						'LEFT(Filepath, ' . strlen(setting('local_users') . $user['Username'] . '/') . ') = "' . addslashes(setting('local_users') . $user['Username'] . '/') . '" OR ' . 
+						'SUBSTR(Filepath, ' . strlen(setting('local_users')) . ' + LOCATE("/", SUBSTR(Filepath, ' . (strlen(setting('local_users')) + 1) . ')), 8) = "/public/"';
+	if(isset($user['Settings']['keys_usernames']) && count($user['Settings']['keys_usernames']) > 0)
+	{
+		
+		foreach($user['Settings']['keys_usernames'] as $i => $username)
+		{
+			$where_security .= ' OR LEFT(Filepath, ' . strlen(setting('local_users') . $username . '/') . ') = "' . addslashes(setting('local_users') . $username . '/') . '"';
+		}
+	}
+}
+
 /** 
  * Implementation of remove_handler
  * @ingroup remove_handler
@@ -530,41 +537,29 @@ function session_users($request)
 	if( isset($request['username']) && isset($request['password']) && setting_installed() && setting('database_enable') )
 	{
 		// lookup username in table
-		$db_user = $GLOBALS['database']->query(array(
-				'SELECT' => 'users',
-				'WHERE' => 'Username = "' . addslashes($request['username']) . '"',
-				'LIMIT' => 1
-			)
-		, false);
+		$db_user = db_query('SELECT * FROM users WHERE Username = "?" AND Password = "?" LIMIT 1', array(
+			$request['username'],
+			substr($request['password'], 5),
+		));
 		
 		if( count($db_user) > 0 )
 		{
-			if(substr($request['password'], 5) == $db_user[0]['Password'])
-			{
-				// just incase a template wants to access the rest of the information; include the user
-				unset($db_user[0]['Password']);
-				
-				$save = $db_user[0];
-				
-				// deserialize settings
-				$save['Settings'] = unserialize($save['Settings']);
-			}
-			else
-				raise_error('Invalid password.', E_USER);
+			// just incase a template wants to access the rest of the information; include the user
+			unset($db_user[0]['Password']);
+			
+			$save = $db_user[0];
+			
+			// deserialize settings
+			$save['Settings'] = unserialize($save['Settings']);
 		}
 		else
-			raise_error('Invalid username.', E_USER);
+			raise_error('Invalid username or password.', E_USER);
 	}
 	// use guest information
 	elseif(setting_installed() && setting('database_enable'))
 	{
 		// get guest user
-		$db_user = $GLOBALS['database']->query(array(
-				'SELECT' => 'users',
-				'WHERE' => 'id = -2',
-				'LIMIT' => 1
-			)
-		, false);
+		$db_user = db_query('SELECT * FROM users WHERE id = -2 LIMIT 1');
 		
 		if(is_array($db_user) && count($db_user) > 0)
 		{
@@ -580,7 +575,7 @@ function session_users($request)
 	{
 		if($request['username'] == 'admin')
 		{
-			if(substr($request['password'], 5) == setting('admin_password'))
+			if(substr($request['password'], 5) == substr(setting('admin_password'), 5))
 			{
 				$save = array(
 					'id' => '-1',
@@ -628,12 +623,7 @@ function output_users($request)
 			if(handles(setting('local_users') . $request['username'], 'db_users'))
 			{
 				// make sure the user doesn't already exist
-				$db_user = $GLOBALS['database']->query(array(
-						'SELECT' => 'users',
-						'WHERE' => 'Username = "' . addslashes($request['username']) . '"',
-						'LIMIT' => 1
-					)
-				, false);
+				$db_user = db_query('SELECT * FROM users WHERE Username = "?" LIMIT 1', array($request['username']));
 				
 				if( count($db_user) > 0 )
 					raise_error('User already exists.', E_USER);
@@ -663,17 +653,14 @@ function output_users($request)
 				if( count($GLOBALS['user_errors']) == 0 )
 				{
 					// create database entry
-					$user_id = handle_db_users(setting('local_users') . $request['username']);
+					$user_id = add_users(setting('local_users') . $request['username']);
 					
 					// add password and profile information
-					$result = $GLOBALS['database']->query(array(
-						'UPDATE' => 'users',
-						'VALUES' => array(
-							'Password' => addslashes($request['password']),
-							'Email' => $request['email']
-						),
-						'WHERE' => 'id=' . $user_id
-					), false);
+					$result = db_query('UPDATE users SET Password = "?", Email = "?" WHERE id = ?', array(
+						$request['password'],
+						$request['email'],
+						$user_id,
+					));
 					
 					// send out confirmation email
 					ob_start();

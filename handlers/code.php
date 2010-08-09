@@ -357,13 +357,7 @@ function add_code($file, $force = false)
 	if(handles($file, 'code'))
 	{
 		// check to see if it is in the database
-		$db_code = $GLOBALS['database']->query(array(
-				'SELECT' => 'code',
-				'COLUMNS' => 'id',
-				'WHERE' => 'Filepath = "' . addslashes($file) . '"',
-				'LIMIT' => 1
-			)
-		, false);
+		$db_code = db_query('SELECT id FROM code WHERE Filepath = "?" LIMIT 1', array($file));
 		
 		if( count($db_code) == 0 || $force )
 		{
@@ -377,14 +371,24 @@ function add_code($file, $force = false)
 				raise_error('Adding code: ' . $file, E_DEBUG);
 				
 				// add to database
-				$id = $GLOBALS['database']->query(array('INSERT' => 'code', 'VALUES' => $fileinfo), false);
+				$id = db_query('INSERT INTO code (Filepath, Words, LineCount, Language) VALUES ("?", "?", "?", "?")', array(
+					$fileinfo['Filepath'],
+					$fileinfo['Words'],
+					$fileinfo['LineCount'],
+					$fileinfo['Language'],
+				));
 			}
 			else
 			{
 				raise_error('Modifying code: ' . $file, E_DEBUG);
 				
 				// update database
-				$return = $GLOBALS['database']->query(array('UPDATE' => 'code', 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $db_code[0]['id']), false);
+				$return = db_query('UPDATE code SET Words = "?", LineCount = "?", Language = "?" WHERE id = ?', array(
+					$fileinfo['Words'],
+					$fileinfo['LineCount'],
+					$fileinfo['Language'],
+					$db_code[0]['id'],
+				));
 				
 				$id = $db_code[0]['id'];
 			}
@@ -394,7 +398,11 @@ function add_code($file, $force = false)
 			if($fileinfo['Words'] < 4096)
 			{
 				$fileinfo = get_code_html($lines, $fileinfo['Language']);
-				$return = $GLOBALS['database']->query(array('UPDATE' => 'code', 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $id), false);
+				
+				$return = db_query('UPDATE code SET HTML = "?" WHERE id = ?', array(
+					$fileinfo['HTML'],
+					$id,
+				));
 			}
 			
 			return $id;
@@ -510,7 +518,7 @@ class code
 		if(substr($path, 0, strlen('code://')) == 'code://')
 			$path = substr($path, strlen('code://'));
 
-		$files = $GLOBALS['database']->query(array('SELECT' => 'code', 'WHERE' => 'Filepath = "' . addslashes($path) . '"', 'LIMIT' => 1), true);
+		$files = db_query('SELECT * FROM code WHERE Filepath = "?" AND ' . sql_users() . ' LIMIT 1', array($path));
 		
 		if(count($files) > 0)
 		{

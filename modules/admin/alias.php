@@ -94,6 +94,11 @@ function setup_admin_alias()
 	}
 }
 
+function alias_replace($file)
+{
+	return preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+}
+
 /**
  * Implementation of get_handler
  * @ingroup get_handler

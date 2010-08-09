@@ -84,7 +84,7 @@ function bootstrap($mode)
 			//load_modules('handlers' . DIRECTORY_SEPARATOR);
 
 			bootstrap('modules');
-			
+
 			// set up the modules
 			invoke_all_callback('setup', 'disable_module');
 

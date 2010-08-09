@@ -76,16 +76,10 @@ function add_diskimage($file, $force = false)
 	if(handles($file, 'diskimage'))
 	{
 		// check to see if it is in the database
-		$db_diskimage = $GLOBALS['database']->query(array(
-				'SELECT' => 'diskimage',
-				'COLUMNS' => 'id',
-				'WHERE' => 'Filepath = "' . addslashes($file) . '"',
-				'LIMIT' => 1
-			)
-		, false);
+		$db_diskimage = get_files(array('cat' => 'diskimage', 'file' => $file), $count);
 		
 		// try to get music information
-		if( count($db_diskimage) == 0 )
+		if( $count == 0 )
 		{
 			return diskimage_add($file);
 		}
@@ -175,13 +169,14 @@ function diskimage_add($file, $image_id = NULL)
 		raise_error('Adding diskimage: ' . $fileinfo['Filepath'], E_DEBUG);
 		
 		// add to database
-		$image_id = $GLOBALS['database']->query(array('INSERT' => 'diskimage', 'VALUES' => $fileinfo), false);
+		$image_id = db_query('INSERT INTO diskimage (' . sql_keys($fileinfo) . ') VALUES ("?", "?", "?", "?", "?", "?", "?")', array_values($fileinfo));
 	}
 	else
 	{
 		raise_error('Modifying diskimage: ' . $fileinfo['Filepath'], E_DEBUG);
 		
 		// update database
+		$image_id = db_query('UPDATE diskimage SET ');
 		$image_id = $GLOBALS['database']->query(array('UPDATE' => 'diskimage', 'VALUES' => $fileinfo, 'WHERE' => 'id=' . $image_id), false);
 	}
 

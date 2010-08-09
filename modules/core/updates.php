@@ -42,13 +42,7 @@ function handles_updates($dir, $file = NULL)
 			if($file == NULL)
 			{
 				// changed directories or directories that don't exist in the database
-				$db_files = $GLOBALS['database']->query(array(
-						'SELECT' => 'files',
-						'COLUMNS' => array('id', 'Filedate'),
-						'WHERE' => 'Filepath = "' . addslashes($dir) . '"',
-						'LIMIT' => 1
-					)
-				, false);
+				$db_files = db_query('SELECT id,Filepath FROM files WHERE Filepath = "?" LIMIT 1', array($dir));
 				if(count($db_files) > 0)
 				{
 					$file = $db_files[0];
@@ -64,12 +58,9 @@ function handles_updates($dir, $file = NULL)
 			else
 			{
 				// compare the count of files in the database to the file system
-				$db_files = $GLOBALS['database']->query(array(
-						'SELECT' => 'files',
-						'COLUMNS' => array('count(*)'),
-						'WHERE' => 'LEFT(Filepath, ' . strlen($dir) . ') = "' . addslashes($dir) . '" AND (LOCATE("/", Filepath, ' . (strlen($dir)+1) . ') = 0 OR LOCATE("/", Filepath, ' . (strlen($dir)+1) . ') = LENGTH(Filepath))'
-					)
-				, false);
+				$db_files = db_query('SELECT count(*) FROM files WHERE LEFT(Filepath, ' . strlen($dir) . ') = "?" AND (LOCATE("/", Filepath, ' . (strlen($dir)+1) . ') = 0 OR LOCATE("/", Filepath, ' . (strlen($dir)+1) . ') = LENGTH(Filepath))', array(
+					$dir
+				));
 				
 				// check for file count inconsistency but don't process anything
 				$count = 1;
@@ -220,13 +211,7 @@ function add_updates($dir)
 	
 	if(handles($dir, 'updates'))
 	{
-		$update = $GLOBALS['database']->query(array(
-				'SELECT' => 'admin_watch',
-				'COLUMNS' => array('id'),
-				'WHERE' => 'Filepath = "' . addslashes($dir) . '"',
-				'LIMIT' => 1
-			)
-		, false);
+		$update = db_query('SELECT id FROM updates WHERE Filepath = "?" LIMIT 1', array($dir));
 		
 		if( count($update) == 0 )
 		{
@@ -237,7 +222,7 @@ function add_updates($dir)
 			raise_error('Queueing directory: ' . $dir, E_DEBUG);
 			
 			// add to database
-			$id = $GLOBALS['database']->query(array('INSERT' => 'updates', 'VALUES' => $fileinfo), false);
+			$id = db_query('INSERT INTO updates (Filepath) VALUES ("?")', array($dir));
 			
 			return $id;
 		}
@@ -277,12 +262,9 @@ function scan_dir($dir)
 	}
 	
 	// search for files removed from filesystem
-	$db_files = $GLOBALS['database']->query(array(
-			'SELECT' => 'files',
-			'COLUMNS' => array('Filepath'),
-			'WHERE' => 'LEFT(Filepath, ' . strlen($dir) . ') = "' . addslashes($dir) . '" AND (LOCATE("/", Filepath, ' . (strlen($dir)+1) . ') = 0 OR LOCATE("/", Filepath, ' . (strlen($dir)+1) . ') = LENGTH(Filepath))'
-		)
-	, false);
+	$db_files = db_query('SELECT Filepath FROM files WHERE LEFT(Filepath, ' . strlen($dir) . ') = "?" AND (LOCATE("/", Filepath, ' . (strlen($dir)+1) . ') = 0 OR LOCATE("/", Filepath, ' . (strlen($dir)+1) . ') = LENGTH(Filepath)', array(
+		$dir,
+	));
 	
 	$db_paths = array();
 	foreach($db_files as $j => $file)
@@ -377,15 +359,8 @@ function handle_dir($dir, $current = '')
 				
 				$current_dir = true;
 				if(handles($file['Filepath'], 'updates'))
-
 				{
-					$db_watch_list = $GLOBALS['database']->query(array(
-							'SELECT' => 'admin_watch',
-							'COLUMNS' => array('id'),
-							'WHERE' => 'Filepath = "' . addslashes($file['Filepath']) . '"',
-							'LIMIT' => 1
-						)
-					, false);
+					$db_watch_list = db_query('SELECT id FROM updates WHERE Filepath = "?" LIMIT 1', array($file['Filepath']));
 					
 					$current_dir = handle_dir($dir, $file['Filepath']);
 					

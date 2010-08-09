@@ -216,7 +216,7 @@ function alter_query_select($request, &$props)
 		unset($props['ORDER']);
 		
 		// get ids from centralized id database
-		$files = $GLOBALS['database']->query(array('WHERE' => $props['WHERE'], 'SELECT' => 'ids'), true);
+		$files = db_query('SELECT * FROM ids WHERE ' . $props['WHERE'] . ' AND ' . sql_users());
 		
 		if(count($files) > 0)
 		{

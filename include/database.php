@@ -24,7 +24,6 @@ function register_database()
 		'name' => lang('database title', 'Database'),
 		'description' => lang('database description', 'Wrapper module for displaying database configuration'),
 		'privilage' => 1,
-		'path' => __FILE__,
 		'settings' => array('db_connect', 'db_type', 'db_server', 'db_user', 'db_pass', 'db_name'),
 		'depends on' => array('adodb_installed', 'valid_connection', 'cannot_read'),
 		'package' => 'core',
@@ -38,7 +37,6 @@ function register_database()
 function setup_database()
 {
 	// load database stuff
-	include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb-errorpear.inc.php';
 	include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'adodb5' . DIRECTORY_SEPARATOR . 'adodb.inc.php';
 
 	$GLOBALS['database'] = new database(setting('db_connect'));
@@ -69,17 +67,12 @@ function dependency_valid_connection()
 
 function dependency_cannot_read()
 {
-	if(dependency('valid_connection'))
-	{
-		// check to see if filesystem is writable
-		$result = db_query('SELECT g LOAD_FILE("/etc/passwd")');
-	print_r($result);
-		if(file_exists($file))
-		{
-			@unlink($file);
-			return false;
-		}
-	}
+	if(!isset($GLOBALS['database']))
+		return;
+		
+	// check to see if filesystem is writable
+	$result = db_query('SELECT "test" INTO OUTFILE "/tmp/mediaserver.log"');
+	return $result == false;
 }
 
 /**
@@ -120,6 +113,26 @@ function status_database($settings)
 				'link' => array(
 					'url' => 'http://adodb.sourceforge.net/',
 					'text' => 'Get ADOdb',
+				),
+			),
+		);
+	}
+	
+	if(dependency('cannot_read') == false)
+	{
+		$options['cannot_read'] = array(
+			'name' => 'Database Permissions',
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					'The system has detected that the supplied user account has FILE permissions.',
+					'The database should never use file permissions.',
+				),
+			),
+			'value' => array(
+				'link' => array(
+					'url' => 'http://dev.mysql.com/doc/refman/5.0/en/revoke.html',
+					'text' => 'REVOKE syntax',
 				),
 			),
 		);
@@ -358,26 +371,34 @@ function configure_database($settings, $request)
 
 function db_query($query, $callback = NULL)
 {
+	if(setting('verbose') == true)
+		raise_error('DATABASE: ' . $query, E_DEBUG);
+	
 	$result = $GLOBALS['database']->db_conn->Execute($query);
 	
-	$output = array();
-	while (!$result->EOF)
+	if($result !== false)
 	{
-		if(isset($callback))
+		// return $GLOBALS['database']->db_conn->GetAssoc();
+		
+		$output = array();
+		while (!$result->EOF)
 		{
-			// this is used for queries too large for memory
-			call_user_func_array($callback, array($result->fields));
+			if(isset($callback))
+			{
+				// this is used for queries too large for memory
+				call_user_func_array($callback, array($result->fields));
+			}
+			else
+			{
+				$output[] = $result->fields;
+				$result->MoveNext();
+			}
 		}
-		else
+		
+		if(!isset($callback))
 		{
-			$output[] = $result->fields;
-			$result->MoveNext();
+			return $output;
 		}
-	}
-	
-	if(!isset($callback))
-	{
-		return $output;
 	}
 }
 

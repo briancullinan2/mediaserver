@@ -138,8 +138,8 @@ function get_amazon_info($file)
 	if(handles($file, 'audio'))
 	{
 		// get information from database
-		$audio = db_query('SELECT * FROM audio WHERE Filepath = "?" ' . users_db() . ' LIMIT 1', array($file));
-		if(count($audio) > 0)
+		$audio = get_files(array('file' => $file, 'cat' => 'audio'), $count);
+		if($count > 0)
 		{
 			$artist = $audio[0]['Artist'];
 			$album = $audio[0]['Album'];
@@ -175,13 +175,8 @@ function add_amazon($file, $force = false)
 			else
 			{
 				// get information from database
-				$audio = $GLOBALS['database']->query(array(
-						'SELECT' => 'audio',
-						'WHERE' => 'Filepath = "' . addslashes($file) . '"',
-						'LIMIT' => 1
-					)
-				, false);
-				if(count($audio) > 0)
+				$audio = get_files(array('cat' => 'audio', 'file' => $file), $count);
+				if($count > 0)
 				{
 					$artist = $audio[0]['Artist'];
 					$album = $audio[0]['Album'];
@@ -197,12 +192,7 @@ function add_amazon($file, $force = false)
 				}
 			}
 			
-			$amazon = $GLOBALS['database']->query(array(
-					'SELECT' => 'amazon',
-					'WHERE' => 'Filepath = "' . addslashes($artist . "\n" . $album) . '"',
-					'LIMIT' => 1
-				)
-			, false);
+			$amazon = get_files(array('cat' => 'amazon', 'file' => $artist . "\n" . $album), $count);
 			
 			if( count($amazon) == 0 )
 			{
@@ -396,14 +386,20 @@ function get_amazon_music_info($artist, $album)
 
 function amazon_add_music($artist, $album)
 {
-	
 	// pull information from $info
 	$fileinfo = get_amazon_music_info($artist, $album);
 
 	raise_error('Adding Amazon Music: ' . $artist . ' - ' . $album, E_DEBUG);
 	
 	// add to database
-	$id = $GLOBALS['database']->query(array('INSERT' => 'amazon', 'VALUES' => $fileinfo), false);
+	$id = db_query('INSERT INTO amazon (Filepath, AmazonId, AmazonType, AmazonInfo, Matches, Thumbnail) VALUES ("?", "?", "?", "?", "?", "?")', array(
+		$fileinfo['Filepath'],
+		$fileinfo['AmazonId'],
+		$fileinfo['AmazonType'],
+		$fileinfo['AmazonInfo'],
+		$fileinfo['Matches'],
+		$fileinfo['Thumbnail'],
+	));
 
 	return $id;
 }
@@ -416,7 +412,14 @@ function amazon_add_movie($title)
 	raise_error('Adding Amazon Movie: ' . $title, E_DEBUG);
 	
 	// add to database
-	$id = $GLOBALS['database']->query(array('INSERT' => 'amazon', 'VALUES' => $fileinfo), false);
+	$id = db_query('INSERT INTO amazon (Filepath, AmazonId, AmazonType, AmazonInfo, Matches, Thumbnail) VALUES ("?", "?", "?", "?", "?", "?")', array(
+		$fileinfo['Filepath'],
+		$fileinfo['AmazonId'],
+		$fileinfo['AmazonType'],
+		$fileinfo['AmazonInfo'],
+		$fileinfo['Matches'],
+		$fileinfo['Thumbnail'],
+	));
 	
 	return $id;
 }
@@ -435,12 +438,11 @@ function get_amazon($request, &$count)
 			$audio = get_files(array('file' => $request['file'], 'audio_id' => (isset($request['audio_id'])?$request['audio_id']:0)), $tmp_count, 'audio');
 			if(count($audio) > 0)
 			{
-				$files = $GLOBALS['database']->query(array(
-						'SELECT' => 'amazon',
-						'WHERE' => 'Filepath = "' . addslashes($audio[0]['Artist'] . "\n" . $audio[0]['Album']) . '"',
-						'LIMIT' => 1
-					)
-				, true);
+				$files = get_files(array(
+					'cat' => 'amazon', 
+					'file' => $audio[0]['Artist'] . "\n" . $audio[0]['Album'],
+					'user' => session('users'),
+				), $count);
 			}
 			else
 			{
@@ -452,12 +454,7 @@ function get_amazon($request, &$count)
 			$movie = get_files(array('file' => $request['file'], 'video_id' => (isset($request['video_id'])?$request['video_id']:0)), $tmp_count, 'audio');
 			if(count($movie) > 0)
 			{
-				$files = $GLOBALS['database']->query(array(
-						'SELECT' => 'amazon',
-						'WHERE' => 'Filepath = "' . addslashes($movie[0]['Title']) . '"',
-						'LIMIT' => 1
-					)
-				, true);
+				$files = db_query('SELECT * FROM amazon WHERE Filepath = "?" AND ' . sql_users() . ' LIMIT 1', array($movie[0]['Title']));
 			}
 			else
 			{
@@ -471,12 +468,7 @@ function get_amazon($request, &$count)
 			
 			$album = $dirs[count($dirs)-1];
 			$artist = @$dirs[count($dirs)-2];
-			$files = $GLOBALS['database']->query(array(
-					'SELECT' => 'amazon',
-					'WHERE' => 'Filepath = "' . addslashes($artist . "\n" . $album) . '"',
-					'LIMIT' => 1
-				)
-			, true);
+			$files = db_query('SELECT * FROM amazon WHERE Filepath = "?" AND ' . sql_users() . ' LIMIT 1', array($artist . "\n" . $albu));
 		}
 		else
 		{
@@ -503,12 +495,7 @@ function get_amazon($request, &$count)
 				$title = $request['dir'];
 			}
 			unset($request['dir']);
-			$amazon = $GLOBALS['database']->query(array(
-					'SELECT' => 'amazon',
-					'WHERE' => 'Filepath = "' . addslashes($title) . '"',
-					'LIMIT' => 1
-				)
-			, true);
+			$amazon = db_query('SELECT * FROM amazon WHERE Filepath = "?" AND ' . sql_users() . ' LIMIT 1', array($title));
 			
 			if(count($amazon) > 0)
 			{

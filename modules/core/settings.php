@@ -59,12 +59,7 @@ function setup_settings()
 	// load settings from database
 	if(setting_installed() && setting('database_enable'))
 	{
-		$return = $GLOBALS['database']->query(array(
-				'SELECT' => 'users',
-				'WHERE' => 'id = -1',
-				'LIMIT' => 1
-			)
-		, false);
+		$return = db_query('SELECT * FROM users WHERE id = -1 LIMIT 1');
 			
 		// make sure the query succeeded
 		if(is_array($return) && count($return) > 0)

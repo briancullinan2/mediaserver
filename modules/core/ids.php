@@ -84,7 +84,7 @@ function add_ids($file, $force = false, $ids = array())
 			raise_error('Adding id for file: ' . $file, E_DEBUG);
 			
 			// add to database
-			return $GLOBALS['database']->query(array('INSERT' => 'ids', 'VALUES' => $fileinfo), false);
+			return db_query('INSERT INTO ids (' . sql_keys($fileinfo) . ') VALUES (' . '' . ')', array_values($fileinfo));
 		}
 		// update ids
 		elseif($force)
@@ -126,12 +126,7 @@ function get_ids($request, &$count, $files = array())
 	// select an array of ids!
 	if(isset($request['selected']) && count($request['selected']) > 0 )
 	{
-		$return = $GLOBALS['database']->query(array(
-				'SELECT' => 'ids',
-				'WHERE' => $request['cat'] . '_id = ' . join(' OR ' . $request['cat'] . '_id = ', $request['selected']),
-				'LIMIT' => count($files)
-			)
-		, true);
+		$return = db_query('SELECT * FROM ids WHERE ' . $request['cat'] . '_id = ' . join(' OR ' . $request['cat'] . '_id = ', $request['selected']) . ' AND ' . sql_users() . ' LIMIT ' . count($files));
 
 		if(count($return) > 0)
 		{
@@ -155,14 +150,13 @@ function get_ids($request, &$count, $files = array())
 				else
 					$id = add_ids($file['Filepath'], true, array($request['cat'] . '_id' => $file['id']));
 				
-				$tmp_id = $GLOBALS['database']->query(array(
-						'SELECT' => 'ids',
-						'WHERE' => 'id = ' . $id,
-						'LIMIT' => 1
-					)
-				, true);
+				$tmp_id = get_files(array(
+					'cat' => 'ids',
+					'id' => $id,
+					'users' => session('users'),
+				), $count);
 
-				if($tmp_id == false || count($tmp_id) == 0)
+				if($tmp_id == false || $count == 0)
 				{
 					raise_error('There was an error getting the IDs.', E_DEBUG|E_USER);
 					return array();
@@ -187,12 +181,11 @@ function get_ids($request, &$count, $files = array())
 			// get file based on ID
 			if(isset($request[$handler . '_id']) && is_numeric($request[$handler . '_id']))
 			{
-				$files = $GLOBALS['database']->query(array(
-						'SELECT' => 'ids',
-						'WHERE' => $handler . '_id = ' . $request[$handler . '_id'],
-						'LIMIT' => 1
-					)
-				, true);
+				$files = db_query(array(
+					'cat'            => 'ids',
+					$handler . '_id' => $request[$handler . '_id'],
+					'users'          => session('users')
+				), $count);
 				break;
 			}
 		}
@@ -205,14 +198,13 @@ function get_ids($request, &$count, $files = array())
 			else
 				$id = add_ids($request['file']);
 			
-			$files = $GLOBALS['database']->query(array(
-					'SELECT' => 'ids',
-					'WHERE' => 'id = ' . $id,
-					'LIMIT' => 1
-				)
-			, true);
+			$files = get_files(array(
+				'cat'   => 'ids',
+				'id'    => $id,
+				'users' => session('users')
+			), $count);
 			
-			if(count($files) == 0)
+			if($count == 0)
 			{
 				raise_error('There was an error getting the IDs.', E_USER);
 				return array();
@@ -246,7 +238,7 @@ function remove_ids($file, $handler = NULL)
 		else $file_dir = $file;
 		
 		// all the removing will be done by other handlers
-		$GLOBALS['database']->query(array('UPDATE' => 'ids', 'VALUES' => array($handler . '_id' => 0), 'WHERE' => 'Filepath = "' . addslashes($file) . '" OR LEFT(Filepath, ' . strlen($file_dir) . ') = "' . addslashes($file_dir) . '"'), false);	
+		db_query('UPDATE ids SET ' . $handler . '_id = 0 WHERE Filepath = "?" OR LEFT(Filepath, ' . strlen($file_dir) . ') = "?"', array($file, $file_dir));
 	}
 }
 
@@ -265,10 +257,7 @@ function cleanup_ids()
 		$where .= ' ' . $handler . '_id=0 AND';
 	}
 	$where = substr($where, 0, strlen($where) - 3);
-
-	$GLOBALS['database']->query(array(
-		'DELETE' => 'ids',
-		'WHERE' => $where
-	), false);
+	
+	db_query('DELETE FROM ids WHERE ' . $where);
 }
 

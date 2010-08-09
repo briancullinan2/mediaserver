@@ -94,6 +94,26 @@ function validate_dirs_only($request)
 	return generic_validate_boolean_true($request, 'dirs_only');
 }
 
+function sql_file($request)
+{
+	$request['file'] = str_replace('\\', '/', $request['file']);
+	
+	// this is necissary for dealing with windows and cross platform queries coming from templates
+	if($request['file'][0] == DIRECTORY_SEPARATOR) $request['file'] = realpath('/') . substr($request['file'], 1);
+	
+	// replace aliased path with actual path
+	if(setting('admin_alias_enable') == true)
+		$request['file'] = alias_replace($request['file']);
+		
+	// if the id is available, try to use that instead
+	if(isset($request[$request['cat'] . '_id']) && $request[$request['cat'] . '_id'] != 0)
+	{
+		return 'id = ' . $request[$request['cat'] . '_id'] . ' OR Filepath = "' . addslashes($request['file']) . '"';
+	}
+	else
+		return 'Filepath = "' . addslashes($request['file']) . '"';
+}
+
 /**
  * Implementation of alter_query
  * Alters the query based on file and dir input variables
@@ -109,8 +129,6 @@ function alter_query_file($request, &$props)
 	// add dir filter to where
 	if(isset($request['dir']))
 	{
-		$columns = get_columns($request['cat']);
-				
 		if($request['dir'] == '') $request['dir'] = '/';
 		
 		// this is necissary for dealing with windows and cross platform queries coming from templates
@@ -161,7 +179,7 @@ function alter_query_file($request, &$props)
 						$props['WHERE'][] = 'LEFT(Filepath, ' . strlen($request['dir']) . ') = "' . addslashes($request['dir']) . '" AND (LOCATE("/", Filepath, ' . (strlen($request['dir'])+1) . ') = 0 OR LOCATE("/", Filepath, ' . (strlen($request['dir'])+1) . ') = LENGTH(Filepath)) AND Filepath != "' . addslashes($request['dir']) . '"';
 					
 					// put folders at top if the handler supports a filetype
-					if(in_array('Filetype', $columns))
+					if(in_array('Filetype', get_columns($request['cat'])))
 					{
 						$props['ORDER'] = '(Filetype = "FOLDER") DESC,' . (isset($props['ORDER'])?$props['ORDER']:'');
 					}

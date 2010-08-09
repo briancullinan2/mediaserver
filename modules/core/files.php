@@ -132,7 +132,10 @@ function handles_count($files)
 	
 	foreach(get_handlers() as $handler => $config)
 	{
-		$modules[$handler . '_count'] = array_sum(array_map('handles', $files, array_fill(0, count($files), $handler)));
+		if(count($files) > 0)
+			$modules[$handler . '_count'] = array_sum(array_map('handles', $files, array_fill(0, count($files), $handler)));
+		else
+			$modules[$handler . '_count'] = 0;
 	}
 	
 	return $modules;
@@ -273,15 +276,9 @@ function add($file, $force = false, $handler = 'files')
 		return false;
 	
 	// check if it is in the database
-	$db_file = $GLOBALS['database']->query(array(
-			'SELECT' => $handler,
-			'COLUMNS' => ($handler == 'files')?array('id', 'Filedate'):'id',
-			'WHERE' => 'Filepath = "' . addslashes($file) . '"',
-			'LIMIT' => 1
-		)
-	, false);
+	$files = get_files(array('file' => $file, 'cat' => $handler), $count);
 	
-	if( count($db_file) == 0 )
+	if( $count == 0 )
 	{
 		// get file information
 		$fileinfo = call_user_func_array('get_' . $handler . '_info', array($file));
@@ -290,7 +287,8 @@ function add($file, $force = false, $handler = 'files')
 		raise_error('Adding ' . $handler . ': ' . $file, E_DEBUG);
 		
 		// add to database
-		return $GLOBALS['database']->query(array('INSERT' => $handler, 'VALUES' => $fileinfo), false);
+		return db_query('INSERT INTO ' . $handler . 
+			' (' . implode(array_keys($fileinfo)) . ') VALUES (' . implode(',', array_fill(0, count($fileinfo), '"?"')) . ')', array_values($fileinfo));
 	}
 	// not dependent on force because it checks for modification
 	elseif($handler == 'files')
@@ -628,7 +626,7 @@ function _get_local_files($request, &$count, $handler)
 	return $files;
 }
 
-function _get_database_files($request, &$count, $handler)
+function _get_database_files($filters, &$count)
 {
 	// handle the request using default functionality
 	$files = array();
