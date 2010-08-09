@@ -1,9 +1,0 @@
-name = Audio/Video Transcoder
-description = Encode video files to the selected output.
-privilage = 1
-template = false
-settings[] = encode_path
-settings[] = encode_args
-depends on[] = encoder
-depends on[] = select
-depends on[] = template

@@ -1,5 +1,0 @@
-name = Ampache Compatibility
-description = Compatibility support for the Ampache XMLRPC protocol.
-privilage = 1
-depends on[] = database
-template = true
