@@ -25,7 +25,10 @@ function setup_template()
 
 	// get the list of templates
 	$GLOBALS['templates'] = array();
-	$files = get_files(array('dir' => setting('local_root') . 'templates' . DIRECTORY_SEPARATOR, 'limit' => 32000), $count, true);
+	$files = get_filesystem(array(
+		'dir' => setting('local_root') . 'templates' . DIRECTORY_SEPARATOR,
+		'limit' => 32000
+	), $count);
 	if(is_array($files))
 	{
 		foreach($files as $i => $file)
@@ -423,6 +426,59 @@ function template_variables($request)
 		}
 		register_output_vars('settings', $settings);
 	}
+}
+
+/**
+ * Make variables available for output in the templates,
+ * convert variables to HTML compatible for security
+ * @param name name of the variable the template can use to refer to
+ * @param value value for the variable, converted to HTML
+ * @param append (Optional) append the input value to a pre-existing set of data
+ */
+function register_output_vars($name, $value, $append = false)
+{
+	if(isset($GLOBALS['output'][$name]) && $append == false)
+	{
+		raise_error('Variable "' . $name . '" already set!', E_DEBUG);
+	}
+	if($append == false)
+		$GLOBALS['output'][$name] = $value;
+	elseif(!isset($GLOBALS['output'][$name]))
+		$GLOBALS['output'][$name] = $value;
+	elseif(is_string($GLOBALS['output'][$name]))
+		$GLOBALS['output'][$name] = array($GLOBALS['output'][$name], $value);
+	elseif(is_array($GLOBALS['output'][$name]))
+		$GLOBALS['output'][$name][] = $value;
+}
+
+/**
+ * Function to call before the template is called, this can also be called from the first time #theme() is called
+ * This sets all the register variables as HTML or original content, it also removes all unnecissary variables that might be used to penetrate the site
+ */
+function set_output_vars()
+{
+	// triggers for always output can also be set
+	trigger('output', NULL, $_REQUEST);	
+
+	// do not remove these variables
+	$dont_remove = array(
+	);
+
+	// unset all other globals to prevent templates from using them
+	foreach($GLOBALS as $key => $value)
+	{
+		if(in_array($key, $dont_remove) === false)
+			unset($GLOBALS[$key]);
+	}
+
+	foreach($GLOBALS['output'] as $name => $value)
+	{
+		$GLOBALS['templates']['vars'][$name] = $value;
+		
+		$GLOBALS['templates']['html'][$name] = traverse_array($value);
+	}
+	
+	unset($GLOBALS['output']);
 }
 
 /**

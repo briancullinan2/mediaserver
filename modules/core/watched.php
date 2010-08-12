@@ -1,9 +1,9 @@
 <?php
 
-function menu_updates()
+function menu_watched()
 {
 	return array(
-		'admin/updates' => array(
+		'admin/watched' => array(
 			'callback' => 'configure',
 		)
 	);
@@ -12,7 +12,7 @@ function menu_updates()
 /**
  * Implementation of setup
  */
-function setting_updates()
+function setting_watched()
 {
 	$settings = array();
 	
@@ -30,7 +30,7 @@ function setting_updates()
  * Implementation of handles
  * @ingroup handles
  */
-function handles_updates($dir, $file = NULL)
+function handles_watched($dir, $file = NULL)
 {
 	$dir = str_replace('\\', '/', $dir);
 	if(setting('admin_alias_enable') == true) $dir = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $dir);
@@ -205,13 +205,13 @@ function is_watched($dir)
  * Implementation of handle
  * @ingroup handle
  */
-function add_updates($dir)
+function add_watched($dir)
 {
 	$dir = str_replace('\\', '/', $dir);
 	
-	if(handles($dir, 'updates'))
+	if(handles($dir, 'watched'))
 	{
-		$update = db_query('SELECT id FROM updates WHERE Filepath = "?" LIMIT 1', array($dir));
+		$update = db_query('SELECT id FROM watched WHERE Filepath = "?" LIMIT 1', array($dir));
 		
 		if( count($update) == 0 )
 		{
@@ -222,7 +222,7 @@ function add_updates($dir)
 			raise_error('Queueing directory: ' . $dir, E_DEBUG);
 			
 			// add to database
-			$id = db_query('INSERT INTO updates (Filepath) VALUES ("?")', array($dir));
+			$id = db_query('INSERT INTO watched (Filepath) VALUES ("?")', array($dir));
 			
 			return $id;
 		}
@@ -246,7 +246,10 @@ function scan_dir($dir)
 	raise_error('Scanning directory: ' . $dir, E_DEBUG);
 	
 	// search all the files in the directory
-	$files = get_files(array('dir' => $dir, 'limit' => 32000), $count, true);
+	$files = get_filesystem(array(
+		'dir' => $dir,
+		'limit' => 32000
+	), $count);
 	
 	// send new/changed files to other handlers
 	$paths = array();
@@ -293,7 +296,7 @@ function scan_dir($dir)
 	{
 		if(is_dir($path) && is_watched($dir))
 		{
-			add_updates($path);
+			add_watched($path);
 		}
 	}
 	
@@ -327,7 +330,10 @@ function handle_dir($dir, $current = '')
 	{
 		raise_error('Looking for changes in: ' . $current, E_DEBUG);
 	
-		$files = get_files(array('dir' => $current, 'limit' => 32000), $count, true);
+		$files = get_filesystem(array(
+			'dir' => $current,
+			'limit' => 32000
+		), $count);
 		$has_resumed = false;
 		// keep going until all files in directory have been read
 		foreach($files as $i => $file)
@@ -358,15 +364,15 @@ function handle_dir($dir, $current = '')
 				$file['Filepath'] = str_replace('\\', '/', $file['Filepath']);
 				
 				$current_dir = true;
-				if(handles($file['Filepath'], 'updates'))
+				if(handles($file['Filepath'], 'watched'))
 				{
-					$db_watch_list = db_query('SELECT id FROM updates WHERE Filepath = "?" LIMIT 1', array($file['Filepath']));
+					$db_watch_list = db_query('SELECT id FROM watched WHERE Filepath = "?" LIMIT 1', array($file['Filepath']));
 					
 					$current_dir = handle_dir($dir, $file['Filepath']);
 					
 					if( count($db_watch_list) == 0 )
 					{
-						$id = add_updates($file['Filepath']);
+						$id = add_watched($file['Filepath']);
 					}
 				}
 				
@@ -435,10 +441,10 @@ function handle_file($file)
  * Implementation of get_handler
  * @ingroup get_handler
  */
-function get_updates($request, &$count)
+function get_watched($request, &$count)
 {
 	// change the cat to the table we want to use
-	$request['cat'] = validate(array('cat' => 'updates'), 'cat');
+	$request['handler'] = validate(array('handler' => 'watched'), 'handler');
 	
 	if(isset($request['file']))
 		return array();
@@ -459,7 +465,7 @@ function validate_wremove($request)
 /**
  * Implementation of configure
  */
-function configure_updates($settings, $request)
+function configure_watched($settings, $request)
 {
 	$settings['watches'] = setting('watches');
 	$settings['ignores'] = setting('ignores');
@@ -542,12 +548,12 @@ function configure_updates($settings, $request)
 	);
 	
 	// make select call for the file browser
-	$files = get_files(array(
+	$files = get_filesystem(array(
 		'dir' => validate($request, 'dir'),
 		'start' => validate($request, 'start'),
 		'limit' => 32000,
 		'dirs_only' => true,
-	), &$total_count, true);
+	), &$total_count);
 	
 	register_output_vars('files', $files);
 	

@@ -68,14 +68,14 @@ function theme_live_select_block()
 			}
 			
 			// make links browsable
-			if(handles($file['Filepath'], 'archive')) $cat = 'archive';
-			elseif(handles($file['Filepath'], 'playlist')) $cat = 'playlist';
-			elseif(handles($file['Filepath'], 'diskimage')) $cat = 'diskimage';
-			else $cat = $GLOBALS['templates']['vars']['cat'];
+			if(handles($file['Filepath'], 'archive')) $handler = 'archive';
+			elseif(handles($file['Filepath'], 'playlist')) $handler = 'playlist';
+			elseif(handles($file['Filepath'], 'diskimage')) $handler = 'diskimage';
+			else $handler = $GLOBALS['templates']['vars']['handler'];
 			
-			if($GLOBALS['templates']['vars']['cat'] != $cat || $file['Filetype'] == 'FOLDER') $new_cat = $cat;
+			if($GLOBALS['templates']['vars']['handler'] != $handler || $file['Filetype'] == 'FOLDER') $new_handler = $handler;
 			
-			$link = isset($new_cat)?url($GLOBALS['templates']['vars']['get'] . '&start=0&cat=' . $new_cat . '&dir=' . urlencode($file['Filepath'])):url($GLOBALS['templates']['vars']['get'] . '&dir=&id=' . urlencode($file['id']) . '&filename=' . urlencode($file['Filename']));
+			$link = isset($new_handler)?url($GLOBALS['templates']['vars']['get'] . '&start=0&handler=' . $new_handler . '&dir=' . urlencode($file['Filepath'])):url($GLOBALS['templates']['vars']['get'] . '&dir=&id=' . urlencode($file['id']) . '&filename=' . urlencode($file['Filename']));
 			
 			?>
 			<div class="filesmall <?php print $file['Filetype']; ?>" onmousedown="deselectAll(event);fileSelect(this, true, event);return false;" oncontextmenu="showMenu(this);return false;" id="<?php print $file['id']; ?>"><div class="notselected"></div>
@@ -117,23 +117,23 @@ function theme_live_files()
 			$GLOBALS['templates']['html']['files'][$i] = live_alter_file($file);
 			
 			// make links browsable
-			if(handles($file['Filepath'], 'archive')) $cat = 'archive';
-			elseif(handles($file['Filepath'], 'playlist')) $cat = 'playlist';
-			elseif(handles($file['Filepath'], 'diskimage')) $cat = 'diskimage';
-			else $cat = $GLOBALS['templates']['vars']['cat'];
+			if(handles($file['Filepath'], 'archive')) $handler = 'archive';
+			elseif(handles($file['Filepath'], 'playlist')) $handler = 'playlist';
+			elseif(handles($file['Filepath'], 'diskimage')) $handler = 'diskimage';
+			else $handler = $GLOBALS['templates']['vars']['handler'];
 			
-			if($GLOBALS['templates']['vars']['cat'] != $cat || $file['Filetype'] == 'FOLDER')
+			if($GLOBALS['templates']['vars']['handler'] != $handler || $file['Filetype'] == 'FOLDER')
 			{
 				if(substr($file['Filepath'], -1) != '/') $file['Filepath'] .= '/';
-				$new_cat = $cat;
+				$new_handler = $handler;
 			}
-			if(isset($new_cat))
+			if(isset($new_handler))
 			{
-				$link = url('select/dir' . $GLOBALS['templates']['html']['files'][$i]['Filepath'] . '?cat=' . $new_cat);
+				$link = url('select/dir' . $GLOBALS['templates']['html']['files'][$i]['Filepath'] . '?handler=' . $new_handler);
 			}
 			else
-				$link = url('file/' . $cat . '/' . $file['id'] . '/' . $file['Filename']);
-			unset($new_cat);
+				$link = url('file/' . $handler . '/' . $file['id'] . '/' . $file['Filename']);
+			unset($new_handler);
 			?>
 			<div class="file <?php print $file['Filetype']; ?>" onmousedown="deselectAll(event);fileSelect(this, true, event);return false;" oncontextmenu="showMenu(this);return false;" id="<?php print $file['id']; ?>"><div class="notselected"></div>
 				<table class="itemTable" cellpadding="0" cellspacing="0" onclick="location.href = '<?php print $link; ?>';">

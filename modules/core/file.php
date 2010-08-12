@@ -38,7 +38,7 @@ function validate_dir($request)
 	if(isset($request['dir']))
 	{
 		// this is needed to make sure the directory is handled by something
-		$request['cat'] = validate($request, 'cat');
+		$request['handler'] = validate($request, 'handler');
 		
 		// replace directory with actual path
 		if(setting('admin_alias_enable') == true && setting('database_enable') && setting_installed())
@@ -53,9 +53,9 @@ function validate_dir($request)
 		// this checks the input 'dir' is on the actual file system
 		if(is_dir(realpath($tmp)) || 
 			// this check the 'dir' for directories inside archives and disk images
-			handles($request['dir'], $request['cat']) == true ||
+			handles($request['dir'], $request['handler']) == true ||
 			// this check the dir for wrappers, wrappers can handle their own dir
-			is_wrapper($request['cat'])
+			is_wrapper($request['handler'])
 		)
 			return $request['dir'];
 		else
@@ -74,10 +74,10 @@ function validate_file($request)
 	//   this shouldn't cause any security risks
 	if(isset($request['file']))
 	{
-		$request['cat'] = validate($request, 'cat');
+		$request['handler'] = validate($request, 'handler');
 		if(setting('admin_alias_enable') == true)
 			$tmp = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']);
-		if(is_file(realpath($tmp)) || handles($request['file'], $request['cat']) == true)
+		if(is_file(realpath($tmp)) || handles($request['file'], $request['handler']) == true)
 			return $request['file'];
 		else
 			raise_error('File does not exist!', E_USER);
@@ -106,10 +106,8 @@ function sql_file($request)
 		$request['file'] = alias_replace($request['file']);
 		
 	// if the id is available, try to use that instead
-	if(isset($request[$request['cat'] . '_id']) && $request[$request['cat'] . '_id'] != 0)
-	{
-		return 'id = ' . $request[$request['cat'] . '_id'] . ' OR Filepath = "' . addslashes($request['file']) . '"';
-	}
+	if(isset($request[$request['handler'] . '_id']) && $request[$request['handler'] . '_id'] != 0)
+		return 'id = ' . $request[$request['handler'] . '_id'] . ' OR Filepath = "' . addslashes($request['file']) . '"';
 	else
 		return 'Filepath = "' . addslashes($request['file']) . '"';
 }
@@ -144,20 +142,20 @@ function alter_query_file($request, &$props)
 			$request['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
 			
 		// maybe the dir is not loaded yet, this part is costly but it is a good way to do it
-		if(setting('recursive_get') && handles($request['dir'], 'updates'))
+		if(setting('recursive_get') && handles($request['dir'], 'watched'))
 		{
 			$GLOBALS['tm_start'] = array_sum(explode(' ', microtime()));
 			scan_dir($request['dir']);
 		}
 		
 		// make sure file exists if we are using the file handler
-		if($request['cat'] != 'files' || is_dir(realpath($request['dir'])) !== false)
+		if($request['handler'] != 'files' || is_dir(realpath($request['dir'])) !== false)
 		{
 		
 			// require_permit below so the user can't see files that don't belong to them
 			
 			// make sure directory is in the database
-			$dirs = $GLOBALS['database']->query(array('SELECT' => $request['cat'], 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"', 'LIMIT' => 1), true);
+			$dirs = $GLOBALS['database']->query(array('SELECT' => $request['handler'], 'WHERE' => 'Filepath = "' . addslashes($request['dir']) . '"', 'LIMIT' => 1), true);
 			
 			// check the file database, some handlers use their own database to store special paths,
 			//  while other handlers only store files and no directories, but these should still be searchable paths
@@ -179,7 +177,7 @@ function alter_query_file($request, &$props)
 						$props['WHERE'][] = 'LEFT(Filepath, ' . strlen($request['dir']) . ') = "' . addslashes($request['dir']) . '" AND (LOCATE("/", Filepath, ' . (strlen($request['dir'])+1) . ') = 0 OR LOCATE("/", Filepath, ' . (strlen($request['dir'])+1) . ') = LENGTH(Filepath)) AND Filepath != "' . addslashes($request['dir']) . '"';
 					
 					// put folders at top if the handler supports a filetype
-					if(in_array('Filetype', get_columns($request['cat'])))
+					if(in_array('Filetype', get_columns($request['handler'])))
 					{
 						$props['ORDER'] = '(Filetype = "FOLDER") DESC,' . (isset($props['ORDER'])?$props['ORDER']:'');
 					}
@@ -217,17 +215,17 @@ function alter_query_file($request, &$props)
 			$request['file'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']);
 			
 		// if the id is available then use that instead
-		if(isset($request[$request['cat'] . '_id']) && $request[$request['cat'] . '_id'] != 0)
+		if(isset($request[$request['handler'] . '_id']) && $request[$request['handler'] . '_id'] != 0)
 		{
 			if(!isset($props['WHERE'])) $props['WHERE'] = array();
 			
 			// add single id to where
-			$props['WHERE'][] = 'id = ' . $request[$request['cat'] . '_id'] . ' OR Filepath = "' . addslashes($request['file']) . '"';					
+			$props['WHERE'][] = 'id = ' . $request[$request['handler'] . '_id'] . ' OR Filepath = "' . addslashes($request['file']) . '"';					
 		}
 		else
 		{
 			// make sure file exists if we are using the file handler
-			if($request['cat'] != 'files' || file_exists(realpath($request['file'])) !== false)
+			if($request['handler'] != 'files' || file_exists(realpath($request['file'])) !== false)
 			{					
 				if(!isset($props['WHERE'])) $props['WHERE'] = array();
 				
@@ -271,7 +269,7 @@ function output_file($request)
 	set_time_limit(0);
 
 	// set up request variables
-	$request['cat'] = validate($request, 'cat');
+	$request['handler'] = validate($request, 'handler');
 	$request['id'] = validate($request, 'id');
 	
 	if(!isset($request['id']))
@@ -282,7 +280,7 @@ function output_file($request)
 	}
 
 	// get the file path from the database
-	$files = get_files($request, $count, $request['cat']);
+	$files = get_files($request, $count);
 	
 	if(count($files) == 0)
 	{
@@ -300,9 +298,9 @@ function output_file($request)
 	// get info from other handlers
 	foreach(get_handlers() as $handler => $config)
 	{
-		if($handler != $request['cat'] && handles($files[0]['Filepath'], $handler))
+		if($handler != $request['handler'] && handles($files[0]['Filepath'], $handler))
 		{
-			$return = get_files($tmp_request, &$tmp_count, $handler);
+			$return = get_files(array('handler' => $handler) + $tmp_request, &$tmp_count);
 			if(isset($return[0])) $files[0] = array_merge($return[0], $files[0]);
 		}
 	}
@@ -316,7 +314,7 @@ function output_file($request)
 	$op = fopen('php://output', 'wb');
 	
 	// get the input stream
-	$fp = output_handler($files[0]['Filepath'], $request['cat']);
+	$fp = output_handler($files[0]['Filepath'], $request['handler']);
 	
 	//-------------------- THIS IS ALL RANAGES STUFF --------------------
 	

@@ -224,7 +224,7 @@ function alter_query_select($request, &$props)
 			$where = '';
 			foreach($files as $i => $file)
 			{
-					$where .= ' id = ' . $file[$request['cat'] . '_id'] . ' OR';
+					$where .= ' id = ' . $file[$request['handler'] . '_id'] . ' OR';
 			}
 			$props['WHERE'] = array(substr($where, 0, strlen($where)-2));
 		}
@@ -243,7 +243,7 @@ function alter_query_select($request, &$props)
 function output_select($request)
 {
 	// set up required request variables
-	$request['cat'] = validate($request, 'cat');
+	$request['handler'] = validate($request, 'handler');
 	$request['start'] = validate($request, 'start');
 	$request['limit'] = validate($request, 'limit');
 	$request['order_by'] = validate($request, 'order_by');
@@ -259,7 +259,7 @@ function output_select($request)
 	}
 	
 	// make select call
-	$files = get_files($request, $total_count, $request['cat']);
+	$files = get_files($request, $total_count, $request['handler']);
 	if(!is_array($files))
 	{
 		raise_error('There was an error with the query.', E_USER);
@@ -271,13 +271,13 @@ function output_select($request)
 	if(count($files) > 0)
 	{
 		// wrappers for parent databases do not get IDs!
-		if(!is_wrapper($request['cat']))
+		if(!is_wrapper($request['handler']))
 		{
-			$files = get_ids(array('cat' => $request['cat']), $tmp_count, $files);
+			$files = get_ids(array('handler' => $request['handler']), $tmp_count, $files);
 		}
 		else
 		{
-			$files = get_ids(array('cat' => $GLOBALS['modules'][$request['cat']]['wrapper']), $tmp_count, $files);
+			$files = get_ids(array('handler' => $GLOBALS['modules'][$request['handler']]['wrapper']), $tmp_count, $files);
 		}
 		$files = get_users(array(), $tmp_count, $files);
 	}
@@ -299,7 +299,7 @@ function output_select($request)
 			// merge all the other information to each file
 			foreach(get_handlers() as $handler => $config)
 			{
-				if($handler != $request['cat'] && handles($file['Filepath'], $handler))
+				if($handler != $request['handler'] && handles($file['Filepath'], $handler))
 				{
 					$return = get_files($tmp_request, $tmp_count, $handler);
 					if(isset($return[0])) $files[$index] = array_merge($return[0], $files[$index]);
@@ -419,14 +419,14 @@ function theme_files()
 			$file = alter_file($GLOBALS['templates']['vars']['files'][$i], $column_lengths);
 			$GLOBALS['templates']['html']['files'][$i] = $file;
 			// make links browsable
-			if(handles($GLOBALS['templates']['vars']['files'][$i]['Filepath'], 'archive')) $cat = 'archive';
-			elseif(handles($GLOBALS['templates']['vars']['files'][$i]['Filepath'], 'playlist')) $cat = 'playlist';
-			elseif(handles($GLOBALS['templates']['vars']['files'][$i]['Filepath'], 'diskimage')) $cat = 'diskimage';
-			else $cat = $GLOBALS['templates']['vars']['cat'];
+			if(handles($GLOBALS['templates']['vars']['files'][$i]['Filepath'], 'archive')) $handler = 'archive';
+			elseif(handles($GLOBALS['templates']['vars']['files'][$i]['Filepath'], 'playlist')) $handler = 'playlist';
+			elseif(handles($GLOBALS['templates']['vars']['files'][$i]['Filepath'], 'diskimage')) $handler = 'diskimage';
+			else $handler = $GLOBALS['templates']['vars']['handler'];
 			
-			if($GLOBALS['templates']['vars']['cat'] != $cat || $GLOBALS['templates']['vars']['files'][$i]['Filetype'] == 'FOLDER') $new_cat = $cat;
+			if($GLOBALS['templates']['vars']['handler'] != $handler || $GLOBALS['templates']['vars']['files'][$i]['Filetype'] == 'FOLDER') $new_handler = $handler;
 			
-			$link = isset($new_cat)?url('select?cat=' . $new_cat . '&dir=' . urlencode($GLOBALS['templates']['vars']['files'][$i]['Filepath'])):url('file/' . $cat . '/' . $file['id'] . '/' . urlencode($GLOBALS['templates']['vars']['files'][$i]['Filename']));
+			$link = isset($new_handler)?url('select?handler=' . $new_handler . '&dir=' . urlencode($GLOBALS['templates']['vars']['files'][$i]['Filepath'])):url('file/' . $handler . '/' . $file['id'] . '/' . urlencode($GLOBALS['templates']['vars']['files'][$i]['Filename']));
 			?>
 			<input type="checkbox" name="item[]" value="<?php print $file['id']; ?>" <?php print isset($GLOBALS['templates']['vars']['selected'])?(in_array($GLOBALS['templates']['vars']['files'][$i]['id'], $GLOBALS['templates']['vars']['selected'])?'checked="checked"':''):''; ?> />
 			<a href="<?php print $link; ?>"><?php print trim($file['Filepath'], '&nbsp;'); ?></a><?php print substr($file['Filepath'], strlen(trim($file['Filepath'], '&nbsp;'))); ?>
@@ -462,13 +462,13 @@ function theme_files()
 			?>
 			<a href="<?php print url(array(
 							'module' => 'zip',
-							'cat' => $GLOBALS['templates']['vars']['cat'],
+							'handler' => $GLOBALS['templates']['vars']['handler'],
 							'id' => $file['id'],
 							'filename' => 'Files.zip'
 						)); ?>">zip</a> :
 			<a href="<?php print url(array(
 							'module' => 'torrent',
-							'cat' => $GLOBALS['templates']['vars']['cat'],
+							'handler' => $GLOBALS['templates']['vars']['handler'],
 							'id' => $file['id'],
 							'filename' => 'Files.torrent'
 						)); ?>">torrent</a>
@@ -476,40 +476,40 @@ function theme_files()
 			if(handles($GLOBALS['templates']['vars']['files'][$i]['Filepath'], 'video'))
 			{
 				?>
-				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'mp4', 'cat' => $GLOBALS['templates']['vars']['cat'],
+				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'mp4', 'handler' => $GLOBALS['templates']['vars']['handler'],
 								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">MP4</a>
-				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'mpg', 'cat' => $GLOBALS['templates']['vars']['cat'],
+				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'mpg', 'handler' => $GLOBALS['templates']['vars']['handler'],
 								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">MPG</a>
-				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'wmv', 'cat' => $GLOBALS['templates']['vars']['cat'],
+				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'wmv', 'handler' => $GLOBALS['templates']['vars']['handler'],
 								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">WMV</a>
 				<?php
 			}
 			if(handles($GLOBALS['templates']['vars']['files'][$i]['Filepath'], 'audio'))
 			{
 				?>
-				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'mp4a', 'cat' => $GLOBALS['templates']['vars']['cat'],
+				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'mp4a', 'handler' => $GLOBALS['templates']['vars']['handler'],
 								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">MP4</a>
-				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'mp3', 'cat' => $GLOBALS['templates']['vars']['cat'],
+				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'mp3', 'handler' => $GLOBALS['templates']['vars']['handler'],
 								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">MP3</a>
-				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'wma', 'cat' => $GLOBALS['templates']['vars']['cat'],
+				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'wma', 'handler' => $GLOBALS['templates']['vars']['handler'],
 								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">WMA</a>
 				<?php
 			}
 			if(handles($GLOBALS['templates']['vars']['files'][$i]['Filepath'], 'image'))
 			{
 				?>
-				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'jpg', 'cat' => $GLOBALS['templates']['vars']['cat'],
+				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'jpg', 'handler' => $GLOBALS['templates']['vars']['handler'],
 								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">JPG</a>
-				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'gif', 'cat' => $GLOBALS['templates']['vars']['cat'],
+				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'gif', 'handler' => $GLOBALS['templates']['vars']['handler'],
 								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">GIF</a>
-				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'png', 'cat' => $GLOBALS['templates']['vars']['cat'],
+				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'png', 'handler' => $GLOBALS['templates']['vars']['handler'],
 								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">PNG</a>
 				<?php
 			}
 			if(handles($GLOBALS['templates']['vars']['files'][$i]['Filepath'], 'code'))
 			{
 				?>
-				: <a href="<?php print url(array('module' => 'code', 'cat' => $GLOBALS['templates']['vars']['cat'],
+				: <a href="<?php print url(array('module' => 'code', 'handler' => $GLOBALS['templates']['vars']['handler'],
 								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">view</a>
 				<?php
 			}

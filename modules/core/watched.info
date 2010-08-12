@@ -1,7 +1,7 @@
 name = Watch List
 description = Keeps track of changed directories and files.
 internal = true
-settings = updates
+settings = watched
 
 [database]
 Filepath = TEXT

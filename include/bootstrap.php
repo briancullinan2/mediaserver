@@ -82,6 +82,7 @@ function bootstrap($mode)
 			// read module list and create a list of available modules	
 			load_modules('modules' . DIRECTORY_SEPARATOR);
 			//load_modules('handlers' . DIRECTORY_SEPARATOR);
+print_r($GLOBALS['modules']);
 
 			bootstrap('modules');
 
@@ -98,30 +99,33 @@ function load_includes()
 {
 
 	// load all the required includes for the system to work
-	include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'module.php';
-	include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'triggers.php';
+	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'module.php';
+	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'triggers.php';
 	setup_triggers();
 	
 	/** require core functionality */
-	include_once dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . 'core' . DIRECTORY_SEPARATOR . 'core.php';
+	require_once dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . 'core' . DIRECTORY_SEPARATOR . 'core.php';
 	
 	// require compatibility
-	include_once setting_local_root() . 'include' . DIRECTORY_SEPARATOR . 'compatibility.php';
+	require_once setting_local_root() . 'include' . DIRECTORY_SEPARATOR . 'compatibility.php';
 
 	// language must be included so that we can translate module definitions
-	include_once setting_local_root() . 'include' . DIRECTORY_SEPARATOR . 'lang.php';
+	require_once setting_local_root() . 'include' . DIRECTORY_SEPARATOR . 'lang.php';
 
 	// include the database module, because it acts like a module, but is kept in the includes directory
-	include_once setting_local_root() . 'include' . DIRECTORY_SEPARATOR . 'session.php';
+	require_once setting_local_root() . 'include' . DIRECTORY_SEPARATOR . 'session.php';
 	
 	// load forms for modules to use for generation
-	include_once setting_local_root() . 'include' . DIRECTORY_SEPARATOR . 'forms.php';
+	require_once setting_local_root() . 'include' . DIRECTORY_SEPARATOR . 'forms.php';
+	
+	// load request processor
+	require_once setting_local_root() . 'include' . DIRECTORY_SEPARATOR . 'request.php';
 
 	// include the settings module ahead of time because it contains 1 needed function setting_settings_file()
-	include_once setting_local_root() . 'modules' . DIRECTORY_SEPARATOR . 'core/settings.php';
+	require_once setting_local_root() . 'modules' . DIRECTORY_SEPARATOR . 'core' . DIRECTORY_SEPARATOR . 'settings.php';
 	
 	// always include files handler
-	include_once setting_local_root() . 'modules' . DIRECTORY_SEPARATOR . 'core' . DIRECTORY_SEPARATOR . 'files.php';
+	require_once setting_local_root() . 'include' . DIRECTORY_SEPARATOR . 'files.php';
 }
 
 

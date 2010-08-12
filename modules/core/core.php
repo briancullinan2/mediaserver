@@ -19,16 +19,16 @@
 function menu_core()
 {
 	return array(
-		'core/%cat/%id/%core/%extra/%filename' => array(
+		'core/%handler/%id/%core/%extra/%filename' => array(
 			'callback' => 'core',
 		),
-		'core/%cat/%id/%core/%filename' => array(
+		'core/%handler/%id/%core/%filename' => array(
 			'callback' => 'core',
 		),
-		'core/%cat/%id/%filename' => array(
+		'core/%handler/%id/%filename' => array(
 			'callback' => 'core',
 		),
-		'core/%cat/%id' => array(
+		'core/%handler/%id' => array(
 			'callback' => 'core',
 		),
 		'core/%search' => array(
@@ -397,7 +397,7 @@ function dependency_extjs_installed($settings)
 /**
  * Implementation of configure
  */
-function configure_index($settings, $request)
+function configure_core($settings, $request)
 {
 	$settings['system_type'] = setting('system_type');
 	$settings['local_root'] = setting('local_root');
@@ -871,81 +871,6 @@ function status_core($settings)
 
 
 /**
- * Set up input variables, everything the site needs about the request <br />
- * Validate all variables, and remove the ones that aren't validate
- * @ingroup setup
- */
-function validate_request()
-{
-	//Remove annoying POST error message with the page is refreshed 
-	//  better place for this?
-	if(isset($_SERVER['REQUEST_METHOD']) && strtolower($_SERVER['REQUEST_METHOD']) == 'post')
-	{
-		session('last_request',  $_REQUEST);
-		goto($_SERVER['REQUEST_URI']);
-	}
-	if($last_request = session('last_request'))
-	{
-		$_REQUEST = $last_request;
-		// set the method just for reference
-		$_SERVER['REQUEST_METHOD'] = 'POST';
-		session('last_request', NULL);
-	}
-	
-	// first fix the REQUEST_URI and pull out what is meant to be pretty dirs
-	if(isset($_SERVER['PATH_INFO']))
-		$_REQUEST['path_info'] = $_SERVER['PATH_INFO'];
-	
-	// call rewrite_vars in order to set some request variables
-	rewrite_vars($_REQUEST, $_GET, $_POST);
-	
-	$GLOBALS['validated'] = array();
-	// go through the rest of the request and validate all the variables with the modules they are for
-	foreach($_REQUEST as $key => $value)
-	{
-		$GLOBALS['validated'][] = $key;
-		$new_value = validate($_REQUEST, $key);
-		if(isset($new_value))
-			$_REQUEST[$key] = $new_value;
-		else
-			unset($_REQUEST[$key]);
-			
-		// set the get variable also, so that when url($_GET) is used it is an accurate representation of the current page
-		if(isset($_GET[$key]) && isset($_REQUEST[$key])) $_GET[$key] = $_REQUEST[$key];
-		else
-			unset($_GET[$key]);
-	}
-	
-	// call the session save functions
-	trigger('session', 'session_set_conditional', $_REQUEST);
-	
-	// do not let GoogleBot perform searches or file downloads
-	if(setting('no_bots'))
-	{
-		if(preg_match('/.*Googlebot.*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
-		{
-			if(basename($_REQUEST['module']) != 'select' && 
-				basename($_REQUEST['module']) != 'index' &&
-				basename($_REQUEST['module']) != 'sitemap')
-			{
-				goto('sitemap');
-			}
-			else
-			{
-				// don't let google bots perform searches, this takes up a lot of resources
-				foreach($_REQUEST as $key => $value)
-				{
-					if(substr($key, 0, 6) == 'search')
-					{
-						unset($_REQUEST[$key]);
-					}
-				}
-			}
-		}
-	}
-}
-
-/**
  * Helper function for validating all variables in a given input
  */
 function core_validate_request($request)
@@ -976,29 +901,6 @@ function core_validate_request($request)
 	return $request;
 }
 
-
-/**
- * Make variables available for output in the templates,
- * convert variables to HTML compatible for security
- * @param name name of the variable the template can use to refer to
- * @param value value for the variable, converted to HTML
- * @param append (Optional) append the input value to a pre-existing set of data
- */
-function register_output_vars($name, $value, $append = false)
-{
-	if(isset($GLOBALS['output'][$name]) && $append == false)
-	{
-		raise_error('Variable "' . $name . '" already set!', E_DEBUG);
-	}
-	if($append == false)
-		$GLOBALS['output'][$name] = $value;
-	elseif(!isset($GLOBALS['output'][$name]))
-		$GLOBALS['output'][$name] = $value;
-	elseif(is_string($GLOBALS['output'][$name]))
-		$GLOBALS['output'][$name] = array($GLOBALS['output'][$name], $value);
-	elseif(is_array($GLOBALS['output'][$name]))
-		$GLOBALS['output'][$name][] = $value;
-}
 
 /**
  * This function takes a request as input, and converts it to a pretty url, or makes no changes if mod_rewrite is off <br />
@@ -1138,7 +1040,7 @@ function goto($request)
 function core_variables($request)
 {
 	// set a couple more that are used a lot
-	$request['cat'] = validate($request, 'cat');
+	$request['handler'] = validate($request, 'handler');
 	$request['group_by'] = validate($request, 'group_by');
 	$request['group_index'] = validate($request, 'group_index');
 	$request['start'] = validate($request, 'start');
@@ -1148,7 +1050,7 @@ function core_variables($request)
 	register_output_vars('modules', $GLOBALS['modules']);
 	
 	// most template pieces use the category variable, so set that
-	register_output_vars('cat', $request['cat']);
+	register_output_vars('handler', $request['handler']);
 	
 	// some templates would like to submit to their own page, generate a string based on the current get variable
 	register_output_vars('get', url($_GET, true));
@@ -1161,63 +1063,6 @@ function core_variables($request)
 	
 	// always make the column list available to templates
 	register_output_vars('columns', get_all_columns());
-}
-
-/**
- * Function to call before the template is called, this can also be called from the first time #theme() is called
- * This sets all the register variables as HTML or original content, it also removes all unnecissary variables that might be used to penetrate the site
- */
-function set_output_vars()
-{
-	// triggers for always output can also be set
-	trigger('output', NULL, $_REQUEST);	
-
-	// do not remove these variables
-	$dont_remove = array(
-		'GLOBALS',
-		//'_REQUEST', // allow this because it has been fully validated
-		'_SESSION', // purely for error handling
-		'templates',
-		'errors',
-		'language_buffer',
-		'debug_errors',
-		'user_errors',
-		'warn_errors',
-		'note_errors',
-		'output',
-		'alias', // these are needed for validating paths in templates
-		'alias_regexp',
-		'paths',
-		'paths_regexp', //
-		'module',
-		'modules',
-		'_PEAR_default_error_mode',
-		'_PEAR_default_error_options',
-		'handlers',
-		'tables',
-		'ext_to_mime',
-		'lists',
-		'settings',
-		'triggers',
-		'menus',
-		'validated',
-	);
-
-	// unset all other globals to prevent templates from using them
-	foreach($GLOBALS as $key => $value)
-	{
-		if(in_array($key, $dont_remove) === false)
-			unset($GLOBALS[$key]);
-	}
-
-	foreach($GLOBALS['output'] as $name => $value)
-	{
-		$GLOBALS['templates']['vars'][$name] = $value;
-		
-		$GLOBALS['templates']['html'][$name] = traverse_array($value);
-	}
-	
-	unset($GLOBALS['output']);
 }
 
 /**
@@ -1247,37 +1092,6 @@ function traverse_array($input)
  * @return NULL if the input is invalid and there is no default, the default value if the input is invalid, the input if it is valid
  * @{
  */
-
-/**
- * Validate request variables for use
- * @param name name of the variable to be validate
- * @param request the request input containing the information to be validated
- * @return the validated variable value
- */
-function validate($request, $key)
-{
-	// call debug error if validate is being called before the request has been validated
-	if(!isset($GLOBALS['validated']))
-		raise_error('Validate \'' . $key . '\' being called before the request has been validated!', E_DEBUG);
-	
-	// call function
-	if(function_exists('validate_' . $key))
-		return call_user_func_array('validate_' . $key, array($request));
-	elseif(isset($GLOBALS['validate_' . $key]) && is_callable($GLOBALS['validate_' . $key]))
-		return call_user_func_array($GLOBALS['validate_' . $key], array($request));
-	// if it is an attempted setting, keep it for now and let the configure modules module handle it
-	elseif(substr($key, 0, 8) == 'setting_')
-		return $request[$key];
-	
-	$result = trigger_key('validate', NULL, $request, $key);
-	if($result)
-		return $result;
-	
-	// if a validator isn't found in the configuration
-	raise_error('Validate \'' . $key . '\' not found!', E_DEBUG);
-	
-	return;
-}
 
 /**
  * Implementation of #setup_validate()
@@ -1522,19 +1336,19 @@ function validate_errors_only($request)
  * Implementation of #setup_validate()
  * @return files handler by default, accepts any valid handler is database is used, or any valid handler that contains a get_handler_info() function if database is not used
  */
-function validate_cat($request)
+function validate_handler($request)
 {
 	// check if it exists
-	if(isset($request['cat']) && is_handler($request['cat']) && !is_internal($request['cat']))
+	if(isset($request['handler']) && is_handler($request['handler']) && !is_internal($request['handler']))
 	{
 		// if the database is not used, then to only categories that can be used for processing
 		//   are the ones with a get_handler_info() function attached, this rules out, but is not limited to
 		//   handlers that only operate on some other database such as wrappers
-		if(setting('database_enable') == false && function_exists('get_' . $request['cat'] . '_info'))
-			return $request['cat'];
+		if(setting('database_enable') == false && function_exists('get_info_' . $request['handler']))
+			return $request['handler'];
 		// the database is used, so return any valid handler
 		elseif(setting('database_enable') != false)
-			return $request['cat'];
+			return $request['handler'];
 		// the database is not used, and there is not get_handler_info function, return default
 		else
 			return 'files';
@@ -1567,7 +1381,7 @@ function validate_limit($request)
  */
 function validate_order_by($request)
 {
-	$handler = validate($request, 'cat');
+	$handler = validate($request, 'handler');
 	
 	$columns = get_columns($handler);
 	
@@ -1597,7 +1411,7 @@ function validate_order_by($request)
  */
 function validate_group_by($request)
 {
-	$handler = validate($request, 'cat');
+	$handler = validate($request, 'handler');
 	
 	$columns = get_columns($handler);
 	
@@ -1654,7 +1468,7 @@ function validate_direction($request)
  */
 function validate_columns($request)
 {
-	$handler = validate($request, 'cat');
+	$handler = validate($request, 'handler');
 	
 	$columns = get_columns($handler);
 	
@@ -1716,87 +1530,6 @@ function rewrite_core($path_info)
 
 	return $request;
 }
-
-/**
- * Rewrite variables in to different names including GET and POST
- */
-function rewrite($old_var, $new_var, &$request, &$get, &$post)
-{
-	if(isset($request[$old_var])) $request[$new_var] = $request[$old_var];
-	if(isset($get[$old_var])) $get[$new_var] = $get[$old_var];
-	if(isset($post[$old_var])) $post[$new_var] = $post[$old_var];
-	
-	unset($request[$old_var]);
-	unset($get[$old_var]);
-	unset($post[$old_var]);
-}
-
-/**
- * Check for variables to be rewritten for specific modules like @ref modules/ampache.php "Ampache" <br />
- * This allows for libraries such as bttracker to recieve variables with similar names in the right way
- * @param request the full request variables
- * @param get the get params
- * @param post the post variables
- */
-function rewrite_vars(&$request, &$get, &$post)
-{
-	// get path info
-	$request['path_info'] = validate($request, 'path_info');
-
-	if($path = get_menu_entry($request['path_info']))
-	{
-		// call a modules rewrite function for further rewriting
-		if(function_exists('rewrite_' . $GLOBALS['menus'][$path]['module']))
-			$result = invoke_module('rewrite', $GLOBALS['menus'][$path]['module'], array($request['path_info'], $request));
-		else
-			$result = invoke_module('rewrite', 'core', array($request['path_info'], $request));
-			
-		// merge result, but current request takes precedence
-		if(isset($result))
-			$request = array_merge($result, $request);
-	}
-	
-	// just about everything uses the cat variable so always validate and add this
-	$request['cat'] = validate($request, 'cat');
-
-/**
-	// do some modifications to specific modules being used
-	if($request['module'] == 'bt')
-	{
-		// save the whole request to be used later
-		$request['bt_request'] = $request;
-	}
-	*/
-}
-
-/**
- * Implementation of #setup_validate()
- * @return The index module by default, also checks for compatibility based on other request information
-function validate_module($request)
-{
-	// remove .php extension
-	if(isset($request['module']) && substr($request['module'], -4) == '.php')
-		$request['module'] = substr($request['module'], 0, -4);
-		
-	// replace slashes
-	if(isset($request['module'])) $request['module'] = str_replace(array('/', '\\'), '_', $request['module']);
-	
-	// if the module is set then return right away
-	if(isset($request['module']) && isset($GLOBALS['modules'][$request['module']]))
-	{
-		return $request['module'];
-	}
-	else
-	{
-		$script = basename($_SERVER['SCRIPT_NAME']);
-		$script = substr($script, 0, strpos($script, '.'));
-		if(isset($GLOBALS['modules'][$script]))
-			return $script;
-		else
-			return 'core';
-	}
-}
- */
 
 /**
  * @defgroup alter_query Alter Query Functions

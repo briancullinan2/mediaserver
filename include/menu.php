@@ -174,6 +174,7 @@ function add_menu($module, $menus)
 
 function output_menu($request)
 {
+	print 'hit';
 	if($path = get_menu_entry($request['path_info']))
 	{
 		// the entire site depends on this

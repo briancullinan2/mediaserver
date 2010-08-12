@@ -141,7 +141,7 @@ function theme_live_breadcrumbs()
 	if($GLOBALS['templates']['vars']['module'] != 'select' && $GLOBALS['templates']['vars']['module'] != 'index')
 	{
 		?>
-		<li><a href="<?php print url('select?cat=' . $GLOBALS['templates']['vars']['cat'] . '&dir=' . urlencode('/')); ?>"><?php print setting('html_name'); ?></a></li>
+		<li><a href="<?php print url('select?handler=' . $GLOBALS['templates']['vars']['handler'] . '&dir=' . urlencode('/')); ?>"><?php print setting('html_name'); ?></a></li>
 		<li><img src="<?php print url('template/live/images/carat.gif'); ?>" class="crumbsep"></li>
 		<?php
 		// break up the module by the underscores
@@ -177,7 +177,7 @@ function theme_live_breadcrumbs()
 			if($count == 0)
 			{
 				?>
-				<li><a href="<?php print url('select?cat=' . (handles($path, $GLOBALS['templates']['vars']['cat'])?$GLOBALS['templates']['vars']['cat']:'files') . '&dir=' . urlencode('/')); ?>"><?php print setting('html_name'); ?></a></li>
+				<li><a href="<?php print url('select?handler=' . (handles($path, $GLOBALS['templates']['vars']['handler'])?$GLOBALS['templates']['vars']['handler']:'files') . '&dir=' . urlencode('/')); ?>"><?php print setting('html_name'); ?></a></li>
 				<li><img src="<?php print url('template/live/images/carat.gif'); ?>" class="crumbsep"></li>
 				<?php
 			}
@@ -188,7 +188,7 @@ function theme_live_breadcrumbs()
 			else
 			{
 				?>
-				<li><a href="<?php print url('select?cat=' . (handles($path, $GLOBALS['templates']['vars']['cat'])?$GLOBALS['templates']['vars']['cat']:'files') . '&dir=' . urlencode($path . '/')); ?>"><?php print $text; ?></a></li>
+				<li><a href="<?php print url('select?handler=' . (handles($path, $GLOBALS['templates']['vars']['handler'])?$GLOBALS['templates']['vars']['handler']:'files') . '&dir=' . urlencode($path . '/')); ?>"><?php print $text; ?></a></li>
 				<li><img src="<?php print url('template/live/images/carat.gif'); ?>" class="crumbsep"></li>
 				<?php
 			}

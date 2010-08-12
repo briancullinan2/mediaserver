@@ -170,7 +170,7 @@ Modules are disabled when the dependencies are not met
 Made lots of changes regarding the handlers
 	Handlers register themselves just like any other module
 	All that is required different from modules is the database field in the config
-Handlers can now change what database they are using by specifying a database in the $request['cat'] and passing it to the get_files() function
+Handlers can now change what database they are using by specifying a database in the $request['handler'] and passing it to the get_files() function
 	The 3rd parameter should be set to 'files' to use default database get functionality
 fs_ handlers now merged with the database handlers and some have been consolidated back in to modules
 If dependencies fail on a module, it is disabled

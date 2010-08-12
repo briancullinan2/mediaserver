@@ -117,11 +117,6 @@ function checkAccess($file)
 	return false;
 }
 
-function sql_keys($fileinfo)
-{
-	return implode(',', array_fill(0, count($fileinfo), '"?"'));
-}
-
 
 /**
  * tokenize a string, assumed to be a filepath, in various different ways

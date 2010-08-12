@@ -126,7 +126,7 @@ function get_ids($request, &$count, $files = array())
 	// select an array of ids!
 	if(isset($request['selected']) && count($request['selected']) > 0 )
 	{
-		$return = db_query('SELECT * FROM ids WHERE ' . $request['cat'] . '_id = ' . join(' OR ' . $request['cat'] . '_id = ', $request['selected']) . ' AND ' . sql_users() . ' LIMIT ' . count($files));
+		$return = db_query('SELECT * FROM ids WHERE ' . $request['handler'] . '_id = ' . join(' OR ' . $request['handler'] . '_id = ', $request['selected']) . ' AND ' . sql_users() . ' LIMIT ' . count($files));
 
 		if(count($return) > 0)
 		{
@@ -134,7 +134,7 @@ function get_ids($request, &$count, $files = array())
 			$ids = array();
 			foreach($return as $i => $id)
 			{
-				$ids[$id[$request['cat'] . '_id']] = $id;
+				$ids[$id[$request['handler'] . '_id']] = $id;
 			}
 		}
 
@@ -146,12 +146,12 @@ function get_ids($request, &$count, $files = array())
 			{
 				// handle file
 				if(setting('admin_alias_enable') != false)
-					$id = add_ids(preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file['Filepath']), true, array($request['cat'] . '_id' => $file['id']));
+					$id = add_ids(preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file['Filepath']), true, array($request['handler'] . '_id' => $file['id']));
 				else
-					$id = add_ids($file['Filepath'], true, array($request['cat'] . '_id' => $file['id']));
+					$id = add_ids($file['Filepath'], true, array($request['handler'] . '_id' => $file['id']));
 				
 				$tmp_id = get_files(array(
-					'cat' => 'ids',
+					'handler' => 'ids',
 					'id' => $id,
 					'users' => session('users'),
 				), $count);
@@ -182,7 +182,7 @@ function get_ids($request, &$count, $files = array())
 			if(isset($request[$handler . '_id']) && is_numeric($request[$handler . '_id']))
 			{
 				$files = db_query(array(
-					'cat'            => 'ids',
+					'handler'            => 'ids',
 					$handler . '_id' => $request[$handler . '_id'],
 					'users'          => session('users')
 				), $count);
@@ -199,7 +199,7 @@ function get_ids($request, &$count, $files = array())
 				$id = add_ids($request['file']);
 			
 			$files = get_files(array(
-				'cat'   => 'ids',
+				'handler'   => 'ids',
 				'id'    => $id,
 				'users' => session('users')
 			), $count);
@@ -214,7 +214,7 @@ function get_ids($request, &$count, $files = array())
 	else
 	{
 		// change the cat to the table we want to use
-		$request['cat'] = validate(array('cat' => 'ids'), 'cat');
+		$request['handler'] = validate(array('handler' => 'ids'), 'handler');
 	
 		$files = get_files($request, $count, 'files');
 	}

@@ -22,15 +22,15 @@ function load_modules($path)
 {
 	if(is_dir(setting_local_root() . $path))
 	{
-		$files = get_files(array(
+		$files = get_filesystem(array(
 			'dir' => setting_local_root() . $path,
 			'depth' => 3,
 			'limit' => 32000,
 			'match' => '/\.info$/i',
-		), $count, true);
+		), $count);
 	}
 	elseif(is_file(setting_local_root() . $path))
-		$files = array(get_files_info(setting_local_root() . $path));
+		$files = array(get_info_files(setting_local_root() . $path));
 
 	if(!is_array($files))
 	{
