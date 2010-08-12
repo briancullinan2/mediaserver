@@ -1,21 +1,14 @@
 <?php
 
-function register_live_select()
-{
-	return array(
-		'name' => 'Live Select'
-	);
-}
-
 function theme_live_select_block()
 {
 	?>
 	<div class="files" style="border:1px solid #006; height:150px; width:84px; border-right:0px; background-color:#FFF;">
 		<div class="file FOLDER small" onmousedown="deselectAll(event);fileSelect(this, true, event);return false;" oncontextmenu="showMenu(this);return false;" id="0"><div class="notselected"></div>
-			<a class="itemLink" href="<?php print url($GLOBALS['templates']['vars']['get'] . '&dir=' . dirname($GLOBALS['templates']['vars']['dir'])); ?>" onmouseout="this.parentNode.firstChild.className = 'notselected';" onmouseover="this.parentNode.firstChild.className = 'selected';"><span>Up 1 Level</span></a>
+			<a class="itemLink" href="<?php print url($GLOBALS['output']['get'] . '&dir=' . dirname($GLOBALS['output']['dir'])); ?>" onmouseout="this.parentNode.firstChild.className = 'notselected';" onmouseover="this.parentNode.firstChild.className = 'selected';"><span>Up 1 Level</span></a>
 		</div>
 		<div class="file FOLDER" onmousedown="deselectAll(event);fileSelect(this, true, event);return false;" oncontextmenu="showMenu(this);return false;" id="0"><div class="notselected"></div>
-			<table class="itemTable" cellpadding="0" cellspacing="0" onclick="location.href = '<?php print url($GLOBALS['templates']['vars']['get'] . '&dir=/'); ?>';">
+			<table class="itemTable" cellpadding="0" cellspacing="0" onclick="location.href = '<?php print url($GLOBALS['output']['get'] . '&dir=/'); ?>';">
 				<tr>
 					<td>
 						<div class="thumb file_ext_FOLDER file_type_">
@@ -24,13 +17,13 @@ function theme_live_select_block()
 					</td>
 				</tr>
 			</table>
-			<a class="itemLink" href="<?php print url($GLOBALS['templates']['vars']['get'] . '&dir=/'); ?>" onmouseout="this.parentNode.firstChild.className = 'notselected';" onmouseover="this.parentNode.firstChild.className = 'selected';"><span>Top Directory</span></a>
+			<a class="itemLink" href="<?php print url($GLOBALS['output']['get'] . '&dir=/'); ?>" onmouseout="this.parentNode.firstChild.className = 'notselected';" onmouseover="this.parentNode.firstChild.className = 'selected';"><span>Top Directory</span></a>
 		</div>
 	</div>
 	<div class="files" id="files" style="border:1px solid #006; overflow:auto; height:150px; width:400px; float:left; background-color:#FFF;"><?php
-	if(count($GLOBALS['templates']['vars']['files']) == 0)
+	if(count($GLOBALS['output']['files']) == 0)
 	{
-		$link = (dirname($GLOBALS['templates']['vars']['dir']) == '/')?url($GLOBALS['templates']['vars']['get'] . '&dir=/'):url($GLOBALS['templates']['vars']['get'] . '&dir=' . urlencode(dirname($GLOBALS['templates']['vars']['dir']) . '/'));
+		$link = (dirname($GLOBALS['output']['dir']) == '/')?url($GLOBALS['output']['get'] . '&dir=/'):url($GLOBALS['output']['get'] . '&dir=' . urlencode(dirname($GLOBALS['output']['dir']) . '/'));
 		?>
 		<b>There are no files to display</b><br />
 		<div class="filesmall FOLDER" onmousedown="deselectAll(event);fileSelect(this, true, event);return false;" oncontextmenu="showMenu(this);return false;" id="0"><div class="notselected"></div>
@@ -51,7 +44,7 @@ function theme_live_select_block()
 	{
 		// get longest filename to base widths off of
 		$length = 0;
-		foreach($GLOBALS['templates']['vars']['files'] as $i => $file)
+		foreach($GLOBALS['output']['files'] as $i => $file)
 		{
 			if(strlen($file['Filename']) > $length)
 				$length = strlen($file['Filename']);
@@ -60,7 +53,7 @@ function theme_live_select_block()
 		?><table cellpadding="0" cellspacing="" border="0" style="height:130px;">
 			<tr>
 				<td style="vertical-align:top; width:<?php print ceil($length*.75);?>em;"><?php
-		foreach($GLOBALS['templates']['vars']['files'] as $i => $file)
+		foreach($GLOBALS['output']['files'] as $i => $file)
 		{
 			if($i > 0 && $i % 6 == 0)
 			{
@@ -71,11 +64,11 @@ function theme_live_select_block()
 			if(handles($file['Filepath'], 'archive')) $handler = 'archive';
 			elseif(handles($file['Filepath'], 'playlist')) $handler = 'playlist';
 			elseif(handles($file['Filepath'], 'diskimage')) $handler = 'diskimage';
-			else $handler = $GLOBALS['templates']['vars']['handler'];
+			else $handler = $GLOBALS['output']['handler'];
 			
-			if($GLOBALS['templates']['vars']['handler'] != $handler || $file['Filetype'] == 'FOLDER') $new_handler = $handler;
+			if($GLOBALS['output']['handler'] != $handler || $file['Filetype'] == 'FOLDER') $new_handler = $handler;
 			
-			$link = isset($new_handler)?url($GLOBALS['templates']['vars']['get'] . '&start=0&handler=' . $new_handler . '&dir=' . urlencode($file['Filepath'])):url($GLOBALS['templates']['vars']['get'] . '&dir=&id=' . urlencode($file['id']) . '&filename=' . urlencode($file['Filename']));
+			$link = isset($new_handler)?url($GLOBALS['output']['get'] . '&start=0&handler=' . $new_handler . '&dir=' . urlencode($file['Filepath'])):url($GLOBALS['output']['get'] . '&dir=&id=' . urlencode($file['id']) . '&filename=' . urlencode($file['Filename']));
 			
 			?>
 			<div class="filesmall <?php print $file['Filetype']; ?>" onmousedown="deselectAll(event);fileSelect(this, true, event);return false;" oncontextmenu="showMenu(this);return false;" id="<?php print $file['id']; ?>"><div class="notselected"></div>
@@ -105,14 +98,14 @@ function theme_live_select_block()
 
 function theme_live_files()
 {
-	if(!isset($GLOBALS['templates']['vars']['files']) || count($GLOBALS['templates']['vars']['files']) == 0)
+	if(!isset($GLOBALS['output']['files']) || count($GLOBALS['output']['files']) == 0)
 	{
 		?><b>There are no files to display</b><?php
 	}
 	else
 	{
 		?><div class="files" id="files"><?php
-		foreach($GLOBALS['templates']['vars']['files'] as $i => $file)
+		foreach($GLOBALS['output']['files'] as $i => $file)
 		{
 			$GLOBALS['templates']['html']['files'][$i] = live_alter_file($file);
 			
@@ -120,9 +113,9 @@ function theme_live_files()
 			if(handles($file['Filepath'], 'archive')) $handler = 'archive';
 			elseif(handles($file['Filepath'], 'playlist')) $handler = 'playlist';
 			elseif(handles($file['Filepath'], 'diskimage')) $handler = 'diskimage';
-			else $handler = $GLOBALS['templates']['vars']['handler'];
+			else $handler = $GLOBALS['output']['handler'];
 			
-			if($GLOBALS['templates']['vars']['handler'] != $handler || $file['Filetype'] == 'FOLDER')
+			if($GLOBALS['output']['handler'] != $handler || $file['Filetype'] == 'FOLDER')
 			{
 				if(substr($file['Filepath'], -1) != '/') $file['Filepath'] .= '/';
 				$new_handler = $handler;
@@ -162,6 +155,10 @@ function theme_live_files()
 	}
 }
 
+function theme_live_file($file)
+{
+}
+
 function theme_live_select()
 {
 	theme('header');
@@ -171,15 +168,15 @@ function theme_live_select()
 	?>
 	<div class="contentSpacing">
 			<h1 class="title"><?php print ($current == '')?setting('html_name'):$current; ?></h1>
-			<span class="subText"><?php print lang('live select description', 'Click to browse files. Drag to select files, and right click for download options.'); ?></span>
+			<span class="subText"><?php print 'Click to browse files. Drag to select files, and right click for download options.'; ?></span>
 	<?php
-	if (count($GLOBALS['user_errors']) == 0 && count($GLOBALS['templates']['vars']['files']) > 0)
+	if (count($GLOBALS['user_errors']) == 0 && count($GLOBALS['output']['files']) > 0)
 	{
 		?>
 		<span class="subText">Displaying items
 			<?php print $GLOBALS['templates']['html']['start']+1; ?>
-			through <?php print $GLOBALS['templates']['vars']['start'] + $GLOBALS['templates']['vars']['limit']; ?>
-			<?php print ($GLOBALS['templates']['vars']['total_count'] > $GLOBALS['templates']['vars']['limit'])?(' out of ' . $GLOBALS['templates']['html']['total_count']):' file(s)'; ?>.
+			through <?php print $GLOBALS['output']['start'] + $GLOBALS['output']['limit']; ?>
+			<?php print ($GLOBALS['output']['total_count'] > $GLOBALS['output']['limit'])?(' out of ' . $GLOBALS['templates']['html']['total_count']):' file(s)'; ?>.
 		</span>
 		<?php
 	}
@@ -224,12 +221,12 @@ function theme_live_info()
 <tr>
 	<td id="infoBar" style="background-color:<?php print ($theme == 'audio')?'#900':(($theme == 'image')?'#990':(($theme == 'video')?'#093':'#06A')); ?>; height:<?php print max($biggest+3, 7); ?>em;">
 	<?php
-	if(!isset($GLOBALS['templates']['vars']['files']))
+	if(!isset($GLOBALS['output']['files']))
 		return;
-	foreach($GLOBALS['templates']['vars']['files'] as $i => $file)
+	foreach($GLOBALS['output']['files'] as $i => $file)
 	{
 		$info_count = 0;
-		foreach($GLOBALS['templates']['vars']['columns'] as $j => $column)
+		foreach($GLOBALS['output']['columns'] as $j => $column)
 		{
 			if(isset($file[$column]) && $file[$column] != '' && strlen($file[$column]) <= 200 &&
 				substr($column, -3) != '_id' && $column != 'id' && $column != 'Hex' && $column != 'Filepath' && 
@@ -263,7 +260,7 @@ function theme_live_info()
 				<td>
 				<?php
 				$count = 0;
-				foreach($GLOBALS['templates']['vars']['columns'] as $j => $column)
+				foreach($GLOBALS['output']['columns'] as $j => $column)
 				{
 					if(isset($file[$column]) && $file[$column] != '' && strlen($file[$column]) <= 200 &&
 						substr($column, -3) != '_id' && $column != 'id' && $column != 'Hex' && 
@@ -308,3 +305,4 @@ function theme_live_info()
 		<?php
 	}
 }
+

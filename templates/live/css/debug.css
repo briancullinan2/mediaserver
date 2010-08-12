@@ -1,0 +1,35 @@
+/* CSS Document */
+
+
+.debug {
+	border:3px solid #FC0;
+	background-color:#FF6;
+}
+
+.debug.hide * {
+	display:none;
+	visibility:hidden;
+}
+
+.debug.hide #hide_link {
+	display:block;
+	visibility:visible;
+}
+
+.error.hide b, .error.hide br {
+	display:none;
+	visibility:hidden;
+}
+
+#user_errors {
+	border:2px solid #C00;
+	background-color:#F99;
+}
+#note_errors {
+	border:2px solid #09F;
+	background-color:#CEF;
+}
+#warn_errors {
+	border:2px solid #CC0;
+	background-color:#FF9;
+}

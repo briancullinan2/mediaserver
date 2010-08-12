@@ -1,0 +1,21 @@
+<?php
+
+
+/**
+ * Implementation of setup_handler
+ * @ingroup setup_handler
+ */
+function setup_ids()
+{
+	$struct = array(
+		'Filepath' 		=> 'TEXT',
+		'Hex'			=> 'TEXT',
+	);
+	// get all the tables for handlers
+	foreach(get_handlers(false, false) as $handler => $config)
+	{
+		$struct[$handler . '_id'] = 'INT';
+	}
+	
+	$GLOBALS['modules']['ids']['database'] = $struct;
+}

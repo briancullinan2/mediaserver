@@ -1,54 +1,6 @@
 <?php
 
-function register_live_header()
-{
-	$config = array(
-		'name' => 'Live Header',
-	);
-
-	$config['styles'] = array(
-		'template/live/live.css',
-		'template/live/types.css',
-	);
-	$config['scripts'] = array(
-		'template/live/dragclick.js',
-		'template/live/jquery.js',
-	);
-	
-	return $config;
-}
-
-function theme_live_styles($styles)
-{
-	if(!isset($styles))
-		return;
-		
-	if(is_string($styles)) $styles = array($styles);
-	
-	foreach($styles as $link)
-	{
-		?>
-		<link rel="stylesheet" href="<?php print url($link); ?>" type="text/css"/>
-		<?php
-	}
-}
-
-function theme_live_scripts($scripts)
-{
-	if(!isset($scripts))
-		return;
-		
-	if(is_string($scripts)) $scripts = array($scripts);
-	
-	foreach($scripts as $link)
-	{
-		?>
-		<script language="javascript" type="text/javascript" src="<?php print url($link); ?>"></script>
-		<?php
-	}
-}
-
-function theme_live_head()
+function theme_live_head($title)
 {
 	?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -56,14 +8,14 @@ function theme_live_head()
 <head>
 <?php theme('redirect_block'); ?>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title><?php print htmlspecialchars($GLOBALS['modules'][$GLOBALS['templates']['vars']['module']]['name']); ?> : <?php print setting('html_name'); ?></title>
+<title><?php print $title; ?></title>
 <meta name="google-site-verification" content="K3Em8a7JMI3_1ry5CNVKIHIWofDt-2C3ohovDq3N2cQ" />
-<?php theme('styles', $GLOBALS['templates']['vars']['styles']); ?>
-<?php theme('scripts', $GLOBALS['templates']['vars']['scripts']); ?>
+<?php if(isset($GLOBALS['output']['styles'])) theme('styles', $GLOBALS['output']['styles']); ?>
+<?php if(isset($GLOBALS['output']['scripts'])) theme('scripts', $GLOBALS['output']['scripts']); ?>
 <script language="javascript">
 var loaded = false;
 <?php
-if(isset($GLOBALS['templates']['vars']['selector']) && $GLOBALS['templates']['vars']['selector'] == false)
+if(isset($GLOBALS['output']['selector']) && $GLOBALS['output']['selector'] == false)
 {
 	?>var selector_off = true;<?php
 }
@@ -79,7 +31,17 @@ else
 
 function theme_live_header()
 {
-	theme('head');
+	register_style('template/live/css/types.css');
+	register_style('template/live/css/layout.css');
+	register_style('template/live/css/menu.css');
+	register_style('template/live/css/files.css');
+	register_style('template/live/css/debug.css');
+	register_script('template/live/js/jquery.js');
+	register_script('template/live/js/dragclick.js');
+	
+	$title = htmlspecialchars($GLOBALS['modules'][$GLOBALS['output']['module']]['name']) . ' : ' . setting('html_name');
+	
+	theme('head', $title);
 	
 	theme('body');
 }
@@ -97,7 +59,7 @@ function theme_live_debug_block()
 		}
 	</script>
 	<?php
-	if($GLOBALS['templates']['vars']['user']['Username'] != 'guest')
+	if($GLOBALS['output']['user']['Username'] != 'guest')
 	{
 		?><div id="debug" class="debug hide"><?php
 		foreach($GLOBALS['debug_errors'] as $i => $error)
@@ -125,7 +87,7 @@ function theme_live_debug_block()
 	else
 	{
 		?><div id="debug" class="debug">
-		<form action="<?php print url('users/login?return=' . urlencode($GLOBALS['templates']['vars']['get'])); ?>" method="post">
+		<form action="<?php print url('users/login?return=' . urlencode($GLOBALS['output']['get'])); ?>" method="post">
 			Administrators: Log in to select debug options. Username: <input type="text" name="username" value="" />
 			Password: <input type="password" name="password" value="" />
 			<input type="submit" value="Login" />
@@ -138,14 +100,14 @@ function theme_live_debug_block()
 
 function theme_live_breadcrumbs()
 {
-	if($GLOBALS['templates']['vars']['module'] != 'select' && $GLOBALS['templates']['vars']['module'] != 'index')
+	if($GLOBALS['output']['module'] != 'select' && $GLOBALS['output']['module'] != 'index')
 	{
 		?>
-		<li><a href="<?php print url('select?handler=' . $GLOBALS['templates']['vars']['handler'] . '&dir=' . urlencode('/')); ?>"><?php print setting('html_name'); ?></a></li>
+		<li><a href="<?php print url('select/dir//'); ?>"><?php print setting('html_name'); ?></a></li>
 		<li><img src="<?php print url('template/live/images/carat.gif'); ?>" class="crumbsep"></li>
 		<?php
 		// break up the module by the underscores
-		$crumbs = split('_', $GLOBALS['templates']['vars']['module']);
+		$crumbs = split('_', $GLOBALS['output']['module']);
 		$current = '';
 		foreach($crumbs as $i => $crumb)
 		{
@@ -166,7 +128,7 @@ function theme_live_breadcrumbs()
 	}
 	else
 	{
-		$crumbs = isset($GLOBALS['templates']['vars']['dir'])?split('/', $GLOBALS['templates']['vars']['dir']):array('');
+		$crumbs = isset($GLOBALS['output']['dir'])?split('/', $GLOBALS['output']['dir']):array('');
 		if($crumbs[count($crumbs)-1] == '')
 			unset($crumbs[count($crumbs)-1]);
 		$path = '';
@@ -177,7 +139,7 @@ function theme_live_breadcrumbs()
 			if($count == 0)
 			{
 				?>
-				<li><a href="<?php print url('select?handler=' . (handles($path, $GLOBALS['templates']['vars']['handler'])?$GLOBALS['templates']['vars']['handler']:'files') . '&dir=' . urlencode('/')); ?>"><?php print setting('html_name'); ?></a></li>
+				<li><a href="<?php print url('select?handler=' . (handles($path, $GLOBALS['output']['handler'])?$GLOBALS['output']['handler']:'files') . '&dir=' . urlencode('/')); ?>"><?php print setting('html_name'); ?></a></li>
 				<li><img src="<?php print url('template/live/images/carat.gif'); ?>" class="crumbsep"></li>
 				<?php
 			}
@@ -188,7 +150,7 @@ function theme_live_breadcrumbs()
 			else
 			{
 				?>
-				<li><a href="<?php print url('select?handler=' . (handles($path, $GLOBALS['templates']['vars']['handler'])?$GLOBALS['templates']['vars']['handler']:'files') . '&dir=' . urlencode($path . '/')); ?>"><?php print $text; ?></a></li>
+				<li><a href="<?php print url('select?handler=' . (handles($path, $GLOBALS['output']['handler'])?$GLOBALS['output']['handler']:'files') . '&dir=' . urlencode($path . '/')); ?>"><?php print $text; ?></a></li>
 				<li><img src="<?php print url('template/live/images/carat.gif'); ?>" class="crumbsep"></li>
 				<?php
 			}
@@ -206,7 +168,7 @@ function theme_live_template_block()
 	{
 		if(isset($template['name']))
 		{
-			?><a href="<?php print url('core?template=' . $name, false, true); ?>"><?php print $template['name']; ?></a><?php
+			?><a href="<?php print url('select?template=' . $name, false, true); ?>"><?php print $template['name']; ?></a><?php
 		}
 	}
 	?></div><?php
@@ -214,21 +176,21 @@ function theme_live_template_block()
 
 function live_get_theme_color()
 {
-	if(!isset($GLOBALS['templates']['vars']['files_count']))
+	if(!isset($GLOBALS['output']['files_count']))
 		return 'files';
-	if($GLOBALS['templates']['vars']['audio_count'] > $GLOBALS['templates']['vars']['image_count'] &&
-		$GLOBALS['templates']['vars']['audio_count'] > $GLOBALS['templates']['vars']['video_count'] &&
-		$GLOBALS['templates']['vars']['audio_count'] > $GLOBALS['templates']['vars']['files_count']
+	if($GLOBALS['output']['audio_count'] > $GLOBALS['output']['image_count'] &&
+		$GLOBALS['output']['audio_count'] > $GLOBALS['output']['video_count'] &&
+		$GLOBALS['output']['audio_count'] > $GLOBALS['output']['files_count']
 	)
 		$theme = 'audio';
-	elseif($GLOBALS['templates']['vars']['image_count'] > $GLOBALS['templates']['vars']['files_count'] &&
-		$GLOBALS['templates']['vars']['image_count'] > $GLOBALS['templates']['vars']['video_count'] &&
-		$GLOBALS['templates']['vars']['image_count'] > $GLOBALS['templates']['vars']['audio_count']
+	elseif($GLOBALS['output']['image_count'] > $GLOBALS['output']['files_count'] &&
+		$GLOBALS['output']['image_count'] > $GLOBALS['output']['video_count'] &&
+		$GLOBALS['output']['image_count'] > $GLOBALS['output']['audio_count']
 	)
 		$theme = 'image';
-	elseif($GLOBALS['templates']['vars']['video_count'] > $GLOBALS['templates']['vars']['files_count'] &&
-		$GLOBALS['templates']['vars']['video_count'] > $GLOBALS['templates']['vars']['image_count'] &&
-		$GLOBALS['templates']['vars']['video_count'] > $GLOBALS['templates']['vars']['audio_count']
+	elseif($GLOBALS['output']['video_count'] > $GLOBALS['output']['files_count'] &&
+		$GLOBALS['output']['video_count'] > $GLOBALS['output']['image_count'] &&
+		$GLOBALS['output']['video_count'] > $GLOBALS['output']['audio_count']
 	)
 		$theme = 'video';
 	else
@@ -253,7 +215,7 @@ function theme_live_body()
 		<div id="expander">
 			<table id="header" cellpadding="0" cellspacing="0" style="background-color:<?php print ($theme == 'audio')?'#900':(($theme == 'image')?'#990':(($theme == 'video')?'#093':'#06A')); ?>;">
 				<tr>
-					<td id="siteTitle"><a href="<?php print url('core'); ?>"><?php print setting('html_name'); ?></a></td>
+					<td id="siteTitle"><a href="<?php print url('select'); ?>"><?php print setting('html_name'); ?></a></td>
 					<td>
 						<?php if(dependency('search') != false) theme('search_block'); ?>
 					</td>

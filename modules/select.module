@@ -1,0 +1,439 @@
+<?php
+
+// handle selecting of files
+function menu_select()
+{
+	return array(
+		'select/dir/%dir' => array(
+			'callback' => 'output_select',
+		),
+		'select' => 'Files', // this is the default item
+	);
+}
+
+
+function rewrite_select($path_info)
+{
+	$request = invoke_module('rewrite', 'default', array($path_info));
+	// make root correction
+	if(isset($request['dir']) && substr($request['dir'], 0, 1) != '/')
+		$request['dir'] = '/' . $request['dir'];
+	return $request;
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return None by default, All or None are valid inputs
+ */
+function validate_select($request)
+{
+	if(isset($request['select']))
+	{
+		if($request['select'] == 'All' || $request['select'] == 'None')
+			return $request['select'];
+		else
+			return 'None';
+	}
+}
+
+/**
+ * Implmenetation of validate, combine and manipulate the IDs from a request
+ * this function looks for item, on, and off, variables in a request and generates a list of IDs
+ * @ingroup validate
+ * @return an array of specified and validate IDs, combines 'item' and 'on' and removes 'off', and empty array by default
+ */
+function validate_selected($request)
+{
+	if(!isset($request['selected']) || !is_array($request['selected']))
+		$selected = validate($request, 'item');
+	else
+		$selected = $request['selected'];
+		
+	foreach($selected as $i => $id)
+	{
+		if(!is_numeric($id))
+			unset($selected[$i]);
+	}
+	
+	$request['on'] = validate($request, 'on');
+	
+	$selected = array_merge($selected, $request['on']);
+	$selected = array_unique($selected);
+	
+	$request['off'] = validate($request, 'off');
+	$selected = array_diff($selected, $request['off']);
+	
+	$request['id'] = validate($request, 'id');
+	if(isset($request['id']))
+		$selected = array($request['id']);
+	
+	return array_values($selected);
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return an array of IDs for the selected value
+ */
+function validate_item($request)
+{
+	$select = validate($request, 'select');
+
+	$selected = array();
+	
+	if(isset($request['item']) && is_string($request['item']))
+	{
+		$selected = split(',', $request['item']);
+	}
+	elseif(isset($request['item']) && is_array($request['item']))
+	{
+		foreach($request['item'] as $id => $value)
+		{
+			if(is_numeric($value))
+			{
+				$id = $value;
+				$value = 'on';
+			}
+			if(($value == 'on' || (isset($select) && $select == 'All')) && !in_array($id, $selected))
+			{
+				$selected[] = $id;
+			}
+			elseif(($value == 'off' || (isset($select) && $select == 'None')) && ($key = array_search($id, $selected)) !== false)
+			{
+				unset($selected[$key]);
+			}
+		}
+	}
+	
+	return array_values($selected);
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return NULL by default, any numeric ID is acceptable
+ */
+function validate_id($request)
+{
+	return generic_validate_numeric($request, 'id');
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return An empty array by default, otherwise a numeric list of IDs to save for later reference
+ */
+function validate_on($request)
+{
+
+	if(isset($request['on']))
+	{
+		$request['on'] = split(',', $request['on']);
+		foreach($request['on'] as $i => $id)
+		{
+			if(!is_numeric($id))
+				unset($request['on'][$i]);
+		}
+		return array_values($request['on']);
+	}
+	return array();
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return an empty array by default or the validated list of numeric IDs to remove from the saved list
+ */
+function validate_off($request)
+{
+	
+	if(isset($request['off']))
+	{
+		$request['off'] = split(',', $request['off']);
+		foreach($request['off'] as $i => $id)
+		{
+			if(!is_numeric($id))
+				unset($request['off'][$i]);
+		}
+		return array_values($request['off']);
+	}
+	return array();
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return false by default, if set to true the select call will not append all relevant information to a list of files, only the information from the specified handler (cat) will be retrieved, this is convenient for performing fast queries
+ */
+function validate_short($request)
+{
+	return generic_validate_boolean_false($request, 'short');
+}
+
+/**
+ * Implementation of #setup_validate()
+ * @return Zero by default, any number greater then zero is valid
+ */
+function validate_start($request)
+{
+	return generic_validate_numeric_zero($request, 'start');
+}
+
+/**
+ * Implementation of #setup_validate()
+ * @return 15 by default, accepts any positive number
+ */
+function validate_limit($request)
+{
+	return generic_validate_numeric_default($request, 'limit', 15);
+}
+
+/**
+ * Implementation of #setup_validate()
+ * @return Filepath by default, Relevance if performing a search which is a keyword for the #alter_query_search() call, any set of columns defined in the specified handler (cat) is valid
+ */
+function validate_order_by($request)
+{
+	$handler = validate($request, 'handler');
+	
+	$columns = get_columns($handler);
+	
+	if( !isset($request['order_by']) || !in_array($request['order_by'], $columns) )
+	{
+		if(isset($request['search']))
+			return 'Relevance';
+			
+		// make sure if it is a list that it is all valid columns
+		$columns = split(',', (isset($request['order_by'])?$request['order_by']:''));
+		foreach($columns as $i => $column)
+		{
+			if(!in_array($column, get_columns($handler)))
+				unset($columns[$i]);
+		}
+		if(count($columns) == 0)
+			return 'Filepath';
+		else
+			return join(',', $columns);
+	}
+	return $request['order_by'];
+}
+
+function validate_order_trimmed($request)
+{
+	return generic_validate_boolean_false($request, 'order_trimmed');
+}
+
+/**
+ * Implementation of #setup_validate()
+ * @return NULL by default, any set of columns defined in the handler (cat) are valid
+ */
+function validate_group_by($request)
+{
+	$handler = validate($request, 'handler');
+	
+	$columns = get_columns($handler);
+	
+	if( isset($request['group_by']) && !in_array($request['group_by'], $columns) )
+	{
+		// make sure if it is a list that it is all valid columns
+		$columns = split(',', $request['group_by']);
+		foreach($columns as $i => $column)
+		{
+			if(!in_array($column, get_columns($handler)))
+				unset($columns[$i]);
+		}
+		if(count($columns) == 0)
+			return;
+		else
+			return join(',', $columns);
+	}
+	elseif(isset($request['group_by']))
+		return $request['group_by'];
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return false by default
+ */
+function validate_group_index($request)
+{
+	if(isset($request['group_index']))
+	{
+		if($request['group_index'] === true || $request['group_index'] === 'true')
+			return true;
+		elseif($request['group_index'] === false || $request['group_index'] === 'false')
+			return false;
+		elseif(is_string($request['group_index']))
+			return strtolower($request['group_index'][0]);
+	}
+}
+
+/**
+ * Implementation of #setup_validate()
+ * @return Ascending (ASC) by default, ASC or DESC are valid
+ */
+function validate_direction($request)
+{
+	if( !isset($request['direction']) || ($request['direction'] != 'ASC' && $request['direction'] != 'DESC') )
+		return 'ASC';
+	return $request['direction'];
+}
+
+function filter_limit($request)
+{
+	$request['limit'] = validate($request, 'limit');
+	$request['start'] = validate($request, 'start');
+	
+	return array('limit' => $request['start'] . ',' . $request['limit']);
+}
+
+function filter_group_by($request)
+{
+	if(isset($request['group_by'])) 
+	{
+		if(isset($request['group_index']) && $request['group_index'] === true)
+		{
+			return array('group' => 'SUBSTRING(' . validate($request, 'group_by') . ', 1, 1)');
+		}
+		elseif(isset($request['group_index']) && is_string($request['group_index']))
+		{
+			return array('where' => 'LEFT(' . validate($request, 'group_by') . ', 1) = "' . addslashes($request['group_index']) . '"');
+		}
+	}
+}
+
+function filter_order_by($request)
+{
+	$request['order_by'] = validate($request, 'order_by');
+	$request['direction'] = validate($request, 'direction');
+	
+	// relevance is handled below
+	if($request['order_by'] == 'Relevance')
+		return array('order' => 'Filepath DESC');
+	else
+	{
+		if(isset($request['order_trimmed']) && $request['order_trimmed'] == true)
+		{
+			return array('order' => 'TRIM(LEADING "a " FROM TRIM(LEADING "an " FROM TRIM(LEADING "the " FROM LOWER( ' . 
+								join(' )))), TRIM(LEADING "a " FROM TRIM(LEADING "an " FROM TRIM(LEADING "the " FROM LOWER( ', split(',', $request['order_by'])) . 
+								' ))))' . ' ' . $request['direction']);
+		}
+		else
+		{
+			return array('order' => $request['order_by'] . ' ' . $request['direction']);
+		}
+	}
+}
+
+function filter_selected($request, &$props)
+{
+	$request['selected'] = validate($request, 'selected');
+	
+	// select an array of ids!
+	if(isset($request['selected']) && count($request['selected']) > 0 )
+	{
+		$where = '';
+		// compile where statement for either numeric id or encoded path
+		foreach($request['selected'] as $i => $id)
+		{
+			if(is_numeric($id))
+			{
+				$where .= ' id = ' . $id . ' OR';
+			}
+			else
+			{
+				// unpack encoded path and add it to where
+				$where .= ' Hex = "' . $id . '" OR';
+			}
+		}
+		// remove last or and add to where list
+		$sql = array(substr($where, 0, strlen($where)-2));
+
+		// get ids from centralized id database
+		$files = db_query('SELECT * FROM ids WHERE ' . $sql . ' AND ' . filter_users($request));
+		
+		if(count($files) > 0)
+		{
+			// loop through ids and construct new where based on handler
+			$where = '';
+			foreach($files as $i => $file)
+			{
+					$where .= ' id = ' . $file[$request['handler'] . '_id'] . ' OR';
+			}
+			return array('where' => substr($where, 0, strlen($where)-2));
+		}
+		else
+		{
+			raise_error('IDs not found!', E_USER);
+			return false;
+		}
+	}
+}
+
+function filter_select($request, $index)
+{
+	switch($index)
+	{
+		case 'selected':
+			return filter_selected($request);
+		case 'order_by':
+			return filter_order_by($request);
+		case 'order_by':
+			return filter_order_by($request);
+		case 'limit':
+			return filter_limit($request);
+	}
+}
+ 
+/**
+ * Implementation of session
+ * passes a validated request to the session select for processing and saving
+ * @ingroup session
+ */ 
+function session_select($request)
+{
+	$save = array();
+	$save['on'] = @$request['on'];
+	$save['off'] = @$request['off'];
+	$save['item'] = @$request['item'];
+	$save['selected'] = validate($request, 'selected');
+
+	return $save;
+}
+
+/**
+ * Implementation of output
+ * @ingroup output
+ */
+function output_select($request)
+{
+	// set up required request variables
+	$request['handler'] = validate($request, 'handler');
+	$request['start'] = validate($request, 'start');
+	$request['limit'] = validate($request, 'limit');
+	$request['order_by'] = validate($request, 'order_by');
+	$request['direction'] = validate($request, 'direction');
+	
+	// discard selected stuff here, we want to show a full list, the selected stuff is just for saving in the session
+	//   in order to list the selected stuff only, one should use the list.php module
+	if(isset($request['module']) && $request['module'] == 'select')
+	{
+		if(isset($request['selected'])) unset($request['selected']);
+		if(isset($request['item'])) unset($request['item']);
+		if(isset($request['id'])) unset($request['id']);
+	}
+	
+	// make select call
+	$files = get_files($request, $request['handler']);
+
+	register_output_vars('files', $files);
+	
+	// count a few types of media for templates to use
+	register_output_vars('file_counts', handles_count($files));
+	
+	// register selected files for templates to use
+	if($session_select = session('select'))
+		register_output_vars('selected', $session_select['selected']);
+}

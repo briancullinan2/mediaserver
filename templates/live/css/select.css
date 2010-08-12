@@ -1,0 +1,13 @@
+/* CSS Document */
+
+
+#selector {
+	-moz-opacity:.25;
+	opacity: .25;
+	filter:alpha(opacity=25);
+	position:absolute;
+	background-color:#6CF;
+	border:1px solid #169;
+	z-index:1000;
+}
+

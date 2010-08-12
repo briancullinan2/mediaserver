@@ -1,0 +1,233 @@
+/* CSS Document */
+
+.files {
+	margin:0;
+	top:0;
+	float:left;
+	position:relative;
+	width:850px;
+}
+
+.filesmall {
+	border:1px solid #FEFEFE;
+	height:1.5em;
+	margin:0.2em 1px;
+	position:relative;
+	width:inherit;
+}
+
+.filesmall .notselected {
+	visibility:hidden;
+	background:#F7FBFF url(?path_info=template/live/images/browse_select_bg.png) repeat-x scroll center bottom;
+	border:1px solid #D8F0FA;
+	height:1.5em;
+	left:0;
+	position:absolute;
+	top:0;
+}
+
+.filesmall .selected {
+	visibility:visible;
+	background:#F7FBFF url(?path_info=template/live/images/browse_select_bg.png) repeat-x scroll center bottom;
+	border:1px solid #D8F0FA;
+	height:1.5em;
+	left:0;
+	position:absolute;
+	top:0;
+	width:100%;
+}
+
+.filesmall .itemTable {
+	left:0;
+	position:absolute;
+	top:0;
+}
+
+.filesmall .itemTable tr {
+	height:1.5em;
+}
+
+.filesmall .itemTable td {
+	text-align:left;
+}
+
+.filesmall .itemTable div {
+	text-align:left;
+	margin-left:0.2em;
+	height:16px;
+	width:16px;
+}
+
+.filesmall .itemLink {
+	background:transparent url(?path_info=template/live/images/transparent.gif) repeat scroll 0 0;
+	height:100%;
+	left:0;
+	position:absolute;
+	top:0;
+	width:100%;
+	z-index:100;
+	color:#0066A7;
+	font-weight:inherit;
+	text-decoration:none;
+}
+
+.filesmall .itemLink span {
+	bottom:0;
+	cursor:pointer;
+	display:block;
+	height:1.5em;
+	left:1.8em;
+	top:0.3em;
+	overflow:hidden;
+	position:absolute;
+	text-align:left;
+	white-space:nowrap;
+}
+
+.select .selected, .select .notselected {
+	visibility: visible;
+}
+
+.file {
+	border:1px solid #FEFEFE;
+	float:left;
+	height:9.5em;
+	margin:0.2em 1px;
+	position:relative;
+	width:7em;
+}
+
+.file.small {
+	height:2.5em;
+}
+
+.file .notselected {
+	visibility:hidden;
+	background:#F7FBFF url(?path_info=template/live/images/browse_select_bg.png) repeat-x scroll center bottom;
+	border:1px solid #D8F0FA;
+	height:9.5em;
+	left:0;
+	position:absolute;
+	top:0;
+	width:7em;
+}
+
+.file.small  .notselected {
+	height:2.5em;
+}
+
+.file .selected {
+	visibility:visible;
+	background:#F7FBFF url(?path_info=template/live/images/browse_select_bg.png) repeat-x scroll center bottom;
+	border:1px solid #D8F0FA;
+	height:9.5em;
+	left:0;
+	position:absolute;
+	top:0;
+	width:7em;
+}
+
+.file.small  .selected {
+	height:2.5em;
+}
+
+.file .itemTable {
+	left:0;
+	position:absolute;
+	top:0;
+}
+
+.file .itemTable tr {
+	height:5.5em;
+}
+
+.file .itemTable td {
+	width:7em;
+	text-align:center;
+}
+
+.file .itemTable div {
+	text-align:center;
+	margin-left:1.2em;
+	height:48px;
+	width:48px;
+}
+
+.file .itemLink {
+	background:transparent url(?path_info=template/live/images/transparent.gif) repeat scroll 0 0;
+	height:100%;
+	left:0;
+	position:absolute;
+	top:0;
+	width:100%;
+	z-index:100;
+	color:#0066A7;
+	font-weight:inherit;
+	text-decoration:none;
+}
+
+.file .itemLink span {
+	bottom:0px;
+	cursor:pointer;
+	display:block;
+	height:4em;
+	left:0.5em;
+	overflow:hidden;
+	position:absolute;
+	text-align:center;
+	width:6em;
+}
+
+.file.small .itemLink span {
+	top:0px;
+}
+
+#infoBar {
+	border-top:1px solid #E0E0E0;
+	height:64px;
+	background:transparent url(?path_info=template/live/images/middle_fade.png) repeat scroll 0 0;
+	color:#FFF;
+	width:100%;
+	line-height:normal;
+	margin:0;
+	padding:0;
+	vertical-align:middle;
+	white-space:nowrap;
+}
+
+#infoBar * {
+	line-height:normal;
+}
+
+.fileInfo {
+	width:100%;
+	vertical-align:top;
+	height:48px;
+	white-space:normal;
+}
+
+.fileInfo .title {
+	font-size:14px;
+}
+
+.fileInfo .label {
+	font-weight:bold;
+	width:50%;
+	text-align:right;
+	margin-right:4px;
+}
+
+.fileInfo td {
+	width:33%;
+	vertical-align:middle;
+	padding:4px;
+}
+
+.fileInfo .fileThumb, .fileInfo .fileThumb td {
+	padding:0;
+	width:auto;
+}
+
+.fileInfo infoCell {
+	width:100%;
+}

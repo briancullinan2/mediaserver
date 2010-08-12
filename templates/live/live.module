@@ -1,0 +1,75 @@
+<?php
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'select.php';
+
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'header.php';
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'footer.php';
+
+function theme_live_logo()
+{
+	$result = fetch('http://www.monolithicmedia.org/favicon.ico', array(), array('timeout' => 2));
+	header('Content-Type: ' . $result['headers']['Content-Type']);
+	print $result['content'];
+}
+
+function validate_live($request)
+{
+	if(!isset($request['dir']))
+		$request['dir'] = '/';
+	
+	if(!isset($request['limit']))
+		$request['limit'] = 50;
+}
+
+function live_get_info_count()
+{
+	$biggest = 0;
+	if(!isset($GLOBALS['output']['files'])) return $biggest;
+	foreach($GLOBALS['output']['files'] as $file)
+	{
+		$info_count = 0;
+		foreach($GLOBALS['output']['columns'] as $column)
+		{
+			if(isset($file[$column]) && $file[$column] != '' && strlen($file[$column]) <= 200 &&
+				substr($column, -3) != '_id' && $column != 'id' && $column != 'Hex' && $column != 'Filename' && $column != 'Filetype')
+			$info_count++;
+		}
+		
+		$info_count = ceil($info_count/2);
+		if($info_count > $biggest) $biggest = $info_count;
+	}
+	
+	return $biggest;
+}
+
+function live_alter_file($file)
+{
+	foreach($file as $column => $value)
+	{
+		if($column == 'Filepath')
+		{
+			$dirs = explode('/', $file['Filepath']);
+			array_walk($dirs, create_function('&$item,$key', '$item = urlencode($item);'));
+			$file['Filepath'] = implode('/', $dirs);
+		}
+		elseif(isset($GLOBALS['templates']['vars']['search_regexp']) && 
+			isset($GLOBALS['templates']['vars']['search_regexp'][$column])
+		)
+		{
+			$file[$column] = preg_replace($GLOBALS['templates']['vars']['search_regexp'][$column], '\'<strong style="background-color:#990;">\' . htmlspecialchars(\'$0\') . \'</strong>\'', $file[$column]);
+		
+			continue;
+		}
+		//$file[$column] = preg_replace('/([^ ]{25})/i', '$1<br />', $file[$column]);
+		elseif($column == 'Filesize')
+			$file['Filesize'] = roundFileSize($file['Filesize']);
+		elseif($column == 'Compressed')
+			$file['Compressed'] = roundFileSize($file['Compressed']);
+		elseif($column == 'Bitrate')
+			$file['Bitrate'] = round($file['Bitrate'] / 1000, 1) . ' kbs';
+		elseif($column == 'Length')
+			$file['Length'] = floor($file['Length'] / 60) . ' minutes ' . floor($file['Length'] % 60) . ' seconds';
+		else
+			$file[$column] = htmlspecialchars($value);
+	}
+	return $file;
+}

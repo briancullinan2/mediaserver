@@ -1,0 +1,8 @@
+name = "File Selector"
+description = "Select files for download or playback."
+template = true
+filter[] = selected
+filter[] = limit
+filter[] = start
+filter[] = order_by
+filter[] = group_by

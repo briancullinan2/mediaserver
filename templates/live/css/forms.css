@@ -1,0 +1,92 @@
+.form-title {
+	width:175px;
+	font-weight:bold;
+	font-size:10pt;
+	border-bottom:1px solid #999;
+}
+
+.submit {
+	display:block;
+	clear:both;
+	padding-top:30px;
+}
+
+.form-field {
+	border-bottom:1px solid #999;
+	width:320px;
+}
+
+.form-row {
+	background-color:#DDFFDD;
+	color:#002200;
+}
+
+.form-row.fail {
+	background-color:#FFEEEE;
+	color:#990000;
+}
+
+.form-row.warn {
+	background-color:#FFFFCC;
+	color:#000000;
+}
+
+.form-desc {
+	width:360px;
+	border-left:1px solid #999;
+	text-align:left;
+	border-bottom:1px solid #999;
+}
+
+table.install {
+	width:100%;
+}
+
+table.install td {
+	text-align:center;
+}
+
+.list_block {
+	color:white;
+	-x-system-font:none;
+	font-family:Verdana,Arial,sans-serif;
+	font-size:100%;
+	font-size-adjust:none;
+	font-stretch:normal;
+	font-style:normal;
+	font-variant:normal;
+	font-weight:normal;
+	line-height:normal;
+	background:url(?path_info=template/live/images/headerBG_24_~HeaderGradientImageType~.png) repeat scroll center top;
+	height:39px;
+	text-align:left;
+	position:fixed;
+	bottom:0px;
+	left:0px;
+	background-color:#06A;
+	z-index:1000;
+}
+
+.list_block form {
+	margin:5px 5px 5px 5px;
+	overflow:hidden;
+	height:26px;
+}
+
+#username, #password {
+	width:154px;
+	position:relative;
+	color:#666;
+	display:block;
+	top:-24px;
+	height:24px;
+}
+
+#password {
+	top:-48px;
+	left:160px;
+}
+
+input.stndsize {
+	width:150px;
+}

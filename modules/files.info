@@ -1,0 +1,20 @@
+name = File Handling
+description = Load information about existing files and allow users to download files.
+privilage = 1
+template = false
+filter[] = dir
+filter[] = file
+depends on[] = files
+depends on[] = template
+output = file_variables
+package = core
+validate = true
+
+[database]
+id = "INT NOT NULL AUTO_INCREMENT, PRIMARY KEY(id)"
+Filename = TEXT
+Filemime = TEXT
+Filesize = BIGINT
+Filedate = DATETIME
+Filetype = TEXT
+Filepath = TEXT

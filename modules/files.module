@@ -1,0 +1,672 @@
+<?php
+
+function validate_files($request)
+{
+	// just about everything uses the cat variable so always validate and add this
+	$request['handler'] = validate($request, 'handler');
+}
+
+
+function validate_handler($request)
+{
+	if(isset($request['handler']) && is_handler($request['handler']))
+		return $request['handler'];
+	else
+		return 'files';
+}
+
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return NULL by default, accepts any file name
+ */
+function validate_filename($request)
+{
+	// just return the same, this is only used for pretty dirs and compatibility
+	if(isset($request['filename']))
+	{
+		// remove any slashes that still exist in the file name
+		if(strpos($request['filename'], '/') !== false)
+			$request['filename'] = substr($request['filename'], -strrpos($request['filename'], '/') + 1);
+		if(strpos($request['filename'], '\\') !== false)
+			$request['filename'] = substr($request['filename'], -strrpos($request['filename'], '\\') + 1);
+		
+		// return the filename
+		return generic_validate_filename($request, 'filename');
+	}
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return NULL by default, validate input is a directory inside an archive or disk image, a directory directly on the filesystem, or a directory handled by the selected wrapper handler
+ */
+function validate_dir($request)
+{
+	// if this is not validated completely it is OK because it will be fixed in the db_file handler when it is looked up
+	//   this shouldn't cause any security risks
+	if(isset($request['dir']))
+	{
+		// this is needed to make sure the directory is handled by something
+		$request['handler'] = validate($request, 'handler');
+		
+		// replace directory with actual path
+		if(setting('admin_alias_enable') == true && setting('database_enable') && setting_installed())
+			$tmp = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
+		else
+			$tmp = $request['dir'];
+			
+		// add leading slash
+		if(substr($request['dir'], -1) != '/' && substr($request['dir'], -1) != '\\')
+			$request['dir'] .= '/';
+			
+		// this checks the input 'dir' is on the actual file system
+		if(is_dir(realpath($tmp)) || 
+			// this check the 'dir' for directories inside archives and disk images
+			handles($request['dir'], $request['handler']) == true ||
+			// this check the dir for wrappers, wrappers can handle their own dir
+			is_wrapper($request['handler'])
+		)
+			return $request['dir'];
+		else
+			raise_error('Directory does not exist!', E_USER);
+	}
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return NULL by default, accepts files on the actual file system, or files handled by a handler other than db_file/fs_file
+ */
+function validate_file($request)
+{
+	// if this is not validated completely it is OK because it will be fixed in the db_file handler when it is looked up
+	//   this shouldn't cause any security risks
+	if(isset($request['file']))
+	{
+		$request['handler'] = validate($request, 'handler');
+		if(setting('admin_alias_enable') == true)
+			$tmp = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']);
+		if(is_file(realpath($tmp)) || handles($request['file'], $request['handler']) == true)
+			return $request['file'];
+		else
+			raise_error('File does not exist!', E_USER);
+	}
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return true by default
+ */
+function validate_dirs_only($request)
+{
+	return generic_validate_boolean_true($request, 'dirs_only');
+}
+
+
+/**
+ * Implementation of always output
+ * @ingroup always_output
+ */
+function file_variables($request)
+{
+	// some templates refer to the dir to determine their own location
+	if(isset($request['dir'])) register_output_vars('dir', $request['dir']);
+	
+	// set filename, just a helper for templates to set content disposition
+	if(isset($request['filename'])) register_output_vars('filename', $request['filename']);
+	
+	// most template pieces use the category variable, so set that
+	register_output_vars('handler', $request['handler']);
+}
+
+/**
+ * this is a common function for handlers, just abstracting the information about a file
+ * @param file The file to get the info for
+ * @return an associative array of information that can be inserted directly in to the database
+ */
+function get_info_files($file)
+{
+	
+	$file = str_replace('/', DIRECTORY_SEPARATOR, $file);
+	
+	$fileinfo = array();
+	$fileinfo['Filepath'] = str_replace('\\', '/', $file);
+	$fileinfo['Filename'] = basename($file);
+	$fileinfo['Filesize'] = file_exists($file)?filesize($file):0;
+	$fileinfo['Filemime'] = mime($file);
+	$fileinfo['Filedate'] = file_exists($file)?date("Y-m-d h:i:s", filemtime($file)):date("Y-m-d h:i:s", 0);
+	$fileinfo['Filetype'] = type($file);
+	
+	return $fileinfo;
+}
+
+
+function sql_insert($fileinfo)
+{
+	return ' (' . implode(array_keys($fileinfo)) . ') VALUES (' . implode(',', array_fill(0, count($fileinfo), '"?"')) . ')';
+}
+
+function sql_update($fileinfo)
+{
+	return ' SET ' . implode(',', array_walk($fileinfo, create_function('&$item, $key', '$item = $key . " = \"?\""')));
+}
+
+function sql_files($files)
+{
+	$sql = '';
+	foreach($files as $i => $file)
+	{
+		$sql .= 'Filepath = "' . addslashes($file['Filepath']) . '" OR ';
+	}
+	return substr($sql, 0, -3);
+}
+
+function filter_file($request)
+{
+	if(isset($request['file']))
+	{
+		$request['file'] = str_replace('\\', '/', $request['file']);
+		
+		// this is necissary for dealing with windows and cross platform queries coming from templates
+		if($request['file'][0] == DIRECTORY_SEPARATOR) $request['file'] = realpath('/') . substr($request['file'], 1);
+		
+		// replace aliased path with actual path
+		if(setting('admin_alias_enable') == true)
+			$request['file'] = alias_replace($request['file']);
+			
+		// if the id is available, try to use that instead
+		if(isset($request[$request['handler'] . '_id']) && $request[$request['handler'] . '_id'] != 0)
+			$sql = 'id = ' . $request[$request['handler'] . '_id'] . ' OR Filepath = "' . addslashes($request['file']) . '"';
+		else
+			$sql = 'Filepath = "' . addslashes($request['file']) . '"';
+			
+		return array('where' => $sql);
+	}
+}
+
+function filter_dir($request)
+{
+	// add dir filter to where
+	if(isset($request['dir']))
+	{
+		if($request['dir'] == '') $request['dir'] = '/';
+		
+		// this is necissary for dealing with windows and cross platform queries coming from templates
+		//  yes: the template should probably handle this by itself, but this is convenient and easy
+		//   it is purely for making all the paths look prettier
+		if($request['dir'][0] == '/') $request['dir'] = realpath('/') . substr($request['dir'], 1);
+
+		// replace separator
+		$request['dir'] = str_replace('\\', '/', $request['dir']);
+		
+		// replace aliased path with actual path
+		if(setting('admin_alias_enable') == true)
+			$request['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
+			
+		// maybe the dir is not loaded yet, this part is costly but it is a good way to do it
+		if(setting('recursive_get') && handles($request['dir'], 'watched'))
+		{
+			$GLOBALS['tm_start'] = array_sum(explode(' ', microtime()));
+			scan_dir($request['dir']);
+		}
+		
+		// make sure file exists if we are using the file handler
+		if(handles($request['dir'], $request['handler']))
+		{
+			// if the includes is blank then only show files from current directory
+			if(!isset($request['search']))
+			{
+				if(isset($request['dirs_only']))
+					$sql = 'LEFT(Filepath, ' . strlen($request['dir']) . ') = "' . addslashes($request['dir']) . '" AND LOCATE("/", Filepath, ' . (strlen($request['dir'])+1) . ') = LENGTH(Filepath)';
+				else
+					$sql = 'LEFT(Filepath, ' . strlen($request['dir']) . ') = "' . addslashes($request['dir']) . '" AND (LOCATE("/", Filepath, ' . (strlen($request['dir'])+1) . ') = 0 OR LOCATE("/", Filepath, ' . (strlen($request['dir'])+1) . ') = LENGTH(Filepath)) AND Filepath != "' . addslashes($request['dir']) . '"';
+				
+				// put folders at top if the handler supports a filetype
+				if(in_array('Filetype', get_columns($request['handler'])))
+				{
+					$order = '(Filetype = "FOLDER") DESC,' . (isset($props['ORDER'])?$props['ORDER']:'');
+				}
+			}
+			// show all results underneath directory
+			else
+			{
+				if(isset($request['dirs_only']))
+					$sql = 'LEFT(Filepath, ' . strlen($request['dir']) . ') = "' . addslashes($request['dir']) . '" AND RIGHT(Filepath, 1) = "/" AND Filepath != "' . addslashes($request['dir']) . '"';
+				else
+					$sql = 'LEFT(Filepath, ' . strlen($request['dir']) . ') = "' . addslashes($request['dir']) . '" AND Filepath != "' . addslashes($request['dir']) . '"';
+			}
+			
+			if(isset($order))
+				return array('order' => $order, 'where' => $sql);
+			else
+				return array('where' => $sql);
+		}
+	}
+}
+
+function filter_files($request, $index)
+{
+	switch($index)
+	{
+		case 'file':
+			return filter_file($request);
+		case 'dir':
+			return filter_dir($request);
+	}
+}
+
+/**
+ * @defgroup handle Handle File Functions
+ * Functions that read file information and store in the database
+ * @param file the file to add to the database
+ * @param force force checking if the file is in the database and add it
+ * @return The ID for the file added to the database, or false if nothing was done or it isn't handled
+ * @{
+ */
+ 
+/**
+ * Implementation of handle
+ */
+function add($file, $force = false, $handler = 'files')
+{
+	$file = str_replace('\\', '/', $file);
+	
+	// if there is an add_handler function specified use that instead
+	if(function_exists('add_' . $handler))
+		invoke_module('add', $handler, array($file, $force));
+	
+	// return false if there is no info function
+	elseif(!function_exists('get_info_' . $handler))
+	{
+		raise_error('No get info function or add function exists for ' . $handler . ' so an add_\'' . $handler . '()\' function should be supplied.', E_DEBUG);
+		
+		return false;
+	}
+	
+	// files always qualify, we are going to log every single one!
+	if(!handles($file, $handler))
+		return false;
+	
+	// check if it is in the database
+	$files = get_files(array('file' => $file, 'cat' => $handler), $count);
+	
+	if( $count == 0 )
+	{
+		// get file information
+		$fileinfo = call_user_func_array('get_info_' . $handler, array($file));
+		
+		// always add to file database
+		raise_error('Adding ' . $handler . ': ' . $file, E_DEBUG);
+		
+		// add to database
+		return db_query('INSERT INTO ' . $handler . sql_insert($fileinfo), array_values($fileinfo));
+	}
+	// not dependent on force because it checks for modification
+	elseif($handler == 'files')
+	{
+		// get file information
+		$fileinfo = get_info_files($file);
+		
+		// update file if modified date has changed
+		if( date("Y-m-d h:i:s", filemtime($file)) != $db_file[0]['Filedate'] )
+		{
+			raise_error('Modifying file: ' . $file, E_DEBUG);
+			
+			// update database
+			return db_query('UPDATE files ' . sql_update($fileinfo) . ' WHERE id=' . $db_file[0]['id'], array_values($fileinfo));
+		}
+		else
+		{
+			raise_error('Skipping file: ' . $file, E_DEBUG);
+		}
+		
+	}
+	elseif($force == true)
+	{
+		// get file information
+		$fileinfo = call_user_func_array('get_info_' . $handler, array($file));
+		
+		raise_error('Modifying ' . $handler . ': ' . $file, E_DEBUG);
+		
+		// update database
+		return db_query('UPDATE ' . $handler . sql_update($fileinfo) . ' WHERE id=' . $db_file[0]['id'], array_values($fileinfo));
+	}
+	else
+	{
+		raise_error('Skipping ' . $handler . ': ' . $file, E_DEBUG);
+	}
+		
+	return false;
+}
+
+/**
+ * @}
+ */
+
+/**
+ * @defgroup output_handler Output Handler Functions
+ * Functions that output the provided file
+ * @param file the file to output
+ * @return a stream handle for use with fread, or false if there was an error
+ * @{
+ */
+ 
+/**
+ * Output a handler file stream
+ */
+function output_handler($file, $handler)
+{
+	if(function_exists('output_' . $handler))
+		return invoke_module('output', $handler, array($file, $handler));
+	elseif(is_wrapper($handler) && function_exists('output_' . $GLOBALS['modules'][$handler]['wrapper']))
+		return invoke_module('output', $GLOBALS['modules'][$handler]['wrapper'], array($file, $handler));
+	else
+		return output_files($file, $handler);
+}
+
+/**
+ * Implementation of output_handler
+ * no headers is used to prevent changing the headers, if it is called by a module it may just need the stream and no header changes
+ */
+function output_files($file, $handler)
+{
+	$file = str_replace('\\', '/', $file);
+	
+	if(setting('admin_alias_enable') == true)
+		$file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+	
+	// load file from file system
+	if(handles($file, $handler) && is_file($file))
+	{
+		if($fp = @fopen($file, 'rb'))
+		{
+			return $fp;
+		}
+	}
+	
+	return false;
+}
+
+/**
+ * @}
+ */
+
+/**
+ * @defgroup get_handler Handler 'Get' Functions
+ * Functions that return a list of files for the specific handler
+ * @param request the request information for the list of files to get from the file database
+ * @param count inserts the total number of files that meet the requested criteria in the database
+ * @param handler a utility parameter for other handlers to use the default file get() functionality but acting on their own columns() and DATABASE
+ * @return an indexed array of files from the database
+ * @{
+ */
+
+/**----------------------- Magic, do not touch -----------------------
+ * - the mysql can be left null to get the files from a directory, in which case a directory must be specified
+ * - if the mysql is provided, then the file listings will be loaded from the database
+ * - this is a very generalized handler to provide a template for overriding, or for other handlers to modify the $request and pass to this one
+ *   - other handlers are responsible for any validation of input that is not listed here, like making sure files exist on the filesystem
+ */
+function get_files($request, &$count)
+{
+	// if the handler is set, call that instead
+	if($request['handler'] != 'files' && function_exists('get_' . $request['handler']))
+		return invoke_module('get', $request['handler'], array($request, $count));
+	elseif(is_wrapper($request['handler']))
+		return get_files($GLOBALS['modules'][$request['handler']]['wrapper']);
+	elseif($request['handler'] != 'files')
+	{
+		raise_error('get_files() called with handler \'' . $request['handler'] . '\' but no get_ handler function exists! Defaulting to files', E_DEBUG);
+		
+		// set the cat in the request to the provided handler
+		$request['handler'] = validate($request, 'handler');
+	}
+	
+	// always apply user information to this type of query
+	$request['user'] = session('users');
+	
+	// if using the database
+	if(setting('database_enable') && setting_installed())
+		return _get_database_files($request, $count);
+	else
+		return _get_local_files($request, $count);
+}
+
+function _get_database_files($request, &$count)
+{
+	// add filters to query
+	$result = trigger('filter', NULL, $request);
+	
+	// compile query
+	$where = array();
+	$limit = array();
+	$order = array();
+	$group = array();
+	foreach($result as $key => $alteration)
+	{
+		if(is_array($alteration))
+		{
+			if(isset($alteration['where'])) $where[] = $alteration['where'];
+			if(isset($alteration['limit'])) $limit[] = $alteration['limit'];
+			if(isset($alteration['order'])) $order[] = $alteration['order'];
+			if(isset($alteration['group'])) $group[] = $alteration['group'];
+		}
+	}
+	
+	$result = db_query('SELECT * FROM ' . $request['handler'] . ' ' . 
+		'WHERE (' . implode(') AND (', $where) . ' ' . 
+		'ORDER BY ' . implode(', ', $order) . ' ' .
+		'LIMIT ' . $limit[0]
+	);
+}
+
+function _get_local_files($request, &$count)
+{
+	if(!isset($request['dir']))
+		$request['dir'] = validate(array('dir' => '/'), 'dir');
+	
+	// get all the files from the current directory
+	$files = scan_directory($request['dir']);
+	
+	// merge in file information
+	foreach($files as $i => $file)
+	{
+		$files[$i] = get_info_files($file);
+	}
+	
+	return $files;
+}
+
+function merge_files_info($files)
+{
+	$ids = db_query('SELECT * FROM ' . sql_files($sql) . ' LIMIT ' . count($files));
+	
+	foreach(get_handlers(false) as $module => $config)
+	{
+		$tmp_files = array_filter($files, create_function('$file', 'return handles($file, ' . $module . ');'));
+		
+		// construct query
+		$module_infos = db_query('SELECT * FROM ' . sql_files($sql) . ' LIMIT ' . count($tmp_files));
+		
+		// go through and merge info and get missing infos
+		foreach($module_infos as $i => $info)
+		{
+			
+		}
+	}
+}
+
+/**
+ * @defgroup remove_handler Handler 'Remove' Functions
+ * Functions that remove files from the database for a specific handler
+ * @param file the file or folder to remove from the database
+ * @param handler a utility parameter to allow handlers to use the default functionality
+ * @{
+ */
+	
+/**
+ * Implementation of remove_handler
+ */
+function remove($file, $handler = NULL)
+{
+	if( $handler == NULL )
+		$handler = 'files';
+	
+	if($handler != 'files')
+		module_invoke('remove', $handler, $file);
+	
+	$file = str_replace('\\', '/', $file);
+	
+	// remove files with inside paths like directories
+	if($file[strlen($file)-1] != '/') $file_dir = $file . '/';
+	else $file_dir = $file;
+	
+	raise_error('Removing ' . $GLOBALS['modules'][$handler]['name'] . ': ' . $file, E_DEBUG);
+
+	// remove file(s) from database
+	$GLOBALS['database']->query(array('DELETE' => $handler, 'WHERE' => 'Filepath = "' . addslashes($file) . '" OR LEFT(Filepath, ' . strlen($file_dir) . ') = "' . addslashes($file_dir) . '"'), false);	
+
+	// delete ids
+	remove_ids($file, $handler);
+}
+
+/**
+ * @}
+ */
+
+
+/**
+ * @defgroup cleanup_handler Handler 'Cleanup' Functions
+ * Functions that cleanup files in the database
+ * @param handler the utility parameter to allow handler to use the default file functionality but acting on their own DATABASE
+ * @{
+ */
+	
+/**
+ * Implementation of cleanup_handler
+ */
+function cleanup($handler = 'files')
+{
+	// if there is a cleanup_handler function use that instead
+	module_invoke('cleanup', $handler);
+
+	/*
+	// first clear all the items that are no longer in the watch list
+	// since the watch is resolved all the items in watch have to start with the watched path
+	$watched_where = '';
+	foreach($GLOBALS['watched'] as $i => $watch)
+	{
+		$tmp_watch = str_replace('\\', '/', $watch['Filepath']);
+		// add the files that begin with a path from a watch directory
+		$watched_where .= ' LEFT(Filepath, ' . strlen($tmp_watch) . ') != "' .  addslashes($tmp_watch) . '" AND';
+	}
+	// remove last AND
+	$watched_where = substr($watched_where, 0, strlen($watched_where)-3);
+	
+	// but keep the ones leading up to watched directories
+	// ----------THIS IS THE SAME FUNCTIONALITY FROM THE CRON.PHP SCRIPT
+	$watched_to_where = '';
+	$directories = array();
+	for($i = 0; $i < count($GLOBALS['watched']); $i++)
+	{
+		$folders = split('/', $GLOBALS['watched'][$i]['Filepath']);
+		$curr_dir = (realpath('/') == '/')?'/':'';
+		// don't add the watch directory here because it is already added by the previous loop!
+		$length = count($folders);
+		unset($folders[$length-1]); // remove the blank at the end
+		unset($folders[$length-2]); // remove the last folder which is the watch
+		$between = false; // directory must be between an aliased path and a watched path
+		// add the directories leading up to the watch
+		for($j = 0; $j < count($folders); $j++)
+		{
+			if($folders[$j] != '')
+			{
+				$curr_dir .= $folders[$j] . '/';
+				// if using aliases then only add the revert from the watch directory to the alias
+				// ex. Watch = /home/share/Pictures/, Alias = /home/share/ => /Shared/
+				//     only /home/share/ is added here
+				if((!setting('admin_alias_enable') || in_array($curr_dir, $GLOBALS['paths']) !== false))
+				{
+					// this allows for us to make sure that at least the beginning 
+					//   of the path is an aliased path
+					$between = true;
+					
+					if(!in_array($curr_dir, $directories))
+					{
+						$directories[] = $curr_dir;
+						// if the setting('admin_alias_enable') is true this will only add the folder
+						//    if it is in the list of aliases
+						$watched_to_where .= ' Filepath != "' . addslashes($curr_dir) . '" AND';
+					}
+				}
+				// but make an exception for folders between an alias and the watch path
+				elseif(setting('admin_alias_enable') && $between && !in_array($curr_dir, $directories))
+				{
+					$directories[] = $curr_dir;
+					
+					$watched_to_where .= ' Filepath != "' . addslashes($curr_dir) . '" AND';
+				}
+			}
+		}
+	}
+	// remove last AND
+	$watched_to_where = substr($watched_to_where, 0, strlen($watched_to_where)-3);
+	
+	$where_str = $watched_to_where . ' AND ' . $watched_where;
+	
+	// remove items that aren't in where directories
+	$GLOBALS['database']->query(array('DELETE' => $handler, 'WHERE' => array($where_str)), true);
+	
+	if(count($GLOBALS['ignored']) > 0)
+	{
+		
+		$ignored_where = '';
+		// clean up items that are in the ignore list
+		foreach($GLOBALS['ignored'] as $i => $ignore)
+		{
+			$tmp_ignore = str_replace('\\', '/', $ignore['Filepath']);
+			$ignored_where .= ' LEFT(Filepath, ' . strlen($tmp_ignore) . ') = "' . addslashes($tmp_ignore) . '" OR';
+		}
+		// remove last OR
+		$ignored_where = substr($ignored_where, 0, strlen($ignored_where)-2);
+		
+		// remove items that are ignored
+		$GLOBALS['database']->query(array('DELETE' => $handler, 'WHERE' => array($ignored_where)), true);
+	}
+	*/
+	
+	// remove any duplicates
+	$files = $GLOBALS['database']->query(array(
+			'SELECT' => $handler,
+			'COLUMNS' => array('MIN(id) as id', 'Filepath', 'COUNT(*) as num'),
+			'GROUP' => 'Filepath',
+			'HAVING' => 'num > 1'
+		)
+	, true);
+
+	// if files is not an array something must have gone wrong
+	if(!is_array($files))
+	{
+		raise_error('There was a problem when trying to remove duplicate files.', E_DEBUG);
+	}
+	else
+	{
+		// remove first item from all duplicates
+		foreach($files as $i => $file)
+		{
+			raise_error('Removing Duplicate ' . $GLOBALS['modules'][$handler]['name'] . ': ' . $file['Filepath'], E_DEBUG);
+			
+			$GLOBALS['database']->query(array('DELETE' => $handler, 'WHERE' => 'id=' . $file['id']), false);
+		}
+	}
+	
+	raise_error('Cleanup: for ' . $GLOBALS['modules'][$handler]['name'] . ' complete.', E_DEBUG);
+	
+}
+
+/**
+ * @}
+ */
