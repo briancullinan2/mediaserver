@@ -61,8 +61,6 @@ function preload_error()
 	/** Set the error handler to use our custom function for storing errors */
 	error_reporting(E_ALL);
 	
-	/** stores a list of all errors */
-	$GLOBALS['errors'] = array();
 	/** stores a list of all user errors */
 	$GLOBALS['user_errors'] = array();
 	/** stores a list of all warnings */
@@ -71,6 +69,8 @@ function preload_error()
 	$GLOBALS['note_errors'] = array();
 	/** stores a list of all debug information */
 	$GLOBALS['debug_errors'] = array();
+	
+	setup_error();
 }
 
 function setup_error()
@@ -106,7 +106,10 @@ function php_to_PEAR_Error($error_code, $error_str, $error_file, $error_line)
 {
 	$error_code = E_DEBUG;
 
-	raise_error('PHP ERROR: ' . $error_str, $error_code);
+	if(substr($error_str, 0, 12) == 'mysql error:')
+		raise_error('DB ERROR:' . substr($error_str, 12), $error_code);
+	else
+		raise_error('PHP ERROR: ' . $error_str, $error_code);
 
 	return (setting('verbose') != 2);
 }
@@ -118,7 +121,8 @@ function raise_error($str, $code)
 	$error->message = $str;
 	$error->backtrace = debug_backtrace();
 	
-	error_callback($error);
+	if(error_reporting() != 0 || setting('verbose') === 2)
+		error_callback($error);
 }
 
 
@@ -128,9 +132,6 @@ function raise_error($str, $code)
  */
 function error_callback($error)
 {
-	if(count($GLOBALS['errors']) > 200)
-		return;
-
 	if($error->code & E_USER)
 		$GLOBALS['user_errors'][] = $error->message;
 	if($error->code & E_WARN)
@@ -145,6 +146,9 @@ function error_callback($error)
 			) && setting('verbose') === 2)
 		)
 	{
+		if(count($GLOBALS['debug_errors']) > 200)
+			return;
+
 		// add special error handling based on the origin of the error
 		foreach($error->backtrace as $i => $stack)
 		{
@@ -170,7 +174,5 @@ function error_callback($error)
 		if($error->code & E_DEBUG || setting('verbose'))
 			$GLOBALS['debug_errors'][] = $error;
 	}
-	
-	$GLOBALS['errors'][] = $error->message;
 }
 

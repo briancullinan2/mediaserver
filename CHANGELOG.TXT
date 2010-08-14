@@ -330,7 +330,7 @@ Finished converting my first template to the new API
 Templates will now have a general function for beginning output
 	and will be responsible for displaying all information from there
 Templates can call some more output_module() functions if they need to, in the theme_live_preload() function
-	After that function, the only variables that should be available to the templates is $GLOBALS['templates']['vars']
+	After that function, the only variables that should be available to the templates is $GLOBALS['output']
 Added some output variables to search
 Fixed core.php general_href and validate doesn't work after template is outputted
 Index now uses theme() function, getting rid of smarty

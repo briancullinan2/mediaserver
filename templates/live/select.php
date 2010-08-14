@@ -122,7 +122,7 @@ function theme_live_files()
 			}
 			if(isset($new_handler))
 			{
-				$link = url('select/dir' . $GLOBALS['templates']['html']['files'][$i]['Filepath'] . '?handler=' . $new_handler);
+				$link = url('select/dir/' . $GLOBALS['templates']['html']['files'][$i]['Filepath'] . '?handler=' . $new_handler);
 			}
 			else
 				$link = url('file/' . $handler . '/' . $file['id'] . '/' . $file['Filename']);

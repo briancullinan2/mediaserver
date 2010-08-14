@@ -86,15 +86,22 @@ function theme_live_debug_block()
 	}
 	else
 	{
-		?><div id="debug" class="debug">
-		<form action="<?php print url('users/login?return=' . urlencode($GLOBALS['output']['get'])); ?>" method="post">
-			Administrators: Log in to select debug options. Username: <input type="text" name="username" value="" />
-			Password: <input type="password" name="password" value="" />
-			<input type="submit" value="Login" />
-			<input type="reset" value="Reset" />
-		</form>
-		</div>
-		<?php
+		if(isset($GLOBALS['output']['users']) && $GLOBALS['output']['users'] == 'login')
+		{
+			?><div id="debug" class="debug">Administrators: Log in below to select debug options.</div><?php
+		}
+		else
+		{
+			?><div id="debug" class="debug">
+			<form action="<?php print url('users/login?return=' . urlencode($GLOBALS['output']['get'])); ?>" method="post">
+				Administrators: Log in to select debug options. Username: <input type="text" name="username" value="" />
+				Password: <input type="password" name="password" value="" />
+				<input type="submit" value="Login" />
+				<input type="reset" value="Reset" />
+			</form>
+			</div>
+			<?php
+		}
 	}
 }
 

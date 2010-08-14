@@ -1,0 +1,61 @@
+<?php
+
+/** 
+ * Implementation of setup_handler
+ * @ingroup setup_handler
+ */
+function setup_audio()
+{
+	if(isset($GLOBALS['getID3']))
+		return;
+	
+	// include the id handler
+	include_once(include_path('getid3' . DIRECTORY_SEPARATOR . 'getid3.php'));
+	
+	// set up id3 reader incase any files need it
+	$GLOBALS['getID3'] = new getID3();
+}
+
+/** 
+ * Implementation of handles
+ * @ingroup handles
+ */
+function handles_audio($file)
+{
+	$file = str_replace('\\', '/', $file);
+	if(setting('admin_alias_enable') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+	
+	// get file extension
+	$type = mime_type($file);
+	
+	if( $type == 'audio' )
+	{
+		return true;
+	}
+
+	return false;
+
+}
+
+function get_info_audio($file)
+{
+	$file = str_replace('/', DIRECTORY_SEPARATOR, $file);
+	
+	$info = $GLOBALS['getID3']->analyze($file);
+	getid3_lib::CopyTagsToComments($info);
+
+	$fileinfo = array();
+	$fileinfo['Filepath'] = addslashes(str_replace('\\', '/', $file));
+	$fileinfo['Title'] = @addslashes($info['comments_html']['title'][0]);
+	$fileinfo['Artist'] = @addslashes($info['comments_html']['artist'][0]);
+	$fileinfo['Album'] = @addslashes($info['comments_html']['album'][0]);
+	$fileinfo['Track'] = @addslashes($info['comments_html']['track'][0]);
+	$fileinfo['Year'] = @addslashes($info['comments_html']['year'][0]);
+	$fileinfo['Genre'] = @addslashes($info['comments_html']['genre'][0]);
+	$fileinfo['Length'] = @addslashes($info['playtime_seconds']);
+	$fileinfo['Comments'] = @addslashes($info['comments_html']['comments'][0]);
+	$fileinfo['Bitrate'] = @addslashes($info['bitrate']);
+	
+	return $fileinfo;
+}
+

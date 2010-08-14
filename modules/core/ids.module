@@ -1,0 +1,74 @@
+<?php
+
+
+/**
+ * Implementation of setup_handler
+ * @ingroup setup_handler
+ */
+function setup_ids()
+{
+	$struct = array(
+		'Filepath' 		=> 'TEXT',
+		'Hex'			=> 'TEXT',
+	) + array_fill_keys(get_id_fields(), 'INT');
+	
+	$GLOBALS['modules']['ids']['database'] = $struct;
+}
+
+function install_ids()
+{
+	setup_ids();
+	install_table('ids', $GLOBALS['modules']['ids']['database']);
+	
+	// alter table to include all handlers
+	foreach(get_id_fields() as $i => $id_field)
+	{
+		db_query('ALTER TABLE ids ADD COLUMN ' . $id_field . ' INT NOT NULL');
+	}
+}
+
+function get_id_fields()
+{
+	$id_fields = array();
+	foreach(get_handlers(false, false) as $handler => $config)
+	{
+		$id_fields[] = $handler . '_id';
+	}
+	return $id_fields;
+}
+
+function handles_ids($file)
+{
+	return true;
+}
+
+
+function get_info_ids($file)
+{
+	$fileinfo = array();
+	
+	$fileinfo['Filepath'] = $file;
+	$fileinfo['Hex'] = bin2hex($file);
+	
+	return $fileinfo;
+}
+
+/**
+ * Implementation of remove_handler
+ * @ingroup remove_handler
+ */
+function remove_ids($file, $handler = NULL)
+{
+	if($handler != NULL)
+	{
+		// do the same thing db_file does except update and set handler_id to 0
+		$file = str_replace('\\', '/', $file);
+		
+		// remove files with inside paths like directories
+		if($file[strlen($file)-1] != '/') $file_dir = $file . '/';
+		else $file_dir = $file;
+		
+		// all the removing will be done by other handlers
+		db_query('UPDATE ids SET ' . $handler . '_id=0 WHERE Filepath=? OR LEFT(Filepath, ' . strlen($file_dir) . ')=?', array($file, $file_dir));
+	}
+}

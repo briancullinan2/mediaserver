@@ -5,6 +5,13 @@ function bootstrap($mode = 'all')
 {
 	switch($mode)
 	{
+		case 'database':
+			require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'database.inc';
+			
+			load_module(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'database.inc');
+			
+			break;
+			
 		case 'all':
 			$includes = array(
 				'error.inc',
@@ -18,7 +25,6 @@ function bootstrap($mode = 'all')
 				'template.inc',
 				'session.inc',
 				'compatibility.inc',
-				'database.inc',
 				'users.inc',
 				'theme.inc',
 				'curl.inc',
@@ -35,10 +41,13 @@ function bootstrap($mode = 'all')
 			preload_error();
 			preload_triggers();
 			
-			// run setup functions and add to modules
+			if(setting('database_enable'))
+				bootstrap('database');
+				
+			// run register functions and add to modules
 			foreach($includes as $i => $include)
 			{
-				$config = load_module(dirname(__FILE__) . DIRECTORY_SEPARATOR . $include);
+				$config = @load_module(dirname(__FILE__) . DIRECTORY_SEPARATOR . $include);
 			}
 
 			load_modules(setting_local_root() . 'modules');
@@ -70,10 +79,10 @@ function setup_mime()
 {
 	// this will load the mime-types from a linux dist mime.types file stored in includes
 	// this will organize the types for easy lookup
-	if(file_exists(setting_local_root() . 'include' . DIRECTORY_SEPARATOR . 'mime.types'))
+	if(file_exists(include_path('mime.types')))
 	{
-		$handle = fopen(setting_local_root() . 'include' . DIRECTORY_SEPARATOR . 'mime.types', 'r');
-		$mime_text = fread($handle, filesize(setting_local_root() . 'include' . DIRECTORY_SEPARATOR . 'mime.types'));
+		$handle = fopen(include_path('mime.types'), 'r');
+		$mime_text = fread($handle, filesize(include_path('mime.types')));
 		fclose($handle);
 		
 		$mimes = split("\n", $mime_text);

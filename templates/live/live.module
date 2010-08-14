@@ -1,5 +1,6 @@
 <?php
 include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'select.php';
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'users.php';
 
 include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'header.php';
 include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'footer.php';
@@ -7,7 +8,8 @@ include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'footer.php';
 function theme_live_logo()
 {
 	$result = fetch('http://www.monolithicmedia.org/favicon.ico', array(), array('timeout' => 2));
-	header('Content-Type: ' . $result['headers']['Content-Type']);
+	if(isset($result['headers']['Content-Type']))
+		header('Content-Type: ' . $result['headers']['Content-Type']);
 	print $result['content'];
 }
 
@@ -48,14 +50,16 @@ function live_alter_file($file)
 		if($column == 'Filepath')
 		{
 			$dirs = explode('/', $file['Filepath']);
+			if($dirs[0] == '' || $dirs[0] == dirname(realpath('/')))
+				array_shift($dirs);
 			array_walk($dirs, create_function('&$item,$key', '$item = urlencode($item);'));
 			$file['Filepath'] = implode('/', $dirs);
 		}
-		elseif(isset($GLOBALS['templates']['vars']['search_regexp']) && 
-			isset($GLOBALS['templates']['vars']['search_regexp'][$column])
+		elseif(isset($GLOBALS['output']['search_regexp']) && 
+			isset($GLOBALS['output']['search_regexp'][$column])
 		)
 		{
-			$file[$column] = preg_replace($GLOBALS['templates']['vars']['search_regexp'][$column], '\'<strong style="background-color:#990;">\' . htmlspecialchars(\'$0\') . \'</strong>\'', $file[$column]);
+			$file[$column] = preg_replace($GLOBALS['output']['search_regexp'][$column], '\'<strong style="background-color:#990;">\' . htmlspecialchars(\'$0\') . \'</strong>\'', $file[$column]);
 		
 			continue;
 		}

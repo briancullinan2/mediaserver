@@ -228,6 +228,12 @@ function register_script($request)
  */
 function theme($request = '')
 {
+	// set the error code
+	if(setting('verbose') === 2)
+		$error_code = E_DEBUG|E_WARN;
+	else
+		$error_code = E_DEBUG;
+	
 	// if the theme function is just being called without any input
 	//   then call the default theme function
 	if($request == '')
@@ -270,7 +276,7 @@ function theme($request = '')
 			return true;
 		}
 		else
-			raise_error('Theme function \'theme_' . $request['template'] . '_' . $request['tfile'] . '\' was not found.', E_DEBUG|E_WARN);
+			raise_error('Theme function \'theme_' . $request['template'] . '_' . $request['tfile'] . '\' was not found.', $error_code);
 	}
 	// the request is a string, this is most common
 	elseif(is_string($request))
@@ -289,10 +295,10 @@ function theme($request = '')
 		}
 		// it is possible the whole request
 		else
-			raise_error('Theme function \'theme_' . validate(array('template' => setting('local_template')), 'template') . '_' . $request . '\' was not found.', E_DEBUG|E_WARN, 'template');
+			raise_error('Theme function \'theme_' . validate(array('template' => setting('local_template')), 'template') . '_' . $request . '\' was not found.', $error_code, 'template');
 	}
 	else
-		raise_error('Theme function could not be handled because of an unrecognized argument.', E_DEBUG|E_WARN);
+		raise_error('Theme function could not be handled because of an unrecognized argument.', $error_code);
 	return false;
 }
 

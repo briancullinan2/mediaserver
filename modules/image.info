@@ -1,0 +1,15 @@
+name = Images
+description = Load information about all images.
+depends on[] = getid3_installed
+
+[database]
+Filepath = TEXT
+Height = INT
+Width = INT
+Make = TEXT
+Model = TEXT
+Comments = TEXT
+Keywords = TEXT
+Title = TEXT
+Author = TEXT
+ExposureTime = TEXT

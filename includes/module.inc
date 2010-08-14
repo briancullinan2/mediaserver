@@ -84,8 +84,9 @@ function load_modules($dir)
 
 	foreach($files as $i => $file)
 	{
-		$config = &load_module($file);
-		$modules[$config['module']] = $config;
+		$config = load_module($file);
+		if(isset($config))
+			$modules[$config['module']] = $config;
 	}
 	
 	$GLOBALS['modules'] = sort_modules($GLOBALS['modules']);
@@ -113,7 +114,7 @@ function load_module($path)
 		ob_start();
 		
 		// load configuration from info file to allow disabling
-		if(ext($path) == 'info')
+		if(ext($path) == 'info' && file_exists(dirname($path) . DIRECTORY_SEPARATOR . $module . '.module'))
 		{
 			$config = parse_ini_file($path, true);
 			
@@ -208,7 +209,7 @@ function is_include($file)
 
 function get_required_modules()
 {
-	return array('menu', 'template', 'select', 'view', 'file', 'users', 'session');
+	return array('menu', 'template', 'select', 'view', 'files', 'users', 'session', 'watched');
 }
 
 function get_dependencies($dependency, $modules_only = false)

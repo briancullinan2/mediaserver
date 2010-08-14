@@ -15,9 +15,8 @@ function menu_select()
 function rewrite_select($path_info)
 {
 	$request = invoke_module('rewrite', 'default', array($path_info));
-	// make root correction
-	if(isset($request['dir']) && substr($request['dir'], 0, 1) != '/')
-		$request['dir'] = '/' . $request['dir'];
+	// do directory aliasing here?
+	
 	return $request;
 }
 
@@ -352,7 +351,7 @@ function filter_selected($request, &$props)
 		$sql = array(substr($where, 0, strlen($where)-2));
 
 		// get ids from centralized id database
-		$files = db_query('SELECT * FROM ids WHERE ' . $sql . ' AND ' . filter_users($request));
+		$files = db_assoc('SELECT * FROM ids WHERE ' . $sql . ' AND ' . filter_users($request));
 		
 		if(count($files) > 0)
 		{
@@ -427,7 +426,7 @@ function output_select($request)
 	
 	// make select call
 	$files = get_files($request, $request['handler']);
-
+	
 	register_output_vars('files', $files);
 	
 	// count a few types of media for templates to use

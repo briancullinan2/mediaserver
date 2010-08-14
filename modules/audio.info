@@ -1,0 +1,15 @@
+name = Audio
+description = Store audio id3 information.
+depends on[] = getid3_installed
+
+[database]
+Filepath = TEXT
+Title = TEXT
+Artist = TEXT
+Album = TEXT
+Track = INT
+Year = INT
+Genre = TEXT
+Length = DOUBLE
+Comments = TEXT
+Bitrate = DOUBLE

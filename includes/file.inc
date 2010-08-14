@@ -52,26 +52,37 @@ function scan_directory($dir, $filter = 'files', $depth = 1)
 	{
 		$dir = realpath($dir);
 		
+		// add slash to end
+		if(substr($dir, -strlen(DIRECTORY_SEPARATOR)) != DIRECTORY_SEPARATOR)
+			$dir .= DIRECTORY_SEPARATOR;
+		
 		while (FALSE !== ($file = readdir($handle)))
 		{
-			if(is_dir($dir . DIRECTORY_SEPARATOR . $file) && handles($dir . DIRECTORY_SEPARATOR . $file, 'files') && $depth > 1)
+			// add slash to directories
+			if(is_dir($dir . $file))
+				$file .= DIRECTORY_SEPARATOR;
+			
+			// filter files
+			if(is_dir($dir . $file) && handles($dir . $file, 'files') && $depth > 1)
 			{
-				$files = array_merge($files, scan_directory($dir . DIRECTORY_SEPARATOR . $file, $filter, $depth - 1));
+				$files = array_merge($files, scan_directory($dir . $file, $filter, $depth - 1));
 			}
 			elseif(function_exists($filter))
 			{
-				if(call_user_func_array($filter, array($dir . DIRECTORY_SEPARATOR . $file)))
-					$files[] = $dir . DIRECTORY_SEPARATOR . $file;
+				if(call_user_func_array($filter, array($dir . $file)))
+					$files[] = $dir . $file;
 			}
 			elseif(is_handler($filter))
 			{
-				if(handles($dir . DIRECTORY_SEPARATOR . $file, $filter))
-					$files[] = $dir . DIRECTORY_SEPARATOR . $file;
+				if(handles($dir . $file, $filter))
+					$files[] = $dir . $file;
 			}
-			elseif(handles($dir . DIRECTORY_SEPARATOR . $file, 'files'))
-				$files[] = $dir . DIRECTORY_SEPARATOR . $file;
+			elseif(handles($dir . $file, 'files'))
+				$files[] = $dir . $file;
 		}
 	}
+	
+	sort($files);
 	
 	return array_unique($files);
 }
@@ -155,6 +166,7 @@ function handles($file, $handler = 'files')
 	// check the handles_ function	
 	if($handler == 'files')
 	{
+		// always use forward slash
 		$file = str_replace('\\', '/', $file);
 		
 		// replace the file alias with actual path
@@ -169,7 +181,7 @@ function handles($file, $handler = 'files')
 		)
 		{
 			// make sure it isn't a hidden file
-			if(strlen(basename($file)) > 0 && substr(basename($file), 0, 1) != '.')
+			if(strlen(basename($file)) > 0 && substr(basename($file), 0, 1) != '.' || realpath($file) == realpath('/'))
 				return true;
 		}
 	}

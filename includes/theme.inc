@@ -8,6 +8,105 @@ function theme__confirmation()
 	
 	theme('footer');
 }
+
+function theme__default()
+{
+	theme('header');
+	
+	?><h1>Module: <?php print $GLOBALS['modules'][$GLOBALS['output']['module']]['name']; ?></h1>
+	This page requires special parameters that have not been set.  This default page is a placeholder.<?php
+	
+	theme('errors_block');
+
+	theme('footer');
+}
+
+function theme__errors()
+{
+	if(count($GLOBALS['user_errors']) > 0)
+	{
+		?><span style="color:#C00"><?php
+		foreach($GLOBALS['user_errors'] as $i => $error)
+		{
+			?><b><?php print $error; ?></b><br /><?php
+		}
+		?></span><?php
+	}
+	if(count($GLOBALS['warn_errors']) > 0)
+	{
+		?><span style="color:#CC0"><?php
+		foreach($GLOBALS['warn_errors'] as $i => $error)
+		{
+			?><b><?php print $error; ?></b><br /><?php
+		}
+		?></span><?php
+	}
+	if(count($GLOBALS['note_errors']) > 0)
+	{
+		?><span style="color:#00C"><?php
+		foreach($GLOBALS['note_errors'] as $i => $error)
+		{
+			?><b><?php print $error; ?></b><br /><?php
+		}
+		?></span><?php
+	}
+	$GLOBALS['note_errors'] = array();
+	$GLOBALS['warn_errors'] = array();
+	$GLOBALS['user_errors'] = array();
+	$GLOBALS['debug_errors'] = array();
+}
+
+function theme__errors_block()
+{
+	theme('errors');
+}
+
+function theme__footer()
+{
+	if($GLOBALS['output']['module'] != 'users')
+		theme('login_block');
+	
+	?>
+	Modules:
+<ul>
+<?php
+foreach(get_modules() as $name => $module)
+{
+	if($module['privilage'] > $GLOBALS['output']['user']['Privilage'])
+		continue;
+										
+	if(!function_exists('output_' . $name))
+		$link = 'admin/modules/' . $name;
+	else
+		$link = $name;
+									
+	?><li><a href="<?php print url($link); ?>"><?php echo $module['name']; ?></a></li><?php
+}
+?>
+</ul>
+</body>
+</html>
+	<?php
+}
+
+function theme__header()
+{
+	?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<?php theme('redirect_block'); ?>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title><?php print setting('html_name'); ?> : <?php print htmlspecialchars($GLOBALS['modules'][$GLOBALS['output']['module']]['name']); ?></title>
+</head>
+
+<body>
+<h1><?php print htmlspecialchars($GLOBALS['modules'][$GLOBALS['output']['module']]['name']); ?></h1>
+	<?php
+	
+	theme('errors');
+}
+
 function theme__login()
 {
 	theme('header');
@@ -98,6 +197,102 @@ function theme__module()
 	theme('footer');
 }
 
+function theme__pages()
+{
+	$item_count = count($GLOBALS['output']['files']);
+	$page_int = $GLOBALS['output']['start'] / $GLOBALS['output']['limit'];
+	$lower = $page_int - 8;
+	$upper = $page_int + 8;
+	$GLOBALS['output']['total_count']--;
+	$pages = floor($GLOBALS['output']['total_count'] / $GLOBALS['output']['limit']);
+	$prev_page = $GLOBALS['output']['start'] - $GLOBALS['output']['limit'];
+	if($pages > 0)
+	{
+		if($lower < 0)
+		{
+			$upper = $upper - $lower;
+			$lower = 0;
+		}
+		if($upper > $pages)
+		{
+			$lower -= $upper - $pages;
+			$upper = $pages;
+		}
+		
+		if($lower < 0)
+			$lower = 0;
+		
+		if($GLOBALS['output']['start'] > 0)
+		{
+			if($GLOBALS['output']['start'] > $GLOBALS['output']['limit'])
+			{
+			?>
+			<a class="pageLink" href="<?php print url($GLOBALS['output']['get'] . '&start=0'); ?>">First</a>
+			<a class="pageLink" href="<?php print url($GLOBALS['output']['get'] . '&start=' . $prev_page); ?>">Prev</a>
+			<?php
+			}
+			else
+			{
+			?>
+			<a class="pageLink" href="<?php print url($GLOBALS['output']['get'] . '&start=0'); ?>">First</a>
+			<?php
+			}
+			?> | <?php
+		}
+		
+		for($i = $lower; $i < $upper + 1; $i++)
+		{
+			if($i == $page_int)
+			{
+				?><b><?php print $page_int + 1; ?></b><?
+			}
+			else
+			{
+				?>
+				<a class="pageLink" href="<?php print url($GLOBALS['output']['get'] . '&start=' . ($i * $GLOBALS['output']['limit'])); ?>"><?php print $i + 1; ?></a>
+				<?php
+			}
+		}
+		
+		if($GLOBALS['output']['start'] <= $GLOBALS['output']['total_count'] - $GLOBALS['output']['limit'])
+		{
+			?> | <?php
+			$last_page = floor($GLOBALS['output']['total_count'] / $GLOBALS['output']['limit']) * $GLOBALS['output']['limit'];
+			$next_page = $GLOBALS['output']['start'] + $GLOBALS['output']['limit'];
+			if($GLOBALS['output']['start'] < $GLOBALS['output']['total_count'] - 2 * $GLOBALS['output']['limit'])
+			{
+				?>
+				<a class="pageLink" href="<?php print url($GLOBALS['output']['get'] . '&start=' . $next_page); ?>">Next</a>
+				<a class="pageLink" href="<?php print url($GLOBALS['output']['get'] . '&start=' . $last_page); ?>">Last</a>
+				<?php
+			}
+			else
+			{
+				?>
+				<a class="pageLink" href="<?php print url($GLOBALS['output']['get'] . '&start=' . $last_page); ?>">Last</a>
+				<?php
+			}
+		}
+	}
+}
+
+function theme__redirect()
+{
+	theme('header');
+	
+	?>You are being redirected...<?php
+	
+	theme('footer');
+}
+
+function theme__redirect_block()
+{
+	if(isset($GLOBALS['templates']['html']['redirect']))
+	{
+		?><META HTTP-EQUIV="refresh" CONTENT="1;URL=<?php print $GLOBALS['templates']['html']['redirect']; ?>"><?php
+	}
+}
+
 function theme__register()
 {
 	theme('header');
@@ -177,5 +372,8 @@ function theme__users()
 		case 'login':
 			theme('login');
 		break;
+		default:
+			theme('default');
 	}
 }
+

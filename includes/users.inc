@@ -35,6 +35,47 @@ function register_users()
 	);
 }
 
+function install_users()
+{
+	install_table('users', $GLOBALS['modules']['users']['database']);
+
+	// add default users
+	$db_user = db_assoc('SELECT * FROM users WHERE Username = "guest" LIMIT 1');
+	
+	if( count($db_user) == 0 )
+	{
+		// create guest user
+		$fileinfo = array(
+			'id' => -2,
+			'Username' => 'guest',
+			'Password' => '',
+			'Email' => 'guest@bjcullinan.com',
+			'Settings' => serialize(array()),
+			'Privilage' => 1,
+			'PrivateKey' => md5(microtime())
+		);
+		
+		$result = db_insert('INSERT INTO users ' . sql_insert($fileinfo), $fileinfo);
+	}
+	
+	$db_user = db_assoc('SELECT * FROM users WHERE Username = "admin" LIMIT 1');
+	
+	if( count($db_user) == 0 )
+	{
+		$fileinfo = array(
+			'id' => -1,
+			'Username' => 'admin',
+			'Password' => md5(setting('secret') . 'tmppass'),
+			'Email' => 'admin@bjcullinan.com',
+			'Settings' => serialize(array()),
+			'Privilage' => 10,
+			'PrivateKey' => md5(microtime()),
+		);
+		// create default administrator
+		$result = db_insert('INSERT INTO users ' . sql_insert($fileinfo), $fileinfo);
+	}
+}
+
 function menu_users()
 {
 	return array(
@@ -67,9 +108,9 @@ function setup_users()
 	// get users associated with the keys
 	if(isset($session_user['Settings']['keys']))
 	{
-		$return = db_query('SELECT * FROM users WHERE PrivateKey = "' . 
-			implode('" OR PrivateKey = "', array_fill(0, count($session_user['Settings']['keys']), '?')) . 
-			'" LIMIT ' . count($session_user['Settings']['keys'])
+		$return = db_assoc('SELECT * FROM users WHERE PrivateKey=' . 
+			implode(' OR PrivateKey=', array_fill(0, count($session_user['Settings']['keys']), '?')) . 
+			' LIMIT ' . count($session_user['Settings']['keys'])
 		, $session_user['Settings']['keys']);
 		
 		$session_user['Settings']['keys_usernames'] = array();
@@ -380,15 +421,13 @@ function add_users($file, $force = false)
 		$username = validate(array('username' => $file), 'username');
 		
 		// check if it is in the database
-		$db_user = db_query('SELECT * FROM users WHERE Username = "?" LIMIT 1', array(
-			$username,
-		));
+		$db_user = db_assoc('SELECT * FROM users WHERE Username=? LIMIT 1', array($username));
 		
 		if( count($db_user) == 0 )
 		{
 			// just set up the user with default information
 			//   if they don't use the module, this creates a system user
-			return qb_query('INSERT INTO users (Username, Settings, Privilage, PrivateKey) VALUES ("?", "?", "?", "?")', array(
+			return db_insert('INSERT INTO users (Username, Settings, Privilage, PrivateKey) VALUES ("?", "?", "?", "?")', array(
 				$username,
 				serialize(array()),
 				1,
@@ -457,7 +496,7 @@ function session_users($request)
 	if( isset($request['username']) && isset($request['password']) && setting_installed() && setting('database_enable') )
 	{
 		// lookup username in table
-		$db_user = db_query('SELECT * FROM users WHERE Username = "?" AND Password = "?" LIMIT 1', array(
+		$db_user = db_assoc('SELECT * FROM users WHERE Username=? AND Password=? LIMIT 1', array(
 			$request['username'],
 			substr($request['password'], 5),
 		));
@@ -479,7 +518,7 @@ function session_users($request)
 	elseif(setting_installed() && setting('database_enable'))
 	{
 		// get guest user
-		$db_user = db_query('SELECT * FROM users WHERE id = -2 LIMIT 1');
+		$db_user = db_assoc('SELECT * FROM users WHERE id = -2 LIMIT 1');
 		
 		if(is_array($db_user) && count($db_user) > 0)
 		{
@@ -543,7 +582,7 @@ function output_users($request)
 			if(handles(setting('local_users') . $request['username'], 'db_users'))
 			{
 				// make sure the user doesn't already exist
-				$db_user = db_query('SELECT * FROM users WHERE Username = "?" LIMIT 1', array($request['username']));
+				$db_user = db_assoc('SELECT * FROM users WHERE Username=? LIMIT 1', array($request['username']));
 				
 				if( count($db_user) > 0 )
 					raise_error('User already exists.', E_USER);
@@ -576,7 +615,7 @@ function output_users($request)
 					$user_id = add_users(setting('local_users') . $request['username']);
 					
 					// add password and profile information
-					$result = db_query('UPDATE users SET Password = "?", Email = "?" WHERE id = ?', array(
+					$result = db_query('UPDATE users SET Password=?, Email=? WHERE id=?', array(
 						$request['password'],
 						$request['email'],
 						$user_id,

@@ -51,13 +51,17 @@ function validate_dir($request)
 		// this is needed to make sure the directory is handled by something
 		$request['handler'] = validate($request, 'handler');
 		
+		// add leading slash
+		if(substr($request['dir'], 0, 1) != '/')
+			$request['dir'] = '/' . $request['dir'];
+		
 		// replace directory with actual path
 		if(setting('admin_alias_enable') == true && setting('database_enable') && setting_installed())
 			$tmp = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
 		else
 			$tmp = $request['dir'];
 			
-		// add leading slash
+		// add trailing slash
 		if(substr($request['dir'], -1) != '/' && substr($request['dir'], -1) != '\\')
 			$request['dir'] .= '/';
 			
@@ -129,7 +133,6 @@ function file_variables($request)
  */
 function get_info_files($file)
 {
-	
 	$file = str_replace('/', DIRECTORY_SEPARATOR, $file);
 	
 	$fileinfo = array();
@@ -144,15 +147,26 @@ function get_info_files($file)
 }
 
 
-function sql_insert($fileinfo)
+function sql_files_ids($files, $handler)
 {
-	return ' (' . implode(array_keys($fileinfo)) . ') VALUES (' . implode(',', array_fill(0, count($fileinfo), '"?"')) . ')';
+	$sql = '';
+	foreach($files as $i => $file)
+	{
+		$sql .= $handler . '_id = ' . addslashes($file['id']) . ' OR ';
+	}
+	return substr($sql, 0, -3);
 }
 
-function sql_update($fileinfo)
+function sql_ids_files($files, $handler)
 {
-	return ' SET ' . implode(',', array_walk($fileinfo, create_function('&$item, $key', '$item = $key . " = \"?\""')));
+	$sql = '';
+	foreach($files as $i => $file)
+	{
+		$sql .= 'id = ' . addslashes($file[$handler . '_id']) . ' OR ';
+	}
+	return substr($sql, 0, -3);
 }
+
 
 function sql_files($files)
 {
@@ -162,6 +176,15 @@ function sql_files($files)
 		$sql .= 'Filepath = "' . addslashes($file['Filepath']) . '" OR ';
 	}
 	return substr($sql, 0, -3);
+}
+
+// this is used it a couple place so it is abstracted
+function sql_filepath($filepath)
+{
+	return 'LEFT(Filepath, ' . strlen($filepath) . ') = "' . addslashes($filepath) . '" AND ' . 
+		'(LOCATE("/", Filepath, ' . (strlen($filepath)+1) . ') = 0 OR ' . 
+		'LOCATE("/", Filepath, ' . (strlen($filepath)+1) . ') = LENGTH(Filepath)) AND ' . 
+		'Filepath != "' . addslashes($filepath) . '"';
 }
 
 function filter_file($request)
@@ -183,7 +206,7 @@ function filter_file($request)
 		else
 			$sql = 'Filepath = "' . addslashes($request['file']) . '"';
 			
-		return array('where' => $sql);
+		return array('where' => $sql, 'limit' => 1);
 	}
 }
 
@@ -222,12 +245,12 @@ function filter_dir($request)
 				if(isset($request['dirs_only']))
 					$sql = 'LEFT(Filepath, ' . strlen($request['dir']) . ') = "' . addslashes($request['dir']) . '" AND LOCATE("/", Filepath, ' . (strlen($request['dir'])+1) . ') = LENGTH(Filepath)';
 				else
-					$sql = 'LEFT(Filepath, ' . strlen($request['dir']) . ') = "' . addslashes($request['dir']) . '" AND (LOCATE("/", Filepath, ' . (strlen($request['dir'])+1) . ') = 0 OR LOCATE("/", Filepath, ' . (strlen($request['dir'])+1) . ') = LENGTH(Filepath)) AND Filepath != "' . addslashes($request['dir']) . '"';
+					$sql = sql_filepath($request['dir']);
 				
 				// put folders at top if the handler supports a filetype
 				if(in_array('Filetype', get_columns($request['handler'])))
 				{
-					$order = '(Filetype = "FOLDER") DESC,' . (isset($props['ORDER'])?$props['ORDER']:'');
+					$order = '(Filetype = "FOLDER") DESC';
 				}
 			}
 			// show all results underneath directory
@@ -291,32 +314,35 @@ function add($file, $force = false, $handler = 'files')
 		return false;
 	
 	// check if it is in the database
-	$files = get_files(array('file' => $file, 'cat' => $handler), $count);
+	$files = db_assoc('SELECT * FROM ' . $handler . ' WHERE Filepath=? LIMIT 1', array($file));
 	
-	if( $count == 0 )
+	if( count($files) == 0 )
 	{
 		// get file information
-		$fileinfo = call_user_func_array('get_info_' . $handler, array($file));
+		$fileinfo = invoke_module('get_info', $handler, array($file));
 		
 		// always add to file database
 		raise_error('Adding ' . $handler . ': ' . $file, E_DEBUG);
 		
 		// add to database
-		return db_query('INSERT INTO ' . $handler . sql_insert($fileinfo), array_values($fileinfo));
+		$id = db_insert('INSERT INTO ' . $handler . sql_insert($fileinfo), array_values($fileinfo));
+		
+		return $fileinfo + array('id' => $id);
 	}
 	// not dependent on force because it checks for modification
 	elseif($handler == 'files')
 	{
-		// get file information
-		$fileinfo = get_info_files($file);
-		
 		// update file if modified date has changed
-		if( date("Y-m-d h:i:s", filemtime($file)) != $db_file[0]['Filedate'] )
+		if( date("Y-m-d h:i:s", filemtime($file)) != $files[0]['Filedate'] )
 		{
+			// get file information
+			$fileinfo = invoke_module('get_info', 'files', array($file));
+		
 			raise_error('Modifying file: ' . $file, E_DEBUG);
 			
 			// update database
-			return db_query('UPDATE files ' . sql_update($fileinfo) . ' WHERE id=' . $db_file[0]['id'], array_values($fileinfo));
+			$id = db_query('UPDATE files ' . sql_update($fileinfo) . ' WHERE id=' . $files[0]['id'], array_values($fileinfo));
+			return $fileinfo + array('id' => $id);
 		}
 		else
 		{
@@ -327,19 +353,20 @@ function add($file, $force = false, $handler = 'files')
 	elseif($force == true)
 	{
 		// get file information
-		$fileinfo = call_user_func_array('get_info_' . $handler, array($file));
+		$fileinfo = invoke_module('get_info', $handler, array($file));
 		
 		raise_error('Modifying ' . $handler . ': ' . $file, E_DEBUG);
 		
 		// update database
-		return db_query('UPDATE ' . $handler . sql_update($fileinfo) . ' WHERE id=' . $db_file[0]['id'], array_values($fileinfo));
+		$id = db_query('UPDATE ' . $handler . sql_update($fileinfo) . ' WHERE id=' . $db_file[0]['id'], array_values($fileinfo));
+		return $fileinfo + array('id' => $id);
 	}
 	else
 	{
+		return $files[0] + array('id' => $files[0]['id']);
+		
 		raise_error('Skipping ' . $handler . ': ' . $file, E_DEBUG);
 	}
-		
-	return false;
 }
 
 /**
@@ -431,15 +458,17 @@ function get_files($request, &$count)
 	// if using the database
 	if(setting('database_enable') && setting_installed())
 		return _get_database_files($request, $count);
-	else
+	elseif(setting_installed())
 		return _get_local_files($request, $count);
+	else
+		raise_error('get_files() called without any acceptable intention!', E_DEBUG);
 }
 
 function _get_database_files($request, &$count)
 {
 	// add filters to query
 	$result = trigger('filter', NULL, $request);
-	
+
 	// compile query
 	$where = array();
 	$limit = array();
@@ -456,11 +485,40 @@ function _get_database_files($request, &$count)
 		}
 	}
 	
-	$result = db_query('SELECT * FROM ' . $request['handler'] . ' ' . 
-		'WHERE (' . implode(') AND (', $where) . ' ' . 
-		'ORDER BY ' . implode(', ', $order) . ' ' .
-		'LIMIT ' . $limit[0]
+	// select files
+	$files = db_assoc('SELECT * FROM ' . $request['handler'] . ' ' . 
+		((count($where) > 0)?('WHERE (' . implode(') AND (', $where) . ') '):'') . 
+		((count($order) > 0)?('ORDER BY ' . implode(', ', $order)):'') . ' ' .
+		((count($limit) > 0)?('LIMIT ' . $limit[0]):'')
 	);
+	if(!is_array($files))
+	{
+		$count = 0;
+		return array();
+	}
+
+	// merge in all other information for the files
+	$files = merge_database_info($files, $request['handler']);
+	
+	// only get count if the query is not limited by the limit field
+	//  get count if limit is not set, which is should never be because of validate()
+	//  get count if it is greater than or equal to the limit, even though it will always be equal to or less then limit
+	//  if it is less, only get count if start is set
+	if(isset($request['file']))
+		$count = count($files);
+	elseif(!isset($request['limit']) || count($files) >= $request['limit'] || 
+		(isset($request['start']) && $request['start'] > 0))
+	{
+		$result = db_assoc('SELECT count(*) FROM ' . $request['handler'] . ' ' . 
+			'WHERE (' . implode(') AND (', $where) . ')'
+		);
+		
+		$count = $result[0]['count(*)'];
+	}
+	else
+		$count = count($files);
+	
+	return $files;
 }
 
 function _get_local_files($request, &$count)
@@ -469,7 +527,15 @@ function _get_local_files($request, &$count)
 		$request['dir'] = validate(array('dir' => '/'), 'dir');
 	
 	// get all the files from the current directory
-	$files = scan_directory($request['dir']);
+	if(!is_module('watched') || is_watched($request['dir']))
+	{
+		$files = scan_directory($request['dir']);
+	}
+	else
+	{
+		$count = 0;
+		return array();
+	}
 	
 	// merge in file information
 	foreach($files as $i => $file)
@@ -477,26 +543,109 @@ function _get_local_files($request, &$count)
 		$files[$i] = get_info_files($file);
 	}
 	
+	$files = merge_local_info($files);
+	
 	return $files;
 }
 
-function merge_files_info($files)
+function merge_database_info($files, $handler)
 {
-	$ids = db_query('SELECT * FROM ' . sql_files($sql) . ' LIMIT ' . count($files));
+	// this is used for determining which files have changes made to the IDs
+	$cache_updates = array();
 	
+	// get ids from database
+	$ids = db_assoc('SELECT * FROM ids WHERE ' . sql_files_ids($files, $handler) . ' LIMIT ' . count($files), array(), 'Filepath');
+
+	// loop through files and add id information
+	foreach($files as $i => $file)
+	{
+		if(!isset($ids[$file['Filepath']]))
+		{
+			// add id
+			$ids[$file['Filepath']] = add($file['Filepath'], false, 'ids');
+			
+			// move passed in file ID
+			$ids[$file['Filepath']][$handler . '_id'] = $file['id'];
+			$cache_updates[] = $file['Filepath'];
+		}
+
+		// merge ids and replace file ID with global ID
+		$files[$i] = array_merge($files[$i], $ids[$file['Filepath']]);
+	}
+	
+	// loop through handlers to efficiently extract IDs
 	foreach(get_handlers(false) as $module => $config)
 	{
-		$tmp_files = array_filter($files, create_function('$file', 'return handles($file, ' . $module . ');'));
+		if($handler == $module)
+			continue;
+	
+		$id_infos = array();
 		
-		// construct query
-		$module_infos = db_query('SELECT * FROM ' . sql_files($sql) . ' LIMIT ' . count($tmp_files));
-		
-		// go through and merge info and get missing infos
-		foreach($module_infos as $i => $info)
+		// select files for this handler
+		$handler_files = array_filter($files, create_function('$file', 'return handles($file, \'' . $module . '\');'));
+	
+		// select all the information with ids already associated
+		$id_files = array_filter($handler_files, create_function('$file', 'return isset($file[\'' . $module . '_id\']) && $file[\'' . $module . '_id\'] != 0;'));
+
+		// only search for ids in handler table if there are ids available
+		if(count($id_files) > 0)
+			$id_infos = db_assoc('SELECT * FROM ' . $module . ' WHERE ' . sql_ids_files($id_files, $module) . ' LIMIT ' . count($id_files), array(), 'Filepath');
+		else
+			$id_infos = array();
+
+		// add information for the files not found by ID
+		$new_infos = array_diff_key($handler_files, $id_files);
+		foreach($new_infos as $i => $file)
 		{
-			
+			$id_infos[$file['Filepath']] = add($file['Filepath'], false, $module);
+			$cache_updates[] = $file['Filepath'];
+		}
+		
+		// merge extra information with files
+		foreach($files as $i => $file)
+		{
+			if(isset($id_infos[$file['Filepath']]))
+				$files[$i] = array($module . '_id' => $id_infos[$file['Filepath']]['id']) + 
+				array_merge($id_infos[$file['Filepath']], $files[$i]);
 		}
 	}
+
+	// update ID caching for later/more efficient use!
+	foreach($files as $i => $file)
+	{
+		if(in_array($file['Filepath'], $cache_updates))
+		{
+			$ids = array_intersect_key($file, array_flip(get_id_fields()));
+			db_query('UPDATE ids ' . sql_update($ids) . ' WHERE id=' . $file['id'], $ids);
+		}
+	}
+	
+	return $files;
+}
+
+function merge_local_info($files)
+{
+	foreach($files as $i => $file)
+	{
+		// always merge ids
+		$fileinfo = invoke_module('get_info', 'ids', array($file['Filepath']));
+		$files[$i] = array_merge($fileinfo, $files[$i]);
+		
+		// move hex in to id field since id will never be set otherwise
+		$files[$i]['id'] = $files[$i]['Hex'];
+		
+		foreach(get_handlers(false) as $module => $config)
+		{
+			if(handles($file['Filepath'], $module))
+			{
+				$fileinfo = invoke_module('get_info', $module, array($file['Filepath']));
+				if(is_array($fileinfo))
+					$files[$i] = array_merge($fileinfo, $files[$i]);
+			}
+		}
+	}
+	
+	return $files;
 }
 
 /**
@@ -516,7 +665,7 @@ function remove($file, $handler = NULL)
 		$handler = 'files';
 	
 	if($handler != 'files')
-		module_invoke('remove', $handler, $file);
+		invoke_module('remove', $handler, array($file));
 	
 	$file = str_replace('\\', '/', $file);
 	
@@ -527,10 +676,14 @@ function remove($file, $handler = NULL)
 	raise_error('Removing ' . $GLOBALS['modules'][$handler]['name'] . ': ' . $file, E_DEBUG);
 
 	// remove file(s) from database
-	$GLOBALS['database']->query(array('DELETE' => $handler, 'WHERE' => 'Filepath = "' . addslashes($file) . '" OR LEFT(Filepath, ' . strlen($file_dir) . ') = "' . addslashes($file_dir) . '"'), false);	
+	db_query('DELETE FROM '. $handler .' WHERE Filepath=? OR LEFT(Filepath, ' . strlen($file_dir) . ')=?', array(
+		$file,
+		$file_dir,
+	));	
 
 	// delete ids
-	remove_ids($file, $handler);
+	if(in_array($handler . '_id', get_id_fields()))
+		invoke_module('remove', 'ids', array($file, $handler));
 }
 
 /**
