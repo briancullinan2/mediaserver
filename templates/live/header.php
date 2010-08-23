@@ -32,6 +32,7 @@ else
 function theme_live_header()
 {
 	register_style('template/live/css/types.css');
+	register_style('template/live/css/search.css');
 	register_style('template/live/css/layout.css');
 	register_style('template/live/css/menu.css');
 	register_style('template/live/css/files.css');

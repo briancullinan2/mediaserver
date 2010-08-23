@@ -1,0 +1,335 @@
+<?php
+
+function menu_ampache()
+{
+	return array(
+		'server/xml.server.php' => array(
+			'callback' => 'output_ampache',
+		),
+	);
+}
+
+function rewrite_ampache($path_info, $request)
+{
+	$return = invoke_module('rewrite', 'core', array($path_info));
+	
+	// rewrite some variables
+	if(isset($request['offset']))
+		$return['start'] = $request['offset'];
+	
+	if(isset($request['filter']) && $request['action'] != 'search_songs')
+		$return['id'] = $request['filter'];
+	elseif(isset($request['filter']))
+		$return['search'] = $request['filter'];
+	
+	return $return;
+}
+
+/**
+ * Implementation of status
+ * @ingroup status
+ */
+function status_ampache()
+{
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return NULL by default, the auth key is any string if specified
+ */
+function validate_auth($request)
+{
+	return generic_validate_all_safe($request, 'auth');
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return NULL by default, creates an error if action is invalid
+ */
+function validate_action($request)
+{
+	if(isset($request['action']) && in_array($request['action'], array(
+		'handshake',
+		'artists',
+		'artist_albums',
+		'album_songs',
+		'albums',
+		'album',
+		'artist_songs',
+		'songs',
+		'song',
+		'search_songs',
+		'ping'
+	)))
+		return $request['action'];
+	else
+		raise_error('405:Invalid Request', E_USER);
+}
+
+/**
+ * Implementation of output
+ * @ingroup output
+ */
+function output_ampache($request)
+{
+	include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'theme.inc';
+	set_time_limit(0);
+	
+	// do some ampache compatibility stuff
+	$fp = fopen('/tmp/test.txt', 'a');
+	fwrite($fp, var_export($_SERVER, true));
+	fclose($fp);
+
+	// just incase this matters
+	$request['cat'] = validate(array('cat' => 'audio'), 'cat');
+	$request['action'] = validate($request, 'action');
+	$request['auth'] = validate($request, 'auth');
+	$request['start'] = validate($request, 'start');
+	$request['limit'] = validate($request, 'limit');
+	
+	$request['user'] = session('users');
+	$user_filter = filter_users($request);
+	$user_sql = $user_filter['where'];
+	
+	register_output_vars('action', $request['action']);
+	
+	// check for the action
+	switch($request['action'])
+	{
+		case 'ping':
+			// report the session has expired
+			if($request['auth'] != session_id())
+			{
+				raise_error('401:Session Expired', E_USER);
+			}
+			
+		break;
+		case 'handshake':
+			// send out the ssid information
+			// send out some counts instead of running select
+			// song count
+			$result = db_assoc('SELECT count(*) FROM audio WHERE ' . $user_sql);
+			$song_count = $result[0]['count(*)'];
+
+			// album count
+			$result = db_assoc('SELECT count(*) FROM (SELECT * FROM audio WHERE ' . 
+				$user_sql . ' GROUP BY Album) as counter');
+			$album_count = $result[0]['count(*)'];
+			
+			// artist count
+			$result = db_assoc('SELECT count(*) FROM (SELECT * FROM audio WHERE ' . 
+				$user_sql . ' GROUP BY Artist) as counter');
+			$artist_count = $result[0]['count(*)'];
+			
+			// genre count
+			$result = db_assoc('SELECT count(*) FROM (SELECT * FROM audio WHERE ' . 
+				$user_sql . ' GROUP BY Genre) as counter');
+			$genre_count = $result[0]['count(*)'];
+			
+			// set the variables in the template
+			register_output_vars('auth', session_id());
+			
+			register_output_vars('song_count', $song_count);
+			
+			register_output_vars('album_count', $album_count);
+			
+			register_output_vars('artist_count', $artist_count);
+	
+			register_output_vars('genre_count', $genre_count);
+			
+		break;
+		case 'artists':
+			// get a simple list of all the artists
+			$result = db_assoc('SELECT *,MIN(id) as id,count(*) as SongCount FROM audio WHERE ' . 
+				$user_sql . ' GROUP BY Artist ORDER BY Artist LIMIT ' . 
+				$request['start'] . ',' . $request['limit']);
+			
+			// album counts
+			$album_count = db_assoc('SELECT count(*) as AlbumCount FROM (SELECT Artist FROM audio WHERE ' . 
+				$user_sql . ' GROUP BY Artist,Album) as counter GROUP BY Artist ORDER BY Artist LIMIT ' . 
+				$request['start'] . ',' . $request['limit']);
+			
+			// go through and merge the artist album and counts
+			$files = array();
+			foreach($result as $i => $artist)
+			{
+				$files[$artist['Artist']] = array(
+					'Artist' => $artist['Artist'],
+					'SongCount' => $artist['SongCount'],
+					'AlbumCount' => $album_count[$i]['AlbumCount'],
+					'id' => $artist['id']
+				);
+			}
+			
+			// set the variables in the template		
+			register_output_vars('files', $files);
+			
+		break;
+		case 'artist_albums':
+			$request['id'] = validate($request, 'id');
+			
+			// get a list of albums for a particular artist
+			// first look up song by supplied ID
+			$artist = db_assoc('SELECT * FROM audio WHERE id = ' . intval($request['id']) . ' AND ' . 
+				$user_sql);
+			
+			// get the list of albums
+			$result = db_assoc('SELECT *,MIN(id) as id,count(*) as SongCount FROM audio WHERE Artist=? AND ' . 
+				$user_sql . ' GROUP BY Album ORDER BY Album', array($artist[0]['Artist']));
+			
+			// artist counts
+			$artist_count = db_assoc('SELECT count(*) as ArtistCount FROM (SELECT Album FROM audio WHERE Artist=? AND ' . 
+				$user_sql . ' GROUP BY Album,Artist) GROUP BY Album ORDER BY Album', array($artist[0]['Artist']));
+			
+			// go through and merge the artist album and counts
+			$files = array();
+			foreach($result as $i => $album)
+			{
+				$files[$album['Album']] = array(
+					'Artist' => $album['Artist'],
+					'Album' => $album['Album'],
+					'Year' => $album['Year'],
+					'ArtistCount' => $artist_count[$i]['ArtistCount'],
+					'SongCount' => $album['SongCount'],
+					'id' => $album['id']
+				);
+			}
+			
+			// set the variables in the template		
+			register_output_vars('files', $files);
+			
+		break;
+		case 'albums':
+			// get a simple list of all the artists
+			$result = db_assoc('SELECT *,MIN(id) as id,count(*) as SongCount FROM audio WHERE ' . 
+				$user_sql . ' GROUP BY Album ORDER BY Album LIMIT ' . 
+				$request['start'] . ',' . $request['limit']);
+			
+			// artist counts
+			$album_count = db_assoc('SELECT count(*) as ArtistCount FROM (SELECT Album FROM audio WHERE ' . 
+				$user_sql . ' GROUP BY Album,Artist) as counter GROUP BY Album ORDER BY Album LIMIT ' . 
+				$request['start'] . ',' . $request['limit']);
+			
+			// go through and merge the artist album and counts
+			$files = array();
+			foreach($result as $i => $album)
+			{
+				$files[$album['Album']] = array(
+					'Artist' => $album['Artist'],
+					'Album' => $album['Album'],
+					'Year' => $album['Year'],
+					'ArtistCount' => $artist_count[$i]['ArtistCount'],
+					'SongCount' => $album['SongCount'],
+					'id' => $album['id']
+				);
+			}
+			
+			// set the variables in the template		
+			register_output_vars('files', $files);
+			
+		break;
+		case 'album':
+			$request['id'] = validate($request, 'id');
+	
+			// get a list of songs for a particular album
+			// first look up song by supplied ID
+			$albums = db_assoc('SELECT *,MIN(id) as id,count(*) as SongCount FROM audio WHERE ' . 
+				'Album = (SELECT Album FROM audio WHERE id = ' . intval($request['id']) . ' AND ' .
+				$user_sql . ') GROUP BY Album');
+			$album = $albums[0];
+			
+			// artist counts
+			$artist_count = db_assoc('SELECT *,count(*) as ArtistCount FROM (SELECT * FROM audio WHERE Album=? AND ' . 
+				$user_sql . ' GROUP BY Album,Artist) as counter GROUP BY Album', array($album['Album']));
+			
+			// create the list of albums with only 1 entry
+			$files = array();
+			$files[$album['Album']] = array(
+				'Artist' => $album['Artist'],
+				'Album' => $album['Album'],
+				'Year' => $album['Year'],
+				'ArtistCount' => $artist_count[0]['ArtistCount'],
+				'SongCount' => $album['SongCount'],
+				'id' => $album['id']
+			);
+			
+			// set the variables in the template		
+			register_output_vars('files', $files);
+		break;
+		case 'song':
+			$request['selected'] = validate($request, 'selected');
+	
+			// get a list of songs for a particular album
+			// first look up song by supplied ID
+			$files = get_files(array(
+				'selected' => $request['selected'],
+				'handler' => 'audio'
+			));
+					
+			// set the variables in the template		
+			register_output_vars('files', $files);
+		break;
+		case 'songs':
+			
+			// get the list of songs
+			$files = db_assoc('SELECT * FROM audio WHERE Title != "" AND ' . $user_sql . 
+				' ORDER BY Title LIMIT ' . $request['start'] . ',' . $request['limit']);
+				
+			// replace ids with global ids
+			merge_id_info_only($files, 'audio');
+					
+			// set the variables in the template		
+			register_output_vars('files', $files);
+		break;
+		case 'artist_songs':
+			$request['id'] = validate($request, 'id');
+	
+			// get a list of songs for a particular album
+			// first look up song by supplied ID
+			$artist_album = db_assoc('SELECT * FROM audio WHERE id = ' . intval($request['id']) . ' AND ' . $user_sql);
+			
+			// get the list of songs
+			$files = db_assoc('SELECT * FROM audio WHERE Artist=? AND ' . $user_sql . ' ORDER BY Title'
+				, array($artist_album[0]['Artist']));
+				
+			// replace ids with global ids
+			merge_id_info_only($files, 'audio');
+					
+			// set the variables in the template		
+			register_output_vars('files', $files);
+		break;			
+		case 'album_songs':
+			$request['id'] = validate($request, 'id');
+	
+			// get a list of songs for a particular album
+			// first look up song by supplied ID
+			$artist_album = db_assoc('SELECT * FROM audio WHERE id = ' . intval($request['id']) . ' AND ' . $user_sql);
+			
+			// get the list of songs
+			$files = db_assoc('SELECT * FROM audio WHERE Album=? AND Artist=? AND ' . $user_sql . ' ORDER BY Title'
+				, array($artist_album[0]['Album'], $artist_album[0]['Artist']));
+				
+			// replace ids with global ids
+			merge_id_info_only($files, 'audio');
+					
+			// set the variables in the template		
+			register_output_vars('files', $files);
+		break;
+		case 'search_songs':
+			$request = array(
+				'limit' => $request['limit'],
+				'start' => $request['start'],
+				'search' => $request['search']
+			);
+			
+			$files = get_files($request, $count, 'audio');
+					
+			// set the variables in the template		
+			register_output_vars('files', $files);
+		break;
+	}
+	
+}
+

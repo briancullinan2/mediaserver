@@ -282,6 +282,10 @@ function validate_direction($request)
 
 function filter_limit($request)
 {
+	$request['selected'] = validate($request, 'selected');
+	if(!empty($request['selected']))
+		return array('limit' => count($request['selected']));
+		
 	$request['limit'] = validate($request, 'limit');
 	$request['start'] = validate($request, 'start');
 	
@@ -328,30 +332,28 @@ function filter_order_by($request)
 
 function filter_selected($request, &$props)
 {
-	$request['selected'] = validate($request, 'selected');
-	
 	// select an array of ids!
 	if(isset($request['selected']) && count($request['selected']) > 0 )
 	{
-		$where = '';
+		$sql = '';
 		// compile where statement for either numeric id or encoded path
 		foreach($request['selected'] as $i => $id)
 		{
 			if(is_numeric($id))
 			{
-				$where .= ' id = ' . $id . ' OR';
+				$sql .= ' id = ' . $id . ' OR';
 			}
 			else
 			{
 				// unpack encoded path and add it to where
-				$where .= ' Hex = "' . $id . '" OR';
+				$sql .= ' Hex = "' . $id . '" OR';
 			}
 		}
 		// remove last or and add to where list
-		$sql = array(substr($where, 0, strlen($where)-2));
+		$sql = substr($sql, 0, -2);
 
 		// get ids from centralized id database
-		$files = db_assoc('SELECT * FROM ids WHERE ' . $sql . ' AND ' . filter_users($request));
+		$files = db_assoc('SELECT * FROM ids WHERE ' . $sql);
 		
 		if(count($files) > 0)
 		{
@@ -359,6 +361,7 @@ function filter_selected($request, &$props)
 			$where = '';
 			foreach($files as $i => $file)
 			{
+				if($file[$request['handler'] . '_id'] != 0)
 					$where .= ' id = ' . $file[$request['handler'] . '_id'] . ' OR';
 			}
 			return array('where' => substr($where, 0, strlen($where)-2));
@@ -412,6 +415,8 @@ function output_select($request)
 	$request['handler'] = validate($request, 'handler');
 	$request['start'] = validate($request, 'start');
 	$request['limit'] = validate($request, 'limit');
+	$request['group_by'] = validate($request, 'group_by');
+	$request['group_index'] = validate($request, 'group_index');
 	$request['order_by'] = validate($request, 'order_by');
 	$request['direction'] = validate($request, 'direction');
 	
@@ -425,14 +430,21 @@ function output_select($request)
 	}
 	
 	// make select call
-	$files = get_files($request, $request['handler']);
+	$files = get_files($request, $total_count);
 	
 	register_output_vars('files', $files);
 	
 	// count a few types of media for templates to use
 	register_output_vars('file_counts', handles_count($files));
+	register_output_vars('total_count', $total_count);
 	
 	// register selected files for templates to use
 	if($session_select = session('select'))
 		register_output_vars('selected', $session_select['selected']);
+
+	// some request variables used primarily by the database
+	register_output_vars('group_by', $request['group_by']);
+	register_output_vars('group_index', $request['group_index']);
+	register_output_vars('start', $request['start']);
+	register_output_vars('limit', $request['limit']);
 }

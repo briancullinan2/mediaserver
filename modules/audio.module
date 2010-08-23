@@ -23,7 +23,7 @@ function setup_audio()
 function handles_audio($file)
 {
 	$file = str_replace('\\', '/', $file);
-	if(setting('admin_alias_enable') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+	if(setting('admin_alias_enable')) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 	
 	// get file extension
 	$type = mime_type($file);
@@ -43,18 +43,29 @@ function get_info_audio($file)
 	
 	$info = $GLOBALS['getID3']->analyze($file);
 	getid3_lib::CopyTagsToComments($info);
+	
+	if(!isset($info['comments_html']['title'][0])) $info['comments_html']['title'][0] = '';
+	if(!isset($info['comments_html']['artist'][0])) $info['comments_html']['artist'][0] = '';
+	if(!isset($info['comments_html']['album'][0])) $info['comments_html']['album'][0] = '';
+	if(!isset($info['comments_html']['track'][0])) $info['comments_html']['track'][0] = 0;
+	if(!isset($info['comments_html']['year'][0])) $info['comments_html']['year'][0] = '';
+	if(!isset($info['comments_html']['genre'][0])) $info['comments_html']['genre'][0] = '';
+	if(!isset($info['playtime_seconds'])) $info['playtime_seconds'] = 0;
+	if(!isset($info['comments_html']['comments'][0])) $info['comments_html']['comments'][0] = '';
+	if(!isset($info['bitrate'])) $info['bitrate'] = 0;
 
 	$fileinfo = array();
-	$fileinfo['Filepath'] = addslashes(str_replace('\\', '/', $file));
-	$fileinfo['Title'] = @addslashes($info['comments_html']['title'][0]);
-	$fileinfo['Artist'] = @addslashes($info['comments_html']['artist'][0]);
-	$fileinfo['Album'] = @addslashes($info['comments_html']['album'][0]);
-	$fileinfo['Track'] = @addslashes($info['comments_html']['track'][0]);
-	$fileinfo['Year'] = @addslashes($info['comments_html']['year'][0]);
-	$fileinfo['Genre'] = @addslashes($info['comments_html']['genre'][0]);
-	$fileinfo['Length'] = @addslashes($info['playtime_seconds']);
-	$fileinfo['Comments'] = @addslashes($info['comments_html']['comments'][0]);
-	$fileinfo['Bitrate'] = @addslashes($info['bitrate']);
+	$fileinfo['Filepath'] = str_replace('\\', '/', $file);
+	
+	$fileinfo['Title'] = $info['comments_html']['title'][0];
+	$fileinfo['Artist'] = $info['comments_html']['artist'][0];
+	$fileinfo['Album'] = $info['comments_html']['album'][0];
+	$fileinfo['Track'] = $info['comments_html']['track'][0];
+	$fileinfo['Year'] = $info['comments_html']['year'][0];
+	$fileinfo['Genre'] = $info['comments_html']['genre'][0];
+	$fileinfo['Length'] = $info['playtime_seconds'];
+	$fileinfo['Comments'] = $info['comments_html']['comments'][0];
+	$fileinfo['Bitrate'] = $info['bitrate'];
 	
 	return $fileinfo;
 }

@@ -257,7 +257,16 @@ function setting_local_users($settings)
 	if(isset($settings['local_users']) && is_dir($settings['local_users']))
 		return $settings['local_users'];
 	else
-		return $settings['local_root'] . 'users' . DIRECTORY_SEPARATOR;
+	{
+		if(setting('system_type') == 'nix')
+			return '/home/';
+		elseif(setting('system_type') == 'mac')
+			return '/Users/';
+		elseif(file_exists(realpath('/') . 'Users'))
+			return realpath('/') . 'Users' . DIRECTORY_SEPARATOR;
+		else
+			return realpath('/') . 'Documents and Settings' . DIRECTORY_SEPARATOR;
+	}
 }
 
 /**
@@ -397,7 +406,7 @@ function validate_required_priv($request)
 function handles_users($file)
 {
 	$file = str_replace('\\', '/', $file);
-	if(setting('admin_alias_enable') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+	if(setting('admin_alias_enable')) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 	
 	// handle directories found in the setting('local_users') directory
 	//  automatically create a user entry in the database for those directories
@@ -447,11 +456,18 @@ function filter_users($request)
 {
 	if(isset($request['user']))
 	{
+		// do not show any user files by default, then allow otherwise
 		$sql = 'LEFT(Filepath, ' . strlen(setting('local_users')) . ') != "' . addslashes(setting('local_users')) . '" OR ' . 
-							'Filepath = "' . addslashes(setting('local_users')) . '" OR ' . 
-							'(LEFT(Filepath, ' . strlen(setting('local_users')) . ') = "' . addslashes(setting('local_users')) . '" AND LOCATE("/", Filepath, ' . (strlen(setting('local_users')) + 1) . ') = LENGTH(Filepath)) OR ' . 
-							'LEFT(Filepath, ' . strlen(setting('local_users') . $request['user']['Username'] . '/') . ') = "' . addslashes(setting('local_users') . $request['user']['Username'] . '/') . '" OR ' . 
-							'SUBSTR(Filepath, ' . strlen(setting('local_users')) . ' + LOCATE("/", SUBSTR(Filepath, ' . (strlen(setting('local_users')) + 1) . ')), 8) = "/public/"';
+			// allow the user directory to be shown
+			'Filepath = "' . addslashes(setting('local_users')) . '" OR ' . 
+			// allow folders to be seen in user directory
+			'(LEFT(Filepath, ' . strlen(setting('local_users')) . ') = "' . addslashes(setting('local_users')) . '" AND LOCATE("/", Filepath, ' . (strlen(setting('local_users')) + 1) . ') = LENGTH(Filepath)) OR ' . 
+			// show currently logged in user files
+			'LEFT(Filepath, ' . strlen(setting('local_users') . $request['user']['Username'] . '/') . ') = "' . addslashes(setting('local_users') . $request['user']['Username'] . '/') . '" OR ' . 
+			// show all public user files
+			'SUBSTR(Filepath, ' . strlen(setting('local_users')) . ' + LOCATE("/", SUBSTR(Filepath, ' . (strlen(setting('local_users')) + 1) . ')), 8) = "/public/"';
+		
+		// show user files for keys that current user has access to
 		if(isset($request['user']['Settings']['keys_usernames']) && count($request['user']['Settings']['keys_usernames']) > 0)
 		{
 			

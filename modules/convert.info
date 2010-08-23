@@ -1,0 +1,7 @@
+name = Image Converter
+description = Convert images to different formats.
+privilage = 1
+template = false
+settings[] = convert_path
+settings[] = convert_args
+depends on[] = converter

@@ -106,11 +106,6 @@ function tokenize($string)
 	return $return;
 }
 
-function ext($file)
-{
-	return substr(basename($file), strpos(basename($file), '.') + 1);
-}
-
 /**
  * @defgroup dependency Dependency Functions
  * All functions that allow the system to check other system settings for module dependencies
@@ -410,6 +405,11 @@ function goto($request)
 	exit;
 }
 
+function ext($file)
+{
+	return substr(basename($file), strrpos(basename($file), '.') + 1);
+}
+
 /**
  * get mime type based on file extension
  * @param ext the extension or filename to get the mime type of
@@ -421,6 +421,8 @@ function mime($ext)
 	{
 		$ext = ext($ext);
 	}
+	
+	$ext = strtolower($ext);
 	
 	if(isset($GLOBALS['ext_to_mime'][$ext]))
 	{
@@ -484,4 +486,36 @@ function roundFileSize($dirsize)
 {
 	$dirsize = ( $dirsize < 1024 ) ? ($dirsize . " B") : (( $dirsize < 1048576 ) ? (round($dirsize / 1024, 2) . " KB") : (( $dirsize < 1073741824 ) ? (round($dirsize / 1048576, 2) . " MB") : (( $dirsize < 1099511627776 ) ? (round($dirsize / 1073741824, 2) . " GB") : (round($dirsize / 1099511627776, 2) . " TB") ) ) );
 	return $dirsize;
+}
+
+/**
+ * kill a process on linux, for some reason closing the streams isn't working
+ * @param command the command to be killed
+ * @param startpid the estimate PID of the process to kill
+ * @param limit the limit for how many process back to kill 
+ */
+function kill9($command, $startpid, $limit = 2)
+{
+	$ps = `ps -u www-data --sort=pid -o comm= -o pid=`;
+	$ps_lines = explode("\n", $ps);
+	
+	$pattern = "/(\S{1,})(\s{1,})(\d{1,})/";
+	
+	foreach($ps_lines as $line)
+	{
+		if(preg_match($pattern, $line, $matches))
+		{
+			//this limits us to finding the command within $limit pid's of the parent;
+			//eg, if ppid = 245, limit = 3, we won't search past 248
+			if($matches[3] > $startpid + $limit)
+				break;
+	
+			//try to match a ps line where the command matches our search
+			//at a higher pid than our parent
+			if($matches[1] == $command && $matches[3] > $startpid)
+			{
+				system('/bin/kill -9 ' . $matches[3]);
+			}
+		}
+	}
 }

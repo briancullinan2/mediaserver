@@ -616,6 +616,8 @@ function db_select($query, $args = array(), $callback)
 
 function db_query($query, $args = array())
 {
+//print $query . '<br />' . "\n";
+
 	if(!isset($GLOBALS['database']) || !is_object($GLOBALS['database']))
 	{
 		raise_error('Database queried but is not set up!', E_DEBUG);

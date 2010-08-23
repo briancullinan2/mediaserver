@@ -287,9 +287,9 @@ function theme__redirect()
 
 function theme__redirect_block()
 {
-	if(isset($GLOBALS['templates']['html']['redirect']))
+	if(isset($GLOBALS['output']['html']['redirect']))
 	{
-		?><META HTTP-EQUIV="refresh" CONTENT="1;URL=<?php print $GLOBALS['templates']['html']['redirect']; ?>"><?php
+		?><META HTTP-EQUIV="refresh" CONTENT="1;URL=<?php print $GLOBALS['output']['html']['redirect']; ?>"><?php
 	}
 }
 
@@ -305,6 +305,52 @@ function theme__register()
 		Password: <input type="password" name="password" value="" /><br />
 		<input type="submit" value="Register" /><input type="reset" value="Reset" />
 		
+	</form>
+	<?php
+	
+	theme('footer');
+}
+
+function theme__search_block()
+{
+	print $GLOBALS['modules'][$GLOBALS['templates']['vars']['cat']]['name']; ?> Search:<br />
+	<form action="<?php print $GLOBALS['templates']['vars']['get']; ?>" method="get" id="search">
+		<input type="text" name="search" value="<?php print isset($GLOBALS['templates']['vars']['search']['search'])?$GLOBALS['templates']['vars']['search']['search']:''; ?>" id="searchInput" />
+		<input type="submit" value="Search" id="searchButton" /> <a href="<?php print url('search'); ?>">Advanced Search</a>
+	</form>
+	<br />
+	<?php
+}
+
+function theme__search()
+{
+	theme('header');
+	
+	?>
+	<form action="<?php print url(''); ?>" method="get">
+		<h3>Search All Available Fields:</h3>
+		Search: <input type="text" name="search" size="40" value="<?php print isset($GLOBALS['templates']['vars']['search'])?$GLOBALS['templates']['vars']['search']:''; ?>" /><br /><br />
+		Directory: <input type="text" name="dir" size="40" value="<?php print isset($GLOBALS['templates']['vars']['dir'])?$GLOBALS['templates']['vars']['dir']:''; ?>" />
+		<h3>Search Individual Fields:</h3>
+		Category: <select name="cat">
+		<?php
+		foreach(get_handlers() as $handler => $config)
+		{
+			?><option value="<?php print $handler; ?>" <?php print ($GLOBALS['templates']['vars']['cat'] == $handler)?'selected="selected"':''; ?>><?php print $config['name']; ?></option><?php
+		}
+		?>
+		</select><br /><br />
+		<?php
+		foreach($GLOBALS['templates']['vars']['columns'] as $column)
+		{
+			?>
+			<?php print $column; ?>:
+			<input type="text" name="search_<?php print $column; ?>" size="40" value="<?php print isset($GLOBALS['templates']['vars']['search']['search_' . $column])?$GLOBALS['templates']['html']['search']['search_' . $column]:''; ?>" />
+			<br />
+			<?php
+		}
+		?>
+		<input type="submit" value="Search" /><input type="reset" value="Reset" />
 	</form>
 	<?php
 	

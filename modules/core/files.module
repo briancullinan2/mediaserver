@@ -1,5 +1,26 @@
 <?php
 
+function menu_files()
+{
+	return array(
+		'files/%handler/%id/%core/%extra/%filename' => array(
+			'callback' => 'output_files',
+		),
+		'files/%handler/%id/%core/%filename' => array(
+			'callback' => 'output_files',
+		),
+		'files/%handler/%id/%filename' => array(
+			'callback' => 'output_files',
+		),
+		'files/%handler/%id' => array(
+			'callback' => 'output_files',
+		),
+		'files/%search' => array(
+			'callback' => 'output_files',
+		),
+	);
+}
+
 function validate_files($request)
 {
 	// just about everything uses the cat variable so always validate and add this
@@ -56,7 +77,7 @@ function validate_dir($request)
 			$request['dir'] = '/' . $request['dir'];
 		
 		// replace directory with actual path
-		if(setting('admin_alias_enable') == true && setting('database_enable') && setting_installed())
+		if(setting('admin_alias_enable') && setting('database_enable') && setting_installed())
 			$tmp = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
 		else
 			$tmp = $request['dir'];
@@ -90,7 +111,7 @@ function validate_file($request)
 	if(isset($request['file']))
 	{
 		$request['handler'] = validate($request, 'handler');
-		if(setting('admin_alias_enable') == true)
+		if(setting('admin_alias_enable'))
 			$tmp = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']);
 		if(is_file(realpath($tmp)) || handles($request['file'], $request['handler']) == true)
 			return $request['file'];
@@ -197,7 +218,7 @@ function filter_file($request)
 		if($request['file'][0] == DIRECTORY_SEPARATOR) $request['file'] = realpath('/') . substr($request['file'], 1);
 		
 		// replace aliased path with actual path
-		if(setting('admin_alias_enable') == true)
+		if(setting('admin_alias_enable'))
 			$request['file'] = alias_replace($request['file']);
 			
 		// if the id is available, try to use that instead
@@ -212,6 +233,10 @@ function filter_file($request)
 
 function filter_dir($request)
 {
+	$request['selected'] = validate($request, 'selected');
+	if(!empty($request['selected']))
+		return;
+	
 	// add dir filter to where
 	if(isset($request['dir']))
 	{
@@ -226,7 +251,7 @@ function filter_dir($request)
 		$request['dir'] = str_replace('\\', '/', $request['dir']);
 		
 		// replace aliased path with actual path
-		if(setting('admin_alias_enable') == true)
+		if(setting('admin_alias_enable'))
 			$request['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
 			
 		// maybe the dir is not loaded yet, this part is costly but it is a good way to do it
@@ -386,35 +411,149 @@ function add($file, $force = false, $handler = 'files')
  */
 function output_handler($file, $handler)
 {
-	if(function_exists('output_' . $handler))
+	if($handler == 'files')
+	{
+		$file = str_replace('\\', '/', $file);
+		
+		if(setting('admin_alias_enable'))
+			$file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+		
+		// load file from file system
+		if(handles($file, $handler) && is_file($file))
+		{
+			if($fp = @fopen($file, 'rb'))
+			{
+				return $fp;
+			}
+		}
+		
+	}
+	elseif(function_exists('output_' . $handler))
 		return invoke_module('output', $handler, array($file, $handler));
 	elseif(is_wrapper($handler) && function_exists('output_' . $GLOBALS['modules'][$handler]['wrapper']))
 		return invoke_module('output', $GLOBALS['modules'][$handler]['wrapper'], array($file, $handler));
-	else
-		return output_files($file, $handler);
+	
+	return false;
 }
 
 /**
  * Implementation of output_handler
  * no headers is used to prevent changing the headers, if it is called by a module it may just need the stream and no header changes
  */
-function output_files($file, $handler)
+function output_files($request)
 {
-	$file = str_replace('\\', '/', $file);
+	set_time_limit(0);
+
+	// set up request variables
+	$request['handler'] = validate($request, 'handler');
+	$request['selected'] = validate($request, 'selected');
 	
-	if(setting('admin_alias_enable') == true)
-		$file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
-	
-	// load file from file system
-	if(handles($file, $handler) && is_file($file))
+	if(!isset($request['id']))
 	{
-		if($fp = @fopen($file, 'rb'))
-		{
-			return $fp;
-		}
+		raise_error('You must select a file for download!', E_USER);
+		theme();
+		return;
+	}
+
+	// get the file path from the database
+	$files = get_files($request, $count);
+	if(count($files) == 0)
+	{
+		raise_error('File not found!', E_USER);
+		theme();
+		return;
 	}
 	
-	return false;
+	// set some general headers
+	header('Content-Transfer-Encoding: binary');
+	header('Content-Type: ' . $files[0]['Filemime']);
+	//header('Content-Disposition: attachment; filename="' . $files[0]['Filename'] . '"');
+	
+	// set up the output stream
+	$op = fopen('php://output', 'wb');
+	
+	// get the input stream
+	$fp = output_handler($files[0]['Filepath'], $request['handler']);
+
+	//-------------------- THIS IS ALL RANAGES STUFF --------------------
+	
+	// range can only be used when the filesize is known
+	
+	// if the filesize is still not known, just output the stream without any fancy stuff
+	if(isset($files[0]['Filesize']))
+	{				
+		// check for range request
+		if(isset($_SERVER['HTTP_RANGE']))
+		{
+			list($size_unit, $range_orig) = explode('=', $_SERVER['HTTP_RANGE'], 2);
+	
+			if ($size_unit == 'bytes')
+			{
+				// multiple ranges could be specified at the same time, but for simplicity only serve the first range
+				// http://tools.ietf.org/id/draft-ietf-http-range-retrieval-00.txt
+				if(strpos($range_orig, ',') !== false)
+					list($range, $extra_ranges) = explode(',', $range_orig, 2);
+				else
+					$range = $range_orig;
+			}
+			else
+			{
+				$range = '-';
+			}
+		}
+		else
+		{
+			$range = '-';
+		}
+		
+		// figure out download piece from range (if set)
+		list($seek_start, $seek_end) = explode('-', $range, 2);
+	
+		// set start and end based on range (if set), else set defaults
+		// also check for invalid ranges.
+		$seek_end = (empty($seek_end)) ? ($files[0]['Filesize'] - 1) : min(abs(intval($seek_end)),($files[0]['Filesize'] - 1));
+		//$seek_end = $file['Filesize'] - 1;
+		$seek_start = (empty($seek_start) || $seek_end < abs(intval($seek_start))) ? 0 : max(abs(intval($seek_start)),0);
+		
+		// Only send partial content header if downloading a piece of the file (IE workaround)
+		if ($seek_start > 0 || $seek_end < ($files[0]['Filesize'] - 1))
+		{
+			header('HTTP/1.1 206 Partial Content');
+		}
+
+		header('Accept-Ranges: bytes');
+		header('Content-Range: bytes ' . $seek_start . '-' . $seek_end . '/' . $files[0]['Filesize']);
+	
+		//headers for IE Bugs (is this necessary?)
+		//header("Cache-Control: cache, must-revalidate");  
+		//header("Pragma: public");
+	
+		header('Content-Length: ' . ($seek_end - $seek_start + 1));
+	}
+	
+	//-------------------- END RANAGES STUFF --------------------
+	
+	// close session now so they can keep using the website
+	if(isset($_SESSION)) session_write_close();
+	
+	if(!is_resource($fp) || !is_resource($op))
+	{
+		raise_error('Cannot open file!', E_USER);
+		theme();
+		return;
+	}
+
+	// seek to start of missing part
+	if(isset($seek_start))
+		fseek($fp, $seek_start);
+	
+	// output file
+	while (!feof($fp)) {
+		fwrite($op, fread($fp, setting('buffer_size')));
+	}
+	
+	// close file handles and return succeeded
+	fclose($fp);
 }
 
 /**
@@ -548,10 +687,8 @@ function _get_local_files($request, &$count)
 	return $files;
 }
 
-function merge_database_info($files, $handler)
+function merge_id_info(&$files, $handler, &$cache_updates)
 {
-	// this is used for determining which files have changes made to the IDs
-	$cache_updates = array();
 	
 	// get ids from database
 	$ids = db_assoc('SELECT * FROM ids WHERE ' . sql_files_ids($files, $handler) . ' LIMIT ' . count($files), array(), 'Filepath');
@@ -572,6 +709,33 @@ function merge_database_info($files, $handler)
 		// merge ids and replace file ID with global ID
 		$files[$i] = array_merge($files[$i], $ids[$file['Filepath']]);
 	}
+	
+}
+
+function merge_id_info_only(&$files, $handler)
+{
+	// this is used for determining which files have changes made to the IDs
+	$cache_updates = array();
+	
+	merge_id_info($files, $handler, $cache_updates);
+
+	// update ID caching for later/more efficient use!
+	foreach($files as $i => $file)
+	{
+		if(in_array($file['Filepath'], $cache_updates))
+		{
+			$ids = array_intersect_key($file, array_flip(get_id_fields()));
+			db_query('UPDATE ids ' . sql_update($ids) . ' WHERE id=' . $file['id'], $ids);
+		}
+	}
+}
+
+function merge_database_info($files, $handler)
+{
+	// this is used for determining which files have changes made to the IDs
+	$cache_updates = array();
+	
+	merge_id_info($files, $handler, $cache_updates);
 	
 	// loop through handlers to efficiently extract IDs
 	foreach(get_handlers(false) as $module => $config)
@@ -792,13 +956,7 @@ function cleanup($handler = 'files')
 	*/
 	
 	// remove any duplicates
-	$files = $GLOBALS['database']->query(array(
-			'SELECT' => $handler,
-			'COLUMNS' => array('MIN(id) as id', 'Filepath', 'COUNT(*) as num'),
-			'GROUP' => 'Filepath',
-			'HAVING' => 'num > 1'
-		)
-	, true);
+	$files = db_assoc('SELECT MIN(id) as id,Filepath,COUNT(*) as num FROM ' . $handler . ' HAVING num > 1 GROUP BY Filepath');
 
 	// if files is not an array something must have gone wrong
 	if(!is_array($files))
@@ -812,7 +970,7 @@ function cleanup($handler = 'files')
 		{
 			raise_error('Removing Duplicate ' . $GLOBALS['modules'][$handler]['name'] . ': ' . $file['Filepath'], E_DEBUG);
 			
-			$GLOBALS['database']->query(array('DELETE' => $handler, 'WHERE' => 'id=' . $file['id']), false);
+			$result = db_query('DELETE FROM ' . $handler . ' WHERE id=' . $file['id']);
 		}
 	}
 	

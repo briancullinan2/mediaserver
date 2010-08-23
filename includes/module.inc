@@ -757,14 +757,7 @@ function _module_settings_to_string($settings)
 function _module_save_db_settings($settings)
 {
 	// store in database
-	$result = $GLOBALS['database']->query(array(
-			'UPDATE' => 'users',
-			'WHERE' => 'id = -1',
-			'VALUES' => array(
-				'Settings' => addslashes(serialize($settings)),
-			),
-		)
-	, false);
+	$result = db_query('UPDATE users SET Settings=? WHERE id=-1', array(serialize($settings)));
 
 	return ($result !== false);
 }

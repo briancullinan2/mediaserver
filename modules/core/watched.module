@@ -31,7 +31,7 @@ function setup_watched()
 function handles_watched($dir)
 {
 	$dir = str_replace('\\', '/', $dir);
-	if(setting('admin_alias_enable') == true) $dir = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $dir);
+	if(setting('admin_alias_enable')) $dir = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $dir);
 
 	if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $dir)))
 	{
@@ -167,6 +167,7 @@ function setting_ignores($settings)
  */
 function is_watched($dir)
 {
+	// check if the file is watched from the list of watched and ignored directories
 	$is_ignored = false;
 	$is_watched = false;
 	foreach(setting('watches') as $i => $watch)
@@ -175,6 +176,12 @@ function is_watched($dir)
 		{
 			$is_watched = true;
 		}
+		// check if aliasing is used, if not, 
+		//   also watch the directories leading up to watched directories, but nothing else
+		if(!setting('admin_alias_enable') && substr($watch['Filepath'], 0, strlen($dir)) == $dir &&
+			is_dir($dir)
+		)
+			$is_watched = true;
 	}
 	foreach(setting('ignores') as $i => $ignore)
 	{
@@ -204,7 +211,7 @@ function scan_dir($dir)
 	raise_error('Scanning directory: ' . $dir, E_DEBUG);
 	
 	$local_files = scan_directory($dir, 'watched_and_files');
-	
+
 	$database_files = db_list('SELECT Filepath FROM files WHERE ' . sql_filepath($dir));
 	
 	// these files exists on disk and in the database

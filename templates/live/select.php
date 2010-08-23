@@ -81,7 +81,7 @@ function theme_live_select_block()
 						</td>
 					</tr>
 				</table>
-				<a class="itemLink" href="<?php print $link; ?>" onmouseout="this.parentNode.firstChild.className = 'notselected';" onmouseover="this.parentNode.firstChild.className = 'selected';"><span><?php print $GLOBALS['templates']['html']['files'][$i]['Filename']; ?></span></a>
+				<a class="itemLink" href="<?php print $link; ?>" onmouseout="this.parentNode.firstChild.className = 'notselected';" onmouseover="this.parentNode.firstChild.className = 'selected';"><span><?php print $GLOBALS['output']['html']['files'][$i]['Filename']; ?></span></a>
 			</div>
 			<?php
 		}
@@ -107,7 +107,7 @@ function theme_live_files()
 		?><div class="files" id="files"><?php
 		foreach($GLOBALS['output']['files'] as $i => $file)
 		{
-			$GLOBALS['templates']['html']['files'][$i] = live_alter_file($file);
+			$GLOBALS['output']['html']['files'][$i] = live_alter_file($file);
 			
 			// make links browsable
 			if(handles($file['Filepath'], 'archive')) $handler = 'archive';
@@ -122,10 +122,10 @@ function theme_live_files()
 			}
 			if(isset($new_handler))
 			{
-				$link = url('select/dir/' . $GLOBALS['templates']['html']['files'][$i]['Filepath'] . '?handler=' . $new_handler);
+				$link = url('select/dir/' . $GLOBALS['output']['html']['files'][$i]['Filepath'] . '?handler=' . $new_handler);
 			}
 			else
-				$link = url('file/' . $handler . '/' . $file['id'] . '/' . $file['Filename']);
+				$link = url('files/' . $handler . '/' . $file['id'] . '/' . $file['Filename']);
 			unset($new_handler);
 			?>
 			<div class="file <?php print $file['Filetype']; ?>" onmousedown="deselectAll(event);fileSelect(this, true, event);return false;" oncontextmenu="showMenu(this);return false;" id="<?php print $file['id']; ?>"><div class="notselected"></div>
@@ -147,7 +147,7 @@ function theme_live_files()
 						</td>
 					</tr>
 				</table>
-				<a class="itemLink" href="<?php print $link; ?>" onmouseout="this.parentNode.firstChild.className = 'notselected'; if(!loaded){return false;} document.getElementById('info_<?php print $file['id']; ?>').style.display = 'none';document.getElementById('info_<?php print $file['id']; ?>').style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.className = 'selected'; if(!loaded){return false;} document.getElementById('info_<?php print $file['id']; ?>').style.display = '';document.getElementById('info_<?php print $file['id']; ?>').style.visibility = 'visible'; return true;"><span><?php print $GLOBALS['templates']['html']['files'][$i]['Filename']; ?></span></a>
+				<a class="itemLink" href="<?php print $link; ?>" onmouseout="this.parentNode.firstChild.className = 'notselected'; if(!loaded){return false;} document.getElementById('info_<?php print $file['id']; ?>').style.display = 'none';document.getElementById('info_<?php print $file['id']; ?>').style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.className = 'selected'; if(!loaded){return false;} document.getElementById('info_<?php print $file['id']; ?>').style.display = '';document.getElementById('info_<?php print $file['id']; ?>').style.visibility = 'visible'; return true;"><span><?php print $GLOBALS['output']['html']['files'][$i]['Filename']; ?></span></a>
 			</div>
 			<?php
 		}
@@ -163,7 +163,7 @@ function theme_live_select()
 {
 	theme('header');
 	
-	$current = isset($GLOBALS['template']['html']['dir'])?basename($GLOBALS['templates']['html']['dir']):'';
+	$current = isset($GLOBALS['template']['html']['dir'])?basename($GLOBALS['output']['html']['dir']):'';
 	
 	?>
 	<div class="contentSpacing">
@@ -174,9 +174,9 @@ function theme_live_select()
 	{
 		?>
 		<span class="subText">Displaying items
-			<?php print $GLOBALS['templates']['html']['start']+1; ?>
+			<?php print $GLOBALS['output']['html']['start']+1; ?>
 			through <?php print $GLOBALS['output']['start'] + $GLOBALS['output']['limit']; ?>
-			<?php print ($GLOBALS['output']['total_count'] > $GLOBALS['output']['limit'])?(' out of ' . $GLOBALS['templates']['html']['total_count']):' file(s)'; ?>.
+			<?php print ($GLOBALS['output']['total_count'] > $GLOBALS['output']['limit'])?(' out of ' . $GLOBALS['output']['html']['total_count']):' file(s)'; ?>.
 		</span>
 		<?php
 	}
@@ -251,8 +251,8 @@ function theme_live_info()
 								</div>
 							</td>
 							<td class="infoCell">
-								<span class="title"><?php print $GLOBALS['templates']['html']['files'][$i]['Filename']; ?></span><br />
-								<span><?php print $GLOBALS['templates']['html']['files'][$i]['Filetype']; ?></span>
+								<span class="title"><?php print $GLOBALS['output']['html']['files'][$i]['Filename']; ?></span><br />
+								<span><?php print $GLOBALS['output']['html']['files'][$i]['Filetype']; ?></span>
 							</td>
 						</tr>
 					</table>
@@ -277,10 +277,10 @@ function theme_live_info()
 							if(dirname(dirname($file['Filepath'])) != '/')
 								print '../../' . basename(dirname($file['Filepath'])) . '/' . basename($file['Filepath']);
 							else
-								print $GLOBALS['templates']['html']['files'][$i]['Filepath'];
+								print $GLOBALS['output']['html']['files'][$i]['Filepath'];
 						}
 						else
-							print $GLOBALS['templates']['html']['files'][$i][$column];
+							print $GLOBALS['output']['html']['files'][$i][$column];
 						?>
 						<br />
 						<?php

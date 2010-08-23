@@ -1,0 +1,9 @@
+name = Database Search
+description = Search for files.
+privilage = 1
+session[] = search
+alter_query[] = search
+output[] = search
+depends on = search
+template = true
+package = core

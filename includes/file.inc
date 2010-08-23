@@ -50,8 +50,6 @@ function scan_directory($dir, $filter = 'files', $depth = 1)
 	// return a flat list of files
 	if (is_dir($dir) && $handle = opendir($dir))
 	{
-		$dir = realpath($dir);
-		
 		// add slash to end
 		if(substr($dir, -strlen(DIRECTORY_SEPARATOR)) != DIRECTORY_SEPARATOR)
 			$dir .= DIRECTORY_SEPARATOR;
@@ -170,7 +168,7 @@ function handles($file, $handler = 'files')
 		$file = str_replace('\\', '/', $file);
 		
 		// replace the file alias with actual path
-		if($handler !== true && setting('admin_alias_enable') == true) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+		if($handler !== true && setting('admin_alias_enable')) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 
 		// check if the given file is a directory or file
 		if(
