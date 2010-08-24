@@ -4,7 +4,11 @@ function menu_watched()
 {
 	return array(
 		'admin/watched' => array(
-			'callback' => 'configure',
+			'callback' => 'output_module',
+			'template' => 'module',
+			'arguments' => array(
+				'configure_module' => 'watched',
+			),
 		)
 	);
 }

@@ -18,7 +18,7 @@ function setup_menu()
 {
 	// define constants for use with menu functions to specify to the template if the menu should be shown
 	define('MENU_CALLBACK', 	0);
-	define('MENU_MENUS', 		1);
+	define('MENU_LIST', 		1);
 	define('MENU_NORMAL', 		2);
 	
 	if(!isset($GLOBALS['menus']))
@@ -34,18 +34,12 @@ function setup_menu()
 			continue;
 			
 		// add default menu items
-		if(!function_exists('output_' . $module))
-			add_menu($module, array($module => array(
-				'name' => $config['name'],
-				'module' => $module,
-				'callback' => 'configure_' . $module,
-			)));
-		else
-			add_menu($module, array($module => array(
-				'name' => $config['name'],
-				'module' => $module,
-				'callback' => 'output_' . $module,
-			)));
+		add_menu($module, array($module => array(
+			'name' => $config['name'],
+			'module' => $module,
+			'callback' => 'output_' . $module,
+			'type' => MENU_CALLBACK,
+		)));
 	}
 }
 
@@ -69,14 +63,20 @@ function get_menu_entry($path)
 	$dirs = split('/', $path);
 
 	// find the menu entry that matches the most
+	$current_path = '';
 	foreach($dirs as $i => $dir)
 	{
 		foreach($GLOBALS['menus'] as $path => $config)
 		{
 			if(preg_match('/' . preg_replace(array('/\\//i', '/\\/%[a-z][a-z0-9_]*/i'), array('\/', '/[^\/]*?'), addslashes($path)) . '/i', implode('/', $dirs)) > 0)
-				return $path;
+			{
+				if(substr_count($path, '/') >= substr_count($current_path, '/'))
+					$current_path = $path;
+			}
 		}
 	}
+	if($current_path != '')
+		return $current_path;
 }
 
 function get_path(&$request, $index)
@@ -95,6 +95,22 @@ function get_path(&$request, $index)
 
 function invoke_menu($request, $template = false)
 {
+	// output errors only
+	if(isset($request['errors_only']) && $request['errors_only'] == true)
+	{
+		register_output_vars('errors_only', true);
+
+		theme('errors_block');
+		
+		// remove old errors from session
+		$GLOBALS['user_errors'] = array();
+		$GLOBALS['warn_errors'] = array();
+		$GLOBALS['debug_errors'] = array();
+		$GLOBALS['note_errors'] = array();
+		
+		return;
+	}
+	
 	// check request for path info
 	$request['path_info'] = validate($request, 'path_info');
 	if($path = get_menu_entry($request['path_info']))
@@ -102,7 +118,10 @@ function invoke_menu($request, $template = false)
 		$user = session('users');
 		$menu = $GLOBALS['menus'][$path];
 		$module = $GLOBALS['modules'][$menu['module']];
-		$template = $module['template'];
+		if(isset($menu['template']))
+			$template = $menu['template'];
+		else
+			$template = $module['template'];
 		
 		// check module permissions
 		if(isset($module['privilage']) && 
@@ -126,7 +145,7 @@ function invoke_menu($request, $template = false)
 					url('admin/modules/' . $menu['module']) . '">Configure</a> this module.'
 				, E_DEBUG|E_USER);
 				
-				theme();
+				theme('errors');
 				return;
 			}
 		}
@@ -140,7 +159,7 @@ function invoke_menu($request, $template = false)
 			call_user_func_array($template, array($request));
 
 		// call the default template based on the module name
-		elseif($template == true)
+		elseif($template === true || $template === '1')
 			theme($menu['module']);
 			
 		// if it is set to a string then that must be the theme handler for it
@@ -169,18 +188,46 @@ function add_menu($module, $menus)
 		// loop through each menu and add default information
 		foreach($menus as $path => &$config)
 		{
+			// reform simple menu definition
 			if(is_string($config))
 				$menus[$path] = array(
 					'name' => $config,
 					'callback' => 'output_' . generic_validate_machine_readable(array('callback' => $path), 'callback'),
 				);
 			
+			// set default type
 			if(!isset($config['type']))
 			{
+				// menu entrys with wildcards in them default to callbacks
 				if(strpos($path, '%') !== false)
 					$menus[$path]['type'] = MENU_CALLBACK;
+				// otherwise they default to normal entries
 				else
 					$menus[$path]['type'] = MENU_NORMAL;
+			}
+			
+			// add intermediate menu lists
+			if($menus[$path]['type'] == MENU_NORMAL)
+			{
+				// loop through each dir and find gaps in menus
+				$dirs = split('/', $path);
+				$current = '';
+				// this can be very exhaustive because if the menu is found later it will just replace it
+				foreach($dirs as $i => $item)
+				{
+					$current .= $item;
+					if(!isset($menus[$current]) && !isset($GLOBALS['menus'][$current]))
+					{
+						$menus[$current] = array(
+							'type' => MENU_LIST,
+							'name' => ucwords(str_replace('/', ' ', $current)),
+							'description' => ucwords(str_replace('/', ' ', $current)) . ' Menu List',
+							'callback' => 'output_menu',
+							'module' => 'menu',
+						);
+					}
+					$current .= '/';
+				}
 			}
 			
 			// add menu to menu because its easy to do it here
@@ -206,19 +253,53 @@ function output_menus($request)
 	// some templates would like to submit to their own page, generate a string based on the current get variable
 	register_output_vars('get', url($_GET, true));
 	
-	if($path = get_menu_entry($request['path_info']))
-	{
-		// the entire site depends on this
-		register_output_vars('module', $GLOBALS['menus'][$path]['module']);
-	}
-	register_output_vars('menus', $GLOBALS['menus']);
+	$path = get_menu_entry($request['path_info']);
+
+	// the entire site depends on this
+	register_output_vars('module', $GLOBALS['menus'][$path]['module']);
+	
+	// register all menus for reference
+	register_output_vars('all_menus', $GLOBALS['menus']);
 	
 	// create a tree of all the menus based on path levels
+	$menus = array();
+	foreach($GLOBALS['menus'] as $path => $config)
+	{
+		// only add menus that are normal types and menu types
+		if($config['type'] == MENU_NORMAL || $config['type'] == MENU_LIST)
+		{
+			$menus[$path] = $config;
+		}
+	}
 	
+	register_output_vars('menus', $menus);
 }
 
 function output_menu($request)
 {
+	$current_menu = array();
+	
 	// output menu template instead of template from module
+	$current = get_menu_entry($request['path_info']);
+
+	// only output menus under current menu item
+	foreach($GLOBALS['menus'] as $path => $config)
+	{
+		// only show normal menus and menu lists
+		if(($config['type'] == MENU_NORMAL || $config['type'] == MENU_LIST) && 
+			// only show menus that begin with the current menu
+			substr($path, 0, strlen($current)) == $current &&
+			// do not show the current menu item in this list
+			$current != $path && 
+			// only show menus that are at this level, not lower levels
+			strpos($path, '/', strlen($current) + 1) === false
+		)
+			// add to current menu
+			$current_menu[$path] = $config;
+	}
+	
+	// registers
+	register_output_vars('current_menu', $GLOBALS['menus'][$current]);
+	register_output_vars('menu', $current_menu);
 }
 

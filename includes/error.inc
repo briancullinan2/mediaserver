@@ -73,6 +73,16 @@ function preload_error()
 	setup_error();
 }
 
+/**
+ * Implementation of validate
+ * @return false by default
+ */
+function validate_errors_only($request)
+{
+	return generic_validate_boolean_false($request, 'errors_only');
+}
+
+
 function setup_error()
 {
 	$verbose = setting('verbose');
@@ -169,6 +179,9 @@ function error_callback($error)
 		
 			$error->message .= ' in ' . $error->backtrace[$i]['file'] . ' on line ' . $error->backtrace[$i]['line'];
 		}
+		
+		if($error->code & E_VERBOSE)
+			$error->message = 'VERBOSE: ' . $error->message;
 		
 		// only show verbose errors if it is really verbose!
 		if($error->code & E_DEBUG || setting('verbose'))

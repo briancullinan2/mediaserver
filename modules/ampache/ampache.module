@@ -5,6 +5,7 @@ function menu_ampache()
 	return array(
 		'server/xml.server.php' => array(
 			'callback' => 'output_ampache',
+			'type' => MENU_CALLBACK,
 		),
 	);
 }

@@ -8,7 +8,7 @@ function register_module()
 		'privilage' => 10,
 		'settings' => 'module',
 		'template' => true,
-		'package' => 'admin',
+		'package' => 'core',
 		'output' => 'module_variables'
 	);
 }
@@ -22,6 +22,7 @@ function menu_module()
 		),
 		'admin/module' => array(
 			'callback' => 'output_module',
+			'name' => 'Configure Modules',
 		),
 	);
 }
@@ -105,7 +106,10 @@ function load_module($path)
 		$module = generic_validate_machine_readable(array('module' => $module), 'module');
 		
 		// functional prefix so there can be multiple modules with the same name
-		$prefix = substr($path, strlen(setting_local_root()), -strlen(basename($path)));
+		if($module == basename(dirname($path)))
+			$prefix = substr($path, strlen(setting_local_root()), -(strlen(basename($path)) + strlen($module)));
+		else
+			$prefix = substr($path, strlen(setting_local_root()), -strlen(basename($path)));
 		
 		// remove slashes and replace with underscores
 		$prefix = generic_validate_machine_readable(array('prefix' => $prefix), 'prefix');
@@ -209,7 +213,7 @@ function is_include($file)
 
 function get_required_modules()
 {
-	return array('menu', 'template', 'select', 'view', 'files', 'users', 'session', 'watched');
+	return array('menu', 'template', 'select', 'files', 'users', 'session', 'watched', 'module', 'ids');
 }
 
 function get_dependencies($dependency, $modules_only = false)
@@ -446,11 +450,11 @@ function disable_module($module)
  * @ingroup dependency
  * @true or false if the settings file is writeable, so that this module can write to it
  */
-function dependency_writable_settings_file($settings)
+function dependency_writable_settings($settings)
 {
 	if(setting_installed() == false)
 		return false;
-	return is_writable(setting('settings_file'));
+	return is_writable(setting('settings_file')) || setting('database_enable') == true;
 }
 
 /**
@@ -461,7 +465,7 @@ function status_admin_modules($settings)
 	$status = array();
 	
 	// settings permission
-	if(dependency('writable_settings_file'))
+	if(dependency('writable_settings'))
 	{
 		$status['writable_settings_file'] = array(
 			'name' => lang('settings access title', 'Access to Settings'),
@@ -500,12 +504,12 @@ function status_admin_modules($settings)
  * Implementation of configure
  * @ingroup configure
  */
-function configure_admin_modules($settings, $request)
+function configure_module($settings, $request)
 {
 	$recommended = array('select', 'list', 'search');
 	
 	$options = array();
-	
+
 	$required_str = lang('modules enable option 1', 'Enabled (Required)');
 	$recommend = lang('modules enable option 2', 'Enabled (Recommended)');
 	$optional = lang('modules enable option 3', 'Enabled (Optional)');
@@ -544,7 +548,7 @@ function configure_admin_modules($settings, $request)
 									?
 									$GLOBALS['modules'][$config['package']]['name']
 									:
-									ucwords($config['package'])
+									ucwords(str_replace('_', ' ', $config['package']))
 								)
 							),
 			);
@@ -602,7 +606,7 @@ function configure_admin_modules($settings, $request)
 		{
 			$new_config['options'][] = array(
 				'type' => 'button',
-				'action' => 'window.location.href=\'' . url('admin/modules/' . $module) . '\'',
+				'action' => 'window.location.href=\'' . url('admin/module/' . $module) . '\'',
 				'value' => 'Configure',
 			);
 		}
@@ -650,7 +654,7 @@ function validate_configure_module($request)
 		return $request['configure_module'];
 	}
 	else
-		return 'admin_modules';
+		return 'module';
 }
 
 /**
@@ -861,7 +865,7 @@ function output_module($request)
 	}
 	
 	// output error if can't write to settings
-	if(dependency('writable_settings_file') == false)
+	if(dependency('writable_settings') == false)
 		raise_error('Cannot save changes made on this page, the settings file is not writable!', E_USER);
 
 	// output configuration page
@@ -894,6 +898,7 @@ function output_module($request)
 	{
 		raise_error('Option \'' . $key . '\' listed in the output options for ' . $request['configure_module'] . ' but not listed in the module config!', E_VERBOSE);
 	}
+	
 	register_output_vars('options', $options);
 	register_output_vars('configure_module', $request['configure_module']);
 }

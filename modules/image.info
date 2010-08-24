@@ -1,6 +1,7 @@
 name = Images
 description = Load information about all images.
 depends on[] = getid3_installed
+package = file_handlers
 
 [database]
 Filepath = TEXT

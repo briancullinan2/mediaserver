@@ -6,6 +6,24 @@
 	background-color:#FF6;
 }
 
+.debug .msg {
+	display:block;
+	cursor:pointer;
+	background-color:#FF6;
+}
+
+.debug .msg.php {
+	background-color:#FC5;
+}
+
+.debug .msg.db {
+	background-color:#F97;
+}
+
+.debug .msg.verbose {
+	background-color:#FF9;
+}
+
 .debug.hide * {
 	display:none;
 	visibility:hidden;

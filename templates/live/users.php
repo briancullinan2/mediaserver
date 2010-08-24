@@ -39,45 +39,23 @@ function theme_live_users()
 {
 	if($GLOBALS['output']['users'] == 'login')
 	{
-		theme('header');
-		
-		?>
-		<div class="contentSpacing">
-				<h1 class="title">User Login</h1>
-				<span class="subText">Enter your username and password to log in.</span>
-		<?php
-		
-		theme('errors_block');
-		
-		?><div class="titlePadding"></div><?php
+		theme('header',
+			'User Login',
+			'Enter your username and password to log in.'
+		);
 		
 		theme('login');
-		
-		?><div class="titlePadding"></div>
-		</div><?php
 		
 		theme('footer');
 	}
 	elseif($GLOBALS['output']['users'] == 'register')
 	{
-		theme('header');
-		
-		?>
-		<div class="contentSpacing">
-				<h1 class="title">User Registration</h1>
-				<span class="subText">Fill out the form below to gain access to additional site features.</span>
-		<?php
-		
-		theme('errors_block');
-		
-		?><div class="titlePadding"></div><?php
+		theme('header',
+			'User Registration',
+			'Fill out the form below to gain access to additional site features.'
+		);
 		
 		theme('register');
-		
-		?><div class="titlePadding"></div>
-		</div>
-		
-		<?php
 		
 		theme('footer');
 	}

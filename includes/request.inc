@@ -139,6 +139,10 @@ function rewrite_vars(&$request, &$get, &$post)
 
 	if($path = get_menu_entry($request['path_info']))
 	{
+		// merge additional argument overrides for menu entry
+		if(isset($GLOBALS['menus'][$path]['arguments']))
+			$request = array_merge($request, $GLOBALS['menus'][$path]['arguments']);
+		
 		// call a modules rewrite function for further rewriting
 		if(function_exists('rewrite_' . $GLOBALS['menus'][$path]['module']))
 			$result = invoke_module('rewrite', $GLOBALS['menus'][$path]['module'], array($request['path_info'], $request));

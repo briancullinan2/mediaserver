@@ -11,17 +11,25 @@ function theme__confirmation()
 
 function theme__default()
 {
-	theme('header');
-	
-	?><h1>Module: <?php print $GLOBALS['modules'][$GLOBALS['output']['module']]['name']; ?></h1>
-	This page requires special parameters that have not been set.  This default page is a placeholder.<?php
-	
-	theme('errors_block');
+	theme('header',
+		'Module: ' . $GLOBALS['modules'][$GLOBALS['output']['module']]['name'],
+		'This page requires special parameters that have not been set.  This default page is a placeholder.'
+	);
 
 	theme('footer');
 }
 
 function theme__errors()
+{
+	theme('header',
+		'Module: ' . $GLOBALS['modules'][$GLOBALS['output']['module']]['name'],
+		'There were errors while processing your request.'
+	);
+
+	theme('footer');
+}
+
+function theme__errors_block()
 {
 	if(count($GLOBALS['user_errors']) > 0)
 	{
@@ -56,11 +64,6 @@ function theme__errors()
 	$GLOBALS['debug_errors'] = array();
 }
 
-function theme__errors_block()
-{
-	theme('errors');
-}
-
 function theme__footer()
 {
 	if($GLOBALS['output']['module'] != 'users')
@@ -89,22 +92,24 @@ foreach(get_modules() as $name => $module)
 	<?php
 }
 
-function theme__header()
+function theme__header($title = NULL, $description = NULL)
 {
+	if(!isset($title))
+		$title = htmlspecialchars($GLOBALS['modules'][$GLOBALS['output']['module']]['name']) . ' : ' . setting('html_name');
+	
 	?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <?php theme('redirect_block'); ?>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title><?php print setting('html_name'); ?> : <?php print htmlspecialchars($GLOBALS['modules'][$GLOBALS['output']['module']]['name']); ?></title>
+<title><?php print $title; ?></title>
 </head>
 
 <body>
-<h1><?php print htmlspecialchars($GLOBALS['modules'][$GLOBALS['output']['module']]['name']); ?></h1>
-	<?php
+<h1><?php print $title; ?></h1><?php
 	
-	theme('errors');
+	theme('errors_block');
 }
 
 function theme__login()
@@ -154,6 +159,14 @@ function theme__logout_block()
 	<?php
 }
 
+function theme__menu()
+{
+	theme('header');
+	
+	theme('menu_block');
+	
+	theme('footer');
+}
 
 function theme__menu_block()
 {
@@ -167,9 +180,9 @@ function theme__menu_block()
 		foreach($GLOBALS['output']['menus'] as $path => $config)
 		{
 			// this path actually leads to output as is, no need to validate it by using url()
-			if($config['type'] == MENU_NORMAL)
+			if($config['type'] == MENU_NORMAL || $config['type'] == MENU_LIST)
 			{
-				?><li><a href="<?php print $path; ?>"><?php echo $config['name']; ?></a></li><?php
+				?><li><a href="<?php print url($path); ?>"><?php echo $config['name']; ?></a></li><?php
 			}
 		}
 		
@@ -313,9 +326,9 @@ function theme__register()
 
 function theme__search_block()
 {
-	print $GLOBALS['modules'][$GLOBALS['templates']['vars']['cat']]['name']; ?> Search:<br />
-	<form action="<?php print $GLOBALS['templates']['vars']['get']; ?>" method="get" id="search">
-		<input type="text" name="search" value="<?php print isset($GLOBALS['templates']['vars']['search']['search'])?$GLOBALS['templates']['vars']['search']['search']:''; ?>" id="searchInput" />
+	print $GLOBALS['modules'][$GLOBALS['output']['cat']]['name']; ?> Search:<br />
+	<form action="<?php print $GLOBALS['output']['get']; ?>" method="get" id="search">
+		<input type="text" name="search" value="<?php print isset($GLOBALS['output']['search']['search'])?$GLOBALS['output']['search']['search']:''; ?>" id="searchInput" />
 		<input type="submit" value="Search" id="searchButton" /> <a href="<?php print url('search'); ?>">Advanced Search</a>
 	</form>
 	<br />
@@ -329,23 +342,23 @@ function theme__search()
 	?>
 	<form action="<?php print url(''); ?>" method="get">
 		<h3>Search All Available Fields:</h3>
-		Search: <input type="text" name="search" size="40" value="<?php print isset($GLOBALS['templates']['vars']['search'])?$GLOBALS['templates']['vars']['search']:''; ?>" /><br /><br />
-		Directory: <input type="text" name="dir" size="40" value="<?php print isset($GLOBALS['templates']['vars']['dir'])?$GLOBALS['templates']['vars']['dir']:''; ?>" />
+		Search: <input type="text" name="search" size="40" value="<?php print isset($GLOBALS['output']['search'])?$GLOBALS['output']['search']:''; ?>" /><br /><br />
+		Directory: <input type="text" name="dir" size="40" value="<?php print isset($GLOBALS['output']['dir'])?$GLOBALS['output']['dir']:''; ?>" />
 		<h3>Search Individual Fields:</h3>
 		Category: <select name="cat">
 		<?php
 		foreach(get_handlers() as $handler => $config)
 		{
-			?><option value="<?php print $handler; ?>" <?php print ($GLOBALS['templates']['vars']['cat'] == $handler)?'selected="selected"':''; ?>><?php print $config['name']; ?></option><?php
+			?><option value="<?php print $handler; ?>" <?php print ($GLOBALS['output']['cat'] == $handler)?'selected="selected"':''; ?>><?php print $config['name']; ?></option><?php
 		}
 		?>
 		</select><br /><br />
 		<?php
-		foreach($GLOBALS['templates']['vars']['columns'] as $column)
+		foreach($GLOBALS['output']['columns'] as $column)
 		{
 			?>
 			<?php print $column; ?>:
-			<input type="text" name="search_<?php print $column; ?>" size="40" value="<?php print isset($GLOBALS['templates']['vars']['search']['search_' . $column])?$GLOBALS['templates']['html']['search']['search_' . $column]:''; ?>" />
+			<input type="text" name="search_<?php print $column; ?>" size="40" value="<?php print isset($GLOBALS['output']['search']['search_' . $column])?$GLOBALS['templates']['html']['search']['search_' . $column]:''; ?>" />
 			<br />
 			<?php
 		}

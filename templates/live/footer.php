@@ -3,6 +3,8 @@
 function theme_live_footer()
 {
 	?>
+			<div class="titlePadding"></div>
+		</div>
 											</td>
 										</tr>
 									</table>

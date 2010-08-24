@@ -299,7 +299,7 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 	{
 		// get query part if there it one for processing
 		$query = generic_validate_query_str(array('query' => $request), 'query');
-		
+
 		// get the path part of the request
 		$path = generic_validate_urlpath(array('path' => $request), 'path');
 		

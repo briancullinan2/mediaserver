@@ -6,3 +6,4 @@ filter[] = limit
 filter[] = start
 filter[] = order_by
 filter[] = group_by
+package = core

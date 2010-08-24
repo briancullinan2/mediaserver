@@ -2,6 +2,9 @@
 include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'select.php';
 include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'users.php';
 include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'search.php';
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'errors.php';
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'modules.php';
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'menu.php';
 
 include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'header.php';
 include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'footer.php';
@@ -21,6 +24,59 @@ function validate_live($request)
 	
 	if(!isset($request['limit']))
 		$request['limit'] = 50;
+}
+
+function live_get_scheme()
+{
+	$scheme_count = 0;
+	$scheme = '';
+	foreach($GLOBALS['output']['file_counts'] as $key => $count)
+	{
+		if($count > $scheme_count && $key != 'files_count')
+		{
+			$scheme_count = $count;
+			$scheme = $key;
+		}
+	}
+	if($GLOBALS['output']['file_counts']['files_count'] - $scheme_count > $scheme_count)
+		$scheme = 'files_count';
+		
+	$scheme = substr($scheme, 0, -6);
+	
+	return $scheme;
+}
+
+function live_get_colors()
+{
+	$color_schemes = array(
+		'files' => array(
+			'bg' => '#06A',
+			'inner' => '#446688 #335588 #115577',
+			'outer' => '#88BBDD #66AACC #5599BB',
+		),
+		'audio' => array(
+			'bg' => '#900',
+			'inner' => '#883333 #883322 #772211',
+			'outer' => '#BB8888 #AA6666 #995555',
+		),
+		'image' => array(
+			'bg' => '#990',
+			'inner' => '#888844 #888833 #777722',
+			'outer' => '#BBBBAA #AAAACC #9999BB',
+		),
+		'video' => array(
+			'bg' => '#093',
+			'inner' => '#668866 #448844 #447744',
+			'outer' => '#88DDBB #66CCAA #55BB99',
+		),
+	);
+
+	$scheme = live_get_scheme();
+	
+	if(isset($color_schemes[$scheme]))
+		return $color_schemes[$scheme];
+	else
+		return $color_schemes['files'];
 }
 
 function live_get_info_count()
@@ -43,6 +99,7 @@ function live_get_info_count()
 	
 	return $biggest;
 }
+
 
 function live_alter_file($file)
 {

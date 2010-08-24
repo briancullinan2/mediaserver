@@ -28,6 +28,8 @@ function bootstrap($mode = 'all')
 				'users.inc',
 				'theme.inc',
 				'curl.inc',
+				'language.inc',
+				'forms.inc',
 			);
 			
 			// include all required system functionality

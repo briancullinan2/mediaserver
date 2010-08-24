@@ -7,7 +7,7 @@ function menu_select()
 		'select/dir/%dir' => array(
 			'callback' => 'output_select',
 		),
-		'select' => 'Files', // this is the default item
+		'select' => 'Select Files', // this is the default item
 	);
 }
 

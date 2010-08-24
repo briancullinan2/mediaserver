@@ -29,81 +29,24 @@ else
 	<?php
 }
 
-function theme_live_header()
+function theme_live_header($title = NULL, $description = NULL)
 {
 	register_style('template/live/css/types.css');
 	register_style('template/live/css/search.css');
 	register_style('template/live/css/layout.css');
 	register_style('template/live/css/menu.css');
 	register_style('template/live/css/files.css');
-	register_style('template/live/css/debug.css');
+	register_style('template/live/css/errors.css');
+	register_style('template/live/css/forms.css');
 	register_script('template/live/js/jquery.js');
 	register_script('template/live/js/dragclick.js');
 	
-	$title = htmlspecialchars($GLOBALS['modules'][$GLOBALS['output']['module']]['name']) . ' : ' . setting('html_name');
+	if(!isset($title))
+		$title = htmlspecialchars($GLOBALS['modules'][$GLOBALS['output']['module']]['name']) . ' : ' . setting('html_name');
 	
 	theme('head', $title);
 	
-	theme('body');
-}
-
-function theme_live_debug_block()
-{
-	?>
-	<script type="application/javascript" language="javascript">
-		function toggleDiv(id) {
-			if(document.getElementById(id).style.display == 'none') {
-				document.getElementById(id).style.display = 'block';
-			} else {
-				document.getElementById(id).style.display = 'none';
-			}
-		}
-	</script>
-	<?php
-	if($GLOBALS['output']['user']['Username'] != 'guest')
-	{
-		?><div id="debug" class="debug hide"><?php
-		foreach($GLOBALS['debug_errors'] as $i => $error)
-		{
-			?>
-			<a class="msg" onClick="toggleDiv('error_<?php print $i; ?>')"><?php print htmlspecialchars($error->message); ?></a><br />
-			<div id="error_<?php print $i; ?>" style="display:none;">
-				<code>
-					<pre>
-<?php print htmlspecialchars(print_r($error, true)); ?>
-					</pre>
-				</code>
-			</div>
-			<?php
-		}
-		
-		// clear debug errors
-		$GLOBALS['debug_errors'] = array();
-		
-		?>
-		<a id="hide_link" href="javascript:return true;" onClick="if(this.hidden == false) { document.getElementById('debug').className='debug hide'; this.hidden=true; this.innerHTML = 'Show'; } else { document.getElementById('debug').className='debug'; this.hidden=false; this.innerHTML = 'Hide'; }">Show</a>
-		</div>
-		<?php
-	}
-	else
-	{
-		if(isset($GLOBALS['output']['users']) && $GLOBALS['output']['users'] == 'login')
-		{
-			?><div id="debug" class="debug">Administrators: Log in below to select debug options.</div><?php
-		}
-		else
-		{
-			?><div id="debug" class="debug">
-			<form action="<?php print url('users/login?return=' . urlencode($GLOBALS['output']['get'])); ?>" method="post">
-				Administrators: Log in to select debug options. Username: <input type="text" name="username" value="" />
-				Password: <input type="password" name="password" value="" />
-				<input type="submit" value="Login" />
-				<input type="reset" value="Reset" />
-			</form>
-			</div>
-			<?php
-		}
-	}
+	theme('body', $title, $description);
 }
 
 function theme_live_breadcrumbs()
@@ -182,34 +125,9 @@ function theme_live_template_block()
 	?></div><?php
 }
 
-function live_get_theme_color()
+function theme_live_body($title = NULL, $description = NULL)
 {
-	if(!isset($GLOBALS['output']['files_count']))
-		return 'files';
-	if($GLOBALS['output']['audio_count'] > $GLOBALS['output']['image_count'] &&
-		$GLOBALS['output']['audio_count'] > $GLOBALS['output']['video_count'] &&
-		$GLOBALS['output']['audio_count'] > $GLOBALS['output']['files_count']
-	)
-		$theme = 'audio';
-	elseif($GLOBALS['output']['image_count'] > $GLOBALS['output']['files_count'] &&
-		$GLOBALS['output']['image_count'] > $GLOBALS['output']['video_count'] &&
-		$GLOBALS['output']['image_count'] > $GLOBALS['output']['audio_count']
-	)
-		$theme = 'image';
-	elseif($GLOBALS['output']['video_count'] > $GLOBALS['output']['files_count'] &&
-		$GLOBALS['output']['video_count'] > $GLOBALS['output']['image_count'] &&
-		$GLOBALS['output']['video_count'] > $GLOBALS['output']['audio_count']
-	)
-		$theme = 'video';
-	else
-		$theme = 'files';
-		
-	return $theme;
-}
-
-function theme_live_body()
-{
-	$theme = live_get_theme_color();
+	$colors = live_get_colors();
 ?>
 <script language="javascript">
 	$(document).ready(function() {
@@ -221,7 +139,7 @@ function theme_live_body()
 <div id="bodydiv">
 	<div id="sizer">
 		<div id="expander">
-			<table id="header" cellpadding="0" cellspacing="0" style="background-color:<?php print ($theme == 'audio')?'#900':(($theme == 'image')?'#990':(($theme == 'video')?'#093':'#06A')); ?>;">
+			<table id="header" cellpadding="0" cellspacing="0" style="background-color:<?php print $colors['bg']; ?>;">
 				<tr>
 					<td id="siteTitle"><a href="<?php print url('select'); ?>"><?php print setting('html_name'); ?></a></td>
 					<td>
@@ -265,6 +183,18 @@ theme('breadcrumbs');
 								<table id="mainTable" cellpadding="0" cellspacing="0">
 									<tr>
 										<td>
+		<div class="contentSpacing">
 <?php
+
+	if(isset($title))
+	{
+		?><h1 class="title"><?php print $title; ?></h1><?php
+	}
+	if(isset($description))
+	{
+		?><span class="subText"><?php print $description; ?></span><?php
+	}
+	
+	theme('errors_block');
 }
 

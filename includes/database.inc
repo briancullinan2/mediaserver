@@ -200,15 +200,15 @@ function status_database($settings)
  */
 function setting_db_type($settings)
 {
-	if(isset($settings['db_type']) && in_array($settings['db_type'], supported_databases()))
+	if(isset($settings['db_type']) && in_array($settings['db_type'], get_supported_databases()))
 		return $settings['db_type'];
 	else
 		return 'mysql';
 }
 
-function supported_databases()
+function get_supported_databases()
 {
-	return $supported_databases = array('access','ado','ado_access','ado_mssql','db2','odbc_db2','vfp','fbsql','ibase','firebird','borland_ibase','informix','informix72','ldap','mssql','mssqlpo','mysql','mysqli','mysqlt','maxsql','oci8','oci805','oci8po','odbc','odbc_mssql','odbc_oracle','odbtp','odbtp_unicode','oracle','netezza','pdo','postgres','postgres64','postgres7','postgres8','sapdb','sqlanywhere','sqlite','sqlitepo','sybase');
+	return array('access','ado','ado_access','ado_mssql','db2','odbc_db2','vfp','fbsql','ibase','firebird','borland_ibase','informix','informix72','ldap','mssql','mssqlpo','mysql','mysqli','mysqlt','maxsql','oci8','oci805','oci8po','odbc','odbc_mssql','odbc_oracle','odbtp','odbtp_unicode','oracle','netezza','pdo','postgres','postgres64','postgres7','postgres8','sapdb','sqlanywhere','sqlite','sqlitepo','sybase');
 }
 
 /**
@@ -444,7 +444,7 @@ function configure_database($settings, $request)
 		),
 		'type' => 'select',
 		'value' => $dsn['dbsyntax'],
-		'options' => database::supported_databases(),
+		'options' => get_supported_databases(),
 	);
 	
 	$options['db_server'] = array(

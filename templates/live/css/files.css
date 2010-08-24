@@ -8,6 +8,10 @@
 	width:850px;
 }
 
+.filestrip {
+	overflow:auto;
+}
+
 .filesmall {
 	border:1px solid #FEFEFE;
 	height:1.5em;
@@ -95,6 +99,7 @@
 	margin:0.2em 1px;
 	position:relative;
 	width:7em;
+	overflow:hidden;
 }
 
 .file.small {

@@ -5,3 +5,4 @@ template = false
 settings[] = convert_path
 settings[] = convert_args
 depends on[] = converter
+package = file_conversion

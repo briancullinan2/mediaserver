@@ -1,6 +1,7 @@
 name = Audio
 description = Store audio id3 information.
 depends on[] = getid3_installed
+package = file_handlers
 
 [database]
 Filepath = TEXT

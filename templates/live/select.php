@@ -104,72 +104,87 @@ function theme_live_files()
 	}
 	else
 	{
-		?><div class="files" id="files"><?php
-		foreach($GLOBALS['output']['files'] as $i => $file)
+		$scheme = live_get_scheme();
+		if($scheme == 'image')
 		{
-			$GLOBALS['output']['html']['files'][$i] = live_alter_file($file);
-			
-			// make links browsable
-			if(handles($file['Filepath'], 'archive')) $handler = 'archive';
-			elseif(handles($file['Filepath'], 'playlist')) $handler = 'playlist';
-			elseif(handles($file['Filepath'], 'diskimage')) $handler = 'diskimage';
-			else $handler = $GLOBALS['output']['handler'];
-			
-			if($GLOBALS['output']['handler'] != $handler || $file['Filetype'] == 'FOLDER')
+			?><img src="<?php print url('convert/png?cheight=500&cwidth=500&id=' . $GLOBALS['output']['files'][0]['id']); ?>" />
+			<div class="filestrip">
+			<div class="files" id="files" style="width:4160px;"><?php
+			foreach($GLOBALS['output']['files'] as $i => $file)
 			{
-				if(substr($file['Filepath'], -1) != '/') $file['Filepath'] .= '/';
-				$new_handler = $handler;
+				theme('file', $file);
 			}
-			if(isset($new_handler))
-			{
-				$link = url('select/dir/' . $GLOBALS['output']['html']['files'][$i]['Filepath'] . '?handler=' . $new_handler);
-			}
-			else
-				$link = url('files/' . $handler . '/' . $file['id'] . '/' . $file['Filename']);
-			unset($new_handler);
-			?>
-			<div class="file <?php print $file['Filetype']; ?>" onmousedown="deselectAll(event);fileSelect(this, true, event);return false;" oncontextmenu="showMenu(this);return false;" id="<?php print $file['id']; ?>"><div class="notselected"></div>
-				<table class="itemTable" cellpadding="0" cellspacing="0" onclick="location.href = '<?php print $link; ?>';">
-					<tr>
-						<td>
-							<div class="thumb file_ext_<?php print $file['Filetype']; ?> file_type_<?php print isset($file['Filemime'])?str_replace('/', ' file_type_', $file['Filemime']):''; ?>">
-								<?php
-								if(handles($file['Filepath'], 'image'))
-								{
-									?><img src="<?php print url('template/live/images/s.gif'); ?>" alt="<?php print $file['Filetype']; ?>" style="background-image:url(<?php print url('convert/png?cheight=56&cwidth=56&id=' . $file['id']); ?>);" height="48" width="48"><?php
-								}
-								else
-								{
-									?><img src="<?php print url('template/live/images/s.gif'); ?>" alt="<?php print $file['Filetype']; ?>" height="48" width="48"><?php
-								}
-								?>
-							</div>
-						</td>
-					</tr>
-				</table>
-				<a class="itemLink" href="<?php print $link; ?>" onmouseout="this.parentNode.firstChild.className = 'notselected'; if(!loaded){return false;} document.getElementById('info_<?php print $file['id']; ?>').style.display = 'none';document.getElementById('info_<?php print $file['id']; ?>').style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.className = 'selected'; if(!loaded){return false;} document.getElementById('info_<?php print $file['id']; ?>').style.display = '';document.getElementById('info_<?php print $file['id']; ?>').style.visibility = 'visible'; return true;"><span><?php print $GLOBALS['output']['html']['files'][$i]['Filename']; ?></span></a>
-			</div>
-			<?php
+			?></div></div><?php
 		}
-		?></div><?php
+		else
+		{
+			?><div class="files" id="files"><?php
+			foreach($GLOBALS['output']['files'] as $i => $file)
+			{
+				theme('file', $file);
+			}
+			?></div><?php
+		}
 	}
 }
 
 function theme_live_file($file)
 {
+	$html = live_alter_file($file);
+	
+	// make links browsable
+	if(handles($file['Filepath'], 'archive')) $handler = 'archive';
+	elseif(handles($file['Filepath'], 'playlist')) $handler = 'playlist';
+	elseif(handles($file['Filepath'], 'diskimage')) $handler = 'diskimage';
+	else $handler = $GLOBALS['output']['handler'];
+	
+	if($GLOBALS['output']['handler'] != $handler || $file['Filetype'] == 'FOLDER')
+	{
+		if(substr($file['Filepath'], -1) != '/') $file['Filepath'] .= '/';
+		$new_handler = $handler;
+	}
+	if(isset($new_handler))
+	{
+		$link = url('select/dir/' . $html['Filepath'] . '?handler=' . $new_handler);
+	}
+	else
+		$link = url('files/' . $handler . '/' . $file['id'] . '/' . urlencode($file['Filename']));
+
+	unset($new_handler);
+	?>
+	<div class="file <?php print $html['Filetype']; ?>" onmousedown="deselectAll(event);fileSelect(this, true, event);return false;" oncontextmenu="showMenu(this);return false;" id="<?php print $html['id']; ?>"><div class="notselected"></div>
+		<table class="itemTable" cellpadding="0" cellspacing="0" onclick="location.href = '<?php print $link; ?>';">
+			<tr>
+				<td>
+					<div class="thumb file_ext_<?php print $html['Filetype']; ?> file_type_<?php print isset($html['Filemime'])?str_replace('/', ' file_type_', $html['Filemime']):''; ?>">
+						<?php
+						if(handles($file['Filepath'], 'image'))
+						{
+							?><img src="<?php print url('template/live/images/s.gif'); ?>" alt="<?php print $html['Filetype']; ?>" style="background-image:url(<?php print url('convert/png?cheight=56&cwidth=56&id=' . $html['id']); ?>);" height="48" width="48"><?php
+						}
+						else
+						{
+							?><img src="<?php print url('template/live/images/s.gif'); ?>" alt="<?php print $html['Filetype']; ?>" height="48" width="48"><?php
+						}
+						?>
+					</div>
+				</td>
+			</tr>
+		</table>
+		<a class="itemLink" href="<?php print $link; ?>" onmouseout="this.parentNode.firstChild.className = 'notselected'; if(!loaded){return false;} document.getElementById('info_<?php print $html['id']; ?>').style.display = 'none';document.getElementById('info_<?php print $html['id']; ?>').style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.className = 'selected'; if(!loaded){return false;} document.getElementById('info_<?php print $html['id']; ?>').style.display = '';document.getElementById('info_<?php print $html['id']; ?>').style.visibility = 'visible'; return true;"><span><?php print $html['Filename']; ?></span></a>
+	</div>
+	<?php
 }
 
 function theme_live_select()
 {
-	theme('header');
+	$current = isset($GLOBALS['output']['html']['dir'])?basename($GLOBALS['output']['html']['dir']):'';
 	
-	$current = isset($GLOBALS['template']['html']['dir'])?basename($GLOBALS['output']['html']['dir']):'';
+	theme('header',
+		($current == '')?setting('html_name'):$current,
+		'Click to browse files. Drag to select files, and right click for download options.'
+	);
 	
-	?>
-	<div class="contentSpacing">
-			<h1 class="title"><?php print ($current == '')?setting('html_name'):$current; ?></h1>
-			<span class="subText"><?php print 'Click to browse files. Drag to select files, and right click for download options.'; ?></span>
-	<?php
 	if (count($GLOBALS['user_errors']) == 0 && count($GLOBALS['output']['files']) > 0)
 	{
 		?>
@@ -180,8 +195,6 @@ function theme_live_select()
 		</span>
 		<?php
 	}
-	
-	theme('errors_block');
 	
 	theme('pages');
 	
@@ -210,7 +223,7 @@ if(document.getElementById("debug")) {
 
 function theme_live_info()
 {
-	$theme = live_get_theme_color();
+	$colors = live_get_colors();
 
 	$biggest = live_get_info_count();
 	
@@ -219,7 +232,7 @@ function theme_live_info()
 	</td>
 </tr>
 <tr>
-	<td id="infoBar" style="background-color:<?php print ($theme == 'audio')?'#900':(($theme == 'image')?'#990':(($theme == 'video')?'#093':'#06A')); ?>; height:<?php print max($biggest+3, 7); ?>em;">
+	<td id="infoBar" style="background-color:<?php print $colors['bg']; ?>; height:<?php print max($biggest+3, 7); ?>em;">
 	<?php
 	if(!isset($GLOBALS['output']['files']))
 		return;
