@@ -27,14 +27,6 @@ function rewrite_ampache($path_info, $request)
 }
 
 /**
- * Implementation of status
- * @ingroup status
- */
-function status_ampache()
-{
-}
-
-/**
  * Implementation of validate
  * @ingroup validate
  * @return NULL by default, the auth key is any string if specified

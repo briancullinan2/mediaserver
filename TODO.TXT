@@ -1,24 +1,10 @@
 ------------- MONOLITHICMEDIA TODO -------------
 ------------- GENERAL TODO -------------
-Fix the location of templates adding scripts and styles from the setup_template_files() function
-	This should be done before the template it outputted
-Rewrite_vars in core.php breaks the rule that variables shouldn't be added in rewrite_functions only process the information that is already available
-Also caused a problem because raise_error was being called from a validate function
-	Raise_error maybe shouldn't be called from validate or setting or dependency functions because the functions can be called at any time from anywhere and the errors stack up
-	Maybe errors of the exact same type should be filtered
-	Maybe errors displayed to the user should only be available after output has been called, so only output functions can raise errors
-	Maybe some functions like invoke and trigger and expecting more specific results and should consider that might corrupt those functions
-Maybe errors shouldn't happen in the validate function, maybe there should be a better place to report bad input to the user
-	Maybe when the register_output_vars function is called and there is nothing there, then the error should be created
-	Maybe there should be a better way of detecting if a variable has been removed from the request
-		This would be useful in the situation where we want to confirm a change on the configuration pages
 IMPORTANT: Finish the configuaration for updates.php and implement new method of reporting changes like described above
 	See configure_balancer for more information
-Consider Revising the don't remove API in set_output_vars
 Running system from command line should change bootstrap options
 Cron is not running properly again...
 Finish webdav module that allows files to be uploaded and access using the web dav protocol.  This is already mostly supported by PEAR.
-Come up with a good way to detect modrewrite
 Look at drupal and find out if there is a better way to save errors to the session at the end of a script
 	Fix session problems with storing errors
 	Consider printing and clearing all possible errors up until the error print out, then save the rest
@@ -99,10 +85,8 @@ Work on db_movies, use cUrl to download movie information from tmdb, use the vol
 	Look up movies on amazon, and see if that will help with searching IMDb
 	Research the video_ts.ifo file, there must be a way of getting the full name from a DVD image, windows media center projects can do it, so can we
 ------------- All Template TODO -------------
-HIGH-PRIORITY: Check all usage of setting(local_template), setting(html_template)
-	Templates should refer to themselves only
-	Templates should have functions for outputting their own files instead of using the file output stream in the output_template() function, make this obsolete
-	Never include path in template reference, the validate_ function always removes the path
+Templates should have functions for outputting their own files instead of using the file output stream in the output_template() function, make this obsolete
+Never include path in template reference, the validate_ function always removes the path
 Set variables to default specified by template if they are not set because of an improper input
 Figure out how template_path and modules_path is used in the javascript in the WMP and EXT JS templates
 Test modifications to extjs and wmp template script and link includes

@@ -34,12 +34,13 @@ function setup_menu()
 			continue;
 			
 		// add default menu items
-		add_menu($module, array($module => array(
-			'name' => $config['name'],
-			'module' => $module,
-			'callback' => 'output_' . $module,
-			'type' => MENU_CALLBACK,
-		)));
+		if(!isset($GLOBALS['menus'][$module]))
+			add_menu($module, array($module => array(
+				'name' => $config['name'],
+				'module' => $module,
+				'callback' => 'output_' . $module,
+				'type' => MENU_CALLBACK,
+			)));
 	}
 }
 
@@ -55,28 +56,24 @@ function validate_path_info($request)
 }
 
 
-function get_menu_entry($path)
+function get_menu_entry($current_path)
 {
 	if(!isset($GLOBALS['menus']))
 		setup_menu();
-	
-	$dirs = split('/', $path);
 
 	// find the menu entry that matches the most
-	$current_path = '';
-	foreach($dirs as $i => $dir)
+	$highest_match = '';
+	foreach($GLOBALS['menus'] as $path => $config)
 	{
-		foreach($GLOBALS['menus'] as $path => $config)
+		$path_regexp = preg_replace(array('/\\//i', '/\\/%[a-z][a-z0-9_]*/i'), array('\/', '/[^\/]*?'), addslashes($path));
+		if(preg_match('/^' . $path_regexp . '/i', $current_path) > 0)
 		{
-			if(preg_match('/' . preg_replace(array('/\\//i', '/\\/%[a-z][a-z0-9_]*/i'), array('\/', '/[^\/]*?'), addslashes($path)) . '/i', implode('/', $dirs)) > 0)
-			{
-				if(substr_count($path, '/') >= substr_count($current_path, '/'))
-					$current_path = $path;
-			}
+			if(substr_count($path, '/') > substr_count($highest_match, '/') || $highest_match == '')
+				$highest_match = $path;
 		}
 	}
-	if($current_path != '')
-		return $current_path;
+	if($highest_match != '')
+		return $highest_match;
 }
 
 function get_path(&$request, $index)

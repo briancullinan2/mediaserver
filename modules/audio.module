@@ -34,7 +34,6 @@ function handles_audio($file)
 	}
 
 	return false;
-
 }
 
 function get_info_audio($file)

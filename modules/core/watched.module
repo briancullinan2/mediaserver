@@ -344,7 +344,7 @@ function configure_watched($settings, $request)
 		'start' => validate($request, 'start'),
 		'limit' => 32000,
 		'dirs_only' => true,
-	), &$total_count);
+	), $total_count);
 	
 	register_output_vars('files', $files);
 	

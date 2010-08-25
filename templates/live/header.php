@@ -29,7 +29,7 @@ else
 	<?php
 }
 
-function theme_live_header($title = NULL, $description = NULL)
+function theme_live_header($title = NULL, $description = NULL, $html_title = NULL)
 {
 	register_style('template/live/css/types.css');
 	register_style('template/live/css/search.css');
@@ -38,6 +38,9 @@ function theme_live_header($title = NULL, $description = NULL)
 	register_style('template/live/css/files.css');
 	register_style('template/live/css/errors.css');
 	register_style('template/live/css/forms.css');
+	register_style('template/live/css/footer.css');
+	register_style('template/live/css/select.css');
+	
 	register_script('template/live/js/jquery.js');
 	register_script('template/live/js/dragclick.js');
 	
@@ -46,7 +49,7 @@ function theme_live_header($title = NULL, $description = NULL)
 	
 	theme('head', $title);
 	
-	theme('body', $title, $description);
+	theme('body', isset($html_title)?$html_title:$title, $description);
 }
 
 function theme_live_breadcrumbs()
@@ -54,7 +57,7 @@ function theme_live_breadcrumbs()
 	if($GLOBALS['output']['module'] != 'select' && $GLOBALS['output']['module'] != 'index')
 	{
 		?>
-		<li><a href="<?php print url('select/dir//'); ?>"><?php print setting('html_name'); ?></a></li>
+		<li><a href="<?php print url('select'); ?>"><?php print setting('html_name'); ?></a></li>
 		<li><img src="<?php print url('template/live/images/carat.gif'); ?>" class="crumbsep"></li>
 		<?php
 		// break up the module by the underscores
@@ -90,7 +93,7 @@ function theme_live_breadcrumbs()
 			if($count == 0)
 			{
 				?>
-				<li><a href="<?php print url('select?handler=' . (handles($path, $GLOBALS['output']['handler'])?$GLOBALS['output']['handler']:'files') . '&dir=' . urlencode('/')); ?>"><?php print setting('html_name'); ?></a></li>
+				<li><a href="<?php print url('select/' . (handles($path, $GLOBALS['output']['handler'])?$GLOBALS['output']['handler']:'files') . '/'); ?>"><?php print setting('html_name'); ?></a></li>
 				<li><img src="<?php print url('template/live/images/carat.gif'); ?>" class="crumbsep"></li>
 				<?php
 			}
@@ -101,7 +104,7 @@ function theme_live_breadcrumbs()
 			else
 			{
 				?>
-				<li><a href="<?php print url('select?handler=' . (handles($path, $GLOBALS['output']['handler'])?$GLOBALS['output']['handler']:'files') . '&dir=' . urlencode($path . '/')); ?>"><?php print $text; ?></a></li>
+				<li><a href="<?php print url('select/' . (handles($path, $GLOBALS['output']['handler'])?$GLOBALS['output']['handler']:'files') . '/' . urlencode_path($path . '/')); ?>"><?php print $text; ?></a></li>
 				<li><img src="<?php print url('template/live/images/carat.gif'); ?>" class="crumbsep"></li>
 				<?php
 			}

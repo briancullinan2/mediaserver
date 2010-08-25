@@ -1,4 +1,11 @@
-2010-08-07
+2010-08-24
+Refactored all alter_query code, now uses database filter_() functions
+Reorganized other database code in to sql_() functions
+Refactored live theme code
+Refactored menu system
+	Automatically generates menu lists for gaps in menus
+Refactored url creation
+See repository
 
 2010-08-06
 Lots of big API changes, see REPO

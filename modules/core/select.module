@@ -4,7 +4,10 @@
 function menu_select()
 {
 	return array(
-		'select/dir/%dir' => array(
+		'select/%handler/%dir' => array(
+			'callback' => 'output_select',
+		),
+		'select/%handler' => array(
 			'callback' => 'output_select',
 		),
 		'select' => 'Select Files', // this is the default item
@@ -330,7 +333,7 @@ function filter_order_by($request)
 	}
 }
 
-function filter_selected($request, &$props)
+function filter_selected($request)
 {
 	// select an array of ids!
 	if(isset($request['selected']) && count($request['selected']) > 0 )

@@ -7,3 +7,4 @@ output[] = search
 depends on = search
 template = true
 package = core
+filter[] = search

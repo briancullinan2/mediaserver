@@ -144,9 +144,7 @@ function theme_live_file($file)
 		$new_handler = $handler;
 	}
 	if(isset($new_handler))
-	{
-		$link = url('select/dir/' . $html['Filepath'] . '?handler=' . $new_handler);
-	}
+		$link = url('select/' . $new_handler . '/' . $html['Filepath']);
 	else
 		$link = url('files/' . $handler . '/' . $file['id'] . '/' . urlencode($file['Filename']));
 
@@ -178,23 +176,21 @@ function theme_live_file($file)
 
 function theme_live_select()
 {
-	$current = isset($GLOBALS['output']['html']['dir'])?basename($GLOBALS['output']['html']['dir']):'';
+	$current = isset($GLOBALS['output']['html']['dir'])?ucwords(basename($GLOBALS['output']['html']['dir'])):'';
+	
+	$description = 'Click to browse files. Drag to select files, and right click for download options.';
+	if(count($GLOBALS['user_errors']) == 0 && count($GLOBALS['output']['files']) > 0)
+	{
+		$description .= '<br />Displaying items ' . ($GLOBALS['output']['html']['start']+1) .
+			' through ' . min($GLOBALS['output']['start'] + count($GLOBALS['output']['files']), $GLOBALS['output']['start'] + $GLOBALS['output']['limit']) . 
+			' out of ' . $GLOBALS['output']['html']['total_count'] . ' file(s).';
+	}
 	
 	theme('header',
-		($current == '')?setting('html_name'):$current,
-		'Click to browse files. Drag to select files, and right click for download options.'
+		($current == '')?setting('html_name'):$current . ' : ' . setting('html_name'),
+		$description
 	);
 	
-	if (count($GLOBALS['user_errors']) == 0 && count($GLOBALS['output']['files']) > 0)
-	{
-		?>
-		<span class="subText">Displaying items
-			<?php print $GLOBALS['output']['html']['start']+1; ?>
-			through <?php print $GLOBALS['output']['start'] + $GLOBALS['output']['limit']; ?>
-			<?php print ($GLOBALS['output']['total_count'] > $GLOBALS['output']['limit'])?(' out of ' . $GLOBALS['output']['html']['total_count']):' file(s)'; ?>.
-		</span>
-		<?php
-	}
 	
 	theme('pages');
 	

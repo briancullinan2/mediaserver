@@ -6,11 +6,12 @@ function theme_live_module()
 	
 	$title = 'Configuring: ' . $GLOBALS['modules'][$GLOBALS['output']['configure_module']]['name'];
 	if(function_exists('output_' . $GLOBALS['output']['configure_module']))
-		$title .= '(<a href="' . url('module=' . $GLOBALS['output']['configure_module']) . '">View</a>)';
+		$html_title = ' (<a href="' . url('module=' . $GLOBALS['output']['configure_module']) . '">View</a>)';
 
 	theme('header',
 		$title,
-		$GLOBALS['modules'][$GLOBALS['output']['configure_module']]['description']
+		$GLOBALS['modules'][$GLOBALS['output']['configure_module']]['description'],
+		$title . $html_title
 	);
 	
 	theme('admin_module_configure');

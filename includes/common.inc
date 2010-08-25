@@ -107,6 +107,33 @@ function tokenize($string)
 }
 
 /**
+ * sorting function for terms in a keyword search
+ * @param a the first item to compare
+ * @param b the second item to compare
+ * @return 1 for comes after, -1 for comes before, 0 for equal
+ */
+function termSort($a, $b)
+{
+	if(($a[0] == '+' && $a[0] == $b[0]) || ($a[0] == '-' && $a[0] == $b[0]) || ($a[0] != '+' && $a[0] != '-' && $b[0] != '+' && $b[0] != '-'))
+	{
+		if(strlen($a) > strlen($b))
+			return -1;
+		elseif(strlen($a) < strlen($b))
+			return 1;
+		else
+			return 0;
+	} elseif($a[0] == '+') {
+		return -1;
+	} elseif($b[0] == '+') {
+		return 1;
+	} elseif($a[0] == '-') {
+		return -1;
+	} else {
+		return 1;
+	}
+}
+
+/**
  * @defgroup dependency Dependency Functions
  * All functions that allow the system to check other system settings for module dependencies
  * @param settings the settings for dependencies to take advantage of, but not necissarily contrained to
@@ -272,6 +299,15 @@ function rewrite_default($path_info)
 	}
 
 	return $request;
+}
+
+function urlencode_path($file)
+{
+	$dirs = explode('/', $file);
+	if($dirs[0] == '' || $dirs[0] == dirname(realpath('/')))
+		array_shift($dirs);
+	array_walk($dirs, create_function('&$item,$key', '$item = urlencode($item);'));
+	return implode('/', $dirs);
 }
 
 /**

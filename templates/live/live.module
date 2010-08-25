@@ -107,11 +107,7 @@ function live_alter_file($file)
 	{
 		if($column == 'Filepath')
 		{
-			$dirs = explode('/', $file['Filepath']);
-			if($dirs[0] == '' || $dirs[0] == dirname(realpath('/')))
-				array_shift($dirs);
-			array_walk($dirs, create_function('&$item,$key', '$item = urlencode($item);'));
-			$file['Filepath'] = implode('/', $dirs);
+			$file['Filepath'] = urlencode_path($file['Filepath']);
 		}
 		elseif(isset($GLOBALS['output']['search_regexp']) && 
 			isset($GLOBALS['output']['search_regexp'][$column])

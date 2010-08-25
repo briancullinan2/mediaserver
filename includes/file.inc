@@ -179,7 +179,7 @@ function handles($file, $handler = 'files')
 		)
 		{
 			// make sure it isn't a hidden file
-			if(strlen(basename($file)) > 0 && substr(basename($file), 0, 1) != '.' || realpath($file) == realpath('/'))
+			if(strlen(basename($file)) > 0 && substr(basename($file), 0, 1) != '.' || (basename($file) == '' && realpath($file) == realpath('/')))
 				return true;
 		}
 	}
