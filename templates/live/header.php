@@ -8,10 +8,10 @@ function theme_live_head($title)
 <head>
 <?php theme('redirect_block'); ?>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title><?php print $title; ?></title>
+<title><?php print $title . ' : ' . setting('html_name'); ?></title>
 <meta name="google-site-verification" content="K3Em8a7JMI3_1ry5CNVKIHIWofDt-2C3ohovDq3N2cQ" />
-<?php if(isset($GLOBALS['output']['styles'])) theme('styles', $GLOBALS['output']['styles']); ?>
-<?php if(isset($GLOBALS['output']['scripts'])) theme('scripts', $GLOBALS['output']['scripts']); ?>
+<script language="javascript" type="text/javascript" src="<?php print url('template/live/scripts'); ?>"></script>
+<link rel="stylesheet" href="<?php print url('template/live/styles'); ?>" type="text/css"/>
 <script language="javascript">
 var loaded = false;
 <?php
@@ -24,6 +24,9 @@ else
 	?>var selector_off = false;<?php
 }
 ?>
+$(document).ready(function() {
+	init();
+});
 </script>
 </head>
 	<?php
@@ -31,85 +34,40 @@ else
 
 function theme_live_header($title = NULL, $description = NULL, $html_title = NULL)
 {
-	register_style('template/live/css/types.css');
-	register_style('template/live/css/search.css');
-	register_style('template/live/css/layout.css');
-	register_style('template/live/css/menu.css');
-	register_style('template/live/css/files.css');
-	register_style('template/live/css/errors.css');
-	register_style('template/live/css/forms.css');
-	register_style('template/live/css/footer.css');
-	register_style('template/live/css/select.css');
-	
-	register_script('template/live/js/jquery.js');
-	register_script('template/live/js/dragclick.js');
-	
 	if(!isset($title))
-		$title = htmlspecialchars($GLOBALS['modules'][$GLOBALS['output']['module']]['name']) . ' : ' . setting('html_name');
+		$title = htmlspecialchars($GLOBALS['modules'][$GLOBALS['output']['module']]['name']);
 	
 	theme('head', $title);
 	
 	theme('body', isset($html_title)?$html_title:$title, $description);
 }
 
-function theme_live_breadcrumbs()
+function theme_live_breadcrumbs($breadcrumbs = array(), $crumb = NULL)
 {
-	if($GLOBALS['output']['module'] != 'select' && $GLOBALS['output']['module'] != 'index')
+	?>
+	<li><a href="<?php print url('select'); ?>"><?php print setting('html_name'); ?></a></li>
+	<li><img src="<?php print url('template/live/images/carat.gif'); ?>" class="crumbsep"></li>
+	<?php
+	if(count($breadcrumbs) == 0)
 	{
-		?>
-		<li><a href="<?php print url('select'); ?>"><?php print setting('html_name'); ?></a></li>
-		<li><img src="<?php print url('template/live/images/carat.gif'); ?>" class="crumbsep"></li>
-		<?php
-		// break up the module by the underscores
-		$crumbs = split('_', $GLOBALS['output']['module']);
-		$current = '';
-		foreach($crumbs as $i => $crumb)
-		{
-			$current .= (($current != '')?'_':'') . $crumb;
-			if(isset($GLOBALS['modules'][$current]))
-			{
-				?>
-				<li><a href="<?php print url($current); ?>"><?php print $GLOBALS['modules'][$current]['name']; ?></a></li>
-				<?php
-				if($i != count($crumbs) - 1)
-				{
-					?>
-					<li><img src="<?php print url('template/images/carat.gif'); ?>" class="crumbsep"></li>
-					<?php
-				}
-			}
-		}
+		?><li><strong><?php print $crumb; ?></strong></li><?php
 	}
 	else
 	{
-		$crumbs = isset($GLOBALS['output']['dir'])?split('/', $GLOBALS['output']['dir']):array('');
-		if($crumbs[count($crumbs)-1] == '')
-			unset($crumbs[count($crumbs)-1]);
-		$path = '';
 		$count = 0;
-		foreach($crumbs as $i => $text)
+		foreach($breadcrumbs as $path  => $menu)
 		{
-			$path .= $text;
-			if($count == 0)
+			if($count != count($breadcrumbs) - 1)
 			{
 				?>
-				<li><a href="<?php print url('select/' . (handles($path, $GLOBALS['output']['handler'])?$GLOBALS['output']['handler']:'files') . '/'); ?>"><?php print setting('html_name'); ?></a></li>
+				<li><a href="<?php print url($path); ?>"><?php print $menu['name']; ?></a></li>
 				<li><img src="<?php print url('template/live/images/carat.gif'); ?>" class="crumbsep"></li>
 				<?php
-			}
-			elseif($count == count($crumbs)-1)
-			{
-				?><li><?php print $text; ?></li><?php
 			}
 			else
 			{
-				?>
-				<li><a href="<?php print url('select/' . (handles($path, $GLOBALS['output']['handler'])?$GLOBALS['output']['handler']:'files') . '/' . urlencode_path($path . '/')); ?>"><?php print $text; ?></a></li>
-				<li><img src="<?php print url('template/live/images/carat.gif'); ?>" class="crumbsep"></li>
-				<?php
+				?><li><strong><?php print $menu['name']; ?></strong></li><?php
 			}
-			$path .= '/';
-			
 			$count++;
 		}
 	}
@@ -132,13 +90,8 @@ function theme_live_body($title = NULL, $description = NULL)
 {
 	$colors = live_get_colors();
 ?>
-<script language="javascript">
-	$(document).ready(function() {
-		init();
-	});
-</script>
 <body onmousemove="setSelector()">
-<?php theme('list_block'); ?>
+<?php if(is_module('list')) theme('list_block'); ?>
 <div id="bodydiv">
 	<div id="sizer">
 		<div id="expander">
@@ -160,7 +113,7 @@ function theme_live_body($title = NULL, $description = NULL)
 							<div id="breadcrumb">
 								<ul>
 <?php
-theme('breadcrumbs');
+theme('breadcrumbs', $GLOBALS['output']['breadcrumbs'], $title);
 ?>
 								</ul>
 							</div>
@@ -169,15 +122,9 @@ theme('breadcrumbs');
 				</table>
 				<div id="content" onmousedown="return startDrag(event);" onmouseup="endDrag();return false;">
 					<div id="selector" style="display:none;"></div>
-					<ul class="menu" id="menu">
-						<li id="option_download"><a href="#" onMouseOut="this.className = '';" onMouseOver="this.className = 'itemSelect';"><b>Download File</b></a></li>
-						<li id="option_open"><a href="#" onMouseOut="this.className = '';" onMouseOver="this.className = 'itemSelect';"><b>Open</b></a></li>
-						<li><a href="#" onMouseOut="this.className = '';" onMouseOver="this.className = 'itemSelect';">Play Now</a></li>
-						<li><div class="sep"></div></li>
-						<li><a href="#" onMouseOut="this.className = '';" onMouseOver="this.className = 'itemSelect';">Download Zip</a></li>
-						<li><a href="#" onMouseOut="this.className = '';" onMouseOver="this.className = 'itemSelect';">Download Torrent</a></li>
-						<li><a href="#" onMouseOut="this.className = '';" onMouseOver="this.className = 'itemSelect';">Add to Queue</a></li>
-					</ul>
+					<?php
+						theme('context_menu');
+					?>
 					<div class="menuShadow" id="shadow"></div>
 					<table id="main" cellpadding="0" cellspacing="0">
 						<tr>
@@ -197,6 +144,8 @@ theme('breadcrumbs');
 	{
 		?><span class="subText"><?php print $description; ?></span><?php
 	}
+	
+	?><div class="titlePadding"></div><?php
 	
 	theme('errors_block');
 }

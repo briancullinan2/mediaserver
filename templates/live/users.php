@@ -1,16 +1,12 @@
 <?php
 
 
-function theme_live_login()
+function theme_live_login($username = 'guest')
 {
-	if(isset($GLOBALS['output']['return']))
-		$return = $GLOBALS['output']['return'];
-	else
-		$return = $GLOBALS['output']['get'];
 	?>	
 	<form action="<?php echo url('users/login?return=' . urlencode($return)); ?>" method="post">
 	
-		Username: <input type="text" name="username" value="<?php print isset($GLOBALS['output']['username'])?$GLOBALS['output']['username']:''; ?>" /><br />
+		Username: <input type="text" name="username" value="<?php print $username; ?>" /><br />
 		Password: <input type="password" name="password" value="" /><br />
 		<input type="submit" value="Login" /><input type="reset" value="Reset" />
 		
@@ -18,15 +14,11 @@ function theme_live_login()
 	<?php
 }
 
-function theme_live_login_block()
+function theme_live_login_block($username = 'guest', $return = '')
 {
-	if(isset($GLOBALS['output']['return']))
-		$return = $GLOBALS['output']['return'];
-	else
-		$return = $GLOBALS['output']['get'];
 	?>
 	<form action="<?php echo url('users/login?return=' . urlencode($return)); ?>" method="post">
-		<input class="stndsize" type="text" onmouseout="if(this.value=='' && !this.hasfocus) document.getElementById('username').style.visibility='visible'" onblur="this.hasfocus=false; this.onmouseout();" onfocus="this.hasfocus=true" name="username" value="<?php print isset($GLOBALS['output']['username'])?$GLOBALS['output']['username']:''; ?>" />
+		<input class="stndsize" type="text" onmouseout="if(this.value=='' && !this.hasfocus) document.getElementById('username').style.visibility='visible'" onblur="this.hasfocus=false; this.onmouseout();" onfocus="this.hasfocus=true" name="username" value="<?php print $username; ?>" />
 		<input class="stndsize" type="password" onmouseout="if(this.value=='' && !this.hasfocus) document.getElementById('password').style.visibility='visible'" onblur="this.hasfocus=false; this.onmouseout();" onfocus="this.hasfocus=true" name="password" value="" />
 		<input type="submit" value="Login" />
 		<span id="username" onmouseover="this.style.visibility='hidden'">Username</span>

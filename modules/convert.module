@@ -70,7 +70,11 @@ function configure_convert($settings, $request)
 		'value' => $settings['convert_args'],
 	);
 
-	return $options;
+	return array('convert' => array(
+		'name' => 'Conversion Command',
+		'type' => 'fieldset',
+		'options' => $options
+	));
 }
 
 /**
@@ -215,16 +219,18 @@ function output_convert($request)
 	// get the file path from the database
 	$files = get_files($request, $count);
 
-	if(count($files) > 0)
+	if($count > 0)
 	{
+		// set height and width if it isn't already
 		if(!isset($request['cheight']) && isset($files[0]['Height']))
 			$request['cheight'] = $files[0]['Height'];
 		
 		if(!isset($request['cwidth']) && isset($files[0]['Width']))
 			$request['cwidth'] = $files[0]['Width'];
 		
+		// set the file variable
 		if(setting('admin_alias_enable'))
-			$request['cfile'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $files[0]['Filepath']);
+			$request['cfile'] = alias_replace($files[0]['Filepath']);
 		else
 			$request['cfile'] = $files[0]['Filepath'];
 	}

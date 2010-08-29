@@ -6,6 +6,8 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SE
 
 bootstrap();
 
+raise_error('Bootstrap Complete! Processing Request.', E_DEBUG);
+
 invoke_menu($_REQUEST);
 
 session('errors', array(

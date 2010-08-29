@@ -10,7 +10,7 @@ function setup_image()
 		return;
 		
 	// include the id handler
-	include_once setting('local_root') . 'include' . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'getid3.php';
+	load_include('getid3' . DIRECTORY_SEPARATOR . 'getid3.php');
 	
 	// set up id3 reader incase any files need it
 	$GLOBALS['getID3'] = new getID3();
@@ -23,7 +23,6 @@ function setup_image()
 function handles_image($file)
 {
 	$file = str_replace('\\', '/', $file);
-	if(setting('admin_alias_enable')) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 			
 	// get file extension
 	$type = mime_type($file);

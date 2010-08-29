@@ -31,6 +31,13 @@ function theme_live_footer()
 			</div>
 		</div>
 	</div>
+	<script language="javascript">
+	loaded = true;
+	if(document.getElementById("debug")) {
+		header_height = document.getElementById("header").clientHeight + document.getElementById("debug").clientHeight;
+	} else {
+		header_height = document.getElementById("header").clientHeight;}
+	</script>
 	</body>
 	</html>
 	<?php

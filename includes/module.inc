@@ -185,6 +185,11 @@ function load_module($path)
 	}
 }
 
+function load_include($path)
+{
+	include_once(include_path($path));
+}
+
 function is_module($file)
 {
 	if(isset($GLOBALS['modules'][$file]))
@@ -213,7 +218,7 @@ function is_include($file)
 
 function get_required_modules()
 {
-	return array('menu', 'template', 'select', 'files', 'users', 'session', 'watched', 'module', 'ids');
+	return array('menu', 'template', 'select', 'files', 'users', 'session', 'watched', 'module', 'ids', 'settings');
 }
 
 function get_dependencies($dependency, $modules_only = false)
@@ -283,10 +288,6 @@ function sort_modules($modules)
 
 	// merge ordered keys with module configs
 	return array_merge($ordered, $modules);
-}
-
-function load_include($path)
-{
 }
 
 /**

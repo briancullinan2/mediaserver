@@ -443,7 +443,10 @@ function goto($request)
 
 function ext($file)
 {
-	return substr(basename($file), strrpos(basename($file), '.') + 1);
+	if(strpos(basename($file), '.') !== false)
+		return substr(basename($file), strrpos(basename($file), '.') + 1);
+	else
+		return '';
 }
 
 /**
@@ -477,6 +480,41 @@ function mime_type($ext)
 	$type = split('/', $mime);
 	
 	return $type[0];
+}
+
+/**
+ * parses the path inside of a file, useful to handlers like archive and diskimage
+ * @param file The filepath to search for the inside part of
+ * @param last_path The part of the path that exists on disk
+ * @param inside_path The inner part of the path that exists within the directory
+ * return none
+ */
+function get_inner_path($file)
+{
+	$paths = split(DIRECTORY_SEPARATOR, $file);
+	$last_path = '';
+	foreach($paths as $i => $tmp_file)
+	{
+		if(file_exists(str_replace('/', DIRECTORY_SEPARATOR, $last_path . $tmp_file)) || $last_path == '')
+		{
+			$last_path = $last_path . $tmp_file;
+			if($last_path == '' || $last_path[strlen($last_path)-1] != '/')
+				$last_path .= '/';
+		} else {
+			if(file_exists(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
+				break;
+		}
+	}
+	
+	$inside_path = substr($file, strlen($last_path));
+	if($last_path[strlen($last_path)-1] == '/') $last_path = substr($last_path, 0, strlen($last_path)-1);
+	
+	return array(
+		'file' => $last_path,
+		'subfile' => $inside_path,
+		0 => $last_path,
+		1 => $inside_path,
+	);
 }
 
 /**

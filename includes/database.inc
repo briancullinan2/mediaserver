@@ -545,7 +545,11 @@ function configure_database($settings, $request)
 		);
 	}
 	
-	return $options;
+	return array('connection' => array(
+		'name' => 'Connection Settings',
+		'type' => 'fieldset',
+		'options' => $options
+	));
 }
 
 function db_assoc($query, $args = array(), $key = NULL)

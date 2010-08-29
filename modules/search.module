@@ -151,7 +151,6 @@ function search_get_pieces($search)
 function search_get_pieces_query($pieces)
 {
 	$columns = '';
-	$order = '';
 	
 	$required = '';
 	$excluded = '';
@@ -159,39 +158,40 @@ function search_get_pieces_query($pieces)
 	
 	foreach($pieces['required'] as $j => $piece)
 	{
-		if($required != '') $required .= ' AND';
-		$required .= ' LOCATE("' . addslashes($piece) . '", {column}) > 0';
-		$columns .= ',(LOCATE("' . addslashes($piece) . '", {column}) > 0) AS result{column_index}' . $j;
-		$order .= 'result{column_index}' . ($pieces['count'] - $j - 1) . ' DESC,';
+		if($required != '') $required .= ' AND ';
+		$required .= 'LOCATE("' . addslashes($piece) . '", {column}) > 0';
+		$columns .= '(LOCATE("' . addslashes($piece) . '", {column}) > 0)+';
 	}
 	
 	foreach($pieces['excluded'] as $j => $piece)
 	{
-		if($excluded != '') $excluded .= ' AND';
-		$excluded .= ' LOCATE("' . addslashes($piece) . '", {column}) = 0';
-		$columns .= ',(LOCATE("' . addslashes($piece) . '", {column}) = 0) AS result{column_index}' . $j;
-		$order .= 'result{column_index}' . ($pieces['count'] - $j - 1) . ' DESC,';
+		if($excluded != '') $excluded .= ' AND ';
+		$excluded .= 'LOCATE("' . addslashes($piece) . '", {column}) = 0';
+		$columns .= '(LOCATE("' . addslashes($piece) . '", {column}) = 0)+';
 	}
 	
 	foreach($pieces['includes'] as $j => $piece)
 	{
-		if($includes != '') $includes .= ' OR';
-		$includes .= ' LOCATE("' . addslashes($piece) . '", {column}) > 0';
-		$columns .= ',(LOCATE("' . addslashes($piece) . '", {column}) > 0) AS result{column_index}' . $j;
-		$order .= 'result{column_index}' . ($pieces['count'] - $j - 1) . ' DESC,';
+		if($includes != '') $includes .= ' OR ';
+		$includes .= 'LOCATE("' . addslashes($piece) . '", {column}) > 0';
+		$columns .= '(LOCATE("' . addslashes($piece) . '", {column}) > 0)+';
 	}
 	
+	// add parenthesis to each part
+	if($required != '') $required = '(' . $required . ')';
+	if($excluded != '') $excluded = '(' . $excluded . ')';
+	if($includes != '') $includes = '(' . $includes . ')';
+	
 	// remove trailing comma
-	if($order != '')
-		$order = substr($order, 0, -1);
+	if($columns != '')
+		$columns = '(' . substr($columns, 0, -1) . ')';
 	
 	$part = '';
-	$part .= (($required != '')?(($part != '')?' AND':'') . $required:'');
-	$part .= (($excluded != '')?(($part != '')?' AND':'') . $excluded:'');
-	$part .= (($includes != '')?(($part != '')?' AND':'') . $includes:'');
+	$part .= (($required != '')?(($part != '')?' AND ':'') . $required:'');
+	$part .= (($excluded != '')?(($part != '')?' AND ':'') . $excluded:'');
+	$part .= (($includes != '')?(($part != '')?' AND ':'') . $includes:'');
 	
 	return array(
-		'order' => $order,
 		'columns' => $columns,
 		'where' => $part,
 	);
@@ -246,8 +246,8 @@ function filter_search($request, &$props)
 			$search = substr($search, 1, -1);
 		
 		// incase an aliased path is being searched for replace it here too!
-		if(setting('admin_alias_enable') == true && isset($GLOBALS['alias_regexp']))
-			$search = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $search);
+		if(setting('admin_alias_enable') == true)
+			$search = alias_replace($search);
 		
 		if($type == 'normal')
 		{
@@ -258,15 +258,11 @@ function filter_search($request, &$props)
 		// tokenize input
 		if($type == 'normal')
 		{
-			if($request['order_by'] == 'Relevance')
-				$result['order'] .= ',r_count' . $i . ' ASC';
-				
 			$replaced = str_replace(array('{column}', '{column_index}'), array($column, $i), $query);
 			$parts[] = $replaced['where'];
-			$result['columns'] .= $replaced['columns'];
-			$result['order'] .= ',' . $replaced['order'] . (isset($order)?$order:'');
+			$result['columns'] = (isset($result['columns'])?($result['columns'] . '+'):'') . $replaced['columns'];
 			
-			$result['columns'] .= ',ABS(LENGTH(' . $column . ') - ' . $pieces['length'] . ') as r_count' . $i;
+			$result['columns'] .= '*10-ABS(LENGTH(' . $column . ') - ' . $pieces['length'] . ')';
 		}
 		elseif($type == 'equal')
 		{
@@ -283,10 +279,8 @@ function filter_search($request, &$props)
 	}
 	
 	// remove leading commas
-	if(isset($result['columns']))
-		$result['columns'] = substr($result['columns'], 1);
-	if(isset($result['order']))
-		$result['order'] = substr($result['order'], 1);
+	if(!empty($result['columns']))
+		$result['columns'] .= ' AS Relevance';
 	
 	// set the new props
 	if(count($parts) > 0)

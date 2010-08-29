@@ -1,4 +1,4 @@
-name = File Handling
+name = Files
 description = Load information about existing files and allow users to download files.
 privilage = 1
 template = false

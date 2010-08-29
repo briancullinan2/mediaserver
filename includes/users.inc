@@ -242,7 +242,11 @@ function configure_users($settings, $request)
 		'value' => $settings['username_validation'],
 	);
 	
-	return $options;
+	return array('users' => array(
+		'name' => 'User File Settings',
+		'type' => 'fieldset',
+		'options' => $options
+	));
 }
 
 /**
@@ -406,7 +410,6 @@ function validate_required_priv($request)
 function handles_users($file)
 {
 	$file = str_replace('\\', '/', $file);
-	if(setting('admin_alias_enable')) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 	
 	// handle directories found in the setting('local_users') directory
 	//  automatically create a user entry in the database for those directories

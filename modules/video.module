@@ -1,14 +1,15 @@
 <?php
 
-/** 
+
+/**
  * Implementation of setup_handler
  * @ingroup setup_handler
  */
-function setup_audio()
+function setup_video()
 {
 	if(isset($GLOBALS['getID3']))
 		return;
-	
+		
 	// include the id handler
 	load_include('getid3' . DIRECTORY_SEPARATOR . 'getid3.php');
 	
@@ -16,26 +17,30 @@ function setup_audio()
 	$GLOBALS['getID3'] = new getID3();
 }
 
-/** 
+/**
  * Implementation of handles
  * @ingroup handles
  */
-function handles_audio($file)
+function handles_video($file)
 {
 	$file = str_replace('\\', '/', $file);
-	
+			
 	// get file extension
 	$type = mime_type($file);
 	
-	if( $type == 'audio' )
+	if( $type == 'video' )
 	{
 		return true;
 	}
 
 	return false;
+
 }
 
-function get_info_audio($file)
+/**
+ * Helper function
+ */
+function get_info_video($file)
 {
 	$file = str_replace('/', DIRECTORY_SEPARATOR, $file);
 	
@@ -43,27 +48,28 @@ function get_info_audio($file)
 	getid3_lib::CopyTagsToComments($info);
 	
 	if(!isset($info['comments_html']['title'][0])) $info['comments_html']['title'][0] = '';
-	if(!isset($info['comments_html']['artist'][0])) $info['comments_html']['artist'][0] = '';
-	if(!isset($info['comments_html']['album'][0])) $info['comments_html']['album'][0] = '';
-	if(!isset($info['comments_html']['track'][0])) $info['comments_html']['track'][0] = 0;
-	if(!isset($info['comments_html']['year'][0])) $info['comments_html']['year'][0] = '';
-	if(!isset($info['comments_html']['genre'][0])) $info['comments_html']['genre'][0] = '';
-	if(!isset($info['playtime_seconds'])) $info['playtime_seconds'] = 0;
 	if(!isset($info['comments_html']['comments'][0])) $info['comments_html']['comments'][0] = '';
 	if(!isset($info['bitrate'])) $info['bitrate'] = 0;
-
+	if(!isset($info['playtime_seconds'])) $info['playtime_seconds'] = 0;
+	if(!isset($info['audio']['channels'])) $info['audio']['channels'] = 0;
+	if(!isset($info['audio']['bitrate'])) $info['audio']['bitrate'] = 0;
+	if(!isset($info['video']['bitrate'])) $info['video']['bitrate'] = 0;
+	if(!isset($info['video']['resolution_x'])) $info['video']['resolution_x'] = 0;
+	if(!isset($info['video']['resolution_y'])) $info['video']['resolution_y'] = 0;
+	if(!isset($info['video']['frame_rate'])) $info['video']['frame_rate'] = 0;
+	
 	$fileinfo = array();
 	$fileinfo['Filepath'] = str_replace('\\', '/', $file);
 	
 	$fileinfo['Title'] = $info['comments_html']['title'][0];
-	$fileinfo['Artist'] = $info['comments_html']['artist'][0];
-	$fileinfo['Album'] = $info['comments_html']['album'][0];
-	$fileinfo['Track'] = $info['comments_html']['track'][0];
-	$fileinfo['Year'] = $info['comments_html']['year'][0];
-	$fileinfo['Genre'] = $info['comments_html']['genre'][0];
-	$fileinfo['Length'] = $info['playtime_seconds'];
 	$fileinfo['Comments'] = $info['comments_html']['comments'][0];
 	$fileinfo['Bitrate'] = $info['bitrate'];
+	$fileinfo['Length'] = $info['playtime_seconds'];
+	$fileinfo['Channels'] = $info['audio']['channels'];
+	$fileinfo['AudioBitrate'] = $info['audio']['bitrate'];
+	$fileinfo['VideoBitrate'] = $info['video']['bitrate'];
+	$fileinfo['Resolution'] = $info['video']['resolution_x'] . 'x' . @$info['video']['resolution_y'];
+	$fileinfo['FrameRate'] = $info['video']['frame_rate'];
 	
 	return $fileinfo;
 }

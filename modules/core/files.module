@@ -77,8 +77,8 @@ function validate_dir($request)
 			$request['dir'] = '/' . $request['dir'];
 		
 		// replace directory with actual path
-		if(setting('admin_alias_enable') && setting('database_enable') && setting_installed())
-			$tmp = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
+		if(setting('admin_alias_enable'))
+			$tmp = alias_replace($request['dir']);
 		else
 			$tmp = $request['dir'];
 			
@@ -112,7 +112,7 @@ function validate_file($request)
 	{
 		$request['handler'] = validate($request, 'handler');
 		if(setting('admin_alias_enable'))
-			$tmp = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['file']);
+			$tmp = alias_replace($request['file']);
 		if(is_file(realpath($tmp)) || handles($request['file'], $request['handler']) == true)
 			return $request['file'];
 		else
@@ -252,7 +252,7 @@ function filter_dir($request)
 		
 		// replace aliased path with actual path
 		if(setting('admin_alias_enable'))
-			$request['dir'] = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $request['dir']);
+			$request['dir'] = alias_replace($request['dir']);
 			
 		// maybe the dir is not loaded yet, this part is costly but it is a good way to do it
 		if(setting('recursive_get') && handles($request['dir'], 'watched'))
@@ -416,7 +416,7 @@ function output_handler($file, $handler)
 		$file = str_replace('\\', '/', $file);
 		
 		if(setting('admin_alias_enable'))
-			$file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+			$file = alias_replace($file);
 		
 		// load file from file system
 		if(handles($file, $handler) && is_file($file))
@@ -640,7 +640,8 @@ function _get_database_files($request, &$count)
 	}
 
 	// merge in all other information for the files
-	$files = merge_database_info($files, $request['handler']);
+	if(!empty($files))
+		$files = merge_database_info($files, $request['handler']);
 	
 	// only get count if the query is not limited by the limit field
 	//  get count if limit is not set, which is should never be because of validate()
@@ -764,8 +765,12 @@ function merge_database_info($files, $handler)
 		$new_infos = array_diff_key($handler_files, $id_files);
 		foreach($new_infos as $i => $file)
 		{
-			$id_infos[$file['Filepath']] = add($file['Filepath'], false, $module);
-			$cache_updates[] = $file['Filepath'];
+			$result = add($file['Filepath'], false, $module);
+			if(is_array($result))
+			{
+				$id_infos[$file['Filepath']] = $result;
+				$cache_updates[] = $file['Filepath'];
+			}
 		}
 		
 		// merge extra information with files

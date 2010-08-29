@@ -1,0 +1,286 @@
+<?php
+
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ */
+function validate_add_alias($request)
+{
+	if(!isset($request['add_alias']['save']))
+		return;
+		
+	return array(
+		'paths' => isset($request['add_alias']['paths'])?$request['add_alias']['paths']:'',
+		'alias' => isset($request['add_alias']['alias'])?$request['add_alias']['alias']:'',
+		'paths_replace' => isset($request['add_alias']['paths_replace'])?$request['add_alias']['paths_replace']:'',
+		'alias_replace' => isset($request['add_alias']['alias_replace'])?$request['add_alias']['alias_replace']:'',
+	);
+}
+
+/**
+ * Implementation of status
+ * @ingroup status
+ */
+function status_alias()
+{
+	$status = array();
+		
+	if(dependency('alias'))
+	{
+		$status['admin_alias_enable'] = array(
+			'name' => 'Aliasing',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'Aliasing is enabled.',
+				),
+			),
+			'value' => 'Aliases enabled',
+		);
+	}
+	else
+	{
+		$status['admin_alias_enable'] = array(
+			'name' => 'Aliasing',
+			'status' => 'warn',
+			'description' => array(
+				'list' => array(
+					'Aliasing is turned off, and therefore people could see the actual paths to files on the filesystem.',
+				),
+			),
+			'value' => 'Aliases disabled',
+		);
+	}
+	
+	return $status;
+
+}
+
+function setting_admin_alias()
+{
+	$settings = array();
+
+	for($i = 0; $i < 100; $i++)
+	{
+		$GLOBALS['setting_alias_' . $i] = create_function('$settings', 'return setting_alias($settings, \'' . $i . '\');');
+		$settings[] = 'alias_' . $i;
+	}
+	
+	return $settings;
+}
+
+function setting_alias($settings, $index)
+{
+	// don't continue with this if stuff is missing
+	if(!isset($settings['alias_' . $index]) || !isset($settings['alias_' . $index]['paths']) || 
+		!isset($settings['alias_' . $index]['paths_replace']) || !isset($settings['alias_' . $index]['alias']) ||
+		!isset($settings['alias_' . $index]['alias_replace'])
+	)
+		return;
+		
+	// copy values
+	$alias = array(
+		'paths' => $settings['alias_' . $index]['paths'],
+		'alias' => $settings['alias_' . $index]['alias'],
+		'paths_replace' => $settings['alias_' . $index]['paths_replace'],
+		'alias_replace' => $settings['alias_' . $index]['alias_replace'],
+	);
+		
+	// validate filepaths
+	if(!($alias['paths'] = generic_validate_all_safe(array('paths' => $alias['paths']), 'paths')))
+		return;
+	if(!($alias['alias'] = generic_validate_all_safe(array('alias' => $alias['alias']), 'alias')))
+		return;
+		
+	// validate replacement regular expressions
+	if(!($alias['paths_replace'] = generic_validate_regexp(array('paths_replace' => $alias['paths_replace']), 'paths_replace')))
+		return;
+	if(!($alias['alias_replace'] = generic_validate_regexp(array('alias_replace' => $alias['alias_replace']), 'alias_replace')))
+		return;
+
+
+	return $alias;
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ */
+function setting_alias_rules($settings)
+{
+	if(!isset($settings['alias_rules']))
+		$settings['alias_rules'] = array();
+	
+	// make sure all servers with numeric indexes are on the list
+	for($i = 0; $i < 100; $i++)
+	{
+		$alias = setting_alias($settings, $i);
+		if(isset($alias))
+			$settings['alias_rules'][$i] = $alias;
+	}
+	
+	return array_values($settings['alias_rules']);
+}
+
+function session_alias($request)
+{
+	// might be configuring the module
+	if(!($save = session('alias')) || isset($request['reset_configuration']))
+		$save = array('alias_rules' => setting('alias_rules'));
+
+	// add server
+	if(isset($request['add_alias']))
+	{
+		$new_alias = setting_alias(array('alias_0' => $request['add_alias']), 0);
+		if(isset($new_alias))
+			$save['alias_rules'][] = $new_alias;
+	}
+
+	// remove server
+	if(isset($request['remove_alias']))
+	{
+		unset($save['alias_rules'][$request['remove_alias']]);
+		$save['alias_rules'] = array_values($save['alias_rules']);
+	}
+	
+	return $save;
+}
+
+function configure_alias($settings)
+{
+	$settings['alias_rules'] = setting('alias_rules');
+	
+	// store count for unsetting
+	$rule_count = count($settings['alias_rules']);
+	
+	if($session_alias = session('admin_alias'))
+	{
+		// load aliases from session
+		$settings['alias_rules'] = $session_alias['alias_rules'];
+	}
+	
+	$options = array();
+
+	if(count($settings['alias_rules']) > 0)
+	{
+		$options['manage_aliases'] = array(
+			'name' => 'Manage Aliases',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'Manage the aliasing rules.',
+				),
+			),
+			'type' => 'set',
+		);
+		
+		$alias_options = array();
+		foreach($settings['alias_rules'] as $i => $alias)
+		{
+			$alias_options['setting_alias_' . $i . '[paths]'] = array(
+				'type' => 'hidden',
+				'value' => $alias['paths'],
+			);
+			$alias_options['setting_alias_' . $i . '[alias]'] = array(
+				'type' => 'hidden',
+				'value' => $alias['alias'],
+			);
+			$alias_options['setting_alias_' . $i . '[paths_replace]'] = array(
+				'type' => 'hidden',
+				'value' => $alias['paths_replace'],
+			);
+			$alias_options['setting_alias_' . $i . '[alias_replace]'] = array(
+				'type' => 'hidden',
+				'value' => $alias['alias_replace'],
+			);
+			$alias_options['edit_alias[' . $i . ']'] = array(
+				'type' => 'submit',
+				'value' => 'Edit',
+				'name' => $alias['paths'] . ' -> ' . $alias['alias'],
+			);
+			$alias_options['remove_alias[' . $i . ']'] = array(
+				'type' => 'submit',
+				'value' => 'Remove',
+			);
+			$alias_options[] = array('value' => '<br />');
+		}
+		
+		$options['manage_aliases']['options'] = $alias_options;
+	}
+	
+	// TODO: put add server removed from request here
+	//   using GLOBALS['validated'] == false
+	//  raise_error('Server was not added due to errors')
+	//  put original values back in?
+	
+	$options['alias_rules'] = array(
+		'name' => 'Add Aliasing Rule',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Enter the regular expressions for replacing file paths displayed to the users.',
+			),
+		),
+		'type' => 'set',
+		'options' => array(
+			'add_alias[paths]' => array(
+				'type' => 'text',
+				'name' => 'Paths',
+				'value' => '',
+			),
+			array(
+				'value' => '<br />'
+			),
+			'add_alias[alias]' => array(
+				'type' => 'text',
+				'name' => 'Alias',
+				'value' => '',
+			),
+			array(
+				'value' => '<br />'
+			),
+			'add_alias[paths_replace]' => array(
+				'type' => 'text',
+				'name' => 'Path Match',
+				'value' => '',
+			),
+			array(
+				'value' => '<br />'
+			),
+			'add_alias[alias_replace]' => array(
+				'type' => 'text',
+				'name' => 'Alias Match',
+				'value' => '',
+			),
+			array(
+				'value' => '<br />'
+			),
+			'add_alias[save]' => array(
+				'type' => 'submit',
+				'value' => 'Add Alias',
+			),
+		),
+	);
+	
+	// add unsettings
+	for($i = 0; $i < $rule_count - count($settings['alias_rules']); $i++)
+	{
+		$options['alias_rules']['options']['setting_alais_' . (count($settings['alias_rules']) + $i)] = array(
+			'type' => 'hidden',
+			'value' => '',
+		);
+	}
+	
+	return array('aliasing' => array(
+		'name' => 'Aliasing Rules',
+		'type' => 'fieldset',
+		'options' => $options
+	));
+}
+
+function alias_replace($file)
+{
+	return preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+}
+

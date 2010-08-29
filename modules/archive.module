@@ -1,0 +1,489 @@
+<?php
+
+/**
+ * Implementation of setup_handler
+ * @ingroup setup_handler
+ */
+function setup_archive()
+{
+	if(setting('archiver') == 'pear')
+		load_include('File' . DIRECTORY_SEPARATOR . 'Archive.php');
+	else
+	{
+		if(isset($GLOBALS['getID3']))
+			return;
+		
+		load_include('getid3' . DIRECTORY_SEPARATOR . 'getid3.php');
+		
+		$GLOBALS['getID3'] = new getID3();
+	}
+	
+	stream_wrapper_register('archive', 'archive');
+}
+
+/**
+ * Implementation of dependency
+ * @ingroup dependency
+ */
+function dependency_archiver($settings)
+{
+	// get the archiver it is set to
+	$settings['archiver'] = setting('archiver');
+	$settings['local_root'] = setting('local_root');
+
+	// if that archiver is not installed, return false
+	if($settings['archiver'] == 'pear' && dependency('pear_installed') != false && include_path('File/Archive.php') !== false)
+		return true;
+	elseif($settings['archiver'] == 'getid3' && dependency('getid3_installed') != false && 
+			include_path('getid3/module.archive.zip.php') !== false)
+		return true;
+	elseif($settings['archiver'] == 'php' && class_exists('ZipArchive'))
+		return true;
+	else
+		return false;
+}
+
+/**
+ * Implementation of configure
+ * @ingroup configure
+ */
+function configure_archive($settings, $request)
+{
+	$settings['archiver'] = setting('archiver');
+	
+	$options = array();
+	
+	if(dependency('archiver'))
+	{
+		$options['archiver'] = array(
+			'name' => lang('archiver title', 'Archiver'),
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					lang('archiver description 1', 'This script comes equiped with 3 archive analyzers.'),
+					lang('archiver description 2', 'The built in PHP archiver, getID3 which is used by other handlers, and PEAR::Archive.'),
+				),
+			),
+			'type' => 'select',
+			'value' => $settings['archiver'],
+			'options' => array(
+				'pear' => 'PEAR File_Archive Extension',
+				'getid3' => 'GetID3() Library Archive reader',
+				'php' => 'Default PHP archiver',
+			),
+		);
+	}
+	else
+	{
+		$options['archiver'] = array(
+			'name' => lang('archiver title', 'Archiver Not Installed'),
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					lang('archiver description fail 1', 'Either there is no archiver installed, or the chosen archiver is missing.'),
+					lang('archiver description fail 2', 'The built in PHP archiver, getID3 which is used by other handlers, and PEAR::Archive.'),
+				),
+			),
+			'type' => 'select',
+			'value' => $settings['archiver'],
+			'options' => array(
+				'pear' => 'PEAR File_Archive Extension',
+				'getid3' => 'GetID3() Library Archive reader',
+				'php' => 'Default PHP archiver',
+			),
+		);
+	}
+	
+	return array('archive' => array(
+		'name' => 'Archiver',
+		'type' => 'fieldset',
+		'options' => $options
+	));
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ * @return returns pear by default
+ */
+function setting_archiver($settings)
+{
+	$settings['local_root'] = setting('local_root');
+	if(isset($settings['archiver']) && in_array($settings['archiver'], array('pear', 'getid3', 'php')))
+		return $settings['archiver'];
+	else
+	{
+		if(dependency('pear_installed') != false && include_path('File/Archive.php') !== false)
+			return 'pear';
+		elseif(include_path('getid3/module.archive.zip.php') !== false)
+			return 'getid3';
+		else
+			return 'pear';
+	}
+}
+
+/**
+ * Implementation of handles
+ * @ingroup handles
+ */
+function handles_archive($file)
+{
+	$file = str_replace('\\', '/', $file);
+	
+	// parse through the file path and try to find a zip
+	list($file) = get_inner_path($file);
+
+	switch(ext($file))
+	{
+		case 'zip':
+		case 'rar':
+		case 'tgz':
+		case 'gz':
+		case 'bz2':
+		case 'tbz':
+		case 'ar':
+		case 'ark':
+		case 'deb':
+		case 'szip':
+		case 'tar':
+		case '7z':
+			return true;
+	}
+	
+	return false;
+
+}
+
+/**
+ * Helper function
+
+ */
+function _archive_get_info_id3($filepath)
+{
+	list($filepath, $subfile) = get_inner_path($filepath);
+	
+	$files = array();
+	
+	$info = $GLOBALS['getID3']->analyze($filepath);
+
+	if(isset($info['zip']['central_directory']))
+	{
+		foreach($info['zip']['central_directory'] as $i => $file)
+		{
+			// if looking for a specific file, skip all other files
+			if($subfile != '' && $file['filename'] != $subfile)
+				continue;
+		
+			// construct file information
+			$fileinfo = array();
+			$fileinfo['Filepath'] = $filepath . '/' . $file['filename'];
+			$fileinfo['Filename'] = basename($file['filename']);
+			if($file['filename'][strlen($file['filename'])-1] == '/')
+			{
+				$fileinfo['Filetype'] = 'FOLDER';
+				$fileinfo['Filesize'] = 0;
+				$fileinfo['Uncompressed'] = 0;
+			}
+			else
+			{
+				$fileinfo['Filetype'] = ext($file['filename']);
+				$fileinfo['Filesize'] = $file['compressed_size'];
+				$fileinfo['Uncompressed'] = $file['uncompressed_size'];
+			}
+			if($fileinfo['Filetype'] === false)
+				$fileinfo['Filetype'] = 'FILE';
+			$fileinfo['Filemime'] = mime($file['filename']);
+			$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
+		
+			// if looking for a specific file, return here
+			if($subfile != '')
+				return $fileinfo;
+			else
+				$files[] = $fileinfo;
+		}
+	}
+	
+	// if the file was not found before now, return false
+	if($subfile != '')
+		return false;
+
+	return $files;
+}
+
+/**
+ * Helper function
+ */
+function _archive_get_info_pear($filepath)
+{
+	list($filepath, $subfile) = get_inner_path($filepath);
+	
+	$files = array();
+	
+	// read archive
+	$source = File_Archive::read($filepath . '/');
+	
+	if(PEAR::isError($source))
+	{
+		raise_error('Error reading archive: ' . $filepath, E_DEBUG);
+		raise_error($source, E_DEBUG);
+	}
+	else
+	{
+		// loop through files
+		while($source->next())
+		{
+			$file = $filepath . '/' . trim($source->getFilename());
+			
+			// if looking for a specific file, skip all other files
+			if($subfile != '' && $file != $subfile)
+				continue;
+			
+			$stat = $source->getStat();
+
+			// construct file information
+			$fileinfo = array();
+			$fileinfo['Filepath'] = $file;
+			$fileinfo['Filename'] = basename($file);
+			$fileinfo['Filesize'] = $source->source->source->source->header['CLen'];
+			
+			// this is how we determine if and internal file is a folder
+			if($fileinfo['Filepath'][strlen($fileinfo['Filepath'])-1] == '/')
+			{
+				$fileinfo['Filetype'] = 'FOLDER';
+				$fileinfo['Uncompressed'] = 0;
+			}
+			else
+			{
+				$fileinfo['Filetype'] = ext($fileinfo['Filename']);
+				$fileinfo['Uncompressed'] = @$stat['size'];
+			}
+			if($fileinfo['Filetype'] === false)
+				$fileinfo['Filetype'] = 'FILE';
+			else
+				$fileinfo['Filetype'] = strtoupper($fileinfo['Filetype']);
+				
+			$fileinfo['Filemime'] = mime($fileinfo['Filepath']);
+			$fileinfo['Filedate'] = date("Y-m-d h:i:s", @$stat['mtime']);
+			
+			// if looking for a specific file, return here
+			if($subfile != '')
+				return $fileinfo;
+			else
+				$files[] = $fileinfo;
+		}
+		
+		// if the file was not found before now, return false
+		if($subfile != '')
+			return false;
+	}
+	
+	return $files;
+}
+
+/**
+ * Helper function
+ */
+function get_info_archive($file)
+{
+	// if using getID3 archive parser
+	if(setting('archiver') == 'pear')
+		return _archive_get_info_pear($file);
+	else
+		return _archive_get_info_id3($file);
+}
+
+/**
+ * Common helper function for the handler
+ */
+function add_archive($file)
+{
+	// files always qualify, we are going to log every single one!
+	if(!handles($file, 'archive'))
+		return false;
+
+	// pull information from $info
+	list($file, $subfile) = get_inner_path($file);
+	
+	// check database for file
+	$files = db_assoc('SELECT * FROM archive WHERE Filepath=? LIMIT 1', array($file));
+	
+	// do a little cleanup here
+	// if the archive changes remove all it's inside files from the database
+	if( count($files) > 0 )
+	{
+		$archive_id = $files[0]['id'];
+		raise_error('Removing archive: ' . $file, E_DEBUG);
+		remove($file . '/', 'archive');
+	}
+
+	// Add archive first so if it fails then it won't try to read it again
+	$fileinfo = get_info_files($file);
+	$fileinfo['Uncompressed'] = 0;
+	
+	// print status
+	if( !isset($archive_id) )
+	{
+		raise_error('Adding archive: ' . $fileinfo['Filepath'], E_DEBUG);
+		
+		// add to database
+		$archive_id = db_insert('INSERT INTO archive ' . sql_insert($fileinfo), array_values($fileinfo));
+	}
+	else
+	{
+		raise_error('Modifying archive: ' . $fileinfo['Filepath'], E_DEBUG);
+		
+		// update database
+		db_query('UPDATE archive' . sql_update($fileinfo) . ' WHERE id=' . $archive_id, array_values($fileinfo));
+	}
+	
+	// set up empty ids array since we know archive_id will be the only entry
+	$empty_ids = array();
+	foreach(get_handlers(false) as $handler => $config)
+	{
+		$empty_ids[$handler . '_id'] = 0;
+	}
+	
+	// add archive internal files to archive database
+	$files = get_info_archive($file);
+	$total_size = 0;
+	foreach($files as $i => $fileinfo)
+	{
+		raise_error('Adding file in archive: ' . stripslashes($fileinfo['Filepath']), E_DEBUG);
+		// add subfile inside archive
+		$id = db_insert('INSERT INTO archive ' . sql_insert($fileinfo), array_values($fileinfo));
+		
+		// add ids for subfile
+		$ids = $empty_ids + array('archive_id' => $id) + get_info_ids($fileinfo['Filepath']);
+		$id = db_insert('INSERT INTO ids ' . sql_insert($ids), array_values($ids));
+		
+		// total up uncompressed size
+		$total_size += $fileinfo['Filesize'];
+	}
+	
+	// add root file which is the filepath but with a / for compatibility
+	$fileinfo = get_info_files($file);
+	$fileinfo['Uncompressed'] = $total_size;
+	if(substr($fileinfo['Filepath'], -1) != '/') $fileinfo['Filepath'] .= '/';
+	
+	raise_error('Adding file in archive: ' . stripslashes($fileinfo['Filepath']), E_DEBUG);
+	$id = db_insert('INSERT INTO archive ' . sql_insert($fileinfo), array_values($fileinfo));
+	
+	// update total size
+	$result = db_query('UPDATE archive SET Uncompressed=? WHERE id=?', array($total_size, $archive_id));
+	
+	return $archive_id;
+}
+
+/**
+ * Implementation of handler_output
+ * @ingroup handler_output
+ */
+function output_archive($file)
+{
+	$file = str_replace('\\', '/', $file);
+	
+	if(setting('admin_alias_enable'))
+		$file = alias_replace($file);
+	
+	$files = db_assoc('SELECT * FROM archive WHERE Filepath=? LIMIT 1', array($file));
+	if(count($files) > 0)
+	{				
+		return fopen('archive://' . $file, 'rb');
+	}
+
+	return false;
+}
+
+// music handler
+class archive
+{	
+	// this is for stream stuff when controlling output of the file
+       
+    protected $internal_fp = NULL;
+    protected $internal_length = NULL;
+    protected $internal_pos = NULL;
+	
+    function stream_open($path, $mode, $options, &$opened_path)
+    {
+		if(substr($path, 0, strlen('archive://')) == 'archive://')
+			$path = substr($path, strlen('archive://'));
+			
+		list($path, $subfile) = get_inner_path($path);
+		if(is_file($path))
+		{
+			if($subfile != '')
+			{
+				$this->internal_fp = File_Archive::read($path . '/' . $subfile);
+				return true;
+			}
+			// download entire image
+			else
+			{
+				if($fp = @fopen($path, 'rb'))
+				{
+					$this->internal_fp = $fp;
+					$this->internal_length = filesize($path);
+					$this->internal_pos = 0;
+					return true;
+				}
+			}
+		}
+		return false;
+    }
+    function stream_read($count){
+		if(is_resource($this->internal_fp))
+		{
+			if($this->internal_pos + $count > $this->internal_length)
+				$count = $this->internal_length - $this->internal_pos;
+			$this->internal_pos += $count;
+			return fread($this->internal_fp, $count);
+		}
+		elseif(is_object($this->internal_fp))
+		{
+			return $this->internal_fp->getData($count);
+		}
+    }
+    function stream_eof(){
+		if(is_resource($this->internal_fp))
+		{
+			return $this->internal_pos >= $this->internal_length;
+		}
+		elseif(is_object($this->internal_fp))
+		{
+			$stat = $this->internal_fp->getStat();
+			return ($this->internal_fp->tell() >= $stat[7]);
+		}
+    }
+    function stream_tell(){
+		if(is_resource($this->internal_fp))
+		{
+			return $this->internal_pos;
+		}
+		elseif(is_object($this->internal_fp))
+		{
+			return $this->internal_fp->tell();
+		}
+    }
+    function stream_seek($position){
+		if(is_resource($this->internal_fp))
+		{
+			if($position > $this->internal_length)
+			{
+				$position = $this->internal_length;
+			}
+			$this->internal_pos = $position;
+			fseek($this->internal_fp, $this->internal_pos);
+			return 0;
+		}
+		elseif(is_object($this->internal_fp))
+		{
+			$stat = $this->internal_fp->getStat();
+			if($position > $stat[7])
+			{
+				$position = $stat[7];
+			}
+			$this->internal_fp->skip($position);
+		}
+    }
+}
+

@@ -1,0 +1,16 @@
+name = Videos
+description = Loads video files.
+depends on[] = getid3_installed
+package = file_handlers
+
+[database]
+Filepath = TEXT
+Title = TEXT
+Length = DOUBLE
+Comments = TEXT
+Bitrate = DOUBLE
+VideoBitrate = DOUBLE
+AudioBitrate = DOUBLE
+Channels = INT
+FrameRate = INT
+Resolution = TEXT

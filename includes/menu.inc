@@ -241,6 +241,22 @@ function add_menu($module, $menus)
 	}
 }
 
+function output_breadcrumbs($current_path)
+{
+	// create a list of breadcrumbs that can be overrided by other modules
+	$breadcrumbs = array();
+	if(strpos($current_path, '%') === false)
+	{
+		$dirs = split('/', $current_path);
+		$path = '';
+		foreach($dirs as $i => $dir)
+		{
+			$path .= (($path != '')?'/':'') . $dir;
+			$breadcrumbs[$path] = $GLOBALS['menus'][$path];
+		}
+		register_output_vars('breadcrumbs', $breadcrumbs);
+	}
+}
 
 /**
  * This is the always output function
@@ -250,10 +266,10 @@ function output_menus($request)
 	// some templates would like to submit to their own page, generate a string based on the current get variable
 	register_output_vars('get', url($_GET, true));
 	
-	$path = get_menu_entry($request['path_info']);
+	$current_path = get_menu_entry($request['path_info']);
 
 	// the entire site depends on this
-	register_output_vars('module', $GLOBALS['menus'][$path]['module']);
+	register_output_vars('module', $GLOBALS['menus'][$current_path]['module']);
 	
 	// register all menus for reference
 	register_output_vars('all_menus', $GLOBALS['menus']);
@@ -268,8 +284,9 @@ function output_menus($request)
 			$menus[$path] = $config;
 		}
 	}
-	
 	register_output_vars('menus', $menus);
+	
+	output_breadcrumbs($current_path);
 }
 
 function output_menu($request)

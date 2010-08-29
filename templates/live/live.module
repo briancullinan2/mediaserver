@@ -5,6 +5,7 @@ include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'search.php';
 include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'errors.php';
 include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'modules.php';
 include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'menu.php';
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'list.php';
 
 include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'header.php';
 include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'footer.php';
@@ -15,6 +16,30 @@ function theme_live_logo()
 	if(isset($result['headers']['Content-Type']))
 		header('Content-Type: ' . $result['headers']['Content-Type']);
 	print $result['content'];
+}
+
+function theme_live_scripts()
+{
+	header('Content-Type: text/javascript');
+	$scripts = array('js/jquery.js', 'js/dragclick.js');
+	
+	foreach($scripts as $i => $script)
+	{
+		print file_get_contents(dirname(__FILE__) . DIRECTORY_SEPARATOR . $script);
+	}
+}
+
+function theme_live_styles()
+{
+	header('Content-Type: text/css');
+	$styles = array('css/types.css', 'css/search.css', 'css/layout.css', 'css/menu.css', 'css/files.css'
+		, 'css/errors.css', 'css/forms.css', 'css/footer.css', 'css/select.css'
+	);
+	
+	foreach($styles as $i => $style)
+	{
+		print file_get_contents(dirname(__FILE__) . DIRECTORY_SEPARATOR . $style);
+	}
 }
 
 function validate_live($request)
@@ -28,6 +53,9 @@ function validate_live($request)
 
 function live_get_scheme()
 {
+	if(!isset($GLOBALS['output']['file_counts']))
+		return 'files';
+	
 	$scheme_count = 0;
 	$scheme = '';
 	foreach($GLOBALS['output']['file_counts'] as $key => $count)
@@ -53,21 +81,25 @@ function live_get_colors()
 			'bg' => '#06A',
 			'inner' => '#446688 #335588 #115577',
 			'outer' => '#88BBDD #66AACC #5599BB',
+			'fg' => '#6CF',
 		),
 		'audio' => array(
 			'bg' => '#900',
 			'inner' => '#883333 #883322 #772211',
 			'outer' => '#BB8888 #AA6666 #995555',
+			'fg' => '#F66',
 		),
 		'image' => array(
 			'bg' => '#990',
 			'inner' => '#888844 #888833 #777722',
 			'outer' => '#BBBBAA #AAAACC #9999BB',
+			'fg' => '#FFA',
 		),
 		'video' => array(
 			'bg' => '#093',
 			'inner' => '#668866 #448844 #447744',
 			'outer' => '#88DDBB #66CCAA #55BB99',
+			'fg' => '#6FA',
 		),
 	);
 
@@ -132,16 +164,9 @@ function live_alter_file($file)
 	return $file;
 }
 
-function theme_live_pages()
+function theme_live_pages($start = 0, $limit = 50, $total = 0)
 {
 	// set some variables if they are missing so we can avoid errors
-	if(!isset($GLOBALS['output']['start']))
-		$GLOBALS['output']['start'] = 0;
-	if(!isset($GLOBALS['output']['total_count']))
-		$GLOBALS['output']['total_count'] = 0;
-	if(!isset($GLOBALS['output']['limit']))
-		$GLOBALS['output']['limit'] = 50;
-
 	?>
 	<table cellpadding="0" cellspacing="0" class="pageTable">
 		<tr>
@@ -150,105 +175,33 @@ function theme_live_pages()
 					<tr>
 						<td>
 	<?php
-	if(!isset($GLOBALS['output']['files']))
-		$item_count = 0;
-	else
-		$item_count = count($GLOBALS['output']['files']);
-	$page_int = $GLOBALS['output']['start'] / $GLOBALS['output']['limit'];
-	$lower = $page_int - 8;
-	$upper = $page_int + 8;
-	$GLOBALS['output']['total_count']--;
-	$pages = floor($GLOBALS['output']['total_count'] / $GLOBALS['output']['limit']);
-	$prev_page = $GLOBALS['output']['start'] - $GLOBALS['output']['limit'];
-	if($pages > 0)
+	foreach($GLOBALS['output']['pages'] as $i => $page_link)
 	{
-		if($lower < 0)
+		list($name, $href) = $page_link;
+		if(isset($page_link[2]) && $page_link[2] == false)
 		{
-			$upper = $upper - $lower;
-			$lower = 0;
-		}
-		if($upper > $pages)
-		{
-			$lower -= $upper - $pages;
-			$upper = $pages;
-		}
-		
-		if($lower < 0)
-			$lower = 0;
-		
-		if($GLOBALS['output']['start'] > 0)
-		{
-			if($GLOBALS['output']['start'] > $GLOBALS['output']['limit'])
-			{
 			?>
-			<div class="pageW"><div class="pageHighlightW" style="visibility:hidden"></div>
-				<a class="pageLink" href="<?php print url($GLOBALS['output']['get'] . '&start=0'); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.style.visibility = 'visible'; return true;">First</a>
-			</div>
-			<div class="pageW"><div class="pageHighlightW" style="visibility:hidden"></div>
-				<a class="pageLink" href="<?php print url($GLOBALS['output']['get'] . '&start=' . $prev_page); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.style.visibility = 'visible'; return true;">Prev</a>
+			<div class="page<?php print (!is_numeric($name) || strlen($name) > 2)?'W':''; ?>">
+				<strong><?php print $name; ?></strong>
 			</div>
 			<?php
-			}
-			else
-			{
+		}
+		else
+		{
 			?>
-			<div class="pageW"><div class="pageHighlightW" style="visibility:hidden"></div>
-				<a class="pageLink" href="<?php print url($GLOBALS['output']['get'] . '&start=0'); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.style.visibility = 'visible'; return true;">First</a>
+			<div class="page<?php print (!is_numeric($name) || strlen($name) > 2)?'W':''; ?>"><div class="pageHighlight<?php print (!is_numeric($name) || strlen($name) > 2)?'W':''; ?>" style="visibility:hidden"></div>
+				<a class="pageLink" href="<?php print url($GLOBALS['output']['get'] . '&' . $href); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.style.visibility = 'visible'; return true;"><?php print $name; ?></a>
 			</div>
 			<?php
-			}
-			?><div class="page">|</div><?php
-		}
-		
-		for($i = $lower; $i < $upper + 1; $i++)
-		{
-			if($i == $page_int)
-			{
-				?><div class="page<?php print (strlen($i) > 2)?'W':''; ?>"><b><?php print $page_int + 1; ?></b></div><?
-			}
-			else
-			{
-				?>
-				<div class="page<?php print (strlen($i) > 2)?'W':''; ?>"><div class="pageHighlight<?php print (strlen($i) > 2)?'W':''; ?>" style="visibility:hidden"></div>
-					<a class="pageLink" href="<?php print url($GLOBALS['output']['get'] . '&start=' . ($i * $GLOBALS['output']['limit'])); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.style.visibility = 'visible'; return true;"><?php print $i + 1; ?></a>
-				</div>
-				<?php
-			}
-		}
-		
-		if($GLOBALS['output']['start'] <= $GLOBALS['output']['total_count'] - $GLOBALS['output']['limit'])
-		{
-			?><div class="page">|</div><?php
-			$last_page = floor($GLOBALS['output']['total_count'] / $GLOBALS['output']['limit']) * $GLOBALS['output']['limit'];
-			$next_page = $GLOBALS['output']['start'] + $GLOBALS['output']['limit'];
-			if($GLOBALS['output']['start'] < $GLOBALS['output']['total_count'] - 2 * $GLOBALS['output']['limit'])
-			{
-				?>
-				<div class="pageW"><div class="pageHighlightW" style="visibility:hidden"></div>
-					<a class="pageLink" href="<?php print url($GLOBALS['output']['get'] . '&start=' . $next_page); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.style.visibility = 'visible'; return true;">Next</a>
-				</div>
-				<div class="pageW"><div class="pageHighlightW" style="visibility:hidden"></div>
-					<a class="pageLink" href="<?php print url($GLOBALS['output']['get'] . '&start=' . $last_page); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.style.visibility = 'visible'; return true;">Last</a>
-				</div>
-				<?php
-			}
-			else
-			{
-				?>
-				<div class="pageW"><div class="pageHighlightW" style="visibility:hidden"></div>
-					<a class="pageLink" href="<?php print url($GLOBALS['output']['get'] . '&start=' . $last_page); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.style.visibility = 'visible'; return true;">Last</a>
-				</div>
-				<?php
-			}
 		}
 	}
 	?>
 	
-					</td>
-				</tr>
-			</table>
-		</td>
-	</tr>
-</table>
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+	</table>
  <?php
 }

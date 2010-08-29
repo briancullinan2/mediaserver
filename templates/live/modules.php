@@ -11,7 +11,7 @@ function theme_live_module()
 	theme('header',
 		$title,
 		$GLOBALS['modules'][$GLOBALS['output']['configure_module']]['description'],
-		$title . $html_title
+		$title . (isset($html_title)?$html_title:'')
 	);
 	
 	theme('admin_module_configure');
@@ -25,6 +25,8 @@ function theme_live_admin_module_configure()
 	if(isset($GLOBALS['output']['status']))
 		print_form_object('status', array(
 			'type' => 'fieldset',
+			'name' => 'Module Status',
+			'collapsible' => true,
 			'options' => $GLOBALS['output']['status']
 		));
 		

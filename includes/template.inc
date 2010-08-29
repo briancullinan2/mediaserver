@@ -26,7 +26,10 @@ function menu_template()
 	return array(
 		'template/%template/%tfile' => array(
 			'callback' => 'output_template',
-		)
+		),
+		'template/%tfile' => array(
+			'callback' => 'output_template',
+		),
 	);
 }
 
@@ -83,7 +86,11 @@ function configure_template($settings, $request)
 		'options' => array('' => 'Not Set') + $templates,
 	);
 
-	return $options;
+	return array('template' => array(
+		'name' => 'Display Settings',
+		'type' => 'fieldset',
+		'options' => $options
+	));
 }
 
 /**

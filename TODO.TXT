@@ -1,5 +1,6 @@
 ------------- MONOLITHICMEDIA TODO -------------
 ------------- GENERAL TODO -------------
+Rate limiting on user login, recaptcha module
 IMPORTANT: Finish the configuaration for updates.php and implement new method of reporting changes like described above
 	See configure_balancer for more information
 Running system from command line should change bootstrap options

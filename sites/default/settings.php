@@ -17,3 +17,9 @@ watched_7 = "!/home/share/Downloads/incomplete/"
 watched_8 = "!/home/share/Downloads/cache/"
 watched_9 = "!/home/share/Music/Unsorted/"
 local_users = "/var/www/dev/users/"
+
+[alias_0]
+paths = /home/share/
+alias = /Shared/
+paths_replace = "/^\/home\/(share\/)?/i"
+alias_replace = "/^\/$|^\/Shared\//i"

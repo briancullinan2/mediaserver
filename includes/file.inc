@@ -160,15 +160,15 @@ function handles($file, $handler = 'files')
 	// if it is not a string there is nothing more we can do
 	if(!is_string($file))
 		return false;
+	
+	// replace the file alias with actual path
+	if(setting('admin_alias_enable')) $file = alias_replace($file);
 		
 	// check the handles_ function	
 	if($handler == 'files')
 	{
 		// always use forward slash
 		$file = str_replace('\\', '/', $file);
-		
-		// replace the file alias with actual path
-		if($handler !== true && setting('admin_alias_enable')) $file = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
 
 		// check if the given file is a directory or file
 		if(

@@ -1,6 +1,5 @@
 <?php
 
-
 function theme_live_search_block()
 {
 	$colors = live_get_colors();
@@ -36,19 +35,16 @@ function theme_live_search()
 	<?php
 	foreach(get_handlers() as $handler => $config)
 	{
-		?>cat_columns['<?php print $handler; ?>'] = new Array('<?php print join('\', \'', get_columns($handler)); ?>');<?php
+		?>cat_columns['<?php print $handler; ?>'] = new Array('<?php print join('\', \'', get_columns($handler)); ?>');
+	<?php
 	}
 	?>
+	
 	function makeVisible(cat)
 	{
-		fields = document.getElementById('fields').getElementsByTagName('div');
-		for(i = 0; i < fields.length; i++)
-		{
-			fields[i].style.display = 'none';
-			fields[i].style.visibility = 'hidden';
-		}
+		$('#fields div').hide();
 		
-		fields = cat_columns[cat];
+		var fields = cat_columns[cat];
 		for(i = 0; i < fields.length; i++)
 		{
 			field = document.getElementById('search_' + fields[i]);
@@ -58,7 +54,7 @@ function theme_live_search()
 	}
 	
 	</script>
-	<form action="<?php print url(''); ?>" method="get">
+	<form action="<?php print url('select'); ?>" method="get">
 		<h3>Search All Available Fields:</h3>
 		Search: <input type="text" name="search" size="40" value="<?php print isset($GLOBALS['output']['search'])?$GLOBALS['output']['search']:''; ?>" /><br /><br />
 		Directory: <input type="text" name="dir" size="40" value="<?php print isset($GLOBALS['output']['dir'])?$GLOBALS['output']['dir']:''; ?>" />

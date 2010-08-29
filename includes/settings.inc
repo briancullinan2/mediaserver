@@ -10,6 +10,21 @@
  *   types will be specified in the documentation (aligns with form types), text, int, radio, checkbox)
  */
 
+function register_settings()
+{
+	return array(
+		'name' => 'General Settings',
+		'description' => 'Contains basic settings for site operation.',
+		'privilage' => 10,
+		'settings' => 'settings',
+		'package' => 'core',
+		'template' => false,
+		'depends on' => array('memory_limit', 'writable_system_files', 'pear_installed', 
+			'getid3_installed', 'curl_installed', 'extjs_installed'),
+	);
+}
+
+
 /**
  * Helper function
  */
@@ -88,7 +103,9 @@ function setup_settings()
  */
 function setting_settings()
 {
-	return array('database_reset', 'all_reset');
+	return array('database_reset', 'all_reset', 'installed', 'system_type', 'local_root', 'settings_file', 'modrewrite', 
+		'html_domain', 'html_root', 'html_name', 'debug_mode', 'recursive_get', 'no_bots', 'buffer_size', 'verbose',
+	);
 }
 
 /**
@@ -425,53 +442,290 @@ function validate_setting_all_reset($request)
 	}
 }
 
+/**
+ * @defgroup status Status Functions
+ * All functions that return the output configuration for the dependencies listed in the module's config, for use on the configuration page and the status page
+ * @param settings The request array that contains values for configuration options
+ * @return an associative array that describes the configuration options
+ * @{
+ */
+
+/**
+ * Implementation of dependencies
+ */
 function status_settings($settings)
 {
 	$status = array();
-	
-	if(setting_modrewrite($settings))
+
+	if(dependency('memory_limit'))
 	{
-		$status['modrewrite'] = array(
-			'name' => 'Mod_Rewrite Enabled',
+		$status['memory_limit'] = array(
+			'name' => 'Memory Limit',
 			'status' => '',
 			'description' => array(
 				'list' => array(
-					'The system has detected that you have mod_rewrite enabled.',
-					'Mod_rewrite is used by some templates and modules to make the paths look prettier.',
+					'The system has detected that the set memory limit is enough to function properly.',
+					'This system requires a large amount of memory for encoding and converting files, some of the third party libraries are not memory efficient.',
+					'PHP reports that the set memory_limit is ' . ini_get('memory_limit') . '.',
 				),
 			),
 			'disabled' => true,
 			'value' => array(
 				'link' => array(
-					'url' => 'http://httpd.apache.org/docs/1.3/mod/mod_rewrite.html',
-					'text' => 'Mod_Rewrite Instructions',
+					'url' => 'http://php.net/manual/en/ini.core.php',
+					'text' => 'PHP Core INI Settings',
 				),
 			),
 		);
 	}
 	else
 	{
-		$status['modrewrite'] = array(
-			'name' => 'Mod_Rewrite Enabled',
-			'status' => 'warn',
+		$status['memory_limit'] = array(
+			'name' => 'Memory Limit',
+			'status' => '',
 			'description' => array(
 				'list' => array(
-					'The system has detected that you do not have mod_rewrite enabled.  Please follow the link for instructions on enabling mod_rewrite.',
-					'Mod_rewrite is used by some templates and modules to make the paths look prettier.',
+					'The system has detected that the set memory limit is NOT ENOUGH for the system to function properly.',
+					'This system requires a large amount of memory for encoding and converting files, some of the third party libraries are not memory efficient.',
+					'PHP reports that the set memory_limit is ' . ini_get('memory_limit') . '.',
 				),
 			),
 			'disabled' => true,
 			'value' => array(
 				'link' => array(
-					'url' => 'http://httpd.apache.org/docs/1.3/mod/mod_rewrite.html',
-					'text' => 'Mod_Rewrite Instructions',
+					'url' => 'http://php.net/manual/en/ini.core.php',
+					'text' => 'PHP Core INI Settings',
 				),
 			),
 		);
 	}
 	
+	if(dependency('writable_system_files'))
+	{
+		$status['writable_system_files'] = array(
+			'name' => 'Writeable System Files',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'The system has detected that the the correct permissions are set on critical system files.',
+				),
+			),
+			'disabled' => true,
+			'value' => 'Permissions OK',
+		);
+	}
+	else
+	{
+		$status['writable_system_files'] = array(
+			'name' => 'Writeable System Files',
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					'There are permission problems with critical system files!',
+				),
+			),
+			'disabled' => true,
+			'value' => 'You must correct the following permission problems:',
+		);
+	}
+	
+	
+	// move these to proper handlers
+	$pear_libs = array('File/Archive.php' => 'File_Archive', 'MIME/Type.php' => 'MIME_Type');
+	$not_installed = array();
+	$installed = array();
+	foreach($pear_libs as $lib => $link)
+	{
+		if(include_path($lib) === false)
+		{
+			$not_installed[] = array(
+				'link' => array(
+					'url' => 'http://pear.php.net/package/' . $link,
+					'text' => $link,
+				),
+			);
+		}
+		else
+		{
+			$installed[] = array(
+				'link' => array(
+					'url' => 'http://pear.php.net/package/' . $link,
+					'text' => $link,
+				),
+			);
+		}
+	}
+	
+	if(dependency('pear_installed'))
+	{
+		$status['pear_installed'] = array(
+			'name' => 'PEAR Installed',
+			'status' => (count($not_installed) > 0)?'warn':'',
+			'description' => array(
+				'list' => array(
+					'The system has detected that PEAR is installed properly.',
+					'The PEAR library is an extensive PHP library that provides common functions for modules and modules in the site.',
+				),
+			),
+			'value' => array(
+				'text' => array(
+					'PEAR Detected',
+				),
+			),
+		);
+		
+		if(count($not_installed) > 0)
+		{
+			$status['pear_installed']['value']['text'][] = 'However, the following packages must be installed:';
+			$status['pear_installed']['value']['text'][] = array('list' => $not_installed);
+		}
+		else
+		{
+			$status['pear_installed']['value']['text'][] = 'The following required packages are also installed:';
+			$status['pear_installed']['value']['text'][] = array('list' => $installed);
+		}
+	}
+	else
+	{
+		$status['pear_installed'] = array(
+			'name' => 'PEAR Missing',
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					'The system has detected that PEAR is NOT INSTALLED.',
+					'The PEAR library is an extensive PHP library that provides common functions for modules and modules in the site.',
+				),
+			),
+			'value' => array(
+				'text' => array(
+					array(
+						'link' => array(
+							'url' => 'http://pear.php.net/',
+							'text' => 'Get PEAR',
+						),
+					),
+					'As well as the following libraries:',
+					array('list' => $not_installed),
+				),
+			),
+		);
+	}
+	
+	
+	if(dependency('getid3_installed'))
+	{
+		$status['getid3_installed'] = array(
+			'name' => 'getID3() Library',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'The system has detected that getID3() library is installed in the includes directory.',
+					'getID3() is a library for reading file headers for MP3s and many different file formats.',
+				),
+			),
+			'type' => 'label',
+			'value' => 'getID3() Library detected',
+		);
+	}
+	else
+	{
+		$status['getid3_installed'] = array(
+			'name' => 'getID3() Library Missing',
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					'The system has detected that getID3() Library is NOT INSTALLED.',
+					'The root of the getID3() library must be placed in &lt;site root&gt;/include/getid3/',
+					'getID3() is a library for reading file headers for MP3s and many different file formats.',
+				),
+			),
+			'value' => array(
+				'link' => array(
+					'url' => 'http://www.smarty.net/',
+					'text' => 'Get ID3()',
+				),
+			),
+		);
+	}
+	
+	if(dependency('curl_installed'))
+	{
+		$status['curl_installed'] = array(
+			'name' => 'cUrl API',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'The system has detected that the cUrl API is installed in the includes directory.',
+					'cUrl is an API for making connections to other sites and downloading web pages and files, this is used by the db_amazon module.',
+				),
+			),
+			'type' => 'label',
+			'value' => 'cUrl detected',
+		);
+	}
+	else
+	{
+		$status['curl_installed'] = array(
+			'name' => 'cUrl API Missing',
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					'The system has detected that the cUrl API is NOT INSTALLED.',
+					'cUrl is an API for making connections to other sites and downloading web pages and files, this is used by the db_amazon module.',
+				),
+			),
+			'value' => array(
+				'link' => array(
+					'url' => 'http://php.net/manual/en/book.curl.php',
+					'text' => 'Get cUrl',
+				),
+			),
+		);
+	}
+
+	if(dependency('extjs_installed'))
+	{
+		$status['extjs_installed'] = array(
+			'name' => 'EXT JS',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'The system has detected that EXT JS is installed in the templates/plain/extjs directory.',
+					'EXT JS is a javascript library for creating windows and toolbars in templates, this library can be used across all templates.',
+				),
+			),
+			'type' => 'label',
+			'value' => 'EXT JS Detected',
+		);
+	}
+	else
+	{
+		$status['extjs_installed'] = array(
+			'name' => 'EXT JS Missing',
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					'The system has detected that EXT JS is NOT INSTALLED.',
+					'The EXT JS root folder must be placed in &lt;site root&gt;/templates/plain/extjs/',
+					'EXT JS is a javascript library for creating windows and toolbars in templates, this library can be used across all templates.',
+				),
+			),
+			'value' => array(
+				'link' => array(
+					'url' => 'http://www.extjs.com/',
+					'text' => 'Get EXT JS',
+				),
+			),
+		);
+	}
+	
+	
 	return $status;
 }
+
+/**
+ * @}
+ */
 
 /**
  * Implementation of configure
@@ -491,7 +745,9 @@ function configure_settings($settings, $request)
 	
 	$options = array();
 	
-	$options['database_reset'] = array(
+	$reset = array();
+	
+	$reset['database_reset'] = array(
 		'name' => 'Database Settings',
 		'status' => 'warn',
 		'description' => array(
@@ -503,7 +759,7 @@ function configure_settings($settings, $request)
 		'value' => 'Reset',
 	);
 	
-	$options['all_reset'] = array(
+	$reset['all_reset'] = array(
 		'name' => 'All Settings',
 		'status' => 'fail',
 		'description' => array(
@@ -515,8 +771,18 @@ function configure_settings($settings, $request)
 		'value' => 'Reset',
 	);
 	
+	$options['reset'] =  array(
+		'name' => 'Reset Settings',
+		'type' => 'fieldset',
+		'collapsible' => true,
+		'collapsed' => true,
+		'options' => $reset
+	);
+	
+	$general = array();
+	
 	// system type
-	$options['system_type'] = array(
+	$general['system_type'] = array(
 		'name' => lang('system type title', 'System Type'),
 		'status' => '',
 		'description' => array(
@@ -536,7 +802,7 @@ function configure_settings($settings, $request)
 	
 	
 	// domain and root
-	$options['html_domain'] = array(
+	$general['html_domain'] = array(
 		'name' => lang('html domain title', 'HTML Domain'),
 		'status' => '',
 		'description' => array(
@@ -549,7 +815,7 @@ function configure_settings($settings, $request)
 		'value' => $settings['html_domain'],
 	);
 
-	$options['html_root'] = array(
+	$general['html_root'] = array(
 		'name' => lang('html root title', 'HTML Root'),
 		'status' => '',
 		'description' => array(
@@ -565,7 +831,7 @@ function configure_settings($settings, $request)
 	);
 
 	// site name
-	$options['html_name'] = array(
+	$general['html_name'] = array(
 		'name' => lang('html name title', 'Site Name'),
 		'status' => '',
 		'description' => array(
@@ -577,7 +843,7 @@ function configure_settings($settings, $request)
 		'value' => $settings['html_name'],
 	);
 	
-	$options['debug_mode'] = array(
+	$general['debug_mode'] = array(
 		'name' => lang('debug mode title', 'Debug Mode'),
 		'status' => '',
 		'description' => array(
@@ -594,7 +860,7 @@ function configure_settings($settings, $request)
 		)
 	);
 	
-	$options['recursive_get'] = array(
+	$general['recursive_get'] = array(
 		'name' => lang('recursive get title', 'Deep Select'),
 		'status' => '',
 		'description' => array(
@@ -612,7 +878,7 @@ function configure_settings($settings, $request)
 		)
 	);
 	
-	$options['no_bots'] = array(
+	$general['no_bots'] = array(
 		'name' => lang('no bots title', 'Robots Handling'),
 		'status' => '',
 		'description' => array(
@@ -629,7 +895,7 @@ function configure_settings($settings, $request)
 		)
 	);
 	
-	$options['buffer_size'] = array(
+	$general['buffer_size'] = array(
 		'name' => lang('buffer size title', 'Buffer Size'),
 		'status' => '',
 		'description' => array(
@@ -639,6 +905,13 @@ function configure_settings($settings, $request)
 		),
 		'type' => 'filesize',
 		'value' => $settings['buffer_size'],
+	);
+	
+	$options['general'] =  array(
+		'name' => 'General Settings',
+		'type' => 'fieldset',
+		'collapsible' => true,
+		'options' => $general
 	);
 	
 	return $options;

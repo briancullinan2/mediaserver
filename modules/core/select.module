@@ -14,15 +14,6 @@ function menu_select()
 	);
 }
 
-
-function rewrite_select($path_info)
-{
-	$request = invoke_module('rewrite', 'default', array($path_info));
-	// do directory aliasing here?
-	
-	return $request;
-}
-
 /**
  * Implementation of validate
  * @ingroup validate
@@ -317,7 +308,7 @@ function filter_order_by($request)
 	
 	// relevance is handled below
 	if($request['order_by'] == 'Relevance')
-		return array('order' => 'Filepath DESC');
+		return array('order' => 'Relevance DESC,Filepath DESC');
 	else
 	{
 		if(isset($request['order_trimmed']) && $request['order_trimmed'] == true)
@@ -408,6 +399,71 @@ function session_select($request)
 	return $save;
 }
 
+function get_select_breadcrumbs($request)
+{
+	$request['handler'] = validate($request, 'handler');
+	$breadcrumbs = array();
+	$crumbs = isset($request['dir'])?split('/', $request['dir']):array('');
+	$cwd = '';
+	foreach($crumbs as $i => $dir)
+	{
+		if($dir != '')
+		{
+			$cwd .= (($cwd != '')?'/':'') . $dir;
+			if(handles($cwd, $request['handler']))
+				$path = 'select/' . $request['handler'] . urlencode_path($cwd . '/');
+			else
+				$path = 'select/files/' . urlencode_path($cwd . '/');
+				
+			$breadcrumbs[$path] = array(
+				'name' => ucwords($dir),
+			);
+		}
+	}
+
+	return $breadcrumbs;
+}
+
+function get_select_pages($start, $limit, $total_count)
+{
+	$pages = array();
+	
+	// return here if all the results fit on one page
+	if($total_count < $limit)
+		return $pages;
+	
+	$current_page = round($start / $limit);
+	$last_page = floor($total_count / $limit);
+	
+	// if it is not on the first page, add a first link
+	$pages[] = array('First', 'start=0');
+
+	// if it is not on the first page, add previon link
+	if($current_page > 1)
+		$pages[] = array('Prev', 'start=' . ($current_page-1)*$limit);
+	
+	// add numeric pages in between
+	for($i = 0; $i <= $last_page; $i++)
+	{
+		if($i == $current_page)
+			$pages[] = array(($i+1), 'start=' . $i * $limit, false);
+		else
+			$pages[] = array(($i+1), 'start=' . $i * $limit);
+	}
+	
+	// if it before the last page, add a next link
+	if($current_page < $last_page - 1)
+		$pages[] = array('Next', 'start=' . ($current_page+1)*$limit);
+
+	// if it is not on the last page, add a last link
+	$pages[] = array('Last', 'start=' . $last_page * $limit);
+		
+	// add convenience stuff to array since this is an API after all
+	foreach($pages as $key => $page) { $pages[$key]['name'] = $page[0]; $pages[$key]['href'] = $page[1]; }
+	
+	return $pages;
+}
+
 /**
  * Implementation of output
  * @ingroup output
@@ -425,13 +481,10 @@ function output_select($request)
 	
 	// discard selected stuff here, we want to show a full list, the selected stuff is just for saving in the session
 	//   in order to list the selected stuff only, one should use the list.php module
-	if(isset($request['module']) && $request['module'] == 'select')
-	{
-		if(isset($request['selected'])) unset($request['selected']);
-		if(isset($request['item'])) unset($request['item']);
-		if(isset($request['id'])) unset($request['id']);
-	}
-	
+	if(isset($request['selected'])) unset($request['selected']);
+	if(isset($request['item'])) unset($request['item']);
+	if(isset($request['id'])) unset($request['id']);
+
 	// make select call
 	$files = get_files($request, $total_count);
 	
@@ -450,4 +503,10 @@ function output_select($request)
 	register_output_vars('group_index', $request['group_index']);
 	register_output_vars('start', $request['start']);
 	register_output_vars('limit', $request['limit']);
+	
+	// output page links based on start and limit
+	register_output_vars('pages', get_select_pages($request['start'], $request['limit'], $total_count));
+	
+	// output breadcrumbs
+	register_output_vars('breadcrumbs', get_select_breadcrumbs($request));
 }

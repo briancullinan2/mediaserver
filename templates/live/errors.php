@@ -64,18 +64,6 @@ function theme_live_errors_block()
 {
 	$error_list = array('warn_errors', 'user_errors', 'note_errors');
 	
-	if(
-		(
-			count($GLOBALS['warn_errors']) > 0 || count($GLOBALS['user_errors']) > 0 || count($GLOBALS['note_errors']) > 0
-		) &&
-		(
-			!isset($GLOBALS['output']['errors_only']) || $GLOBALS['output']['errors_only'] == false
-		)
-	)
-	{
-		?><div class="titlePadding"></div><?php
-	}
-	
 	$has_errors = false;
 	foreach($error_list as $i => $errors)
 	{

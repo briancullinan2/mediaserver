@@ -1,0 +1,6 @@
+name = Aliasing
+description = Alias the paths from the filesystem to display as differen/less complicated paths when shown to the users.
+privilage = 10
+template = true
+package = core
+settings = admin_alias

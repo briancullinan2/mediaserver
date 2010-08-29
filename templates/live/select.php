@@ -1,5 +1,38 @@
 <?php
 
+function theme_live_select()
+{
+	$current = isset($GLOBALS['output']['html']['dir'])?ucwords(basename($GLOBALS['output']['html']['dir'])):'';
+	
+	$description = 'Click to browse files. Drag to select files, and right click for download options.';
+	if(count($GLOBALS['user_errors']) == 0 && count($GLOBALS['output']['files']) > 0)
+	{
+		$description .= '<br />Displaying items ' . ($GLOBALS['output']['html']['start']+1) .
+			' through ' . min($GLOBALS['output']['start'] + count($GLOBALS['output']['files']), $GLOBALS['output']['start'] + $GLOBALS['output']['limit']) . 
+			' out of ' . $GLOBALS['output']['html']['total_count'] . ' file(s).';
+	}
+	
+	theme('header',
+		($current == '')?setting('html_name'):$current,
+		$description
+	);
+	
+	
+	theme('pages');
+	
+	?>
+	<div class="titlePadding"></div>
+	<?php
+	
+	theme('files', $GLOBALS['output']['files']);
+
+	theme('pages');
+	
+	theme('info', $GLOBALS['output']['files'], $GLOBALS['output']['columns']);
+
+	theme('footer');
+}
+
 function theme_live_select_block()
 {
 	?>
@@ -96,30 +129,38 @@ function theme_live_select_block()
 	?></div><?php
 }
 
-function theme_live_files()
+function theme_live_files($files = NULL)
 {
-	if(!isset($GLOBALS['output']['files']) || count($GLOBALS['output']['files']) == 0)
+	if(!isset($files) || count($files) == 0)
 	{
 		?><b>There are no files to display</b><?php
 	}
 	else
 	{
 		$scheme = live_get_scheme();
-		if($scheme == 'image')
+		if($scheme == 'image' && is_module('convert'))
 		{
-			?><img src="<?php print url('convert/png?cheight=500&cwidth=500&id=' . $GLOBALS['output']['files'][0]['id']); ?>" />
+			?><img id="preview" src="<?php print url('convert/png?cheight=500&cwidth=500&id=' . $files[0]['id']); ?>" />
 			<div class="filestrip">
 			<div class="files" id="files" style="width:4160px;"><?php
-			foreach($GLOBALS['output']['files'] as $i => $file)
+			foreach($files as $i => $file)
 			{
-				theme('file', $file);
+				// check if we should use an image with preview instead of usual file
+				if(handles($file['Filepath'], 'image'))
+				{
+					theme('file_preview', $file);
+				}
+				else
+				{
+					theme('file', $file, $GLOBALS['output']['handler']);
+				}
 			}
 			?></div></div><?php
 		}
 		else
 		{
 			?><div class="files" id="files"><?php
-			foreach($GLOBALS['output']['files'] as $i => $file)
+			foreach($files as $i => $file)
 			{
 				theme('file', $file);
 			}
@@ -128,7 +169,29 @@ function theme_live_files()
 	}
 }
 
-function theme_live_file($file)
+function theme_live_file_preview($file)
+{
+	$html = live_alter_file($file);
+	
+	$link = "$('#preview').attr('src', '" . url('convert/png?cheight=500&cwidth=500&id=' . $html['id']) . "')";
+	
+	?>
+	<div class="file <?php print $html['Filetype']; ?>" onmousedown="deselectAll(event);fileSelect(this, true, event);return false;" oncontextmenu="showMenu(this);return false;" id="<?php print $html['id']; ?>"><div class="notselected"></div>
+		<table class="itemTable" cellpadding="0" cellspacing="0" onclick="<?php print $link; ?>">
+			<tr>
+				<td>
+					<div class="thumb file_ext_<?php print $html['Filetype']; ?> file_type_<?php print isset($html['Filemime'])?str_replace('/', ' file_type_', $html['Filemime']):''; ?>">
+						<img src="<?php print url('template/live/images/s.gif'); ?>" alt="<?php print $html['Filetype']; ?>" style="background-image:url(<?php print url('convert/png?cheight=56&cwidth=56&id=' . $html['id']); ?>);" height="48" width="48">
+					</div>
+				</td>
+			</tr>
+		</table>
+		<a class="itemLink" href="javascript:void(0);" onclick="<?php print $link; ?>; return false;" onmouseout="this.parentNode.firstChild.className = 'notselected'; if(!loaded){return false;} document.getElementById('info_<?php print $html['id']; ?>').style.display = 'none';document.getElementById('info_<?php print $html['id']; ?>').style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.className = 'selected'; if(!loaded){return false;} document.getElementById('info_<?php print $html['id']; ?>').style.display = '';document.getElementById('info_<?php print $html['id']; ?>').style.visibility = 'visible'; return true;"><span><?php print $html['Filename']; ?></span></a>
+	</div>
+	<?php
+}
+
+function theme_live_file($file, $current_handler = 'files')
 {
 	$html = live_alter_file($file);
 	
@@ -136,9 +199,9 @@ function theme_live_file($file)
 	if(handles($file['Filepath'], 'archive')) $handler = 'archive';
 	elseif(handles($file['Filepath'], 'playlist')) $handler = 'playlist';
 	elseif(handles($file['Filepath'], 'diskimage')) $handler = 'diskimage';
-	else $handler = $GLOBALS['output']['handler'];
+	else $handler = $current_handler;
 	
-	if($GLOBALS['output']['handler'] != $handler || $file['Filetype'] == 'FOLDER')
+	if($current_handler != $handler || $file['Filetype'] == 'FOLDER')
 	{
 		if(substr($file['Filepath'], -1) != '/') $file['Filepath'] .= '/';
 		$new_handler = $handler;
@@ -156,7 +219,7 @@ function theme_live_file($file)
 				<td>
 					<div class="thumb file_ext_<?php print $html['Filetype']; ?> file_type_<?php print isset($html['Filemime'])?str_replace('/', ' file_type_', $html['Filemime']):''; ?>">
 						<?php
-						if(handles($file['Filepath'], 'image'))
+						if(handles($file['Filepath'], 'image') && is_module('convert'))
 						{
 							?><img src="<?php print url('template/live/images/s.gif'); ?>" alt="<?php print $html['Filetype']; ?>" style="background-image:url(<?php print url('convert/png?cheight=56&cwidth=56&id=' . $html['id']); ?>);" height="48" width="48"><?php
 						}
@@ -174,50 +237,8 @@ function theme_live_file($file)
 	<?php
 }
 
-function theme_live_select()
-{
-	$current = isset($GLOBALS['output']['html']['dir'])?ucwords(basename($GLOBALS['output']['html']['dir'])):'';
-	
-	$description = 'Click to browse files. Drag to select files, and right click for download options.';
-	if(count($GLOBALS['user_errors']) == 0 && count($GLOBALS['output']['files']) > 0)
-	{
-		$description .= '<br />Displaying items ' . ($GLOBALS['output']['html']['start']+1) .
-			' through ' . min($GLOBALS['output']['start'] + count($GLOBALS['output']['files']), $GLOBALS['output']['start'] + $GLOBALS['output']['limit']) . 
-			' out of ' . $GLOBALS['output']['html']['total_count'] . ' file(s).';
-	}
-	
-	theme('header',
-		($current == '')?setting('html_name'):$current . ' : ' . setting('html_name'),
-		$description
-	);
-	
-	
-	theme('pages');
-	
-	?>
-	<div class="titlePadding"></div>
-	<?php
-	
-	theme('files');
 
-	theme('pages');
-	
-	theme('info');
-
-	?>
-<script language="javascript">
-loaded = true;
-if(document.getElementById("debug")) {
-	header_height = document.getElementById("header").clientHeight + document.getElementById("debug").clientHeight;
-} else {
-	header_height = document.getElementById("header").clientHeight;}
-</script>
-<?php
-	theme('footer');
-}
-
-
-function theme_live_info()
+function theme_live_info($files = array(), $columns = array())
 {
 	$colors = live_get_colors();
 
@@ -230,12 +251,12 @@ function theme_live_info()
 <tr>
 	<td id="infoBar" style="background-color:<?php print $colors['bg']; ?>; height:<?php print max($biggest+3, 7); ?>em;">
 	<?php
-	if(!isset($GLOBALS['output']['files']))
-		return;
-	foreach($GLOBALS['output']['files'] as $i => $file)
+	foreach($files as $i => $file)
 	{
+		$html = live_alter_file($file);
+					
 		$info_count = 0;
-		foreach($GLOBALS['output']['columns'] as $j => $column)
+		foreach($columns as $j => $column)
 		{
 			if(isset($file[$column]) && $file[$column] != '' && strlen($file[$column]) <= 200 &&
 				substr($column, -3) != '_id' && $column != 'id' && $column != 'Hex' && $column != 'Filepath' && 
@@ -255,13 +276,13 @@ function theme_live_info()
 					<table cellpadding="0" cellspacing="0" border="0" class="fileThumb">
 						<tr>
 							<td>
-								<div class="thumb file_ext_<?php print $file['Filetype']; ?> file_type_<?php print isset($file['Filemime'])?str_replace('/', ' file_type_', $file['Filemime']):''; ?>">
+								<div class="thumb file_ext_<?php print $html['Filetype']; ?> file_type_<?php print isset($html['Filemime'])?str_replace('/', ' file_type_', $html['Filemime']):''; ?>">
 									<img src="<?php print url('template/live/images/s.gif'); ?>" height="48" width="48">
 								</div>
 							</td>
 							<td class="infoCell">
-								<span class="title"><?php print $GLOBALS['output']['html']['files'][$i]['Filename']; ?></span><br />
-								<span><?php print $GLOBALS['output']['html']['files'][$i]['Filetype']; ?></span>
+								<span class="title"><?php print $html['Filename']; ?></span><br />
+								<span><?php print $html['Filetype']; ?></span>
 							</td>
 						</tr>
 					</table>
@@ -269,7 +290,7 @@ function theme_live_info()
 				<td>
 				<?php
 				$count = 0;
-				foreach($GLOBALS['output']['columns'] as $j => $column)
+				foreach($columns as $j => $column)
 				{
 					if(isset($file[$column]) && $file[$column] != '' && strlen($file[$column]) <= 200 &&
 						substr($column, -3) != '_id' && $column != 'id' && $column != 'Hex' && 
@@ -278,18 +299,18 @@ function theme_live_info()
 					{
 						$count++;
 						?>
-						<span class="label" style="color:<?php print ($theme == 'audio')?'#F66':(($theme == 'image')?'#FFA':(($theme == 'video')?'#6FA':'#6CF')); ?>;"><?php print $column; ?>:</span>
+						<span class="label" style="color:<?php print $colors['fg']; ?>;"><?php print htmlspecialchars($column); ?>:</span>
 						<?php
 						
 						if($column == 'Filepath')
 						{
 							if(dirname(dirname($file['Filepath'])) != '/')
-								print '../../' . basename(dirname($file['Filepath'])) . '/' . basename($file['Filepath']);
+								print '../../' . basename(dirname($html['Filepath'])) . '/' . basename($html['Filepath']);
 							else
-								print $GLOBALS['output']['html']['files'][$i]['Filepath'];
+								print $html['Filepath'];
 						}
 						else
-							print $GLOBALS['output']['html']['files'][$i][$column];
+							print $html[$column];
 						?>
 						<br />
 						<?php

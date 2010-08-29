@@ -35,7 +35,6 @@ function setup_watched()
 function handles_watched($dir)
 {
 	$dir = str_replace('\\', '/', $dir);
-	if(setting('admin_alias_enable')) $dir = preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $dir);
 
 	if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $dir)))
 	{
