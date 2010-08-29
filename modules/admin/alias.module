@@ -19,6 +19,50 @@ function validate_add_alias($request)
 }
 
 /**
+ * Implementation of validate
+ * @ingroup validate
+ */
+function validate_remove_alias($request)
+{
+	if(isset($request['remove_alias']))
+	{
+		// if it is an array because the button value is set to text instead of the index
+		if(is_array($request['remove_alias']))
+		{
+			$keys = array_keys($request['remove_alias']);
+			$request['remove_alias'] = $keys[0];
+		}
+			
+		if(is_numeric($request['remove_alias']) && $request['remove_alias'] >= 0 && 
+			$request['remove_alias'] < setting('alias_rules')
+		)
+			return $request['remove_alias'];
+	}
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ */
+function validate_edit_alias($request)
+{
+	if(isset($request['edit_alias']))
+	{
+		// if it is an array because the button value is set to text instead of the index
+		if(is_array($request['edit_alias']))
+		{
+			$keys = array_keys($request['edit_alias']);
+			$request['edit_alias'] = $keys[0];
+		}
+			
+		if(is_numeric($request['edit_alias']) && $request['edit_alias'] >= 0 &&
+			$request['edit_alias'] < setting('alias_rules')
+		)
+			return $request['edit_alias'];
+	}
+}
+
+/**
  * Implementation of status
  * @ingroup status
  */
@@ -133,7 +177,9 @@ function session_alias($request)
 	if(isset($request['add_alias']))
 	{
 		$new_alias = setting_alias(array('alias_0' => $request['add_alias']), 0);
-		if(isset($new_alias))
+		if(isset($new_alias) && isset($request['edit_alias']))
+			$save['alias_rules'][$request['edit_alias']] = $new_alias;
+		else
 			$save['alias_rules'][] = $new_alias;
 	}
 
@@ -147,7 +193,7 @@ function session_alias($request)
 	return $save;
 }
 
-function configure_alias($settings)
+function configure_alias($settings, $request)
 {
 	$settings['alias_rules'] = setting('alias_rules');
 	
@@ -209,10 +255,10 @@ function configure_alias($settings)
 		$options['manage_aliases']['options'] = $alias_options;
 	}
 	
-	// TODO: put add server removed from request here
-	//   using GLOBALS['validated'] == false
-	//  raise_error('Server was not added due to errors')
-	//  put original values back in?
+	if(isset($request['edit_alias']))
+		$current_alias = $settings['alias_rules'][$request['edit_alias']];
+	else
+		$current_alias = array('paths' => '', 'alias' => '', 'paths_replace' => '', 'alias_replace' => '');
 	
 	$options['alias_rules'] = array(
 		'name' => 'Add Aliasing Rule',
@@ -227,7 +273,7 @@ function configure_alias($settings)
 			'add_alias[paths]' => array(
 				'type' => 'text',
 				'name' => 'Paths',
-				'value' => '',
+				'value' => $current_alias['paths'],
 			),
 			array(
 				'value' => '<br />'
@@ -235,7 +281,7 @@ function configure_alias($settings)
 			'add_alias[alias]' => array(
 				'type' => 'text',
 				'name' => 'Alias',
-				'value' => '',
+				'value' => $current_alias['alias'],
 			),
 			array(
 				'value' => '<br />'
@@ -243,7 +289,7 @@ function configure_alias($settings)
 			'add_alias[paths_replace]' => array(
 				'type' => 'text',
 				'name' => 'Path Match',
-				'value' => '',
+				'value' => $current_alias['paths_replace'],
 			),
 			array(
 				'value' => '<br />'
@@ -251,17 +297,20 @@ function configure_alias($settings)
 			'add_alias[alias_replace]' => array(
 				'type' => 'text',
 				'name' => 'Alias Match',
-				'value' => '',
+				'value' => $current_alias['alias_replace'],
 			),
 			array(
 				'value' => '<br />'
 			),
 			'add_alias[save]' => array(
 				'type' => 'submit',
-				'value' => 'Add Alias',
+				'value' => isset($request['edit_alias'])?'Save Alias':'Add Alias',
 			),
 		),
 	);
+	
+	if(isset($request['edit_alias']))
+		$options['alias_rules']['options']['edit_alias'] = array('type' => 'hidden', 'value' => $request['edit_alias']);
 	
 	// add unsettings
 	for($i = 0; $i < $rule_count - count($settings['alias_rules']); $i++)

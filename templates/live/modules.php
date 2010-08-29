@@ -31,7 +31,7 @@ function theme_live_admin_module_configure()
 		));
 		
 	print_form_object('setting', array(
-		'action' => url('module=modules&configure_module=' . $GLOBALS['output']['configure_module'], true),
+		'action' => url('admin/module/' . $GLOBALS['output']['configure_module'], true),
 		'options' => $GLOBALS['output']['options'],
 		'type' => 'form',
 	));
