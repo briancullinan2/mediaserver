@@ -181,7 +181,7 @@ function is_watched($dir)
 		}
 		// check if aliasing is used, if not, 
 		//   also watch the directories leading up to watched directories, but nothing else
-		if(!setting('admin_alias_enable') && substr($watch['Filepath'], 0, strlen($dir)) == $dir &&
+		if(!setting('alias_enable') && substr($watch['Filepath'], 0, strlen($dir)) == $dir &&
 			is_dir($dir)
 		)
 			$is_watched = true;

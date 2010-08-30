@@ -162,7 +162,7 @@ function handles($file, $handler = 'files')
 		return false;
 	
 	// replace the file alias with actual path
-	if(setting('admin_alias_enable')) $file = alias_replace($file);
+	if(setting('alias_enable')) $file = alias_replace($file);
 		
 	// check the handles_ function	
 	if($handler == 'files')

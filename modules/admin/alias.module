@@ -1,5 +1,19 @@
 <?php
 
+// handle selecting of files
+function menu_alias()
+{
+	return array(
+		'admin/aliasing' => array(
+			'callback' => 'output_module',
+			'template' => 'module',
+			'arguments' => array(
+				'configure_module' => 'alias',
+			),
+		),
+	);
+}
+
 
 /**
  * Implementation of validate
@@ -167,6 +181,62 @@ function setting_alias_rules($settings)
 	return array_values($settings['alias_rules']);
 }
 
+function setting_paths_match($settings)
+{
+	$paths_match = array();
+	
+	for($i = 0; $i < 100; $i++)
+	{
+		$alias = setting_alias($settings, $i);
+		if(isset($alias))
+			$paths_match[] = $alias['paths_replace'];
+	}
+	
+	return $paths_match;
+}
+
+function setting_alias_match($settings)
+{
+	$alias_match = array();
+	
+	for($i = 0; $i < 100; $i++)
+	{
+		$alias = setting_alias($settings, $i);
+		if(isset($alias))
+			$alias_match[] = $alias['alias_replace'];
+	}
+	
+	return $alias_match;
+}
+
+function setting_replace_alias($settings)
+{
+	$aliases = array();
+	
+	for($i = 0; $i < 100; $i++)
+	{
+		$alias = setting_alias($settings, $i);
+		if(isset($alias))
+			$aliases[] = $alias['alias'];
+	}
+	
+	return $aliases;
+}
+function setting_replace_paths($settings)
+{
+	$replace_paths = array();
+	
+	for($i = 0; $i < 100; $i++)
+	{
+		$alias = setting_alias($settings, $i);
+		if(isset($alias))
+			$replace_paths[] = $alias['paths'];
+	}
+	
+	return $replace_paths;
+}
+
+
 function session_alias($request)
 {
 	// might be configuring the module
@@ -200,7 +270,7 @@ function configure_alias($settings, $request)
 	// store count for unsetting
 	$rule_count = count($settings['alias_rules']);
 	
-	if($session_alias = session('admin_alias'))
+	if($session_alias = session('alias'))
 	{
 		// load aliases from session
 		$settings['alias_rules'] = $session_alias['alias_rules'];
@@ -330,6 +400,12 @@ function configure_alias($settings, $request)
 
 function alias_replace($file)
 {
-	return preg_replace($GLOBALS['alias_regexp'], $GLOBALS['paths'], $file);
+	return preg_replace(setting('alias_match'), setting('replace_paths'), $file);
 }
+
+function paths_replace($file)
+{
+	return preg_replace(setting('paths_match'), setting('replace_alias'), $file);
+}
+
 

@@ -1,3 +1,7 @@
+2010-08-29
+Readded modules
+Finished alias configuration
+
 2010-08-24
 Refactored all alter_query code, now uses database filter_() functions
 Reorganized other database code in to sql_() functions

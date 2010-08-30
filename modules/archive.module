@@ -382,7 +382,7 @@ function output_archive($file)
 {
 	$file = str_replace('\\', '/', $file);
 	
-	if(setting('admin_alias_enable'))
+	if(setting('alias_enable'))
 		$file = alias_replace($file);
 	
 	$files = db_assoc('SELECT * FROM archive WHERE Filepath=? LIMIT 1', array($file));

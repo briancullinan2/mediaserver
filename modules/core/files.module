@@ -77,7 +77,7 @@ function validate_dir($request)
 			$request['dir'] = '/' . $request['dir'];
 		
 		// replace directory with actual path
-		if(setting('admin_alias_enable'))
+		if(setting('alias_enable'))
 			$tmp = alias_replace($request['dir']);
 		else
 			$tmp = $request['dir'];
@@ -111,7 +111,7 @@ function validate_file($request)
 	if(isset($request['file']))
 	{
 		$request['handler'] = validate($request, 'handler');
-		if(setting('admin_alias_enable'))
+		if(setting('alias_enable'))
 			$tmp = alias_replace($request['file']);
 		if(is_file(realpath($tmp)) || handles($request['file'], $request['handler']) == true)
 			return $request['file'];
@@ -218,7 +218,7 @@ function filter_file($request)
 		if($request['file'][0] == DIRECTORY_SEPARATOR) $request['file'] = realpath('/') . substr($request['file'], 1);
 		
 		// replace aliased path with actual path
-		if(setting('admin_alias_enable'))
+		if(setting('alias_enable'))
 			$request['file'] = alias_replace($request['file']);
 			
 		// if the id is available, try to use that instead
@@ -251,7 +251,7 @@ function filter_dir($request)
 		$request['dir'] = str_replace('\\', '/', $request['dir']);
 		
 		// replace aliased path with actual path
-		if(setting('admin_alias_enable'))
+		if(setting('alias_enable'))
 			$request['dir'] = alias_replace($request['dir']);
 			
 		// maybe the dir is not loaded yet, this part is costly but it is a good way to do it
@@ -415,7 +415,7 @@ function output_handler($file, $handler)
 	{
 		$file = str_replace('\\', '/', $file);
 		
-		if(setting('admin_alias_enable'))
+		if(setting('alias_enable'))
 			$file = alias_replace($file);
 		
 		// load file from file system
@@ -596,11 +596,24 @@ function get_files($request, &$count)
 	
 	// if using the database
 	if(setting('database_enable') && setting_installed())
-		return _get_database_files($request, $count);
+		$files = _get_database_files($request, $count);
 	elseif(setting_installed())
-		return _get_local_files($request, $count);
+		$files = _get_local_files($request, $count);
 	else
 		raise_error('get_files() called without any acceptable intention!', E_DEBUG);
+		
+	// do alterations
+	if(isset($files))
+	{
+		foreach($files as $i => $file)
+		{
+			$files[$i]['Filepath'] = paths_replace($file['Filepath']);
+			// check if the replaced path was the entire alias path
+			// in this case we want to replace the filename with the alias name
+			$files[$i]['Filename'] = basename($files[$i]['Filepath']);
+		}
+		return $files;
+	}
 }
 
 function _get_database_files($request, &$count)
@@ -913,7 +926,7 @@ function cleanup($handler = 'files')
 				// if using aliases then only add the revert from the watch directory to the alias
 				// ex. Watch = /home/share/Pictures/, Alias = /home/share/ => /Shared/
 				//     only /home/share/ is added here
-				if((!setting('admin_alias_enable') || in_array($curr_dir, $GLOBALS['paths']) !== false))
+				if((!setting('alias_enable') || in_array($curr_dir, $GLOBALS['paths']) !== false))
 				{
 					// this allows for us to make sure that at least the beginning 
 					//   of the path is an aliased path
@@ -922,13 +935,13 @@ function cleanup($handler = 'files')
 					if(!in_array($curr_dir, $directories))
 					{
 						$directories[] = $curr_dir;
-						// if the setting('admin_alias_enable') is true this will only add the folder
+						// if the setting('alias_enable') is true this will only add the folder
 						//    if it is in the list of aliases
 						$watched_to_where .= ' Filepath != "' . addslashes($curr_dir) . '" AND';
 					}
 				}
 				// but make an exception for folders between an alias and the watch path
-				elseif(setting('admin_alias_enable') && $between && !in_array($curr_dir, $directories))
+				elseif(setting('alias_enable') && $between && !in_array($curr_dir, $directories))
 				{
 					$directories[] = $curr_dir;
 					

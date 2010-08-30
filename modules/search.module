@@ -17,8 +17,8 @@ function setup_search()
  */
 function dependency_search($settings)
 {
-	if(dependency('admin_alias') != false)
-		return array('database', 'admin_alias');
+	if(dependency('alias') != false)
+		return array('database', 'alias');
 	else
 		return array('database');
 }
@@ -246,7 +246,7 @@ function filter_search($request, &$props)
 			$search = substr($search, 1, -1);
 		
 		// incase an aliased path is being searched for replace it here too!
-		if(setting('admin_alias_enable') == true)
+		if(setting('alias_enable'))
 			$search = alias_replace($search);
 		
 		if($type == 'normal')

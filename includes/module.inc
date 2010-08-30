@@ -815,7 +815,7 @@ function module_get_new_settings($request)
 			$new_settings[substr($setting, 8)] = $value;
 		}
 	}
-	
+
 	foreach($new_settings as $setting => $value)
 	{
 		// validate the attempted setting
@@ -827,6 +827,7 @@ function module_get_new_settings($request)
 			raise_error('Setting_ function for \'' . $setting . '\' does not exist!', E_DEBUG);
 			
 		// make sure the new setting is different from the current setting
+print_r(setting($setting));
 		if($new_setting != setting($setting))
 		{
 			$settings_changed = true;
@@ -863,8 +864,10 @@ function output_module($request)
 		{
 			module_save_settings($GLOBALS['settings'], true);
 		}
+		else
+			raise_error('No settings changed.', E_WARN);
 	}
-	
+
 	// output error if can't write to settings
 	if(dependency('writable_settings') == false)
 		raise_error('Cannot save changes made on this page, the settings file is not writable!', E_USER);

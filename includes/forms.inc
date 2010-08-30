@@ -142,7 +142,7 @@ function print_form_object($field_name, $config)
 					?></legend><?php
 				}
 				
-				?><table id="fieldset_<?php print $id; ?>" <?php print (isset($config['collapsed']) && $config['collapsed'] == true)?'style="display:none;"':''; ?> border="0" cellpadding="0" cellspacing="0"><?php
+				?><table id="fieldset_<?php print $field_name; ?>" <?php print (isset($config['collapsed']) && $config['collapsed'] == true)?'style="display:none;"':''; ?> border="0" cellpadding="0" cellspacing="0"><?php
 	
 				foreach($config['options'] as $name => $field)
 				{

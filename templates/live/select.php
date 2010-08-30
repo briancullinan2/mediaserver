@@ -13,7 +13,7 @@ function theme_live_select()
 	}
 	
 	theme('header',
-		($current == '')?setting('html_name'):$current,
+		($current == '')?'Select Files':$current,
 		$description
 	);
 	

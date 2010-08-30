@@ -229,7 +229,7 @@ function output_convert($request)
 			$request['cwidth'] = $files[0]['Width'];
 		
 		// set the file variable
-		if(setting('admin_alias_enable'))
+		if(setting('alias_enable'))
 			$request['cfile'] = alias_replace($files[0]['Filepath']);
 		else
 			$request['cfile'] = $files[0]['Filepath'];

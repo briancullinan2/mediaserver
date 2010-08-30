@@ -217,7 +217,7 @@ function add_menu($module, $menus)
 					{
 						$menus[$current] = array(
 							'type' => MENU_LIST,
-							'name' => ucwords(str_replace('/', ' ', $current)),
+							'name' => ucwords(str_replace('/', ' ', $item)),
 							'description' => ucwords(str_replace('/', ' ', $current)) . ' Menu List',
 							'callback' => 'output_menu',
 							'module' => 'menu',
@@ -245,17 +245,16 @@ function output_breadcrumbs($current_path)
 {
 	// create a list of breadcrumbs that can be overrided by other modules
 	$breadcrumbs = array();
-	if(strpos($current_path, '%') === false)
+	$dirs = split('/', $current_path);
+	$path = '';
+	foreach($dirs as $i => $dir)
 	{
-		$dirs = split('/', $current_path);
-		$path = '';
-		foreach($dirs as $i => $dir)
-		{
-			$path .= (($path != '')?'/':'') . $dir;
+		$path .= (($path != '')?'/':'') . $dir;
+		if(isset($GLOBALS['menus'][$path]))
 			$breadcrumbs[$path] = $GLOBALS['menus'][$path];
-		}
-		register_output_vars('breadcrumbs', $breadcrumbs);
 	}
+	if(!isset($GLOBALS['output']['breadcrumbs']))
+		register_output_vars('breadcrumbs', $breadcrumbs);
 }
 
 /**
@@ -286,7 +285,7 @@ function output_menus($request)
 	}
 	register_output_vars('menus', $menus);
 	
-	output_breadcrumbs($current_path);
+	output_breadcrumbs($request['path_info']);
 }
 
 function output_menu($request)

@@ -22,6 +22,7 @@ function menu_list()
  */
 function setup_list()
 {
+	include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'theme.inc';
 	$GLOBALS['modules']['list']['lists'] = array(
 		'rss' => array(
 			'name' => 'RSS Feed',

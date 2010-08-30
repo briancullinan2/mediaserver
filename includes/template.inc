@@ -360,6 +360,8 @@ function register_output_vars($name, $value, $append = false)
 		$GLOBALS['output'][$name] = $value;
 	elseif(is_string($GLOBALS['output'][$name]))
 		$GLOBALS['output'][$name] = array($GLOBALS['output'][$name], $value);
+	elseif(is_array($GLOBALS['output'][$name]) && is_array($value))
+		$GLOBALS['output'][$name] = array_merge($GLOBALS['output'][$name], $value);
 	elseif(is_array($GLOBALS['output'][$name]))
 		$GLOBALS['output'][$name][] = $value;
 }

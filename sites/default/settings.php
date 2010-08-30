@@ -22,4 +22,10 @@ local_users = "/var/www/dev/users/"
 paths = /home/share/
 alias = /Shared/
 paths_replace = "/^\/home\/(share\/)?/i"
-alias_replace = "/^\/$|^\/Shared\//i"
+alias_replace = "/^\/Shared\//i"
+
+[alias_1]
+paths = /var/www/dev/users/
+alias = /Users/
+paths_replace = "/^\/var\/(www\/(dev\/(users\/)?)?)?/i"
+alias_replace = "/^\/Users\//i"

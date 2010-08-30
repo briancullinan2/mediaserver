@@ -4,3 +4,7 @@ privilage = 10
 template = true
 package = core
 settings = admin_alias
+session[] = add_alias
+session[] = remove_alias
+session[] = edit_alias
+session[] = reset_configuration
