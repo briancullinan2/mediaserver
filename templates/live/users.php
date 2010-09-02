@@ -3,6 +3,10 @@
 
 function theme_live_login($username = '')
 {
+	if(isset($GLOBALS['output']['return']))
+		$return = $GLOBALS['output']['return'];
+	else
+		$return = $GLOBALS['output']['get'];
 	?>	
 	<form action="<?php echo url('users/login?return=' . urlencode($return)); ?>" method="post">
 	
@@ -16,6 +20,10 @@ function theme_live_login($username = '')
 
 function theme_live_login_block($username = '', $return = '')
 {
+	if(isset($GLOBALS['output']['return']))
+		$return = $GLOBALS['output']['return'];
+	else
+		$return = $GLOBALS['output']['get'];
 	?>
 	<form action="<?php echo url('users/login?return=' . urlencode($return)); ?>" method="post">
 		<input class="stndsize" type="text" onmouseout="if(this.value=='' && !this.hasfocus) document.getElementById('username').style.visibility='visible'" onblur="this.hasfocus=false; this.onmouseout();" onfocus="this.hasfocus=true" name="username" value="<?php print $username; ?>" />

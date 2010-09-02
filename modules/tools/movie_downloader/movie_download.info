@@ -10,6 +10,4 @@ settings = movie_download
 session[] = add_movie_folder
 session[] = remove_movie_folder
 session[] = reset_configuration
-depends on[] = settings
-depends on[] = valid_movie_service
 package = tools

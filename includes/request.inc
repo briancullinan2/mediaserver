@@ -24,7 +24,7 @@ function validate($request, $key)
 		return $request[$key];
 	
 	$result = trigger_key('validate', NULL, $request, $key);
-	if($result)
+	if(isset($result))
 		return $result;
 	
 	// if a validator isn't found in the configuration

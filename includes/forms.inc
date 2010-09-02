@@ -182,7 +182,7 @@ function theme__form_object($field_name, $config)
 				theme('info_objects', $config['value']);
 		break;
 		case 'theme':
-			theme($config['value'], array('name' => $field_name) + $config);
+			theme('form_' . $config['value'], array('name' => $field_name) + $config);
 		break;
 		default:
 			if(function_exists('theme__form_' . $config['type']))
@@ -197,24 +197,6 @@ function theme__form_object($field_name, $config)
 	if(isset($config['description']))
 	{
 		theme('info_objects', $config['description']);
-	}
-}
-
-function theme__form_tableset($options)
-{
-	foreach($options as $name => $field)
-	{
-		?>
-		<tr class="form-row <?php print $field['status']; ?>" id="row_<?php print $name; ?>">
-			<td class="form-title"><?php print $field['name']; ?></td>
-			<td class="form-field">
-			<?php theme('form_objects', array($name => array('name' => NULL, 'description' => NULL) + $field)); ?>
-			</td>
-			<td class="form-desc">
-			<?php theme('info_objects', $field['description']); ?>
-			</td>
-		</tr>
-		<?php
 	}
 }
 
@@ -236,6 +218,24 @@ function theme__form_objects($form)
 		{
 			theme('form_object', $field_name, $config);
 		}
+	}
+}
+
+function theme__form_tableset($options)
+{
+	foreach($options as $name => $field)
+	{
+		?>
+		<tr class="form-row <?php print $field['status']; ?>" id="row_<?php print $name; ?>">
+			<td class="form-title"><?php print $field['name']; ?></td>
+			<td class="form-field">
+			<?php theme('form_objects', array($name => array('name' => NULL, 'description' => NULL) + $field)); ?>
+			</td>
+			<td class="form-desc">
+			<?php theme('info_objects', $field['description']); ?>
+			</td>
+		</tr>
+		<?php
 	}
 }
 

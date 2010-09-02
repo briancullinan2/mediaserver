@@ -12,49 +12,6 @@ function menu_movie_download()
 	);
 }
 
-/**
- * Implementation of dependency
- * @ingroup dependency
- */
-function dependency_valid_movie_service($settings)
-{
-	// check that there is services installed
-	if(dependency('all_nzbservices'))
-	{
-		// check that there is a service configured
-		$services = setting('nzbservices');
-		
-		// loop through NZB services until we find the show
-		foreach($services as $i => $config)
-		{
-			$search = setting('nzb_movie_search_' . $i);
-			
-			// all it takes is one
-			if($search != '')
-				return true;
-		}
-	}
-	
-	// check if there is a torrent service available
-	if(dependency('all_torservices'))
-	{
-		// check that there is a service configured
-		$services = setting('torservices');
-		
-		// loop through NZB services until we find the show
-		foreach($services as $i => $config)
-		{
-			$search = setting('tor_movie_search_' . $i);
-			
-			// all it takes is one
-			if($search != '')
-				return true;
-		}
-	}
-	
-	return false;
-}
-
 function setup_movie_download()
 {
 	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'mvdl.singular.inc';
@@ -232,34 +189,34 @@ function validate_movie_download($request, $index)
  * Implementation of validate
  * @ingroup validate
  */
-function validate_manual_search($request)
+function validate_movie_search($request)
 {
-	if(isset($request['manual_search']) && is_string($request['manual_search']))
-		return generic_validate_all_safe($request, 'manual_search');
+	if(isset($request['movie_search']) && is_string($request['movie_search']))
+		return generic_validate_all_safe($request, 'movie_search');
 	
-	if(!isset($request['manual_search']['search']))
+	if(!isset($request['movie_search']['search']))
 		return;
 		
-	if(isset($request['manual_search']['text']))
-		return $request['manual_search']['text'];
+	if(isset($request['movie_search']['text']))
+		return $request['movie_search']['text'];
 }
 
 /**
  * Implementation of validate
  * @ingroup validate
  */
-function validate_manual_search_torindex($request)
+function validate_movie_search_torindex($request)
 {
-	return generic_validate_numeric($request, 'manual_search_torindex');
+	return generic_validate_numeric($request, 'movie_search_torindex');
 }
 
 /**
  * Implementation of validate
  * @ingroup validate
  */
-function validate_manual_search_nzbindex($request)
+function validate_movie_search_nzbindex($request)
 {
-	return generic_validate_numeric($request, 'manual_search_nzbindex');
+	return generic_validate_numeric($request, 'movie_search_nzbindex');
 }
 
 /**
@@ -312,7 +269,7 @@ function configure_movie_download($settings)
 	
 	$feeds = array();
 	
-	$feeds['netflix_xml'] = array(
+	$feeds['setting_netflix_xml'] = array(
 		'name' => 'Netflix XML Q',
 		'status' => '',
 		'description' => array(
@@ -435,15 +392,15 @@ function configure_movie_download($settings)
 function output_movie_download($request)
 {
 	// save the manual search to use later
-	if(isset($request['manual_search']))
-		session('movies_manual_search', $request['manual_search']);
+	if(isset($request['movie_search']))
+		session('movie_search', $request['movie_search']);
 	else
-		$request['manual_search'] = session('movies_manual_search');
+		$request['movie_search'] = session('movie_search');
 
 	$infos = array();
 
 	// output configuration link
-	raise_error('You may need to <a href="' . url('admin/module/movie_downloader') . '">configure</a> this tool in order to use it properly.', E_WARN);
+	raise_error('You may need to <a href="' . url('admin/module/movie_download') . '">configure</a> this tool in order to use it properly.', E_WARN);
 
 	// perform television downloading
 	if(dependency('curl_installed') == false)
@@ -479,11 +436,19 @@ function output_movie_download($request)
 			'text' => array(
 				'loading' => 'Loading...'
 			),
-			'singular' => url('admin/tools/movies/downloader/login', true),
+			'type' => 'theme',
+			'value' => 'singular',
+			'href' => url('admin/tools/movies/downloader/login', true),
 		);
 	}
 	
-	register_output_vars('infos', $infos);
+	register_output_vars('infos', array(
+		'movie_downloader' => array(
+			'name' => 'Movie Downloader',
+			'type' => 'fieldset',
+			'options' => $infos
+		),
+	));
 	
 	theme('tool_info');
 }
@@ -522,7 +487,7 @@ function movies_fetch_movie_service($movie, $i, $is_nzb = true)
 			foreach($matches[1] as $i => $link)
 			{
 				// return list of downloads
-				$downloads[$i] = '<a href="' . $link . '">' . htmlspecialchars($movie) . '</a><br />';
+				$downloads[$i] = array('link' => array('href' => $link, 'name' => htmlspecialchars($movie)));
 			}
 		}
 	}
@@ -535,12 +500,12 @@ function movies_fetch_movie_service($movie, $i, $is_nzb = true)
  */
 function movies_fetch_movies($movie)
 {
-	$services = setting('nzbservices');
-	
 	$downloads = array();
 	
+	$nzbservices = setting('all_nzbservices');
+	
 	// loop through NZB services until we find the show
-	foreach($services as $i => $config)
+	foreach($nzbservices as $i => $config)
 	{
 		$search = setting('nzb_movie_search_' . $i);
 			
@@ -555,12 +520,15 @@ function movies_fetch_movies($movie)
 			if($count > 0)
 			{
 				// return list of downloads
-				$downloads[$i] = '<a href="' . sprintf($search, urlencode($movie)) . '">' . htmlspecialchars($movie) . ' on ' . htmlspecialchars($config['name']) . ' (' . $count . ') <img src="' . $config['image'] . '" alt="icon" /></a><br />';
+				$downloads[] = array('link' => array(
+					'url' => sprintf($search, urlencode($movie)),
+					'text' => htmlspecialchars($movie) . ' on ' . htmlspecialchars($config['name']) . ' (' . $count . ') <img src="' . $config['image'] . '" alt="icon" />'
+				));
 			}
 		}
 	}
 	
-	$torservices = setting('torservices');
+	$torservices = setting('all_torservices');
 	
 	// loop through NZB services until we find the show
 	foreach($torservices as $i => $config)
@@ -577,7 +545,10 @@ function movies_fetch_movies($movie)
 			if($count > 0)
 			{
 				// return list of downloads
-				$downloads[$i] = '<a href="' . sprintf($search, urlencode($movie)) . '">' . htmlspecialchars($movie) . ' on ' . htmlspecialchars($config['name']) . ' (' . $count . ') <img src="' . $config['image'] . '" alt="icon" /></a><br />';
+				$downloads[] = array('link' => array(
+					'url' => sprintf($search, urlencode($movie)),
+					'text' => htmlspecialchars($movie) . ' on ' . htmlspecialchars($config['name']) . ' (' . $count . ') <img src="' . $config['image'] . '" alt="icon" />'
+				));
 			}
 		}
 	}
@@ -600,15 +571,15 @@ function movies_get_movie_tokens()
 	$filepaths = array();
 	foreach($settings['movie_folders'] as $i => $folder)
 	{
-		$movies = get_files(array('dir' => $folder, 'limit' => 32000), $count, true);
+		$movies = scan_directory($folder);
 		
 		foreach($movies as $j => $file)
 		{
-			$names[] = $file['Filename'];
-			$tmp_tokens = tokenize($file['Filename']);
+			$names[] = basename($file);
+			$tmp_tokens = tokenize(basename($file));
 			sort($tmp_tokens['Most']);
 			$tokens[] = implode(' ', $tmp_tokens['Most']);
-			$filepaths[] = $file['Filepath'];
+			$filepaths[] = $file;
 		}
 	}
 	

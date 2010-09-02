@@ -21,7 +21,7 @@ function theme_live_tool_info()
 	theme('footer');
 }
 
-function theme__singular($config)
+function theme__form_singular($config)
 {
 	extract($config);
 	theme('info_objects', array('type' => 'info') + $config);
