@@ -1,3 +1,6 @@
+2010-08-31
+Updated diskimage
+
 2010-08-29
 Readded modules
 Finished alias configuration

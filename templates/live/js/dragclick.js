@@ -1,5 +1,6 @@
 // JavaScript Document
 var IE = document.all?true:false
+var singular_cancel = false;
 
 var selectOffset = 0;
 

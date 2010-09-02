@@ -1,0 +1,253 @@
+<?php
+
+/** 
+ * Implementation of setup_handler
+ * @ingroup setup_handler
+ */
+function setup_diskimage()
+{
+	stream_wrapper_register('diskimage', 'diskimage');
+	
+	if(isset($GLOBALS['getID3']))
+		return;
+		
+	// include the id handler
+	load_include('getid3' . DIRECTORY_SEPARATOR . 'getid3.php');
+	
+	// set up id3 reader incase any files need it
+	$GLOBALS['getID3'] = new getID3();
+}
+
+/** 
+ * Implementation of handles
+ * @ingroup handles
+ */
+function handles_diskimage($file)
+{
+	$file = str_replace('\\', '/', $file);
+	
+	// parse through the file path and try to find a zip
+	list($file) = get_inner_path($file);
+
+	switch(ext($file))
+	{
+		case 'iso':
+			return true;
+		default:
+			return false;
+	}
+	
+	return false;
+
+}
+
+function get_info_diskimage($filepath, $include_offset = false)
+{
+	list($filepath, $subfile) = get_inner_path($filepath);
+	
+	$files = array();
+	
+	$info = $GLOBALS['getID3']->analyze($filepath);
+	if(isset($info['iso']) && isset($info['iso']['directories']))
+	{
+		$directories = array();
+		foreach($info['iso']['directories'] as $i => $directory)
+		{
+			foreach($directory as $j => $file)
+			{
+				// if looking for a specific file, skip all other files
+				if($subfile != '' && $file['filename'] != '/' . $subfile)
+					continue;
+					
+				// for some reason there are duplicate entries for directories
+				if(!in_array($filepath . $file['filename'], $directories))
+					$directories[] = $filepath . $file['filename'];
+				else
+					continue;
+				
+				// construct file information
+				$fileinfo = array();
+				$fileinfo['Filepath'] = $filepath . $file['filename'];
+				$fileinfo['Filename'] = basename($file['filename']);
+				if($file['filename'][strlen($file['filename'])-1] == '/')
+					$fileinfo['Filetype'] = 'FOLDER';
+				else
+					$fileinfo['Filetype'] = ext($file['filename']);
+				if($fileinfo['Filetype'] === false)
+					$fileinfo['Filetype'] = 'FILE';
+				$fileinfo['Filesize'] = $file['filesize'];
+				$fileinfo['Filemime'] = mime($file['filename']);
+				$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['recording_timestamp']);
+				
+				// include the offset if the caller is trying to use this information to stream
+				if($include_offset)
+					$fileinfo['offset'] = $file['offset_bytes'];
+				
+				// if looking for a specific file, return here
+				if($subfile != '')
+					return $fileinfo;
+				else
+					$files[] = $fileinfo;
+			}
+		}
+	}
+	
+	// if the file was not found before now, return false
+	if($subfile != '')
+		return false;
+	else
+		return $files;
+}
+
+/** 
+ * Helper function
+ */
+function add_diskimage($file)
+{
+	// files always qualify, we are going to log every single one!
+	if(!handles($file, 'diskimage'))
+		return false;
+
+	// pull information from $info
+	list($file, $subfile) = get_inner_path($file);
+	
+	// check database for file
+	$files = db_assoc('SELECT * FROM diskimage WHERE Filepath=? LIMIT 1', array($file));
+	
+	// do a little cleanup here
+	// if the archive changes remove all it's inside files from the database
+	if( count($files) > 0 )
+	{
+		$diskimage_id = $files[0]['id'];
+		raise_error('Removing archive: ' . $file, E_DEBUG);
+		remove($file . '/', 'diskimage');
+	}
+
+	// Add diskimage first so if it fails then it won't try to read it again
+	$fileinfo = get_info_files($file);
+	
+	// print status
+	if( !isset($diskimage_id) )
+	{
+		raise_error('Adding diskimage: ' . $fileinfo['Filepath'], E_DEBUG);
+		
+		// add to database
+		$diskimage_id = db_insert('INSERT INTO diskimage ' . sql_insert($fileinfo), array_values($fileinfo));
+	}
+	else
+	{
+		raise_error('Modifying diskimage: ' . $fileinfo['Filepath'], E_DEBUG);
+		
+		// update database
+		db_query('UPDATE diskimage' . sql_update($fileinfo) . ' WHERE id=' . $diskimage_id, array_values($fileinfo));
+	}
+
+	// set up empty ids array since we know archive_id will be the only entry
+	$empty_ids = array();
+	foreach(get_handlers(false) as $handler => $config)
+	{
+		$empty_ids[$handler . '_id'] = 0;
+	}
+	
+	// add archive internal files to archive database
+	$files = get_info_diskimage($file);
+	foreach($files as $i => $fileinfo)
+	{
+		raise_error('Adding file in diskimage: ' . stripslashes($fileinfo['Filepath']), E_DEBUG);
+		// add subfile inside archive
+		$id = db_insert('INSERT INTO diskimage ' . sql_insert($fileinfo), array_values($fileinfo));
+		
+		// add ids for subfile
+		$ids = array('diskimage_id' => $id) + $empty_ids + get_info_ids($fileinfo['Filepath']);
+		$id = db_insert('INSERT INTO ids ' . sql_insert($ids), array_values($ids));
+	}
+	
+	// add root file which is the filepath but with a / for compatibility
+	$fileinfo = get_info_files($file);
+	if(substr($fileinfo['Filepath'], -1) != '/') $fileinfo['Filepath'] .= '/';
+	
+	raise_error('Adding file in diskimage: ' . stripslashes($fileinfo['Filepath']), E_DEBUG);
+	$id = db_insert('INSERT INTO diskimage ' . sql_insert($fileinfo), array_values($fileinfo));
+
+	return $diskimage_id;
+}
+
+/** 
+ * Implementation of output_handler
+ * @ingroup output_handler
+ */
+function output_diskimage($file)
+{
+	$file = str_replace('\\', '/', $file);
+	
+	if(setting('alias_enable'))
+		$file = alias_replace($file);
+	
+	$files = db_assoc('SELECT * FROM diskimage WHERE Filepath=? LIMIT 1', array($file));
+	if(count($files) > 0)
+	{
+		return fopen('diskimage://' . $file, 'rb');
+	}
+
+	return false;
+}
+
+// ISO handler
+class diskimage
+{
+	
+	// this is for stream stuff when controlling output of the file
+       
+    protected $internal_fp = NULL;
+    protected $internal_start = NULL;
+    protected $internal_length = NULL;
+    protected $internal_pos = NULL;
+	
+    function stream_open($path, $mode, $options, &$opened_path)
+    {
+		if(substr($path, 0, strlen('diskimage://')) == 'diskimage://')
+			$path = substr($path, strlen('diskimage://'));
+			
+		list($path, $subfile) = get_inner_path($path);
+		if(is_file($path) && $fp = @fopen($path, 'rb'))
+		{
+			$this->internal_fp = $fp;
+			$this->internal_pos = 0;
+			if($subfile != '')
+			{
+				$fileinfo = get_info_diskimage($path . '/' . $subfile, true);
+				$this->internal_length = $fileinfo['Filesize'];
+				$this->internal_start = $fileinfo['offset'];
+			}
+			// download entire image
+			else
+			{
+				$this->internal_length = filesize($path);
+				$this->internal_start = 0;
+			}
+			return true;
+		}
+		return false;
+    }
+    function stream_read($count){
+		if($this->internal_pos + $count > $this->internal_length)
+			$count = $this->internal_length - $this->internal_pos;
+		$this->internal_pos += $count;
+        return fread($this->internal_fp, $count);
+    }
+    function stream_eof(){
+        return $this->internal_pos >= $this->internal_length;
+    }
+    function stream_tell(){
+        return $this->internal_pos;
+    }
+    function stream_seek($position){
+		if($position > $this->internal_length)
+		{
+			$position = $this->internal_length;
+		}
+		$this->internal_pos = $position;
+		fseek($this->internal_fp, $this->internal_start + $this->internal_pos);
+        return 0;
+    }
+}

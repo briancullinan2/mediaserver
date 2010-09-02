@@ -620,7 +620,7 @@ function db_select($query, $args = array(), $callback)
 
 function db_query($query, $args = array())
 {
-//print $query . '<br />' . "\n";
+//print '<span style="color:#F00">' . $query . '</span><br />' . "\n";
 
 	if(!isset($GLOBALS['database']) || !is_object($GLOBALS['database']))
 	{

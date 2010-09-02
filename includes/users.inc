@@ -16,7 +16,7 @@ function register_users()
 		'description' => 'Allows for managing and displaying users.',
 		'privilage' => 1,
 		'session' => array('username'),
-		'settings' => array('local_users', 'username_validation'),
+		'settings' => array('local_users', 'username_validation', 'admin_password', 'secret'),
 		'depends on' => 'users',
 		'filter' => array('user'),
 		'internal' => true,

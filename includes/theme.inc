@@ -66,17 +66,17 @@ function theme__errors_block()
 
 function theme__files()
 {
-	if(count($GLOBALS['templates']['vars']['files']) == 0)
+	if(count($GLOBALS['output']['files']) == 0)
 	{
 		?><b>There are no files to display</b><?php
 	}
 	else
 	{
 		$column_lengths = array();
-		if($GLOBALS['templates']['vars']['settings']['view'] == 'mono')
+		if($GLOBALS['output']['settings']['view'] == 'mono')
 		{
 			// go through files ahead of time and make them monospaced
-			foreach($GLOBALS['templates']['vars']['files'] as $i => $file)
+			foreach($GLOBALS['output']['files'] as $i => $file)
 			{
 				// find the longest string for each column
 				foreach($file as $column => $value)
@@ -89,40 +89,40 @@ function theme__files()
 			
 			?><input type="checkbox" name="item" value="All" /> <?php
 			print str_replace(' ', '&nbsp;', sprintf('%-' . ($column_lengths['Filepath']+2) . 's', 'Filepath'));
-			foreach($GLOBALS['templates']['vars']['settings']['columns'] as $i => $column)
+			foreach($GLOBALS['output']['settings']['columns'] as $i => $column)
 			{
 				print ' | ' . str_replace(' ', '&nbsp;', sprintf('%-' . ($column_lengths[$column]+2) . 's', $column));
 			}
 			?> | Download<br /><?php
 		}
-		elseif($GLOBALS['templates']['vars']['settings']['view'] == 'table')
+		elseif($GLOBALS['output']['settings']['view'] == 'table')
 		{
 			?><table cellpadding="10" cellspacing="0" border="1"><tr><td><?php
 		}
 		
-		foreach($GLOBALS['templates']['html']['files'] as $i => $file)
+		foreach($GLOBALS['output']['html']['files'] as $i => $file)
 		{
-			$file = alter_file($GLOBALS['templates']['vars']['files'][$i], $column_lengths);
-			$GLOBALS['templates']['html']['files'][$i] = $file;
+			$file = alter_file($GLOBALS['output']['files'][$i], $column_lengths);
+			$GLOBALS['output']['html']['files'][$i] = $file;
 			// make links browsable
-			if(handles($GLOBALS['templates']['vars']['files'][$i]['Filepath'], 'archive')) $handler = 'archive';
-			elseif(handles($GLOBALS['templates']['vars']['files'][$i]['Filepath'], 'playlist')) $handler = 'playlist';
-			elseif(handles($GLOBALS['templates']['vars']['files'][$i]['Filepath'], 'diskimage')) $handler = 'diskimage';
-			else $handler = $GLOBALS['templates']['vars']['handler'];
+			if(handles($GLOBALS['output']['files'][$i]['Filepath'], 'archive')) $handler = 'archive';
+			elseif(handles($GLOBALS['output']['files'][$i]['Filepath'], 'playlist')) $handler = 'playlist';
+			elseif(handles($GLOBALS['output']['files'][$i]['Filepath'], 'diskimage')) $handler = 'diskimage';
+			else $handler = $GLOBALS['output']['handler'];
 			
-			if($GLOBALS['templates']['vars']['handler'] != $handler || $GLOBALS['templates']['vars']['files'][$i]['Filetype'] == 'FOLDER') $new_handler = $handler;
+			if($GLOBALS['output']['handler'] != $handler || $GLOBALS['output']['files'][$i]['Filetype'] == 'FOLDER') $new_handler = $handler;
 			
-			$link = isset($new_handler)?url('select?handler=' . $new_handler . '&dir=' . urlencode($GLOBALS['templates']['vars']['files'][$i]['Filepath'])):url('file/' . $handler . '/' . $file['id'] . '/' . urlencode($GLOBALS['templates']['vars']['files'][$i]['Filename']));
+			$link = isset($new_handler)?url('select?handler=' . $new_handler . '&dir=' . urlencode($GLOBALS['output']['files'][$i]['Filepath'])):url('file/' . $handler . '/' . $file['id'] . '/' . urlencode($GLOBALS['output']['files'][$i]['Filename']));
 			?>
-			<input type="checkbox" name="item[]" value="<?php print $file['id']; ?>" <?php print isset($GLOBALS['templates']['vars']['selected'])?(in_array($GLOBALS['templates']['vars']['files'][$i]['id'], $GLOBALS['templates']['vars']['selected'])?'checked="checked"':''):''; ?> />
+			<input type="checkbox" name="item[]" value="<?php print $file['id']; ?>" <?php print isset($GLOBALS['output']['selected'])?(in_array($GLOBALS['output']['files'][$i]['id'], $GLOBALS['output']['selected'])?'checked="checked"':''):''; ?> />
 			<a href="<?php print $link; ?>"><?php print trim($file['Filepath'], '&nbsp;'); ?></a><?php print substr($file['Filepath'], strlen(trim($file['Filepath'], '&nbsp;'))); ?>
 			<?php
 			
-			foreach($GLOBALS['templates']['vars']['settings']['columns'] as $j => $column)
+			foreach($GLOBALS['output']['settings']['columns'] as $j => $column)
 			{
-				if($GLOBALS['templates']['vars']['settings']['view'] == 'mono')
+				if($GLOBALS['output']['settings']['view'] == 'mono')
 					print ' | ';
-				elseif($GLOBALS['templates']['vars']['settings']['view'] == 'table')
+				elseif($GLOBALS['output']['settings']['view'] == 'table')
 					print '</td><td>';
 				else
 					print ' - ';
@@ -133,11 +133,11 @@ function theme__files()
 				}
 			}
 			
-			if($GLOBALS['templates']['vars']['settings']['view'] == 'mono')
+			if($GLOBALS['output']['settings']['view'] == 'mono')
 			{
 				print ' | ';
 			}
-			elseif($GLOBALS['templates']['vars']['settings']['view'] == 'table')
+			elseif($GLOBALS['output']['settings']['view'] == 'table')
 			{
 				print '</td><td>';
 			}
@@ -148,61 +148,61 @@ function theme__files()
 			?>
 			<a href="<?php print url(array(
 							'module' => 'zip',
-							'handler' => $GLOBALS['templates']['vars']['handler'],
+							'handler' => $GLOBALS['output']['handler'],
 							'id' => $file['id'],
 							'filename' => 'Files.zip'
 						)); ?>">zip</a> :
 			<a href="<?php print url(array(
 							'module' => 'torrent',
-							'handler' => $GLOBALS['templates']['vars']['handler'],
+							'handler' => $GLOBALS['output']['handler'],
 							'id' => $file['id'],
 							'filename' => 'Files.torrent'
 						)); ?>">torrent</a>
 			<?php
-			if(handles($GLOBALS['templates']['vars']['files'][$i]['Filepath'], 'video'))
+			if(handles($GLOBALS['output']['files'][$i]['Filepath'], 'video'))
 			{
 				?>
-				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'mp4', 'handler' => $GLOBALS['templates']['vars']['handler'],
+				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'mp4', 'handler' => $GLOBALS['output']['handler'],
 								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">MP4</a>
-				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'mpg', 'handler' => $GLOBALS['templates']['vars']['handler'],
+				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'mpg', 'handler' => $GLOBALS['output']['handler'],
 								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">MPG</a>
-				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'wmv', 'handler' => $GLOBALS['templates']['vars']['handler'],
+				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'wmv', 'handler' => $GLOBALS['output']['handler'],
 								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">WMV</a>
 				<?php
 			}
-			if(handles($GLOBALS['templates']['vars']['files'][$i]['Filepath'], 'audio'))
+			if(handles($GLOBALS['output']['files'][$i]['Filepath'], 'audio'))
 			{
 				?>
-				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'mp4a', 'handler' => $GLOBALS['templates']['vars']['handler'],
+				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'mp4a', 'handler' => $GLOBALS['output']['handler'],
 								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">MP4</a>
-				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'mp3', 'handler' => $GLOBALS['templates']['vars']['handler'],
+				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'mp3', 'handler' => $GLOBALS['output']['handler'],
 								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">MP3</a>
-				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'wma', 'handler' => $GLOBALS['templates']['vars']['handler'],
+				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'wma', 'handler' => $GLOBALS['output']['handler'],
 								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">WMA</a>
 				<?php
 			}
-			if(handles($GLOBALS['templates']['vars']['files'][$i]['Filepath'], 'image'))
+			if(handles($GLOBALS['output']['files'][$i]['Filepath'], 'image'))
 			{
 				?>
-				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'jpg', 'handler' => $GLOBALS['templates']['vars']['handler'],
+				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'jpg', 'handler' => $GLOBALS['output']['handler'],
 								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">JPG</a>
-				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'gif', 'handler' => $GLOBALS['templates']['vars']['handler'],
+				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'gif', 'handler' => $GLOBALS['output']['handler'],
 								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">GIF</a>
-				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'png', 'handler' => $GLOBALS['templates']['vars']['handler'],
+				: <a href="<?php print url(array('module' => 'encode', 'encode' => 'png', 'handler' => $GLOBALS['output']['handler'],
 								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">PNG</a>
 				<?php
 			}
-			if(handles($GLOBALS['templates']['vars']['files'][$i]['Filepath'], 'code'))
+			if(handles($GLOBALS['output']['files'][$i]['Filepath'], 'code'))
 			{
 				?>
-				: <a href="<?php print url(array('module' => 'code', 'handler' => $GLOBALS['templates']['vars']['handler'],
+				: <a href="<?php print url(array('module' => 'code', 'handler' => $GLOBALS['output']['handler'],
 								'id' => $file['id'], 'filename' => $file['Filename'])); ?>">view</a>
 				<?php
 			}
 			
-			if($GLOBALS['templates']['vars']['settings']['view'] == 'table')
+			if($GLOBALS['output']['settings']['view'] == 'table')
 			{
-				if($i < count($GLOBALS['templates']['vars']['files']) - 1)
+				if($i < count($GLOBALS['output']['files']) - 1)
 				{
 					?></td></tr><tr><td><?php
 				}
@@ -212,11 +212,11 @@ function theme__files()
 				?><br /><?php
 			}
 		}
-		if($GLOBALS['templates']['vars']['settings']['view'] == 'mono')
+		if($GLOBALS['output']['settings']['view'] == 'mono')
 		{
 			?></code><?php
 		}
-		if($GLOBALS['templates']['vars']['settings']['view'] == 'table')
+		if($GLOBALS['output']['settings']['view'] == 'table')
 		{
 			?></td></tr></table><?php
 		}
@@ -358,12 +358,12 @@ function theme__module()
 
 	// if the status is avaiable print that out first
 	if(isset($GLOBALS['output']['status']))
-		print_form_object('status', array(
+		theme('form_object', 'status', array(
 			'type' => 'fieldset',
 			'options' => $GLOBALS['output']['status']
 		));
 		
-	print_form_object('setting', array(
+	theme('form_object', 'setting', array(
 		'action' => url('admin/modules/' . $GLOBALS['output']['configure_module'], true),
 		'options' => $GLOBALS['output']['options'],
 		'type' => 'form',
@@ -539,15 +539,15 @@ function theme__select()
 	theme('search_block');
 
 	?>
-	There are <?php print $GLOBALS['templates']['html']['total_count']; ?> result(s).<br />
-	Displaying items <?php print $GLOBALS['templates']['html']['start']; ?> to <?php print $GLOBALS['templates']['html']['start'] + $GLOBALS['templates']['html']['limit']; ?>.
+	There are <?php print $GLOBALS['output']['html']['total_count']; ?> result(s).<br />
+	Displaying items <?php print $GLOBALS['output']['html']['start']; ?> to <?php print $GLOBALS['output']['html']['start'] + $GLOBALS['output']['html']['limit']; ?>.
 	<br />
 	<?php
 	
 	theme('pages');
 	?>
 	<br />
-	<form name="select" action="<?php print $GLOBALS['templates']['html']['get']; ?>" method="post">
+	<form name="select" action="<?php print $GLOBALS['output']['html']['get']; ?>" method="post">
 		<input type="submit" name="select" value="All" />
 		<input type="submit" name="select" value="None" />
 		<p style="white-space:nowrap">

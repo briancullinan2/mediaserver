@@ -115,20 +115,20 @@ function status_alias()
 
 }
 
-function setting_admin_alias()
+function setting_alias()
 {
 	$settings = array();
 
 	for($i = 0; $i < 100; $i++)
 	{
-		$GLOBALS['setting_alias_' . $i] = create_function('$settings', 'return setting_alias($settings, \'' . $i . '\');');
+		$GLOBALS['setting_alias_' . $i] = create_function('$settings', 'return setting_alias_index($settings, \'' . $i . '\');');
 		$settings[] = 'alias_' . $i;
 	}
 	
 	return $settings;
 }
 
-function setting_alias($settings, $index)
+function setting_alias_index($settings, $index)
 {
 	// don't continue with this if stuff is missing
 	if(!isset($settings['alias_' . $index]) || !isset($settings['alias_' . $index]['paths']) || 
@@ -173,7 +173,7 @@ function setting_alias_rules($settings)
 	// make sure all servers with numeric indexes are on the list
 	for($i = 0; $i < 100; $i++)
 	{
-		$alias = setting_alias($settings, $i);
+		$alias = setting_alias_index($settings, $i);
 		if(isset($alias))
 			$settings['alias_rules'][$i] = $alias;
 	}
@@ -187,7 +187,7 @@ function setting_paths_match($settings)
 	
 	for($i = 0; $i < 100; $i++)
 	{
-		$alias = setting_alias($settings, $i);
+		$alias = setting_alias_index($settings, $i);
 		if(isset($alias))
 			$paths_match[] = $alias['paths_replace'];
 	}
@@ -201,7 +201,7 @@ function setting_alias_match($settings)
 	
 	for($i = 0; $i < 100; $i++)
 	{
-		$alias = setting_alias($settings, $i);
+		$alias = setting_alias_index($settings, $i);
 		if(isset($alias))
 			$alias_match[] = $alias['alias_replace'];
 	}
@@ -215,7 +215,7 @@ function setting_replace_alias($settings)
 	
 	for($i = 0; $i < 100; $i++)
 	{
-		$alias = setting_alias($settings, $i);
+		$alias = setting_alias_index($settings, $i);
 		if(isset($alias))
 			$aliases[] = $alias['alias'];
 	}
@@ -228,7 +228,7 @@ function setting_replace_paths($settings)
 	
 	for($i = 0; $i < 100; $i++)
 	{
-		$alias = setting_alias($settings, $i);
+		$alias = setting_alias_index($settings, $i);
 		if(isset($alias))
 			$replace_paths[] = $alias['paths'];
 	}
@@ -246,7 +246,7 @@ function session_alias($request)
 	// add server
 	if(isset($request['add_alias']))
 	{
-		$new_alias = setting_alias(array('alias_0' => $request['add_alias']), 0);
+		$new_alias = setting_alias_index(array('alias_0' => $request['add_alias']), 0);
 		if(isset($new_alias) && isset($request['edit_alias']))
 			$save['alias_rules'][$request['edit_alias']] = $new_alias;
 		else

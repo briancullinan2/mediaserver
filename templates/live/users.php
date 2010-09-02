@@ -1,7 +1,7 @@
 <?php
 
 
-function theme_live_login($username = 'guest')
+function theme_live_login($username = '')
 {
 	?>	
 	<form action="<?php echo url('users/login?return=' . urlencode($return)); ?>" method="post">
@@ -14,7 +14,7 @@ function theme_live_login($username = 'guest')
 	<?php
 }
 
-function theme_live_login_block($username = 'guest', $return = '')
+function theme_live_login_block($username = '', $return = '')
 {
 	?>
 	<form action="<?php echo url('users/login?return=' . urlencode($return)); ?>" method="post">

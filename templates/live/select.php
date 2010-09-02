@@ -162,7 +162,7 @@ function theme_live_files($files = NULL)
 			?><div class="files" id="files"><?php
 			foreach($files as $i => $file)
 			{
-				theme('file', $file);
+				theme('file', $file, $GLOBALS['output']['handler']);
 			}
 			?></div><?php
 		}
@@ -200,7 +200,7 @@ function theme_live_file($file, $current_handler = 'files')
 	elseif(handles($file['Filepath'], 'playlist')) $handler = 'playlist';
 	elseif(handles($file['Filepath'], 'diskimage')) $handler = 'diskimage';
 	else $handler = $current_handler;
-	
+
 	if($current_handler != $handler || $file['Filetype'] == 'FOLDER')
 	{
 		if(substr($file['Filepath'], -1) != '/') $file['Filepath'] .= '/';
@@ -213,19 +213,19 @@ function theme_live_file($file, $current_handler = 'files')
 
 	unset($new_handler);
 	?>
-	<div class="file <?php print $html['Filetype']; ?>" onmousedown="deselectAll(event);fileSelect(this, true, event);return false;" oncontextmenu="showMenu(this);return false;" id="<?php print $html['id']; ?>"><div class="notselected"></div>
+	<div class="file <?php print $file['Filetype']; ?>" onmousedown="deselectAll(event);fileSelect(this, true, event);return false;" oncontextmenu="showMenu(this);return false;" id="<?php print $html['id']; ?>"><div class="notselected"></div>
 		<table class="itemTable" cellpadding="0" cellspacing="0" onclick="location.href = '<?php print $link; ?>';">
 			<tr>
 				<td>
-					<div class="thumb file_ext_<?php print $html['Filetype']; ?> file_type_<?php print isset($html['Filemime'])?str_replace('/', ' file_type_', $html['Filemime']):''; ?>">
+					<div class="thumb file_ext_<?php print $file['Filetype']; ?> file_type_<?php print isset($file['Filemime'])?str_replace('/', ' file_type_', $file['Filemime']):''; ?>">
 						<?php
 						if(handles($file['Filepath'], 'image') && is_module('convert'))
 						{
-							?><img src="<?php print url('template/live/images/s.gif'); ?>" alt="<?php print $html['Filetype']; ?>" style="background-image:url(<?php print url('convert/png?cheight=56&cwidth=56&id=' . $html['id']); ?>);" height="48" width="48"><?php
+							?><img src="<?php print url('template/live/images/s.gif'); ?>" alt="<?php print $file['Filetype']; ?>" style="background-image:url(<?php print url('convert/png?cheight=56&cwidth=56&id=' . $html['id']); ?>);" height="48" width="48"><?php
 						}
 						else
 						{
-							?><img src="<?php print url('template/live/images/s.gif'); ?>" alt="<?php print $html['Filetype']; ?>" height="48" width="48"><?php
+							?><img src="<?php print url('template/live/images/s.gif'); ?>" alt="<?php print $file['Filetype']; ?>" height="48" width="48"><?php
 						}
 						?>
 					</div>

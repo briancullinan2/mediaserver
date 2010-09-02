@@ -6,6 +6,8 @@
  */
 function setup_archive()
 {
+	stream_wrapper_register('archive', 'archive');
+	
 	if(setting('archiver') == 'pear')
 		load_include('File' . DIRECTORY_SEPARATOR . 'Archive.php');
 	else
@@ -17,8 +19,6 @@ function setup_archive()
 		
 		$GLOBALS['getID3'] = new getID3();
 	}
-	
-	stream_wrapper_register('archive', 'archive');
 }
 
 /**
@@ -113,10 +113,10 @@ function setting_archiver($settings)
 		return $settings['archiver'];
 	else
 	{
-		if(dependency('pear_installed') != false && include_path('File/Archive.php') !== false)
-			return 'pear';
-		elseif(include_path('getid3/module.archive.zip.php') !== false)
+		if(include_path('getid3/module.archive.zip.php') !== false)
 			return 'getid3';
+		elseif(dependency('pear_installed') != false && include_path('File/Archive.php') !== false)
+			return 'pear';
 		else
 			return 'pear';
 	}
@@ -206,8 +206,8 @@ function _archive_get_info_id3($filepath)
 	// if the file was not found before now, return false
 	if($subfile != '')
 		return false;
-
-	return $files;
+	else
+		return $files;
 }
 
 /**
@@ -221,7 +221,7 @@ function _archive_get_info_pear($filepath)
 	
 	// read archive
 	$source = File_Archive::read($filepath . '/');
-	
+
 	if(PEAR::isError($source))
 	{
 		raise_error('Error reading archive: ' . $filepath, E_DEBUG);
@@ -233,7 +233,7 @@ function _archive_get_info_pear($filepath)
 		while($source->next())
 		{
 			$file = $filepath . '/' . trim($source->getFilename());
-			
+
 			// if looking for a specific file, skip all other files
 			if($subfile != '' && $file != $subfile)
 				continue;
@@ -244,7 +244,13 @@ function _archive_get_info_pear($filepath)
 			$fileinfo = array();
 			$fileinfo['Filepath'] = $file;
 			$fileinfo['Filename'] = basename($file);
-			$fileinfo['Filesize'] = $source->source->source->source->header['CLen'];
+			if(!isset($source->source->source->source->header['CLen']))
+			{
+				raise_error(print_r($source, true), E_DEBUG);
+				$fileinfo['Filesize'] = 0;
+			}
+			else
+				$fileinfo['Filesize'] = $source->source->source->source->header['CLen'];
 			
 			// this is how we determine if and internal file is a folder
 			if($fileinfo['Filepath'][strlen($fileinfo['Filepath'])-1] == '/')
@@ -353,7 +359,7 @@ function add_archive($file)
 		$id = db_insert('INSERT INTO archive ' . sql_insert($fileinfo), array_values($fileinfo));
 		
 		// add ids for subfile
-		$ids = $empty_ids + array('archive_id' => $id) + get_info_ids($fileinfo['Filepath']);
+		$ids = array('archive_id' => $id) + $empty_ids + get_info_ids($fileinfo['Filepath']);
 		$id = db_insert('INSERT INTO ids ' . sql_insert($ids), array_values($ids));
 		
 		// total up uncompressed size
@@ -411,10 +417,13 @@ class archive
 		list($path, $subfile) = get_inner_path($path);
 		if(is_file($path))
 		{
-			if($subfile != '')
+			if($subfile != '' && setting('archiver') == 'pear')
 			{
 				$this->internal_fp = File_Archive::read($path . '/' . $subfile);
 				return true;
+			}
+			elseif($subfile != '' && setting('archiver') == 'getid3')
+			{
 			}
 			// download entire image
 			else

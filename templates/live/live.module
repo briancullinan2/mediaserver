@@ -13,8 +13,8 @@ include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'footer.php';
 function theme_live_logo()
 {
 	$result = fetch('http://www.monolithicmedia.org/favicon.ico', array(), array('timeout' => 2));
-	if(isset($result['headers']['Content-Type']))
-		header('Content-Type: ' . $result['headers']['Content-Type']);
+	if(isset($result['headers']['content-type']))
+		header('Content-Type: ' . $result['headers']['content-type']);
 	print $result['content'];
 }
 

@@ -73,7 +73,7 @@ function theme_live_search()
 		{
 			?>
 			<div id="search_<?php print $column; ?>"><?php print $column; ?>:
-				<input type="text" name="search_<?php print $column; ?>" size="40" value="<?php print isset($GLOBALS['output']['search']['search_' . $column])?$GLOBALS['templates']['html']['search']['search_' . $column]:''; ?>" />
+				<input type="text" name="search_<?php print $column; ?>" size="40" value="<?php print isset($GLOBALS['output']['search']['search_' . $column])?$GLOBALS['output']['html']['search']['search_' . $column]:''; ?>" />
 				<br />
 				<br />
 			</div>
@@ -81,7 +81,7 @@ function theme_live_search()
 		}
 		?>
 		<script language="javascript">
-		makeVisible('<?php print $GLOBALS['templates']['html']['handler']; ?>');
+		makeVisible('<?php print $GLOBALS['output']['html']['handler']; ?>');
 		</script>
 		</div>
 		<input type="submit" value="Search" /><input type="reset" value="Reset" />

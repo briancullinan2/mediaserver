@@ -235,7 +235,8 @@ function add_menu($module, $menus)
 				$menus[$path]['description'] = $GLOBALS['modules'][$module]['description'];
 				
 			// add module to menu info
-			$menus[$path]['module'] = $module;
+			if(!isset($menus[$path]['module']))
+				$menus[$path]['module'] = $module;
 		}
 		$GLOBALS['menus'] = array_merge($GLOBALS['menus'], $menus);
 	}

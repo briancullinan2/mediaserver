@@ -5,6 +5,9 @@ function menu_tv_download()
 	return array(
 		'admin/tools/television/downloader' => array(
 			'callback' => 'output_tv_download',
+		),
+		'admin/tools/television/downloader/%info_singular_step_television' => array(
+			'callback' => 'output_tv_download_singular'
 		)
 	);
 }
@@ -16,19 +19,28 @@ function menu_tv_download()
 function setup_tv_download()
 {
 	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'tvdl.singular.inc';
+	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'myepisodes.inc';
+}
+
+function setting_tv_download()
+{
+	$settings = array('netflix_xml');
+	
 	// add wrapper functions for validating a service entry
 	for($i = 0; $i < 10; $i++)
 	{
 		$GLOBALS['setting_nzb_television_search_' . $i] = create_function('$settings', 'return setting_nzb_television_search($settings, \'' . $i . '\');');
-		$GLOBALS['modules']['tv_download']['settings'][] = 'television_nzb_search_' . $i;
+		$settings[] = 'nzb_television_search_' . $i;
 	}
 	
 	// add wrapper functions for validating a service entry
 	for($i = 0; $i < 10; $i++)
 	{
 		$GLOBALS['setting_tor_television_search_' . $i] = create_function('$settings', 'return setting_tor_television_search($settings, \'' . $i . '\');');
-		$GLOBALS['modules']['tv_download']['settings'][] = 'television_tor_search_' . $i;
+		$settings[] = 'tor_television_search_' . $i;
 	}
+	
+	return $settings;
 }
 
 /**
@@ -101,18 +113,6 @@ function setting_tor_television_search($settings, $index)
  * Implementation of validate
  * @ingroup validate
  */
-function validate_info_singular_step_television($request)
-{
-	if(isset($request['info_singular_step_television']) &&
-		in_array($request['info_singular_step_television'], array('login', 'shows', 'download'))
-	)
-		return $request['info_singular_step_television'];
-}
-
-/**
- * Implementation of validate
- * @ingroup validate
- */
 function validate_episode($request)
 {
 	return generic_validate_numeric($request, 'episode');
@@ -165,7 +165,9 @@ function configure_tv_download($settings)
 	
 	$options = array();
 	
-	$options['myepisodes'] = array(
+	$feeds = array();
+	
+	$feeds['myepisodes'] = array(
 		'name' => 'My Episodes Account',
 		'status' => '',
 		'description' => array(
@@ -191,43 +193,48 @@ function configure_tv_download($settings)
 		),
 	);
 	
-	// add nzb services
+	$options['tv_input'] = array(
+		'name' => 'TV Show Input',
+		'type' => 'fieldset',
+		'options' => $feeds
+	);
+	
+	$download = array();
+	
 	if(setting('nzbservices_enable') == true)
 	{
-		$options = array_merge($options, configure_nzbservices($settings));
-		
-		// alter the nzbservices form to use television search queries instead
-		$settings['nzbservices'] = setting('nzbservices');
-		foreach($settings['nzbservices'] as $i => $config)
-		{
-			$options['nzbservices']['options']['setting_nzb_television_search_' . $i] = array(
-				'type' => 'hidden',
-				'value' => setting_nzb_television_search($settings, $i),
-			);
-		}
+		// add nzb services
+		$download = array_merge($download, configure_nzbservices($settings));
 	}
 	
 	if(setting('torservices_enable') == true)
 	{
 		// add torrent services
-		$options = array_merge($options, configure_torservices($settings));
-		
-		// alter the torservices form to use television search queries instead
-		$settings['torservices'] = setting('torservices');
-		foreach($settings['torservices'] as $i => $config)
-		{
-			$options['torservices']['options']['setting_tor_television_search_' . $i] = array(
-				'type' => 'hidden',
-				'value' => setting_tor_television_search($settings, $i),
-			);
-		}
+		$download = array_merge($download, configure_torservices($settings));
 	}
 	
-	return array('tv_download' => array(
-		'name' => 'TV Automatic Download',
+	if(!is_module('torservices') && !is_module('nzbservices'))
+	{
+		$download['services'] = array(
+			'name' => 'Download Services',
+			'status' => 'warn',
+			'description' => array(
+				'list' => array(
+					'This module takes advantage of torrent and news group services.',
+					'In order to use this module, the service modules must also be installed.'
+				),
+			),
+			'text' => 'No download service modules installed!',
+		);
+	}
+	
+	$options['tv_download'] = array(
+		'name' => 'TV Show Downloads',
 		'type' => 'fieldset',
-		'options' => $options
-	));
+		'options' => $download
+	);
+	
+	return $options;
 }
 
 /**
@@ -236,18 +243,8 @@ function configure_tv_download($settings)
  */
 function output_tv_download($request)
 {
-	$request['info_singular'] = validate($request, 'info_singular');
-	$infos = array();
-	
-	if($request['info_singular'] == true)
-	{
-		output_television_singular($request);
-		
-		return;
-	}
-	
 	// output configuration link
-	raise_error('You may need to <a href="' . url('admin/modules/admin_tools_tv_downloader') . '">configure</a> this tool in order to use it properly.', E_WARN);
+	raise_error('You may need to <a href="' . url('admin/module/tv_download') . '">configure</a> this tool in order to use it properly.', E_WARN);
 
 	// perform television downloading
 	if(dependency('curl_installed') == false)
@@ -272,7 +269,7 @@ function output_tv_download($request)
 	else
 	{
 		// log in to myepisodes
-		$infos['television_login'] = array(
+		$infos['login'] = array(
 			'name' => 'MyEpisodes, Service Login',
 			'status' => '',
 			'description' => array(
@@ -283,12 +280,20 @@ function output_tv_download($request)
 			'text' => array(
 				'loading' => 'Loading...'
 			),
-			'singular' => url('admin/tools/tv_downloader?info_singular=true&info_singular_step_television=login', true),
+			'type' => 'theme',
+			'value' => 'singular',
+			'href' => url('admin/tools/television/downloader/login', true),
 		);
 	}
 	
 	// output info
-	register_output_vars('infos', $infos);
+	register_output_vars('infos', array(
+		'tv_downloader' => array(
+			'name' => 'TV Downloader',
+			'type' => 'fieldset',
+			'options' => $infos
+		),
+	));
 	
 	theme('tool_info');
 }
@@ -305,7 +310,7 @@ function television_fetch_nzb($showname, $season, $episode)
 	// construct search arguments
 	$args = func_get_args();
 	
-	$services = setting('nzbservices');
+	$services = setting('all_nzbservices');
 	
 	// loop through NZB services until we find the show
 	foreach($services as $i => $config)
@@ -336,27 +341,14 @@ function television_fetch_nzb($showname, $season, $episode)
 			if(strlen($result['content']) == 0)
 				return false;
 			
-			$path = setting('nzbpath');
-			if(substr($path, -1) != '/') $path .= '/';
-			if(isset($result['headers']['Content-disposition']) && strpos($result['headers']['Content-disposition'], 'filename=') !== false)
-			{
-				$start = strpos($result['headers']['Content-disposition'], 'filename=') + 9;
-				$filename = substr($result['headers']['Content-disposition'], $start);
-				if($filename[0] == '"') $filename = trim(substr($filename, 1));
-				if($filename[strlen($filename)-1] == '"') $filename = trim(substr($filename, 0, -1));
-			}
-			else
-			{
-				$filename = $showname . ' Season ' . $season . ' Episode ' . $episode . '.nzb';
-			}
-			$path .= $filename;
+			$path = setting('nzbpath') . television_rename_show($showname, $season, $episode, $result['headers']);
 
 			if($fh = fopen($path, 'w'))
 			{
 				fwrite($fh, $result['content']);
 				fclose($fh);
 				
-				return true;
+				return $path;
 			}
 			else
 				return -1;
@@ -366,91 +358,10 @@ function television_fetch_nzb($showname, $season, $episode)
 	return false;
 }
 
-/**
- * Helper function for logging in to myepisodes
- */
-function television_myepisodes_login()
+function television_rename_show($showname, $season, $episode, $headers)
 {
-	$myepisodes = setting('myepisodes');
-	$login_url = 'http://myepisodes.com/login.php?u=views.php';
-	$result = fetch($login_url);
-	
-	session('television_cookies', $result['cookies']);
-	
-	// login
-	$result = fetch($login_url, array(
-		'username' => $myepisodes['username'],
-		'password' => $myepisodes['password'],
-		'action' => 'Login',
-	), array('referer' => $login_url), session('television_cookies'));
+	if(!($filename = get_filename($headers)))
+		$filename = $showname . ' Season ' . $season . ' Episode ' . $episode . '.nzb';
 
-	// check for failure
-	if(preg_match('/<div class="warning">/i', $result['content']) != 0)
-		$result['status'] = false;
-	
-	// store all cookies
-	session('television_cookies', $result['cookies']);
-	
-	return $result;
-}
-
-/**
- * Helper function for fetching the list of shows from myepisodes
- * @return an associative array consistion of a list of all shows and a list of shows to download
- */
-function television_myepisodes_fetch_shows()
-{
-	// try to fetch shows with current cookies
-	$result = fetch('http://myepisodes.com/views.php', array(), array(), session('television_cookies'));
-	
-	// save cookies
-	session('television_cookies', $result['cookies']);
-
-	// match shows
-	$result = preg_match_all('/<td class="date">.*?>([^<]*?)<[\s\S]*?' . 
-		'<td class="showname">.*?>([^<]*?)<[\s\S]*?' . 
-		'<td class="longnumber">([^<]*?)<[\s\S]*?' . 
-		'<td class="status">.*?name="([^"]*?)"( checked)*.*?>/i', $result['content'], $matches);
-
-	$all_shows = array();
-	$new_episodes = array(
-		'times' => array(),
-		'shows' => array(),
-		'seasons' => array(),
-		'episodes' => array(),
-		'combined' => array(),
-		'status' => array(),
-	);
-	foreach($matches[0] as $i => $match)
-	{
-		$all_shows[] = $matches[2][$i];
-		$time = strtotime($matches[1][$i]);
-		if($time < time() && $matches[5][$i] == '')
-		{
-			$new_episodes['times'][] = $matches[1][$i];
-			$new_episodes['shows'][] = $matches[2][$i];
-			$season_episode = split('x', $matches[3][$i]);
-			$new_episodes['seasons'][] = intval($season_episode[0]);
-			$new_episodes['episodes'][] = intval($season_episode[1]);
-			$new_episodes['combined'][] = $matches[2][$i] . ' ' . $matches[3][$i];
-			$new_episodes['status'][] = $matches[4][$i];
-		}
-	}
-	$all_shows = array_unique($all_shows);
-	
-	return array(
-		'all_shows' => $all_shows,
-		'new_episodes' => $new_episodes,
-	);
-}
-
-function television_myepisodes_save_status($show_status)
-{
-	// try to fetch shows with current cookies
-	$result = fetch('http://myepisodes.com/views.php?type=save', array(
-		$show_status => 'on',
-		'checkboxes' => substr($show_status, 1),
-		'action' => 'Save Status',
-		'returnaddress' => '/views.php?',
-	), array(), session('television_cookies'));
+	return $filename;
 }

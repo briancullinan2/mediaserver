@@ -23,14 +23,14 @@ function theme_live_admin_module_configure()
 {
 	// if the status is avaiable print that out first
 	if(isset($GLOBALS['output']['status']))
-		print_form_object('status', array(
+		theme('form_object', 'status', array(
 			'type' => 'fieldset',
 			'name' => 'Module Status',
 			'collapsible' => true,
 			'options' => $GLOBALS['output']['status']
 		));
 		
-	print_form_object('setting', array(
+	theme('form_object', 'setting', array(
 		'action' => url('admin/module/' . $GLOBALS['output']['configure_module'], true),
 		'options' => $GLOBALS['output']['options'],
 		'type' => 'form',
@@ -46,7 +46,7 @@ function theme_live_admin_status()
 		$GLOBALS['modules']['admin_status']['description']
 	);
 	
-	print_form_object('status', array(
+	theme('form_object', 'status', array(
 		'type' => 'fieldset',
 		'options' => $GLOBALS['output']['status']
 	));

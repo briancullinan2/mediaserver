@@ -306,12 +306,9 @@ function generic_validate_filename($request, $index)
  */
 function generic_validate_machine_readable($request, $index)
 {
-	if(isset($request[$index]))
-		$request[$index] = preg_replace('/[^a-z0-9]/i', '_', $request[$index]);
-		
 	// ensure it is a valid name
-	if(preg_match('/^[a-z][a-z0-9_]*$/i', $request[$index]) != 0)
-		return strtolower($request[$index]);
+	if(isset($request[$index]))
+		return strtolower(machine($request[$index]));
 }
 
 /**

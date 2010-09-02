@@ -142,7 +142,7 @@ function file_variables($request)
 	
 	// set filename, just a helper for templates to set content disposition
 	if(isset($request['filename'])) register_output_vars('filename', $request['filename']);
-	
+
 	// most template pieces use the category variable, so set that
 	register_output_vars('handler', $request['handler']);
 }
@@ -352,7 +352,7 @@ function add($file, $force = false, $handler = 'files')
 		// add to database
 		$id = db_insert('INSERT INTO ' . $handler . sql_insert($fileinfo), array_values($fileinfo));
 		
-		return $fileinfo + array('id' => $id);
+		return array('id' => $id) + $fileinfo;
 	}
 	// not dependent on force because it checks for modification
 	elseif($handler == 'files')
@@ -367,7 +367,7 @@ function add($file, $force = false, $handler = 'files')
 			
 			// update database
 			$id = db_query('UPDATE files ' . sql_update($fileinfo) . ' WHERE id=' . $files[0]['id'], array_values($fileinfo));
-			return $fileinfo + array('id' => $id);
+			return array('id' => $id) + $fileinfo;
 		}
 		else
 		{
@@ -384,11 +384,11 @@ function add($file, $force = false, $handler = 'files')
 		
 		// update database
 		$id = db_query('UPDATE ' . $handler . sql_update($fileinfo) . ' WHERE id=' . $db_file[0]['id'], array_values($fileinfo));
-		return $fileinfo + array('id' => $id);
+		return array('id' => $id) + $fileinfo;
 	}
 	else
 	{
-		return $files[0] + array('id' => $files[0]['id']);
+		return array('id' => $files[0]['id']) + $files[0];
 		
 		raise_error('Skipping ' . $handler . ': ' . $file, E_DEBUG);
 	}
@@ -467,16 +467,14 @@ function output_files($request)
 	// set some general headers
 	header('Content-Transfer-Encoding: binary');
 	header('Content-Type: ' . $files[0]['Filemime']);
-	//header('Content-Disposition: attachment; filename="' . $files[0]['Filename'] . '"');
+	header('Content-Disposition: attachment; filename="' . $files[0]['Filename'] . '"');
 	
 	// set up the output stream
 	$op = fopen('php://output', 'wb');
 	
 	// get the input stream
 	$fp = output_handler($files[0]['Filepath'], $request['handler']);
-
 	//-------------------- THIS IS ALL RANAGES STUFF --------------------
-	
 	// range can only be used when the filesize is known
 	
 	// if the filesize is still not known, just output the stream without any fancy stuff

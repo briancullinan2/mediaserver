@@ -42,15 +42,15 @@ function bootstrap($mode = 'all')
 			}
 			preload_error();
 			preload_triggers();
-			
-			if(setting('database_enable'))
-				bootstrap('database');
 				
 			// run register functions and add to modules
 			foreach($includes as $i => $include)
 			{
 				$config = @load_module(dirname(__FILE__) . DIRECTORY_SEPARATOR . $include);
 			}
+			
+			if(setting('database_enable'))
+				bootstrap('database');
 
 			load_modules(setting_local_root() . 'modules');
 			

@@ -89,7 +89,7 @@ function fetch($url, $post = array(), $headers = array(), $cookies = array())
 			// parse header
 			if(strpos($header, ':') !== false)
 			{
-				$headers[substr($header, 0, strpos($header, ':'))] = trim(substr($header, strpos($header, ':') + 1));
+				$headers[strtolower(substr($header, 0, strpos($header, ':')))] = trim(substr($header, strpos($header, ':') + 1));
 			}
 			
 			// parse cookie
@@ -179,6 +179,14 @@ function get_login_form($content, $userfield = 'username')
 			}
 		}
 	}
+}
+
+function get_filename($headers)
+{
+	if(isset($headers['content-disposition']) && 
+		preg_match('/filename="([^"]*)"/i', $headers['content-disposition'], $matches) > 0
+	)
+		$filename = $matches[1];
 }
 
 

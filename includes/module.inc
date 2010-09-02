@@ -468,7 +468,7 @@ function status_admin_modules($settings)
 	// settings permission
 	if(dependency('writable_settings'))
 	{
-		$status['writable_settings_file'] = array(
+		$status['writable_settings'] = array(
 			'name' => lang('settings access title', 'Access to Settings'),
 			'status' => '',
 			'description' => array(
@@ -483,7 +483,7 @@ function status_admin_modules($settings)
 	}
 	else
 	{
-		$status['writable_settings_file'] = array(
+		$status['writable_settings'] = array(
 			'name' => lang('settings access title', 'Access to Settings'),
 			'status' => 'fail',
 			'description' => array(
@@ -773,7 +773,7 @@ function _module_save_db_settings($settings)
 function _module_save_fs_settings($settings)
 {
 	// if the settings file is writable, put the new setting in it
-	if(dependency('writable_settings_file'))
+	if(is_writable(setting('settings_file')))
 	{
 		raise_error('The settings file is writeable!', E_DEBUG|E_WARN);
 		
@@ -825,9 +825,8 @@ function module_get_new_settings($request)
 			$new_setting = $GLOBALS['setting_' . $setting](array_merge($GLOBALS['settings'], $new_settings));
 		else
 			raise_error('Setting_ function for \'' . $setting . '\' does not exist!', E_DEBUG);
-			
+
 		// make sure the new setting is different from the current setting
-print_r(setting($setting));
 		if($new_setting != setting($setting))
 		{
 			$settings_changed = true;
@@ -862,7 +861,7 @@ function output_module($request)
 		
 		if($settings_changed == true)
 		{
-			module_save_settings($GLOBALS['settings'], true);
+			module_save_settings(array_intersect_key($GLOBALS['settings'], $GLOBALS['modules']['settings']['settings']), true);
 		}
 		else
 			raise_error('No settings changed.', E_WARN);

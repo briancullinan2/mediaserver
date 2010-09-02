@@ -2,6 +2,7 @@ name = Watch List
 description = Keeps track of changed directories and files.
 internal = true
 package = core
+settings = watched
 
 [database]
 Filepath = TEXT

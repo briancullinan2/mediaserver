@@ -203,71 +203,6 @@ function dependency($dependency, $ignore_setting = false, $already_checked = arr
 		
 	return false;
 }
- 
-/**
- * Implementation of dependency
- * @ingroup dependency
- * @return true or false if the system has enough memory to operate properly
- */
-function dependency_memory_limit()
-{
-	return (intval(ini_get('memory_limit')) >= 96);
-}
-
-/**
- * Implementation of dependency
- * @ingroup dependency
- * @return true or false if there are any critical files to the system that are writable and could cause a security threat
- */
-function dependency_writable_system_files($settings)
-{
-	// try to make this function return false
-	if(dependency('writable_settings_file') != false)
-		return false;
-		
-	
-	return true;
-}
-
-/**
- * Implementation of dependency
- * @ingroup dependency
- * @return true or false whether or not pear is installed
- */
-function dependency_pear_installed($settings)
-{
-	return include_path('PEAR.php') !== false;
-}
-
-/**
- * Implementation of dependency
- * @ingroup dependency
- * @return true or false if getID3() is installed
- */
-function dependency_getid3_installed($settings)
-{
-	return include_path('getid3' . DIRECTORY_SEPARATOR . 'getid3.lib.php') !== false;
-}
-
-/**
- * Implementation of dependency
- * @ingroup dependency
- * @return true or false if snoopy library is installed in the include directory
- */
-function dependency_curl_installed($settings)
-{
-	return function_exists('curl_init');
-}
-
-/**
- * Implementation of dependency
- * @ingroup dependency
- * @return true or false if EXT JS library is installed in the plain templates directory for use by other templates
- */
-function dependency_extjs_installed($settings)
-{
-	return file_exists(setting_local_root() . 'templates' . DIRECTORY_SEPARATOR . 'plain' . DIRECTORY_SEPARATOR . 'extjs' . DIRECTORY_SEPARATOR . 'ext-all.js');
-}
 
 /**
  * @}
@@ -549,6 +484,11 @@ function type($file)
 	{
 		return false;
 	}
+}
+
+function machine($text)
+{
+	return preg_replace('/[^a-z0-9_\[\]]/i', '_', $text);
 }
 
 /**

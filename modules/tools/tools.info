@@ -1,0 +1,5 @@
+name = Tools
+description = Tools for manipulating the database and viewing different types of information about the system.
+privilage = 10
+template = false
+package = tools

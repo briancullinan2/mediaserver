@@ -1,0 +1,649 @@
+<?php
+
+function menu_movie_download()
+{
+	return array(
+		'admin/tools/movies/downloader' => array(
+			'callback' => 'output_movie_download',
+		),
+		'admin/tools/movies/downloader/%info_singular_step_movies' => array(
+			'callback' => 'output_movie_download_singular'
+		)
+	);
+}
+
+/**
+ * Implementation of dependency
+ * @ingroup dependency
+ */
+function dependency_valid_movie_service($settings)
+{
+	// check that there is services installed
+	if(dependency('all_nzbservices'))
+	{
+		// check that there is a service configured
+		$services = setting('nzbservices');
+		
+		// loop through NZB services until we find the show
+		foreach($services as $i => $config)
+		{
+			$search = setting('nzb_movie_search_' . $i);
+			
+			// all it takes is one
+			if($search != '')
+				return true;
+		}
+	}
+	
+	// check if there is a torrent service available
+	if(dependency('all_torservices'))
+	{
+		// check that there is a service configured
+		$services = setting('torservices');
+		
+		// loop through NZB services until we find the show
+		foreach($services as $i => $config)
+		{
+			$search = setting('tor_movie_search_' . $i);
+			
+			// all it takes is one
+			if($search != '')
+				return true;
+		}
+	}
+	
+	return false;
+}
+
+function setup_movie_download()
+{
+	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'mvdl.singular.inc';
+	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'netflix.inc';
+}
+
+/**
+ * Set up the list of settings
+ * @ingroup setup
+ */
+function setting_movie_download()
+{
+	$settings = array('netflix_xml');
+	
+	// add wrapper functions for nzb_movie_search
+	for($i = 0; $i < 10; $i++)
+	{
+		$GLOBALS['setting_nzb_movie_search_' . $i] = create_function('$settings', 'return setting_nzb_movie_search($settings, \'' . $i . '\');');
+		$settings[] = 'nzb_movie_search_' . $i;
+	}
+	
+	// add wrapper functions for tor_movie_search
+	for($i = 0; $i < 10; $i++)
+	{
+		$GLOBALS['setting_tor_movie_search_' . $i] = create_function('$settings', 'return setting_tor_movie_search($settings, \'' . $i . '\');');
+		$settings[] = 'tor_movie_search_' . $i;
+	}
+	
+	// movie folders
+	for($i = 0; $i < 50; $i++)
+	{
+		$GLOBALS['setting_movie_folder_' . $i] = create_function('$settings', 'return setting_movie_folder($settings, \'' . $i . '\');');
+		$settings[] = 'movie_folder_' . $i;
+	}
+	
+	return $settings;
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ */
+function setting_netflix_xml($settings)
+{
+	// not much to validate, it either is an xml id or it isn't
+	if(isset($settings['netflix_xml']))
+		return $settings['netflix_xml'];
+	return '';
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ */
+function setting_nzb_movie_search($settings, $index)
+{
+	// return the same static service as listed in the nzbservice module
+	if($index == 0)
+		return 'http://nzbmatrix.com/nzb-search.php?cat=1&search=%s';
+	if($index == 1)
+		return 'http://www.newzbin.com/search/query/?searchaction=Go&group=alt.binaries.dvd&q=%s';
+
+	// don't continue with this if stuff is missing
+	if(isset($settings['nzb_movie_search_' . $index]) && 
+		$settings['nzb_movie_search_' . $index] != ''
+	)
+		return $settings['nzb_movie_search_' . $index];
+	// use default
+	elseif(isset($settings['nzbservice_' . $index]['search']) && 
+		$settings['nzbservice_' . $index]['search'] != ''
+	)
+		return $settings['nzbservice_' . $index]['search'];
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ */
+function setting_tor_movie_search($settings, $index)
+{
+	// the static services to not have movies, only tv and music
+	if($index == 0 || $index == 1 || $index == 2)
+		return '';
+
+	// don't continue with this if stuff is missing
+	if(isset($settings['tor_movie_search_' . $index]) && 
+		$settings['tor_movie_search_' . $index] != ''
+	)
+		return $settings['tor_movie_search_' . $index];
+	// use default
+	elseif(isset($settings['torservice_' . $index]['search']) && 
+		$settings['torservice_' . $index]['search'] != ''
+	)
+		return $settings['torservice_' . $index]['search'];
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ */
+function setting_movie_folder($settings, $index)
+{
+	if(isset($settings['movie_folder_' . $index]))
+	{
+		$settings['movie_folder_' . $index] = str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $settings['movie_folder_' . $index]);
+		if(substr($settings['movie_folder_' . $index], -1) != DIRECTORY_SEPARATOR)
+			$settings['movie_folder_' . $index] .= DIRECTORY_SEPARATOR;
+		if(file_exists($settings['movie_folder_' . $index]))
+			return $settings['movie_folder_' . $index];
+	}
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ */
+function setting_movie_folders($settings)
+{
+	if(!isset($settings['movie_folders']))
+		$settings['movie_folders'] = array();
+
+	for($i = 0; $i < 50; $i++)
+	{
+		$folder = setting_movie_folder($settings, $i);
+		if(isset($folder))
+			$settings['movie_folders'][$i] = $folder;
+	}
+	
+	if(setting_installed() && setting('database_enable'))
+	{
+		// add folders in the watch list that include the word movie
+		foreach($GLOBALS['watched'] as $i => $watch)
+		{
+			if(preg_match('/movie/i', $watch['Filepath']) != 0)
+			{
+				$index = count($settings['movie_folders']);
+				$folder = setting_movie_folder(array('movie_folder_' . $index => $watch['Filepath']), $index);
+			}
+		}
+	}
+	
+	return array_values(array_unique($settings['movie_folders']));
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ */
+function validate_movie_download($request, $index)
+{
+	switch($index)
+	{
+		case 'add_movie_folder':
+			if(!isset($request['add_movie_folder']['add']))
+				return;
+				
+			return $request['add_movie_folder']['folder'];
+		break;
+		case 'remove_movie_folder':
+			return generic_validate_numeric($request, 'remove');
+		break;
+		case 'info_singular_step_movies':
+			if(isset($request['info_singular_step_movies']) &&
+				in_array($request['info_singular_step_movies'], array('login', 'login2', 'netflix', 'search'))
+			)
+				return $request['info_singular_step_movies'];
+		break;
+		case 'movie_index':
+			return generic_validate_numeric_zero($request, 'movie_index');
+		break;
+	}
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ */
+function validate_manual_search($request)
+{
+	if(isset($request['manual_search']) && is_string($request['manual_search']))
+		return generic_validate_all_safe($request, 'manual_search');
+	
+	if(!isset($request['manual_search']['search']))
+		return;
+		
+	if(isset($request['manual_search']['text']))
+		return $request['manual_search']['text'];
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ */
+function validate_manual_search_torindex($request)
+{
+	return generic_validate_numeric($request, 'manual_search_torindex');
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ */
+function validate_manual_search_nzbindex($request)
+{
+	return generic_validate_numeric($request, 'manual_search_nzbindex');
+}
+
+/**
+ * Implementation of session
+ * @ingroup session
+ */
+function session_movie_download($request)
+{
+	// might be configuring the module
+	if(!($save = session('movies')) || isset($request['reset_configuration']))
+		$save = array('folders' => setting('movie_folders'));
+
+	// add server
+	if(isset($request['add_movie_folder']))
+	{
+		$new_folder = setting_movie_folder(array('movie_folder_0' => $request['add_movie_folder']), 0);
+		if(isset($new_folder))
+			$save['folders'][] = $new_folder;
+	}
+
+	// remove server
+	if(isset($request['remove_movie_folder']))
+	{
+		unset($save['folders'][$request['remove_movie_folder']]);
+		$save['folders'] = array_values($save['folders']);
+	}
+	
+	// cleanup
+	$save['folders'] = array_unique($save['folders']);
+	
+	return $save;
+}
+
+/**
+ * Implementation of configure
+ * @ingroup configure
+ */
+function configure_movie_download($settings)
+{
+	$settings['netflix_xml'] = setting('netflix_xml');
+	$settings['movie_folders'] = setting('movie_folders');
+	
+	$folder_count = count($settings['movie_folders']);
+	
+	// load services from session
+	if($session_movies = session('movie_download'))
+		$settings['movie_folders'] = $session_movies['folders'];
+	
+	$options = array();
+	
+	$feeds = array();
+	
+	$feeds['netflix_xml'] = array(
+		'name' => 'Netflix XML Q',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Enter the id of the RSS feed to compare to movies on disk or NZB services.',
+				'The Netflix RSS feeds can be found by going to <a href="http://www.netflix.com/RSSFeeds">Netflix RSS Feeds</a>.',
+				'It is recommended you enter the id for the entire Queue.'
+			),
+		),
+		'type' => 'text',
+		'value' => $settings['netflix_xml'],
+	);
+	
+	// use indices instead
+	$feeds['movie_folders'] = array(
+		'name' => 'Movie Folders',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'This is a list for folders that contain movies.  Movies can be folder names, or file names.',
+				'It is recommended that only watched folders be used.'
+			),
+		),
+		'type' => 'set',
+		'options' => array(
+			'remove_movie_folder[folders]' => array(
+				'type' => 'multiselect',
+				'options' => $settings['movie_folders'],
+				'value' => array(),
+				'force_numeric' => true,
+			),
+			array(
+				'value' => '<br />'
+			),
+			'remove_movie_folder[remove]' => array(
+				'type' => 'submit',
+				'value' => 'Remove',
+			),
+			array(
+				'value' => '<br />'
+			),
+			'add_movie_folder[folder]' => array(
+				'type' => 'text',
+				'value' => '',
+				'name' => 'Add Folder',
+			),
+			'add_movie_folder[add]' => array(
+				'type' => 'submit',
+				'value' => 'Add',
+			),
+		),
+	);
+	
+	// add movies for saving
+	foreach($settings['movie_folders'] as $i => $folder)
+	{
+		$feeds['movie_folders']['options']['setting_movie_folder_' . $i] = array(
+			'type' => 'hidden',
+			'value' => $folder,
+		);
+	}
+	
+	// add unsettings
+	for($i = 0; $i < $folder_count - count($settings['movie_folders']); $i++)
+	{
+		$feeds['movie_folders']['options']['setting_movie_folder_' . (count($settings['movie_folders']) + $i)] = array(
+			'type' => 'hidden',
+			'value' => '',
+		);
+	}
+	
+	$options['tv_input'] = array(
+		'name' => 'TV Show Input',
+		'type' => 'fieldset',
+		'options' => $feeds
+	);
+	
+	$download = array();
+	
+	if(setting('nzbservices_enable') == true)
+	{
+		// add nzb services
+		$download = array_merge($download, configure_nzbservices($settings));
+	}
+	
+	if(setting('torservices_enable') == true)
+	{
+		// add torrent services
+		$download = array_merge($download, configure_torservices($settings));
+	}
+	
+	if(!is_module('torservices') && !is_module('nzbservices'))
+	{
+		$download['services'] = array(
+			'name' => 'Download Services',
+			'status' => 'warn',
+			'description' => array(
+				'list' => array(
+					'This module takes advantage of torrent and news group services.',
+					'In order to use this module, the service modules must also be installed.'
+				),
+			),
+			'text' => 'No download service modules installed!',
+		);
+	}
+	
+	$options['tv_download'] = array(
+		'name' => 'Movie Downloads',
+		'type' => 'fieldset',
+		'options' => $download
+	);
+	
+	return $options;
+}
+
+/**
+ * Implementation of output
+ * @ingroup output
+ */
+function output_movie_download($request)
+{
+	// save the manual search to use later
+	if(isset($request['manual_search']))
+		session('movies_manual_search', $request['manual_search']);
+	else
+		$request['manual_search'] = session('movies_manual_search');
+
+	$infos = array();
+
+	// output configuration link
+	raise_error('You may need to <a href="' . url('admin/module/movie_downloader') . '">configure</a> this tool in order to use it properly.', E_WARN);
+
+	// perform television downloading
+	if(dependency('curl_installed') == false)
+	{
+		$infos['curl_installed'] = array(
+			'name' => 'cUrl Not Installed',
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					'The system has detected that cUrl API is NOT INSTALLED.',
+					'cUrl is used to download content from Netflix, and the specified NZB services.',
+				),
+			),
+			'value' => array(
+				'link' => array(
+					'url' => 'http://php.net/manual/en/book.curl.php',
+					'text' => 'Get cUrl',
+				),
+			),
+		);
+	}
+	else
+	{
+		// log in to services
+		$infos['movies_login'] = array(
+			'name' => 'NZB Services Login',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'Logging in to NZB Services.',
+				),
+			),
+			'text' => array(
+				'loading' => 'Loading...'
+			),
+			'singular' => url('admin/tools/movies/downloader/login', true),
+		);
+	}
+	
+	register_output_vars('infos', $infos);
+	
+	theme('tool_info');
+}
+
+/**
+ * Helper function for fetching all movies from services
+ */
+function movies_fetch_movie_service($movie, $i, $is_nzb = true)
+{
+	$downloads = array();
+	
+	// get the config
+	if($is_nzb)
+		$config = setting('nzbservice_' . $i);
+	else
+		$config = setting('torservice_' . $i);
+	
+	// load search settings
+	if($is_nzb)
+		$search = setting('nzb_movie_search_' . $i);
+	else
+		$search = setting('tor_movie_search_' . $i);
+	
+	if($search != '')
+	{
+		// run query, using television search strings
+		if($is_nzb)
+			$result = fetch(sprintf($search, urlencode($movie)), array(), array(), session('nzbservices_' . $i));
+		else
+			$result = fetch(sprintf($search, urlencode($movie)), array(), array(), session('torservices_' . $i));
+		
+		// match nzbs
+		$count = preg_match_all($config['match'], $result['content'], $matches);
+		if($count > 0)
+		{
+			foreach($matches[1] as $i => $link)
+			{
+				// return list of downloads
+				$downloads[$i] = '<a href="' . $link . '">' . htmlspecialchars($movie) . '</a><br />';
+			}
+		}
+	}
+	
+	return $downloads;
+}
+
+/**
+ * Helper function for fetching all movies from services
+ */
+function movies_fetch_movies($movie)
+{
+	$services = setting('nzbservices');
+	
+	$downloads = array();
+	
+	// loop through NZB services until we find the show
+	foreach($services as $i => $config)
+	{
+		$search = setting('nzb_movie_search_' . $i);
+			
+		if($search != '')
+		{
+			// run query, using television search strings
+			$result = fetch(sprintf($search, urlencode($movie)), array(), array(), session('nzbservices_' . $i));
+
+			// match nzbs
+			$count = preg_match_all($config['match'], $result['content'], $matches);
+
+			if($count > 0)
+			{
+				// return list of downloads
+				$downloads[$i] = '<a href="' . sprintf($search, urlencode($movie)) . '">' . htmlspecialchars($movie) . ' on ' . htmlspecialchars($config['name']) . ' (' . $count . ') <img src="' . $config['image'] . '" alt="icon" /></a><br />';
+			}
+		}
+	}
+	
+	$torservices = setting('torservices');
+	
+	// loop through NZB services until we find the show
+	foreach($torservices as $i => $config)
+	{
+		$search = setting('tor_movie_search_' . $i);
+		
+		if($search != '')
+		{
+			// run query, using television search strings
+			$result = fetch(sprintf($search, urlencode($movie)), array(), array(), session('torservices_' . $i));
+			
+			// match nzbs
+			$count = preg_match_all($config['match'], $result['content'], $matches);
+			if($count > 0)
+			{
+				// return list of downloads
+				$downloads[$i] = '<a href="' . sprintf($search, urlencode($movie)) . '">' . htmlspecialchars($movie) . ' on ' . htmlspecialchars($config['name']) . ' (' . $count . ') <img src="' . $config['image'] . '" alt="icon" /></a><br />';
+			}
+		}
+	}
+
+	return $downloads;
+}
+
+/**
+ * Helper function for getting the tokens for all the movies
+ @return an associative array contains movie names and tokens
+ */
+function movies_get_movie_tokens()
+{
+	// get movie folders
+	$settings['movie_folders'] = setting('movie_folders');
+	
+	// first get all directories and merge file paths, and tokens
+	$names = array();
+	$tokens = array();
+	$filepaths = array();
+	foreach($settings['movie_folders'] as $i => $folder)
+	{
+		$movies = get_files(array('dir' => $folder, 'limit' => 32000), $count, true);
+		
+		foreach($movies as $j => $file)
+		{
+			$names[] = $file['Filename'];
+			$tmp_tokens = tokenize($file['Filename']);
+			sort($tmp_tokens['Most']);
+			$tokens[] = implode(' ', $tmp_tokens['Most']);
+			$filepaths[] = $file['Filepath'];
+		}
+	}
+	
+	return array(
+		'names' => $names,
+		'tokens' => $tokens,
+		'filepaths' => $filepaths,
+	);
+}
+
+/**
+ * Helper function
+ * @return an associative array of all the repeated files on disk
+ */
+function movies_repeats_on_disk($disk)
+{
+	$result = array();
+	
+	// try names first because it's easiest
+	$repeats = array_diff_key($disk['names'], array_unique($disk['names']));
+	$orig = array_flip(array_unique($disk['names']));
+	foreach($repeats as $id => $movie)
+	{
+		$result[] = array($disk['filepaths'][$id], $disk['filepaths'][$orig[$movie]]);
+	}
+	
+	// now do tokens
+	$repeats = array_diff_key($disk['tokens'], array_unique($disk['tokens']));
+	$orig = array_flip(array_unique($disk['tokens']));
+	foreach($repeats as $id => $movie)
+	{
+		// exclude movies in the same folder
+		if(dirname($disk['filepaths'][$id]) != dirname($disk['filepaths'][$orig[$movie]]))
+			$result[] = array($disk['filepaths'][$id], $disk['filepaths'][$orig[$movie]]);
+	}
+	
+	return $result;
+}

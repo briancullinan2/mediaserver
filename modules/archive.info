@@ -3,6 +3,7 @@ description = Convert sets of files to an archive using a command line program.
 privilage = 1
 depends on[] = archiver
 settings[] = archiver
+package = file_handlers
 
 [database]
 Filepath = TEXT

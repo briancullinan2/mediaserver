@@ -377,6 +377,8 @@ function settings_get_defaults($settings)
 		{
 			foreach($config['settings'] as $i => $setting)
 			{
+				$GLOBALS['modules']['settings']['settings'][$setting] = $module;
+				
 				if(function_exists('setting_' . $setting))
 					$new_setting = call_user_func_array('setting_' . $setting, array($settings));
 				elseif(isset($GLOBALS['setting_' . $setting]) && is_callable($GLOBALS['setting_' . $setting]))
@@ -442,6 +444,80 @@ function validate_setting_all_reset($request)
 	}
 }
 
+function get_system_files($settings)
+{
+	$paths = explode(PATH_SEPARATOR, get_include_path());
+	$paths[] = setting('settings_file');
+	$paths[] = dirname(__FILE__);
+	
+	return $paths;
+}
+ 
+/**
+ * Implementation of dependency
+ * @ingroup dependency
+ * @return true or false if the system has enough memory to operate properly
+ */
+function dependency_memory_limit()
+{
+	return (intval(ini_get('memory_limit')) >= 96);
+}
+
+/**
+ * Implementation of dependency
+ * @ingroup dependency
+ * @return true or false if there are any critical files to the system that are writable and could cause a security threat
+ */
+function dependency_writable_system_files($settings)
+{
+	// try to make this function return false
+	if(array_sum(array_map('is_writable', get_system_files($settings))) > 0)
+		return false;
+		
+	
+	return true;
+}
+
+/**
+ * Implementation of dependency
+ * @ingroup dependency
+ * @return true or false whether or not pear is installed
+ */
+function dependency_pear_installed($settings)
+{
+	return include_path('PEAR.php') !== false;
+}
+
+/**
+ * Implementation of dependency
+ * @ingroup dependency
+ * @return true or false if getID3() is installed
+ */
+function dependency_getid3_installed($settings)
+{
+	return include_path('getid3' . DIRECTORY_SEPARATOR . 'getid3.lib.php') !== false;
+}
+
+/**
+ * Implementation of dependency
+ * @ingroup dependency
+ * @return true or false if snoopy library is installed in the include directory
+ */
+function dependency_curl_installed($settings)
+{
+	return function_exists('curl_init');
+}
+
+/**
+ * Implementation of dependency
+ * @ingroup dependency
+ * @return true or false if EXT JS library is installed in the plain templates directory for use by other templates
+ */
+function dependency_extjs_installed($settings)
+{
+	return file_exists(setting_local_root() . 'templates' . DIRECTORY_SEPARATOR . 'plain' . DIRECTORY_SEPARATOR . 'extjs' . DIRECTORY_SEPARATOR . 'ext-all.js');
+}
+
 /**
  * @defgroup status Status Functions
  * All functions that return the output configuration for the dependencies listed in the module's config, for use on the configuration page and the status page
@@ -500,6 +576,13 @@ function status_settings($settings)
 		);
 	}
 	
+	$corrections = array();
+	$files = get_system_files($settings);
+	foreach($files as $i => $file)
+	{
+		if(is_writable($file))
+			$corrections[] = '\'' . $file . '\' is writable, remove write permissions.';
+	}
 	if(dependency('writable_system_files'))
 	{
 		$status['writable_system_files'] = array(
@@ -525,7 +608,10 @@ function status_settings($settings)
 				),
 			),
 			'disabled' => true,
-			'value' => 'You must correct the following permission problems:',
+			'value' => array(
+				'You must correct the following permission problems:',
+				'list' => $corrections,
+			),
 		);
 	}
 	

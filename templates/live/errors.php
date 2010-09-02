@@ -3,24 +3,13 @@
 
 function theme_live_debug_block()
 {
-	?>
-	<script type="application/javascript" language="javascript">
-		function toggleDiv(id) {
-			if(document.getElementById(id).style.display == 'none') {
-				document.getElementById(id).style.display = 'block';
-			} else {
-				document.getElementById(id).style.display = 'none';
-			}
-		}
-	</script>
-	<?php
 	if($GLOBALS['output']['user']['Username'] != 'guest')
 	{
 		?><div id="debug" class="debug hide"><?php
 		foreach($GLOBALS['debug_errors'] as $i => $error)
 		{
 			?>
-			<a class="msg <?php print (substr($error->message, 0, 10) == 'PHP ERROR:')?'php':((substr($error->message, 0, 9) == 'DB ERROR:')?'db':((substr($error->message, 0, 8) == 'VERBOSE:')?'verbose':'')); ?>" onClick="toggleDiv('error_<?php print $i; ?>')"><?php print htmlspecialchars($error->message); ?></a>
+			<a class="msg <?php print (substr($error->message, 0, 10) == 'PHP ERROR:')?'php':((substr($error->message, 0, 9) == 'DB ERROR:')?'db':((substr($error->message, 0, 8) == 'VERBOSE:')?'verbose':'')); ?>" onClick="$('#error_<?php print $i; ?>').toggle()"><?php print htmlspecialchars($error->message); ?></a>
 			<div id="error_<?php print $i; ?>" style="display:none;">
 				<code>
 					<pre>

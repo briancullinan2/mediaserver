@@ -16,16 +16,18 @@ function menu_watched()
 /**
  * Implementation of setup
  */
-function setup_watched()
+function setting_watched()
 {
-	$GLOBALS['modules']['watched']['settings'] = array();
+	$settings = array();
 	
 	// add wrapper functions for validating a service entry
 	for($i = 0; $i < 128; $i++)
 	{
-		$GLOBALS['setting_watched_' . $i] = create_function('$settings', 'return setting_watched($settings, \'' . $i . '\');');
-		$GLOBALS['modules']['watched']['settings'][] = 'watched_' . $i;
+		$GLOBALS['setting_watched_' . $i] = create_function('$settings', 'return setting_watched_index($settings, \'' . $i . '\');');
+		$settings[] = 'watched_' . $i;
 	}
+	
+	return $settings;
 }
 
 /** 
@@ -104,7 +106,7 @@ function handles_watched($dir)
 /**
  * Helper function
  */
-function setting_watched($settings, $index)
+function setting_watched_index($settings, $index)
 {
 	if(isset($settings['watched_' . $index]))
 	{
@@ -138,7 +140,7 @@ function setting_watches($settings)
 	
 	for($i = 0; $i < 128; $i++)
 	{
-		$watch = setting_watched($settings, $i);
+		$watch = setting_watched_index($settings, $i);
 		if(isset($watch) && substr($watch, 0, 1) == '^')
 			$watches[] = get_info_files(substr($watch, 1));
 	}
@@ -157,7 +159,7 @@ function setting_ignores($settings)
 	
 	for($i = 0; $i < 128; $i++)
 	{
-		$watch = setting_watched($settings, $i);
+		$watch = setting_watched_index($settings, $i);
 		if(isset($watch) && substr($watch, 0, 1) == '!')
 			$ignores[] = get_info_files(substr($watch, 1));
 	}
