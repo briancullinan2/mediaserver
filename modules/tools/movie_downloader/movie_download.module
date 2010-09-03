@@ -54,18 +54,6 @@ function setting_movie_download()
  * Implementation of setting
  * @ingroup setting
  */
-function setting_netflix_xml($settings)
-{
-	// not much to validate, it either is an xml id or it isn't
-	if(isset($settings['netflix_xml']))
-		return $settings['netflix_xml'];
-	return '';
-}
-
-/**
- * Implementation of setting
- * @ingroup setting
- */
 function setting_nzb_movie_search($settings, $index)
 {
 	// return the same static service as listed in the nzbservice module
@@ -95,6 +83,8 @@ function setting_tor_movie_search($settings, $index)
 	// the static services to not have movies, only tv and music
 	if($index == 0 || $index == 1 || $index == 2)
 		return '';
+	if($index == 3)
+		return 'http://thedvdclub.org/browse.php?search=%s&cat=0&blah=0&incldead=1';
 
 	// don't continue with this if stuff is missing
 	if(isset($settings['tor_movie_search_' . $index]) && 

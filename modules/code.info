@@ -1,0 +1,12 @@
+name = Code
+description = Highlight and store source code files for many languages.
+depends on[] = highlighter
+settings[] = highlighter
+package = file_handlers
+
+[database]
+Words = TEXT
+HTML = TEXT
+LineCount = INT
+Language = TEXT
+Filepath = TEXT

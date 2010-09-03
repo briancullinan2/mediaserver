@@ -11,3 +11,8 @@
 	z-index:1000;
 }
 
+#codepreview {
+	height:500px;
+	overflow:auto;
+	white-space:nowrap;
+}

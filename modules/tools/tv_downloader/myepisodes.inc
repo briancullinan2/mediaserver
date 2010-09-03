@@ -2,6 +2,24 @@
 
 
 /**
+ * Implementation of setting
+ * @ingroup setting
+ */
+function setting_myepisodes($settings)
+{
+	if(isset($settings['myepisodes']) && isset($settings['myepisodes']['username']) &&
+		isset($settings['myepisodes']['password']))
+		return array(
+			'username' => $settings['myepisodes']['username'],
+			'password' => $settings['myepisodes']['password'],
+		);
+	return array(
+		'username' => '',
+		'password' => '',
+	);
+}
+
+/**
  * Helper function for logging in to myepisodes
  */
 function television_myepisodes_login()

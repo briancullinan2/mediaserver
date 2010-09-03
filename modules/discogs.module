@@ -1,0 +1,204 @@
+<?php
+
+/** 
+ * Implementation of handles
+ * @ingroup handles
+ */
+function handles_discogs($file)
+{
+	return handles($file, 'audio');
+}
+
+function setting_discogs_api($settings)
+{
+	return '903e98c4a3';
+}
+
+
+function get_info_discogs($file)
+{
+	$audioinfo = get_info_audio($file);
+	
+	// match as much information as possible
+	if(!empty($audioinfo['Artist']) && !empty($audioinfo['Album']))
+	{
+		$fileinfo = array();
+		$fileinfo['Filepath'] = str_replace('\\', '/', $file);
+		
+		$search_text = $audioinfo['Artist'] . ' - ' . $audioinfo['Album'];
+		$search = 'http://www.discogs.com/search?type=all&q=' . urlencode($search_text) . '&f=xml&api_key=' . setting('discogs_api');
+		$result = fetch($search, array(), array('Accept-Encoding: gzip'));
+			
+		// check for errors
+		if(preg_match('/<error>/i', $result['content']) > 0)
+			return false;
+		
+		// parse content
+		$titles = get_titles($result['content']);
+		$types = get_types($result['content']);
+		$uris = get_uris($result['content']);
+		
+		// find the closest match
+		list($album_artist, $key) = get_closest($search_text, $titles);
+	
+		$fileinfo['Type'] = ucfirst($types[$key]);
+		
+		// try to find artist album first
+		if($types[$key] == 'artist')
+		{
+			// get artist info then album
+			$query = $uris[$key] . '?f=xml&api_key=' . setting('discogs_api');
+			$artist = fetch($query, array(), array('Accept-Encoding: gzip'));
+		}
+		elseif($types[$key] == 'release')
+		{
+			$query = $uris[$key] . '?f=xml&api_key=' . setting('discogs_api');
+			$album = fetch($query, array(), array('Accept-Encoding: gzip'));
+			
+			$releases = get_releases($album['content']);
+			$fileinfo['ReleaseNum'] = $releases[0];
+		}
+		
+		if(!isset($album))
+		{
+			// try to match up release
+			$albums = get_titles($artist['content']);
+			$releases = get_releases($artist['content']);
+			
+			// find the closest match
+			list($album, $key) = get_closest($audioinfo['Album'], $albums);
+			
+			$fileinfo['ReleaseNum'] = $releases[$key];
+		
+			// get album info
+			$query = 'http://www.discogs.com/release/' . $releases[$key] . '?f=xml&api_key=' . setting('discogs_api');
+			$album = fetch($query, array(), array('Accept-Encoding: gzip'));
+			$fileinfo['Type'] = 'Release';
+		}
+	
+		if(!isset($artist))
+		{
+			// try to match up release
+			$artists = get_artists($album['content']);
+		
+			// find the closest match
+			list($artist) = get_closest($audioinfo['Artist'], $artists);
+			
+			// get album info
+			$query = 'http://www.discogs.com/artist/' . urlencode($artist) . '?f=xml&api_key=' . setting('discogs_api');
+			$artist = fetch($query, array(), array('Accept-Encoding: gzip'));
+		}
+
+		// match up track
+		if(!empty($audioinfo['Title']))
+		{
+			// get position
+			$tracks = get_tracks($album['content']);
+			$positions = get_positions($album['content']);
+			
+			// find closest match
+			list($track, $key) = get_closest($audioinfo['Title'], $tracks);
+			
+			$fileinfo['Position'] = $positions[$key];
+			$fileinfo['Type'] = 'Track';
+		}
+		
+		// get image
+		$images = get_images($album['content']);
+		if(isset($images[0]))
+		{
+			$query = $images[0] . '?api_key=' . setting('discogs_api');
+			$image = fetch($query, array(), array('Accept-Encoding: gzip'));
+			$fileinfo['Image'] = $image['content'];
+		}
+		
+		
+		$fileinfo['ArtistXml'] = $artist['content'];
+		$fileinfo['ReleaseXml'] = $album['content'];
+	
+		return $fileinfo;
+	}
+	
+	return false;
+}
+
+function get_closest($search_text, $titles)
+{
+	$distances = array_map('levenshtein', $titles, array_fill(0, count($titles), $search_text));
+	asort($distances);
+	reset($distances);
+	$closest = key($distances);
+	
+	return array(
+		$titles[$closest],
+		$closest,
+		'value' => $titles[$closest],
+		'key' => $closest,
+	);
+}
+
+function get_artists($content)
+{
+	if(preg_match_all('/<artist><name>([^<]*?)<\/name><\/artist>/i', $content, $matches) > 0)
+		return $matches[1];
+	else
+		return array();
+}
+
+function get_titles($content)
+{
+	if(preg_match_all('/<title>([^<]*?)<\/title>/i', $content, $matches) > 0)
+		return $matches[1];
+	else
+		return array();
+}
+
+function get_tracks($content)
+{
+	if(preg_match_all('/<track>.*?<title>([^<]*?)<\/title>/i', $content, $matches) > 0)
+		return $matches[1];
+	else
+		return array();
+}
+
+function get_types($content)
+{
+	if(preg_match_all('/<result[^>]*?type="([^"]*?)">/i', $content, $matches) > 0)
+		return $matches[1];
+	else
+		return array();
+}
+
+function get_uris($content)
+{
+	if(preg_match_all('/<uri>([^<]*?)<\/uri>/i', $content, $matches) > 0)
+		return $matches[1];
+	else
+		return array();
+}
+
+function get_releases($content)
+{
+	if(preg_match_all('/<release[^>]*?id="([^"]*?)"[^>]*?>/i', $content, $matches) > 0)
+		return $matches[1];
+	else
+		return array();
+}
+
+function get_images($content)
+{
+	if(preg_match_all('/<image[^>]*?uri="([^"]*?)"/i', $content, $matches) > 0)
+		return $matches[1];
+	else
+		return array();
+}
+
+function get_positions($content)
+{
+	if(preg_match_all('/<position>([^<]*?)<\/position>/i', $content, $matches) > 0)
+		return $matches[1];
+	else
+		return array();
+}
+
+

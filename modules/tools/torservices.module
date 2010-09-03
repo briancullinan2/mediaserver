@@ -13,7 +13,7 @@ function setting_torservices()
 	for($i = 0; $i < 10; $i++)
 	{
 		// first 3 torrent services are static
-		if($i > 2)
+		if(!function_exists('setting_torservice_' . $i))
 			$GLOBALS['setting_torservice_' . $i] = create_function('$settings', 'return setting_torservice($settings, \'' . $i . '\');');
 		$settings[] = 'torservice_' . $i;
 	}
@@ -112,6 +112,19 @@ function setting_torservice_2($settings)
 		'exclude' => 'cookie'
 	));
 	return setting_torservice($settings, 2);
+}
+
+function setting_torservice_3($settings)
+{
+	$settings['torservice_3'] = array_merge((isset($settings['torservice_3']) && is_array($settings['torservice_3']))?$settings['torservice_3']:array(), array(
+		'name' => 'TheDvdClub',
+		'match' => '/<a id="hltorrent9546" href="([^"]*)"/i',
+		'search' => '',
+		'login' => 'http://thedvdclub.org/login.php',
+		'loginfail' => '/color="red">Error:/i',
+		'exclude' => 'cookie'
+	));
+	return setting_torservice($settings, 3);
 }
 
 /**

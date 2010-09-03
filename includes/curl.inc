@@ -83,25 +83,8 @@ function fetch($url, $post = array(), $headers = array(), $cookies = array())
 		curl_close($ch);
 		
 		// process cookies
-		$headers = array();
-		foreach($headers_raw as $i => $header)
-		{
-			// parse header
-			if(strpos($header, ':') !== false)
-			{
-				$headers[strtolower(substr($header, 0, strpos($header, ':')))] = trim(substr($header, strpos($header, ':') + 1));
-			}
-			
-			// parse cookie
-			if(!strncmp($header, "Set-Cookie:", 11))
-			{
-				$cookiestr = trim(substr($header, 11, -1));
-				$cookie = explode(';', $cookiestr);
-				$cookie = explode('=', $cookie[0]);
-				$cookiename = trim(array_shift($cookie)); 
-				$cookies[$cookiename] = trim(implode('=', $cookie));
-			}
-		}
+		list($headers, $new_cookies) = parse_headers($headers_raw);
+		$cookies = array_merge($cookies, $new_cookies);
 		
 		// delete cookie jar because they are saved and return in an array instead
 		if($cookie_file !== false) unlink($cookie_file);
@@ -114,6 +97,38 @@ function fetch($url, $post = array(), $headers = array(), $cookies = array())
 		
 		return array('headers' => array(), 'content' => '', 'cookies' => array(), 'status' => 0);
 	}
+}
+
+function parse_headers($headers_raw)
+{
+	$headers = array();
+	$cookies = array();
+	
+	foreach($headers_raw as $i => $header)
+	{
+		// parse header
+		if(strpos($header, ':') !== false)
+		{
+			$headers[strtolower(substr($header, 0, strpos($header, ':')))] = trim(substr($header, strpos($header, ':') + 1));
+		}
+		
+		// parse cookie
+		if(!strncmp($header, "Set-Cookie:", 11))
+		{
+			$cookiestr = trim(substr($header, 11, -1));
+			$cookie = explode(';', $cookiestr);
+			$cookie = explode('=', $cookie[0]);
+			$cookiename = trim(array_shift($cookie)); 
+			$cookies[$cookiename] = trim(implode('=', $cookie));
+		}
+	}
+	
+	return array(
+		$headers,
+		$cookies,
+		'headers' => $headers,
+		'cookies' => $cookies,
+	);
 }
 
 /**

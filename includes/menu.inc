@@ -24,11 +24,23 @@ function setup_menu()
 	if(!isset($GLOBALS['menus']))
 		$GLOBALS['menus'] = array();
 		
-	// get menus defined by modules
-	invoke_all_callback('menu', 'add_menu');
+	bootstrap_menu($GLOBALS['modules']);
+}
 
+function bootstrap_menu($modules)
+{
+	foreach($modules as $module => $config)
+	{
+		unset($result);
+		
+		if(dependency($module))
+			$result = invoke_module('menu', $module);
+			
+		add_menu($module, isset($result)?$result:NULL);
+	}
+	
 	// loop through modules and process menu items
-	foreach($GLOBALS['modules'] as $module => $config)
+	foreach($modules as $module => $config)
 	{
 		if(isset($GLOBALS['menus'][$module]))
 			continue;

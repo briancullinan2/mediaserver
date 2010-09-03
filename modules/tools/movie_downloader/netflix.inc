@@ -2,6 +2,18 @@
 
 
 /**
+ * Implementation of setting
+ * @ingroup setting
+ */
+function setting_netflix_xml($settings)
+{
+	// not much to validate, it either is an xml id or it isn't
+	if(isset($settings['netflix_xml']))
+		return $settings['netflix_xml'];
+	return '';
+}
+
+/**
  * Helper function
  * @return an associative array of all the repeated files on netflix
  */

@@ -41,24 +41,6 @@ function setting_module()
 }
 
 
-
-function setup_module()
-{
-	// create functions for checking module_enable
-	foreach($GLOBALS['modules'] as $module => $config)
-	{
-		// if the module supplys it's own function for checking if it is enabled
-		//   this is useful if the enable state depends on more then the dependencies and needs logic to figure it out
-		if(!function_exists('setting_' . $module . '_enable'))
-		{
-			if(!in_array($module, get_required_modules()))
-				$GLOBALS['setting_' . $module . '_enable'] = create_function('$request', 'return setting_modules_enable($request, \'' . $module . '\');');
-			else
-				$GLOBALS['setting_' . $module . '_enable'] = create_function('$request', 'return true;');
-		}
-	}
-}
-
 /**
  * Implementation of setting, validate all module_enable settings
  * @ingroup setting
@@ -81,7 +63,7 @@ function load_modules($dir)
 		
 	$modules = array();
 	
-	$files = scan_directory($dir, 'is_info', 3);
+	$files = scan_directory($dir, 'is_info', 2);
 
 	foreach($files as $i => $file)
 	{
@@ -173,6 +155,18 @@ function load_module($path)
 			register_trigger($trigger, $config, $module);
 		}
 		
+		// create enabled functions
+		// if the module supplys it's own function for checking if it is enabled
+		//   this is useful if the enable state depends on more then the dependencies and needs logic to figure it out
+		if(!function_exists('setting_' . $module . '_enable'))
+		{
+			if(!in_array($module, get_required_modules()))
+				$GLOBALS['setting_' . $module . '_enable'] = create_function('$request', 'return setting_modules_enable($request, \'' . $module . '\');');
+			else
+				$GLOBALS['setting_' . $module . '_enable'] = create_function('$request', 'return true;');
+		}
+		
+		// add to global list
 		$GLOBALS['modules'][$config['module']] = $config;
 		
 		return $GLOBALS['modules'][$config['module']];
@@ -684,7 +678,7 @@ function validate_reset_configuration($request)
 function module_save_settings($settings, $force_file = false)
 {
 	// get default settings so they are not included in the save
-	$defaults = settings_get_defaults(array());
+	$defaults = get_default_settings(array());
 
 	// only write the settings that are not the default
 	$new_settings = array();
@@ -858,10 +852,9 @@ function output_module($request)
 	{
 		// get changed settings
 		$settings_changed = module_get_new_settings($request);
-		
 		if($settings_changed == true)
 		{
-			module_save_settings(array_intersect_key($GLOBALS['settings'], $GLOBALS['modules']['settings']['settings']), true);
+			module_save_settings(array_intersect_key($GLOBALS['settings'], $GLOBALS['all_settings']), true);
 		}
 		else
 			raise_error('No settings changed.', E_WARN);

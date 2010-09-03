@@ -1,0 +1,15 @@
+name = DiscOgs
+description = Get discography information for all music.
+depends on[] = audio
+depends on[] = curl_installed
+package = file_handlers
+settings[] = discogs_api
+
+[database]
+Filepath = TEXT
+ReleaseNum = TEXT
+Position = TEXT
+Type = TEXT
+Image = BLOB
+ReleaseXml = TEXT
+ArtistXml = TEXT

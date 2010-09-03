@@ -56,17 +56,26 @@ function bootstrap($mode = 'all')
 			
 			bootstrap('mime');
 			
-			// run some known setup functions
-			setup_module();
-		
 			invoke_all_callback('setup', 'disable_module');
-			
+		
 			request_validate();
 			
 			break;
 		
 		case 'mime':
 			setup_mime();
+			break;
+			
+		case 'modules':
+			$modules = func_get_arg(1);
+			
+			invoke_all('bootstrap', $modules);
+
+			foreach($modules as $module => $config)
+			{
+				invoke_module('setup', $module);
+			}
+			
 			break;
 	}
 	
@@ -111,7 +120,6 @@ function setup_mime()
 				}
 			}
 		}
-		
 		
 		// set global variables
 		$GLOBALS['ext_to_mime'] = $ext_to_mime;

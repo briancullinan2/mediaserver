@@ -2,3 +2,4 @@ name = Torrent Services
 description = Provides configuration for Torrenting websites and torrent files.
 privilage = 10
 settings = torservices
+package = tools

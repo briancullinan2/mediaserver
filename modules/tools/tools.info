@@ -3,3 +3,4 @@ description = Tools for manipulating the database and viewing different types of
 privilage = 10
 template = false
 package = tools
+settings = tools

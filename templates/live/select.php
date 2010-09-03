@@ -138,7 +138,26 @@ function theme_live_files($files = NULL)
 	else
 	{
 		$scheme = live_get_scheme();
-		if($scheme == 'image' && is_module('convert'))
+		if($scheme == 'code' && is_module('code'))
+		{
+			?><div id="codepreview"><?php print $files[0]['HTML']; ?></div>
+			<div class="filestrip">
+			<div class="files" id="files" style="width:4160px;"><?php
+			foreach($files as $i => $file)
+			{
+				// check if we should use an image with preview instead of usual file
+				if(handles($file['Filepath'], 'code'))
+				{
+					theme('file_preview_code', $file);
+				}
+				else
+				{
+					theme('file', $file, $GLOBALS['output']['handler']);
+				}
+			}
+			?></div></div><?php
+		}
+		elseif($scheme == 'image' && is_module('convert'))
 		{
 			?><img id="preview" src="<?php print url('convert/png?cheight=500&cwidth=500&id=' . $files[0]['id']); ?>" />
 			<div class="filestrip">
@@ -148,7 +167,7 @@ function theme_live_files($files = NULL)
 				// check if we should use an image with preview instead of usual file
 				if(handles($file['Filepath'], 'image'))
 				{
-					theme('file_preview', $file);
+					theme('file_preview_image', $file);
 				}
 				else
 				{
@@ -169,7 +188,29 @@ function theme_live_files($files = NULL)
 	}
 }
 
-function theme_live_file_preview($file)
+function theme_live_file_preview_code($file)
+{
+	$html = live_alter_file($file);
+	
+	$link = "$('#codepreview').load('" . url('files/code/' . $html['id']) . "/" . urlencode($file['Filename']) . "')";
+	
+	?>
+	<div class="file <?php print $html['Filetype']; ?>" onmousedown="deselectAll(event);fileSelect(this, true, event);return false;" oncontextmenu="showMenu(this);return false;" id="<?php print $html['id']; ?>"><div class="notselected"></div>
+		<table class="itemTable" cellpadding="0" cellspacing="0" onclick="<?php print $link; ?>">
+			<tr>
+				<td>
+					<div class="thumb file_ext_<?php print $html['Filetype']; ?> file_type_<?php print isset($html['Filemime'])?str_replace('/', ' file_type_', $html['Filemime']):''; ?>">
+						<img src="<?php print url('template/live/images/s.gif'); ?>" alt="<?php print $file['Filetype']; ?>" height="48" width="48">
+					</div>
+				</td>
+			</tr>
+		</table>
+		<a class="itemLink" href="javascript:void(0);" onclick="<?php print $link; ?>; return false;" onmouseout="this.parentNode.firstChild.className = 'notselected'; if(!loaded){return false;} document.getElementById('info_<?php print $html['id']; ?>').style.display = 'none';document.getElementById('info_<?php print $html['id']; ?>').style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.className = 'selected'; if(!loaded){return false;} document.getElementById('info_<?php print $html['id']; ?>').style.display = '';document.getElementById('info_<?php print $html['id']; ?>').style.visibility = 'visible'; return true;"><span><?php print $html['Filename']; ?></span></a>
+	</div>
+	<?php
+}
+
+function theme_live_file_preview_image($file)
 {
 	$html = live_alter_file($file);
 	

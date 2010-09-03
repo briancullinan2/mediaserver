@@ -162,7 +162,7 @@ function theme__form_object($field_name, $config)
 					?></legend><?php
 				}
 				
-				?><table id="table_<?php print machine($field_name); ?>" <?php print (isset($options['collapsed']) && $options['collapsed'] == true)?'style="display:none;"':''; ?> border="0" cellpadding="0" cellspacing="0"><?php
+				?><table id="table_<?php print machine($field_name); ?>" <?php print (isset($config['collapsed']) && $config['collapsed'] == true)?'style="display:none;"':''; ?> border="0" cellpadding="0" cellspacing="0"><?php
 				
 				theme('form_tableset', $config['options']);
 				

@@ -13,7 +13,7 @@ function setting_nzbservices()
 	// add wrapper functions for validating a service entry
 	for($i = 0; $i < 10; $i++)
 	{
-		if($i > 1)
+		if(!function_exists('setting_nzbservice_' . $i))
 			$GLOBALS['setting_nzbservice_' . $i] = create_function('$settings', 'return setting_nzbservice($settings, \'' . $i . '\');');
 		$settings[] = 'nzbservice_' . $i;
 	}

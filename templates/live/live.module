@@ -33,7 +33,7 @@ function theme_live_styles()
 {
 	header('Content-Type: text/css');
 	$styles = array('css/types.css', 'css/search.css', 'css/layout.css', 'css/menu.css', 'css/files.css'
-		, 'css/errors.css', 'css/forms.css', 'css/footer.css', 'css/select.css'
+		, 'css/errors.css', 'css/forms.css', 'css/footer.css', 'css/select.css', 'css/geshi.css', 'css/highlight.css'
 	);
 	
 	foreach($styles as $i => $style)
@@ -101,6 +101,12 @@ function live_get_colors()
 			'outer' => '#88DDBB #66CCAA #55BB99',
 			'fg' => '#6FA',
 		),
+		'code' => array(
+			'bg' => '#909',
+			'inner' => '#884488 #883388 #772277',
+			'outer' => '#BBAABB #AACCAA #99BB99',
+			'fg' => '#FAF',
+		),
 	);
 
 	$scheme = live_get_scheme();
@@ -152,8 +158,8 @@ function live_alter_file($file)
 		//$file[$column] = preg_replace('/([^ ]{25})/i', '$1<br />', $file[$column]);
 		elseif($column == 'Filesize')
 			$file['Filesize'] = roundFileSize($file['Filesize']);
-		elseif($column == 'Compressed')
-			$file['Compressed'] = roundFileSize($file['Compressed']);
+		elseif($column == 'Uncompressed')
+			$file['Uncompressed'] = roundFileSize($file['Uncompressed']);
 		elseif($column == 'Bitrate')
 			$file['Bitrate'] = round($file['Bitrate'] / 1000, 1) . ' kbs';
 		elseif($column == 'Length')

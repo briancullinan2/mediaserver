@@ -16,7 +16,9 @@ function register_settings()
 		'name' => 'General Settings',
 		'description' => 'Contains basic settings for site operation.',
 		'privilage' => 10,
-		'settings' => 'settings',
+		'settings' => array('database_reset', 'all_reset', 'installed', 'system_type', 'local_root', 'settings_file', 'modrewrite', 
+			'html_domain', 'html_root', 'html_name', 'debug_mode', 'recursive_get', 'no_bots', 'buffer_size', 'verbose',
+		),
 		'package' => 'core',
 		'template' => false,
 		'depends on' => array('memory_limit', 'writable_system_files', 'pear_installed', 
@@ -51,6 +53,10 @@ function preload_settings()
 		}
 	}
 	
+	// this stores a list of all the settings from the modules
+	if(!isset($GLOBALS['all_settings']))
+		$GLOBALS['all_settings'] = array();
+		
 	// the include must have failed
 	if(!isset($GLOBALS['settings']) || empty($GLOBALS['settings']))
 	{
@@ -83,29 +89,37 @@ function setup_settings()
 			raise_error('There was an error getting the administrative settings from the database!', E_DEBUG);
 	}
 
+	// get settings from functions
+	bootstrap_settings($GLOBALS['modules']);
+	
+	// merge everything with the default settings
+	$GLOBALS['settings'] = array_merge(get_default_settings($GLOBALS['settings']), $GLOBALS['settings']);
+}
+
+function bootstrap_settings($modules)
+{
 	// loop through the modules and call settings functions on them if they are set to callbacks
-	foreach(get_modules() as $module => $config)
+	foreach($modules as $module => $config)
 	{
 		if(isset($config['settings']) && is_string($config['settings']) && 
 			$config['settings'] == $module && function_exists('setting_' . $module)
 		)
+		{
 			$GLOBALS['modules'][$module]['settings'] = invoke_module('setting', $module, array($GLOBALS['settings']));
+		}
+		
+		// merge new settings with total list of settings
+		if(isset($config['settings']))
+		{
+			if(is_array($GLOBALS['modules'][$module]['settings']))
+			{
+				$setting_module_pairs = array_fill_keys($GLOBALS['modules'][$module]['settings'], $module);
+				$GLOBALS['all_settings'] = array_merge($setting_module_pairs, $GLOBALS['all_settings']);
+			}
+			else
+				raise_error('Settings is not an array for module \'' . $module . '\'.', E_DEBUG);
+		}
 	}
-	
-	// merge everything with the default settings
-	$GLOBALS['settings'] = array_merge(settings_get_defaults($GLOBALS['settings']), $GLOBALS['settings']);
-}
-
-/**
- * Implementation of settings
- * DO NOT TOUCH!  This is how the dependency_settings() function determines when this module has been setup in setup_settings()
- * @ingroup settings
- */
-function setting_settings()
-{
-	return array('database_reset', 'all_reset', 'installed', 'system_type', 'local_root', 'settings_file', 'modrewrite', 
-		'html_domain', 'html_root', 'html_name', 'debug_mode', 'recursive_get', 'no_bots', 'buffer_size', 'verbose',
-	);
 }
 
 /**
@@ -293,36 +307,6 @@ function setting_modrewrite($settings)
 }
 
 /**
- * Implementation of dependency
- * Get all the dependencies based on what settings must be set up first
- * @ingroup dependency
- */
-function dependency_settings($settings)
-{
-	// this is a hack to return empty array after the setup has been done
-	if(isset($GLOBALS['output']['modules']))
-		return array();
-
-	$depends = array();
-	
-	// loop through all the modules and look for config settings set to the module name
-	// those modules must be set up before settings tries to load their default values
-	foreach(get_modules() as $module => $config)
-	{
-		if(isset($config['settings']) && is_string($config['settings']) && 
-			$config['settings'] == $module && function_exists('setting_' . $module)
-		)
-			$depends[] = $module;
-	}
-	
-	// always load database first if it is being used
-	if(dependency('database') !== false)
-		$depends[] = 'database';
-
-	return $depends;
-}
-
-/**
  * @defgroup setting Settings Functions
  * All functions that handling site settings, basically designed exactly the same way as validate()
  * @param settings the current list of settings for settings to depend on each other
@@ -363,7 +347,7 @@ function setting($name, $default = NULL)
  * Get all the default settings
  * @ingroup setting
  */
-function settings_get_defaults($settings)
+function get_default_settings($settings)
 {
 	// existing settings are passed in to this function incase a default depends on something already set up
 	
@@ -377,8 +361,6 @@ function settings_get_defaults($settings)
 		{
 			foreach($config['settings'] as $i => $setting)
 			{
-				$GLOBALS['modules']['settings']['settings'][$setting] = $module;
-				
 				if(function_exists('setting_' . $setting))
 					$new_setting = call_user_func_array('setting_' . $setting, array($settings));
 				elseif(isset($GLOBALS['setting_' . $setting]) && is_callable($GLOBALS['setting_' . $setting]))

@@ -86,7 +86,7 @@ function install_table($handler, $struct, $callback = NULL)
 	$query[strlen($query)-1] = ')';
 	
 	// query database
-	$result = @db_query($query);
+	$result = db_query($query);
 	if($callback !== NULL)
 	{
 		call_user_func_array($callback, array($result, database($handler)));

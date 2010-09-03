@@ -1,0 +1,540 @@
+<?php
+
+
+/** 
+ * Implementation of setup_handler
+ * @ingroup setup_handler
+ */
+function setup_code()
+{
+	stream_wrapper_register('code', 'code');
+	
+	if(setting('highlighter') == 'geshi')
+		load_include('geshi' . DIRECTORY_SEPARATOR . 'geshi.php');
+	else
+		load_include('Text' . DIRECTORY_SEPARATOR . 'Highlighter.php');
+}
+
+/**
+ * Implementation of dependency
+ * @ingroup dependency
+ */
+function dependency_highlighter($settings)
+{
+	// get the archiver it is set to
+	$settings['highlighter'] = setting('highlighter');
+	$settings['local_root'] = setting_local_root();
+
+	// if that archiver is not installed, return false
+	if($settings['highlighter'] == 'pear' && dependency('pear_installed') != false && include_path('Text/Highlighter.php') !== false)
+		return true;
+	elseif($settings['highlighter'] == 'gheshi' && 
+		include_path('geshi' . DIRECTORY_SEPARATOR . 'geshi.php') !== false)
+		return true;
+	else
+		return false;
+}
+
+/**
+ * Implementation of configure
+ * @ingroup configure
+ */
+function configure_code($settings, $request)
+{
+	$settings['highlighter'] = setting('highlighter');
+	
+	$options = array();
+	
+	if(dependency('highlighter'))
+	{
+		$options['highlighter'] = array(
+			'name' => lang('highlighter title', 'Highlighter'),
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					lang('highlighter description 1', 'This script comes equiped with 2 code highlighting tools.'),
+					lang('highlighter description 2', 'PEAR::Text_Highlighter may be used, or the popular GeSHi highlighter.'),
+				),
+			),
+			'type' => 'select',
+			'value' => $settings['highlighter'],
+			'options' => array(
+				'pear' => 'PEAR Text_Highlighter Extension',
+				'geshi' => 'GeSHi Highligher',
+			),
+		);
+	}
+	else
+	{
+		$options['highlighter'] = array(
+			'name' => lang('highlighter title', 'Highlighter Not Installed'),
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					lang('highlighter description fail 1', 'Either there is no highlighter installed, or the chosen highlighter is missing.'),
+					lang('highlighter description fail 2', 'PEAR::Text_Highlighter may be used, or the popular GeSHi highlighter.'),
+				),
+			),
+			/*'value' => array(
+				'link' => array(
+					'url' => 'http://qbnz.com/highlighter/',
+					'text' => 'Get Geshi',
+				),
+			),*/
+			'type' => 'select',
+			'value' => $settings['highlighter'],
+			'options' => array(
+				'pear' => 'PEAR Text_Highlighter Extension',
+				'geshi' => 'GeSHi Highligher',
+			),
+		);
+	}
+	
+	return $options;
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ * @return returns pear by default
+ */
+function setting_highlighter($settings)
+{
+	$settings['local_root'] = setting_local_root();
+	if(isset($settings['highlighter']) && in_array($settings['highlighter'], array('pear', 'geshi')))
+		return $settings['highlighter'];
+	else
+	{
+		if(include_path('geshi' . DIRECTORY_SEPARATOR . 'geshi.php') !== false)
+			return 'geshi';
+		elseif(dependency('pear_installed') != false && include_path('Text/Highlighter.php') !== false)
+			return 'pear';
+		else
+			return 'geshi';
+	}
+}
+
+// read in code files and cache the hilighted version
+//  use highlighting library from codepaster.com
+
+/** 
+ * Implementation of handles
+ * Handles all text files, and all extensions supported by the get language function
+ * @ingroup handles
+ */
+function handles_code($file)
+{
+	$file = str_replace('\\', '/', $file);
+	
+	$type = mime_type($file);
+	
+	return ( code_get_language(basename($file)) || $type == 'text' );
+}
+
+function code_get_language($file)
+{
+	if(setting('highlighter') == 'geshi')
+		return _get_language_geshi($file);
+	else
+		return _get_language_pear($file);
+}
+
+function _get_language_pear($file)
+{
+	$ext = ext($file);
+	
+	switch($ext)
+	{
+		case "c":
+		case "h":
+		case "cpp":
+			return 'cpp';
+			break;
+		case "css":
+			return 'css';
+			break;
+		case "dtd":
+			return 'dtd';
+			break;
+		case "htm":
+		case "html":
+			return 'html';
+			break;
+		case "java":
+			return 'java';
+			break;
+		case "js":
+			return 'javascript';
+			break;
+		case "mysql":
+			return 'mysql';
+			break;
+		case "pl":
+			return 'perl';
+			break;
+		case "php":
+			return 'php';
+			break;
+		case "py":
+			return 'python';
+			break;
+		case "rb":
+			return 'ruby';
+			break;
+		case "sql":
+			return 'sql';
+			break;
+		case "xml":
+			return 'xml';
+			break;
+		case "vbs":
+			return 'vbscript';
+			break;
+		default:
+			return;
+	}
+}
+
+/**
+ * Helper function for db_code
+ */
+function _get_language_geshi($file)
+{
+	switch($file)
+	{
+		case 'error.log':
+		case 'access.log':
+		case 'other_vhosts_access.log':
+			return 'apache';
+			break;
+		case 'sources.list':
+			return 'apt_sources';
+			break;
+		case 'robots.txt':
+			return 'robots';
+			break;
+		case 'xorg.conf':
+			return 'xorg_conf';
+			break;
+	}
+	
+	$ext_to_lang = array(
+		// extension            //language
+		'as'			=>		'actionscript',
+		'abap'			=>		'abap',
+		'a'			    =>		'ada',
+		'applescript'	=>		'applescript',
+		'x86'			=>		'asm',
+		'asm'			=>		'asm',
+		'm68k'			=>		'm68k',
+		'pic16'			=>		'pic16',
+		'z80'			=>		'z80',
+		'log'			=>		'apache',
+		'list'			=>		'apt_sources',
+		'asp'			=>		'asp',
+		'aspx'			=>		'asp',
+		'aut'			=>		'autoit',
+		'abnf'			=>		'bnf',
+		'bnf'			=>		'bnf',
+		'sh'			=>		'bash',
+		'bash'			=>		'bash',
+		'bgm'			=>		'basic4gl',
+		'bb'			=>		'blitzbasic',
+		'b'				=>		'bf',
+		'bf'			=>		'bf',
+		'c'				=>		'cpp',
+		'h'				=>		'cpp',
+		'cpp'			=>		'cpp',
+		'cs'			=>		'csharp',
+		'csharp'		=>		'csharp',
+		'dcl'			=>		'caddcl',
+		'lsp'			=>		'cadlisp',
+		'cfdg'			=>		'cfdg',
+		'cil'			=>		'cil',
+		'cob'			=>		'cobol',
+		'cbl'			=>		'cobol',
+		'cobol'			=>		'cobol',
+		'css'			=>		'css',
+		'd'				=>		'd',
+		'pas'			=>		'delphi',
+		'dpr'			=>		'delphi',
+		'patch'			=>		'diff',
+		'diff'			=>		'diff',
+		'batch'			=>		'dos',
+		'dot'			=>		'dot',
+		'eff'			=>		'eiffel',
+		'f77'			=>		'fortran',
+		'f95'			=>		'fortran',
+		'ftn'			=>		'fortran',
+		'4gl'			=>		'genero',
+		'fbl'			=>		'freebasic',
+		'mo'			=>		'gettext',
+		'glsl'			=>		'glsl',
+		'gml'			=>		'gml',
+		'plt'			=>		'gnuplot',
+		'groovy'		=>		'groovy',
+		'gs'			=>		'haskell',
+		'hs'			=>		'haskell',
+		'hq9+'			=>		'hq9plus',
+		'htm'			=>		'html',
+		'html'			=>		'html',
+		'ini'			=>		'ini',
+		'ino'			=>		'inno',
+		'myp'			=>		'inno',
+		'i'				=>		'intercal',
+		'io'			=>		'io',
+		'java'			=>		'java',
+		'js'			=>		'javascript',
+		'javascript'	=>		'javascript',
+		'kix'			=>		'kixtart',
+		'tex'			=>		'latex',
+		'lisp'			=>		'lisp',
+		'lsp'			=>		'lisp',
+		'lols'			=>		'lolcode',
+		'lol'			=>		'lolcode',
+		'lsx'			=>		'lotusscript',
+		'lscript'		=>		'lscript',
+		'lua'			=>		'lua',
+		'makefile'		=>		'make',
+		'make'			=>		'make',
+		'mrc'			=>		'mirc',
+		'mxml'			=>		'mxml',
+		'mysql'			=>		'mysql',
+		'nsh'			=>		'nsis',
+		'nsi'			=>		'nsis',
+		'cma'			=>		'ocaml',
+		'p'				=>		'pascal',
+		'pl'			=>		'perl',
+		'php'			=>		'php',
+		'php4'			=>		'php',
+		'php5'			=>		'php',
+		'phps'			=>		'php',
+		'pbk'			=>		'pixelbender',
+		'pl'			=>		'plsql',
+		'pov'			=>		'povray',
+		'ps'			=>		'powershell',
+		'pl'			=>		'prolog',
+		'pvx'			=>		'providex',
+		'py'			=>		'python',
+		'qbasic'		=>		'qbasic',
+		'rb'			=>		'ruby',
+		'ruby'			=>		'ruby',
+		'sas'			=>		'sas',
+		'sas'			=>		'scala',
+		'scm'			=>		'scheme',
+		'sce'			=>		'scilab',
+		'st'			=>		'smalltalk',
+		'sql'			=>		'sql',
+		'tk'			=>		'tcl',
+		'tcl'			=>		'tcl',
+		'tclx'			=>		'tcl',
+		'tbasic'		=>		'thinbasic',
+		'typo3'			=>		'typoscript',
+		'idl'			=>		'idl',
+		'vb'			=>		'vbnet',
+		'v'				=>		'verilog',
+		'vhdl'			=>		'vhdl',
+		'vim'			=>		'vim',
+		'wbt'			=>		'winbatch',
+		'reg'			=>		'reg',
+		'xml'			=>		'xml',
+		'x++'			=>		'xpp',
+		'vbs'			=>		'vb',
+	);
+	
+	$ext = ext($file);
+	if(isset($ext_to_lang[$ext]))
+		return $ext_to_lang[$ext];
+}
+
+/** 
+ * Implementation of handle
+ * @ingroup handle
+ */
+function add_code($file)
+{
+	// files always qualify, we are going to log every single one!
+	if(!handles($file, 'code'))
+		return false;
+	
+	// check database for file
+	$files = db_assoc('SELECT * FROM archive WHERE Filepath=? LIMIT 1', array($file));
+	
+	if( count($files) > 0 )
+		$code_id = $files[0]['id'];
+		
+	$fileinfo = get_info_code($file);
+	$lines = $fileinfo['lines'];
+	unset($fileinfo['lines']);
+	
+	if( !isset($code_id) )
+	{
+		raise_error('Adding code: ' . $fileinfo['Filepath'], E_DEBUG);
+		
+		// add to database
+		$code_id = db_insert('INSERT INTO code ' . sql_insert($fileinfo), array_values($fileinfo));
+	}
+	else
+	{
+		raise_error('Modifying code: ' . $fileinfo['Filepath'], E_DEBUG);
+		
+		// update database
+		db_query('UPDATE code' . sql_update($fileinfo) . ' WHERE id=' . $code_id, array_values($fileinfo));
+	}
+	
+	// now add the HTML so if this takes too long and fails it won't happen again
+	// don't even bother if there are too many words
+	if($fileinfo['Words'] < 4096)
+	{
+		$fileinfo = get_code_html($lines, $fileinfo['Language']);
+		
+		$return = db_query('UPDATE code SET HTML=? WHERE id=?', array(
+			$fileinfo['HTML'],
+			$code_id,
+		));
+	}
+			
+	return $code_id;
+}
+
+function get_info_code($file)
+{
+	$fileinfo = array();
+	$fileinfo['Filepath'] = $file;
+	
+	$lines = array();
+	$words = array('');
+	if($fp = @fopen(str_replace('/', DIRECTORY_SEPARATOR, $file), 'rb'))
+	{
+		$word_count = 0;
+		while(!feof($fp))
+		{
+			$buffer = trim(fgets($fp, 4096));
+			if($word_count < 4096)
+			{
+				$symbols = split('[^a-zA-Z0-9]', strtolower($buffer), 512);
+				$words = array_merge($symbols, $words);
+				$word_count = count($words);
+			}
+			$lines[] = $buffer;
+		}
+		fclose($fp);
+		
+		// remove empty word
+		unset($words[0]);
+		
+		$fileinfo['LineCount'] = count($lines);
+		$fileinfo['Words'] = join(' ', $words);
+			
+		$fileinfo['lines'] = join("\n", $lines);
+		
+		$lang = code_get_language(basename($file));
+		if($lang !== false && $lines != '')
+		{
+			$fileinfo['Language'] = $lang;
+		}
+		else
+		{
+			$fileinfo['Language'] = '';
+		}
+	}
+	
+	return $fileinfo;
+}
+
+function get_code_html($lines, $lang)
+{
+	$fileinfo = array();
+	if($lang !== '' && $lines != '')
+	{
+		if(setting('highlighter') == 'geshi')
+		{
+			$geshi = new GeSHi($lines, $lang);
+		
+			$fileinfo['HTML'] = $geshi->parse_code();
+		}
+		else
+		{
+			$highlighter = Text_Highlighter::factory($lang);
+			
+			$fileinfo['HTML'] = $highlighter->highlight($lines);
+		}
+	}
+	else
+	{
+		$fileinfo['HTML'] = htmlspecialchars($lines);
+	}
+	return $fileinfo;
+}
+
+/**
+ * Implementation of handler_output
+ * @ingroup handler_output
+ */
+function output_code($file)
+{
+	$file = str_replace('\\', '/', $file);
+	
+	if(setting('alias_enable'))
+		$file = alias_replace($file);
+	
+	$files = db_assoc('SELECT * FROM code WHERE Filepath=? LIMIT 1', array($file));
+	if(count($files) > 0)
+	{				
+		header('Content-Type: text/html');
+		header('Content-Length: ' . strlen($files[0]['HTML']));
+	
+		return fopen('code://' . $file, 'rb');
+	}
+
+	return false;
+}
+
+// source code handler
+class code
+{
+       
+    protected $internal_text = NULL;
+    protected $internal_length = NULL;
+    protected $internal_pos = NULL;
+	
+    function stream_open($path, $mode, $options, &$opened_path)
+    {
+		if(substr($path, 0, strlen('code://')) == 'code://')
+			$path = substr($path, strlen('code://'));
+
+		$files = db_assoc('SELECT * FROM code WHERE Filepath=? LIMIT 1', array($path));
+		
+		if(count($files) > 0)
+		{
+			$this->internal_text = $files[0]['HTML'];
+			$this->internal_length = strlen($this->internal_text);
+			$this->internal_pos = 0;
+			return true;
+		}
+		
+		return false;
+    }
+    function stream_read($count){
+		if($this->internal_pos + $count > $this->internal_length)
+			$count = $this->internal_length - $this->internal_pos;
+		$buffer = substr($this->internal_text, $this->internal_pos, $count);
+		$this->internal_pos += $count;
+        return $buffer;
+    }
+    function stream_eof(){
+        return $this->internal_pos >= $this->internal_length;
+    }
+    function stream_tell(){
+        return $this->internal_pos;
+    }
+    function stream_seek($position){
+		if($position > $this->internal_length)
+		{
+			$position = $this->internal_length;
+		}
+		$this->internal_pos = $position;
+        return 0;
+    }
+
+}

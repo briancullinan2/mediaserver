@@ -24,7 +24,7 @@ function setup_tv_download()
 
 function setting_tv_download()
 {
-	$settings = array('netflix_xml');
+	$settings = array('myepisodes');
 	
 	// add wrapper functions for validating a service entry
 	for($i = 0; $i < 10; $i++)
@@ -41,24 +41,6 @@ function setting_tv_download()
 	}
 	
 	return $settings;
-}
-
-/**
- * Implementation of setting
- * @ingroup setting
- */
-function setting_myepisodes($settings)
-{
-	if(isset($settings['myepisodes']) && isset($settings['myepisodes']['username']) &&
-		isset($settings['myepisodes']['password']))
-		return array(
-			'username' => $settings['myepisodes']['username'],
-			'password' => $settings['myepisodes']['password'],
-		);
-	return array(
-		'username' => '',
-		'password' => '',
-	);
 }
 
 /**

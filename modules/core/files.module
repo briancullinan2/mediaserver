@@ -3,10 +3,10 @@
 function menu_files()
 {
 	return array(
-		'files/%handler/%id/%core/%extra/%filename' => array(
+		'files/%handler/%id/%files/%extra/%filename' => array(
 			'callback' => 'output_files',
 		),
-		'files/%handler/%id/%core/%filename' => array(
+		'files/%handler/%id/%files/%filename' => array(
 			'callback' => 'output_files',
 		),
 		'files/%handler/%id/%filename' => array(
@@ -345,6 +345,8 @@ function add($file, $force = false, $handler = 'files')
 	{
 		// get file information
 		$fileinfo = invoke_module('get_info', $handler, array($file));
+		if($fileinfo === false)
+			return false;
 		
 		// always add to file database
 		raise_error('Adding ' . $handler . ': ' . $file, E_DEBUG);
@@ -379,6 +381,8 @@ function add($file, $force = false, $handler = 'files')
 	{
 		// get file information
 		$fileinfo = invoke_module('get_info', $handler, array($file));
+		if($fileinfo === false)
+			return false;
 		
 		raise_error('Modifying ' . $handler . ': ' . $file, E_DEBUG);
 		
@@ -464,16 +468,21 @@ function output_files($request)
 		return;
 	}
 	
-	// set some general headers
-	header('Content-Transfer-Encoding: binary');
-	header('Content-Type: ' . $files[0]['Filemime']);
-	header('Content-Disposition: attachment; filename="' . $files[0]['Filename'] . '"');
-	
 	// set up the output stream
 	$op = fopen('php://output', 'wb');
 	
 	// get the input stream
 	$fp = output_handler($files[0]['Filepath'], $request['handler']);
+	list($headers) = parse_headers(headers_list());
+
+	// set some general headers
+	header('Content-Transfer-Encoding: binary');
+	if(!isset($headers['content-type']))
+		header('Content-Type: ' . $files[0]['Filemime']);
+	if(isset($headers['content-length']))
+		$files[0]['Filesize'] = $headers['content-length'];
+	header('Content-Disposition: attachment; filename="' . $files[0]['Filename'] . '"');
+	
 	//-------------------- THIS IS ALL RANAGES STUFF --------------------
 	// range can only be used when the filesize is known
 	
