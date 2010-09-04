@@ -58,10 +58,6 @@ function theme__errors_block()
 		}
 		?></span><?php
 	}
-	$GLOBALS['note_errors'] = array();
-	$GLOBALS['warn_errors'] = array();
-	$GLOBALS['user_errors'] = array();
-	$GLOBALS['debug_errors'] = array();
 }
 
 function theme__files()

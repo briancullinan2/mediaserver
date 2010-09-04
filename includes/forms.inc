@@ -68,9 +68,9 @@ function theme__info_list($value)
 	}
 	elseif(is_array($value))
 	{
-		foreach($value as $i => $text)
+		foreach($value as $key => $text)
 		{
-			?><li><?php theme('info_objects', $text); ?></li><?php
+			?><li><?php theme('info_objects', array($key => $text)); ?></li><?php
 		}
 	}
 	?></ul><?php
@@ -229,7 +229,12 @@ function theme__form_tableset($options)
 		<tr class="form-row <?php print $field['status']; ?>" id="row_<?php print $name; ?>">
 			<td class="form-title"><?php print $field['name']; ?></td>
 			<td class="form-field">
-			<?php theme('form_objects', array($name => array('name' => NULL, 'description' => NULL) + $field)); ?>
+			<?php
+			if(is_array($field))
+				theme('form_objects', array($name => array('name' => NULL, 'description' => NULL) + $field));
+			else
+				theme('form_objects', array($name => array('name' => NULL, 'description' => NULL, 'value' => $field)));
+			?>
 			</td>
 			<td class="form-desc">
 			<?php theme('info_objects', $field['description']); ?>

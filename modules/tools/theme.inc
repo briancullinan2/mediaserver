@@ -16,7 +16,6 @@ function theme_live_tool_info()
 		'options' => $GLOBALS['output']['infos'],
 		'type' => 'form',
 	));
-	$GLOBALS['debug_errors'] = array();
 
 	theme('footer');
 }

@@ -276,7 +276,11 @@ function configure_torservices($settings)
 		);
 	}
 	
-	return $options;
+	return array('torservices' => array(
+		'name' => 'Torrenting Services',
+		'type' => 'fieldset',
+		'options' => $options
+	));
 }
 
 /**

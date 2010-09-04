@@ -8,7 +8,7 @@
 function setup_code()
 {
 	stream_wrapper_register('code', 'code');
-	
+
 	if(setting('highlighter') == 'geshi')
 		load_include('geshi' . DIRECTORY_SEPARATOR . 'geshi.php');
 	else
@@ -90,7 +90,11 @@ function configure_code($settings, $request)
 		);
 	}
 	
-	return $options;
+	return array('code' => array(
+		'name' => 'Code Colorizer',
+		'type' => 'fieldset',
+		'options' => $options
+	));
 }
 
 /**
@@ -190,8 +194,6 @@ function _get_language_pear($file)
 		case "vbs":
 			return 'vbscript';
 			break;
-		default:
-			return;
 	}
 }
 
@@ -429,7 +431,7 @@ function get_info_code($file)
 		$fileinfo['lines'] = join("\n", $lines);
 		
 		$lang = code_get_language(basename($file));
-		if($lang !== false && $lines != '')
+		if(!isset($lang) && !empty($lang))
 		{
 			$fileinfo['Language'] = $lang;
 		}
@@ -445,6 +447,7 @@ function get_info_code($file)
 function get_code_html($lines, $lang)
 {
 	$fileinfo = array();
+
 	if($lang !== '' && $lines != '')
 	{
 		if(setting('highlighter') == 'geshi')

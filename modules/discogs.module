@@ -9,9 +9,63 @@ function handles_discogs($file)
 	return handles($file, 'audio');
 }
 
+function configure_discogs($settings)
+{
+	$settings['discogs_api'] = setting('discogs_api');
+	
+	if(dependency('discogs_api'))
+	{
+		$options['setting_discogs_api'] = array(
+			'name' => 'API Key',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'You have specified a DiscOgs API key.',
+					'Note: This key is limited to 5,000 request per 24 hours.',
+					'link' => array(
+						'url' => 'http://www.discogs.com/help/api',
+						'text' => 'DiscOgs API Documentation',
+					)
+				),
+			),
+			'type' => 'text',
+			'value' => $settings['discogs_api'],
+		);
+	}
+	else
+	{
+		$options['setting_discogs_api'] = array(
+			'name' => 'API Key',
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					'In order to use this module you must specify an API key to access DiscOgs.',
+					'link' => array(
+						'url' => 'http://www.discogs.com/help/api',
+						'text' => 'DiscOgs API Documentation',
+					)
+				),
+			),
+			'type' => 'text',
+			'value' => $settings['discogs_api'],
+		);
+	}
+	
+	return array('discogs' => array(
+		'name' => 'API Key',
+		'type' => 'fieldset',
+		'options' => $options
+	));
+}
+
+function dependency_discogs_api($settings)
+{
+	return (setting('discogs_api') != '');
+}
+
 function setting_discogs_api($settings)
 {
-	return '903e98c4a3';
+	return generic_validate_alphanumeric($settings, 'discogs_api');
 }
 
 
@@ -75,6 +129,18 @@ function get_info_discogs($file)
 			$album = fetch($query, array(), array('Accept-Encoding: gzip'));
 			$fileinfo['Type'] = 'Release';
 		}
+		
+		// check database for artist and track info
+		if(setting('database_enable'))
+		{
+			$files = db_assoc('SELECT * FROM discogs WHERE ReleaseNum=?', array($fileinfo['ReleaseNum']));
+			
+			if(count($files) > 0)
+			{
+				$artist['content'] = $files[0]['ArtistXml'];
+				$fileinfo['Image'] = $files[0]['Image'];
+			}
+		}
 	
 		if(!isset($artist))
 		{
@@ -105,7 +171,7 @@ function get_info_discogs($file)
 		
 		// get image
 		$images = get_images($album['content']);
-		if(isset($images[0]))
+		if(!isset($fileinfo['Image']) && isset($images[0]))
 		{
 			$query = $images[0] . '?api_key=' . setting('discogs_api');
 			$image = fetch($query, array(), array('Accept-Encoding: gzip'));
@@ -120,21 +186,6 @@ function get_info_discogs($file)
 	}
 	
 	return false;
-}
-
-function get_closest($search_text, $titles)
-{
-	$distances = array_map('levenshtein', $titles, array_fill(0, count($titles), $search_text));
-	asort($distances);
-	reset($distances);
-	$closest = key($distances);
-	
-	return array(
-		$titles[$closest],
-		$closest,
-		'value' => $titles[$closest],
-		'key' => $closest,
-	);
 }
 
 function get_artists($content)

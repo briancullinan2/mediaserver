@@ -40,13 +40,6 @@ function setting_movie_download()
 		$settings[] = 'tor_movie_search_' . $i;
 	}
 	
-	// movie folders
-	for($i = 0; $i < 50; $i++)
-	{
-		$GLOBALS['setting_movie_folder_' . $i] = create_function('$settings', 'return setting_movie_folder($settings, \'' . $i . '\');');
-		$settings[] = 'movie_folder_' . $i;
-	}
-	
 	return $settings;
 }
 
@@ -99,54 +92,6 @@ function setting_tor_movie_search($settings, $index)
 }
 
 /**
- * Implementation of setting
- * @ingroup setting
- */
-function setting_movie_folder($settings, $index)
-{
-	if(isset($settings['movie_folder_' . $index]))
-	{
-		$settings['movie_folder_' . $index] = str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $settings['movie_folder_' . $index]);
-		if(substr($settings['movie_folder_' . $index], -1) != DIRECTORY_SEPARATOR)
-			$settings['movie_folder_' . $index] .= DIRECTORY_SEPARATOR;
-		if(file_exists($settings['movie_folder_' . $index]))
-			return $settings['movie_folder_' . $index];
-	}
-}
-
-/**
- * Implementation of setting
- * @ingroup setting
- */
-function setting_movie_folders($settings)
-{
-	if(!isset($settings['movie_folders']))
-		$settings['movie_folders'] = array();
-
-	for($i = 0; $i < 50; $i++)
-	{
-		$folder = setting_movie_folder($settings, $i);
-		if(isset($folder))
-			$settings['movie_folders'][$i] = $folder;
-	}
-	
-	if(setting_installed() && setting('database_enable'))
-	{
-		// add folders in the watch list that include the word movie
-		foreach($GLOBALS['watched'] as $i => $watch)
-		{
-			if(preg_match('/movie/i', $watch['Filepath']) != 0)
-			{
-				$index = count($settings['movie_folders']);
-				$folder = setting_movie_folder(array('movie_folder_' . $index => $watch['Filepath']), $index);
-			}
-		}
-	}
-	
-	return array_values(array_unique($settings['movie_folders']));
-}
-
-/**
  * Implementation of validate
  * @ingroup validate
  */
@@ -154,15 +99,6 @@ function validate_movie_download($request, $index)
 {
 	switch($index)
 	{
-		case 'add_movie_folder':
-			if(!isset($request['add_movie_folder']['add']))
-				return;
-				
-			return $request['add_movie_folder']['folder'];
-		break;
-		case 'remove_movie_folder':
-			return generic_validate_numeric($request, 'remove');
-		break;
 		case 'info_singular_step_movies':
 			if(isset($request['info_singular_step_movies']) &&
 				in_array($request['info_singular_step_movies'], array('login', 'login2', 'netflix', 'search'))
@@ -210,50 +146,12 @@ function validate_movie_search_nzbindex($request)
 }
 
 /**
- * Implementation of session
- * @ingroup session
- */
-function session_movie_download($request)
-{
-	// might be configuring the module
-	if(!($save = session('movies')) || isset($request['reset_configuration']))
-		$save = array('folders' => setting('movie_folders'));
-
-	// add server
-	if(isset($request['add_movie_folder']))
-	{
-		$new_folder = setting_movie_folder(array('movie_folder_0' => $request['add_movie_folder']), 0);
-		if(isset($new_folder))
-			$save['folders'][] = $new_folder;
-	}
-
-	// remove server
-	if(isset($request['remove_movie_folder']))
-	{
-		unset($save['folders'][$request['remove_movie_folder']]);
-		$save['folders'] = array_values($save['folders']);
-	}
-	
-	// cleanup
-	$save['folders'] = array_unique($save['folders']);
-	
-	return $save;
-}
-
-/**
  * Implementation of configure
  * @ingroup configure
  */
 function configure_movie_download($settings)
 {
 	$settings['netflix_xml'] = setting('netflix_xml');
-	$settings['movie_folders'] = setting('movie_folders');
-	
-	$folder_count = count($settings['movie_folders']);
-	
-	// load services from session
-	if($session_movies = session('movie_download'))
-		$settings['movie_folders'] = $session_movies['folders'];
 	
 	$options = array();
 	
@@ -265,7 +163,14 @@ function configure_movie_download($settings)
 		'description' => array(
 			'list' => array(
 				'Enter the id of the RSS feed to compare to movies on disk or NZB services.',
-				'The Netflix RSS feeds can be found by going to <a href="http://www.netflix.com/RSSFeeds">Netflix RSS Feeds</a>.',
+				array(
+					'The Netflix RSS feeds can be found by going to ',
+					'link' => array(
+						'url' => 'http://www.netflix.com/RSSFeeds',
+						'text' => 'Netflix RSS Feeds',
+					),
+					'.',
+				),
 				'It is recommended you enter the id for the entire Queue.'
 			),
 		),
@@ -273,66 +178,11 @@ function configure_movie_download($settings)
 		'value' => $settings['netflix_xml'],
 	);
 	
-	// use indices instead
-	$feeds['movie_folders'] = array(
-		'name' => 'Movie Folders',
-		'status' => '',
-		'description' => array(
-			'list' => array(
-				'This is a list for folders that contain movies.  Movies can be folder names, or file names.',
-				'It is recommended that only watched folders be used.'
-			),
-		),
-		'type' => 'set',
-		'options' => array(
-			'remove_movie_folder[folders]' => array(
-				'type' => 'multiselect',
-				'options' => $settings['movie_folders'],
-				'value' => array(),
-				'force_numeric' => true,
-			),
-			array(
-				'value' => '<br />'
-			),
-			'remove_movie_folder[remove]' => array(
-				'type' => 'submit',
-				'value' => 'Remove',
-			),
-			array(
-				'value' => '<br />'
-			),
-			'add_movie_folder[folder]' => array(
-				'type' => 'text',
-				'value' => '',
-				'name' => 'Add Folder',
-			),
-			'add_movie_folder[add]' => array(
-				'type' => 'submit',
-				'value' => 'Add',
-			),
-		),
-	);
+	$movies = configure_movies($settings);
+	$feeds = array_merge($feeds, $movies['movies']['options']);
 	
-	// add movies for saving
-	foreach($settings['movie_folders'] as $i => $folder)
-	{
-		$feeds['movie_folders']['options']['setting_movie_folder_' . $i] = array(
-			'type' => 'hidden',
-			'value' => $folder,
-		);
-	}
-	
-	// add unsettings
-	for($i = 0; $i < $folder_count - count($settings['movie_folders']); $i++)
-	{
-		$feeds['movie_folders']['options']['setting_movie_folder_' . (count($settings['movie_folders']) + $i)] = array(
-			'type' => 'hidden',
-			'value' => '',
-		);
-	}
-	
-	$options['tv_input'] = array(
-		'name' => 'TV Show Input',
+	$options['movie_input'] = array(
+		'name' => 'Movie Input',
 		'type' => 'fieldset',
 		'options' => $feeds
 	);
@@ -342,13 +192,15 @@ function configure_movie_download($settings)
 	if(setting('nzbservices_enable') == true)
 	{
 		// add nzb services
-		$download = array_merge($download, configure_nzbservices($settings));
+		$nzbservices = configure_nzbservices($settings);
+		$download = array_merge($download, $nzbservices['nzbservices']['options']);
 	}
 	
 	if(setting('torservices_enable') == true)
 	{
 		// add torrent services
-		$download = array_merge($download, configure_torservices($settings));
+		$torservices = configure_torservices($settings);
+		$download = array_merge($download, $torservices['torservices']['options']);
 	}
 	
 	if(!is_module('torservices') && !is_module('nzbservices'))
@@ -393,44 +245,22 @@ function output_movie_download($request)
 	raise_error('You may need to <a href="' . url('admin/module/movie_download') . '">configure</a> this tool in order to use it properly.', E_WARN);
 
 	// perform television downloading
-	if(dependency('curl_installed') == false)
-	{
-		$infos['curl_installed'] = array(
-			'name' => 'cUrl Not Installed',
-			'status' => 'fail',
-			'description' => array(
-				'list' => array(
-					'The system has detected that cUrl API is NOT INSTALLED.',
-					'cUrl is used to download content from Netflix, and the specified NZB services.',
-				),
+	// log in to services
+	$infos['movies_login'] = array(
+		'name' => 'NZB Services Login',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Logging in to NZB Services.',
 			),
-			'value' => array(
-				'link' => array(
-					'url' => 'http://php.net/manual/en/book.curl.php',
-					'text' => 'Get cUrl',
-				),
-			),
-		);
-	}
-	else
-	{
-		// log in to services
-		$infos['movies_login'] = array(
-			'name' => 'NZB Services Login',
-			'status' => '',
-			'description' => array(
-				'list' => array(
-					'Logging in to NZB Services.',
-				),
-			),
-			'text' => array(
-				'loading' => 'Loading...'
-			),
-			'type' => 'theme',
-			'value' => 'singular',
-			'href' => url('admin/tools/movies/downloader/login', true),
-		);
-	}
+		),
+		'text' => array(
+			'loading' => 'Loading...'
+		),
+		'type' => 'theme',
+		'value' => 'singular',
+		'href' => url('admin/tools/movies/downloader/login', true),
+	);
 	
 	register_output_vars('infos', array(
 		'movie_downloader' => array(

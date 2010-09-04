@@ -133,6 +133,21 @@ function termSort($a, $b)
 	}
 }
 
+function get_closest($search_text, $titles)
+{
+	$distances = array_map('levenshtein', $titles, array_fill(0, count($titles), $search_text));
+	asort($distances);
+	reset($distances);
+	$closest = key($distances);
+	
+	return array(
+		$titles[$closest],
+		$closest,
+		'value' => $titles[$closest],
+		'key' => $closest,
+	);
+}
+
 /**
  * @defgroup dependency Dependency Functions
  * All functions that allow the system to check other system settings for module dependencies

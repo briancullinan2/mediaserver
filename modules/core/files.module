@@ -345,7 +345,7 @@ function add($file, $force = false, $handler = 'files')
 	{
 		// get file information
 		$fileinfo = invoke_module('get_info', $handler, array($file));
-		if($fileinfo === false)
+		if(!isset($fileinfo) || !is_array($fileinfo))
 			return false;
 		
 		// always add to file database
@@ -381,7 +381,7 @@ function add($file, $force = false, $handler = 'files')
 	{
 		// get file information
 		$fileinfo = invoke_module('get_info', $handler, array($file));
-		if($fileinfo === false)
+		if(!isset($fileinfo) || !is_array($fileinfo))
 			return false;
 		
 		raise_error('Modifying ' . $handler . ': ' . $file, E_DEBUG);

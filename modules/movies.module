@@ -1,0 +1,356 @@
+<?php
+
+
+function handles_movies($file)
+{
+	$is_video = handles($file, 'video');
+	
+	// do all movies
+	if($is_video)
+		return true;
+		
+	// do movies in the folders from the download_movies module
+	if($movie_folders = setting('movie_folders'))
+	{
+		$is_movie = false;
+		foreach($movie_folders as $i => $folder)
+		{
+			if(substr($file, 0, strlen($folder)) == $folder)
+			{
+				$is_movie = true;
+			}
+		}
+		if($is_movie)
+			return true;
+	}
+	
+	// check to see if current directory of the file is titled movie
+	if(strtolower(basename(dirname($file))) == 'movies')
+		return true;
+	
+	// not a movie
+	return false;
+}
+
+function setting_movies()
+{
+	$settings = array('tmdb_api');
+	
+	// movie folders
+	for($i = 0; $i < 50; $i++)
+	{
+		$GLOBALS['setting_movie_folder_' . $i] = create_function('$settings', 'return setting_movie_folder($settings, \'' . $i . '\');');
+		$settings[] = 'movie_folder_' . $i;
+	}
+	
+	return $settings;
+}
+
+function dependency_tmdb_api($settings)
+{
+	return (setting('tmdb_api') != '');
+}
+
+function setting_tmdb_api($settings)
+{
+	return generic_validate_alphanumeric($settings, 'tmdb_api');
+}
+
+function validate_add_movie_folder($request)
+{
+	if(!isset($request['add_movie_folder']['add']))
+		return;
+		
+	return $request['add_movie_folder']['folder'];
+}
+
+function validate_remove_movie_folder($request)
+{
+	return generic_validate_numeric($request, 'remove');
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ */
+function setting_movie_folder($settings, $index)
+{
+	if(isset($settings['movie_folder_' . $index]))
+	{
+		$settings['movie_folder_' . $index] = str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $settings['movie_folder_' . $index]);
+		if(substr($settings['movie_folder_' . $index], -1) != DIRECTORY_SEPARATOR)
+			$settings['movie_folder_' . $index] .= DIRECTORY_SEPARATOR;
+		if(file_exists($settings['movie_folder_' . $index]))
+			return $settings['movie_folder_' . $index];
+	}
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ */
+function setting_movie_folders($settings)
+{
+	if(!isset($settings['movie_folders']))
+		$settings['movie_folders'] = array();
+
+	for($i = 0; $i < 50; $i++)
+	{
+		$folder = setting_movie_folder($settings, $i);
+		if(isset($folder))
+			$settings['movie_folders'][$i] = $folder;
+	}
+	
+	if(setting_installed() && setting('database_enable'))
+	{
+		// add folders in the watch list that include the word movie
+		foreach(setting('watched') as $i => $watch)
+		{
+			if(preg_match('/movie/i', $watch['Filepath']) != 0)
+			{
+				$index = count($settings['movie_folders']);
+				$folder = setting_movie_folder(array('movie_folder_' . $index => $watch['Filepath']), $index);
+			}
+		}
+	}
+	
+	return array_values(array_unique($settings['movie_folders']));
+}
+
+function configure_movies($request)
+{
+	$settings['movie_folders'] = setting('movie_folders');
+	$settings['tmdb_api'] = setting('tmdb_api');
+	
+	$folder_count = count($settings['movie_folders']);
+	
+	// load services from session
+	if($session_movies = session('movie_download'))
+		$settings['movie_folders'] = $session_movies['folders'];
+	
+	if(dependency('tmdb_api'))
+	{
+		$options['setting_tmdb_api'] = array(
+			'name' => 'API Key',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'You have specified a TMDB API key.',
+					'link' => array(
+						'url' => 'http://api.themoviedb.org/2.1',
+						'text' => 'TMDB API Documentation',
+					)
+				),
+			),
+			'type' => 'text',
+			'value' => $settings['tmdb_api'],
+		);
+	}
+	else
+	{
+		$options['setting_tmdb_api'] = array(
+			'name' => 'API Key',
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					'In order to use this module you must specify an API key to access TMDB.',
+					'link' => array(
+						'url' => 'http://api.themoviedb.org/2.1',
+						'text' => 'TMDB API Documentation',
+					)
+				),
+			),
+			'type' => 'text',
+			'value' => $settings['tmdb_api'],
+		);
+	}
+	
+	// use indices instead
+	$options['movie_folders'] = array(
+		'name' => 'Movie Folders',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'This is a list for folders that contain movies.  Movies can be folder names, or file names.',
+				'It is recommended that only watched folders be used.'
+			),
+		),
+		'type' => 'set',
+		'options' => array(
+			'remove_movie_folder[folders]' => array(
+				'type' => 'multiselect',
+				'options' => $settings['movie_folders'],
+				'value' => array(),
+				'force_numeric' => true,
+			),
+			array(
+				'value' => '<br />'
+			),
+			'remove_movie_folder[remove]' => array(
+				'type' => 'submit',
+				'value' => 'Remove',
+			),
+			array(
+				'value' => '<br />'
+			),
+			'add_movie_folder[folder]' => array(
+				'type' => 'text',
+				'value' => '',
+				'name' => 'Add Folder',
+			),
+			'add_movie_folder[add]' => array(
+				'type' => 'submit',
+				'value' => 'Add',
+			),
+		),
+	);
+	
+	// add movies for saving
+	foreach($settings['movie_folders'] as $i => $folder)
+	{
+		$options['movie_folders']['options']['setting_movie_folder_' . $i] = array(
+			'type' => 'hidden',
+			'value' => $folder,
+		);
+	}
+	
+	// add unsettings
+	for($i = 0; $i < $folder_count - count($settings['movie_folders']); $i++)
+	{
+		$options['movie_folders']['options']['setting_movie_folder_' . (count($settings['movie_folders']) + $i)] = array(
+			'type' => 'hidden',
+			'value' => '',
+		);
+	}
+	
+	return array('movies' => array(
+		'name' => 'Movie Meta-Data Settings',
+		'type' => 'fieldset',
+		'options' => $options
+	));
+}
+
+/**
+ * Implementation of session
+ * @ingroup session
+ */
+function session_movies($request)
+{
+	// might be configuring the module
+	if(!($save = session('movies')) || isset($request['reset_configuration']))
+		$save = array('folders' => setting('movie_folders'));
+
+	// add server
+	if(isset($request['add_movie_folder']))
+	{
+		$new_folder = setting_movie_folder(array('movie_folder_0' => $request['add_movie_folder']), 0);
+		if(isset($new_folder))
+			$save['folders'][] = $new_folder;
+	}
+
+	// remove server
+	if(isset($request['remove_movie_folder']))
+	{
+		unset($save['folders'][$request['remove_movie_folder']]);
+		$save['folders'] = array_values($save['folders']);
+	}
+	
+	// cleanup
+	$save['folders'] = array_unique($save['folders']);
+	
+	return $save;
+}
+
+
+function get_info_movies($file)
+{
+	$fileinfo = array();
+	$fileinfo['Filepath'] = str_replace('\\', '/', $file);
+		
+	$tmp_tokens = tokenize(basename($file));
+	sort($tmp_tokens['Most']);
+	$search_text = implode(' ', $tmp_tokens['Most']);
+	$search = 'http://api.themoviedb.org/2.1/Movie.search/en/xml/' . setting('tmdb_api') . '/' . urlencode($search_text);
+	$result = fetch($search, array(), array('Accept-Encoding: gzip'));
+	
+	$names = get_movie_names($result['content']);
+	$ids = get_movie_ids($result['content']);
+	
+	list($movie, $key) = get_closest($search_text, $names);
+
+	// get movie info
+	$query = 'http://api.themoviedb.org/2.1/Movie.getInfo/en/xml/' . setting('tmdb_api') . '/' . $ids[$key];
+	$movie = fetch($query, array(), array('Accept-Encoding: gzip'));
+	
+	$imdb = get_imdb($movie['content']);
+	$rating = get_rating($movie['content']);
+	$overview = get_overview($movie['content']);
+	$released = get_released($movie['content']);
+	$runtime = get_runtime($movie['content']);
+	
+	$fileinfo['IMDB'] = $imdb[0];
+	$fileinfo['Rating'] = $rating[0];
+	$fileinfo['Overview'] = $overview[0];
+	$fileinfo['ReleaseDate'] = strtotime($released[0]);
+	$fileinfo['Runtime'] = $runtime[0];
+	$fileinfo['MovieID'] = $ids[$key];
+	$fileinfo['MovieXml'] = $movie['content'];
+	
+	return $fileinfo;
+}
+
+function get_movie_names($content)
+{
+	if(preg_match_all('/<movie>[\s\S]*?<name>([^<]*?)<\/name>/i', $content, $matches) > 0)
+		return $matches[1];
+	else
+		return array();
+}
+
+function get_movie_ids($content)
+{
+	if(preg_match_all('/<movie>[\s\S]*?<id>([^<]*?)<\/id>/i', $content, $matches) > 0)
+		return $matches[1];
+	else
+		return array();
+}
+
+function get_imdb($content)
+{
+	if(preg_match_all('/<imdb_id>([^<]*?)<\/imdb_id>/i', $content, $matches) > 0)
+		return $matches[1];
+	else
+		return array();
+}
+
+function get_rating($content)
+{
+	if(preg_match_all('/<rating>([^<]*?)<\/rating>/i', $content, $matches) > 0)
+		return $matches[1];
+	else
+		return array();
+}
+
+function get_overview($content)
+{
+	if(preg_match_all('/<overview>([^<]*?)<\/overview>/i', $content, $matches) > 0)
+		return $matches[1];
+	else
+		return array();
+}
+
+function get_released($content)
+{
+	if(preg_match_all('/<released>([^<]*?)<\/released>/i', $content, $matches) > 0)
+		return $matches[1];
+	else
+		return array();
+}
+
+function get_runtime($content)
+{
+	if(preg_match_all('/<runtime>([^<]*?)<\/runtime>/i', $content, $matches) > 0)
+		return $matches[1];
+	else
+		return array();
+}

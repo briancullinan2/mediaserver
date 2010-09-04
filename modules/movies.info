@@ -1,0 +1,21 @@
+name = Movies
+description = Get meta-data for movies in library.
+depends on[] = video
+depends on[] = curl_installed
+depends on[] = tmdb_api
+package = file_handlers
+settings = movies
+session[] = add_movie_folder
+session[] = remove_movie_folder
+session[] = reset_configuration
+
+[database]
+Filepath = TEXT
+MovieID = INT
+IMDB = TEXT
+Image = BLOB
+Rating = DOUBLE
+Overview = TEXT
+ReleaseDate = DATETIME
+Runtime = FLOAT
+MovieXml = TEXT

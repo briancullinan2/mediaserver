@@ -20,7 +20,6 @@ function theme_live_debug_block()
 			<?php
 		}
 		
-		// clear debug errors
 		$GLOBALS['debug_errors'] = array();
 		
 		?>
@@ -76,10 +75,9 @@ function theme_live_errors_block()
 				<?php
 			}
 			?></div><?php
+			
+			$GLOBALS[$errors] = array();
 		}
-		
-		// clear current list because it was just outputted
-		$GLOBALS[$errors] = array();
 	}
 	
 	if($has_errors)

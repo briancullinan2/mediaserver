@@ -251,7 +251,11 @@ function configure_nzbservices($settings)
 		);
 	}
 	
-	return $options;
+	return array('nzbservices' => array(
+		'name' => 'News Group Services',
+		'type' => 'fieldset',
+		'options' => $options
+	));
 }
 
 /**

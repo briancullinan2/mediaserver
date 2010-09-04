@@ -186,13 +186,15 @@ function configure_tv_download($settings)
 	if(setting('nzbservices_enable') == true)
 	{
 		// add nzb services
-		$download = array_merge($download, configure_nzbservices($settings));
+		$nzbservices = configure_nzbservices($settings);
+		$download = array_merge($download, $nzbservices['nzbservices']['options']);
 	}
 	
 	if(setting('torservices_enable') == true)
 	{
 		// add torrent services
-		$download = array_merge($download, configure_torservices($settings));
+		$torservices = configure_torservices($settings);
+		$download = array_merge($download, $torservices['torservices']['options']);
 	}
 	
 	if(!is_module('torservices') && !is_module('nzbservices'))
@@ -229,44 +231,22 @@ function output_tv_download($request)
 	raise_error('You may need to <a href="' . url('admin/module/tv_download') . '">configure</a> this tool in order to use it properly.', E_WARN);
 
 	// perform television downloading
-	if(dependency('curl_installed') == false)
-	{
-		$infos['curl_installed'] = array(
-			'name' => 'cUrl Not Installed',
-			'status' => 'fail',
-			'description' => array(
-				'list' => array(
-					'The system has detected that cUrl API is NOT INSTALLED.',
-					'cUrl is used to download content from myepisodes.com, and the specified NZB services.',
-				),
+	// log in to myepisodes
+	$infos['login'] = array(
+		'name' => 'MyEpisodes, Service Login',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Logging in to myepisodes.com and the configured NZB services.',
 			),
-			'value' => array(
-				'link' => array(
-					'url' => 'http://php.net/manual/en/book.curl.php',
-					'text' => 'Get cUrl',
-				),
-			),
-		);
-	}
-	else
-	{
-		// log in to myepisodes
-		$infos['login'] = array(
-			'name' => 'MyEpisodes, Service Login',
-			'status' => '',
-			'description' => array(
-				'list' => array(
-					'Logging in to myepisodes.com and the configured NZB services.',
-				),
-			),
-			'text' => array(
-				'loading' => 'Loading...'
-			),
-			'type' => 'theme',
-			'value' => 'singular',
-			'href' => url('admin/tools/television/downloader/login', true),
-		);
-	}
+		),
+		'text' => array(
+			'loading' => 'Loading...'
+		),
+		'type' => 'theme',
+		'value' => 'singular',
+		'href' => url('admin/tools/television/downloader/login', true),
+	);
 	
 	// output info
 	register_output_vars('infos', array(

@@ -111,12 +111,6 @@ function invoke_menu($request, $template = false)
 
 		theme('errors_block');
 		
-		// remove old errors from session
-		$GLOBALS['user_errors'] = array();
-		$GLOBALS['warn_errors'] = array();
-		$GLOBALS['debug_errors'] = array();
-		$GLOBALS['note_errors'] = array();
-		
 		return;
 	}
 	
