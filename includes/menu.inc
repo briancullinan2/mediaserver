@@ -155,7 +155,9 @@ function invoke_menu($request, $template = false)
 
 		// just return because the output function was already called
 		if($template == false)
+		{
 			return;
+		}
 		
 		// if it is set to a callable function to determine the template, then call that
 		elseif(is_callable($template))

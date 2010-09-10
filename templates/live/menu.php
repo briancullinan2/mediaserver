@@ -23,14 +23,14 @@ function theme_live_menu()
 
 function theme_live_menu_block()
 {
-	?><ul><?php
+	?><ul class=".menu_block"><?php
 	
 	// loop through top items and create a list
 	foreach($GLOBALS['output']['menus'] as $path => $config)
 	{
 		if(strpos($path, '/') === false)
 		{
-			?><li class="top_menu"><a href="<?php print url($path); ?>"><?php print $config['name']; ?></a><br /><?php
+			?><li class="top_menu"><a class="menu_link" href="<?php print url($path); ?>"><?php print $config['name']; ?></a><br /><?php
 			
 			// add sub items
 			$first = true;
@@ -48,7 +48,7 @@ function theme_live_menu_block()
 						$first = false;
 						?><ul><?php
 					}
-					?><li><a href="<?php print url($subpath); ?>"><?php print $subconfig['name']; ?></a></li><?php
+					?><li><a class="menu_link" href="<?php print url($subpath); ?>"><?php print $subconfig['name']; ?></a></li><?php
 				}
 			}
 			if(!$first)
@@ -80,13 +80,14 @@ function theme_live_context_menu()
 {
 	?>
 	<ul class="menu" id="menu">
-		<li id="option_download"><a href="#" onMouseOut="this.className = '';" onMouseOver="this.className = 'itemSelect';"><b>Download File</b></a></li>
-		<li id="option_open"><a href="#" onMouseOut="this.className = '';" onMouseOver="this.className = 'itemSelect';"><b>Open</b></a></li>
-		<li><a href="#" onMouseOut="this.className = '';" onMouseOver="this.className = 'itemSelect';">Play Now</a></li>
+		<li id="option_download"><a href="#">Download File</a></li>
+		<li id="option_open"><a href="#">Open</a></li>
+		<li id="option_play"><a href="#" onclick="play_selected(); return false;">Play Now</a></li>
+		<li id="option_preview"><a href="#">Preview</a></li>
 		<li><div class="sep"></div></li>
-		<li><a href="#" onMouseOut="this.className = '';" onMouseOver="this.className = 'itemSelect';">Download Zip</a></li>
-		<li><a href="#" onMouseOut="this.className = '';" onMouseOver="this.className = 'itemSelect';">Download Torrent</a></li>
-		<li><a href="#" onMouseOut="this.className = '';" onMouseOver="this.className = 'itemSelect';">Add to Queue</a></li>
+		<li><a href="#">Download Zip</a></li>
+		<li><a href="#">Download Torrent</a></li>
+		<li><a href="#">Add to Queue</a></li>
 	</ul>
 	<?php
 }

@@ -873,16 +873,8 @@ function output_module($request)
 		register_output_vars('status', $status);
 	
 	// find invalid parameters
-	if(isset($GLOBALS['modules'][$request['configure_module']]))
-	{
-		$missing_settings = array_diff($GLOBALS['modules'][$request['configure_module']]['settings'], array_keys($options));
-		$in_settings_not_in_config = array_intersect($missing_settings, $GLOBALS['modules'][$request['configure_module']]['settings']);
-	}
-	else
-	{
-		$missing_settings = array_diff($GLOBALS['handlers'][$request['configure_module']]['settings'], array_keys($options));
-		$in_settings_not_in_config = array_intersect($missing_settings, $GLOBALS['handlers'][$request['configure_module']]['settings']);
-	}
+	$missing_settings = array_diff(get_settings($request['configure_module']), array_keys($options));
+	$in_settings_not_in_config = array_intersect($missing_settings, $GLOBALS['modules'][$request['configure_module']]['settings']);
 	
 	// print out errors for incorrect configuration
 	$in_config_not_in_settings = array_intersect($missing_settings, array_keys($options));

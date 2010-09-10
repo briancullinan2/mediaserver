@@ -21,7 +21,7 @@ function theme_live_logo()
 function theme_live_scripts()
 {
 	header('Content-Type: text/javascript');
-	$scripts = array('js/jquery.js', 'js/dragclick.js');
+	$scripts = array('js/jquery.js', 'js/jquery-ui.js', 'js/player.js', 'js/playlist.js', 'js/utils.js');
 	
 	foreach($scripts as $i => $script)
 	{
@@ -32,8 +32,9 @@ function theme_live_scripts()
 function theme_live_styles()
 {
 	header('Content-Type: text/css');
-	$styles = array('css/types.css', 'css/search.css', 'css/layout.css', 'css/menu.css', 'css/files.css'
+	$styles = array('css/types.css', 'css/colors.css', 'css/search.css', 'css/layout.css', 'css/menu.css', 'css/files.css'
 		, 'css/errors.css', 'css/forms.css', 'css/footer.css', 'css/select.css', 'css/geshi.css', 'css/highlight.css'
+		, 'css/list.css'
 	);
 	
 	foreach($styles as $i => $style)
@@ -76,45 +77,14 @@ function live_get_scheme()
 
 function live_get_colors()
 {
-	$color_schemes = array(
-		'files' => array(
-			'bg' => '#06A',
-			'inner' => '#446688 #335588 #115577',
-			'outer' => '#88BBDD #66AACC #5599BB',
-			'fg' => '#6CF',
-		),
-		'audio' => array(
-			'bg' => '#900',
-			'inner' => '#883333 #883322 #772211',
-			'outer' => '#BB8888 #AA6666 #995555',
-			'fg' => '#F66',
-		),
-		'image' => array(
-			'bg' => '#990',
-			'inner' => '#888844 #888833 #777722',
-			'outer' => '#BBBBAA #AAAACC #9999BB',
-			'fg' => '#FFA',
-		),
-		'video' => array(
-			'bg' => '#093',
-			'inner' => '#668866 #448844 #447744',
-			'outer' => '#88DDBB #66CCAA #55BB99',
-			'fg' => '#6FA',
-		),
-		'code' => array(
-			'bg' => '#909',
-			'inner' => '#884488 #883388 #772277',
-			'outer' => '#BBAABB #AACCAA #99BB99',
-			'fg' => '#FAF',
-		),
-	);
+	$color_schemes = array('files', 'audio', 'image', 'video', 'code', 'movies');
 
 	$scheme = live_get_scheme();
 	
-	if(isset($color_schemes[$scheme]))
-		return $color_schemes[$scheme];
+	if(in_array($scheme, $color_schemes))
+		return $scheme;
 	else
-		return $color_schemes['files'];
+		return 'files';
 }
 
 function live_get_info_count()
@@ -164,8 +134,6 @@ function live_alter_file($file)
 			$file['Bitrate'] = round($file['Bitrate'] / 1000, 1) . ' kbs';
 		elseif($column == 'Length')
 			$file['Length'] = floor($file['Length'] / 60) . ' minutes ' . floor($file['Length'] % 60) . ' seconds';
-		else
-			$file[$column] = htmlspecialchars($value);
 	}
 	return $file;
 }

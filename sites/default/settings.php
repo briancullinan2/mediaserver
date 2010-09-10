@@ -2,8 +2,8 @@
 db_connect = mysql://media:eVi0FIWJIZVLPwiB@localhost/mediaserver
 database_enable = 1
 debug_mode = "1"
-recursive_get = "1"
-verbose = 1
+deep_select = "1"
+verbose = 2
 movies_enable = "false"
 db_connect = "mysql%3A%2F%2Fmedia%3AeVi0FIWJIZVLPwiB%40localhost%2Fmediaserver"
 local_users = "%2Fvar%2Fwww%2Fdev%2Fusers%2F"

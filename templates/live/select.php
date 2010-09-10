@@ -2,6 +2,13 @@
 
 function theme_live_select()
 {
+	if(isset($GLOBALS['output']['extra']) && $GLOBALS['output']['extra'] == 'filesonly')
+	{
+		theme('files', $GLOBALS['output']['files']);
+		
+		return;
+	}
+	
 	$current = isset($GLOBALS['output']['html']['dir'])?ucwords(basename($GLOBALS['output']['html']['dir'])):'';
 	
 	$description = 'Click to browse files. Drag to select files, and right click for download options.';
@@ -37,20 +44,20 @@ function theme_live_select_block()
 {
 	?>
 	<div class="files" style="border:1px solid #006; height:150px; width:84px; border-right:0px; background-color:#FFF;">
-		<div class="file FOLDER small" onmousedown="deselectAll(event);fileSelect(this, true, event);return false;" oncontextmenu="showMenu(this);return false;" id="0"><div class="notselected"></div>
-			<a class="itemLink" href="<?php print url($GLOBALS['output']['get'] . '&dir=' . dirname($GLOBALS['output']['dir'])); ?>" onmouseout="this.parentNode.firstChild.className = 'notselected';" onmouseover="this.parentNode.firstChild.className = 'selected';"><span>Up 1 Level</span></a>
+		<div class="file FOLDER small" id="0">
+			<a class="itemLink" href="<?php print url($GLOBALS['output']['get'] . '&dir=' . dirname($GLOBALS['output']['dir'])); ?>"><span>Up 1 Level</span></a>
 		</div>
-		<div class="file FOLDER" onmousedown="deselectAll(event);fileSelect(this, true, event);return false;" oncontextmenu="showMenu(this);return false;" id="0"><div class="notselected"></div>
-			<table class="itemTable" cellpadding="0" cellspacing="0" onclick="location.href = '<?php print url($GLOBALS['output']['get'] . '&dir=/'); ?>';">
+		<div class="file file_ext_FOLDER file_type_" id="0">
+			<table class="itemTable" cellpadding="0" cellspacing="0">
 				<tr>
 					<td>
-						<div class="thumb file_ext_FOLDER file_type_">
+						<div class="thumb">
 							<img src="<?php print url('template/live/images/s.gif'); ?>" alt="FOLDER" height="48" width="48">
 						</div>
 					</td>
 				</tr>
 			</table>
-			<a class="itemLink" href="<?php print url($GLOBALS['output']['get'] . '&dir=/'); ?>" onmouseout="this.parentNode.firstChild.className = 'notselected';" onmouseover="this.parentNode.firstChild.className = 'selected';"><span>Top Directory</span></a>
+			<a class="itemLink" href="<?php print url($GLOBALS['output']['get'] . '&dir=/'); ?>"><span>Top Directory</span></a>
 		</div>
 	</div>
 	<div class="files" id="files" style="border:1px solid #006; overflow:auto; height:150px; width:400px; float:left; background-color:#FFF;"><?php
@@ -59,11 +66,11 @@ function theme_live_select_block()
 		$link = (dirname($GLOBALS['output']['dir']) == '/')?url($GLOBALS['output']['get'] . '&dir=/'):url($GLOBALS['output']['get'] . '&dir=' . urlencode(dirname($GLOBALS['output']['dir']) . '/'));
 		?>
 		<b>There are no files to display</b><br />
-		<div class="filesmall FOLDER" onmousedown="deselectAll(event);fileSelect(this, true, event);return false;" oncontextmenu="showMenu(this);return false;" id="0"><div class="notselected"></div>
-			<table class="itemTable" cellpadding="0" cellspacing="0" onclick="location.href = '<?php print $link; ?>';">
+		<div class="filesmall file_ext_FOLDER file_type_" id="0">
+			<table class="itemTable" cellpadding="0" cellspacing="0">
 				<tr>
 					<td>
-						<div class="thumbsmall file_ext_FOLDER file_type_">
+						<div class="thumbsmall">
 							<img src="<?php print url('template/live/images/s.gif'); ?>" alt="FOLDER" height="48" width="48">
 						</div>
 					</td>
@@ -104,17 +111,17 @@ function theme_live_select_block()
 			$link = isset($new_handler)?url($GLOBALS['output']['get'] . '&start=0&handler=' . $new_handler . '&dir=' . urlencode($file['Filepath'])):url($GLOBALS['output']['get'] . '&dir=&id=' . urlencode($file['id']) . '&filename=' . urlencode($file['Filename']));
 			
 			?>
-			<div class="filesmall <?php print $file['Filetype']; ?>" onmousedown="deselectAll(event);fileSelect(this, true, event);return false;" oncontextmenu="showMenu(this);return false;" id="<?php print $file['id']; ?>"><div class="notselected"></div>
-				<table class="itemTable" cellpadding="0" cellspacing="0" onclick="location.href = '<?php print $link; ?>';">
+			<div class="filesmall file_ext_<?php print $file['Filetype']; ?> file_type_<?php print str_replace('/', ' file_type_', $file['Filemime']); ?>" id="<?php print $file['id']; ?>">
+				<table class="itemTable" cellpadding="0" cellspacing="0">
 					<tr>
 						<td>
-							<div class="thumbsmall file_ext_<?php print $file['Filetype']; ?> file_type_<?php print str_replace('/', ' file_type_', $file['Filemime']); ?>">
+							<div class="thumbsmall">
 								<img src="<?php print url('template/live/images/s.gif'); ?>" alt="<?php print $file['Filetype']; ?>" height="16" width="16">
 							</div>
 						</td>
 					</tr>
 				</table>
-				<a class="itemLink" href="<?php print $link; ?>" onmouseout="this.parentNode.firstChild.className = 'notselected';" onmouseover="this.parentNode.firstChild.className = 'selected';"><span><?php print $GLOBALS['output']['html']['files'][$i]['Filename']; ?></span></a>
+				<a class="itemLink" href="<?php print $link; ?>"><span><?php print $GLOBALS['output']['html']['files'][$i]['Filename']; ?></span></a>
 			</div>
 			<?php
 		}
@@ -142,7 +149,7 @@ function theme_live_files($files = NULL)
 		{
 			?><div id="codepreview"><?php print $files[0]['HTML']; ?></div>
 			<div class="filestrip">
-			<div class="files" id="files" style="width:4160px;"><?php
+			<div class="files" style="width:4160px;"><?php
 			foreach($files as $i => $file)
 			{
 				// check if we should use an image with preview instead of usual file
@@ -161,7 +168,7 @@ function theme_live_files($files = NULL)
 		{
 			?><img id="preview" src="<?php print url('convert/png?cheight=500&cwidth=500&id=' . $files[0]['id']); ?>" />
 			<div class="filestrip">
-			<div class="files" id="files" style="width:4160px;"><?php
+			<div class="files" style="width:4160px;"><?php
 			foreach($files as $i => $file)
 			{
 				// check if we should use an image with preview instead of usual file
@@ -178,7 +185,7 @@ function theme_live_files($files = NULL)
 		}
 		else
 		{
-			?><div class="files" id="files"><?php
+			?><div class="files"><?php
 			foreach($files as $i => $file)
 			{
 				theme('file', $file, $GLOBALS['output']['handler']);
@@ -195,17 +202,17 @@ function theme_live_file_preview_code($file)
 	$link = "$('#codepreview').load('" . url('files/code/' . $html['id']) . "/" . urlencode($file['Filename']) . "')";
 	
 	?>
-	<div class="file <?php print $html['Filetype']; ?>" onmousedown="deselectAll(event);fileSelect(this, true, event);return false;" oncontextmenu="showMenu(this);return false;" id="<?php print $html['id']; ?>"><div class="notselected"></div>
-		<table class="itemTable" cellpadding="0" cellspacing="0" onclick="<?php print $link; ?>">
+	<div class="file preview file_ext_<?php print $html['Filetype']; ?> file_type_<?php print isset($html['Filemime'])?str_replace('/', ' file_type_', $html['Filemime']):''; ?>" id="<?php print $html['id']; ?>">
+		<table class="itemTable" cellpadding="0" cellspacing="0">
 			<tr>
 				<td>
-					<div class="thumb file_ext_<?php print $html['Filetype']; ?> file_type_<?php print isset($html['Filemime'])?str_replace('/', ' file_type_', $html['Filemime']):''; ?>">
+					<div class="thumb">
 						<img src="<?php print url('template/live/images/s.gif'); ?>" alt="<?php print $file['Filetype']; ?>" height="48" width="48">
 					</div>
 				</td>
 			</tr>
 		</table>
-		<a class="itemLink" href="javascript:void(0);" onclick="<?php print $link; ?>; return false;" onmouseout="this.parentNode.firstChild.className = 'notselected'; if(!loaded){return false;} document.getElementById('info_<?php print $html['id']; ?>').style.display = 'none';document.getElementById('info_<?php print $html['id']; ?>').style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.className = 'selected'; if(!loaded){return false;} document.getElementById('info_<?php print $html['id']; ?>').style.display = '';document.getElementById('info_<?php print $html['id']; ?>').style.visibility = 'visible'; return true;"><span><?php print $html['Filename']; ?></span></a>
+		<a class="itemLink" href="#" onclick="<?php print $link; ?>; return false;"><span><?php print $html['Filename']; ?></span></a>
 	</div>
 	<?php
 }
@@ -217,17 +224,17 @@ function theme_live_file_preview_image($file)
 	$link = "$('#preview').attr('src', '" . url('convert/png?cheight=500&cwidth=500&id=' . $html['id']) . "')";
 	
 	?>
-	<div class="file <?php print $html['Filetype']; ?>" onmousedown="deselectAll(event);fileSelect(this, true, event);return false;" oncontextmenu="showMenu(this);return false;" id="<?php print $html['id']; ?>"><div class="notselected"></div>
-		<table class="itemTable" cellpadding="0" cellspacing="0" onclick="<?php print $link; ?>">
+	<div class="file preview file_ext_<?php print $html['Filetype']; ?> file_type_<?php print isset($html['Filemime'])?str_replace('/', ' file_type_', $html['Filemime']):''; ?>" id="<?php print $html['id']; ?>">
+		<table class="itemTable" cellpadding="0" cellspacing="0">
 			<tr>
 				<td>
-					<div class="thumb file_ext_<?php print $html['Filetype']; ?> file_type_<?php print isset($html['Filemime'])?str_replace('/', ' file_type_', $html['Filemime']):''; ?>">
+					<div class="thumb">
 						<img src="<?php print url('template/live/images/s.gif'); ?>" alt="<?php print $html['Filetype']; ?>" style="background-image:url(<?php print url('convert/png?cheight=56&cwidth=56&id=' . $html['id']); ?>);" height="48" width="48">
 					</div>
 				</td>
 			</tr>
 		</table>
-		<a class="itemLink" href="javascript:void(0);" onclick="<?php print $link; ?>; return false;" onmouseout="this.parentNode.firstChild.className = 'notselected'; if(!loaded){return false;} document.getElementById('info_<?php print $html['id']; ?>').style.display = 'none';document.getElementById('info_<?php print $html['id']; ?>').style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.className = 'selected'; if(!loaded){return false;} document.getElementById('info_<?php print $html['id']; ?>').style.display = '';document.getElementById('info_<?php print $html['id']; ?>').style.visibility = 'visible'; return true;"><span><?php print $html['Filename']; ?></span></a>
+		<a class="itemLink" href="#" onclick="<?php print $link; ?>; return false;"><span><?php print $html['Filename']; ?></span></a>
 	</div>
 	<?php
 }
@@ -247,22 +254,33 @@ function theme_live_file($file, $current_handler = 'files')
 		if(substr($file['Filepath'], -1) != '/') $file['Filepath'] .= '/';
 		$new_handler = $handler;
 	}
+	
 	if(isset($new_handler))
 		$link = url('select/' . $new_handler . '/' . $html['Filepath']);
+	elseif(handles($file['Filepath'], 'image'))
+		$link = url('select/' . $handler . '?file=' . $html['Filepath']);
 	else
 		$link = url('files/' . $handler . '/' . $file['id'] . '/' . urlencode($file['Filename']));
 
 	unset($new_handler);
 	?>
-	<div class="file <?php print $file['Filetype']; ?>" onmousedown="deselectAll(event);fileSelect(this, true, event);return false;" oncontextmenu="showMenu(this);return false;" id="<?php print $html['id']; ?>"><div class="notselected"></div>
-		<table class="itemTable" cellpadding="0" cellspacing="0" onclick="location.href = '<?php print $link; ?>';">
+	<div class="file file_ext_<?php print $file['Filetype']; ?> file_type_<?php print isset($file['Filemime'])?str_replace('/', ' file_type_', $file['Filemime']):''; ?>" id="<?php print $html['id']; ?>">
+		<table class="itemTable" cellpadding="0" cellspacing="0">
 			<tr>
 				<td>
-					<div class="thumb file_ext_<?php print $file['Filetype']; ?> file_type_<?php print isset($file['Filemime'])?str_replace('/', ' file_type_', $file['Filemime']):''; ?>">
+					<div class="thumb">
 						<?php
 						if(handles($file['Filepath'], 'image') && is_module('convert'))
 						{
 							?><img src="<?php print url('template/live/images/s.gif'); ?>" alt="<?php print $file['Filetype']; ?>" style="background-image:url(<?php print url('convert/png?cheight=56&cwidth=56&id=' . $html['id']); ?>);" height="48" width="48"><?php
+						}
+						elseif(handles($file['Filepath'], 'movies') && is_module('convert'))
+						{
+							?><img src="<?php print url('template/live/images/s.gif'); ?>" alt="<?php print $file['Filetype']; ?>" style="background-image:url(<?php print url('convert/png?handler=movies&cheight=56&cwidth=56&id=' . $html['id']); ?>);" height="48" width="48"><?php
+						}
+						elseif(handles($file['Filepath'], 'discogs') && is_module('convert'))
+						{
+							?><img src="<?php print url('template/live/images/s.gif'); ?>" alt="<?php print $file['Filetype']; ?>" style="background-image:url(<?php print url('convert/png?handler=discogs&cheight=56&cwidth=56&id=' . $html['id']); ?>);" height="48" width="48"><?php
 						}
 						else
 						{
@@ -273,7 +291,7 @@ function theme_live_file($file, $current_handler = 'files')
 				</td>
 			</tr>
 		</table>
-		<a class="itemLink" href="<?php print $link; ?>" onmouseout="this.parentNode.firstChild.className = 'notselected'; if(!loaded){return false;} document.getElementById('info_<?php print $html['id']; ?>').style.display = 'none';document.getElementById('info_<?php print $html['id']; ?>').style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.className = 'selected'; if(!loaded){return false;} document.getElementById('info_<?php print $html['id']; ?>').style.display = '';document.getElementById('info_<?php print $html['id']; ?>').style.visibility = 'visible'; return true;"><span><?php print $html['Filename']; ?></span></a>
+		<a class="itemLink" href="<?php print $link; ?>"><span><?php print $html['Filename']; ?></span></a>
 	</div>
 	<?php
 }
@@ -281,8 +299,6 @@ function theme_live_file($file, $current_handler = 'files')
 
 function theme_live_info($files = array(), $columns = array())
 {
-	$colors = live_get_colors();
-
 	$biggest = live_get_info_count();
 	
 	// hack header to add new row
@@ -290,7 +306,7 @@ function theme_live_info($files = array(), $columns = array())
 	</td>
 </tr>
 <tr>
-	<td id="infoBar" style="background-color:<?php print $colors['bg']; ?>; height:<?php print max($biggest+3, 7); ?>em;">
+	<td id="infoBar" class="colors_bg infobar" style="height:<?php print max($biggest+3, 7); ?>em;">
 	<?php
 	foreach($files as $i => $file)
 	{
@@ -311,7 +327,7 @@ function theme_live_info($files = array(), $columns = array())
 		
 		//
 		?>
-		<table cellpadding="0" cellspacing="0" border="0" class="fileInfo" id="info_<?php print $file['id']; ?>" style="display:none; visibility:hidden;">
+		<table cellpadding="0" cellspacing="0" border="0" class="fileInfo" id="info_<?php print $file['id']; ?>" style="display:none;">
 			<tr>
 				<td>
 					<table cellpadding="0" cellspacing="0" border="0" class="fileThumb">
@@ -340,7 +356,7 @@ function theme_live_info($files = array(), $columns = array())
 					{
 						$count++;
 						?>
-						<span class="label" style="color:<?php print $colors['fg']; ?>;"><?php print htmlspecialchars($column); ?>:</span>
+						<span class="label colors_fg"><?php print htmlspecialchars($column); ?>:</span>
 						<?php
 						
 						if($column == 'Filepath')

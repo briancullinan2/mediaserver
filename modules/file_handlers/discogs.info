@@ -3,6 +3,7 @@ description = Get discography information for all music.
 depends on[] = audio
 depends on[] = curl_installed
 depends on[] = discogs_api
+depends on[] = simplexml_installed
 package = file_handlers
 settings[] = discogs_api
 
@@ -11,6 +12,6 @@ Filepath = TEXT
 ReleaseNum = TEXT
 Position = TEXT
 Type = TEXT
-Image = BLOB
+Image = LONGBLOB
 ReleaseXml = TEXT
 ArtistXml = TEXT

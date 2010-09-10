@@ -1,5 +1,9 @@
 <?php
 
+function setup_movies()
+{
+	stream_wrapper_register('moviesthumb', 'moviesthumb');
+}
 
 function handles_movies($file)
 {
@@ -8,21 +12,36 @@ function handles_movies($file)
 	// do all movies
 	if($is_video)
 		return true;
+	
+	// add a trailing slash to directories so that is does not match the movie folder as a movie
+	if(is_dir($file) && substr($file, -1) != '/')
+		$file .= '/';
 		
+	// do not handle internal files, only physical files
+	if(!is_file($file) && !is_dir($file))
+		return false;
+	
 	// do movies in the folders from the download_movies module
 	if($movie_folders = setting('movie_folders'))
 	{
 		$is_movie = false;
 		foreach($movie_folders as $i => $folder)
 		{
-			if(substr($file, 0, strlen($folder)) == $folder)
+			if(substr($file, 0, strlen($folder)) == $folder && $file != $folder)
 			{
 				$is_movie = true;
+				break;
 			}
 		}
 		if($is_movie)
 			return true;
 	}
+	
+	// if current directory is a movie and the file is a VIDEO_TS or .ISO
+	if((ext($file) == 'iso' || strtoupper(basename($file)) == 'VIDEO_TS') && 
+		handles(dirname($file), 'movies')
+	)
+		return true;
 	
 	// check to see if current directory of the file is titled movie
 	if(strtolower(basename(dirname($file))) == 'movies')
@@ -80,8 +99,8 @@ function setting_movie_folder($settings, $index)
 		$settings['movie_folder_' . $index] = str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $settings['movie_folder_' . $index]);
 		if(substr($settings['movie_folder_' . $index], -1) != DIRECTORY_SEPARATOR)
 			$settings['movie_folder_' . $index] .= DIRECTORY_SEPARATOR;
-		if(file_exists($settings['movie_folder_' . $index]))
-			return $settings['movie_folder_' . $index];
+		if(is_dir($settings['movie_folder_' . $index]))
+			return str_replace('\\', '/', $settings['movie_folder_' . $index]);
 	}
 }
 
@@ -266,91 +285,142 @@ function get_info_movies($file)
 {
 	$fileinfo = array();
 	$fileinfo['Filepath'] = str_replace('\\', '/', $file);
-		
-	$tmp_tokens = tokenize(basename($file));
-	sort($tmp_tokens['Most']);
-	$search_text = implode(' ', $tmp_tokens['Most']);
-	$search = 'http://api.themoviedb.org/2.1/Movie.search/en/xml/' . setting('tmdb_api') . '/' . urlencode($search_text);
-	$result = fetch($search, array(), array('Accept-Encoding: gzip'));
 	
-	$names = get_movie_names($result['content']);
-	$ids = get_movie_ids($result['content']);
+	// set up tokens
+	if((ext($file) == 'iso' || strtoupper(basename($file)) == 'VIDEO_TS') && 
+		handles(dirname($file), 'movies')
+	)
+		$tmp_tokens = tokenize(basename(dirname($file)));
+	else
+		$tmp_tokens = tokenize(basename($file));
+
+	// set up search
+	$search_text = implode(' ', $tmp_tokens['All']);
+	$search = 'http://api.themoviedb.org/2.1/Movie.search/en/xml/' . setting('tmdb_api') . '/' . urlencode($search_text);
+	$search_results = fetch($search, array(), array('Accept-Encoding: gzip'));
+	
+	// if no xml is defined then there was a problem
+	if(!isset($search_results['xml']))
+		return false;
+	
+	// get names and ids of results
+	$names = get_xml_list($search_results['xml']->xpath('//movie/name'));
+	$ids = get_xml_list($search_results['xml']->xpath('//movie/id'));
+	
+	if(empty($names))
+		return $fileinfo;
 	
 	list($movie, $key) = get_closest($search_text, $names);
+	
+	$fileinfo['MovieID'] = $ids[$key];
+	
+	// check database for movie info
+	if(setting('database_enable'))
+	{
+		$files = db_assoc('SELECT * FROM movies WHERE MovieID=?', array($fileinfo['MovieID']));
+		
+		if(count($files) > 0)
+		{
+			$fileinfo += $files[0];
+			unset($fileinfo['id']);
+			return $fileinfo;
+		}
+	}
 
-	// get movie info
-	$query = 'http://api.themoviedb.org/2.1/Movie.getInfo/en/xml/' . setting('tmdb_api') . '/' . $ids[$key];
+	// get movie info for closest match
+	$query = 'http://api.themoviedb.org/2.1/Movie.getInfo/en/xml/' . setting('tmdb_api') . '/' . $fileinfo['MovieID'];
 	$movie = fetch($query, array(), array('Accept-Encoding: gzip'));
 	
-	$imdb = get_imdb($movie['content']);
-	$rating = get_rating($movie['content']);
-	$overview = get_overview($movie['content']);
-	$released = get_released($movie['content']);
-	$runtime = get_runtime($movie['content']);
+	if(!isset($movie['xml']))
+		return false;
 	
-	$fileinfo['IMDB'] = $imdb[0];
-	$fileinfo['Rating'] = $rating[0];
-	$fileinfo['Overview'] = $overview[0];
-	$fileinfo['ReleaseDate'] = strtotime($released[0]);
-	$fileinfo['Runtime'] = $runtime[0];
-	$fileinfo['MovieID'] = $ids[$key];
+	$fileinfo['IMDB'] = get_xml_result($movie['xml']->xpath('//movie/imdb_id'));
+	$fileinfo['Rating'] = get_xml_result($movie['xml']->xpath('//movie/rating'));
+	$fileinfo['Overview'] = get_xml_result($movie['xml']->xpath('//movie/overview'));
+	$fileinfo['ReleaseDate'] = date('Y-m-d', strtotime(get_xml_result($movie['xml']->xpath('//movie/released'))));
+	$fileinfo['Runtime'] = get_xml_result($movie['xml']->xpath('//movie/runtime'));
 	$fileinfo['MovieXml'] = $movie['content'];
+	
+	// get the image
+	$images = $movie['xml']->xpath('//image[@size="original"]');
+	if(isset($images[0]))
+	{
+		$image_attr = $images[0]->attributes();
+		$image = fetch($image_attr['url'], array(), array('Accept-Encoding: gzip'));
+		$fileinfo['Image'] = 'data:' . $image['headers']['content-type'] . ';base64,' . base64_encode($image['content']);
+	}
 	
 	return $fileinfo;
 }
 
-function get_movie_names($content)
+/**
+ * Implementation of handler_output
+ * @ingroup handler_output
+ */
+function output_movies($file)
 {
-	if(preg_match_all('/<movie>[\s\S]*?<name>([^<]*?)<\/name>/i', $content, $matches) > 0)
-		return $matches[1];
-	else
-		return array();
+	$file = str_replace('\\', '/', $file);
+	
+	if(setting('alias_enable'))
+		$file = alias_replace($file);
+	
+	$files = db_assoc('SELECT * FROM movies WHERE Filepath=? LIMIT 1', array($file));
+	if(count($files) > 0)
+	{				
+		header('Content-Type: ' . substr($files[0]['Image'], 5, strpos($files[0]['Image'], ';')));
+		return fopen('moviesthumb://' . $file, 'rb');
+	}
+
+	return false;
 }
 
-function get_movie_ids($content)
-{
-	if(preg_match_all('/<movie>[\s\S]*?<id>([^<]*?)<\/id>/i', $content, $matches) > 0)
-		return $matches[1];
-	else
-		return array();
+
+// music handler
+class moviesthumb
+{	
+	// this is for stream stuff when controlling output of the file
+       
+    protected $internal_fp = NULL;
+    protected $internal_length = NULL;
+    protected $internal_pos = NULL;
+	
+    function stream_open($path, $mode, $options, &$opened_path)
+    {
+		if(substr($path, 0, strlen('moviesthumb://')) == 'moviesthumb://')
+			$path = substr($path, strlen('moviesthumb://'));
+			
+		$files = db_assoc('SELECT * FROM movies WHERE Filepath=? LIMIT 1', array($path));
+
+		if(count($files) > 0)
+		{
+			$this->internal_text = base64_decode(substr($files[0]['Image'], strpos($files[0]['Image'], ';base64,') + 8));
+			$this->internal_length = strlen($this->internal_text);
+			$this->internal_pos = 0;
+			return true;
+		}
+		
+		return false;
+    }
+    function stream_read($count){
+		if($this->internal_pos + $count > $this->internal_length)
+			$count = $this->internal_length - $this->internal_pos;
+		$buffer = substr($this->internal_text, $this->internal_pos, $count);
+		$this->internal_pos += $count;
+        return $buffer;
+    }
+    function stream_eof(){
+        return $this->internal_pos >= $this->internal_length;
+    }
+    function stream_tell(){
+        return $this->internal_pos;
+    }
+    function stream_seek($position){
+		if($position > $this->internal_length)
+		{
+			$position = $this->internal_length;
+		}
+		$this->internal_pos = $position;
+        return 0;
+    }
 }
 
-function get_imdb($content)
-{
-	if(preg_match_all('/<imdb_id>([^<]*?)<\/imdb_id>/i', $content, $matches) > 0)
-		return $matches[1];
-	else
-		return array();
-}
-
-function get_rating($content)
-{
-	if(preg_match_all('/<rating>([^<]*?)<\/rating>/i', $content, $matches) > 0)
-		return $matches[1];
-	else
-		return array();
-}
-
-function get_overview($content)
-{
-	if(preg_match_all('/<overview>([^<]*?)<\/overview>/i', $content, $matches) > 0)
-		return $matches[1];
-	else
-		return array();
-}
-
-function get_released($content)
-{
-	if(preg_match_all('/<released>([^<]*?)<\/released>/i', $content, $matches) > 0)
-		return $matches[1];
-	else
-		return array();
-}
-
-function get_runtime($content)
-{
-	if(preg_match_all('/<runtime>([^<]*?)<\/runtime>/i', $content, $matches) > 0)
-		return $matches[1];
-	else
-		return array();
-}

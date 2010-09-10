@@ -12,22 +12,6 @@ function theme_live_head($title)
 <meta name="google-site-verification" content="K3Em8a7JMI3_1ry5CNVKIHIWofDt-2C3ohovDq3N2cQ" />
 <script language="javascript" type="text/javascript" src="<?php print url('template/live/scripts'); ?>"></script>
 <link rel="stylesheet" href="<?php print url('template/live/styles'); ?>" type="text/css"/>
-<script language="javascript">
-var loaded = false;
-<?php
-if(isset($GLOBALS['output']['selector']) && $GLOBALS['output']['selector'] == false)
-{
-	?>var selector_off = true;<?php
-}
-else
-{
-	?>var selector_off = false;<?php
-}
-?>
-$(document).ready(function() {
-	init();
-});
-</script>
 </head>
 	<?php
 }
@@ -37,9 +21,15 @@ function theme_live_header($title = NULL, $description = NULL, $html_title = NUL
 	if(!isset($title))
 		$title = htmlspecialchars($GLOBALS['modules'][$GLOBALS['output']['module']]['name']);
 	
-	theme('head', $title);
+	if(!isset($GLOBALS['output']['extra']) || $GLOBALS['output']['extra'] != 'inneronly')
+	{
+		theme('head', $title);
 	
-	theme('body', isset($html_title)?$html_title:$title, $description);
+		theme('body');
+	}
+	
+	
+	theme('container', isset($html_title)?$html_title:$title, $description);
 }
 
 function theme_live_breadcrumbs($breadcrumbs = array(), $crumb = NULL)
@@ -86,16 +76,16 @@ function theme_live_template_block()
 	?></div><?php
 }
 
-function theme_live_body($title = NULL, $description = NULL)
+function theme_live_body()
 {
-	$colors = live_get_colors();
+	$scheme = live_get_colors();
 ?>
-<body onmousemove="setSelector()">
+<body class="colors_<?php print $scheme; ?>">
 <?php if(is_module('list')) theme('list_block'); ?>
 <div id="bodydiv">
 	<div id="sizer">
 		<div id="expander">
-			<table id="header" cellpadding="0" cellspacing="0" style="background-color:<?php print $colors['bg']; ?>;">
+			<table id="header" cellpadding="0" cellspacing="0" class="colors_bg header">
 				<tr>
 					<td id="siteTitle"><a href="<?php print url('select'); ?>"><?php print setting('html_name'); ?></a></td>
 					<td>
@@ -106,39 +96,45 @@ function theme_live_body($title = NULL, $description = NULL)
 			</table>
 <?php if(setting('debug_mode')) theme('debug_block'); ?>
 			<?php if(dependency('language') != false) theme('language_block'); ?>
+			<div id="loading">&nbsp;</div>
+			<?php theme('context_menu'); ?>
 			<div id="container">
-				<table width="100%" cellpadding="5" cellspacing="0">
-					<tr>
-						<td>
-							<div id="breadcrumb">
-								<ul>
-<?php
-theme('breadcrumbs', $GLOBALS['output']['breadcrumbs'], $title);
-?>
-								</ul>
-							</div>
-						</td>
-					</tr>
-				</table>
-				<div id="content" onmousedown="return startDrag(event);" onmouseup="endDrag();return false;">
-					<div id="selector" style="display:none;"></div>
-					<?php
-						theme('context_menu');
-					?>
-					<div class="menuShadow" id="shadow"></div>
-					<table id="main" cellpadding="0" cellspacing="0">
-						<tr>
-							<td class="sideColumn"></td>
-							<td id="mainColumn">
-								<table id="mainTable" cellpadding="0" cellspacing="0">
-									<tr>
-										<td>
-		<div class="contentSpacing">
-<?php
+	<?php
+}
 
+
+function theme_live_container($title = NULL, $description = NULL)
+{
+	$scheme = live_get_colors();
+
+	?>
+	<table width="100%" cellpadding="5" cellspacing="0">
+		<tr>
+			<td>
+				<div id="breadcrumb">
+					<ul>
+					<?php
+					theme('breadcrumbs', $GLOBALS['output']['breadcrumbs'], $title);
+					?>
+					</ul>
+				</div>
+			</td>
+		</tr>
+	</table>
+	<div id="content" class="colors_<?php print $scheme; ?>">
+		<table id="main" cellpadding="0" cellspacing="0">
+			<tr>
+				<td class="sideColumn"></td>
+				<td id="mainColumn">
+					<table id="mainTable" cellpadding="0" cellspacing="0">
+						<tr>
+							<td>
+	<div class="contentSpacing">
+	<?php
+	
 	if(isset($title))
 	{
-		?><h1 class="title"><?php print $title; ?></h1><?php
+		?><h1 class="title" id="title"><?php print $title; ?></h1><?php
 	}
 	if(isset($description))
 	{
@@ -149,4 +145,3 @@ theme('breadcrumbs', $GLOBALS['output']['breadcrumbs'], $title);
 	
 	theme('errors_block');
 }
-

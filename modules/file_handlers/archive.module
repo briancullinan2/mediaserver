@@ -186,11 +186,11 @@ function _archive_get_info_id3($filepath)
 			}
 			else
 			{
-				$fileinfo['Filetype'] = ext($file['filename']);
+				$fileinfo['Filetype'] = strtoupper(ext($file['filename']));
 				$fileinfo['Filesize'] = $file['compressed_size'];
 				$fileinfo['Uncompressed'] = $file['uncompressed_size'];
 			}
-			if($fileinfo['Filetype'] === false)
+			if($fileinfo['Filetype'] == '')
 				$fileinfo['Filetype'] = 'FILE';
 			$fileinfo['Filemime'] = mime($file['filename']);
 			$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
@@ -260,10 +260,10 @@ function _archive_get_info_pear($filepath)
 			}
 			else
 			{
-				$fileinfo['Filetype'] = ext($fileinfo['Filename']);
+				$fileinfo['Filetype'] = strtoupper(ext($fileinfo['Filename']));
 				$fileinfo['Uncompressed'] = @$stat['size'];
 			}
-			if($fileinfo['Filetype'] === false)
+			if($fileinfo['Filetype'] == '')
 				$fileinfo['Filetype'] = 'FILE';
 			else
 				$fileinfo['Filetype'] = strtoupper($fileinfo['Filetype']);

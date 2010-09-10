@@ -72,8 +72,8 @@ function get_info_diskimage($filepath, $include_offset = false)
 				if($file['filename'][strlen($file['filename'])-1] == '/')
 					$fileinfo['Filetype'] = 'FOLDER';
 				else
-					$fileinfo['Filetype'] = ext($file['filename']);
-				if($fileinfo['Filetype'] === false)
+					$fileinfo['Filetype'] = strtoupper(ext($file['filename']));
+				if($fileinfo['Filetype'] == '')
 					$fileinfo['Filetype'] = 'FILE';
 				$fileinfo['Filesize'] = $file['filesize'];
 				$fileinfo['Filemime'] = mime($file['filename']);

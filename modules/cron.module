@@ -1,0 +1,447 @@
+<?php
+
+
+function menu_cron()
+{
+	return array(
+		'cron' => array(
+			'callback' => 'output_cron',
+		)
+	);
+}
+
+/**
+ * Implementation of status
+ * @ingroup status
+ */
+function status_cron()
+{
+	$status = array();
+
+	if(dependency('database'))
+	{
+		$status['cron'] = array(
+			'name' => lang('cron status title', 'Cron'),
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					lang('cron status description', 'Cron updating functionality is available.'),
+				),
+			),
+			'value' => array(
+				'text' => array(
+					'Cron updating available',
+				),
+			),
+		);
+	}
+	else
+	{
+		$status['users'] = array(
+			'name' => lang('users status title', 'Cron'),
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					lang('cron status fail description', 'Cron cannot update the database because it is not configured.'),
+				),
+			),
+			'value' => array(
+				'text' => array(
+					'Cron cannot update',
+				),
+			),
+		);
+	}
+	
+	return $status;
+}
+
+/**
+ * Implementation of configure
+ * @ingroup configure
+ */
+function configure_cron($settings, $request)
+{
+	$settings['dir_seek_time'] = setting('dir_seek_time');
+	$settings['file_seek_time'] = setting('file_seek_time');
+	$settings['cleanup_buffer_time'] = setting('cleanup_buffer_time');
+	$settings['cleanup_threashold'] = setting('cleanup_threashold');
+	
+	$options = array();
+	
+	$options['cron'] = array(
+		'name' => 'Running the Cron',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'In order for the cron script to run, it must be installed in the OS to run periodically throughout the day.',
+			),
+		),
+		'value' => array(
+			'On Unix and Linux:',
+			array(
+				'code' => '&nbsp;&nbsp;&nbsp;&nbsp;0 * * * * /usr/bin/php /&lt;site path&gt;/modules/cron.php &gt;/dev/null 2&gt;&amp;1<br />
+				&nbsp;&nbsp;&nbsp;&nbsp;30 * * * * /usr/bin/php /&lt;site path&gt;/modules/cron.php &gt;/dev/null 2&gt;&amp;1<br />',
+			),
+			'On Windows:',
+			'Run this command from the command line to install the cron script as a task:',
+		),
+	);
+	
+	// dir seek time
+	$options['dir_seek_time'] = array(
+		'name' => 'Directory Seek Time',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'This script allows you to specify an amount of time to spend on searching directories.  This is so the script only runs for a few minutes every hour or every half hour.',
+				'The directory seek time is the amount of time the script will spend searching directories for changed files.',
+			),
+		),
+		'type' => 'time',
+		'value' => $settings['dir_seek_time'],
+	);
+	
+	// file seek time
+	$options['file_seek_time'] = array(
+		'name' => 'File Seek Time',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'The file seek time is the amount of time the script will spend reading file information and putting it in to the database.',
+			),
+		),
+		'type' => 'time',
+		'value' => $settings['dir_seek_time'],
+	);
+	
+	$options['cleanup_buffer_time'] = array(
+		'name' => 'Clean-Up Buffer Time',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'The clean up buffer time is used to add an extra amount of run time for database cleanup, such as removing non-existent files or duplicate files.',
+			),
+		),
+		'type' => 'time',
+		'value' => $settings['cleanup_buffer_time'],
+	);
+	
+	$options['cleanup_theashold'] = array(
+		'name' => 'Clean-Up Threashold',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'How many time should the script script run before cleaning up.',
+				'Sometimes cleanups can be time consuming, if the accuracy of what is on the filesystem is not a concern, this value should be high.',
+			),
+		),
+		'type' => 'text',
+		'value' => $settings['cleanup_threashold'],
+	);
+	
+	return $options;
+}
+
+/**
+ * Implementation of dependency
+ * Check the late date the cron ran and show status if it is too long ago
+ * @ingroup dependency
+ */
+function dependency_cron_last_run()
+{
+	return true; // TODO: more here
+}
+
+function dependency_dir_to_scan()
+{
+	return count(setting('watches')) > 0;
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ * @return 60 by default, accepts a number over zero or numeric [value] * numeric [multiplier]
+ */
+function setting_dir_seek_time($settings)
+{
+	if(isset($settings['dir_seek_time']['value']) && isset($settings['dir_seek_time']['multiplier']) && 
+		is_numeric($settings['dir_seek_time']['value']) && is_numeric($settings['dir_seek_time']['multiplier'])
+	)
+		$settings['dir_seek_time'] = $settings['dir_seek_time']['value'] * $settings['dir_seek_time']['multiplier'];
+	
+	if(isset($settings['dir_seek_time']) && is_numeric($settings['dir_seek_time']) && $settings['dir_seek_time'] > 0)
+		return $settings['dir_seek_time'];
+	else
+		return 60;
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ * @return 60 by default
+ */
+function setting_file_seek_time($settings)
+{
+	if(isset($settings['file_seek_time']['value']) && isset($settings['file_seek_time']['multiplier']) && 
+		is_numeric($settings['file_seek_time']['value']) && is_numeric($settings['file_seek_time']['multiplier'])
+	)
+		$settings['file_seek_time'] = $settings['file_seek_time']['value'] * $settings['file_seek_time']['multiplier'];
+	
+	if(isset($settings['file_seek_time']) && is_numeric($settings['file_seek_time']) && $settings['file_seek_time'] > 0)
+		return $settings['file_seek_time'];
+	else
+		return 60;
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ * @return 45 by default
+ */
+function setting_cleanup_buffer_time($settings)
+{
+	if(isset($settings['cleanup_buffer_time']['value']) && isset($settings['cleanup_buffer_time']['multiplier']) && 
+		is_numeric($settings['cleanup_buffer_time']['value']) && is_numeric($settings['cleanup_buffer_time']['multiplier'])
+	)
+		$settings['cleanup_buffer_time'] = $settings['cleanup_buffer_time']['value'] * $settings['cleanup_buffer_time']['multiplier'];
+	
+	if(isset($settings['cleanup_buffer_time']) && is_numeric($settings['cleanup_buffer_time']) && $settings['cleanup_buffer_time'] > 0)
+		return $settings['cleanup_buffer_time'];
+	else
+		return 45;
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ * @return 5 by default
+ */
+function setting_cleanup_threashold($settings)
+{
+	if(isset($settings['cleanup_threashold']) && is_numeric($settings['cleanup_threashold']))
+		return $settings['cleanup_threashold'];
+	else
+		return 5;
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return NULL by default, valid input is the index of the watched directory to scan
+ */
+function validate_scan_entry($request)
+{
+	if(isset($request['scan_entry']) && is_numeric($request['scan_entry']) && $request['scan_entry'] > 0 && $request['scan_entry'] < count($GLOBALS['watched']))
+		return $request['scan_entry'];
+	elseif(isset($request['scan_dir']))
+	{
+		foreach($GLOBALS['watched'] as $i => $watch)
+		{
+			if(substr($request['scan_dir'], 0, strlen($watch['Filepath'])) == $watch['Filepath'])
+				return $i;
+		}
+	}
+}
+
+/**
+ * Imeplementation of validate
+ * @ingroup validate
+ * @return NULL by default, valid input is the full watched path of the directory to scan
+ */
+function validate_scan_dir($request)
+{
+	$request['scan_entry'] = validate($request, 'scan_entry');
+	
+	if(isset($request['scan_dir']))
+	{
+		if(is_watched($request['scan_dir']) && 
+			(
+			 	!isset($request['scan_entry']) ||
+				substr($request['scan_dir'], 0, strlen($GLOBALS['watched'][$request['scan_entry']]['Filepath'])) == $GLOBALS['watched'][$request['scan_entry']]['Filepath']
+			)
+		)
+			return $request['scan_dir'];
+		else
+			unset($request['scan_dir']);
+	}
+	
+	if(!isset($request['scan_dir']))
+		return isset($request['scan_entry'])?$GLOBALS['watched'][$request['scan_entry']]['Filepath']: $GLOBALS['watched'][0]['Filepath'];
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return false by default, true to ingore the lock on the log file and scan anyways
+ */
+function validate_ignore_lock($request)
+{
+	return generic_validate_boolean_false($request, 'ignore_lock');
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return setting(cleanup_threashold) by default, any number between zero and setting(cleanup_threashold) is valid, this will be incremented and saved in the state
+ */
+function validate_clean_count($request)
+{
+	if(isset($request['clean_count']) && is_numeric($request['clean_count']) && $request['clean_count'] > 0 && $request['clean_count'] < setting('cleanup_threashold'))
+		return $request['clean_count'];
+	else
+		return setting('cleanup_threashold');
+}
+
+/**
+ * Implementation of validate
+ * @ingroup validate
+ * @return false by default, when set to true the file scanning will be skipped, only the directory scanning will be done
+ */
+function validate_scan_skip($request)
+{
+	return generic_validate_boolean_false($request, 'scan_skip');
+}
+
+
+function scan_watched($filepath)
+{
+	// prevent recursion from symbolic links and add the resolved path to this list
+	if(!isset($GLOBALS['scan_dirs']))
+		$GLOBALS['scan_dirs'] = array();
+		
+	// check if execution time is too long
+	$secs_total = array_sum(explode(' ', microtime())) - $GLOBALS['tm_start'];
+	
+	if( $secs_total > setting('dir_seek_time') )
+	{
+		// return the path to be saved in the state
+		return $file['Filepath'];
+	}
+	
+	// recursivley scan for changed directories based on file time and database
+	
+	
+}
+
+/** 
+ * look for changed directories
+ *   different from scan dir, which looks for changed and new files
+ */
+function handle_dir($dir, $current = '')
+{
+	// prevent recursion from symbolic links and add the resolved path to this list
+	if(!isset($GLOBALS['scan_dirs']))
+		$GLOBALS['scan_dirs'] = array();
+		
+	// get current if it is not already set
+	if($current == '')
+	{
+		foreach(setting('watches') as $i => $watch)
+		{
+			if(substr($dir, 0, strlen($watch)) == $watch)
+			{
+				$current = $watch;
+				break;
+			}
+		}
+	}
+	
+	if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $current)))
+	{
+		raise_error('Looking for changes in: ' . $current, E_DEBUG);
+	
+		$files = scan_directory($current);
+		$has_resumed = false;
+		// keep going until all files in directory have been read
+		foreach($files as $i => $file)
+		{
+			if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $file)) && !in_array(realpath($file), $GLOBALS['scan_dirs']))
+			{
+				$GLOBALS['scan_dirs'][] = realpath($file);
+				
+				// resume scanning
+				// check to see if $dir is above the current directory
+				if(substr($current, 0, strlen($dir)) != $dir && $has_resumed == false)
+				{
+					if(substr($dir, 0, strlen($file)) != $file)
+						continue;
+					raise_error('Resuming looking for changes in: ' . $file, E_DEBUG);
+					$has_resumed = true;
+				}
+				
+				// check if execution time is too long
+				$secs_total = array_sum(explode(' ', microtime())) - $GLOBALS['tm_start'];
+				
+				if( $secs_total > setting('dir_seek_time') )
+				{
+					// return the path to be saved in the state
+					return $file;
+				}
+			
+				// keep processing files
+				$file = str_replace('\\', '/', $file);
+				
+				$current_dir = true;
+				if(is_watched($file))
+					$current_dir = handle_dir($dir, $file);
+					
+				$fileinfo = add($file, false, 'watched');
+				
+				if( $current_dir !== true || connection_status() != 0)
+				{
+					return $current_dir;
+				}
+				
+				if($has_resumed == true)
+					$dir = dirname($file) . '/';
+			}
+			
+			// don't put too much load on the system
+			usleep(1);
+		}
+	}
+	
+	// directory as been completed
+	return true;
+}
+
+function output_cron($request)
+{
+	// close the session so the site can be used while cron is manually started
+	session_write_close();
+	
+	//------------- DON'T CHANGE THIS - USE /include/settings.php TO MODIFY THESE VALUES ---------//
+	// add 30 seconds becase the cleanup shouldn't take any longer then that
+	set_time_limit(setting('dir_seek_time') + setting('file_seek_time') + setting('cleanup_buffer_time'));
+	
+	// ignore user abort because the script will handle it
+	ignore_user_abort(1);
+	
+	// get the starting path for directory scanning
+	if(isset($request['scan_dir']))
+		$filepath = $request['scan_dir'];
+	elseif(isset($request['scan_entry']))
+		$filepath = setting('watched_' . $request['scan_entry']);
+	// get saved directory starting point from database
+	else
+	{
+		$files = db_assoc('SELECT * FROM watched WHERE LEFT(Filepath, 1) = "^"');
+		
+		if(count($files) == 0)
+			$filepath = setting('watched_0');
+		else
+			$filepath = substr($files[0]['Filepath'], 1);
+	}
+	
+	// start timer
+	$GLOBALS['tm_start'] = array_sum(explode(' ', microtime()));
+	
+	$current_dir = handle_dir($filepath);
+	
+	// scan changed directories
+	
+	// update files
+	
+	// cleanup
+}

@@ -116,7 +116,7 @@ function setup_mime()
 				// ext to mime
 				foreach($file_types as $index => $ext)
 				{
-					$ext_to_mime[$ext] = $mime_type;
+					$ext_to_mime[strtolower($ext)] = $mime_type;
 				}
 			}
 		}

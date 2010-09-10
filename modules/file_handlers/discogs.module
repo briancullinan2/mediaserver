@@ -1,5 +1,10 @@
 <?php
 
+function setup_discogs()
+{
+	stream_wrapper_register('discogsthumb', 'discogsthumb');
+}
+
 /** 
  * Implementation of handles
  * @ingroup handles
@@ -81,51 +86,63 @@ function get_info_discogs($file)
 		
 		$search_text = $audioinfo['Artist'] . ' - ' . $audioinfo['Album'];
 		$search = 'http://www.discogs.com/search?type=all&q=' . urlencode($search_text) . '&f=xml&api_key=' . setting('discogs_api');
-		$result = fetch($search, array(), array('Accept-Encoding: gzip'));
+		$search_results = fetch($search, array(), array('Accept-Encoding: gzip'));
 			
 		// check for errors
-		if(preg_match('/<error>/i', $result['content']) > 0)
+		if(!isset($search_results['xml']) || preg_match('/<error>/i', $search_results['content']) > 0)
 			return false;
 		
 		// parse content
-		$titles = get_titles($result['content']);
-		$types = get_types($result['content']);
-		$uris = get_uris($result['content']);
+		$results = $search_results['xml']->xpath('//result[@type="artist" or @type="release"]');
+		if(count($results) == 0)
+			return false;
+		
+		$titles = get_xml_list($search_results['xml']->xpath('//result[@type="artist" or @type="release"]/title'));
+		$uris = get_xml_list($search_results['xml']->xpath('//result[@type="artist" or @type="release"]/uri'));
 		
 		// find the closest match
 		list($album_artist, $key) = get_closest($search_text, $titles);
-	
-		$fileinfo['Type'] = ucfirst($types[$key]);
-		
+
+		$result_attr = $results[$key]->attributes();
+		$fileinfo['Type'] = ucfirst($result_attr['type']);
+
 		// try to find artist album first
-		if($types[$key] == 'artist')
+		if($fileinfo['Type'] == 'Artist')
 		{
 			// get artist info then album
 			$query = $uris[$key] . '?f=xml&api_key=' . setting('discogs_api');
 			$artist = fetch($query, array(), array('Accept-Encoding: gzip'));
+			
+			if(!isset($artist['xml']))
+				return false;
 		}
-		elseif($types[$key] == 'release')
+		elseif($fileinfo['Type'] == 'Release')
 		{
 			$query = $uris[$key] . '?f=xml&api_key=' . setting('discogs_api');
 			$album = fetch($query, array(), array('Accept-Encoding: gzip'));
 			
-			$releases = get_releases($album['content']);
-			$fileinfo['ReleaseNum'] = $releases[0];
+			if(!isset($album['xml']))
+				return false;
+			
+			$release = $album['xml']->xpath('//release');
+			$release_attr = $release[0]->attributes();
+			$fileinfo['ReleaseNum'] = $release_attr['id'];
 		}
 		
 		if(!isset($album))
 		{
 			// try to match up release
-			$albums = get_titles($artist['content']);
-			$releases = get_releases($artist['content']);
+			$albums = get_xml_list($artist['xml']->xpath('//release/title'));
+			$releases = get_xml_list($artist['xml']->xpath('//release'));
 			
 			// find the closest match
 			list($album, $key) = get_closest($audioinfo['Album'], $albums);
 			
-			$fileinfo['ReleaseNum'] = $releases[$key];
+			$release_attr = $releases[$key]->attributes();
+			$fileinfo['ReleaseNum'] = $release_attr['id'];
 		
 			// get album info
-			$query = 'http://www.discogs.com/release/' . $releases[$key] . '?f=xml&api_key=' . setting('discogs_api');
+			$query = 'http://www.discogs.com/release/' . $fileinfo['ReleaseNum'] . '?f=xml&api_key=' . setting('discogs_api');
 			$album = fetch($query, array(), array('Accept-Encoding: gzip'));
 			$fileinfo['Type'] = 'Release';
 		}
@@ -145,7 +162,7 @@ function get_info_discogs($file)
 		if(!isset($artist))
 		{
 			// try to match up release
-			$artists = get_artists($album['content']);
+			$artists = get_xml_list($album['xml']->xpath('//artist/name'));
 		
 			// find the closest match
 			list($artist) = get_closest($audioinfo['Artist'], $artists);
@@ -159,8 +176,8 @@ function get_info_discogs($file)
 		if(!empty($audioinfo['Title']))
 		{
 			// get position
-			$tracks = get_tracks($album['content']);
-			$positions = get_positions($album['content']);
+			$tracks = get_xml_list($album['xml']->xpath('//track/title'));
+			$positions = get_xml_list($album['xml']->xpath('//track/position'));
 			
 			// find closest match
 			list($track, $key) = get_closest($audioinfo['Title'], $tracks);
@@ -170,12 +187,12 @@ function get_info_discogs($file)
 		}
 		
 		// get image
-		$images = get_images($album['content']);
+		$images = $album['xml']->xpath('//images/image');
 		if(!isset($fileinfo['Image']) && isset($images[0]))
 		{
-			$query = $images[0] . '?api_key=' . setting('discogs_api');
-			$image = fetch($query, array(), array('Accept-Encoding: gzip'));
-			$fileinfo['Image'] = $image['content'];
+			$image_attr = $images[0]->attributes();
+			$image = fetch($image_attr['uri'], array(), array('Accept-Encoding: gzip'));
+			$fileinfo['Image'] = 'data:' . $image['headers']['content-type'] . ';base64,' . base64_encode($image['content']);
 		}
 		
 		
@@ -188,68 +205,74 @@ function get_info_discogs($file)
 	return false;
 }
 
-function get_artists($content)
+/**
+ * Implementation of handler_output
+ * @ingroup handler_output
+ */
+function output_discogs($file)
 {
-	if(preg_match_all('/<artist><name>([^<]*?)<\/name><\/artist>/i', $content, $matches) > 0)
-		return $matches[1];
-	else
-		return array();
+	$file = str_replace('\\', '/', $file);
+	
+	if(setting('alias_enable'))
+		$file = alias_replace($file);
+	
+	$files = db_assoc('SELECT * FROM discogs WHERE Filepath=? LIMIT 1', array($file));
+	if(count($files) > 0)
+	{				
+		header('Content-Type: ' . substr($files[0]['Image'], 5, strpos($files[0]['Image'], ';')));
+		return fopen('discogsthumb://' . $file, 'rb');
+	}
+
+	return false;
 }
 
-function get_titles($content)
-{
-	if(preg_match_all('/<title>([^<]*?)<\/title>/i', $content, $matches) > 0)
-		return $matches[1];
-	else
-		return array();
-}
 
-function get_tracks($content)
-{
-	if(preg_match_all('/<track>.*?<title>([^<]*?)<\/title>/i', $content, $matches) > 0)
-		return $matches[1];
-	else
-		return array();
-}
+// music handler
+class discogsthumb
+{	
+	// this is for stream stuff when controlling output of the file
+       
+    protected $internal_fp = NULL;
+    protected $internal_length = NULL;
+    protected $internal_pos = NULL;
+	
+    function stream_open($path, $mode, $options, &$opened_path)
+    {
+		if(substr($path, 0, strlen('discogsthumb://')) == 'discogsthumb://')
+			$path = substr($path, strlen('discogsthumb://'));
+			
+		$files = db_assoc('SELECT * FROM discogs WHERE Filepath=? LIMIT 1', array($path));
 
-function get_types($content)
-{
-	if(preg_match_all('/<result[^>]*?type="([^"]*?)">/i', $content, $matches) > 0)
-		return $matches[1];
-	else
-		return array();
+		if(count($files) > 0)
+		{
+			$this->internal_text = base64_decode(substr($files[0]['Image'], strpos($files[0]['Image'], ';base64,') + 8));
+			$this->internal_length = strlen($this->internal_text);
+			$this->internal_pos = 0;
+			return true;
+		}
+		
+		return false;
+    }
+    function stream_read($count){
+		if($this->internal_pos + $count > $this->internal_length)
+			$count = $this->internal_length - $this->internal_pos;
+		$buffer = substr($this->internal_text, $this->internal_pos, $count);
+		$this->internal_pos += $count;
+        return $buffer;
+    }
+    function stream_eof(){
+        return $this->internal_pos >= $this->internal_length;
+    }
+    function stream_tell(){
+        return $this->internal_pos;
+    }
+    function stream_seek($position){
+		if($position > $this->internal_length)
+		{
+			$position = $this->internal_length;
+		}
+		$this->internal_pos = $position;
+        return 0;
+    }
 }
-
-function get_uris($content)
-{
-	if(preg_match_all('/<uri>([^<]*?)<\/uri>/i', $content, $matches) > 0)
-		return $matches[1];
-	else
-		return array();
-}
-
-function get_releases($content)
-{
-	if(preg_match_all('/<release[^>]*?id="([^"]*?)"[^>]*?>/i', $content, $matches) > 0)
-		return $matches[1];
-	else
-		return array();
-}
-
-function get_images($content)
-{
-	if(preg_match_all('/<image[^>]*?uri="([^"]*?)"/i', $content, $matches) > 0)
-		return $matches[1];
-	else
-		return array();
-}
-
-function get_positions($content)
-{
-	if(preg_match_all('/<position>([^<]*?)<\/position>/i', $content, $matches) > 0)
-		return $matches[1];
-	else
-		return array();
-}
-
 

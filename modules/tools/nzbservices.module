@@ -179,7 +179,7 @@ function configure_nzbservices($settings)
 				
 			if(isset($result) && $result['status'] == 200)
 			{
-				$config['image'] = 'data:;base64,' . base64_encode($result['content']);
+				$config['image'] = 'data:image/x-icon;base64,' . base64_encode($result['content']);
 			}
 		}
 		

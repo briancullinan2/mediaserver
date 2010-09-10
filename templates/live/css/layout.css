@@ -17,6 +17,19 @@ body {
 	direction:ltr;
 }
 
+#loading {
+	background-image:url(?path_info=template/live/images/large-loading.gif);
+	top:50%;
+	left:50%;
+	margin-left:-16px;
+	margin-top:-16px;
+	position:absolute;
+	z-index:1000;
+	display:none;
+	height:32px;
+	width:32px;
+}
+
 .template_box a {
 	color:#FFF;
 	padding-right:10px;
@@ -34,7 +47,7 @@ body {
 	min-width:800px
 }
 
-#header {
+.header {
 	color:white;
 	-x-system-font:none;
 	font-family:Verdana,Arial,sans-serif;

@@ -1,6 +1,16 @@
 <?php
 
 /**
+ * Implementation of dependency
+ * @ingroup dependency
+ * @return true or false if snoopy library is installed in the include directory
+ */
+function dependency_curl_installed($settings)
+{
+	return function_exists('curl_init');
+}
+
+/**
  * Fetch remote pages using curl
  * @param url the url of the page to fetch
  * @param post if set perform a post request
@@ -75,6 +85,7 @@ function fetch($url, $post = array(), $headers = array(), $cookies = array())
 		}
 	
 		// execute
+		raise_error('Fetching \'' . $url . '\'.', E_DEBUG);
 		$content = curl_exec($ch);
 		$status = curl_getinfo($ch, CURLINFO_HTTP_CODE); 	
 		$header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);	
@@ -88,8 +99,22 @@ function fetch($url, $post = array(), $headers = array(), $cookies = array())
 		
 		// delete cookie jar because they are saved and return in an array instead
 		if($cookie_file !== false) unlink($cookie_file);
+
+		if(dependency('simplexml_installed') && isset($headers['content-type']) && substr($headers['content-type'], 0, 8) == 'text/xml')
+		{
+			try {
+				$xml = new SimpleXMLElement($content);
+			} catch (Exception $e) {
+				exception_wrapper($e);
+			}
+		}
 		
-		return array('headers' => $headers, 'content' => $content, 'cookies' => $cookies, 'status' => $status);
+		if(isset($xml))
+			return array('headers' => $headers, 'content' => $content, 'cookies' => $cookies,
+				'status' => $status, 'xml' => $xml
+			);
+		else
+			return array('headers' => $headers, 'content' => $content, 'cookies' => $cookies, 'status' => $status);
 	}
 	else
 	{
@@ -204,6 +229,22 @@ function get_filename($headers)
 		$filename = $matches[1];
 }
 
+function get_xml_list($xpath)
+{
+	$result = array();
+	while(list( , $node) = each($xpath)) {
+		$result[] = (string)$node;
+	}
+	return $result;
+}
+
+function get_xml_result($xpath)
+{
+	if(count($xpath) > 0)
+		return (string)array_shift($xpath);
+	else
+		return;
+}
 
 function escape_urlquery($request)
 {

@@ -17,7 +17,7 @@ function register_settings()
 		'description' => 'Contains basic settings for site operation.',
 		'privilage' => 10,
 		'settings' => array('database_reset', 'all_reset', 'installed', 'system_type', 'local_root', 'settings_file', 'modrewrite', 
-			'html_domain', 'html_root', 'html_name', 'debug_mode', 'recursive_get', 'no_bots', 'buffer_size', 'verbose',
+			'html_domain', 'html_root', 'html_name', 'debug_mode', 'deep_select', 'no_bots', 'buffer_size', 'verbose',
 		),
 		'package' => 'core',
 		'template' => false,
@@ -101,25 +101,37 @@ function bootstrap_settings($modules)
 	// loop through the modules and call settings functions on them if they are set to callbacks
 	foreach($modules as $module => $config)
 	{
-		if(isset($config['settings']) && is_string($config['settings']) && 
-			$config['settings'] == $module && function_exists('setting_' . $module)
+		$config['settings'] = get_settings($module);
+		
+		// merge new settings with total list of settings
+		if(is_array($config['settings']))
+		{
+			$setting_module_pairs = array_fill_keys($config['settings'], $module);
+			$GLOBALS['all_settings'] = array_merge($setting_module_pairs, $GLOBALS['all_settings']);
+		}
+		else
+			raise_error('Settings is not an array for module \'' . $module . '\'.', E_DEBUG);
+	}
+}
+
+function get_settings($module)
+{
+	if(!is_module($module))
+		return false;
+	
+	if(isset($config['settings']))
+	{
+		if(isset($GLOBALS['modules'][$module]['settings']) && is_string($GLOBALS['modules'][$module]['settings']) && 
+			$GLOBALS['modules'][$module]['settings'] == $module && function_exists('setting_' . $module)
 		)
 		{
 			$GLOBALS['modules'][$module]['settings'] = invoke_module('setting', $module, array($GLOBALS['settings']));
 		}
-		
-		// merge new settings with total list of settings
-		if(isset($config['settings']))
-		{
-			if(is_array($GLOBALS['modules'][$module]['settings']))
-			{
-				$setting_module_pairs = array_fill_keys($GLOBALS['modules'][$module]['settings'], $module);
-				$GLOBALS['all_settings'] = array_merge($setting_module_pairs, $GLOBALS['all_settings']);
-			}
-			else
-				raise_error('Settings is not an array for module \'' . $module . '\'.', E_DEBUG);
-		}
+		else
+			return $GLOBALS['modules'][$module]['settings'];
 	}
+	else
+		return array();
 }
 
 /**
@@ -263,9 +275,9 @@ function setting_debug_mode($settings)
  * @ingroup setting
  * @return false by default
  */
-function setting_recursive_get($settings)
+function setting_deep_select($settings)
 {
-	return generic_validate_boolean_false($settings, 'recursive_get');
+	return generic_validate_boolean_false($settings, 'deep_select');
 }
 
 /**
@@ -293,7 +305,7 @@ function setting_buffer_size($settings)
 	if(isset($settings['buffer_size']) && is_numeric($settings['buffer_size']) && $settings['buffer_size'] > 0)
 		return $settings['buffer_size'];
 	else
-		return 2*1024*8;
+		return 8*8*1024;
 }
 
 /**
@@ -304,6 +316,23 @@ function setting_modrewrite($settings)
 {
 	return true;
 	return (isset($_REQUEST['modrewrite']) && $_REQUEST['modrewrite'] == true);
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ * @return the temp directory reported by the OS by default
+ */
+function setting_tmp_dir($settings)
+{
+	if(isset($settings['tmp_dir']) && is_dir($settings['tmp_dir']))
+		return $settings['tmp_dir'];
+	else
+	{
+		$tmpfile = tempnam("dummy","");
+		unlink($tmpfile);
+		return dirname($tmpfile) . DIRECTORY_SEPARATOR;
+	}
 }
 
 /**
@@ -483,21 +512,21 @@ function dependency_getid3_installed($settings)
 /**
  * Implementation of dependency
  * @ingroup dependency
- * @return true or false if snoopy library is installed in the include directory
- */
-function dependency_curl_installed($settings)
-{
-	return function_exists('curl_init');
-}
-
-/**
- * Implementation of dependency
- * @ingroup dependency
  * @return true or false if EXT JS library is installed in the plain templates directory for use by other templates
  */
 function dependency_extjs_installed($settings)
 {
 	return file_exists(setting_local_root() . 'templates' . DIRECTORY_SEPARATOR . 'plain' . DIRECTORY_SEPARATOR . 'extjs' . DIRECTORY_SEPARATOR . 'ext-all.js');
+}
+
+/**
+ * Implementation of dependency
+ * @ingroup dependency
+ * @return true or false if simplexml is installed in the include directory
+ */
+function dependency_simplexml_installed($settings)
+{
+	return class_exists('SimpleXMLElement');
 }
 
 /**
@@ -807,7 +836,7 @@ function configure_settings($settings, $request)
 	$settings['html_domain'] = setting('html_domain');
 	$settings['html_name'] = setting('html_name');
 	$settings['debug_mode'] = setting('debug_mode');
-	$settings['recursive_get'] = setting('recursive_get');
+	$settings['deep_select'] = setting('deep_select');
 	$settings['no_bots'] = setting('no_bots');
 	$settings['buffer_size'] = setting('buffer_size');
 	
@@ -928,7 +957,7 @@ function configure_settings($settings, $request)
 		)
 	);
 	
-	$general['recursive_get'] = array(
+	$general['deep_select'] = array(
 		'name' => lang('recursive get title', 'Deep Select'),
 		'status' => '',
 		'description' => array(
@@ -939,7 +968,7 @@ function configure_settings($settings, $request)
 			),
 		),
 		'type' => 'boolean',
-		'value' => $settings['recursive_get'],
+		'value' => $settings['deep_select'],
 		'options' => array(
 			lang('recursive get option 1', 'Turn Deep Select On'),
 			lang('recursive get option 2', 'Do Not Use Deep Select'),

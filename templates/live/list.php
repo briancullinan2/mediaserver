@@ -26,7 +26,7 @@ function theme_live_list()
 function theme_live_list_block()
 {
 	?>
-	<div class="list_block">
+	<div class="list_block colors_bg">
 	<?php 
 	if($GLOBALS['output']['user']['Username'] == 'guest') 
 	{
@@ -35,7 +35,36 @@ function theme_live_list_block()
 	else
 	{
 		?>
-		User Directory
+		<div style="height:40px;">
+			<div class="filemedium FOLDER" id="user_folder">
+				<table class="itemTable" cellpadding="0" cellspacing="0">
+					<tr>
+						<td>
+							<div class="thumbmedium file_ext_FOLDER file_type_">
+								<img src="<?php print url('template/live/images/s.gif'); ?>" alt="FOLDER" height="24" width="24">
+							</div>
+						</td>
+					</tr>
+				</table>
+				<a class="itemLink" href="<?php print url('select/files/' . setting('local_users')); ?>"><span>User Directory</span></a>
+			</div>
+			<div class="filemedium FOLDER" id="collapser">
+				<table class="itemTable" cellpadding="0" cellspacing="0">
+					<tr>
+						<td>
+							<div class="thumbmedium">
+								<img src="<?php print url('template/live/images/s.gif'); ?>" alt="FOLDER" height="24" width="24">
+							</div>
+						</td>
+					</tr>
+				</table>
+				<a class="itemLink" href="#"><span>Collapse</span></a>
+			</div>
+		</div>
+		<div id="playlist-outer" class="colors_outer">
+		<div id="playlist" class="colors_inner" style="height:32px; width:425px;"></div>
+		</div>
+		<a style="display:block;width:425px;height:30px;" id="player"></a>
 		<?php
 	}
 	?>

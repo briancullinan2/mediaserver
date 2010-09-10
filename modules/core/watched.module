@@ -103,6 +103,13 @@ function handles_watched($dir)
 	return false;
 }
 
+function get_info_watched($file)
+{
+	$fileinfo = array();
+	$fileinfo['Filepath'] = str_replace('\\', '/', $file);
+	return $fileinfo;
+}
+
 /**
  * Helper function
  */
@@ -142,9 +149,9 @@ function setting_watches($settings)
 	{
 		$watch = setting_watched_index($settings, $i);
 		if(isset($watch) && substr($watch, 0, 1) == '^')
-			$watches[] = get_info_files(substr($watch, 1));
+			$watches[] = substr($watch, 1);
 	}
-	$watches[] = get_info_files(setting('local_users'));
+	$watches[] = setting('local_users');
 	
 	return $watches;
 }
@@ -161,7 +168,7 @@ function setting_ignores($settings)
 	{
 		$watch = setting_watched_index($settings, $i);
 		if(isset($watch) && substr($watch, 0, 1) == '!')
-			$ignores[] = get_info_files(substr($watch, 1));
+			$ignores[] = substr($watch, 1);
 	}
 	
 	return $ignores;
@@ -177,20 +184,20 @@ function is_watched($dir)
 	$is_watched = false;
 	foreach(setting('watches') as $i => $watch)
 	{
-		if(substr($dir, 0, strlen($watch['Filepath'])) == $watch['Filepath'])
+		if(substr($dir, 0, strlen($watch)) == $watch)
 		{
 			$is_watched = true;
 		}
 		// check if aliasing is used, if not, 
 		//   also watch the directories leading up to watched directories, but nothing else
-		if(!setting('alias_enable') && substr($watch['Filepath'], 0, strlen($dir)) == $dir &&
+		if(!setting('alias_enable') && substr($watch, 0, strlen($dir)) == $dir &&
 			is_dir($dir)
 		)
 			$is_watched = true;
 	}
 	foreach(setting('ignores') as $i => $ignore)
 	{
-		if(substr($dir, 0, strlen($ignore['Filepath'])) == $ignore['Filepath'])
+		if(substr($dir, 0, strlen($ignore)) == $ignore)
 		{
 			$is_ignored = true;
 		}

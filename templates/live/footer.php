@@ -1,6 +1,6 @@
 <?php
 
-function theme_live_footer()
+function theme_live_container_footer()
 {
 	?>
 			<div class="titlePadding"></div>
@@ -13,6 +13,17 @@ function theme_live_footer()
 							</tr>
 						</table>
 					</div>
+	<?php
+}
+
+
+function theme_live_footer()
+{
+	theme('container_footer');
+	
+	if(!isset($GLOBALS['output']['extra']) || $GLOBALS['output']['extra'] != 'inneronly')
+	{
+		?>
 					<div id="footer">
 						<table id="footerCtr">
 							<tr>
@@ -32,7 +43,6 @@ function theme_live_footer()
 		</div>
 	</div>
 	<script language="javascript">
-	loaded = true;
 	if(document.getElementById("debug")) {
 		header_height = document.getElementById("header").clientHeight + document.getElementById("debug").clientHeight;
 	} else {
@@ -41,4 +51,5 @@ function theme_live_footer()
 	</body>
 	</html>
 	<?php
+	}
 }

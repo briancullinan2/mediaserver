@@ -3,7 +3,10 @@
 function menu_encode()
 {
 	return array(
-		'encode/%encode/%id/%cat' => array(
+		'encode/%encode/%id/%handler/%filename' => array(
+			'callback' => 'output_encode',
+		),
+		'encode/%encode/%id/%handler' => array(
 			'callback' => 'output_encode',
 		),
 	);
@@ -65,7 +68,7 @@ function configure_encode($settings, $request)
 				%VB - Video Bitrate<br />
 				%AB - Audio Bitrate<br />
 				%SR - Sample Rate<br />
-				%SR - Scale<br />
+				%SC - Scale<br />
 				%CH - Number of Channels<br />
 				%MX - Muxer to use for encapsulating the streams<br />
 				%TO - Time Offset for resumable listening and moving time position<br />
@@ -92,6 +95,106 @@ function dependency_encoder($settings)
 {
 	$settings['encode_path'] = setting('encode_path');
 	return file_exists($settings['encode_path']);
+}
+
+function setting_encode($settings)
+{
+	$new_settings = array('encode_path', 'encode_args');
+	
+	// movie folders
+	for($i = 0; $i < 50; $i++)
+	{
+		if(!function_exists('setting_encoder_' . $i))
+			$GLOBALS['setting_encoder_' . $i] = create_function('$settings', 'return setting_encoder($settings, \'' . $i . '\');');
+		$new_settings[] = 'encoder_' . $i;
+	}
+	
+	return $new_settings;
+}
+
+function setting_encoder($settings, $index)
+{
+	if(!isset($settings['encoder_' . $index]) || !is_array($settings['encoder_' . $index]))
+		return;
+		
+	// copy values
+	$encoder = array(
+		'input_ext' => isset($settings['encoder_' . $index]['input_ext'])?$settings['encoder_' . $index]['input_ext']:'',
+		'output_ext' => isset($settings['encoder_' . $index]['output_ext'])?$settings['encoder_' . $index]['output_ext']:'',
+		'command' => isset($settings['encoder_' . $index]['command'])?$settings['encoder_' . $index]['command']:'',
+		'arguments' => isset($settings['encoder_' . $index]['arguments'])?$settings['encoder_' . $index]['arguments']:'',
+	);
+	
+	// validate name
+	if(!($encoder['input_ext'] = generic_validate_all_safe(array('input_ext' => $encoder['input_ext']), 'input_ext')))
+		return;
+	if(!($encoder['output_ext'] = generic_validate_all_safe(array('output_ext' => $encoder['output_ext']), 'output_ext')))
+		return;
+	if(!($encoder['arguments'] = generic_validate_all_safe(array('arguments' => $encoder['arguments']), 'arguments')))
+		return;
+		
+	if(!($encoder['command'] = generic_validate_all_safe(array('command' => $encoder['command']), 'command')) || 
+		!is_file($encoder['command']) || !is_executable($encoder['command'])
+	)
+		return;
+		
+	return $encoder;
+}
+
+function setting_encoder_0($settings)
+{
+	$settings['encoder_0'] = array(
+		'input_ext' => '*',
+		'output_ext' => 'flv',
+		'command' => '/usr/bin/ffmpeg',
+		'arguments' => '-i - -ar %SR -ab %AB -ac %CH -b %VB -r %FS -f flv - | flvtool2 -U stdin stdout'
+	);
+	return setting_encoder($settings, 0);
+}
+
+function setting_encoder_4($settings)
+{
+	$settings['encoder_1'] = array(
+		'input_ext' => '*',
+		'output_ext' => 'mp4',
+		'command' => '/usr/bin/ffmpeg',
+		'arguments' => '-i - -acodec libmp3lame -ar %SR -ab %AB -ac %CH -vcodec libx264 -b %VB -r %FS -f mpegts -'
+	);
+	return setting_encoder($settings, 1);
+}
+
+function setting_encoder_1($settings)
+{
+	$settings['encoder_1'] = array(
+		'input_ext' => '*',
+		'output_ext' => 'mp4',
+		'command' => '/usr/bin/vlc',
+		'arguments' => '-I dummy - :sout=\'#transcode{vcodec=h264,acodec=mp4a}:std{mux=mp4,access=file,dst=-}\' vlc://quit' . ((setting('verbose') === 2)?' 2>&1':'')
+	);
+	return setting_encoder($settings, 1);
+}
+
+function setting_encoder_3($settings)
+{
+	$settings['encoder_2'] = array(
+		'input_ext' => '*',
+		'output_ext' => 'mp3',
+		'command' => '/usr/bin/lame',
+		'arguments' => '--mp3input -q 3 -S - -'
+	);
+	return setting_encoder($settings, 2);
+}
+
+
+function setting_encoder_2($settings)
+{
+	$settings['encoder_2'] = array(
+		'input_ext' => '*',
+		'output_ext' => 'mp3',
+		'command' => '/usr/bin/vlc',
+		'arguments' => '-I dummy - :sout=\'#transcode{acodec=mp3}:std{mux=dummy,access=file,dst=-}\' vlc://quit'
+	);
+	return setting_encoder($settings, 2);
 }
 
 /**
@@ -129,6 +232,32 @@ function setting_encode_args($settings)
 			return '-I dummy - --start-time=%TO :sout=\'#transcode{vcodec=%VC,acodec=%AC,vb=%VB,ab=%AB,samplerate=%SR,channels=%CH,audio-sync,scale=%SC,fps=%FS}:std{mux=%MX,access=file,dst=-}\' vlc://quit';
 	}
 }
+	
+function setting_encode_types($settings)
+{
+	$types = array();
+	
+	// make sure all servers with numeric indexes are on the list
+	for($i = 0; $i < 50; $i++)
+	{
+		$encoder = setting('encoder_' . $i);
+		if(isset($encoder))
+			$types[] = $encoder['output_ext'];
+	}
+
+	return array_unique($types);
+}
+
+function get_encoder($type)
+{
+	// make sure all servers with numeric indexes are on the list
+	for($i = 0; $i < 50; $i++)
+	{
+		$encoder = setting('encoder_' . $i);
+		if(isset($encoder) && $encoder['output_ext'] == $type)
+			return $encoder;
+	}
+}
 
 /**
  * Implementation of validate
@@ -157,13 +286,13 @@ function validate_encode($request)
 		}
 		elseif(isset($request['filename']))
 		{
-			$request['encode'] = strtoupper(getExt($request['filename']));
+			$request['encode'] = ext($request['filename']);
 		}
 	}
 	
 	$request['encode'] = strtolower($request['encode']);
 	
-	if(in_array($request['encode'], array('mp4', 'mpg', 'wmv', 'mp4a', 'mp3', 'wma', 'flv')))
+	if(in_array($request['encode'], setting('encode_types')))
 		return $request['encode'];
 	else
 		return 'mp3';
@@ -220,7 +349,7 @@ function validate_acodec($request)
 		switch($request['encode'])
 		{
 			case 'mp4':
-				return 'mp3';
+				return 'mp4a';
 				break;
 			case 'mpg':
 				return 'mpga';
@@ -300,7 +429,10 @@ function validate_abitrate($request)
  */
 function validate_samplerate($request)
 {
-	return generic_validate_numeric_default($request, 'samplerate', 44100);
+	if(isset($request['samplerate']) && in_array($request['samplerate'], array(44100, 22050, 11025)))
+		return $request['samplerate'];
+	else
+		return 44100;
 }
 
 /**
@@ -338,7 +470,7 @@ function validate_muxer($request)
 		switch($request['encode'])
 		{
 			case 'mp4':
-				return 'asf';
+				return 'mp4';
 				break;
 			case 'mpg':
 				return 'ts';
@@ -461,7 +593,19 @@ function output_encode($request)
 	$request['muxer'] = validate($request, 'muxer');
 	$request['framerate'] = validate($request, 'framerate');
 	$request['timeoffset'] = validate($request, 'timeoffset');
-	$request['cat'] = validate($request, 'cat');
+	$request['handler'] = validate($request, 'handler');
+	$request['selected'] = validate($request, 'selected');
+	
+	
+	$encoder = get_encoder($request['encode']);
+	if(!isset($encoder))
+	{
+		raise_error('Encode format not supported!', E_USER);
+		
+		theme('encode');
+		
+		return;
+	}
 
 	// get the file path from the database
 	$files = get_files($request, $count);
@@ -488,6 +632,17 @@ function output_encode($request)
 		else
 			$request['efile'] = $files[0]['Filepath'];
 	}
+	else
+	{
+		raise_error('File not found!', E_USER);
+		
+		theme('encode');
+		
+		return;
+	}
+	
+	// close session so the client can continue browsing the site
+	if(isset($_SESSION)) session_write_close();
 	
 	// make up some header to takes the length of the media into consideration
 	if(isset($files[0]['Length']))
@@ -546,38 +701,15 @@ function output_encode($request)
 		header('Content-Length: ' . ($seek_end - $seek_start + 1));
 	}
 	
-	// set the headers
-	switch($request['encode'])
+	if(setting('verbose') !== 2)
 	{
-		case 'mp4':
-			header('Content-Type: video/mp4');
-			break;
-		case 'mpg':
-			header('Content-Type: video/mpg');
-			break;
-		case 'wmv':
-			header('Content-Type: video/x-ms-wmv');
-			break;
-		case 'mp4a':
-			header('Content-Type: audio/mp4');
-			break;
-		case 'mp3':
-			header('Content-Type: audio/mpeg');
-			break;
-		case 'wma':
-			header('Content-Type: audio/x-ms-wma');
-			break;
-		case 'flv':
-			header('Content-Type: video/x-ts');
-			break;
+		header('Content-Type: ' . mime($encoder['output_ext']));
+		header('Content-Disposition: attachment; filename="' . $files[0]['Filename'] . '"');
 	}
-		
-	// close session so the client can continue browsing the site
-	if(isset($_SESSION)) session_write_close();
 	
 	// replace the argument string with the contents of $_REQUEST
 	//  without validation this is VERY DANGEROUS!
-	$cmd = basename(setting('encode_path')) . ' ' . str_replace(array(
+	$cmd = basename($encoder['command']) . ' ' . str_replace(array(
 		'%IF', 
 		'%VC',
 		'%AC', 
@@ -601,101 +733,29 @@ function output_encode($request)
 		$request['muxer'],
 		$request['framerate'],
 		$request['timeoffset']
-	), setting('encode_args'));
+	), $encoder['arguments']);
 	
 	$descriptorspec = array(
 	   0 => array("pipe", "r"),  // stdin is a pipe that the child will read from
 	   1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
 	   2 => array("pipe", "w"),  // stderr is a pipe that the child will write to
 	);
+
 	// start process
-	$process = proc_open($cmd, $descriptorspec, $pipes, dirname(setting('encode_path')), NULL); //array('binary_pipes' => true, 'bypass_shell' => true));
+	$process = proc_open($cmd, $descriptorspec, $pipes, dirname($encoder['command']), NULL); //array('binary_pipes' => true, 'bypass_shell' => true));
+
+	$if = output_handler($request['efile'], $request['handler']);
 	
-	stream_set_blocking($pipes[0], 0);
-	stream_set_blocking($pipes[1], 0);
-	stream_set_blocking($pipes[2], 0);
-	
-	$fp = output_handler($request['efile'], $request['cat']);
-	
-	//$fp = fopen($_REQUEST['%IF'], 'rb');
-	$php_out = fopen('php://output', 'wb');
+	$of = fopen('php://output', 'wb');
 	
 	// if %IF is not in the arguments, it is reading from stdin so use pipe
 	// output file
-	if(is_resource($process) && is_resource($fp))
+	if(is_resource($process) && is_resource($if))
 	{
-		// don't use the file at all if the %IF field exists in the ARGS sections
-		//   the reason for this is because it won't be reading from STDIN
-		$file_closed = (strpos(setting('encode_args'), '%IF') !== false);
-		$read_count = 0;
-		$write_count = 0;
-		$in_buffer = '';
-		$out_buffer = '';
-		while(true)
-		{
-			// if the connection was interrupted then stop looping
-			if(connection_status()!=0)
-			{
-				fclose($fp);
-				fclose($pipes[0]);
-				fclose($pipes[1]);
-				fclose($php_out);
-				proc_terminate($process);
-				break;
-			}
-			
-			// if the file is not already closed, then close the file when it hits eof
-			if(!$file_closed && feof($fp))
-			{
-				$file_closed = true;
-				fclose($fp);
-				fclose($pipes[0]);
-			}
-			
-			// if the pipe is eof then we are finished
-			if(feof($pipes[1]))
-			{
-				// write out what is left
-				if(isset($length))
-				{
-					if($read_count < $length)
-						fwrite($php_out, sprintf('[%0' . ($length - $read_count) . 's]', 0));
-				}
-				fclose($pipes[1]);
-				fclose($php_out);
-				break;
-			}
-			
-			// set up the pipes to be checked
-			$read = array($pipes[1]);
-			$write = (!$file_closed)?array($pipes[0]):array();
-			$except = NULL;
-	
-			// select the pipes that are available for reading and writing
-			stream_select($read, $write, $except, NULL);
-			
-			// if we can read then read more and send it out to php
-			if(in_array($pipes[1], $read))
-			{
-				$count = fwrite($php_out, fread($pipes[1], setting('buffer_size')));
-				$read_count += $count;
-			}
-			
-			// if we can write then write more from the input stream
-			if(!$file_closed && in_array($pipes[0], $write))
-			{
-				if(strlen($in_buffer) == 0)
-				{
-					$in_buffer = fread($fp, setting('buffer_size'));
-				}
-				$count = fwrite($pipes[0], $in_buffer);
-				$in_buffer = substr($in_buffer, $count);
-				$write_count += $count;
-			}
-		}
+		output_input_stream($if, $pipes[0], $pipes[1], $of);
 		
 		$status = proc_get_status($process);
-		kill9('vlc', $status['pid']);
+		kill9(basename($encoder['command']), $status['pid']);
 		
 		$return_value = proc_close($process);
 	}

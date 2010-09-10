@@ -6,7 +6,12 @@
 function traverse_array($input)
 {
 	if(is_string($input))
-		return htmlspecialchars($input, ENT_QUOTES);
+	{
+		if(strlen($input) < setting('buffer_size'))
+			return htmlspecialchars($input, ENT_QUOTES);
+		else
+			return;
+	}
 	elseif(is_array($input))
 	{
 		foreach($input as $key => $value)
@@ -394,7 +399,7 @@ function goto($request)
 function ext($file)
 {
 	if(strpos(basename($file), '.') !== false)
-		return substr(basename($file), strrpos(basename($file), '.') + 1);
+		return strtolower(substr(basename($file), strrpos(basename($file), '.') + 1));
 	else
 		return '';
 }
@@ -485,7 +490,7 @@ function type($file)
 		elseif( is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)) )
 		{
 			$ext = ext($file);
-			if( $ext == false )
+			if( $ext == '' )
 			{
 				return 'FILE';
 			}
@@ -515,6 +520,103 @@ function roundFileSize($dirsize)
 {
 	$dirsize = ( $dirsize < 1024 ) ? ($dirsize . " B") : (( $dirsize < 1048576 ) ? (round($dirsize / 1024, 2) . " KB") : (( $dirsize < 1073741824 ) ? (round($dirsize / 1048576, 2) . " MB") : (( $dirsize < 1099511627776 ) ? (round($dirsize / 1073741824, 2) . " GB") : (round($dirsize / 1099511627776, 2) . " TB") ) ) );
 	return $dirsize;
+}
+
+function output_stream($if, $of, $kill_with_connection = true)
+{
+	stream_set_blocking($if, 0);
+	stream_set_blocking($of, 0);
+	
+	while(!feof($if))
+	{
+		if($kill_with_connection && connection_status()!=0)
+		{
+			fclose($if);
+			fclose($of);
+			break;
+		}
+		
+		$buffer = fread($if, setting('buffer_size'));
+		fwrite($of, $buffer);
+		fflush($of);
+	}
+	fclose($if);
+	fclose($of);
+}
+
+function output_input_stream(&$if, &$is, &$os, &$of, $kill_with_connection = true)
+{
+	stream_set_blocking($if, 0);
+	stream_set_blocking($is, 0);
+	stream_set_blocking($os, 0);
+	stream_set_blocking($of, 0);
+	
+	$in_buffer = '';
+	$if_closed = false;
+	$out_buffer = '';
+	$count == 0;
+	while(!feof($os) || (!$if_closed && !feof($if)))
+	{
+		$count++;
+		// if the connection was interrupted then stop looping
+		if($kill_with_connection && connection_status()!=0)
+		{
+			fclose($if);
+			fclose($is);
+			fclose($os);
+			fclose($of);
+			break;
+		}
+		
+		if(!$if_closed && feof($if))
+		{
+			fclose($if);
+			fclose($is);
+			$if_closed = true;
+		}
+		
+		if(feof($os))
+		{
+			fclose($os);
+			fclose($of);
+			break;
+		}
+		
+		// set up the pipes to be checked
+		$read = array($os);
+		$write = array($is);
+		$except = NULL;
+
+		// select the pipes that are available for reading and writing
+		stream_select($read, $write, $except, NULL);
+
+		// if we can read then read more and send it out to php
+		if(in_array($os, $read))
+		{
+			$out_buffer = fread($os, setting('buffer_size'));
+			fwrite($of, $out_buffer);
+			fflush($of);
+			if($count > 8 && setting('verbose') === 2)
+				break;
+		}
+		
+		// if we can write then write more from the input stream
+		if(in_array($is, $write))
+		{
+			if(!$if_closed)
+				$in_buffer .= fread($if, setting('buffer_size') - strlen($in_buffer));
+			$in_count = fwrite($is, $in_buffer);
+			if($in_count < strlen($in_buffer))
+				$in_buffer = substr($in_buffer, $in_count);
+			else
+				$in_buffer = '';
+			fflush($is);
+		}
+	}
+	fclose($if);
+	fclose($is);
+	fclose($os);
+	fclose($of);
 }
 
 /**

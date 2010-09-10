@@ -111,8 +111,15 @@ function validate_file($request)
 	if(isset($request['file']))
 	{
 		$request['handler'] = validate($request, 'handler');
+		
+		// add leading slash
+		if(substr($request['file'], 0, 1) != '/')
+			$request['file'] = '/' . $request['file'];
+		
+		// replace directory with actual path
 		if(setting('alias_enable'))
 			$tmp = alias_replace($request['file']);
+
 		if(is_file(realpath($tmp)) || handles($request['file'], $request['handler']) == true)
 			return $request['file'];
 		else
@@ -208,6 +215,11 @@ function sql_filepath($filepath)
 		'Filepath != "' . addslashes($filepath) . '"';
 }
 
+function sql_columns($columns)
+{
+	return implode(',', $columns);
+}
+
 function filter_file($request)
 {
 	if(isset($request['file']))
@@ -234,7 +246,7 @@ function filter_file($request)
 function filter_dir($request)
 {
 	$request['selected'] = validate($request, 'selected');
-	if(!empty($request['selected']))
+	if(!empty($request['selected']) || !empty($request['file']))
 		return;
 	
 	// add dir filter to where
@@ -255,7 +267,7 @@ function filter_dir($request)
 			$request['dir'] = alias_replace($request['dir']);
 			
 		// maybe the dir is not loaded yet, this part is costly but it is a good way to do it
-		if(setting('recursive_get') && handles($request['dir'], 'watched'))
+		if(setting('deep_select') && handles($request['dir'], 'watched'))
 		{
 			$GLOBALS['tm_start'] = array_sum(explode(' ', microtime()));
 			scan_dir($request['dir']);
@@ -339,7 +351,7 @@ function add($file, $force = false, $handler = 'files')
 		return false;
 	
 	// check if it is in the database
-	$files = db_assoc('SELECT * FROM ' . $handler . ' WHERE Filepath=? LIMIT 1', array($file));
+	$files = db_assoc('SELECT id' . (($handler == 'files')?',Filedate':'') . ' FROM ' . $handler . ' WHERE Filepath=? LIMIT 1', array($file));
 	
 	if( count($files) == 0 )
 	{
@@ -387,7 +399,7 @@ function add($file, $force = false, $handler = 'files')
 		raise_error('Modifying ' . $handler . ': ' . $file, E_DEBUG);
 		
 		// update database
-		$id = db_query('UPDATE ' . $handler . sql_update($fileinfo) . ' WHERE id=' . $db_file[0]['id'], array_values($fileinfo));
+		$id = db_query('UPDATE ' . $handler . sql_update($fileinfo) . ' WHERE id=' . $files[0]['id'], array_values($fileinfo));
 		return array('id' => $id) + $fileinfo;
 	}
 	else
@@ -608,16 +620,19 @@ function get_files($request, &$count)
 		$files = _get_local_files($request, $count);
 	else
 		raise_error('get_files() called without any acceptable intention!', E_DEBUG);
-		
+	
 	// do alterations
 	if(isset($files))
 	{
 		foreach($files as $i => $file)
 		{
-			$files[$i]['Filepath'] = paths_replace($file['Filepath']);
-			// check if the replaced path was the entire alias path
-			// in this case we want to replace the filename with the alias name
-			$files[$i]['Filename'] = basename($files[$i]['Filepath']);
+			if(setting('alias_enable'))
+			{
+				$files[$i]['Filepath'] = paths_replace($file['Filepath']);
+				// check if the replaced path was the entire alias path
+				// in this case we want to replace the filename with the alias name
+				$files[$i]['Filename'] = basename($files[$i]['Filepath']);
+			}
 		}
 		return $files;
 	}
@@ -777,7 +792,7 @@ function merge_database_info($files, $handler)
 
 		// only search for ids in handler table if there are ids available
 		if(count($id_files) > 0)
-			$id_infos = db_assoc('SELECT * FROM ' . $module . ' WHERE ' . sql_ids_files($id_files, $module) . ' LIMIT ' . count($id_files), array(), 'Filepath');
+			$id_infos = db_assoc('SELECT ' . sql_columns(get_columns($module)) . ' FROM ' . $module . ' WHERE ' . sql_ids_files($id_files, $module) . ' LIMIT ' . count($id_files), array(), 'Filepath');
 		else
 			$id_infos = array();
 

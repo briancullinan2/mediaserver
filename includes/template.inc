@@ -166,6 +166,11 @@ function validate_template($request, $session = '')
 	return setting('local_template');
 }
 
+function validate_extra($request)
+{
+	return generic_validate_all_safe($request, 'extra');
+}
+
 /**
  * Implementation of session
  * @ingroup session
@@ -379,7 +384,8 @@ function set_output_vars()
 
 	foreach($GLOBALS['output'] as $name => $value)
 	{
-		$GLOBALS['output']['html'][$name] = traverse_array($value);
+		if($name != 'html')
+			$GLOBALS['output']['html'][$name] = traverse_array($value);
 	}
 }
 

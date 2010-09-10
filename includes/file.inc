@@ -161,15 +161,15 @@ function handles($file, $handler = 'files')
 	if(!is_string($file))
 		return false;
 	
+	// always use forward slash
+	$file = str_replace('\\', '/', $file);
+
 	// replace the file alias with actual path
 	if(setting('alias_enable')) $file = alias_replace($file);
 		
 	// check the handles_ function	
 	if($handler == 'files')
 	{
-		// always use forward slash
-		$file = str_replace('\\', '/', $file);
-
 		// check if the given file is a directory or file
 		if(
 			is_dir(str_replace('/', DIRECTORY_SEPARATOR, $file)) || 
@@ -201,20 +201,33 @@ function handles($file, $handler = 'files')
 /**
  * Gets the columns from the specified handler
  */
-function get_columns($handler)
+function get_columns($handler, $exclude_blobs = true)
 {
 	if(isset($GLOBALS['modules'][$handler]['database']))
 	{
-		return array_keys($GLOBALS['modules'][$handler]['database']);
+		$spec = $GLOBALS['modules'][$handler]['database'];
 	}
 	elseif(isset($GLOBALS['modules'][$handler]['wrapper']))
 	{
-		return get_columns($GLOBALS['modules'][$handler]['wrapper']);
+		return get_columns($GLOBALS['modules'][$handler]['wrapper'], $exclude_blobs);
 	}
 	else
 	{
-		return array_keys($GLOBALS['modules']['files']['database']);
+		$spec = $GLOBALS['modules']['files']['database'];
 	}
+	
+	if($exclude_blobs)
+	{
+		$columns = array();
+		foreach($spec as $column => $type)
+		{
+			if($type != 'BLOB' && $type != 'MEDIUMBLOB' && $type != 'LONGBLOB')
+				$columns[] = $column;
+		}
+		return $columns;
+	}
+	else
+		return array_keys($spec);
 }
 
 /**

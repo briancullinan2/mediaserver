@@ -90,17 +90,18 @@ function setup_error()
 	// do some extra error stuff since we made it to this point
 	if($verbose === 2)
 	{
-		set_error_handler('php_to_PEAR_Error', E_ALL | E_STRICT);
+		set_error_handler('phperror_wrapper', E_ALL | E_STRICT);
 		error_reporting(E_ALL);
 	}
 	elseif($verbose === true)
 	{
-		set_error_handler('php_to_PEAR_Error', E_ALL);
+		set_error_handler('phperror_wrapper', E_ALL);
 		error_reporting(E_ERROR);
 	}
 	else
 		error_reporting(E_ERROR);
 	
+	set_exception_handler('exception_wrapper');
 	PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'error_callback');
 }
 
@@ -112,14 +113,19 @@ function setup_error()
  * @param error_line the line the error was triggered from
  * @return true so the backend error handle knows the error has been processed
  */
-function php_to_PEAR_Error($error_code, $error_str, $error_file, $error_line)
+function phperror_wrapper($error_code, $error_str, $error_file, $error_line)
 {
-	$error_code = E_DEBUG;
-
 	if(substr($error_str, 0, 12) == 'mysql error:')
-		raise_error('DB ERROR:' . substr($error_str, 12), $error_code);
+		raise_error('DB ERROR:' . substr($error_str, 12), E_DEBUG);
 	else
-		raise_error('PHP ERROR: ' . $error_str, $error_code);
+		raise_error('PHP ERROR: ' . $error_str . ' in ' . $error_file . ' on line ' . $error_line, E_DEBUG);
+
+	return (setting('verbose') != 2);
+}
+
+function exception_wrapper($exception)
+{
+	raise_error('PHP EXCEPTION: ' . $exception->getMessage(), E_DEBUG);
 
 	return (setting('verbose') != 2);
 }
@@ -185,7 +191,12 @@ function error_callback($error)
 		
 		// only show verbose errors if it is really verbose!
 		if($error->code & E_DEBUG || setting('verbose'))
-			$GLOBALS['debug_errors'][] = $error;
+		{
+			if(isset($GLOBALS['debug_errors'][md5($error->message)]))
+				$error->count = isset($GLOBALS['debug_errors'][md5($error->message)]->count)?$GLOBALS['debug_errors'][md5($error->message)]->count++:2;
+			//$GLOBALS['debug_errors'][] = $error;
+			$GLOBALS['debug_errors'][md5($error->message)] = $error;
+		}
 	}
 }
 

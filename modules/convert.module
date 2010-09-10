@@ -250,12 +250,25 @@ function output_convert($request)
 			header('Content-Type: image/gif');
 			break;
 		case 'png':
-			header('Content-Type: image/png');
+			//header('Content-Type: image/png');
 			break;
 	}
 
 	// close session so the client can continue browsing the site
 	if(isset($_SESSION)) session_write_close();
+
+	// if %IF is in the arguments and the file does not actually exist on disk
+	//  then the file must be copied to a temporary location before converted
+	if(strpos(setting('convert_args'), '%IF') !== false && $request['handler'] != 'files' &&
+		function_exists('output_' . $request['handler'])
+	)
+	{
+		$if = output_handler($request['cfile'], $request['handler']);
+		$request['cfile'] = setting('tmp_dir') . 'convert_' . md5(microtime());
+		$of = fopen($request['cfile'], 'wb');
+		
+		output_stream($if, $of);
+	}
 
 	// replace the argument string with the contents of $_REQUEST
 	//  without validation this is VERY DANGEROUS!
@@ -275,28 +288,28 @@ function output_convert($request)
 	$descriptorspec = array(
 	   0 => array("pipe", "r"),  // stdin is a pipe that the child will read from
 	   1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
+	   2 => array("pipe", "w"),  // stderr is a pipe that the child will write to
 	);
 
 	$process = proc_open($cmd, $descriptorspec, $pipes, dirname(setting('convert_path')), NULL, array('binary_pipes' => true));
 
 	// output file
-	if(is_resource($process))
+	if(strpos(setting('convert_args'), '%IF') !== false)
 	{
-		while(!feof($pipes[1]))
+		$of = fopen('php://output', 'wb');
+		
+		if(is_resource($process))
 		{
-			if(connection_status()!=0)
-			{
-				proc_terminate($process);
-				break;
-			}
-			print fread($pipes[1], setting('buffer_size'));
-			flush();
+			output_stream($pipes[1], $of);
+			
+			$status = proc_get_status($process);
+			kill9('convert', $status['pid']);
+		
+			$return_value = proc_close($process);
 		}
-		fclose($pipes[1]);
-	
-		$status = proc_get_status($process);
-		kill9('convert', $status['pid']);
-	
-		$return_value = proc_close($process);
+		
+		// remove temporary file
+		if($request['handler'] != 'files' && function_exists('output_' . $request['handler']))
+			unlink($request['cfile']);
 	}
 }

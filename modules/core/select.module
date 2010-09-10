@@ -403,15 +403,21 @@ function get_select_breadcrumbs($request)
 {
 	$request['handler'] = validate($request, 'handler');
 	$breadcrumbs = array();
-	$crumbs = isset($request['dir'])?split('/', $request['dir']):array('');
-	$cwd = '';
+	$crumbs = array();
+	if(isset($request['dir']) && !isset($request['file']))
+		$crumbs = split('/', $request['dir']);
+	elseif(isset($request['file']))
+		$crumbs = split('/', $request['file']);
+	$cwd = '/';
 	foreach($crumbs as $i => $dir)
 	{
 		if($dir != '')
 		{
-			$cwd .= (($cwd != '')?'/':'') . $dir;
+			$cwd .= (($cwd != '/')?'/':'') . $dir;
+			$unaliased = $cwd;
+			if(setting('alias_enable')) $unaliased = alias_replace($unaliased);
 			if(handles($cwd, $request['handler']))
-				$path = 'select/' . $request['handler'] . urlencode_path($cwd . '/');
+				$path = 'select/' . $request['handler'] . '/' . urlencode_path($cwd . '/');
 			else
 				$path = 'select/files/' . urlencode_path($cwd . '/');
 				
@@ -478,12 +484,13 @@ function output_select($request)
 	$request['group_index'] = validate($request, 'group_index');
 	$request['order_by'] = validate($request, 'order_by');
 	$request['direction'] = validate($request, 'direction');
+	$request['selected'] = validate($request, 'selected');
 	
 	// discard selected stuff here, we want to show a full list, the selected stuff is just for saving in the session
 	//   in order to list the selected stuff only, one should use the list.php module
-	if(isset($request['selected'])) unset($request['selected']);
-	if(isset($request['item'])) unset($request['item']);
-	if(isset($request['id'])) unset($request['id']);
+	//if(isset($request['selected'])) unset($request['selected']);
+	//if(isset($request['item'])) unset($request['item']);
+	//if(isset($request['id'])) unset($request['id']);
 
 	// make select call
 	$files = get_files($request, $total_count);

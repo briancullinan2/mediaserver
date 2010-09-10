@@ -1,0 +1,12 @@
+name = Cron Updater
+description = Update the database to match the file system.
+privilage = 1
+template = false
+settings[] = dir_seek_time
+settings[] = file_seek_time
+settings[] = cleanup_buffer_time
+settings[] = cleanup_threashold
+depends on[] = database
+depends on[] = dir_to_scan
+depends on[] = watched
+depends on[] = cron_last_run
