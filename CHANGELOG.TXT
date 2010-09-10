@@ -1,3 +1,14 @@
+2010-09-10
+Lots of bug fixes
+Reorganize file structure slightly
+Worked on Live template
+	Replaced a lot of custom code with jquery
+Added discogs module
+Added movies module
+Worked on encode options
+	Many different programs can be set for each file type output
+	This will allow for templating other devices (mobile) to use specific commands
+
 2010-08-31
 Updated diskimage
 

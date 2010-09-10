@@ -1,5 +1,6 @@
 ------------- MONOLITHICMEDIA TODO -------------
 ------------- GENERAL TODO -------------
+Add dependencies to live theme (jquery, flowplayer) and decide if these should be included in the theme package
 Rate limiting on user login, recaptcha module
 Running system from command line should change bootstrap options
 Cron is not running properly again...
@@ -60,6 +61,7 @@ bt module should have a configurable ctorrent settings that uses %IF for the tor
 Check for bt module in install.php script
 Add bttracker install script to admin/install.php to fully bootstrap the install process
 ------------- ADMIN TOOLS -------------
+Make a CLI module with its own theme
 Make a movie services tool that allows you to check vudu and netflix and block buster for movies
 Make a tv services tool that allows you to use myepisodes and hulu
 Allow ranking of all available services
