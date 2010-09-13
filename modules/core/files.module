@@ -267,11 +267,8 @@ function filter_dir($request)
 			$request['dir'] = alias_replace($request['dir']);
 			
 		// maybe the dir is not loaded yet, this part is costly but it is a good way to do it
-		if(setting('deep_select') && handles($request['dir'], 'watched'))
-		{
-			$GLOBALS['tm_start'] = array_sum(explode(' ', microtime()));
-			scan_dir($request['dir']);
-		}
+		if(setting('deep_select'))
+			scan_watched_files($request['dir']);
 		
 		// make sure file exists if we are using the file handler
 		if(handles($request['dir'], $request['handler']))
@@ -327,12 +324,50 @@ function filter_files($request, $index)
  * @{
  */
  
+function add_all($file, $force = false)
+{
+	// first add id
+	$fileid = add($file, false, 'ids');
+	
+	$ids = array();
+	foreach(get_handlers(false) as $module => $config)
+	{
+		$fileinfo = add($file, $force, $module);
+		if($fileinfo !== false)
+			$ids[$module . '_id'] = $fileinfo['id'];
+	}
+	
+	// update ids
+	db_query('UPDATE ids ' . sql_update($ids) . ' WHERE id=' . $fileid['id'], $ids);
+
+}
+
 /**
  * Implementation of handle
  */
 function add($file, $force = false, $handler = 'files')
 {
 	$file = str_replace('\\', '/', $file);
+	
+	// maybe a fileinfo was passed in by mistake
+	if(is_array($file))
+	{
+		raise_error('File is an Array!', E_DEBUG);
+		
+		if(isset($file['Filepath']))
+			$file = $file['Filepath'];
+	}
+	
+	if(!is_string($file))
+	{
+		raise_error('File is not a string!', E_DEBUG);
+		
+		return false;
+	}
+	
+	// files always qualify, we are going to log every single one!
+	if(!handles($file, $handler))
+		return false;
 	
 	// if there is an add_handler function specified use that instead
 	if(function_exists('add_' . $handler))
@@ -345,10 +380,6 @@ function add($file, $force = false, $handler = 'files')
 		
 		return false;
 	}
-	
-	// files always qualify, we are going to log every single one!
-	if(!handles($file, $handler))
-		return false;
 	
 	// check if it is in the database
 	$files = db_assoc('SELECT id' . (($handler == 'files')?',Filedate':'') . ' FROM ' . $handler . ' WHERE Filepath=? LIMIT 1', array($file));

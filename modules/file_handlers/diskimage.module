@@ -104,10 +104,6 @@ function get_info_diskimage($filepath, $include_offset = false)
  */
 function add_diskimage($file)
 {
-	// files always qualify, we are going to log every single one!
-	if(!handles($file, 'diskimage'))
-		return false;
-
 	// pull information from $info
 	list($file, $subfile) = get_inner_path($file);
 	

@@ -1,0 +1,70 @@
+<?php
+
+function setup_cli()
+{
+	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'theme.inc';
+	add_error_callback('cli_error_callback');
+	
+	// highjack request here!!
+	if(dependency('run_from_cli') == true)
+	{
+		if(!isset($_REQUEST['path_info']))
+			$_REQUEST['path_info'] = 'cli';
+		$GLOBALS['settings']['local_template'] = 'cli';
+		$GLOBALS['templates']['cli'] = array();
+	}
+}
+
+function rewrite_cli($path_info, $request)
+{
+	// this is the bulk of the command line processing
+	$request['path_info'] = $GLOBALS['argv'][1];
+	
+	foreach($GLOBALS['argv'] as $i => $value)
+	{
+		if(substr($value, 0, 2) == '--')
+		{
+			$request[substr($value, 2)] = $GLOBALS['argv'][++$i];
+		}
+	}
+	
+	if(validate($request, 'path_info') != 'cli')
+		rewrite_vars($request, $get, $post);
+	
+	// get path information for privilage check
+	$path = get_menu_entry($request['path_info']);
+	$menu = $GLOBALS['menus'][$path];
+	$module = $GLOBALS['modules'][$menu['module']];
+	
+	// check access and prompt for password
+	$user = session('users');
+	if($module['privilage'] > $user['Privilage'])
+	{
+		// read in username
+		print 'Login as: ';
+		$request['username'] = trim(fgets(STDIN));
+		print 'Password: ';
+		$request['password'] = 'hash:' . md5(setting('secret') . trim(fgets(STDIN)));
+	}
+	
+	return $request;
+}
+
+function dependency_run_from_cli($settings)
+{
+	return (php_sapi_name() == 'cli');
+}
+
+function output_cli($request)
+{
+	// check if it is being run from the command line and display useful setting information
+	if(isset($argv) && isset($argv[1]) && $argv[1] == '-conf')
+	{
+	}
+}
+
+function cli_error_callback($error)
+{
+	print $error->message . "\n";
+	flush();
+}

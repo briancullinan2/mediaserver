@@ -152,7 +152,7 @@ function setting_encoder_0($settings)
 	return setting_encoder($settings, 0);
 }
 
-function setting_encoder_4($settings)
+function setting_encoder_1($settings)
 {
 	$settings['encoder_1'] = array(
 		'input_ext' => '*',
@@ -163,7 +163,7 @@ function setting_encoder_4($settings)
 	return setting_encoder($settings, 1);
 }
 
-function setting_encoder_1($settings)
+function setting_encoder_4($settings)
 {
 	$settings['encoder_1'] = array(
 		'input_ext' => '*',

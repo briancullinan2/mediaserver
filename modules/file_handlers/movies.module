@@ -123,7 +123,7 @@ function setting_movie_folders($settings)
 	if(setting_installed() && setting('database_enable'))
 	{
 		// add folders in the watch list that include the word movie
-		foreach(setting('watched') as $i => $watch)
+		foreach(setting('watches') as $i => $watch)
 		{
 			if(preg_match('/movie/i', $watch['Filepath']) != 0)
 			{

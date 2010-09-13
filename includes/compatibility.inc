@@ -41,7 +41,7 @@ if(ini_get('magic_quotes_gpc')){
 }
 //Make all Posts immune to xsrf.
 //$_GET is only used for navigation. 
-if($_SERVER['REQUEST_METHOD']=="POST"){
+if(isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD']=="POST"){
 	//The referer can be forged on old, unpatched browsers.
 	//The token cannot be forged unless it is guessed. 
 	$referer_check = parse_url($_SERVER['HTTP_REFERER']);

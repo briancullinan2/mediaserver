@@ -116,22 +116,22 @@ function bootstrap_settings($modules)
 
 function get_settings($module)
 {
+	// if it is not a module return false to indicate erryr
 	if(!is_module($module))
 		return false;
-	
-	if(isset($config['settings']))
+		
+	// if it is a module but has no settings, return empty array
+	if(!isset($GLOBALS['modules'][$module]['settings']))
+		return array();
+
+	if(isset($GLOBALS['modules'][$module]['settings']) && is_string($GLOBALS['modules'][$module]['settings']) && 
+		$GLOBALS['modules'][$module]['settings'] == $module && function_exists('setting_' . $module)
+	)
 	{
-		if(isset($GLOBALS['modules'][$module]['settings']) && is_string($GLOBALS['modules'][$module]['settings']) && 
-			$GLOBALS['modules'][$module]['settings'] == $module && function_exists('setting_' . $module)
-		)
-		{
-			$GLOBALS['modules'][$module]['settings'] = invoke_module('setting', $module, array($GLOBALS['settings']));
-		}
-		else
-			return $GLOBALS['modules'][$module]['settings'];
+		$GLOBALS['modules'][$module]['settings'] = invoke_module('setting', $module, array($GLOBALS['settings']));
 	}
 	else
-		return array();
+		return $GLOBALS['modules'][$module]['settings'];
 }
 
 /**
@@ -177,21 +177,6 @@ function setting_installed()
 
 	// make sure the database isn't being used and failed
 	return (file_exists($settings) && is_readable($settings) && (!isset($GLOBALS['database']) || dependency('database') != false));
-}
-
-/**
- * Implementation of setting
- * @ingroup setting
- * @return false by default, set to true to record all notices
- */
-function setting_verbose($settings)
-{
-	$verbose = generic_validate_boolean_false($settings, 'verbose');
-
-	if(isset($settings['verbose']) && ($settings['verbose'] === "2" || $settings['verbose'] === 2))
-		return 2;
-	else
-		return $verbose;
 }
 
 /**
@@ -258,16 +243,6 @@ function setting_html_name($settings)
 		return $settings['html_name'];
 	else
 		return 'Brian\'s Media Website';
-}
-
-/**
- * Implementation of setting
- * @ingroup setting
- * @return false by default
- */
-function setting_debug_mode($settings)
-{
-	return generic_validate_boolean_false($settings, 'debug_mode') || !setting_installed();
 }
 
 /**
@@ -938,23 +913,6 @@ function configure_settings($settings, $request)
 		),
 		'type' => 'text',
 		'value' => $settings['html_name'],
-	);
-	
-	$general['debug_mode'] = array(
-		'name' => lang('debug mode title', 'Debug Mode'),
-		'status' => '',
-		'description' => array(
-			'list' => array(
-				lang('debug mode description 1', 'Debug mode is used by many templates to display debugging options on the page.'),
-				lang('debug mode description 2', 'This is usefull for viewing information about file system and database problems and to test if the system is running properly.'),
-			),
-		),
-		'type' => 'boolean',
-		'value' => $settings['debug_mode'],
-		'options' => array(
-			lang('debug mode option 1', 'Turn Debug Mode On'),
-			lang('debug mode option 2', 'Do Not Use Debug Mode'),
-		)
 	);
 	
 	$general['deep_select'] = array(

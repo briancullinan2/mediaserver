@@ -140,7 +140,11 @@ function configure_cron($settings, $request)
 		'value' => $settings['cleanup_threashold'],
 	);
 	
-	return $options;
+	return array('cron' => array(
+		'name' => 'Cron',
+		'type' => 'fieldset',
+		'options' => $options
+	));
 }
 
 /**
@@ -304,110 +308,11 @@ function validate_scan_skip($request)
 }
 
 
-function scan_watched($filepath)
-{
-	// prevent recursion from symbolic links and add the resolved path to this list
-	if(!isset($GLOBALS['scan_dirs']))
-		$GLOBALS['scan_dirs'] = array();
-		
-	// check if execution time is too long
-	$secs_total = array_sum(explode(' ', microtime())) - $GLOBALS['tm_start'];
-	
-	if( $secs_total > setting('dir_seek_time') )
-	{
-		// return the path to be saved in the state
-		return $file['Filepath'];
-	}
-	
-	// recursivley scan for changed directories based on file time and database
-	
-	
-}
-
-/** 
- * look for changed directories
- *   different from scan dir, which looks for changed and new files
- */
-function handle_dir($dir, $current = '')
-{
-	// prevent recursion from symbolic links and add the resolved path to this list
-	if(!isset($GLOBALS['scan_dirs']))
-		$GLOBALS['scan_dirs'] = array();
-		
-	// get current if it is not already set
-	if($current == '')
-	{
-		foreach(setting('watches') as $i => $watch)
-		{
-			if(substr($dir, 0, strlen($watch)) == $watch)
-			{
-				$current = $watch;
-				break;
-			}
-		}
-	}
-	
-	if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $current)))
-	{
-		raise_error('Looking for changes in: ' . $current, E_DEBUG);
-	
-		$files = scan_directory($current);
-		$has_resumed = false;
-		// keep going until all files in directory have been read
-		foreach($files as $i => $file)
-		{
-			if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $file)) && !in_array(realpath($file), $GLOBALS['scan_dirs']))
-			{
-				$GLOBALS['scan_dirs'][] = realpath($file);
-				
-				// resume scanning
-				// check to see if $dir is above the current directory
-				if(substr($current, 0, strlen($dir)) != $dir && $has_resumed == false)
-				{
-					if(substr($dir, 0, strlen($file)) != $file)
-						continue;
-					raise_error('Resuming looking for changes in: ' . $file, E_DEBUG);
-					$has_resumed = true;
-				}
-				
-				// check if execution time is too long
-				$secs_total = array_sum(explode(' ', microtime())) - $GLOBALS['tm_start'];
-				
-				if( $secs_total > setting('dir_seek_time') )
-				{
-					// return the path to be saved in the state
-					return $file;
-				}
-			
-				// keep processing files
-				$file = str_replace('\\', '/', $file);
-				
-				$current_dir = true;
-				if(is_watched($file))
-					$current_dir = handle_dir($dir, $file);
-					
-				$fileinfo = add($file, false, 'watched');
-				
-				if( $current_dir !== true || connection_status() != 0)
-				{
-					return $current_dir;
-				}
-				
-				if($has_resumed == true)
-					$dir = dirname($file) . '/';
-			}
-			
-			// don't put too much load on the system
-			usleep(1);
-		}
-	}
-	
-	// directory as been completed
-	return true;
-}
-
 function output_cron($request)
 {
+	global $log_fp;
+	header('Content-type: text/html; charset=UTF-8');
+	
 	// close the session so the site can be used while cron is manually started
 	session_write_close();
 	
@@ -418,7 +323,11 @@ function output_cron($request)
 	// ignore user abort because the script will handle it
 	ignore_user_abort(1);
 	
+	// set up a special error handler
+	$log_fp = fopen(setting('tmp_dir') . 'mediaserver.log', 'wb');
+	
 	// get the starting path for directory scanning
+	$files = db_assoc('SELECT * FROM watched WHERE LEFT(Filepath, 1) = "^"');
 	if(isset($request['scan_dir']))
 		$filepath = $request['scan_dir'];
 	elseif(isset($request['scan_entry']))
@@ -426,8 +335,6 @@ function output_cron($request)
 	// get saved directory starting point from database
 	else
 	{
-		$files = db_assoc('SELECT * FROM watched WHERE LEFT(Filepath, 1) = "^"');
-		
 		if(count($files) == 0)
 			$filepath = setting('watched_0');
 		else
@@ -437,11 +344,75 @@ function output_cron($request)
 	// start timer
 	$GLOBALS['tm_start'] = array_sum(explode(' ', microtime()));
 	
-	$current_dir = handle_dir($filepath);
-	
+	while(true)
+	{
+		$current_dir = scan_watched($filepath);
+
+		// continue on to next watched directory
+		if($current_dir === true)
+		{
+			$index = get_watched_index($filepath) + 1;
+			if($index > count(setting('watches')))
+				$index = 0;
+			$filepath = substr(setting('watched_' . $index), 1);
+		}
+		// save directory left off at
+		else
+		{
+			if(count($files) == 0)
+				$id = db_insert('INSERT INTO watched (Filepath) VALUES (?)', array('^' . $current_dir));
+			else
+				$result = db_query('UPDATE watched SET Filepath=? WHERE LEFT(Filepath, 1) = "^"', array('^' . $current_dir));
+			
+			// exit while because we ran out of time
+			break;
+		}
+	}
+		
+	// reset timer for file seeking
+	$GLOBALS['tm_start'] = array_sum(explode(' ', microtime()));
+
 	// scan changed directories
-	
-	// update files
+	while(true)
+	{
+		// check if execution time is too long
+		$secs_total = array_sum(explode(' ', microtime())) - $GLOBALS['tm_start'];
+		
+		if( $secs_total > setting('file_seek_time') )
+		{
+			// return the path to be saved in the state
+			break;
+		}
+		
+		// get file out of watched
+		$files = db_assoc('SELECT id,Filepath FROM watched LIMIT 1');
+		
+		// stop if no more files in watched database
+		if(count($files) == 0)
+			break;
+		
+		// remove from watched list
+		$result = db_query('DELETE FROM watched WHERE id=?', array($files[0]['id']));
+		
+		// update files
+		scan_watched_files($files[0]['Filepath'], 'add_all');
+	}
 	
 	// cleanup
+	fclose($log_fp);
+}
+
+function cron_error_callback($error)
+{
+	if(substr($error->message, 0, 9) == 'DATABASE:')
+		return;
+	// do not print notes
+	print $error->message . "<br />\n";
+	flush();
+}
+
+if(php_sapi_name() == 'cli' && basename($_SERVER['SCRIPT_FILENAME']) == 'cron.module')
+{
+	$_REQUEST['path_info'] = 'cron';
+	include_once dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'index.php';
 }

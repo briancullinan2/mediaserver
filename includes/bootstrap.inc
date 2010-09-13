@@ -73,7 +73,10 @@ function bootstrap($mode = 'all')
 
 			foreach($modules as $module => $config)
 			{
-				invoke_module('setup', $module);
+				if(dependency($module))
+					invoke_module('setup', $module);
+				else
+					disable_module($module);
 			}
 			
 			break;

@@ -13,17 +13,6 @@ function theme_live_container_footer()
 							</tr>
 						</table>
 					</div>
-	<?php
-}
-
-
-function theme_live_footer()
-{
-	theme('container_footer');
-	
-	if(!isset($GLOBALS['output']['extra']) || $GLOBALS['output']['extra'] != 'inneronly')
-	{
-		?>
 					<div id="footer">
 						<table id="footerCtr">
 							<tr>
@@ -39,6 +28,18 @@ function theme_live_footer()
 						</table>
 					</div>
 				</div>
+	<?php
+}
+
+
+function theme_live_footer()
+{
+	theme('container_footer');
+	
+	if(!isset($GLOBALS['output']['extra']) || $GLOBALS['output']['extra'] != 'inneronly')
+	{
+		?>
+				
 			</div>
 		</div>
 	</div>

@@ -69,6 +69,8 @@ function preload_error()
 	$GLOBALS['note_errors'] = array();
 	/** stores a list of all debug information */
 	$GLOBALS['debug_errors'] = array();
+	// stores a list of callback functions for error processing
+	$GLOBALS['error_callback'] = array();
 	
 	setup_error();
 }
@@ -142,18 +144,32 @@ function raise_error($str, $code)
 }
 
 
+function add_error_callback($callback)
+{
+	if(is_callable($callback) && !in_array($callback, $GLOBALS['error_callback']))
+	{
+		$GLOBALS['error_callback'][] = $callback;
+		return true;
+	}
+	
+	return false;
+}
+
 /**
  * The callback function for the PEAR error handler to use
  * @param error the pear error object to add to the error stack
  */
-function error_callback($error)
+function error_callback($error, $callback = NULL)
 {
+	
 	if($error->code & E_USER)
 		$GLOBALS['user_errors'][] = $error->message;
 	if($error->code & E_WARN)
 		$GLOBALS['warn_errors'][] = $error->message;
 	if($error->code & E_NOTE)
 		$GLOBALS['note_errors'][] = $error->message;
+	
+	// debug information
 	if($error->code & E_DEBUG || 
 		(
 			(
@@ -162,41 +178,120 @@ function error_callback($error)
 			) && setting('verbose') === 2)
 		)
 	{
-		if(count($GLOBALS['debug_errors']) > 200)
-			return;
-
-		// add special error handling based on the origin of the error
-		foreach($error->backtrace as $i => $stack)
+		if(count($GLOBALS['debug_errors']) < 200)
 		{
-			if($stack['function'] == 'raise_error')
-				break;
-		}
-		$i++;
-		if(isset($error->backtrace[$i]['file']))
-		{
-			if(dirname($error->backtrace[$i]['file']) == 'modules' && basename($error->backtrace[$i]['file']) == 'template.php')
+			// add special error handling based on the origin of the error
+			foreach($error->backtrace as $i => $stack)
 			{
-				for($i = $i; $i < count($error->backtrace); $i++)
-				{
-					if(dirname($error->backtrace[$i]['file']) != 'modules' || basename($error->backtrace[$i]['file']) != 'template.php')
-						break;
-				}
+				if($stack['function'] == 'raise_error')
+					break;
 			}
-		
-			$error->message .= ' in ' . $error->backtrace[$i]['file'] . ' on line ' . $error->backtrace[$i]['line'];
+			$i++;
+			if(isset($error->backtrace[$i]['file']))
+			{
+				if(dirname($error->backtrace[$i]['file']) == 'modules' && basename($error->backtrace[$i]['file']) == 'template.php')
+				{
+					for($i = $i; $i < count($error->backtrace); $i++)
+					{
+						if(dirname($error->backtrace[$i]['file']) != 'modules' || basename($error->backtrace[$i]['file']) != 'template.php')
+							break;
+					}
+				}
+			
+				$error->message .= ' in ' . $error->backtrace[$i]['file'] . ' on line ' . $error->backtrace[$i]['line'];
+			}
+			
+			if($error->code & E_VERBOSE)
+				$error->message = 'VERBOSE: ' . $error->message;
+			
+			// only show verbose errors if it is really verbose!
+			if($error->code & E_DEBUG || setting('verbose'))
+			{
+				if(isset($GLOBALS['debug_errors'][md5($error->message)]))
+					$error->count = isset($GLOBALS['debug_errors'][md5($error->message)]->count)?$GLOBALS['debug_errors'][md5($error->message)]->count++:2;
+				//$GLOBALS['debug_errors'][] = $error;
+				$GLOBALS['debug_errors'][md5($error->message)] = $error;
+			}
 		}
+	}
 		
-		if($error->code & E_VERBOSE)
-			$error->message = 'VERBOSE: ' . $error->message;
-		
-		// only show verbose errors if it is really verbose!
-		if($error->code & E_DEBUG || setting('verbose'))
-		{
-			if(isset($GLOBALS['debug_errors'][md5($error->message)]))
-				$error->count = isset($GLOBALS['debug_errors'][md5($error->message)]->count)?$GLOBALS['debug_errors'][md5($error->message)]->count++:2;
-			//$GLOBALS['debug_errors'][] = $error;
-			$GLOBALS['debug_errors'][md5($error->message)] = $error;
-		}
+	// calling all callbacks
+	foreach($GLOBALS['error_callback'] as $i => $callback)
+	{
+		call_user_func_array($callback, array($error));
 	}
 }
 
+/**
+ * Implementation of setting
+ * @ingroup setting
+ * @return false by default, set to true to record all notices
+ */
+function setting_verbose($settings)
+{
+	$verbose = generic_validate_boolean_false($settings, 'verbose');
+
+	if(isset($settings['verbose']) && ($settings['verbose'] === "2" || $settings['verbose'] === 2))
+		return 2;
+	else
+		return $verbose;
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ * @return false by default
+ */
+function setting_debug_mode($settings)
+{
+	return generic_validate_boolean_false($settings, 'debug_mode') || !setting_installed();
+}
+
+
+function configure_error($settings)
+{
+	$settings['debug_mode'] = setting('debug_mode');
+	$settings['verbose'] = setting('verbose');
+	
+	$options = array();
+
+	$options['debug_mode'] = array(
+		'name' => lang('debug mode title', 'Debug Mode'),
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				lang('debug mode description 1', 'Debug mode is used by many templates to display debugging options on the page.'),
+				lang('debug mode description 2', 'This is usefull for viewing information about file system and database problems and to test if the system is running properly.'),
+			),
+		),
+		'type' => 'boolean',
+		'value' => $settings['debug_mode'],
+		'options' => array(
+			lang('debug mode option 1', 'Turn Debug Mode On'),
+			lang('debug mode option 2', 'Do Not Use Debug Mode'),
+		)
+	);
+	
+	$options['setting_verbose'] = array(
+		'name' => 'Verbosity',
+		'status' => 'fail',
+		'description' => array(
+			'list' => array(
+				'Set the level of errors and warnings to display in the debug bar.',
+			),
+		),
+		'type' => 'select',
+		'value' => $settings['verbose'],
+		'options' => array(
+			false => 'Do not show any debug information.',
+			true => 'Show important debug information.',
+			2 => 'Show all notices and debug information.',
+		),
+	);
+
+	return array('error' => array(
+		'name' => 'Error Reporting',
+		'type' => 'fieldset',
+		'options' => $options
+	));
+}

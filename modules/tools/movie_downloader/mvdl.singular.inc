@@ -226,7 +226,7 @@ function get_movie_download_netflix($request)
 		$infos['netflix_movies_null']['options'][] = array(
 			'type' => 'button',
 			'value' => 'Cancel',
-			'action' => 'singular_cancel=true;',
+			'action' => 'if(current_ajax) current_ajax.abort();',
 			'name' => 'Automatic Search',
 		);
 		
@@ -262,7 +262,7 @@ function get_movie_download_search($request)
 	{
 		// search for movies
 		$results = movies_fetch_movies($all_movies[$request['movie_index']]);
-		
+
 		if(count($results) > 0)
 		{
 			$infos['netflix_movies_' . $request['movie_index']] = array(

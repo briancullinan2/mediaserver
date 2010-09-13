@@ -257,7 +257,7 @@ $(document).ready(function()
 			}
 		
 		}).playlist("#playlist", {
-			template: '<div class="${class}"><img src="${img}" height="24" width="24" /><a href="${url}">${title}</a></div>'
+			template: '<a href="${url}" class="${class}"><img src="${img}" height="24" width="24" />${title}</a>'
 		});
 	}
 	

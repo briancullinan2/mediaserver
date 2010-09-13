@@ -328,7 +328,8 @@ function movies_fetch_movies($movie)
 	foreach($nzbservices as $i => $config)
 	{
 		$search = setting('nzb_movie_search_' . $i);
-			
+print_r($i);
+		
 		if($search != '')
 		{
 			// run query, using television search strings

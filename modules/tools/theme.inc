@@ -26,11 +26,8 @@ function theme__form_singular($config)
 	theme('info_objects', array('type' => 'info') + $config);
 
 	?><script language="javascript">
-	if(!singular_cancel)
-	{
-		$.get('<?php print $href; ?>',function(data){
-			$('#row_<?php print $name; ?>').replaceWith(data);
-		}, 'text');
-	}
+	var current_ajax = $.get('<?php print $href; ?>',function(data){
+		$('#row_<?php print $name; ?>').replaceWith(data);
+	}, 'text');
 	</script><?php
 }

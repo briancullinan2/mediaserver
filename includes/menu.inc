@@ -127,8 +127,7 @@ function invoke_menu($request, $template = false)
 			$template = $module['template'];
 		
 		// check module permissions
-		if(isset($module['privilage']) && 
-			$user['Privilage'] < $module['privilage'])
+		if($module['privilage'] > $user['Privilage'])
 		{
 			raise_error('Access Denied!', E_USER);
 			

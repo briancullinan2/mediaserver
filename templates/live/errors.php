@@ -9,11 +9,11 @@ function theme_live_debug_block()
 		foreach($GLOBALS['debug_errors'] as $i => $error)
 		{
 			?>
-			<a href="#" class="msg <?php print (substr($error->message, 0, 10) == 'PHP ERROR:')?'php':((substr($error->message, 0, 9) == 'DB ERROR:')?'db':((substr($error->message, 0, 8) == 'VERBOSE:')?'verbose':'')); ?>" onClick="$('#error_<?php print $i; ?>').toggle()"><?php print htmlspecialchars($error->message) . (isset($error->count)?(' repeated ' . $error->count . ' time(s)'):''); ?></a>
+			<a href="#" class="msg <?php print (substr($error->message, 0, 10) == 'PHP ERROR:')?'php':((substr($error->message, 0, 9) == 'DB ERROR:')?'db':((substr($error->message, 0, 8) == 'VERBOSE:')?'verbose':'')); ?>" onClick="$('#error_<?php print $i; ?>').toggle(); return false;"><?php print htmlspecialchars($error->message) . (isset($error->count)?(' repeated ' . $error->count . ' time(s)'):''); ?></a>
 			<div id="error_<?php print $i; ?>" style="display:none;">
 				<code>
 					<pre>
-<?php //print htmlspecialchars(print_r($error, true)); ?>
+<?php print htmlspecialchars(print_r($error, true)); ?>
 					</pre>
 				</code>
 			</div>
@@ -23,7 +23,7 @@ function theme_live_debug_block()
 		$GLOBALS['debug_errors'] = array();
 		
 		?>
-		<a id="hide_link" href="#" onClick="if(this.hidden == false) { document.getElementById('debug').className='debug hide'; this.hidden=true; this.innerHTML = 'Show'; } else { document.getElementById('debug').className='debug'; this.hidden=false; this.innerHTML = 'Hide'; }">Show</a>
+		<a id="hide_link" href="#" onClick="if(this.hidden == false) { document.getElementById('debug').className='debug hide'; this.hidden=true; this.innerHTML = 'Show'; } else { document.getElementById('debug').className='debug'; this.hidden=false; this.innerHTML = 'Hide'; } return false;">Show</a>
 		</div>
 		<?php
 	}

@@ -327,7 +327,7 @@ function validate_users($request)
 function validate_password($request)
 {
 	// if the request method is a get then the password must be base64 encoded
-	if(isset($request['password']) && strtoupper($_SERVER['REQUEST_METHOD']) != 'POST' && ($request['password'] = base64_decode($request['password'], true)) === false)
+	if(isset($request['password']) && strtoupper($_SERVER['REQUEST_METHOD']) != 'POST' && substr($request['password'], 0, 5) != 'hash:')
 	{
 		// if the previous conditions are not met, then flip the fuck out
 		raise_error('Password not properly encoded, referrer is not this site!', E_DEBUG|E_USER|E_FATAL);

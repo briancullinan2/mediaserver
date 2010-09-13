@@ -188,11 +188,9 @@ function is_watched($dir)
 		{
 			$is_watched = true;
 		}
-		// check if aliasing is used, if not, 
-		//   also watch the directories leading up to watched directories, but nothing else
-		if(!setting('alias_enable') && substr($watch, 0, strlen($dir)) == $dir &&
-			is_dir($dir)
-		)
+		
+		// watch the directories leading up to watched directories, but nothing else
+		if(substr($watch, 0, strlen($dir)) == $dir && is_dir($dir))
 			$is_watched = true;
 	}
 	foreach(setting('ignores') as $i => $ignore)
@@ -218,8 +216,99 @@ function watched_and_files($file)
 	return is_watched($file) && handles($file, 'files');
 }
 
-function scan_dir($dir)
+function get_watched_index($filepath)
 {
+	if(substr($filepath, 0, 1) == '^')
+		$filepath = substr($filepath, 1);
+	
+	foreach(setting('watches') as $i => $watch)
+	{
+		if(substr($filepath, 0, strlen($watch)) == $watch)
+		{
+			return $i;
+		}
+	}
+}
+
+/** 
+ * look for changed directories
+ *   different from scan dir, which looks for changed and new files
+ */
+function scan_watched($dir, $current = '')
+{
+	// prevent recursion from symbolic links and add the resolved path to this list
+	if(!isset($GLOBALS['scan_dirs']))
+		$GLOBALS['scan_dirs'] = array();
+		
+	// get current if it is not already set
+	if($current == '')
+		$current = substr(setting('watched_' . get_watched_index($dir)), 1);
+	
+	if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $current)))
+	{
+		raise_error('Looking for changes in: ' . $current, E_DEBUG);
+	
+		$files = scan_directory($current);
+		$has_resumed = false;
+		// keep going until all files in directory have been read
+		foreach($files as $i => $file)
+		{
+			if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $file)) && !in_array(realpath($file), $GLOBALS['scan_dirs']))
+			{
+				$GLOBALS['scan_dirs'][] = realpath($file);
+				
+				// resume scanning
+				// check to see if $dir is above the current directory
+				if(substr($current, 0, strlen($dir)) != $dir && $has_resumed == false)
+				{
+					if(substr($dir, 0, strlen($file)) != $file)
+						continue;
+					raise_error('Resuming looking for changes in: ' . $file, E_DEBUG);
+					$has_resumed = true;
+				}
+				
+				// check if execution time is too long
+				$secs_total = array_sum(explode(' ', microtime())) - $GLOBALS['tm_start'];
+				
+				if( $secs_total > setting('dir_seek_time') )
+				{
+					// return the path to be saved in the state
+					return $file;
+				}
+			
+				// keep processing files
+				$file = str_replace('\\', '/', $file);
+				
+				$current_dir = true;
+				if(is_watched($file))
+					$current_dir = scan_watched($dir, $file);
+					
+				$fileinfo = add($file, false, 'watched');
+				
+				if( $current_dir !== true || connection_status() != 0)
+				{
+					return $current_dir;
+				}
+				
+				if($has_resumed == true)
+					$dir = dirname($file) . '/';
+			}
+			
+			// don't put too much load on the system
+			usleep(1);
+		}
+	}
+	
+	// directory as been completed
+	return true;
+}
+
+function scan_watched_files($dir, $callback = NULL)
+{
+	// verify the directory is actually watched
+	if(!handles($dir, 'watched'))
+		return false;
+	
 	raise_error('Scanning directory: ' . $dir, E_DEBUG);
 	
 	$local_files = scan_directory($dir, 'watched_and_files');
@@ -234,6 +323,8 @@ function scan_dir($dir)
 	foreach($new_files as $i => $file)
 	{
 		add($file);
+		if(is_callable($callback))
+			call_user_func_array($callback, array($file));
 	}
 	
 	// get removed files

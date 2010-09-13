@@ -277,15 +277,13 @@ function theme($request = '')
 		if(function_exists('theme_' . $request['template'] . '_' . $request['tfile']))
 		{
 			// call the function and be done with it
-			call_user_func_array('theme_' . $request['template'] . '_' . $request['tfile'], $args);
-			return true;
+			return call_user_func_array('theme_' . $request['template'] . '_' . $request['tfile'], $args);
 		}
 		// check if a default function exists for the theme
 		elseif(function_exists('theme__' . $request['tfile']))
 		{
 			// call the function and be done with it
-			call_user_func_array('theme__' . $request['tfile'], $args);
-			return true;
+			return call_user_func_array('theme__' . $request['tfile'], $args);
 		}
 		else
 			raise_error('Theme function \'theme_' . $request['template'] . '_' . $request['tfile'] . '\' was not found.', $error_code);
@@ -296,14 +294,13 @@ function theme($request = '')
 		// check if function exists in current theme
 		if(function_exists('theme_' . setting('local_template') . '_' . $request))
 		{
-			call_user_func_array('theme_' . setting('local_template') . '_' . $request, $args);
+			return call_user_func_array('theme_' . setting('local_template') . '_' . $request, $args);
 			return true;
 		}
 		// check if a default function exists for the theme
 		elseif(function_exists('theme__' . $request))
 		{
-			call_user_func_array('theme__' . $request, $args);
-			return true;
+			return call_user_func_array('theme__' . $request, $args);
 		}
 		// it is possible the whole request
 		else

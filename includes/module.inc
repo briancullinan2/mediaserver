@@ -27,7 +27,7 @@ function menu_module()
 	);
 }
 
-function setting_module()
+function setting_module($settings)
 {
 	$settings = array();
 	
@@ -35,6 +35,14 @@ function setting_module()
 	foreach($GLOBALS['modules'] as $module => $config)
 	{
 		$settings[] = $module . '_enable';
+	}
+	
+	// if a module is disabled, it will not show up in the modules list and therefore so setting will be created for it
+	//   this fixes that problem and adds enable settings for unknown modules
+	foreach($settings as $setting => $value)
+	{
+		if(substr($setting, -7) == '_enable')
+			$settings[] = $setting;
 	}
 	
 	return $settings;
@@ -96,9 +104,6 @@ function load_module($path)
 		// remove slashes and replace with underscores
 		$prefix = generic_validate_machine_readable(array('prefix' => $prefix), 'prefix');
 		
-		// use output buffer to prevent unwanted output
-		ob_start();
-		
 		// load configuration from info file to allow disabling
 		if(ext($path) == 'info' && file_exists(dirname($path) . DIRECTORY_SEPARATOR . $module . '.module'))
 		{
@@ -107,12 +112,20 @@ function load_module($path)
 			// point to module path instead
 			$path = dirname($path) . DIRECTORY_SEPARATOR . $module . '.module';
 
+			// use output buffer to prevent unwanted output
+			ob_start();
 			include_once $path;
+			$buffer = ob_get_contents();
+			ob_end_clean();
 		}
 		// used mostly internally, call register_ function
 		elseif(ext($path) == 'module' || ext($path) == 'inc')
 		{
+			// use output buffer to prevent unwanted output
+			ob_start();
 			include_once $path;
+			$buffer = ob_get_contents();
+			ob_end_clean();
 
 			if(function_exists('register_' . $module))
 				$config = invoke_module('register', $module);
@@ -127,11 +140,8 @@ function load_module($path)
 		else
 			return;
 		
-		// check output buffer and report
-		$buffer = ob_get_contents();
-		if(strlen($buffer) > 0)
+		if(isset($buffer) && strlen($buffer) > 0)
 			raise_error('Output detected while loading modules \'' . $path . '\'.', E_VERBOSE);
-		ob_end_clean();
 		
 		// set the module name for reference
 		$config['module'] = $module;

@@ -151,7 +151,7 @@ function rewrite_vars(&$request, &$get, &$post)
 			
 		// merge result, but current request takes precedence
 		if(isset($result))
-			$request = array_merge($result, $request);
+			$request = array_merge($request, $result);
 	}
 
 	$result = trigger_key('validate', NULL, &$request, NULL);

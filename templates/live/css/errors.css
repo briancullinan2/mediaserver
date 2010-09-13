@@ -10,6 +10,8 @@
 	display:block;
 	cursor:pointer;
 	background-color:#FF6;
+	text-decoration:none;
+	color:#000;
 }
 
 .debug .msg.php {

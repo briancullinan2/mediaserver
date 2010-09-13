@@ -1,4 +1,16 @@
 <?php
+
+/**
+ * @name Version Information
+ * DO NOT CHANGE!
+ * @{ 
+ * @enum VERSION set version for stuff to reference
+ * @enum VERSION_NAME set the name for a text representation of the version
+ */
+define('VERSION', 			     '0.90.0');
+define('VERSION_NAME', 			  'Atlas');
+
+
 /**
  * Recursively convert an array of string information to htmlspecialchars(), used by #register_output_vars()
  * @return a multilevel array with all strings converted to HTML compatible

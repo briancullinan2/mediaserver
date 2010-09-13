@@ -55,7 +55,7 @@ function configure_archive($settings, $request)
 	
 	if(dependency('archiver'))
 	{
-		$options['archiver'] = array(
+		$options['setting_archiver'] = array(
 			'name' => lang('archiver title', 'Archiver'),
 			'status' => '',
 			'description' => array(
@@ -75,7 +75,7 @@ function configure_archive($settings, $request)
 	}
 	else
 	{
-		$options['archiver'] = array(
+		$options['setting_archiver'] = array(
 			'name' => lang('archiver title', 'Archiver Not Installed'),
 			'status' => 'fail',
 			'description' => array(
@@ -303,10 +303,6 @@ function get_info_archive($file)
  */
 function add_archive($file)
 {
-	// files always qualify, we are going to log every single one!
-	if(!handles($file, 'archive'))
-		return false;
-
 	// pull information from $info
 	list($file, $subfile) = get_inner_path($file);
 	
