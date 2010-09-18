@@ -135,6 +135,10 @@ function get_info_discogs($file)
 			$albums = get_xml_list($artist['xml']->xpath('//release/title'));
 			$releases = get_xml_list($artist['xml']->xpath('//release'));
 			
+			// return if no search results where found
+			if(count($release) == 0)
+				return $fileinfo;
+			
 			// find the closest match
 			list($album, $key) = get_closest($audioinfo['Album'], $albums);
 			

@@ -1,3 +1,16 @@
+2010-09-17
+Fixed some adding in archive, code, and diskimage
+	Now check file change time if it is already found in the database
+	This should depricate the need of a $force option in the add function
+
+2010-09-15
+Refactored tools
+Added a CLI with lots of template support
+	Overrides form and info functions (very useful)
+Fixed a huge problem with output buffer not closing in module.inc
+	This caused a lot of problems with buffering for client side media players
+Using sha1() for password encryption now
+
 2010-09-10
 Lots of bug fixes
 Reorganize file structure slightly

@@ -17,7 +17,7 @@ function register_settings()
 		'description' => 'Contains basic settings for site operation.',
 		'privilage' => 10,
 		'settings' => array('database_reset', 'all_reset', 'installed', 'system_type', 'local_root', 'settings_file', 'modrewrite', 
-			'html_domain', 'html_root', 'html_name', 'debug_mode', 'deep_select', 'no_bots', 'buffer_size', 'verbose',
+			'html_domain', 'html_root', 'html_name', 'debug_mode', 'deep_select', 'buffer_size', 'verbose',
 		),
 		'package' => 'core',
 		'template' => false,
@@ -99,9 +99,9 @@ function setup_settings()
 function bootstrap_settings($modules)
 {
 	// loop through the modules and call settings functions on them if they are set to callbacks
-	foreach($modules as $module => $config)
+	foreach($modules as $module => &$config)
 	{
-		$config['settings'] = get_settings($module);
+		$config['settings'] = get_settings($config);
 		
 		// merge new settings with total list of settings
 		if(is_array($config['settings']))
@@ -114,24 +114,18 @@ function bootstrap_settings($modules)
 	}
 }
 
-function get_settings($module)
+function get_settings($config)
 {
-	// if it is not a module return false to indicate erryr
-	if(!is_module($module))
-		return false;
-		
 	// if it is a module but has no settings, return empty array
-	if(!isset($GLOBALS['modules'][$module]['settings']))
+	if(!isset($config['settings']))
 		return array();
 
-	if(isset($GLOBALS['modules'][$module]['settings']) && is_string($GLOBALS['modules'][$module]['settings']) && 
-		$GLOBALS['modules'][$module]['settings'] == $module && function_exists('setting_' . $module)
-	)
+	if(is_string($config['settings']) && is_callable('setting_' . $config['settings']))
 	{
-		$GLOBALS['modules'][$module]['settings'] = invoke_module('setting', $module, array($GLOBALS['settings']));
+		return call_user_func_array('setting_' . $config['settings'], array($GLOBALS['settings']));
 	}
 	else
-		return $GLOBALS['modules'][$module]['settings'];
+		return $config['settings'];
 }
 
 /**
@@ -209,6 +203,12 @@ function setting_system_type($settings)
  */
 function setting_html_domain($settings)
 {
+	if(!isset($_SERVER['SERVER_PROTOCOL']))
+		$_SERVER['SERVER_PROTOCOL'] = 'HTTP/1.0';
+	if(!isset($_SERVER['HTTP_HOST']))
+		$_SERVER['HTTP_HOST'] = 'localhost';
+	if(!isset($_SERVER['SERVER_PORT']))
+		$_SERVER['SERVER_PORT'] = 80;
 	if(isset($settings['html_domain']) && @parse_url($settings['html_domain']) !== false)
 		return $settings['html_domain'];
 	else
@@ -258,16 +258,6 @@ function setting_deep_select($settings)
 /**
  * Implementation of setting
  * @ingroup setting
- * @return true by default
- */
-function setting_no_bots($settings)
-{
-	return generic_validate_boolean_true($settings, 'no_bots');
-}
-
-/**
- * Implementation of setting
- * @ingroup setting
  * @return 16MB by default
  */
 function setting_buffer_size($settings)
@@ -281,6 +271,11 @@ function setting_buffer_size($settings)
 		return $settings['buffer_size'];
 	else
 		return 8*8*1024;
+}
+
+function dependency_modrewrite()
+{
+	return setting('modrewrite');
 }
 
 /**
@@ -812,7 +807,6 @@ function configure_settings($settings, $request)
 	$settings['html_name'] = setting('html_name');
 	$settings['debug_mode'] = setting('debug_mode');
 	$settings['deep_select'] = setting('deep_select');
-	$settings['no_bots'] = setting('no_bots');
 	$settings['buffer_size'] = setting('buffer_size');
 	
 	$options = array();
@@ -933,23 +927,6 @@ function configure_settings($settings, $request)
 		)
 	);
 	
-	$general['no_bots'] = array(
-		'name' => lang('no bots title', 'Robots Handling'),
-		'status' => '',
-		'description' => array(
-			'list' => array(
-				lang('no bots description 1', 'Some services like Google like to scan websites.  This option will prevent robots from downloading and scanning files on your site.'),
-				lang('no bots description 2', 'This will also enable robots to view a customizable sitemap.php module that provides them with the information they deserve.'),
-			),
-		),
-		'type' => 'boolean',
-		'value' => $settings['no_bots'],
-		'options' => array(
-			lang('no bots option 1', 'Disable Robots'),
-			lang('no bots option 2', 'Allow Robots to Scan my Files'),
-		)
-	);
-	
 	$general['buffer_size'] = array(
 		'name' => lang('buffer size title', 'Buffer Size'),
 		'status' => '',
@@ -962,7 +939,7 @@ function configure_settings($settings, $request)
 		'value' => $settings['buffer_size'],
 	);
 	
-	$options['general'] =  array(
+	$options['general'] = array(
 		'name' => 'General Settings',
 		'type' => 'fieldset',
 		'collapsible' => true,

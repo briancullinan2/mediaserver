@@ -189,32 +189,19 @@ function configure_nzbservices($settings)
 		);
 		if($config['login'] != '' || $config['username'] != '')
 		{
-			$options['nzbservices']['options']['setting_nzbservice_' . $i . '[login]'] = array(
-				'type' => 'hidden',
-				'value' => $config['login'],
-			);
-			$options['nzbservices']['options'][] = array(
-				'value' => '<br />'
-			);
 			$options['nzbservices']['options']['setting_nzbservice_' . $i . '[username]'] = array(
 				'type' => 'text',
 				'value' => $config['username'],
 				'name' => $config['name'] . ' Username',
-			);
-			$options['nzbservices']['options'][] = array(
-				'value' => '<br />'
 			);
 			$options['nzbservices']['options']['setting_nzbservice_' . $i . '[password]'] = array(
 				'type' => 'text',
 				'value' => $config['password'],
 				'name' => $config['name'] . ' Password',
 			);
-			$options['nzbservices']['options'][] = array(
-				'value' => '<br />'
-			);
 		}
 		$options['nzbservices']['options']['setting_nzbservice_image_' . $i] = array(
-			'value' => '<img src="' . $config['image'] . '" alt="" />',
+			'image' => $config['image'],
 			'name' => $config['name'] . ' Image',
 		);
 	}

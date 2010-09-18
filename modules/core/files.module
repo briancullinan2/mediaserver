@@ -823,7 +823,12 @@ function merge_database_info($files, $handler)
 
 		// only search for ids in handler table if there are ids available
 		if(count($id_files) > 0)
-			$id_infos = db_assoc('SELECT ' . sql_columns(get_columns($module)) . ' FROM ' . $module . ' WHERE ' . sql_ids_files($id_files, $module) . ' LIMIT ' . count($id_files), array(), 'Filepath');
+		{
+			$columns = get_columns($module);
+			if(!in_array('id', $columns))
+				$columns[] = 'id';
+			$id_infos = db_assoc('SELECT ' . sql_columns($columns) . ' FROM ' . $module . ' WHERE ' . sql_ids_files($id_files, $module) . ' LIMIT ' . count($id_files), array(), 'Filepath');
+		}
 		else
 			$id_infos = array();
 

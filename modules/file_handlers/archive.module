@@ -330,13 +330,16 @@ function add_archive($file)
 		// add to database
 		$archive_id = db_insert('INSERT INTO archive ' . sql_insert($fileinfo), array_values($fileinfo));
 	}
-	else
+	// check file date and only update if it has changed
+	elseif(date("Y-m-d h:i:s", filemtime($file)) != $files[0]['Filedate'])
 	{
 		raise_error('Modifying archive: ' . $fileinfo['Filepath'], E_DEBUG);
 		
 		// update database
 		db_query('UPDATE archive' . sql_update($fileinfo) . ' WHERE id=' . $archive_id, array_values($fileinfo));
 	}
+	else
+		return $archive_id;
 	
 	// set up empty ids array since we know archive_id will be the only entry
 	$empty_ids = array();

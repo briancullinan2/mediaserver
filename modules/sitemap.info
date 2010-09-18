@@ -1,0 +1,5 @@
+name = Site Map
+description = Provides users and search engines with an XML site map.
+privilage = 1
+template = false
+settings[] = no_bots

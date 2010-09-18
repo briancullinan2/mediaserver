@@ -8,3 +8,4 @@ filter[] = order_by
 filter[] = group_by
 package = core
 session[] = selected
+privilage = 1

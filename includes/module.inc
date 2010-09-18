@@ -150,6 +150,18 @@ function load_module($path)
 		if(!isset($config['path']))
 			$config['path'] = $path;
 		
+		// check privilage
+		if(!isset($config['privilage']))
+			raise_error('Privilage not set for \'' . $config['module'] . '\'!', E_DEBUG);
+		
+		// check privilage
+		if(!isset($config['template']))
+		{
+			raise_error('Template not set for \'' . $config['module'] . '\'!', E_VERBOSE);
+			
+			$config['template'] = false;
+		}
+		
 		// set the package if it is not set already
 		if(!isset($config['package']))
 		{
@@ -523,6 +535,19 @@ function configure_module($settings, $request)
 	$description_2 = lang('modules enable description 2', 'Click configure to configure additional options for a specific module.');
 	$description_fail = lang('modules enable fail description', 'This module has been forcefully disabled because of dependency issues.');
 	
+	$options['all'] = array(
+		'name' => 'Configure All Modules',
+		'type' => 'button',
+		'action' => 'window.location.href=\'' . url('admin/module/all') . '\'',
+		'value' => 'Configure All',
+		'description' => array(
+			'list' => array(
+				'This option allows you to configure all the modules on one page.',
+				'Note:  This page may take a while to load and may be difficult to navigate.'
+			)
+		)
+	);
+	
 	foreach(get_modules() as $module => $config)
 	{
 		// get the enabled setting
@@ -647,19 +672,25 @@ function configure_module($settings, $request)
  */
 function validate_configure_module($request)
 {
-	if(isset($request['configure_module']) && isset($GLOBALS['modules'][$request['configure_module']]) &&
-		isset($GLOBALS['modules'][$request['configure_module']]['settings']) && count($GLOBALS['modules'][$request['configure_module']]['settings']) > 0
-	)
+	if(isset($request['configure_module']))
 	{
-		if(!function_exists('configure_' . $request['configure_module']))
+		if($request['configure_module'] == 'all')
+			return 'all';
+		elseif(isset($GLOBALS['modules'][$request['configure_module']]) && 
+			isset($GLOBALS['modules'][$request['configure_module']]['settings']) && 
+			count($GLOBALS['modules'][$request['configure_module']]['settings']) > 0
+		)
 		{
-			raise_error('Configuration function \'' . $request['configure_module'] . '\' does not exist!', E_DEBUG);
-			return 'admin_modules';
+			if(!function_exists('configure_' . $request['configure_module']))
+			{
+				raise_error('Configuration function \'' . $request['configure_module'] . '\' does not exist!', E_DEBUG);
+				return 'admin_modules';
+			}
+			return $request['configure_module'];
 		}
-		return $request['configure_module'];
 	}
-	else
-		return 'module';
+	
+	return 'module';
 }
 
 /**
@@ -874,27 +905,46 @@ function output_module($request)
 	if(dependency('writable_settings') == false)
 		raise_error('Cannot save changes made on this page, the settings file is not writable!', E_USER);
 
-	// output configuration page
-	$options = invoke_module('configure', $request['configure_module'], array($GLOBALS['settings'], $request));
-	
-	// add status to configuration
-	$status = invoke_module('status', $request['configure_module'], array($GLOBALS['settings']));
-	if(isset($status))
-		register_output_vars('status', $status);
-	
-	// find invalid parameters
-	$missing_settings = array_diff(get_settings($request['configure_module']), array_keys($options));
-	$in_settings_not_in_config = array_intersect($missing_settings, $GLOBALS['modules'][$request['configure_module']]['settings']);
-	
-	// print out errors for incorrect configuration
-	$in_config_not_in_settings = array_intersect($missing_settings, array_keys($options));
-	foreach($in_settings_not_in_config as $i => $key)
+	// this is the configure all code
+	if($request['configure_module'] == 'all')
 	{
-		raise_error('Option \'' . $key . '\' listed in settings for ' . $request['configure_module'] . ' but not listed in the output options configuration!', E_VERBOSE);
+		foreach(get_modules() as $module => $config)
+		{
+			if(!function_exists('configure_' . $module))
+				continue;
+				
+			$options['module_' . $module] = array(
+				'type' => 'fieldset',
+				'name' => $config['name'],
+				'options' => invoke_module('configure', $module, array($GLOBALS['settings'], $request)),
+				'collapsible' => true,
+			);
+		}
 	}
-	foreach($in_config_not_in_settings as $i => $key)
+	else
 	{
-		raise_error('Option \'' . $key . '\' listed in the output options for ' . $request['configure_module'] . ' but not listed in the module config!', E_VERBOSE);
+		// output configuration page
+		$options = invoke_module('configure', $request['configure_module'], array($GLOBALS['settings'], $request));
+		
+		// add status to configuration
+		$status = invoke_module('status', $request['configure_module'], array($GLOBALS['settings']));
+		if(isset($status))
+			register_output_vars('status', $status);
+		
+		// find invalid parameters
+		$missing_settings = array_diff(get_settings($GLOBALS['modules'][$request['configure_module']]), array_keys($options));
+		$in_settings_not_in_config = array_intersect($missing_settings, $GLOBALS['modules'][$request['configure_module']]['settings']);
+		
+		// print out errors for incorrect configuration
+		$in_config_not_in_settings = array_intersect($missing_settings, array_keys($options));
+		foreach($in_settings_not_in_config as $i => $key)
+		{
+			raise_error('Option \'' . $key . '\' listed in settings for ' . $request['configure_module'] . ' but not listed in the output options configuration!', E_VERBOSE);
+		}
+		foreach($in_config_not_in_settings as $i => $key)
+		{
+			raise_error('Option \'' . $key . '\' listed in the output options for ' . $request['configure_module'] . ' but not listed in the module config!', E_VERBOSE);
+		}
 	}
 	
 	register_output_vars('options', $options);

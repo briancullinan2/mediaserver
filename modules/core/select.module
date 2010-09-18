@@ -358,7 +358,8 @@ function filter_selected($request)
 				if($file[$request['handler'] . '_id'] != 0)
 					$where .= ' id = ' . $file[$request['handler'] . '_id'] . ' OR';
 			}
-			return array('where' => substr($where, 0, strlen($where)-2));
+			if($where != '')
+				return array('where' => substr($where, 0, strlen($where)-2));
 		}
 		else
 		{
@@ -448,8 +449,27 @@ function get_select_pages($start, $limit, $total_count)
 	if($current_page > 1)
 		$pages[] = array('Prev', 'start=' . ($current_page-1)*$limit);
 	
+	// start the links 5 or less away from current page
+	if($last_page < 10)
+	{
+		$start = 0;
+		$stop = $last_page;
+	}
+	else
+	{
+		if($current_page - 5 < 0)
+			$start = 0;
+		else
+			if($current_page + 5 > $last_page)
+				$start = $last_page - 10;
+			else
+				$start = $current_page - 5;
+		
+		$stop = $start + 10;
+	}
+		
 	// add numeric pages in between
-	for($i = 0; $i <= $last_page; $i++)
+	for($i = $start; $i <= $stop; $i++)
 	{
 		if($i == $current_page)
 			$pages[] = array(($i+1), 'start=' . $i * $limit, false);

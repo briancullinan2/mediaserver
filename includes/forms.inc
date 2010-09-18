@@ -29,8 +29,10 @@ function theme__info_objects($infos)
 						if($infos['type'] != 'info')
 						{
 							theme('form_objects', array($infos));
-							break;
 						}
+						break;
+					case 'name':
+						break;
 					default:
 						if(function_exists('theme__info_' . $key))
 						{
@@ -118,9 +120,12 @@ function theme__form_object($field_name, $config)
 	
 	if(isset($config['name']) && $config['type'] != 'fieldset')
 	{
+		?><div class="fieldname <?php print isset($config['status'])?$config['status']:''; ?>"><?php
 		theme('info_objects', $config['name']);
-		?><br /><?php
+		?></div><?php
 	}
+	
+	?><div class="field field_<?php print $config['type']; ?>"><?php
 	
 	switch($config['type'])
 	{
@@ -129,13 +134,13 @@ function theme__form_object($field_name, $config)
 			<form name="<?php print htmlspecialchars($field_name, ENT_QUOTES); ?>" action="<?php print isset($config_html['action'])?$config_html['action']:$GLOBALS['output']['get']; ?>" method="<?php print isset($config_html['method'])?$config_html['method']:'post'; ?>">
 				<?php
 				theme('form_objects', $config['options']);
-				?>
-				<div class="submit">
-					<input type="submit" name="reset_configuration" value="Reset to Defaults" class="button" />
-					<input type="submit" name="save_configuration" value="Save" class="button" style="float:right;" />
-				</div>
-			</form>
-			<?php
+				
+				if(isset($config['submit']))
+					theme('form_submit', $config['submit']);
+				if(isset($config['reset']))
+					theme('form_submit', $config['reset']);
+			
+			?></form><?php
 		break;
 		case 'fieldset':
 			if(isset($config['name']) || count($config['options']) > 0)
@@ -148,10 +153,10 @@ function theme__form_object($field_name, $config)
 					if(isset($config['collapsible']) && $config['collapsible'] == true)
 					{
 						$id = htmlspecialchars($field_name, ENT_QUOTES);
-						$script = "if($('#table_" . $id . "').css('display')=='none'){" . 
-							"$('#table_" . $id . "').slideDown('fast');" . 
+						$script = "if($('#fieldcontainer_" . $id . "').css('display')=='none'){" . 
+							"$('#fieldcontainer_" . $id . "').slideDown('fast');" . 
 						"}else{" .
-							"$('#table_" . $id . "').slideUp('fast');" . 
+							"$('#fieldcontainer_" . $id . "').slideUp('fast');" . 
 						"}return false;";
 						?><a href="#" onclick="<?php print $script; ?>"><?php print htmlspecialchars($config['name']); ?></a><?php
 					}
@@ -162,11 +167,16 @@ function theme__form_object($field_name, $config)
 					?></legend><?php
 				}
 				
-				?><table id="table_<?php print machine($field_name); ?>" <?php print (isset($config['collapsed']) && $config['collapsed'] == true)?'style="display:none;"':''; ?> border="0" cellpadding="0" cellspacing="0"><?php
+				?><div id="fieldcontainer_<?php print machine($field_name); ?>" <?php print (isset($config['collapsed']) && $config['collapsed'] == true)?'style="display:none;"':''; ?> border="0" cellpadding="0" cellspacing="0"><?php
 				
-				theme('form_tableset', $config['options']);
+				foreach($config['options'] as $name => $field)
+				{
+					?><div class="field_row"><?php
+					theme('form_object', $name, $field);
+					?></div><?php
+				}
 				
-				?></table><?php
+				?></div><?php
 				
 				?></fieldset><?php
 			}
@@ -192,12 +202,16 @@ function theme__form_object($field_name, $config)
 			else
 				raise_error('Form type \'' . $config['type'] . '\' not found!', E_DEBUG);
 	}
+	?></div><?php
 	
 	// print description
 	if(isset($config['description']))
 	{
+		?><div class="fielddesc"><?php
 		theme('info_objects', $config['description']);
+		?></div><?php
 	}
+	
 }
 
 function theme__form_objects($form)
@@ -218,29 +232,6 @@ function theme__form_objects($form)
 		{
 			theme('form_object', $field_name, $config);
 		}
-	}
-}
-
-function theme__form_tableset($options)
-{
-	foreach($options as $name => $field)
-	{
-		?>
-		<tr class="form-row <?php print $field['status']; ?>" id="row_<?php print $name; ?>">
-			<td class="form-title"><?php print $field['name']; ?></td>
-			<td class="form-field">
-			<?php
-			if(is_array($field))
-				theme('form_objects', array($name => array('name' => NULL, 'description' => NULL) + $field));
-			else
-				theme('form_objects', array($name => array('name' => NULL, 'description' => NULL, 'value' => $field)));
-			?>
-			</td>
-			<td class="form-desc">
-			<?php theme('info_objects', $field['description']); ?>
-			</td>
-		</tr>
-		<?php
 	}
 }
 

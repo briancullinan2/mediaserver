@@ -360,7 +360,7 @@ function add_code($file)
 		return false;
 	
 	// check database for file
-	$files = db_assoc('SELECT * FROM archive WHERE Filepath=? LIMIT 1', array($file));
+	$files = db_assoc('SELECT * FROM code WHERE Filepath=? LIMIT 1', array($file));
 	
 	if( count($files) > 0 )
 		$code_id = $files[0]['id'];
@@ -378,10 +378,17 @@ function add_code($file)
 	}
 	else
 	{
-		raise_error('Modifying code: ' . $fileinfo['Filepath'], E_DEBUG);
-		
-		// update database
-		db_query('UPDATE code' . sql_update($fileinfo) . ' WHERE id=' . $code_id, array_values($fileinfo));
+		// may have failed on html generation, so we don't want to try again if the file is the same
+		$files = db_assoc('SELECT * FROM files WHERE Filepath=? LIMIT 1', array($file));
+		if(count($files) == 0 || date("Y-m-d h:i:s", filemtime($file)) != $files[0]['Filedate'])
+		{
+			raise_error('Modifying code: ' . $fileinfo['Filepath'], E_DEBUG);
+			
+			// update database
+			db_query('UPDATE code' . sql_update($fileinfo) . ' WHERE id=' . $code_id, array_values($fileinfo));
+		}
+		else
+			return $code_id;
 	}
 	
 	// now add the HTML so if this takes too long and fails it won't happen again

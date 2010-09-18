@@ -24,7 +24,16 @@ function rewrite_cli($path_info, $request)
 	{
 		if(substr($value, 0, 2) == '--')
 		{
-			$request[substr($value, 2)] = $GLOBALS['argv'][++$i];
+			if(strpos($value, '=') !== false)
+			{
+				$name_value_pair = split('=', substr($value, 2));
+				$name = trim($name_value_pair[0]);
+				$request[$name] = trim($name_value_pair[1]);
+			}
+			else
+			{
+				$request[substr($value, 2)] = $GLOBALS['argv'][++$i];
+			}
 		}
 	}
 	
@@ -44,10 +53,40 @@ function rewrite_cli($path_info, $request)
 		print 'Login as: ';
 		$request['username'] = trim(fgets(STDIN));
 		print 'Password: ';
-		$request['password'] = 'hash:' . md5(setting('secret') . trim(fgets(STDIN)));
+		$request['password'] = 'hash:' . sha1(setting('secret') . trim(fgets(STDIN)));
 	}
 	
 	return $request;
+}
+
+function setting_cli_columns($settings)
+{
+	if(isset($settings['cli_columns']) && is_numeric($settings['cli_columns']) &&
+		$settings['cli_columns'] > 0
+	)
+		return $settings['cli_columns'];
+	elseif(isset($_ENV['COLUMNS']))
+		return $_ENV['COLUMNS'];
+	elseif($columns = exec('tput cols'))
+		return $columns;
+	else
+		return 80;
+}
+
+function setting_cli_rows($settings)
+{
+	if(isset($settings['cli_rows']) && is_numeric($settings['cli_rows']) &&
+		$settings['cli_rows'] > 0
+	)
+		return $settings['cli_rows'];
+	elseif(isset($_ENV['ROWS']))
+		return $_ENV['ROWS'];
+	elseif(isset($_ENV['LINES']))
+		return $_ENV['LINES'];
+	elseif($rows = exec('tput lines'))
+		return $rows;
+	else
+		return 60;
 }
 
 function dependency_run_from_cli($settings)

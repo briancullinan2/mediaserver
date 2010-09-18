@@ -2,13 +2,6 @@
 
 function theme_live_select()
 {
-	if(isset($GLOBALS['output']['extra']) && $GLOBALS['output']['extra'] == 'filesonly')
-	{
-		theme('files', $GLOBALS['output']['files']);
-		
-		return;
-	}
-	
 	$current = isset($GLOBALS['output']['html']['dir'])?ucwords(basename($GLOBALS['output']['html']['dir'])):'';
 	
 	$description = 'Click to browse files. Drag to select files, and right click for download options.';
@@ -362,9 +355,9 @@ function theme_live_info($files = array(), $columns = array())
 						if($column == 'Filepath')
 						{
 							if(dirname(dirname($file['Filepath'])) != '/')
-								print '../../' . basename(dirname($html['Filepath'])) . '/' . basename($html['Filepath']);
+								print wordwrap('../../' . basename(dirname($html['Filepath'])) . '/' . basename($html['Filepath']), 45, "<br />", true);
 							else
-								print $html['Filepath'];
+								print wordwrap($html['Filepath'], 45, "<br />", true);
 						}
 						else
 							print $html[$column];

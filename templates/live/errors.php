@@ -9,7 +9,7 @@ function theme_live_debug_block()
 		foreach($GLOBALS['debug_errors'] as $i => $error)
 		{
 			?>
-			<a href="#" class="msg <?php print (substr($error->message, 0, 10) == 'PHP ERROR:')?'php':((substr($error->message, 0, 9) == 'DB ERROR:')?'db':((substr($error->message, 0, 8) == 'VERBOSE:')?'verbose':'')); ?>" onClick="$('#error_<?php print $i; ?>').toggle(); return false;"><?php print htmlspecialchars($error->message) . (isset($error->count)?(' repeated ' . $error->count . ' time(s)'):''); ?></a>
+			<a href="#" class="msg <?php print (substr($error->message, 0, 10) == 'PHP ERROR:')?'php':((substr($error->message, 0, 9) == 'DB ERROR:')?'db':((substr($error->message, 0, 8) == 'VERBOSE:')?'verbose':'')); ?>" onClick="$('#error_<?php print $i; ?>').toggle(); return false;"><?php print (isset($error->time)?('[' . $error->time . ']'):'') . htmlspecialchars($error->message) . (isset($error->count)?(' repeated ' . $error->count . ' time(s)'):''); ?></a>
 			<div id="error_<?php print $i; ?>" style="display:none;">
 				<code>
 					<pre>

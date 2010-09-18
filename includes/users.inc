@@ -304,7 +304,7 @@ function setting_admin_password($settings)
 			return generic_validate_base64($settings, 'admin_password');
 			
 		elseif(preg_match(PASSWORD_COMPLEXITY, $settings['admin_password']) != 0)
-			return 'hash:' . md5(setting('secret') . $settings['admin_password']);
+			return 'hash:' . sha1(setting('secret') . $settings['admin_password']);
 	}
 }
 
@@ -340,7 +340,7 @@ function validate_password($request)
 		if(substr($request['password'], 0, 5) == 'hash:')
 			return $request['password'];
 		else
-			return 'hash:' . md5(setting('secret') . $request['password']);
+			return 'hash:' . sha1(setting('secret') . $request['password']);
 	}
 }
 
@@ -389,7 +389,7 @@ function validate_username($request)
  */
 function validate_return($request)
 {
-	return generic_validate_url($request, 'return');
+	return url(generic_validate_url($request, 'return'));
 }
 
 /**
@@ -621,7 +621,7 @@ function output_users($request)
 				
 					if($made == false)
 					{
-						raise_error('Cannot create user directory.', E_USER);
+						raise_error('Cannot create user directory.', E_DEBUG|E_USER);
 					}
 				}
 			

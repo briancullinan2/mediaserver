@@ -105,6 +105,7 @@ function setup_error()
 	
 	set_exception_handler('exception_wrapper');
 	PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'error_callback');
+	$GLOBALS['tm_start'] = array_sum(explode(' ', microtime()));
 }
 
 /**
@@ -180,6 +181,9 @@ function error_callback($error, $callback = NULL)
 	{
 		if(count($GLOBALS['debug_errors']) < 200)
 		{
+			if(isset($GLOBALS['tm_start']))
+				$error->time = array_sum(explode(' ', microtime())) - $GLOBALS['tm_start'];
+
 			// add special error handling based on the origin of the error
 			foreach($error->backtrace as $i => $stack)
 			{

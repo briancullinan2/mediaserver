@@ -6,44 +6,6 @@ function ajax_click(event) {
 	return false;
 }
 
-function page_click(event)
-{
-	// get link
-	href = String($(this).attr('href'));
-	
-	$('#loading').show();
-	
-	// add inner only
-	if(href.indexOf('?'))
-	{
-		href += '&extra=filesonly';
-	} else {
-		href += '?extra=filesonly';
-	}
-	
-	// set window location
-	var location = String(window.location);
-	if(location.indexOf('#'))
-		location = location.substring(0, location.indexOf('#'));
-	window.location = location + '#' + href;
-	
-	// load ajax
-	$.get(href, function(data) {
-		
-		//$('.files').append($('div.file',data));
-		$('.files:last').after(data);
-		$('.files:first').slideUp("normal", function() { $(this).remove(); } );
-
-		$('#loading').hide();
-		$('body').attr('class', $('#content').attr('class'))
-		$('.files a').not('[href="#"]').click(ajax_click);	
-		set_selectable();
-		document.title = $('#title').html();
-	});
-	
-	return false;
-}
-
 function relocate(href)
 {
 	$('#loading').show();
@@ -66,10 +28,9 @@ function relocate(href)
 	$('#container').load(href, function() {
 		$('#loading').hide();
 		$('body').attr('class', $('#content').attr('class'))
-		$('#container a.pageLink').click(page_click);
-		$('#container a').not('[href="#"]').not('[class="pageLink"]').click(ajax_click);	
+		$('a.pageLink, #breadcrumb a').click(ajax_click);	
 		set_selectable();
-		document.title = $('#title').html();
+		document.title = $('#title').html() + " : " + $('#siteTitle a').html();
 	});
 }
 
@@ -149,7 +110,13 @@ function set_selectable()
 			if($('.ui-selected').length == 1)
 			{
 				if($('.ui-selected a').attr('href') != '#')
-				relocate(String($('.ui-selected a').attr('href')));
+				{
+					if($('.ui-selected').is('.file_ext_FOLDER'))
+						relocate(String($('.ui-selected a').attr('href')));
+					else
+						window.location = String($('.ui-selected a').attr('href'));
+					
+				}
 			}
 		}
 	});
@@ -198,10 +165,7 @@ function set_selectable()
 var selected = null;
 $(document).ready(function()
 {
-	// set up paging
-	$('a.pageLink').click(page_click);
-	
-	$('a').not('[href="#"]').not('[class="pageLink"]').not('[class="menu_link"]').click(ajax_click);	
+	$('a.pageLink, #breadcrumb a').click(ajax_click);	
 	set_selectable();
 	
 	// set up list collapse animation
@@ -257,7 +221,7 @@ $(document).ready(function()
 			}
 		
 		}).playlist("#playlist", {
-			template: '<a href="${url}" class="${class}"><img src="${img}" height="24" width="24" />${title}</a>'
+			template: '<a href="${url}" class="listitem ${class}"><img src="${img}" height="24" width="24" />${title}</a>'
 		});
 	}
 	

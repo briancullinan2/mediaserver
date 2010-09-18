@@ -16,14 +16,14 @@ function menu_watched()
 /**
  * Implementation of setup
  */
-function setting_watched()
+function setting_watched_settings()
 {
 	$settings = array();
 	
 	// add wrapper functions for validating a service entry
 	for($i = 0; $i < 128; $i++)
 	{
-		$GLOBALS['setting_watched_' . $i] = create_function('$settings', 'return setting_watched_index($settings, \'' . $i . '\');');
+		$GLOBALS['setting_watched_' . $i] = create_function('$settings', 'return setting_watched($settings, \'' . $i . '\');');
 		$settings[] = 'watched_' . $i;
 	}
 	
@@ -113,7 +113,7 @@ function get_info_watched($file)
 /**
  * Helper function
  */
-function setting_watched_index($settings, $index)
+function setting_watched($settings, $index)
 {
 	if(isset($settings['watched_' . $index]))
 	{
@@ -147,7 +147,7 @@ function setting_watches($settings)
 	
 	for($i = 0; $i < 128; $i++)
 	{
-		$watch = setting_watched_index($settings, $i);
+		$watch = setting_watched($settings, $i);
 		if(isset($watch) && substr($watch, 0, 1) == '^')
 			$watches[] = substr($watch, 1);
 	}
@@ -166,7 +166,7 @@ function setting_ignores($settings)
 	
 	for($i = 0; $i < 128; $i++)
 	{
-		$watch = setting_watched_index($settings, $i);
+		$watch = setting_watched($settings, $i);
 		if(isset($watch) && substr($watch, 0, 1) == '!')
 			$ignores[] = substr($watch, 1);
 	}
@@ -312,6 +312,13 @@ function scan_watched_files($dir, $callback = NULL)
 	raise_error('Scanning directory: ' . $dir, E_DEBUG);
 	
 	$local_files = scan_directory($dir, 'watched_and_files');
+	
+	// IMPORTANT!  if there are no local files for a watched directory, it must not be mounted
+	//   do not ruin database by removing everything
+	if(count($local_files) == 0 && $dir == setting('watched_' . get_watched_index($dir)))
+	{
+		raise_error('Watched directory missing!', E_DEBUG);
+	}
 
 	$database_files = db_list('SELECT Filepath FROM files WHERE ' . sql_filepath($dir));
 	
@@ -365,11 +372,11 @@ function configure_watched($settings, $request)
 	$watched_options = array();
 	foreach($settings['watches'] as $i => $watch)
 	{
-		$watched_options[] = 'Watched: ' . $watch['Filepath'];
+		$watched_options[] = 'Watched: ' . $watch;
 	}
 	foreach($settings['ignores'] as $i => $watch)
 	{
-		$watched_options[] = 'Ignored: ' . $watch['Filepath'];
+		$watched_options[] = 'Ignored: ' . $watch;
 	}
 	
 	$options['manage'] = array(
@@ -386,9 +393,6 @@ function configure_watched($settings, $request)
 						'type' => 'multiselect',
 						'options' => $watched_options,
 						'value' => '',
-					),
-					array(
-						'value' => '<br />',
 					),
 					'wremove[remove]' => array(
 						'type' => 'submit',
@@ -412,15 +416,9 @@ function configure_watched($settings, $request)
 						'type' => 'theme',
 						'value' => 'select_block',
 					),
-					array(
-						'value' => '<br />',
-					),
 					'waddpath[folder]' => array(
 						'type' => 'text',
 						'value' => $request['dir'],
-					),
-					array(
-						'value' => '<br />',
 					),
 					'waddpath[add]' => array(
 						'type' => 'submit',

@@ -83,31 +83,6 @@ function request_validate()
 	
 	// call the session save functions
 	trigger('session', 'session_set_conditional', $_REQUEST);
-	
-	// do not let GoogleBot perform searches or file downloads
-	if(setting('no_bots'))
-	{
-		if(preg_match('/.*Googlebot.*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
-		{
-			if(basename($_REQUEST['module']) != 'select' && 
-				basename($_REQUEST['module']) != 'index' &&
-				basename($_REQUEST['module']) != 'sitemap')
-			{
-				goto('sitemap');
-			}
-			else
-			{
-				// don't let google bots perform searches, this takes up a lot of resources
-				foreach($_REQUEST as $key => $value)
-				{
-					if(substr($key, 0, 6) == 'search')
-					{
-						unset($_REQUEST[$key]);
-					}
-				}
-			}
-		}
-	}
 }
 
 /**

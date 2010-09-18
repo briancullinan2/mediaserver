@@ -75,3 +75,13 @@
 #playlist div.even {
 	background-color:#CCC;
 }
+
+.listitem {
+	text-decoration:none;
+}
+
+
+.listitem span {
+	display:block;
+	
+}

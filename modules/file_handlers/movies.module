@@ -202,15 +202,9 @@ function configure_movies($request)
 				'value' => array(),
 				'force_numeric' => true,
 			),
-			array(
-				'value' => '<br />'
-			),
 			'remove_movie_folder[remove]' => array(
 				'type' => 'submit',
 				'value' => 'Remove',
-			),
-			array(
-				'value' => '<br />'
 			),
 			'add_movie_folder[folder]' => array(
 				'type' => 'text',

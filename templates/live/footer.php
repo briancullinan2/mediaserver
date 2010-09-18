@@ -22,9 +22,6 @@ function theme_live_container_footer()
 									?>
 								</td>
 							</tr>
-							<tr>
-								<td align="center">Powered by <a href="http://www.monolithicmedia.org/" style="text-decoration:none;"><img style="border:0px;" src="<?php print url('template/live/logo'); ?>" />MonolithicMedia.org</a></td>
-							</tr>
 						</table>
 					</div>
 				</div>
@@ -39,7 +36,7 @@ function theme_live_footer()
 	if(!isset($GLOBALS['output']['extra']) || $GLOBALS['output']['extra'] != 'inneronly')
 	{
 		?>
-				
+Powered by <a href="http://www.monolithicmedia.org/" style="text-decoration:none;"><img style="border:0px;" src="<?php print url('template/live/logo'); ?>" />MonolithicMedia.org</a>				
 			</div>
 		</div>
 	</div>

@@ -130,13 +130,15 @@ function add_diskimage($file)
 		// add to database
 		$diskimage_id = db_insert('INSERT INTO diskimage ' . sql_insert($fileinfo), array_values($fileinfo));
 	}
-	else
+	elseif(date("Y-m-d h:i:s", filemtime($file)) != $files[0]['Filedate'])
 	{
 		raise_error('Modifying diskimage: ' . $fileinfo['Filepath'], E_DEBUG);
 		
 		// update database
 		db_query('UPDATE diskimage' . sql_update($fileinfo) . ' WHERE id=' . $diskimage_id, array_values($fileinfo));
 	}
+	else
+		return $diskimage_id;
 
 	// set up empty ids array since we know archive_id will be the only entry
 	$empty_ids = array();

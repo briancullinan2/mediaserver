@@ -1,5 +1,10 @@
 ------------- MONOLITHICMEDIA TODO -------------
 ------------- GENERAL TODO -------------
+Check if add_all() id updating is working properly
+Fix archive library problem by specifying that it should update an archive if it has changed
+	If it fails, it won't try to do it again until the archive has changed
+	Cron script probably removes folder from database even if the script fails,
+		maybe it should be removed after it runs or maybe that is the only thing allowing it to continue
 Add dependencies to live theme (jquery, flowplayer) and decide if these should be included in the theme package
 Rate limiting on user login, recaptcha module
 Running system from command line should change bootstrap options
@@ -61,11 +66,11 @@ bt module should have a configurable ctorrent settings that uses %IF for the tor
 Check for bt module in install.php script
 Add bttracker install script to admin/install.php to fully bootstrap the install process
 ------------- ADMIN TOOLS -------------
-Make a CLI module with its own theme
+Finish CLI module
+	How about a nifty little remote RPC admin tool or a debug tool
 Make a movie services tool that allows you to check vudu and netflix and block buster for movies
 Make a tv services tool that allows you to use myepisodes and hulu
 Allow ranking of all available services
-How about a nifty little remote RPC admin tool or a debug tool
 Port all Jamu stuff from MythTV to PHP admin tools
 Work on music tool
 Add show renamer to admin tools
@@ -77,14 +82,7 @@ Work on settings.php module
 	Global settings such as default template to use for each device logged in the to account
 	Template settings, must provide specification in template config, use database for storing fields?
 ------------- Handler TODO -------------
-Make a discography handler that parses out wikipedia discographys, store album information, and return links to Full Discography, and Partial Discography
-	Base discography handler on discogs.com
-	this will list out each artist with full or missing albums
-	It handles artists, when an album count changes or doesn't exist it updates the database
 Work on playlist handler, use hard links to help find files
-Work on db_movies, use cUrl to download movie information from tmdb, use the volume decriptor for lookup, this shouldn't change even if they edited an image
-	Look up movies on amazon, and see if that will help with searching IMDb
-	Research the video_ts.ifo file, there must be a way of getting the full name from a DVD image, windows media center projects can do it, so can we
 ------------- All Template TODO -------------
 Templates should have functions for outputting their own files instead of using the file output stream in the output_template() function, make this obsolete
 Never include path in template reference, the validate_ function always removes the path

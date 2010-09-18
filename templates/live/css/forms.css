@@ -1,41 +1,54 @@
-.form-title {
-	width:175px;
-	font-weight:bold;
-	font-size:10pt;
-	border-bottom:1px solid #999;
-}
-
 .submit {
 	display:block;
 	clear:both;
 	padding-top:30px;
 }
 
-.form-field {
-	border-bottom:1px solid #999;
-	width:320px;
+.field.field_fieldset, .field_row .field.field_fieldset {
+	width:100%;
 }
 
-.form-row {
+.field_row {
+	clear:both;
+}
+
+.field_row .fieldname {
+	width:30%;
+	float:left;
+}
+
+.field_row .field.field_set .fieldname {
+	width:auto;
+	float:none;
+}
+
+.field_row .field {
+	width:30%;
+	float:left;
+}
+
+.field_row .field.field_set .field {
+	width:auto;
+	float:none;
+}
+
+.field_row .fielddesc {
+	width:40%;
+	float:left;
+}
+
+.fieldname {
 	background-color:#DDFFDD;
-	color:#002200;
 }
 
-.form-row.fail {
+.fieldname.fail {
 	background-color:#FFEEEE;
 	color:#990000;
 }
 
-.form-row.warn {
+.fieldname.warn {
 	background-color:#FFFFCC;
 	color:#000000;
-}
-
-.form-desc {
-	width:360px;
-	border-left:1px solid #999;
-	text-align:left;
-	border-bottom:1px solid #999;
 }
 
 table.install {

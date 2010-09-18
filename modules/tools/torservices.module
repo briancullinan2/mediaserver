@@ -214,32 +214,19 @@ function configure_torservices($settings)
 		);
 		if($config['login'] != '' || $config['username'] != '')
 		{
-			$options['torservices']['options']['setting_torservice_' . $i . '[login]'] = array(
-				'type' => 'hidden',
-				'value' => $config['login'],
-			);
-			$options['torservices']['options'][] = array(
-				'value' => '<br />'
-			);
 			$options['torservices']['options']['setting_torservice_' . $i . '[username]'] = array(
 				'type' => 'text',
 				'value' => $config['username'],
 				'name' => $config['name'] . ' Username',
-			);
-			$options['torservices']['options'][] = array(
-				'value' => '<br />'
 			);
 			$options['torservices']['options']['setting_torservice_' . $i . '[password]'] = array(
 				'type' => 'text',
 				'value' => $config['password'],
 				'name' => $config['name'] . ' Password',
 			);
-			$options['torservices']['options'][] = array(
-				'value' => '<br />'
-			);
 		}
 		$options['torservices']['options']['setting_torservice_image_' . $i] = array(
-			'value' => '<img src="' . $config['image'] . '" alt="" />',
+			'image' => $config['image'],
 			'name' => $config['name'] . ' Image',
 		);
 	}

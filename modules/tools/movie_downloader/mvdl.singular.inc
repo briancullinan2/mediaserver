@@ -221,9 +221,6 @@ function get_movie_download_netflix($request)
 	{
 		// add cancel button
 		$infos['netflix_movies_null']['options'][] = array(
-			'value' => '<br />'
-		);
-		$infos['netflix_movies_null']['options'][] = array(
 			'type' => 'button',
 			'value' => 'Cancel',
 			'action' => 'if(current_ajax) current_ajax.abort();',

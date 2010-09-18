@@ -1,0 +1,93 @@
+<?php
+
+
+function menu_sitemap()
+{
+	return array(
+		'robots.txt' => array(
+			'callback' => 'output_robots',
+			'type' => MENU_CALLBACK,
+		),
+		'sitemap.xml' => array(
+			'callback' => 'output_sitemap',
+		)
+	);
+}
+
+function setup_sitemap()
+{
+	// just incase the robots to not honor the bots.txt, rewrite them here
+	if(setting('no_bots'))
+	{
+		// do not let GoogleBot perform searches or file downloads
+		if(preg_match('/.*Googlebot.*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
+		{
+			if(basename($_REQUEST['path_info']) != 'sitemap.xml')
+			{
+				goto('sitemap.xml');
+			}
+			else
+			{
+				// don't let google bots perform searches, this takes up a lot of resources
+				foreach($_REQUEST as $key => $value)
+				{
+					if(substr($key, 0, 6) == 'search')
+					{
+						unset($_REQUEST[$key]);
+					}
+				}
+			}
+		}
+	}
+}
+
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ * @return true by default
+ */
+function setting_no_bots($settings)
+{
+	return generic_validate_boolean_true($settings, 'no_bots');
+}
+
+
+function configure_sitemap($settings)
+{
+	$settings['no_bots'] = setting('no_bots');
+	
+	$options['no_bots'] = array(
+		'name' => lang('no bots title', 'Robots Handling'),
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				lang('no bots description 1', 'Some services like Google like to scan websites.  This option will prevent robots from downloading and scanning files on your site.'),
+				lang('no bots description 2', 'This will also enable robots to view a customizable sitemap.php module that provides them with the information they deserve.'),
+			),
+		),
+		'type' => 'boolean',
+		'value' => $settings['no_bots'],
+		'options' => array(
+			lang('no bots option 1', 'Disable Robots'),
+			lang('no bots option 2', 'Allow Robots to Scan my Files'),
+		)
+	);
+	
+	return array('sitemap' => array(
+		'name' => 'Sitemap Settings',
+		'type' => 'fieldset',
+		'options' => $options,
+	));
+}
+
+function output_robots($request)
+{
+	if(setting('no_bots') == true)
+		print "User-agent: *\nDisallow: /";
+}
+
+
+function output_sitemap($request)
+{
+}

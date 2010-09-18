@@ -319,7 +319,6 @@ function configure_alias($settings, $request)
 				'type' => 'submit',
 				'value' => 'Remove',
 			);
-			$alias_options[] = array('value' => '<br />');
 		}
 		
 		$options['manage_aliases']['options'] = $alias_options;
@@ -345,32 +344,20 @@ function configure_alias($settings, $request)
 				'name' => 'Paths',
 				'value' => $current_alias['paths'],
 			),
-			array(
-				'value' => '<br />'
-			),
 			'add_alias[alias]' => array(
 				'type' => 'text',
 				'name' => 'Alias',
 				'value' => $current_alias['alias'],
-			),
-			array(
-				'value' => '<br />'
 			),
 			'add_alias[paths_replace]' => array(
 				'type' => 'text',
 				'name' => 'Path Match',
 				'value' => $current_alias['paths_replace'],
 			),
-			array(
-				'value' => '<br />'
-			),
 			'add_alias[alias_replace]' => array(
 				'type' => 'text',
 				'name' => 'Alias Match',
 				'value' => $current_alias['alias_replace'],
-			),
-			array(
-				'value' => '<br />'
 			),
 			'add_alias[save]' => array(
 				'type' => 'submit',

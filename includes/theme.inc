@@ -363,6 +363,14 @@ function theme__module()
 		'action' => url('admin/modules/' . $GLOBALS['output']['configure_module'], true),
 		'options' => $GLOBALS['output']['options'],
 		'type' => 'form',
+		'submit' => array(
+			'name' => 'save_configuration',
+			'value' => 'Save',
+		),
+		'reset' => array(
+			'name' => 'reset_configuration',
+			'value' => 'Reset to Defaults',
+		),
 	));
 	
 	theme('footer');
