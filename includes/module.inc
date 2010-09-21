@@ -32,7 +32,7 @@ function setting_module($settings)
 	$settings = array();
 	
 	// create functions for checking module_enable
-	foreach($GLOBALS['modules'] as $module => $config)
+	foreach(get_modules() as $i => $module)
 	{
 		$settings[] = $module . '_enable';
 	}
@@ -71,7 +71,7 @@ function load_modules($dir)
 		
 	$modules = array();
 	
-	$files = scan_directory($dir, 'is_info', 2);
+	$files = scan_directory($dir, 'is_info', 0);
 
 	foreach($files as $i => $file)
 	{
@@ -127,7 +127,7 @@ function load_module($path)
 			$buffer = ob_get_contents();
 			ob_end_clean();
 
-			if(function_exists('register_' . $module))
+			if(module_implements('register', $module))
 				$config = invoke_module('register', $module);
 			else
 			{
@@ -189,6 +189,8 @@ function load_module($path)
 		}
 		
 		// add to global list
+		if(is_module($config['module']))
+			raise_error('Module \'' . $config['module'] . '\' already exists!', E_DEBUG);
 		$GLOBALS['modules'][$config['module']] = $config;
 		
 		return $GLOBALS['modules'][$config['module']];
@@ -241,9 +243,9 @@ function get_dependencies($dependency, $modules_only = false)
 {
 	$depends = array();
 	
-	if(isset($GLOBALS['modules'][$dependency]))
+	if(is_module($dependency))
 	{
-		$config = $GLOBALS['modules'][$dependency];
+		$config = get_module($dependency);
 		
 		if(isset($config['depends on']))
 		{
@@ -306,6 +308,26 @@ function sort_modules($modules)
 	return array_merge($ordered, $modules);
 }
 
+function module_implements($method, $module)
+{
+	return function_exists($method . '_' . $module);
+}
+
+function get_module($module, $property = NULL)
+{
+	if(isset($GLOBALS['modules'][$module]))
+	{
+		if($property !== NULL && isset($GLOBALS['modules'][$module][$property]))
+			return $GLOBALS['modules'][$module][$property];
+		elseif($property !== NULL)
+			return NULL;
+		else
+			return $GLOBALS['modules'][$module];
+	}
+	else
+		return false;
+}
+
 /**
  * Function for returning all the modules that match certain criteria
  */
@@ -316,7 +338,7 @@ function get_modules($package = NULL)
 	foreach($GLOBALS['modules'] as $module => $config)
 	{
 		if($package === NULL || $config['package'] == $package)
-			$modules[$module] = $config;
+			$modules[] = $module;
 	}
 	
 	return $modules;
@@ -325,15 +347,18 @@ function get_modules($package = NULL)
 /**
  * Function for getting all the modules that implement a specified API function
  */
-function get_modules_implements($method)
+function get_modules_implements($method, $does_implement)
 {
 	$modules = array();
 	
 	// check if function exists
-	foreach($GLOBALS['modules'] as $module => $config)
+	foreach(get_modules() as $i => $module)
 	{
-		if(function_exists($method . '_' . $module))
-			$modules[$module] = $config;
+		if(
+			($does_implement && module_implements($method, $module)) ||
+			(!$does_implement && !module_implements($method, $module))
+		)
+			$modules[] = $module;
 	}
 	
 	return $modules;
@@ -357,10 +382,10 @@ function get_modules_match($expression)
 	if(isset($expression))
 	{
 		// loop through all the modules and match expression
-		foreach($GLOBALS['modules'] as $module => $config)
+		foreach(get_modules() as $i => $module)
 		{
-			if(preg_match($expression, serialize($config)) != 0)
-				$modules[$module] = $config;
+			if(preg_match($expression, serialize(get_module($module))) != 0)
+				$modules[] = $module;
 		}
 	}
 	
@@ -371,7 +396,7 @@ function get_modules_match($expression)
 
 function invoke_module($method, $module, $args = NULL)
 {
-	if(function_exists($method . '_' . $module))
+	if(module_implements($method, $module))
 	{
 		return call_user_func_array($method . '_' . $module, $args);
 	}
@@ -396,11 +421,11 @@ function invoke_all($method)
 	raise_error('Modules invoked with \'' . $method . '\'.', E_VERBOSE);
 	
 	// loop through modules
-	foreach($GLOBALS['modules'] as $module => $config)
+	foreach(get_modules_implements($method, true) as $i => $module)
 	{
 		// do not call set up if dependencies are not met, this will force strict use of modules functionality
 		// set up the modules in the right order
-		if((dependency($module) || in_array($module, get_required_modules())) && function_exists($method . '_' . $module))
+		if(dependency($module) || in_array($module, get_required_modules()))
 		{
 			$result = call_user_func_array($method . '_' . $module, $args);
 		}
@@ -418,7 +443,7 @@ function invoke_all_callback($method, $callback)
 	raise_error('Modules invoked with \'' . $method . '\' and a callback function supplied.', E_VERBOSE);
 	
 	// loop through modules
-	foreach($GLOBALS['modules'] as $module => $config)
+	foreach(get_modules_implements($method, true) as $i => $module)
 	{
 		unset($result);
 		
@@ -431,13 +456,9 @@ function invoke_all_callback($method, $callback)
 		
 		// do not call set up if dependencies are not met, this will force strict use of modules functionality
 		// set up the modules in the right order
-		if(
-			(dependency($module) || in_array($module, get_required_modules())) && 
-			function_exists($method . '_' . $module)
-		)
-		{
+		if(dependency($module) || in_array($module, get_required_modules()))
 			$result = call_user_func_array($method . '_' . $module, $args);
-		}
+		
 		if(is_callable($callback))
 			call_user_func_array($callback, array($module, isset($result)?$result:NULL, $args));
 		
@@ -537,9 +558,12 @@ function configure_module($settings, $request)
 	
 	$options['all'] = array(
 		'name' => 'Configure All Modules',
-		'type' => 'button',
-		'action' => 'window.location.href=\'' . url('admin/module/all') . '\'',
-		'value' => 'Configure All',
+		'value' => array(
+			'link' => array(
+				'text' => 'Configure All',
+				'url' => 'admin/module/all'
+			),
+		),
 		'description' => array(
 			'list' => array(
 				'This option allows you to configure all the modules on one page.',
@@ -548,13 +572,14 @@ function configure_module($settings, $request)
 		)
 	);
 	
-	foreach(get_modules() as $module => $config)
+	foreach(get_modules() as $i => $module)
 	{
 		// get the enabled setting
 		$settings[$module . '_enable'] = setting_modules_enable($settings, $module);
 		
 		$key = 'setting_' . $module . '_enable';
-			
+		
+		$config = get_module($module);
 		// if the package is core and the modules are required put them in a separate fieldset
 		if($config['package'] == 'core' && in_array($module, get_required_modules()))
 			$config['package'] = 'core_required';
@@ -574,9 +599,9 @@ function configure_module($settings, $request)
 								?
 								'Core (Optional)'
 								:
-								(isset($GLOBALS['modules'][$config['package']])
+								(is_module($config['package'])
 									?
-									$GLOBALS['modules'][$config['package']]['name']
+									get_module($config['package'], 'name')
 									:
 									ucwords(str_replace('_', ' ', $config['package']))
 								)
@@ -588,11 +613,11 @@ function configure_module($settings, $request)
 		
 		// set up config for this module
 		$new_config = array(
-			'name' => $GLOBALS['modules'][$module]['name'],
+			'name' => get_module($module, 'name'),
 			'status' => '',
 			'description' => array(
 				'list' => array(
-					$GLOBALS['modules'][$module]['description'],
+					get_module($module, 'description'),
 					$description_1,
 					$description_2,
 				),
@@ -632,31 +657,23 @@ function configure_module($settings, $request)
 		}
 		
 		// add configure button
-		if(function_exists('configure_' . $module))
+		if(module_implements('configure', $module))
 		{
-			$new_config['options'][] = array(
-				'type' => 'button',
-				'action' => 'window.location.href=\'' . url('admin/module/' . $module) . '\'',
-				'value' => 'Configure',
+			$new_config['options']['return'] = array(
+				'link' => array(
+					'url' => 'admin/module/' . $module,
+					'text' => 'Configure',
+				)
 			);
 		}
 		
 		// add dependency info
-		if(isset($GLOBALS['modules'][$module]['depends on']))
-		{
-			// get dependencies
-			if(is_string($GLOBALS['modules'][$module]['depends on']) && $GLOBALS['modules'][$module]['depends on'] == $module &&
-				function_exists('dependency_' . $module)
-			)
-				$depends_on = invoke_module('dependency', $module, array($GLOBALS['settings']));
-			else
-				$depends_on = $GLOBALS['modules'][$module]['depends on'];
-				
+		$depends = get_dependencies($module);
+		if(count($depends) > 0)
 			// add to options
 			$new_config['options'][] = array(
-				'value' => '<br />Depends on:<br />' . (is_array($depends_on)?implode(', ', $depends_on):'Failed to retrieve dependencies!'),
+				'value' => '<br />Depends on:<br />' . (is_array($depends)?implode(', ', $depends):'Failed to retrieve dependencies!'),
 			);
-		}
 		
 		// add new config to the fieldset
 		$options[$config['package']]['options'][$module . '_enable'] = $new_config;
@@ -676,12 +693,9 @@ function validate_configure_module($request)
 	{
 		if($request['configure_module'] == 'all')
 			return 'all';
-		elseif(isset($GLOBALS['modules'][$request['configure_module']]) && 
-			isset($GLOBALS['modules'][$request['configure_module']]['settings']) && 
-			count($GLOBALS['modules'][$request['configure_module']]['settings']) > 0
-		)
+		elseif(count(get_settings($request['configure_module'])) > 0)
 		{
-			if(!function_exists('configure_' . $request['configure_module']))
+			if(!module_implements('configure', $request['configure_module']))
 			{
 				raise_error('Configuration function \'' . $request['configure_module'] . '\' does not exist!', E_DEBUG);
 				return 'admin_modules';
@@ -908,14 +922,11 @@ function output_module($request)
 	// this is the configure all code
 	if($request['configure_module'] == 'all')
 	{
-		foreach(get_modules() as $module => $config)
+		foreach(get_modules_implements('configure', true) as $i => $module)
 		{
-			if(!function_exists('configure_' . $module))
-				continue;
-				
 			$options['module_' . $module] = array(
 				'type' => 'fieldset',
-				'name' => $config['name'],
+				'name' => get_module($module, 'name'),
 				'options' => invoke_module('configure', $module, array($GLOBALS['settings'], $request)),
 				'collapsible' => true,
 			);
@@ -932,8 +943,9 @@ function output_module($request)
 			register_output_vars('status', $status);
 		
 		// find invalid parameters
-		$missing_settings = array_diff(get_settings($GLOBALS['modules'][$request['configure_module']]), array_keys($options));
-		$in_settings_not_in_config = array_intersect($missing_settings, $GLOBALS['modules'][$request['configure_module']]['settings']);
+		$settings = get_settings($request['configure_module']);
+		$missing_settings = array_diff($settings, array_keys($options));
+		$in_settings_not_in_config = array_intersect($missing_settings, $settings);
 		
 		// print out errors for incorrect configuration
 		$in_config_not_in_settings = array_intersect($missing_settings, array_keys($options));

@@ -18,7 +18,7 @@ function setup_ids()
 function install_ids()
 {
 	setup_ids();
-	install_table('ids', $GLOBALS['modules']['ids']['database']);
+	install_table('ids', get_module('ids', 'database'));
 	
 	// alter table to include all handlers
 	foreach(get_id_fields() as $i => $id_field)

@@ -1,5 +1,6 @@
 name = NZB Services
 description = Provides configuration for News Groups and NZB files.
 privilage = 10
-settings = nzbservices
+settings = download_services_nzbservices
 package = tools
+depends on[] = download_services

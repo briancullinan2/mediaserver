@@ -1,5 +1,6 @@
 name = Torrent Services
 description = Provides configuration for Torrenting websites and torrent files.
 privilage = 10
-settings = torservices
+settings = download_services_torservices
 package = tools
+depends on[] = download_services

@@ -66,7 +66,7 @@ function theme_live_errors_block()
 				{
 					?><div id="inner_<?php print $errors; ?>" class="error hide"><?php
 				}
-				?><b><?php print $error; ?></b><br /><?php
+				?><b><?php print theme('info_objects', $error); ?></b><br /><?php
 			}
 			if(count($GLOBALS[$errors]) > 5)
 			{

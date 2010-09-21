@@ -262,7 +262,7 @@ function output_convert($request)
 	// if %IF is in the arguments and the file does not actually exist on disk
 	//  then the file must be copied to a temporary location before converted
 	if(strpos(setting('convert_args'), '%IF') !== false && $request['handler'] != 'files' &&
-		function_exists('output_' . $request['handler'])
+		module_implements('output', $request['handler'])
 	)
 	{
 		$if = output_handler($request['cfile'], $request['handler']);
@@ -311,7 +311,7 @@ function output_convert($request)
 		}
 		
 		// remove temporary file
-		if($request['handler'] != 'files' && function_exists('output_' . $request['handler']))
+		if($request['handler'] != 'files' && module_implements('output', $request['handler']))
 			unlink($request['cfile']);
 	}
 }

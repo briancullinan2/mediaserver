@@ -1,5 +1,0 @@
-name = File Handlers
-description = Modules that read and store extra information about different file types.
-privilage = 1
-template = false
-package = file_handlers

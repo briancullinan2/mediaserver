@@ -46,30 +46,6 @@ function setup_list()
 		),
 	);
 
-	
-	// get all the possible types for a list from templates directory
-	foreach($GLOBALS['templates'] as $name => $template)
-	{
-		if(isset($template['lists']))
-		{
-			foreach($template['lists'] as $i => $list)
-			{
-				if(file_exists(setting('local_root') . 'templates' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . $list . '.php'))
-				{
-					include_once setting('local_root') . 'templates' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . $list . '.php';
-					
-					if(isset($GLOBALS['lists'][$list]))
-						raise_error('List already defined!', E_DEBUG|E_WARN);
-					
-					if(function_exists('register_' . $name . '_' . $list))
-					{
-						$GLOBALS['modules']['list']['lists'][$list] = call_user_func_array('register_' . $name . '_' . $list, array());
-					}
-				}
-			}
-		}
-	}
-	
 	$GLOBALS['lists'] = &$GLOBALS['modules']['list']['lists'];
 }
 

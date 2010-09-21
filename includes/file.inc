@@ -4,7 +4,7 @@
 function get_handlers($get_wrappers = true, $get_internals = false, $wrappers_only = false, $internals_only = false)
 {
 	// get all combos of handlers
-	$handlers = array_filter(array_keys($GLOBALS['modules']), 'is_handler');
+	$handlers = array_filter(get_modules(), 'is_handler');
 	$wrappers = array_filter($handlers, 'is_wrapper');
 	$internals = array_filter($handlers, 'is_internal');
 	
@@ -61,9 +61,9 @@ function scan_directory($dir, $filter = 'files', $depth = 1)
 				$file .= DIRECTORY_SEPARATOR;
 			
 			// filter files
-			if(is_dir($dir . $file) && handles($dir . $file, 'files') && $depth > 1)
+			if(is_dir($dir . $file) && handles($dir . $file, 'files') && ($depth > 1 || $depth == 0))
 			{
-				$files = array_merge($files, scan_directory($dir . $file, $filter, $depth - 1));
+				$files = array_merge($files, scan_directory($dir . $file, $filter, ($depth == 0)?$depth:($depth - 1)));
 			}
 			elseif(function_exists($filter))
 			{
@@ -90,13 +90,13 @@ function is_internal($handler)
 	if(!is_handler($handler))
 		return;
 		
-	if(isset($GLOBALS['modules'][$handler]['internal']))
+	if(get_module($handler, 'internal') == true)
 	{
-		return $GLOBALS['modules'][$handler]['internal'];
+		return true;
 	}
-	elseif(isset($GLOBALS['modules'][$handler]['wrapper']))
+	elseif(is_wrapper($handler))
 	{
-		return is_internal($GLOBALS['modules'][$handler]['wrapper']);
+		return is_internal(get_module($handler, 'wrapper'));
 	}
 	else
 	{
@@ -124,7 +124,7 @@ function is_wrapper($handler)
 
 function is_handler($handler)
 {
-	if(isset($GLOBALS['modules'][$handler]) && function_exists('handles_' . $handler))
+	if(is_module($handler) && module_implements('handles', $handler))
 		return true;
 	elseif(isset($GLOBALS['modules'][$handler]['wrapper']))
 		return is_handler($GLOBALS['modules'][$handler]['wrapper']);
@@ -188,7 +188,7 @@ function handles($file, $handler = 'files')
 		return false;
 		
 	// check if there is a handle function
-	elseif(function_exists('handles_' . $handler))
+	elseif(module_implements('handles', $handler))
 		return invoke_module('handles', $handler, array($file));
 
 	// no handler specified, show debug error
@@ -203,18 +203,12 @@ function handles($file, $handler = 'files')
  */
 function get_columns($handler, $exclude_blobs = true)
 {
-	if(isset($GLOBALS['modules'][$handler]['database']))
-	{
-		$spec = $GLOBALS['modules'][$handler]['database'];
-	}
-	elseif(isset($GLOBALS['modules'][$handler]['wrapper']))
-	{
-		return get_columns($GLOBALS['modules'][$handler]['wrapper'], $exclude_blobs);
-	}
+	if(is_wrapper($handler, 'wrapper'))
+		return get_columns(get_module($handler, 'wrapper'), $exclude_blobs);
+	elseif(is_handler($handler))
+		$spec = get_module($handler, 'database');
 	else
-	{
-		$spec = $GLOBALS['modules']['files']['database'];
-	}
+		$spec = get_module('files', 'database');
 	
 	if($exclude_blobs)
 	{

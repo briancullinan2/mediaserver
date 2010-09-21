@@ -19,7 +19,7 @@ function theme_live_head($title)
 function theme_live_header($title = NULL, $description = NULL, $html_title = NULL)
 {
 	if(!isset($title))
-		$title = htmlspecialchars($GLOBALS['modules'][$GLOBALS['output']['module']]['name']);
+		$title = htmlspecialchars(get_module($GLOBALS['output']['module'], 'name'));
 	
 	if(!isset($GLOBALS['output']['extra']) || $GLOBALS['output']['extra'] != 'inneronly')
 	{

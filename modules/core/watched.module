@@ -67,18 +67,8 @@ function handles_watched($dir)
 					// count files
 					while (($file = readdir($dh)) !== false)
 					{
-						if(handles($dir . $file, 'files'))
-						{
-							if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $dir . $file . '/')))
-							{
-								if(is_watched($dir . $file . '/'))
-									$count++;
-							}
-							else
-							{
-								$count++;
-							}
-						}
+						if(is_watched($dir . $file))
+							$count++;
 						
 						// return if count is different from database
 						if($count > $db_files[0]['count(*)'])

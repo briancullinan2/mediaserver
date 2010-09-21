@@ -2,7 +2,8 @@
 
 function setup_movies()
 {
-	stream_wrapper_register('moviesthumb', 'moviesthumb');
+	if(!in_array('moviesthumb', stream_get_wrappers()))
+		stream_wrapper_register('moviesthumb', 'moviesthumb');
 }
 
 function handles_movies($file)

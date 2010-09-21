@@ -242,7 +242,14 @@ function output_movie_download($request)
 	$infos = array();
 
 	// output configuration link
-	raise_error('You may need to <a href="' . url('admin/module/movie_download') . '">configure</a> this tool in order to use it properly.', E_WARN);
+	raise_error(array(
+		'You may need to ',
+		'link' => array(
+			'url' => 'admin/module/movie_download',
+			'text' => 'configure'
+		),
+		' this tool in order to use it properly.'
+	), E_WARN);
 
 	// perform television downloading
 	// log in to services

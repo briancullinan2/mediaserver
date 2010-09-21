@@ -6,7 +6,8 @@
  */
 function setup_diskimage()
 {
-	stream_wrapper_register('diskimage', 'diskimage');
+	if(!in_array('diskimage', stream_get_wrappers()))
+		stream_wrapper_register('diskimage', 'diskimage');
 	
 	if(isset($GLOBALS['getID3']))
 		return;

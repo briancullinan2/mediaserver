@@ -1,0 +1,5 @@
+name = Download Services
+description = Provides an API for connecting to download services for searching and downloading files.
+privilage = 10
+settings = download_services
+package = tools

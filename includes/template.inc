@@ -125,7 +125,7 @@ function validate_tfile($request)
 				return $request['tfile'];
 			}
 		}
-		elseif(function_exists('theme_' . $request['template'] . '_' . $request['tfile']))
+		elseif(theme_implements($request['tfile'], $request['template']))
 			return $request['tfile'];
 
 		raise_error('Template file requested but could not be found!', E_DEBUG|E_WARN);
@@ -168,7 +168,7 @@ function validate_template($request, $session = '')
 
 function validate_extra($request)
 {
-	return generic_validate_all_safe($request, 'extra');
+	return generic_validate_machine_readable($request, 'extra');
 }
 
 /**
@@ -204,6 +204,7 @@ function register_style($request)
 	}
 	else
 		raise_error('Style could not be set because of missing arguments.', E_DEBUG|E_WARN);
+	
 	return false;
 }
 
@@ -232,6 +233,11 @@ function register_script($request)
 		raise_error('Script could not be set because of missing arguments.', E_DEBUG|E_WARN);
 		
 	return false;
+}
+
+function theme_implements($method, $theme = '')
+{
+	return function_exists('theme_' . $theme . '_' . $method);
 }
 
 /**
@@ -266,48 +272,23 @@ function theme($request = '')
 	// do not pass original theme call argument
 	array_shift($args);
 	
-	// if the request is an array, assume they are setting the template and theme call
-	if(is_array($request))
-	{
-		// the tfile parameter can be used to call the theme_ function
-		$request['template'] = validate($request, 'template');
-		$request['tfile'] = validate($request, 'tfile');
-		
-		// if the function exists call the theme_ implementation
-		if(function_exists('theme_' . $request['template'] . '_' . $request['tfile']))
-		{
-			// call the function and be done with it
-			return call_user_func_array('theme_' . $request['template'] . '_' . $request['tfile'], $args);
-		}
-		// check if a default function exists for the theme
-		elseif(function_exists('theme__' . $request['tfile']))
-		{
-			// call the function and be done with it
-			return call_user_func_array('theme__' . $request['tfile'], $args);
-		}
-		else
-			raise_error('Theme function \'theme_' . $request['template'] . '_' . $request['tfile'] . '\' was not found.', $error_code);
-	}
+	raise_error('Theming \'' . $request . '\'.', E_DEBUG);
+	
 	// the request is a string, this is most common
-	elseif(is_string($request))
+	// check if function exists in current theme
+	if(theme_implements($request, setting('local_template')))
 	{
-		// check if function exists in current theme
-		if(function_exists('theme_' . setting('local_template') . '_' . $request))
-		{
-			return call_user_func_array('theme_' . setting('local_template') . '_' . $request, $args);
-			return true;
-		}
-		// check if a default function exists for the theme
-		elseif(function_exists('theme__' . $request))
-		{
-			return call_user_func_array('theme__' . $request, $args);
-		}
-		// it is possible the whole request
-		else
-			raise_error('Theme function \'theme_' . validate(array('template' => setting('local_template')), 'template') . '_' . $request . '\' was not found.', $error_code, 'template');
+		return call_user_func_array('theme_' . setting('local_template') . '_' . $request, $args);
 	}
+	// check if a default function exists for the theme
+	elseif(theme_implements($request))
+	{
+		return call_user_func_array('theme__' . $request, $args);
+	}
+	// it is possible the whole request
 	else
-		raise_error('Theme function could not be handled because of an unrecognized argument.', $error_code);
+		raise_error('Theme function \'theme_' . validate(array('template' => setting('local_template')), 'template') . '_' . $request . '\' was not found.', $error_code, 'template');
+		
 	return false;
 }
 
@@ -406,13 +387,15 @@ function output_template($request)
 		return;
 	}
 	// check if they are calling a theme function
-	elseif(function_exists('theme_' . $request['template'] . '_' . $request['tfile']) || 
-		function_exists('theme__' . $request['tfile']))
+	elseif(theme_implements($request['tfile'], $request['template']) || theme_implements($request['tfile']))
 	{
-		theme($request);
+		theme($request['tfile']);
 		
 		return;
 	}
+	
+	// close session now so they can keep using the website
+	if(isset($_SESSION)) session_write_close();
 	
 	// set some general headers
 	header('Content-Transfer-Encoding: binary');
@@ -477,9 +460,6 @@ function output_template($request)
 	header('Content-Length: ' . ($seek_end - $seek_start + 1));
 	
 	//-------------------- END RANAGES STUFF --------------------
-	
-	// close session now so they can keep using the website
-	if(isset($_SESSION)) session_write_close();
 	
 	if(is_resource($fp) && is_resource($op))
 	{

@@ -15,11 +15,17 @@
 .field_row .fieldname {
 	width:30%;
 	float:left;
+	height:3em;
+	font-weight:bold;
+	background-color:#DDFFDD;
 }
 
 .field_row .field.field_set .fieldname {
 	width:auto;
 	float:none;
+	font-weight:normal;
+	height:auto;
+	background-color:inherit;
 }
 
 .field_row .field {
@@ -37,7 +43,7 @@
 	float:left;
 }
 
-.fieldname {
+.fieldname.valid {
 	background-color:#DDFFDD;
 }
 
@@ -48,7 +54,7 @@
 
 .fieldname.warn {
 	background-color:#FFFFCC;
-	color:#000000;
+	color:inherit;
 }
 
 table.install {

@@ -1,3 +1,7 @@
+2010-09-20
+Performance improvements
+API fixes
+
 2010-09-17
 Fixed some adding in archive, code, and diskimage
 	Now check file change time if it is already found in the database

@@ -14,7 +14,7 @@ function register_menu()
 }
 
 
-function setup_menu()
+function preload_menu()
 {
 	// define constants for use with menu functions to specify to the template if the menu should be shown
 	define('MENU_CALLBACK', 	0);
@@ -23,37 +23,24 @@ function setup_menu()
 	
 	if(!isset($GLOBALS['menus']))
 		$GLOBALS['menus'] = array();
-		
-	bootstrap_menu($GLOBALS['modules']);
 }
 
-function bootstrap_menu($modules)
+function bootstrap_menu($module)
 {
-	foreach($modules as $module => $config)
-	{
-		unset($result);
+	if(dependency($module))
+		$result = invoke_module('menu', $module);
 		
-		if(dependency($module))
-			$result = invoke_module('menu', $module);
-			
-		add_menu($module, isset($result)?$result:NULL);
-	}
-	
-	// loop through modules and process menu items
-	foreach($modules as $module => $config)
-	{
-		if(isset($GLOBALS['menus'][$module]))
-			continue;
-			
-		// add default menu items
-		if(!isset($GLOBALS['menus'][$module]))
-			add_menu($module, array($module => array(
-				'name' => $config['name'],
-				'module' => $module,
-				'callback' => 'output_' . $module,
-				'type' => MENU_CALLBACK,
-			)));
-	}
+	if(isset($result))
+		add_menu($module, $result);
+
+	// add default menu items
+	if(!isset($GLOBALS['menus'][$module]))
+		add_menu($module, array($module => array(
+			'name' => get_module($module, 'name'),
+			'module' => $module,
+			'callback' => 'output_' . $module,
+			'type' => MENU_CALLBACK,
+		)));
 }
 
 function validate_path_info($request)
@@ -120,7 +107,7 @@ function invoke_menu($request, $template = false)
 	{
 		$user = session('users');
 		$menu = $GLOBALS['menus'][$path];
-		$module = $GLOBALS['modules'][$menu['module']];
+		$module = get_module($menu['module']);
 		if(isset($menu['template']))
 			$template = $menu['template'];
 		else
@@ -187,66 +174,68 @@ function invoke_menu($request, $template = false)
 
 function add_menu($module, $menus)
 {
-	if(isset($menus))
+	// loop through each menu and add default information
+	foreach($menus as $path => &$config)
 	{
-		// loop through each menu and add default information
-		foreach($menus as $path => &$config)
+		// reform simple menu definition
+		if(is_string($config))
+			$menus[$path] = array(
+				'name' => $config,
+				'callback' => 'output_' . generic_validate_machine_readable(array('callback' => $path), 'callback'),
+			);
+		
+		// set default type
+		if(!isset($config['type']))
 		{
-			// reform simple menu definition
-			if(is_string($config))
-				$menus[$path] = array(
-					'name' => $config,
-					'callback' => 'output_' . generic_validate_machine_readable(array('callback' => $path), 'callback'),
-				);
-			
-			// set default type
-			if(!isset($config['type']))
-			{
-				// menu entrys with wildcards in them default to callbacks
-				if(strpos($path, '%') !== false)
-					$menus[$path]['type'] = MENU_CALLBACK;
-				// otherwise they default to normal entries
-				else
-					$menus[$path]['type'] = MENU_NORMAL;
-			}
-			
-			// add intermediate menu lists
-			if($menus[$path]['type'] == MENU_NORMAL)
-			{
-				// loop through each dir and find gaps in menus
-				$dirs = split('/', $path);
-				$current = '';
-				// this can be very exhaustive because if the menu is found later it will just replace it
-				foreach($dirs as $i => $item)
-				{
-					$current .= $item;
-					if(!isset($menus[$current]) && !isset($GLOBALS['menus'][$current]))
-					{
-						$menus[$current] = array(
-							'type' => MENU_LIST,
-							'name' => ucwords(str_replace('/', ' ', $item)),
-							'description' => ucwords(str_replace('/', ' ', $current)) . ' Menu List',
-							'callback' => 'output_menu',
-							'module' => 'menu',
-						);
-					}
-					$current .= '/';
-				}
-			}
-			
-			// add menu to menu because its easy to do it here
-			if(!isset($config['name']))
-				$menus[$path]['name'] = $GLOBALS['modules'][$module]['name'];
-				
-			if(!isset($config['description']))
-				$menus[$path]['description'] = $GLOBALS['modules'][$module]['description'];
-				
-			// add module to menu info
-			if(!isset($menus[$path]['module']))
-				$menus[$path]['module'] = $module;
+			// menu entrys with wildcards in them default to callbacks
+			if(strpos($path, '%') !== false)
+				$menus[$path]['type'] = MENU_CALLBACK;
+			// otherwise they default to normal entries
+			else
+				$menus[$path]['type'] = MENU_NORMAL;
 		}
-		$GLOBALS['menus'] = array_merge($GLOBALS['menus'], $menus);
+		
+		// add intermediate menu lists
+		if($menus[$path]['type'] == MENU_NORMAL)
+		{
+			// loop through each dir and find gaps in menus
+			$dirs = split('/', $path);
+			$current = '';
+			// this can be very exhaustive because if the menu is found later it will just replace it
+			foreach($dirs as $i => $item)
+			{
+				$current .= $item;
+				if(!isset($menus[$current]) && !isset($GLOBALS['menus'][$current]))
+				{
+					$menus[$current] = array(
+						'type' => MENU_LIST,
+						'name' => ucwords(str_replace('/', ' ', $item)),
+						'description' => ucwords(str_replace('/', ' ', $current)) . ' Menu List',
+						'callback' => 'output_menu',
+						'module' => 'menu',
+					);
+				}
+				$current .= '/';
+			}
+		}
+		elseif($menus[$path]['type'] == MENU_LIST)
+		{
+			$menus[$path]['callback'] = 'output_menu';
+			$menus[$path]['module'] = 'menu';
+		}
+		
+		// add name to menu because its easy to do it here
+		if(!isset($config['name']))
+			$menus[$path]['name'] = get_module($module, 'name');
+			
+		if(!isset($config['description']))
+			$menus[$path]['description'] = get_module($module, 'description');
+			
+		// add module to menu info
+		if(!isset($menus[$path]['module']))
+			$menus[$path]['module'] = $module;
 	}
+	$GLOBALS['menus'] = array_merge($GLOBALS['menus'], $menus);
 }
 
 function output_breadcrumbs($current_path)

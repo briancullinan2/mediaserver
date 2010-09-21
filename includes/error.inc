@@ -162,7 +162,6 @@ function add_error_callback($callback)
  */
 function error_callback($error, $callback = NULL)
 {
-	
 	if($error->code & E_USER)
 		$GLOBALS['user_errors'][] = $error->message;
 	if($error->code & E_WARN)

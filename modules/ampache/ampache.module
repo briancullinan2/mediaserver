@@ -34,7 +34,7 @@ function rewrite_ampache($path_info, $request)
  */
 function validate_auth($request)
 {
-	return generic_validate_all_safe($request, 'auth');
+	return generic_validate_alphanumeric($request, 'auth');
 }
 
 /**

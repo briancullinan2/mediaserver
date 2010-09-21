@@ -34,7 +34,7 @@ function theme__info_objects($infos)
 					case 'name':
 						break;
 					default:
-						if(function_exists('theme__info_' . $key))
+						if(theme_implements('info_' . $key))
 						{
 							theme('info_' . $key, $value);
 						}
@@ -118,6 +118,9 @@ function theme__form_object($field_name, $config)
 	// encode the settings
 	$config_html = traverse_array($config);
 	
+	if(!isset($config['type']))
+		$config['type'] = 'info';
+	
 	if(isset($config['name']) && $config['type'] != 'fieldset')
 	{
 		?><div class="fieldname <?php print isset($config['status'])?$config['status']:''; ?>"><?php
@@ -195,7 +198,7 @@ function theme__form_object($field_name, $config)
 			theme('form_' . $config['value'], array('name' => $field_name) + $config);
 		break;
 		default:
-			if(function_exists('theme__form_' . $config['type']))
+			if(theme_implements('form_' . $config['type']))
 			{
 				theme('form_' .  $config['type'], array('name' => $field_name) + $config);
 			}
@@ -223,10 +226,6 @@ function theme__form_objects($form)
 		if(!is_array($config))
 		{
 			theme('info_objects', $config);
-		}
-		elseif(!isset($config['type']))
-		{
-			theme('form_object', $field_name, array('type' => 'info') + $config);
 		}
 		else
 		{

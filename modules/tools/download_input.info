@@ -1,0 +1,5 @@
+name = Download Input
+description = Provides API for inputting streams for files to be searched and downloaded automatically.
+privilage = 10
+settings = download_input
+package = tools

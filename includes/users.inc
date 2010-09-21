@@ -37,7 +37,7 @@ function register_users()
 
 function install_users()
 {
-	install_table('users', $GLOBALS['modules']['users']['database']);
+	install_table('users', get_module('users', 'database'));
 
 	// add default users
 	$db_user = db_assoc('SELECT * FROM users WHERE Username = "guest" LIMIT 1');

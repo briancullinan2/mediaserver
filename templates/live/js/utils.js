@@ -174,14 +174,14 @@ $(document).ready(function()
 		{
 			$('#playlist').animate({
 				height: 300,
-				width: 425,
+				width: 421,
 			}, 500);     
 		},
 		function()
 		{
 			$('#playlist').animate({
 				height: 28, 
-				width: 425,
+				width: 421,
 			}, 500);
 		}
 	);

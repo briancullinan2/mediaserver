@@ -5,22 +5,8 @@ function menu_tools()
 	return array(
 		'admin/tools' => array(
 			'type' => MENU_LIST,
-			'name' => $GLOBALS['modules']['tools']['name'],
-			'description' => $GLOBALS['modules']['tools']['description'],
-			'callback' => 'output_menu',
-			'module' => 'menu',
 		),
 	);
-}
-
-function setup_tools()
-{
-	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'theme.inc';
-	$GLOBALS['modules']['tools']['tools'] = load_modules(dirname(__FILE__) . DIRECTORY_SEPARATOR);
-	
-	// remove self
-	unset($GLOBALS['modules']['tools']['tools']['tools']);
-	bootstrap('modules', $GLOBALS['modules']['tools']['tools']);
 }
 
 function setting_tools()

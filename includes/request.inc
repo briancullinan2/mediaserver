@@ -119,7 +119,7 @@ function rewrite_vars(&$request, &$get, &$post)
 			$request = array_merge($request, $GLOBALS['menus'][$path]['arguments']);
 		
 		// call a modules rewrite function for further rewriting
-		if(function_exists('rewrite_' . $GLOBALS['menus'][$path]['module']))
+		if(module_implements('rewrite', $GLOBALS['menus'][$path]['module']))
 			$result = invoke_module('rewrite', $GLOBALS['menus'][$path]['module'], array($request['path_info'], $request));
 		else
 			$result = invoke_module('rewrite', 'default', array($request['path_info'], $request));

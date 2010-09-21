@@ -185,12 +185,7 @@ function get_closest($search_text, $titles)
 function dependency($dependency, $ignore_setting = false, $already_checked = array())
 {
 	// check if the caller is trying to verify the dependencies of another module
-	if(isset($GLOBALS['modules'][$dependency]))
-	{
-		$config = $GLOBALS['modules'][$dependency];
-	}
-	
-	if(isset($config))
+	if(is_module($dependency))
 	{
 		$depends = get_dependencies($dependency);
 		
@@ -317,7 +312,7 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 		}
 		
 		// invoke rewriting
-		if(function_exists('rewrite_' . $GLOBALS['menus'][$menu]['module']))
+		if(module_implements('rewrite', $GLOBALS['menus'][$menu]['module']))
 			$request = invoke_module('rewrite', $GLOBALS['menus'][$menu]['module'], array($path));
 		else
 			$request = invoke_module('rewrite', 'default', array($path));

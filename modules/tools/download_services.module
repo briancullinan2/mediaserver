@@ -1,0 +1,363 @@
+<?php
+
+function get_download_services()
+{
+	return get_modules_implements('setting_download_services', true);
+}
+
+/**
+ * Set up the list settings
+ * @ingroup setup
+ */
+function setting_download_services()
+{
+	$settings = array();
+	
+	// add the predefined download services for use
+	foreach(get_download_services() as $i => $module)
+	{
+		$predefined = setting('download_services_' . $module);
+		// create function calls to merge username and password settings
+		foreach($predefined as $i => $setting)
+		{
+			$GLOBALS['setting_download_service_' . $setting] = create_function('$settings', 'return setting_predefined_service($settings, \'' . $setting . '\');');
+		}
+		$GLOBALS['setting_all_services_' . $module] = create_function('$settings', 'return setting_all_predefined_services($settings, \'' . $module . '\');');
+	}
+	
+	// add wrapper functions for validating a service entry
+	for($i = 0; $i < 10; $i++)
+	{
+		if(!function_exists('setting_download_service_' . $i))
+			$GLOBALS['setting_download_service_' . $i] = create_function('$settings', 'return setting_download_service($settings, \'download_service_' . $i . '\');');
+		$settings[] = 'download_service_' . $i;
+	}
+	
+	return $settings;
+}
+
+function setting_predefined_service($settings, $index)
+{
+	// get predefined services from API call
+	if(isset($settings[$index]) && is_array($settings[$index]))
+		// merge username and password information
+		$settings[$index] = array_merge($settings[$index], setting($index));
+	
+	return setting_download_service($settings, $index);
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ */
+function setting_download_service($settings, $index)
+{
+	if(!isset($settings[$index]) || !is_array($settings[$index]))
+		return;
+		
+	// copy values
+	$service = array(
+		'name' => isset($settings[$index]['name'])?$settings[$index]['name']:'',
+		'match' => isset($settings[$index]['match'])?$settings[$index]['match']:'',
+		'search' => isset($settings[$index]['search'])?$settings[$index]['search']:'',
+		'image' => isset($settings[$index]['image'])?$settings[$index]['image']:'',
+		'login' => isset($settings[$index]['login'])?$settings[$index]['login']:'',
+		'username' => isset($settings[$index]['username'])?$settings[$index]['username']:'',
+		'password' => isset($settings[$index]['password'])?$settings[$index]['password']:'',
+		'userfield' => isset($settings[$index]['userfield'])?$settings[$index]['userfield']:'',
+		'passfield' => isset($settings[$index]['passfield'])?$settings[$index]['passfield']:'',
+		'loginfail' => isset($settings[$index]['loginfail'])?$settings[$index]['loginfail']:'',
+		'exclude' => isset($settings[$index]['exclude'])?$settings[$index]['exclude']:'',
+	);
+	
+	// validate name
+	if(!($service['name'] = generic_validate_all_safe(array('service_name' => $service['name']), 'service_name')))
+		return;
+
+	// make sure there is valid regular expression
+	if(!($service['match'] = generic_validate_regexp(array('service_match' => $service['match']), 'service_match')))
+		return;
+		
+	$service['image'] = generic_validate_all_safe(array('service_image' => $service['image']), 'service_image');
+	
+	// validate search
+	$service['search'] = generic_validate_url(array('service_search' => $service['search']), 'service_search');
+		
+	$service['login'] = generic_validate_url(array('service_login' => $service['login']), 'service_login');
+	
+	// validate username and password
+	$service['username'] = generic_validate_all_safe(array('service_username' => $service['username']), 'service_username');
+	$service['password'] = generic_validate_all_safe(array('service_password' => $service['password']), 'service_password');
+	
+	// validate extra fields
+	$service['userfield'] = generic_validate_all_safe(array('service_userfield' => $service['userfield']), 'service_userfield');
+	$service['passfield'] = generic_validate_all_safe(array('service_passfield' => $service['passfield']), 'service_passfield');
+	$service['loginfail'] = generic_validate_regexp(array('service_loginfail' => $service['loginfail']), 'service_loginfail');
+	$service['exclude'] = generic_validate_all_safe(array('service_exclude' => $service['exclude']), 'service_exclude');
+	
+	return $service;
+}
+
+function setting_all_predefined_services($settings, $module)
+{
+	if(!isset($settings['all_services_' . $module]))
+		$settings['all_services_' . $module] = array();
+	
+	$predefined = setting('download_services_' . $module);
+
+	// create function calls to merge username and password settings
+	foreach($predefined as $i => $setting)
+	{
+		$service = setting('download_service_' . $setting);
+		if(isset($service))
+			$settings['all_services_' . $module][$i] = $service;
+	}
+	
+	return $settings['all_services_' . $module];
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ */
+function setting_all_download_services($settings)
+{
+	if(!isset($settings['all_download_services']))
+		$settings['all_download_services'] = array();
+
+	foreach(get_download_services() as $i => $module)
+	{
+		$settings['all_download_services'] = array_merge(setting('all_services_' . $module), $settings['all_download_services']);
+	}
+	
+	// make sure all servers with numeric indexes are on the list
+	for($i = 0; $i < 10; $i++)
+	{
+		$service = setting('download_service_' . $i);
+		if(isset($service))
+			$settings['all_download_services'][$i] = $service;
+	}
+
+	return array_values($settings['all_download_services']);
+}
+
+/**
+ * Implementation of configure
+ * @ingroup configure
+ */
+function configure_download_services($settings)
+{
+	$settings['all_download_services'] = setting('all_download_services');
+	
+	$options = array();
+	
+	$service_options = array();
+	foreach($settings['all_download_services'] as $i => $config)
+	{
+		$service_options[$i] = $config['name'];
+	}
+	
+	$options['manage_services'] = array(
+		'name' => 'Manage Download Services',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Select an NZB service to search and download from.',
+				'Select multiple services to search if there are no NZBs found.',
+			),
+		),
+		'type' => 'set',
+		'options' => array(
+			'setting_nzbservices' => array(
+				'type' => 'multiselect',
+				'options' => $service_options,
+				'value' => $settings['all_download_services'],
+			),
+		),
+	);
+
+	foreach($settings['all_download_services'] as $i => $config)
+	{
+		$service = array();
+		
+		if($config['image'] == '')
+		{
+			if($address = generic_validate_hostname(array('address' => $config['search']), 'address'))
+				$result = fetch($address . '/favicon.ico');
+			elseif($address = generic_validate_hostname(array('address' => $config['login']), 'address'))
+				$result = fetch($address . '/favicon.ico');
+				
+			if(isset($result) && $result['status'] == 200)
+			{
+				$config['image'] = 'data:image/x-icon;base64,' . base64_encode($result['content']);
+			}
+		}
+		
+		$service['setting_download_services_' . $i . '[image]'] = array(
+			'type' => 'hidden',
+			'value' => $config['image'],
+		);
+		if($config['login'] != '' || $config['username'] != '')
+		{
+			$service['setting_download_services_' . $i . '[username]'] = array(
+				'type' => 'text',
+				'value' => $config['username'],
+				'name' => 'Username',
+			);
+			$service['setting_download_services_' . $i . '[password]'] = array(
+				'type' => 'text',
+				'value' => $config['password'],
+				'name' => 'Password',
+			);
+		}
+		$service['setting_download_services_image_' . $i] = array(
+			'image' => $config['image'],
+			'name' => 'Image',
+		);
+		
+		$options['download_service_' . $i] = array(
+			'name' => $config['name'],
+			'status' => (isset($config['login']) && $config['username'] == '')?'warn':'',
+			'type' => 'set',
+			'options' => $service,
+			'description' => array(
+				'list' => array(
+					'Configure the username and password for ' . $config['name'] . '.'
+				)
+			)
+		);
+	}
+	
+	return array('download_services' => array(
+		'name' => 'Download Services',
+		'type' => 'fieldset',
+		'options' => $options,
+	));
+}
+
+
+/**
+ * Helper function
+ * Provides fetch functions for logging in to the configured torrent services
+ * More importantly, stores cookies in $_SESSION['download_services_0']
+ * @return an array of status codes reported by the fetch function for each configured service
+ */
+function download_services_login()
+{
+	$services = setting('all_download_services');
+	$stati = array();
+	
+	foreach($services as $i => $config)
+	{
+		$result = fetch($config['login']);
+		
+		// save session info
+		session('download_services_' . $i, $result['cookies']);
+		
+		if(isset($config['userfield']))
+		{
+			list($login, $post) = get_login_form($result['content'], $config['userfield']);
+			
+			// set username
+			$post[$config['userfield']] = $config['username'];
+		}
+		else
+		{
+			list($login, $post) = get_login_form($result['content']);
+			
+			// set username
+			$post['username'] = $config['username'];
+		}
+			
+		// set password
+		if(isset($config['passfield']))
+			$post[$config['passfield']] = $config['password'];
+		else
+			$post['password'] = $config['password'];
+			
+		// remove excluded fields
+		if(isset($config['exclude']))
+		{
+			$exclude = split(',', $config['exclude']);
+			foreach($exclude as $j => $remove)
+			{
+				if(isset($post[$remove]))
+					unset($post[$remove]);
+			}
+		}
+		
+		// submit
+		$session_service = session('download_services_' . $i);
+		
+		// set second login location
+		if($login != '')
+			$config['login'] = get_full_url($config['login'], $login);
+
+		$result = fetch(get_full_url($config['login'], $login), $post, array('referer' => $config['login']), isset($session_service)?$session_service:array());
+
+		// save session info
+		session('download_services_' . $i, $result['cookies']);
+
+		// try to check if the login was successful
+		if(isset($config['loginfail']))
+		{
+			if(preg_match($config['loginfail'], $result['content']) != 0)
+				$stati[$i] = false;
+			else
+				$stati[$i] = $result['status'];
+		}
+		elseif(preg_match('/access denied|error/i', $result['content']) != 0)
+		{
+			$stati[$i] = false;
+		}
+		else
+			$stati[$i] = $result['status'];
+	}
+	
+	return $stati;
+}
+
+
+/**
+ * Helper function, creates a return for the singular object
+ */
+function download_services_singular_result()
+{
+	$infos = array();
+	
+	// log in to services here
+	$results = download_services_login();
+	$services = setting('all_download_services');
+	foreach($results as $i => $result)
+	{
+		if($result == false)
+		{
+			$infos['download_service_' . $i] = array(
+				'name' => $services[$i]['name'] . ' Login Failed',
+				'status' => 'fail',
+				'description' => array(
+					'list' => array(
+						'Login to ' . $services[$i]['login'] . ' for ' . $services[$i]['name'] . ' failed!',
+					),
+				),
+				'text' => (is_numeric($result)?'Login Failed!':$result),
+			);
+		}
+		else
+		{
+			$infos['download_services_' . $i] = array(
+				'name' => $services[$i]['name'] . ' Login',
+				'status' => '',
+				'description' => array(
+					'list' => array(
+						'Login to ' . $services[$i]['login'] . ' for ' . $services[$i]['name'] . ' successful!',
+					),
+				),
+				'text' => 'Login Succeeded!'
+			);
+		}
+	}
+
+	return $infos;
+}
+ 

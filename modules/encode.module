@@ -126,9 +126,9 @@ function setting_encoder($settings, $index)
 	);
 	
 	// validate name
-	if(!($encoder['input_ext'] = generic_validate_all_safe(array('input_ext' => $encoder['input_ext']), 'input_ext')))
+	if(!($encoder['input_ext'] = generic_validate_alphanumeric(array('input_ext' => $encoder['input_ext']), 'input_ext')))
 		return;
-	if(!($encoder['output_ext'] = generic_validate_all_safe(array('output_ext' => $encoder['output_ext']), 'output_ext')))
+	if(!($encoder['output_ext'] = generic_validate_alphanumeric(array('output_ext' => $encoder['output_ext']), 'output_ext')))
 		return;
 	if(!($encoder['arguments'] = generic_validate_all_safe(array('arguments' => $encoder['arguments']), 'arguments')))
 		return;

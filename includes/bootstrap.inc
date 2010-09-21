@@ -42,22 +42,25 @@ function bootstrap($mode = 'all')
 			}
 			preload_error();
 			preload_triggers();
+			preload_menu();
 				
 			// run register functions and add to modules
 			foreach($includes as $i => $include)
 			{
-				$config = @load_module(dirname(__FILE__) . DIRECTORY_SEPARATOR . $include);
+				$config = load_module(dirname(__FILE__) . DIRECTORY_SEPARATOR . $include);
 			}
 			
 			if(setting('database_enable'))
 				bootstrap('database');
-
+			
+			// load all modules in to global
 			load_modules(setting_local_root() . 'modules');
-			
+
 			bootstrap('mime');
-			
-			invoke_all_callback('setup', 'disable_module');
 		
+			// bootstrap the modules and setup
+			bootstrap('modules', $GLOBALS['modules']);
+
 			request_validate();
 			
 			break;
@@ -68,20 +71,33 @@ function bootstrap($mode = 'all')
 			
 		case 'modules':
 			$modules = func_get_arg(1);
-			
-			invoke_all('bootstrap', $modules);
 
 			foreach($modules as $module => $config)
 			{
+				raise_error('bootstrapping \'' . $module . '\'', E_DEBUG);
 				if(dependency($module))
 					invoke_module('setup', $module);
-				else
-					disable_module($module);
+
+				bootstrap_or_disable($module);
 			}
-			
+
 			break;
 	}
 	
+}
+
+function bootstrap_or_disable($module)
+{
+	if(dependency($module) == false)
+	{
+		$GLOBALS['settings'][$module . '_enable'] = false;
+		// this prevents us from disabling required modules on accident
+		$GLOBALS['settings'][$module . '_enable'] = setting($module . '_enable');
+	}
+	else
+	{
+		invoke_all('bootstrap', $module);
+	}
 }
 
 /** 

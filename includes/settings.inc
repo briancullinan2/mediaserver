@@ -21,11 +21,20 @@ function register_settings()
 		),
 		'package' => 'core',
 		'template' => false,
-		'depends on' => array('memory_limit', 'writable_system_files', 'pear_installed', 
-			'getid3_installed', 'curl_installed', 'extjs_installed'),
+		'depends on' => 'settings',
 	);
 }
 
+function dependency_settings()
+{
+	$depends_on = array('memory_limit', 'writable_system_files', 'pear_installed', 
+		'getid3_installed', 'curl_installed', 'extjs_installed');
+	
+	if(setting('database_enable'))
+		$depends_on[] = 'database';
+	
+	return $depends_on;
+}
 
 /**
  * Helper function
@@ -88,44 +97,42 @@ function setup_settings()
 		else
 			raise_error('There was an error getting the administrative settings from the database!', E_DEBUG);
 	}
-
-	// get settings from functions
-	bootstrap_settings($GLOBALS['modules']);
 	
 	// merge everything with the default settings
 	$GLOBALS['settings'] = array_merge(get_default_settings($GLOBALS['settings']), $GLOBALS['settings']);
 }
 
-function bootstrap_settings($modules)
+function bootstrap_settings($module)
 {
 	// loop through the modules and call settings functions on them if they are set to callbacks
-	foreach($modules as $module => &$config)
+	$settings = get_settings($module);
+	
+	$GLOBALS['modules'][$module]['settings'] = $settings;
+	
+	// merge new settings with total list of settings
+	if(is_array($settings))
 	{
-		$config['settings'] = get_settings($config);
-		
-		// merge new settings with total list of settings
-		if(is_array($config['settings']))
-		{
-			$setting_module_pairs = array_fill_keys($config['settings'], $module);
-			$GLOBALS['all_settings'] = array_merge($setting_module_pairs, $GLOBALS['all_settings']);
-		}
-		else
-			raise_error('Settings is not an array for module \'' . $module . '\'.', E_DEBUG);
-	}
-}
-
-function get_settings($config)
-{
-	// if it is a module but has no settings, return empty array
-	if(!isset($config['settings']))
-		return array();
-
-	if(is_string($config['settings']) && is_callable('setting_' . $config['settings']))
-	{
-		return call_user_func_array('setting_' . $config['settings'], array($GLOBALS['settings']));
+		$setting_module_pairs = array_fill_keys($settings, $module);
+		$GLOBALS['all_settings'] = array_merge($setting_module_pairs, $GLOBALS['all_settings']);
 	}
 	else
-		return $config['settings'];
+		raise_error('Settings is not an array for module \'' . $module . '\'.', E_DEBUG);
+}
+
+function get_settings($module)
+{
+	// if it is a module but has no settings, return empty array
+	$settings = get_module($module, 'settings');
+
+	if(!isset($settings))
+		return array();
+
+	if(is_string($settings) && is_callable('setting_' . $settings))
+	{
+		return call_user_func_array('setting_' . $settings, array($GLOBALS['settings']));
+	}
+	else
+		return $settings;
 }
 
 /**
@@ -354,24 +361,22 @@ function get_default_settings($settings)
 	$default_settings = array();
 	
 	// loop through each module and get the default settings
-	foreach(get_modules() as $module => $config)
+	foreach(get_modules() as $i => $module)
 	{
-		if(isset($config['settings']) && is_array($config['settings']))
+		$settings = get_settings($module);
+		foreach($settings as $i => $setting)
 		{
-			foreach($config['settings'] as $i => $setting)
-			{
-				if(function_exists('setting_' . $setting))
-					$new_setting = call_user_func_array('setting_' . $setting, array($settings));
-				elseif(isset($GLOBALS['setting_' . $setting]) && is_callable($GLOBALS['setting_' . $setting]))
-					$new_setting = $GLOBALS['setting_' . $setting]($settings);
-				else
-					raise_error('Setting \'' . $setting . '\' is specified without a validate function in the ' . $module . ' module.', E_DEBUG);
-			
-				if(isset($new_setting))
-					$default_settings[$setting] = $new_setting;
-				else
-					unset($default_settings[$setting]);
-			}
+			if(function_exists('setting_' . $setting))
+				$new_setting = call_user_func_array('setting_' . $setting, array($settings));
+			elseif(isset($GLOBALS['setting_' . $setting]) && is_callable($GLOBALS['setting_' . $setting]))
+				$new_setting = $GLOBALS['setting_' . $setting]($settings);
+			else
+				raise_error('Setting \'' . $setting . '\' is specified without a validate function in the ' . $module . ' module.', E_DEBUG);
+		
+			if(isset($new_setting))
+				$default_settings[$setting] = $new_setting;
+			else
+				unset($default_settings[$setting]);
 		}
 	}
 	
@@ -916,7 +921,7 @@ function configure_settings($settings, $request)
 			'list' => array(
 				lang('recursive get description 1', 'This tells to system whether or not it should read directories on the fly and recursively.'),
 				lang('recursive get description 2', 'If some files in a directory haven\'t been loaded, this will load them when the directory is accessed.'),
-				lang('recursive get description 3', 'On large systems, this could cause page response to be VERY SLOW.  This option is not recommended for system where files change a lot.'),
+				lang('recursive get description 3', 'On large systems, this could cause page response to be VERY SLOW.  This option is not recommended for system where many files change often.'),
 			),
 		),
 		'type' => 'boolean',

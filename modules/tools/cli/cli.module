@@ -43,7 +43,7 @@ function rewrite_cli($path_info, $request)
 	// get path information for privilage check
 	$path = get_menu_entry($request['path_info']);
 	$menu = $GLOBALS['menus'][$path];
-	$module = $GLOBALS['modules'][$menu['module']];
+	$module = get_module($menu['module']);
 	
 	// check access and prompt for password
 	$user = session('users');

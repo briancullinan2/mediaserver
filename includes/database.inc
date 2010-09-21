@@ -50,10 +50,15 @@ function setup_database()
 		{
 			$GLOBALS['database']->SetFetchMode(ADODB_FETCH_ASSOC);
 		
+			$tables_installed = $GLOBALS['database']->MetaTables();
+			
 			// install tables
 			foreach(get_handlers(false, true) as $module => $config)
 			{
-				if(function_exists('install_' . $module))
+				if(in_array($module, $tables_installed))
+					continue;
+				
+				if(module_implements('install', $module))
 					invoke_module('install', $module);
 				elseif(isset($config['database']) && is_array($config['database']))
 					install_table($module, $config['database']);

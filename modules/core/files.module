@@ -370,11 +370,11 @@ function add($file, $force = false, $handler = 'files')
 		return false;
 	
 	// if there is an add_handler function specified use that instead
-	if(function_exists('add_' . $handler))
-		invoke_module('add', $handler, array($file, $force));
+	if(module_implements('add', $handler))
+		return invoke_module('add', $handler, array($file, $force));
 	
 	// return false if there is no info function
-	elseif(!function_exists('get_info_' . $handler))
+	elseif(!module_implements('get_info', $handler))
 	{
 		raise_error('No get info function or add function exists for ' . $handler . ' so an add_\'' . $handler . '()\' function should be supplied.', E_DEBUG);
 		
@@ -475,10 +475,10 @@ function output_handler($file, $handler)
 		}
 		
 	}
-	elseif(function_exists('output_' . $handler))
+	elseif(module_implements('output', $handler))
 		return invoke_module('output', $handler, array($file, $handler));
-	elseif(is_wrapper($handler) && function_exists('output_' . $GLOBALS['modules'][$handler]['wrapper']))
-		return invoke_module('output', $GLOBALS['modules'][$handler]['wrapper'], array($file, $handler));
+	elseif(is_wrapper($handler) && module_implements('output', get_module($handler, 'wrapper')))
+		return invoke_module('output', get_module($handler, 'wrapper'), array($file, $handler));
 	
 	return false;
 }
@@ -629,10 +629,10 @@ function output_files($request)
 function get_files($request, &$count)
 {
 	// if the handler is set, call that instead
-	if($request['handler'] != 'files' && function_exists('get_' . $request['handler']))
+	if($request['handler'] != 'files' && module_implements('get', $request['handler']))
 		return invoke_module('get', $request['handler'], array($request, $count));
 	elseif(is_wrapper($request['handler']))
-		return get_files($GLOBALS['modules'][$request['handler']]['wrapper']);
+		return get_files(get_module($request['handler'], 'wrapper'));
 	elseif($request['handler'] != 'files')
 	{
 		raise_error('get_files() called with handler \'' . $request['handler'] . '\' but no get_ handler function exists! Defaulting to files', E_DEBUG);
@@ -916,7 +916,7 @@ function remove($file, $handler = NULL)
 	if($file[strlen($file)-1] != '/') $file_dir = $file . '/';
 	else $file_dir = $file;
 	
-	raise_error('Removing ' . $GLOBALS['modules'][$handler]['name'] . ': ' . $file, E_DEBUG);
+	raise_error('Removing ' . get_module($handler, 'name') . ': ' . $file, E_DEBUG);
 
 	// remove file(s) from database
 	db_query('DELETE FROM '. $handler .' WHERE Filepath=? OR LEFT(Filepath, ' . strlen($file_dir) . ')=?', array(
@@ -1047,13 +1047,13 @@ function cleanup($handler = 'files')
 		// remove first item from all duplicates
 		foreach($files as $i => $file)
 		{
-			raise_error('Removing Duplicate ' . $GLOBALS['modules'][$handler]['name'] . ': ' . $file['Filepath'], E_DEBUG);
+			raise_error('Removing Duplicate ' . get_module($handler, 'name') . ': ' . $file['Filepath'], E_DEBUG);
 			
 			$result = db_query('DELETE FROM ' . $handler . ' WHERE id=' . $file['id']);
 		}
 	}
 	
-	raise_error('Cleanup: for ' . $GLOBALS['modules'][$handler]['name'] . ' complete.', E_DEBUG);
+	raise_error('Cleanup: for ' . get_module($handler, 'name') . ' complete.', E_DEBUG);
 	
 }
 

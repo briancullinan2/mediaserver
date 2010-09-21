@@ -7,7 +7,8 @@
  */
 function setup_code()
 {
-	stream_wrapper_register('code', 'code');
+	if(!in_array('code', stream_get_wrappers()))
+		stream_wrapper_register('code', 'code');
 
 	if(setting('highlighter') == 'geshi')
 		load_include('geshi' . DIRECTORY_SEPARATOR . 'geshi.php');

@@ -1,14 +1,13 @@
 <?php
 
 
-function setup_search()
+function bootstrap_search($module)
 {
-	$columns = get_all_columns();
+	$columns = get_columns($module);
 	foreach($columns as $column)
 	{
 		$GLOBALS['validate_search_' . $column] = create_function('$request', 'return validate_search($request, \'' . $column . '\');');
 	}
-	
 }
 
 /**

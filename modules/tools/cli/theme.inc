@@ -126,7 +126,7 @@ function theme_cli_errors_block()
 function theme_cli_errors()
 {
 	theme('header',
-		'Module: ' . $GLOBALS['modules'][$GLOBALS['output']['module']]['name'],
+		'Module: ' . get_module($GLOBALS['output']['module'], 'name'),
 		'There were errors while processing your request.'
 	);
 
@@ -190,7 +190,7 @@ function theme_cli_form_object($field_name, $config, $width = 0)
 			theme('form_' . $config['value'], array('name' => $field_name) + $config, $width);
 			break;
 		default:
-			if(function_exists('theme_cli_form_' . $config['type']))
+			if(theme_implements('form_' . $config['type'], 'cli'))
 			{
 				theme('form_' .  $config['type'], array('name' => $field_name) + $config, $width);
 			}
@@ -236,7 +236,7 @@ function theme_cli_info_objects($infos, $width)
 					case 'name':
 						break;
 					default:
-						if(function_exists('theme_cli_info_' . $key))
+						if(theme_implements('info_' . $key, 'cli'))
 						{
 							theme('info_' . $key, $value, $width);
 						}
@@ -379,7 +379,7 @@ function theme_cli_select()
 {
 	theme('header',
 		'Select Files',
-		$GLOBALS['modules']['files']['description']
+		get_module('files', 'description')
 	);
 	
 	$width = setting('cli_columns');

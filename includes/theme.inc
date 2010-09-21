@@ -12,7 +12,7 @@ function theme__confirmation()
 function theme__default()
 {
 	theme('header',
-		'Module: ' . $GLOBALS['modules'][$GLOBALS['output']['module']]['name'],
+		'Module: ' . get_module($GLOBALS['output']['module'], 'name'),
 		'This page requires special parameters that have not been set.  This default page is a placeholder.'
 	);
 
@@ -22,7 +22,7 @@ function theme__default()
 function theme__errors()
 {
 	theme('header',
-		'Module: ' . $GLOBALS['modules'][$GLOBALS['output']['module']]['name'],
+		'Module: ' . get_module($GLOBALS['output']['module'], 'name'),
 		'There were errors while processing your request.'
 	);
 
@@ -229,17 +229,17 @@ function theme__footer()
 	Modules:
 <ul>
 <?php
-foreach(get_modules() as $name => $module)
+foreach(get_modules() as $i => $module)
 {
-	if($module['privilage'] > $GLOBALS['output']['user']['Privilage'])
+	if(get_module($module, 'privilage') > $GLOBALS['output']['user']['Privilage'])
 		continue;
-										
-	if(!function_exists('output_' . $name))
-		$link = 'admin/modules/' . $name;
+		
+	if(!module_implements('output', $module))
+		$link = 'admin/modules/' . $module;
 	else
 		$link = $name;
 									
-	?><li><a href="<?php print url($link); ?>"><?php echo $module['name']; ?></a></li><?php
+	?><li><a href="<?php print url($link); ?>"><?php echo get_module($module, 'name'); ?></a></li><?php
 }
 ?>
 </ul>
@@ -251,7 +251,7 @@ foreach(get_modules() as $name => $module)
 function theme__header($title = NULL, $description = NULL)
 {
 	if(!isset($title))
-		$title = htmlspecialchars($GLOBALS['modules'][$GLOBALS['output']['module']]['name']) . ' : ' . setting('html_name');
+		$title = htmlspecialchars(get_module($GLOBALS['output']['module'], 'name')) . ' : ' . setting('html_name');
 	
 	?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -492,7 +492,7 @@ function theme__register()
 
 function theme__search_block()
 {
-	print $GLOBALS['modules'][$GLOBALS['output']['cat']]['name']; ?> Search:<br />
+	print get_module($GLOBALS['output']['handler'], 'name'); ?> Search:<br />
 	<form action="<?php print $GLOBALS['output']['get']; ?>" method="get" id="search">
 		<input type="text" name="search" value="<?php print isset($GLOBALS['output']['search']['search'])?$GLOBALS['output']['search']['search']:''; ?>" id="searchInput" />
 		<input type="submit" value="Search" id="searchButton" /> <a href="<?php print url('search'); ?>">Advanced Search</a>

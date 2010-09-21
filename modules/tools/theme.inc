@@ -3,8 +3,8 @@
 function theme_live_tool_info()
 {
 	theme('header',
-		'Tools: ' . $GLOBALS['modules'][$GLOBALS['output']['module']]['name'],
-		$GLOBALS['modules'][$GLOBALS['output']['module']]['description']
+		'Tools: ' . get_module($GLOBALS['output']['module'], 'name'),
+		get_module($GLOBALS['output']['module'], 'description')
 	);
 	
 	// output configuration if it is set
