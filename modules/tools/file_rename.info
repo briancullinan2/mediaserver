@@ -1,0 +1,5 @@
+name = File Renamer
+description = Provides API and functionality for renaming large sets of files.
+privilage = 10
+settings = file_rename
+package = tools

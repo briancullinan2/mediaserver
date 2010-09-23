@@ -13,10 +13,9 @@ function menu_convert()
  * Checks for convert path
  * @ingroup configure
  */
-function configure_convert($settings, $request)
+function configure_convert($settings)
 {
 	$settings['convert_path'] = setting('convert_path');
-	$settings['convert_args'] = setting('convert_args');
 	
 	$options = array();
 	
@@ -67,7 +66,7 @@ function configure_convert($settings, $request)
 			),
 		),
 		'type' => 'text',
-		'value' => $settings['convert_args'],
+		'value' => setting('convert_args'),
 	);
 
 	return array('convert' => array(

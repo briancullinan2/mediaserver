@@ -1,0 +1,119 @@
+<?php
+
+function setting_download_services_nzbservices()
+{
+	return array('nzbservice_0', 'nzbservice_1');
+}
+
+function setting_nzbservice_0($settings, $type = NULL)
+{
+	$service = array(
+		'name' => 'NZB Matrix',
+		'match' => '/<a href="(http:\/\/nzbmatrix.com\/nzb-download.php?[^"]*?&amp;nozip=1)"/i',
+		'match_title' => '/<span id="ctitle[^"]*"><b>([^<]*)</i',
+		'search' => 'http://nzbmatrix.com/nzb-search.php?search=%s',
+		'login' => 'http://nzbmatrix.com/account-login.php',
+		'loginfail' => '/Access Denied:|<form method="post" action="account-login.php">/i',
+		'savepath' => setting('nzbpath'),
+	);
+	
+	if($type == 'movies')
+		$service['search'] = 'http://nzbmatrix.com/nzb-search.php?cat=1&search=%s';
+	elseif($type == 'audio')
+		$service['search'] = 'http://nzbmatrix.com/nzb-search.php?cat=22&search=%s';
+	elseif($type == 'television')
+		$service['search'] = 'http://nzbmatrix.com/nzb-search.php?cat=6&search=%s%%20s%02de%02d';
+	
+	if(isset($settings['nzbservice_0']))
+		$settings['nzbservice_0'] = array_merge($settings['nzbservice_0'], $service);
+		
+	return setting_download_service($settings, 'nzbservice_0');
+}
+
+function setting_nzbservice_1($settings, $type = NULL)
+{
+	$service = array(
+		'name' => 'Newzbin',
+		'match' => '/<a.*?href="(\/browse\/post\/[0-9]*?\/nzb)">/i',
+		'match_title' => '/<a href="\/browse\/post\/[^"]*">([^<]*)</i',
+		'search' => 'http://www.newzbin.com/search/query/?searchaction=Go&q=%s',
+		'login' => 'http://www.newzbin.com/account/login/',
+		'loginfail' => '/<span>Error:<\/span>/i',
+		'savepath' => setting('nzbpath'),
+	);
+	
+	if($type == 'movies')
+		$service['search'] = 'http://www.newzbin.com/search/query/?searchaction=Go&group=alt.binaries.dvd&q=%s';
+	elseif($type == 'audio')
+		$service['search'] = 'http://www.newzbin.com/search/query/?searchaction=Go&group=alt.binaries.sounds.mp3.complete_cd&q=%s';
+	elseif($type == 'television')
+		$service['search'] = 'http://www.newzbin.com/search/query/?searchaction=Go&category=8&q=%s%%20%dx%02d';
+	
+	if(isset($settings['nzbservice_1']))
+		$settings['nzbservice_1'] = array_merge($settings['nzbservice_1'], $service);
+		
+	return setting_download_service($settings, 'nzbservice_1');
+}
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ */
+function setting_nzbpath($settings)
+{
+	if($settings['nzbpath'] = generic_validate_dir($settings, 'nzbpath') && is_writable($settings['nzbpath']))
+		return $settings['nzbpath'];
+	else
+		return setting('tmp_dir');
+}
+
+/**
+ * Implementation of configure
+ * @ingroup configure
+ */
+function configure_nzbservices($settings)
+{
+	$settings['nzbpath'] = setting('nzbpath');
+	
+	$options = array();
+	
+	if($settings['nzbpath'] == '' || is_writable($settings['nzbpath']))
+	{
+		$options['setting_nzbpath'] = array(
+			'name' => 'NZB Save path',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'Select a path to save the NZB files to.',
+					'Some NZB download programs such as SABnzbd or NewzLeecher can automatically search a directory for new NZB files.'
+				),
+			),
+			'type' => 'text',
+			'value' => $settings['nzbpath'],
+		);
+	}
+	else
+	{
+		$options['setting_nzbpath'] = array(
+			'name' => 'NZB Save path',
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					'The selected path is not writable!',
+					'Select a path to save the NZB files to.',
+					'Some NZB download programs such as SABnzbd or NewzLeecher can automatically search a directory for new NZB files.'
+				),
+			),
+			'type' => 'text',
+			'value' => $settings['nzbpath'],
+		);
+	}
+	
+	$options = array_merge(configure_services(all_services_module('nzbservices')), $options);
+	
+	return array('nzbservices' => array(
+		'name' => 'News Group Services',
+		'type' => 'fieldset',
+		'options' => $options
+	));
+}

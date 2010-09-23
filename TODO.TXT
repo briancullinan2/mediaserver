@@ -1,5 +1,6 @@
 ------------- MONOLITHICMEDIA TODO -------------
 ------------- GENERAL TODO -------------
+Should be able to look at a login form and extract the username, password and captcha using levenshtien so save along with the image in the settings
 Make it faster
 	Enhance remove performance by only removing from tables that handle the file, remove by ID first, and if it isn't removed by ID, remove by filename
 Admin tools should provide an API and theme for tools to generate command line scripts
@@ -11,14 +12,8 @@ For non-jquery templates, an I-Frame could be used to perform the request and pr
 	this may take too long, and maybe an API should be created in the tool output for performing all long-scripts sequentially
 		this would replace the singular functionality
 Check if add_all() id updating is working properly
-Fix archive library problem by specifying that it should update an archive if it has changed
-	If it fails, it won't try to do it again until the archive has changed
-	Cron script probably removes folder from database even if the script fails,
-		maybe it should be removed after it runs or maybe that is the only thing allowing it to continue
 Add dependencies to live theme (jquery, flowplayer) and decide if these should be included in the theme package
 Rate limiting on user login, recaptcha module
-Running system from command line should change bootstrap options
-Cron is not running properly again...
 Finish webdav module that allows files to be uploaded and access using the web dav protocol.  This is already mostly supported by PEAR.
 Look at drupal and find out if there is a better way to save errors to the session at the end of a script
 	Fix session problems with storing errors
@@ -36,7 +31,6 @@ Store the remote_address in the session, and if it doesn't match up with what is
 Create a unique id and insert it into forms, this is required when the form is submitted
 Make hard links and soft links, hard links are replaced when they are put in to the database, soft links are replaced when they are read from the database, this will allow us to do more network stuff
 ------------- MEDIA MODULES -------------
-Test playing using http://flowplayer.org/demos/index.html and hopefully be more successfull than JW Player (Mike)
 Search module could be configured to use a different algorithm for searching, possibly an external site 
 	like Google could display results or one of those cool database searching services that cost money
 Add 'guess' parameter to list module to allow randomly selected files from the same genre
@@ -122,6 +116,3 @@ Get settings dialog working and set up user accounts to control it
 Finish the player app that displays pictures
 Make players resize to Player window
 ------------- LIVE -------------
-Fix javascript select and right click in all browsers
-Fix appearance in IE and Chrome
-	Chrome, the module list doesn't wrap, whitespace:nowrap?

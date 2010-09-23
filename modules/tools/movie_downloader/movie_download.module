@@ -6,9 +6,16 @@ function menu_movie_download()
 		'admin/tools/movies/downloader' => array(
 			'callback' => 'output_movie_download',
 		),
-		'admin/tools/movies/downloader/%info_singular_step_movies' => array(
-			'callback' => 'output_movie_download_singular'
-		)
+		'admin/tools/movies/downloader/login/%login_index' => array(
+			'callback' => 'output_movie_download_login'
+		),
+		'admin/tools/movies/downloader/netflix' => array(
+			'callback' => 'output_movie_download_netflix',
+			'type' => MENU_CALLBACK
+		),
+		'admin/tools/movies/downloader/search/%movie_index' => array(
+			'callback' => 'output_movie_download_search'
+		),
 	);
 }
 
@@ -18,131 +25,9 @@ function setup_movie_download()
 	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'netflix.inc';
 }
 
-/**
- * Set up the list of settings
- * @ingroup setup
- */
-function setting_movie_download()
+function validate_movie_index($request)
 {
-	$settings = array('netflix_xml');
-	
-	// add wrapper functions for nzb_movie_search
-	for($i = 0; $i < 10; $i++)
-	{
-		$GLOBALS['setting_nzb_movie_search_' . $i] = create_function('$settings', 'return setting_nzb_movie_search($settings, \'' . $i . '\');');
-		$settings[] = 'nzb_movie_search_' . $i;
-	}
-	
-	// add wrapper functions for tor_movie_search
-	for($i = 0; $i < 10; $i++)
-	{
-		$GLOBALS['setting_tor_movie_search_' . $i] = create_function('$settings', 'return setting_tor_movie_search($settings, \'' . $i . '\');');
-		$settings[] = 'tor_movie_search_' . $i;
-	}
-	
-	return $settings;
-}
-
-/**
- * Implementation of setting
- * @ingroup setting
- */
-function setting_nzb_movie_search($settings, $index)
-{
-	// return the same static service as listed in the nzbservice module
-	if($index == 0)
-		return 'http://nzbmatrix.com/nzb-search.php?cat=1&search=%s';
-	if($index == 1)
-		return 'http://www.newzbin.com/search/query/?searchaction=Go&group=alt.binaries.dvd&q=%s';
-
-	// don't continue with this if stuff is missing
-	if(isset($settings['nzb_movie_search_' . $index]) && 
-		$settings['nzb_movie_search_' . $index] != ''
-	)
-		return $settings['nzb_movie_search_' . $index];
-	// use default
-	elseif(isset($settings['nzbservice_' . $index]['search']) && 
-		$settings['nzbservice_' . $index]['search'] != ''
-	)
-		return $settings['nzbservice_' . $index]['search'];
-}
-
-/**
- * Implementation of setting
- * @ingroup setting
- */
-function setting_tor_movie_search($settings, $index)
-{
-	// the static services to not have movies, only tv and music
-	if($index == 0 || $index == 1 || $index == 2)
-		return '';
-	if($index == 3)
-		return 'http://thedvdclub.org/browse.php?search=%s&cat=0&blah=0&incldead=1';
-
-	// don't continue with this if stuff is missing
-	if(isset($settings['tor_movie_search_' . $index]) && 
-		$settings['tor_movie_search_' . $index] != ''
-	)
-		return $settings['tor_movie_search_' . $index];
-	// use default
-	elseif(isset($settings['torservice_' . $index]['search']) && 
-		$settings['torservice_' . $index]['search'] != ''
-	)
-		return $settings['torservice_' . $index]['search'];
-}
-
-/**
- * Implementation of validate
- * @ingroup validate
- */
-function validate_movie_download($request, $index)
-{
-	switch($index)
-	{
-		case 'info_singular_step_movies':
-			if(isset($request['info_singular_step_movies']) &&
-				in_array($request['info_singular_step_movies'], array('login', 'login2', 'netflix', 'search'))
-			)
-				return $request['info_singular_step_movies'];
-		break;
-		case 'movie_index':
-			return generic_validate_numeric_zero($request, 'movie_index');
-		break;
-	}
-}
-
-/**
- * Implementation of validate
- * @ingroup validate
- */
-function validate_movie_search($request)
-{
-	if(isset($request['movie_search']) && is_string($request['movie_search']))
-		return generic_validate_all_safe($request, 'movie_search');
-	
-	if(!isset($request['movie_search']['search']))
-		return;
-		
-	if(isset($request['movie_search']['text']))
-		return $request['movie_search']['text'];
-}
-
-/**
- * Implementation of validate
- * @ingroup validate
- */
-function validate_movie_search_torindex($request)
-{
-	return generic_validate_numeric($request, 'movie_search_torindex');
-}
-
-/**
- * Implementation of validate
- * @ingroup validate
- */
-function validate_movie_search_nzbindex($request)
-{
-	return generic_validate_numeric($request, 'movie_search_nzbindex');
+	return generic_validate_numeric_zero($request, 'movie_index');
 }
 
 /**
@@ -187,43 +72,6 @@ function configure_movie_download($settings)
 		'options' => $feeds
 	);
 	
-	$download = array();
-	
-	if(setting('nzbservices_enable') == true)
-	{
-		// add nzb services
-		$nzbservices = configure_nzbservices($settings);
-		$download = array_merge($download, $nzbservices['nzbservices']['options']);
-	}
-	
-	if(setting('torservices_enable') == true)
-	{
-		// add torrent services
-		$torservices = configure_torservices($settings);
-		$download = array_merge($download, $torservices['torservices']['options']);
-	}
-	
-	if(!is_module('torservices') && !is_module('nzbservices'))
-	{
-		$download['services'] = array(
-			'name' => 'Download Services',
-			'status' => 'warn',
-			'description' => array(
-				'list' => array(
-					'This module takes advantage of torrent and news group services.',
-					'In order to use this module, the service modules must also be installed.'
-				),
-			),
-			'text' => 'No download service modules installed!',
-		);
-	}
-	
-	$options['tv_download'] = array(
-		'name' => 'Movie Downloads',
-		'type' => 'fieldset',
-		'options' => $download
-	);
-	
 	return $options;
 }
 
@@ -233,12 +81,6 @@ function configure_movie_download($settings)
  */
 function output_movie_download($request)
 {
-	// save the manual search to use later
-	if(isset($request['movie_search']))
-		session('movie_search', $request['movie_search']);
-	else
-		$request['movie_search'] = session('movie_search');
-
 	$infos = array();
 
 	// output configuration link
@@ -252,13 +94,12 @@ function output_movie_download($request)
 	), E_WARN);
 
 	// perform television downloading
-	// log in to services
 	$infos['movies_login'] = array(
-		'name' => 'NZB Services Login',
+		'name' => 'Download Services Login',
 		'status' => '',
 		'description' => array(
 			'list' => array(
-				'Logging in to NZB Services.',
+				'Logging in to Downloading Services.',
 			),
 		),
 		'text' => array(
@@ -266,7 +107,7 @@ function output_movie_download($request)
 		),
 		'type' => 'theme',
 		'value' => 'singular',
-		'href' => url('admin/tools/movies/downloader/login', true),
+		'href' => url('admin/tools/movies/downloader/login/0', true),
 	);
 	
 	register_output_vars('infos', array(
@@ -283,64 +124,19 @@ function output_movie_download($request)
 /**
  * Helper function for fetching all movies from services
  */
-function movies_fetch_movie_service($movie, $i, $is_nzb = true)
-{
-	$downloads = array();
-	
-	// get the config
-	if($is_nzb)
-		$config = setting('nzbservice_' . $i);
-	else
-		$config = setting('torservice_' . $i);
-	
-	// load search settings
-	if($is_nzb)
-		$search = setting('nzb_movie_search_' . $i);
-	else
-		$search = setting('tor_movie_search_' . $i);
-	
-	if($search != '')
-	{
-		// run query, using television search strings
-		if($is_nzb)
-			$result = fetch(sprintf($search, urlencode($movie)), array(), array(), session('nzbservices_' . $i));
-		else
-			$result = fetch(sprintf($search, urlencode($movie)), array(), array(), session('torservices_' . $i));
-		
-		// match nzbs
-		$count = preg_match_all($config['match'], $result['content'], $matches);
-		if($count > 0)
-		{
-			foreach($matches[1] as $i => $link)
-			{
-				// return list of downloads
-				$downloads[$i] = array('link' => array('href' => $link, 'name' => htmlspecialchars($movie)));
-			}
-		}
-	}
-	
-	return $downloads;
-}
-
-/**
- * Helper function for fetching all movies from services
- */
 function movies_fetch_movies($movie)
 {
 	$downloads = array();
 	
-	$nzbservices = setting('all_nzbservices');
+	$services = setting('all_download_services', 'movies');
 	
 	// loop through NZB services until we find the show
-	foreach($nzbservices as $i => $config)
+	foreach($services as $i => $config)
 	{
-		$search = setting('nzb_movie_search_' . $i);
-print_r($i);
-		
-		if($search != '')
+		if($config['search'] != '')
 		{
 			// run query, using television search strings
-			$result = fetch(sprintf($search, urlencode($movie)), array(), array(), session('nzbservices_' . $i));
+			$result = fetch(sprintf($config['search'], urlencode($movie)), array(), array(), session('download_services_' . $i));
 
 			// match nzbs
 			$count = preg_match_all($config['match'], $result['content'], $matches);
@@ -349,32 +145,7 @@ print_r($i);
 			{
 				// return list of downloads
 				$downloads[] = array('link' => array(
-					'url' => sprintf($search, urlencode($movie)),
-					'text' => htmlspecialchars($movie) . ' on ' . htmlspecialchars($config['name']) . ' (' . $count . ') <img src="' . $config['image'] . '" alt="icon" />'
-				));
-			}
-		}
-	}
-	
-	$torservices = setting('all_torservices');
-	
-	// loop through NZB services until we find the show
-	foreach($torservices as $i => $config)
-	{
-		$search = setting('tor_movie_search_' . $i);
-		
-		if($search != '')
-		{
-			// run query, using television search strings
-			$result = fetch(sprintf($search, urlencode($movie)), array(), array(), session('torservices_' . $i));
-			
-			// match nzbs
-			$count = preg_match_all($config['match'], $result['content'], $matches);
-			if($count > 0)
-			{
-				// return list of downloads
-				$downloads[] = array('link' => array(
-					'url' => sprintf($search, urlencode($movie)),
+					'url' => sprintf($config['search'], urlencode($movie)),
 					'text' => htmlspecialchars($movie) . ' on ' . htmlspecialchars($config['name']) . ' (' . $count . ') <img src="' . $config['image'] . '" alt="icon" />'
 				));
 			}

@@ -55,7 +55,7 @@ function install_users()
 			'PrivateKey' => md5(microtime())
 		);
 		
-		$result = db_insert('INSERT INTO users ' . sql_insert($fileinfo), $fileinfo);
+		$result = db_insert('INSERT INTO users ' . sql_insert($fileinfo), array_values($fileinfo));
 	}
 	
 	$db_user = db_assoc('SELECT * FROM users WHERE Username = "admin" LIMIT 1');
@@ -72,7 +72,7 @@ function install_users()
 			'PrivateKey' => md5(microtime()),
 		);
 		// create default administrator
-		$result = db_insert('INSERT INTO users ' . sql_insert($fileinfo), $fileinfo);
+		$result = db_insert('INSERT INTO users ' . sql_insert($fileinfo), array_values($fileinfo));
 	}
 }
 
@@ -111,7 +111,7 @@ function setup_users()
 		$return = db_assoc('SELECT * FROM users WHERE PrivateKey=' . 
 			implode(' OR PrivateKey=', array_fill(0, count($session_user['Settings']['keys']), '?')) . 
 			' LIMIT ' . count($session_user['Settings']['keys'])
-		, $session_user['Settings']['keys']);
+		, array_values($session_user['Settings']['keys']));
 		
 		$session_user['Settings']['keys_usernames'] = array();
 		foreach($return as $index => $user)
@@ -258,7 +258,7 @@ function setting_local_users($settings)
 {
 	$settings['local_root'] = setting('local_root');
 	
-	if(isset($settings['local_users']) && is_dir($settings['local_users']))
+	if($settings['local_users'] = generic_validate_dir($settings, 'local_users'))
 		return $settings['local_users'];
 	else
 	{

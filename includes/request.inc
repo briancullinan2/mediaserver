@@ -45,8 +45,6 @@ function request_validate()
 	if(isset($_SERVER['REQUEST_METHOD']) && strtolower($_SERVER['REQUEST_METHOD']) == 'post')
 	{
 		session('last_request',  $_REQUEST);
-		if(substr($_SERVER['REQUEST_URI'], 0, 1) == '/')
-			$_SERVER['REQUEST_URI'] = substr($_SERVER['REQUEST_URI'], 1);
 		goto($_SERVER['REQUEST_URI']);
 	}
 	if($last_request = session('last_request'))
@@ -331,3 +329,12 @@ function generic_validate_base64($request, $index)
 		return $request[$index];
 }
 
+function generic_validate_dir($request, $index)
+{
+	if(isset($request[$index]) && is_dir($request[$index]))
+	{
+		if(substr($request[$index], -strlen(DIRECTORY_SEPARATOR)) != DIRECTORY_SEPARATOR) 
+			$request[$index] .= DIRECTORY_SEPARATOR;
+		return $request[$index];
+	}
+}

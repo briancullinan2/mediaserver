@@ -275,20 +275,14 @@ function setting_db_name($settings)
  */
 function setting_db_connect($settings)
 {
-	$settings['db_type'] = setting('db_type');
-	$settings['db_server'] = setting('db_server');
-	$settings['db_user'] = setting('db_user');
-	$settings['db_pass'] = setting('db_pass');
-	$settings['db_name'] = setting('db_name');
-	
 	if(isset($settings['db_connect']) && parseDSN($settings['db_connect']) !== NULL)
 		return $settings['db_connect'];
 	else
-		return $settings['db_type'] . '://' . 
-				$settings['db_user'] . ':' . 
-				$settings['db_pass'] . '@' . 
-				$settings['db_server'] . '/' . 
-				$settings['db_name'];
+		return setting('db_type') . '://' . 
+				setting('db_user') . ':' . 
+				setting('db_pass') . '@' . 
+				setting('db_server') . '/' . 
+				setting('db_name');
 }
 
 /**

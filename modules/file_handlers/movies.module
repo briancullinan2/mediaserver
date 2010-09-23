@@ -95,30 +95,22 @@ function validate_remove_movie_folder($request)
  */
 function setting_movie_folder($settings, $index)
 {
-	if(isset($settings['movie_folder_' . $index]))
-	{
-		$settings['movie_folder_' . $index] = str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $settings['movie_folder_' . $index]);
-		if(substr($settings['movie_folder_' . $index], -1) != DIRECTORY_SEPARATOR)
-			$settings['movie_folder_' . $index] .= DIRECTORY_SEPARATOR;
-		if(is_dir($settings['movie_folder_' . $index]))
-			return str_replace('\\', '/', $settings['movie_folder_' . $index]);
-	}
+	return generic_validate_dir($settings, 'movie_folder_' . $index);
 }
 
 /**
  * Implementation of setting
  * @ingroup setting
  */
-function setting_movie_folders($settings)
+function setting_movie_folders()
 {
-	if(!isset($settings['movie_folders']))
-		$settings['movie_folders'] = array();
+	$movie_folders = array();
 
 	for($i = 0; $i < 50; $i++)
 	{
-		$folder = setting_movie_folder($settings, $i);
+		$folder = setting('movie_folder', $i);
 		if(isset($folder))
-			$settings['movie_folders'][$i] = $folder;
+			$movie_folders[] = $folder;
 	}
 	
 	if(setting_installed() && setting('database_enable'))
@@ -128,13 +120,13 @@ function setting_movie_folders($settings)
 		{
 			if(preg_match('/movie/i', $watch['Filepath']) != 0)
 			{
-				$index = count($settings['movie_folders']);
+				$index = count($movie_folders);
 				$folder = setting_movie_folder(array('movie_folder_' . $index => $watch['Filepath']), $index);
 			}
 		}
 	}
 	
-	return array_values(array_unique($settings['movie_folders']));
+	return array_unique($movie_folders);
 }
 
 function configure_movies($request)
@@ -337,6 +329,7 @@ function get_info_movies($file)
 	$fileinfo['MovieXml'] = $movie['content'];
 	
 	// get the image
+	/*
 	$images = $movie['xml']->xpath('//image[@size="original"]');
 	if(isset($images[0]))
 	{
@@ -344,6 +337,7 @@ function get_info_movies($file)
 		$image = fetch($image_attr['url'], array(), array('Accept-Encoding: gzip'));
 		$fileinfo['Image'] = 'data:' . $image['headers']['content-type'] . ';base64,' . base64_encode($image['content']);
 	}
+	*/
 	
 	return $fileinfo;
 }

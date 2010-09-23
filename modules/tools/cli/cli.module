@@ -26,7 +26,7 @@ function rewrite_cli($path_info, $request)
 		{
 			if(strpos($value, '=') !== false)
 			{
-				$name_value_pair = split('=', substr($value, 2));
+				$name_value_pair = explode('=', substr($value, 2), 2);
 				$name = trim($name_value_pair[0]);
 				$request[$name] = trim($name_value_pair[1]);
 			}

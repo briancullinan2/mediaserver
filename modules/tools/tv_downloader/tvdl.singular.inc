@@ -23,11 +23,8 @@ function output_tv_download_singular($request)
 	
 	switch($request['info_singular_step_television'])
 	{
-		case 'login':
-			$infos = get_tv_download_login($request);
-			break;
 		case 'shows':
-			$infos = get_tv_download_shows($request);
+			return output_tv_download_shows($request);
 			break;
 		case 'download':
 			$infos = get_tv_download_downloads($request);
@@ -36,108 +33,116 @@ function output_tv_download_singular($request)
 			$infos = array();
 	}
 	
-	theme('form_tableset', $infos);
+	theme('form_fieldrows', $infos);
 }
 
-function get_tv_download_login($request)
+function output_tv_download_login($request)
 {
-	// log in to my episodes first
-	$result = television_myepisodes_login();
-	
-	$infos = array();
-	
-	if($result['status'] == false)
+	if($request['login_index'] < count(setting('all_download_services')))
 	{
-		$infos['television_login'] = array(
-			'name' => 'MyEpisodes Login',
-			'status' => 'fail',
-			'description' => array(
-				'list' => array(
-					'Failed to login to my episodes while fetching the login page.',
-				),
-			),
-			'text' => 'Login Failed!'
-		);
+		output_download_services_login($request, 'admin/tools/television/downloader/login/');
 	}
-	else
+	
+	if($request['login_index'] == count(setting('all_download_services'))-1)
 	{
-		// login succeeded
-		$infos['television_login'] = array(
-			'name' => 'MyEpisodes Login',
-			'status' => '',
-			'description' => array(
-				'list' => array(
-					'Login to myepisodes.com successful!',
+		// log in to my episodes
+		$result = television_myepisodes_login();
+		
+		$infos = array();
+		
+		if($result['status'] == false)
+		{
+			$infos['television_login'] = array(
+				'name' => 'MyEpisodes Login',
+				'status' => 'fail',
+				'description' => array(
+					'list' => array(
+						'Failed to login to my episodes while fetching the login page.',
+					),
 				),
-			),
-			'text' => 'Login Succeeded!'
-		);
+				'text' => 'Login Failed!'
+			);
+		}
+		else
+		{
+			// login succeeded
+			$infos['television_login'] = array(
+				'name' => 'MyEpisodes Login',
+				'status' => '',
+				'description' => array(
+					'list' => array(
+						'Login to myepisodes.com successful!',
+					),
+				),
+				'text' => 'Login Succeeded!'
+			);
+			
+			
+			// download episode list
+			$infos['myepisodes_shows'] = array(
+				'name' => 'MyEpisodes TV Shows',
+				'status' => '',
+				'description' => array(
+					'list' => array(
+						'Loading TV shows.',
+					),
+				),
+				'text' => array(
+					'loading' => 'Loading...'
+				),
+				'type' => 'theme',
+				'value' => 'singular',
+				'href' => url('admin/tools/television/downloader/shows', true),
+			);
+		}
 		
-		// log in to services here
-		if(setting('nzbservices_enable') == true)
-			$infos = array_merge(nzbservices_singular_result(), $infos);
-		if(setting('torservices_enable') == true)
-			$infos = array_merge(torservices_singular_result(), $infos);
+		theme('form_fieldrows', $infos);
+	}
+}
+
+function output_tv_download_shows($request)
+{
+	// add manual search
+	output_download_services_manual($request);
+	
+	$request['service_search'] = session('download_services');
+	
+	if(!isset($request['service_search']))
+	{
+		// get list of shows
+		$shows = television_myepisodes_fetch_shows();
 		
-		// download episode list
+		$infos = array();
+		
 		$infos['myepisodes_shows'] = array(
 			'name' => 'MyEpisodes TV Shows',
 			'status' => '',
 			'description' => array(
 				'list' => array(
-					'Loading TV shows.',
+					'These are all the TV Shows you are subscribed to.',
 				),
 			),
-			'text' => array(
-				'loading' => 'Loading...'
+			'value' => array(
+				'TV Shows:',
+				'list' => $shows['all_shows'],
 			),
-			'type' => 'theme',
-			'value' => 'singular',
-			'href' => url('admin/tools/television/downloader/shows', true),
 		);
-	}
-	
-	return $infos;
-}
-
-function get_tv_download_shows($request)
-{
-	// get list of shows
-	$shows = television_myepisodes_fetch_shows();
-	
-	$infos = array();
-	
-	$infos['myepisodes_shows'] = array(
-		'name' => 'MyEpisodes TV Shows',
-		'status' => '',
-		'description' => array(
-			'list' => array(
-				'These are all the TV Shows you are subscribed to.',
+		
+		// list of shows to download
+		$infos['myepisodes_episodes'] = array(
+			'name' => 'New Episodes',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'These are all the new episodes that need to be downloaded.',
+				),
 			),
-		),
-		'value' => array(
-			'TV Shows:',
-			'list' => $shows['all_shows'],
-		),
-	);
-	
-	// list of shows to download
-	$infos['myepisodes_episodes'] = array(
-		'name' => 'New Episodes',
-		'status' => '',
-		'description' => array(
-			'list' => array(
-				'These are all the new episodes that need to be downloaded.',
+			'value' => array(
+				'Episodes for download:',
+				'list' => $shows['new_episodes']['combined']
 			),
-		),
-		'value' => array(
-			'Episodes for download:',
-			'list' => $shows['new_episodes']['combined']
-		),
-	);
+		);
 	
-	if(count(setting('all_nzbservices')) > 0 || count(setting('torservices')) > 0)
-	{
 		// add an entry for each show
 		foreach($shows['new_episodes']['shows'] as $i => $show)
 		{
@@ -163,22 +168,9 @@ function get_tv_download_shows($request)
 				, true),
 			);
 		}
-	}
-	else
-	{
-		$infos['services'] = array(
-			'name' => 'No Services',
-			'status' => 'warn',
-			'description' => array(
-				'list' => array(
-					'There are no services configured, shows cannot be downloaded!',
-				),
-			),
-			'text' => 'No Services Configured!',
-		);
-	}
 	
-	return $infos;
+		theme('form_fieldrows', $infos);
+	}
 }
 
 function get_tv_download_downloads($request)
@@ -190,7 +182,7 @@ function get_tv_download_downloads($request)
 	$request['show_index'] = validate($request, 'show_index');
 	
 	// fetch nzb files
-	$status = television_fetch_nzb($request['showname'], $request['season'], $request['episode']);
+	$status = television_fetch_show($request['showname'], $request['season'], $request['episode']);
 	
 	$show_title = htmlspecialchars($request['showname']) . ' ' . 
 		htmlspecialchars($request['season']) . 'x' . 

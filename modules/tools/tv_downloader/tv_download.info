@@ -1,7 +1,7 @@
 name = TV Downloader
 description = Automatically download episodes selected on MyEpisodes from NZB or torrent services to a specified folder.
 privilage = 10
-settings = tv_download
+settings[] = myepisodes
 template = false
 package = tools
 depends on[] = tools

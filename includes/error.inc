@@ -251,11 +251,8 @@ function setting_debug_mode($settings)
 }
 
 
-function configure_error($settings)
+function configure_error()
 {
-	$settings['debug_mode'] = setting('debug_mode');
-	$settings['verbose'] = setting('verbose');
-	
 	$options = array();
 
 	$options['debug_mode'] = array(
@@ -268,7 +265,7 @@ function configure_error($settings)
 			),
 		),
 		'type' => 'boolean',
-		'value' => $settings['debug_mode'],
+		'value' => setting('debug_mode'),
 		'options' => array(
 			lang('debug mode option 1', 'Turn Debug Mode On'),
 			lang('debug mode option 2', 'Do Not Use Debug Mode'),
@@ -284,7 +281,7 @@ function configure_error($settings)
 			),
 		),
 		'type' => 'select',
-		'value' => $settings['verbose'],
+		'value' => setting('verbose'),
 		'options' => array(
 			false => 'Do not show any debug information.',
 			true => 'Show important debug information.',

@@ -1,77 +1,37 @@
 <?php
 
-function output_movie_download_singular($request)
+
+function output_movie_download_login($request)
 {
-	switch($request['info_singular_step_movies'])
+	if($request['login_index'] < count(setting('all_download_services')))
 	{
-		case 'login':
-			$infos = get_movie_download_login($request);
-			break;
-		case 'login2':
-			$infos = get_movie_download_login2($request);
-			break;
-		case 'netflix':
-			$infos = get_movie_download_netflix($request);
-			break;
-		case 'search':
-			$infos = get_movie_download_search($request);
-			break;
+		output_download_services_login($request, 'admin/tools/movies/downloader/login/');
 	}
-	
-	theme('form_tableset', $infos);
-}
 
-
-function get_movie_download_login($request)
-{
-	$infos = nzbservices_singular_result();
-	
-	// log in to services
-	$infos['movies_login2'] = array(
-		'name' => 'Torrent Services Login',
-		'status' => '',
-		'description' => array(
-			'list' => array(
-				'Logging in to torrent services.',
+	if($request['login_index'] == count(setting('all_download_services'))-1)
+	{
+		// download netflix Q
+		$infos['netflix_movies'] = array(
+			'name' => 'Movies from Netflix',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'Downloading Netflix Q.',
+				),
 			),
-		),
-		'text' => array(
-			'loading' => 'Loading...'
-		),
-		'type' => 'theme',
-		'value' => 'singular',
-		'href' => url('admin/tools/movies/downloader/login2', true),
-	);
-	
-	return $infos;
-}
-
-function get_movie_download_login2($request)
-{
-	// get torrent login stuff
-	$infos = torservices_singular_result();
-
-	// download netflix Q
-	$infos['netflix_movies'] = array(
-		'name' => 'Movies from Netflix',
-		'status' => '',
-		'description' => array(
-			'list' => array(
-				'Downloading Netflix Q.',
+			'text' => array(
+				'loading' => 'Loading...'
 			),
-		),
-		'text' => array(
-			'loading' => 'Loading...'
-		),
-		'type' => 'theme',
-		'value' => 'singular',
-		'href' => url('admin/tools/movies/downloader/netflix', true),
-	);
-	
-	return $infos;
+			'type' => 'theme',
+			'value' => 'singular',
+			'href' => url('admin/tools/movies/downloader/netflix', true),
+		);
+		
+		theme('form_fieldrows', $infos);
+	}
 }
 
-function get_movie_download_netflix($request)
+function output_movie_download_netflix($request)
 {
 	$infos = array();
 	
@@ -86,7 +46,10 @@ function get_movie_download_netflix($request)
 				'These are all the Movies on your Q.',
 			),
 		),
-		'text' => 'There are ' . count($movies['all_movies']) . ' movies on your Netflix Q'
+		'type' => 'set',
+		'options' => array(
+			'text' => 'There are ' . count($movies['all_movies']) . ' movies on your Netflix Q'
+		),
 	);
 	
 	// get intersections
@@ -173,54 +136,14 @@ function get_movie_download_netflix($request)
 	session('all_movies', $movies['all_movies']);
 	session('descriptions', $movies['descriptions']);
 
-	// cancel options
-	$infos['netflix_movies_null'] = array(
-		'name' => 'Movie Search',
-		'status' => '',
-		'description' => array(
-			'list' => array(
-				'A movie can be entered to search for, and the cancel function can be used at any time to stop the automatic search.',
-			),
-		),
-		'type' => 'set',
-		'options' => array(
-			'movie_search[text]' => array(
-				'type' => 'text',
-				'value' => (isset($request['movie_search'])?$request['movie_search']:''),
-				'name' => 'Manual Search'
-			),
-			'movie_search[search]' => array(
-				'type' => 'submit',
-				'value' => 'Search',
-			),
-		),
-	);
+	// add manual search
+	$infos = array_merge(get_services_manual_download($request), $infos);
 	
-	// if the manual search is set, just do that one
-	if(isset($request['movie_search']))
-	{
-		// construct first movie singular
-		$infos['movies_manual_0'] = array(
-			'name' => 'Movies in your Q available for Download',
-			'status' => '',
-			'description' => array(
-				'list' => array(
-					'Searching for movies.',
-				),
-			),
-			'text' => array(
-				'loading' => 'Loading...'
-			),
-			'type' => 'theme',
-			'value' => 'singular',
-			'href' => url('admin/tools/movies/downloader/search?movie_search=' . urlencode($request['movie_search']), true),
-		);
-	}
 	// begin automatic search
-	elseif(count($movies['all_movies']) > 0)
+	if(!isset($request['service_search']) && count($movies['all_movies']) > 0)
 	{
 		// add cancel button
-		$infos['netflix_movies_null']['options'][] = array(
+		$infos['netflix_movies']['options'][] = array(
 			'type' => 'button',
 			'value' => 'Cancel',
 			'action' => 'if(current_ajax) current_ajax.abort();',
@@ -241,14 +164,14 @@ function get_movie_download_netflix($request)
 			),
 			'type' => 'theme',
 			'value' => 'singular',
-			'href' => url('admin/tools/movies/downloader/search?movie_index=0', true),
+			'href' => url('admin/tools/movies/downloader/search/0', true),
 		);
 	}
 	
-	return $infos;
+	theme('form_fieldrows', $infos);
 }
 
-function get_movie_download_search($request)
+function output_movie_download_search($request)
 {
 	$infos = array();
 	
@@ -302,112 +225,11 @@ function get_movie_download_search($request)
 				),
 				'type' => 'theme',
 				'value' => 'singular',
-				'href' => url('admin/tools/movies/downloader/search?movie_index=' . ($request['movie_index']+1), true),
+				'href' => url('admin/tools/movies/downloader/search/' . ($request['movie_index']+1), true),
 			);
 		}
-	}
-	elseif(isset($request['movie_search']))
-	{
-		$request['movie_search_torindex'] = validate($request, 'movie_search_torindex');
-		$request['movie_search_nzbindex'] = validate($request, 'movie_search_nzbindex');
-		
-		// search for movie on each services
-		if(!isset($request['movie_search_nzbindex']) && !isset($request['movie_search_torindex']))
-			$request['movie_search_nzbindex'] = 0;
-
-		if(isset($request['movie_search_nzbindex']))
-			$results = movies_fetch_movie_service($request['movie_search'], $request['movie_search_nzbindex'], true);
-		else
-			$results = movies_fetch_movie_service($request['movie_search'], $request['movie_search_torindex'], false);
-		
-		// service movie info, only if results were found
-		if(count($results) > 0)
-		{
-			if(isset($request['movie_search_nzbindex']))
-			{
-				$index = $request['movie_search_nzbindex'];
-				$config = setting('nzbservice_' . $index);
-			}
-			else
-			{
-				$index = $request['movie_search_torindex'];
-				$config = setting('torservice_' . $index);
-			}
-			
-			$infos['movie_search_' . $index] = array(
-				'name' => 'Searched on ' . $config['name'],
-				'status' => '',
-				'description' => array(
-					'list' => array(
-						'This movie has been searched for on ' . $config['name'] . ', and results were found.',
-					),
-				),
-				'text' => $config['name'] . ':<br />' . implode('<br />', $results),
-			);
-		}
-		
-		// do next service
-		if(isset($request['movie_search_nzbindex']) && $request['movie_search_nzbindex']+1 < count(setting('nzbservices')))
-		{
-			$config = setting('nzbservice_' . $request['movie_search_nzbindex']);
-			$infos['movie_search' . ($request['movie_search_nzbindex']+1)] = array(
-				'name' => 'Manual Search on ' . $config['name'],
-				'status' => '',
-				'description' => array(
-					'list' => array(
-						'Searching for movies.',
-					),
-				),
-				'text' => array(
-					'loading' => 'Loading...'
-				),
-				'type' => 'theme',
-				'value' => 'singular',
-				'href' => url('admin/tools/movies/downloader/search?movie_search_nzbindex=' . ($request['movie_search_nzbindex']+1) . '&movie_search=' . urlencode($request['movie_search']), true),
-			);
-		}
-		elseif(isset($request['movie_search_torindex']) && $request['movie_search_torindex']+1 < count(setting('torservices')))
-		{
-			$config = setting('torservice_' . $request['movie_search_torindex']);
-			$infos['movies_manual_' . ($request['movie_search_torindex']+1)] = array(
-				'name' => 'Manual Search on ' . $config['name'],
-				'status' => '',
-				'description' => array(
-					'list' => array(
-						'Searching for movies.',
-					),
-				),
-				'text' => array(
-					'loading' => 'Loading...'
-				),
-				'type' => 'theme',
-				'value' => 'singular',
-				'href' => url('admin/tools/movies/downloader/search?movie_search_torindex=' . ($request['movie_search_torindex']+1) . '&movie_search=' . urlencode($request['movie_search']), true),
-			);
-		}
-		elseif(isset($request['movie_search_nzbindex']))
-		{
-			$config = setting('torservice_0');
-			$infos['movies_manual_0'] = array(
-				'name' => 'Manual Search on ' . $config['name'],
-				'status' => '',
-				'description' => array(
-					'list' => array(
-						'Searching for movies.',
-					),
-				),
-				'text' => array(
-					'loading' => 'Loading...'
-				),
-				'type' => 'theme',
-				'value' => 'singular',
-				'href' => url('admin/tools/movies/downloader/search?movie_search_torindex=0&movie_search=' . urlencode($request['movie_search']), true),
-			);
-		}
-		else
-			session('movie_search', NULL);
 	}
 	
-	return $infos;
+	theme('form_fieldrows', $infos);
 }
 

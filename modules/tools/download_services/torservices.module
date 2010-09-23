@@ -5,21 +5,30 @@ function setting_download_services_torservices()
 	return array('torservice_0', 'torservice_1', 'torservice_2', 'torservice_3');
 }
 
-function setting_torservice_0($settings)
+function setting_torservice_0($settings, $type = NULL)
 {
-	return array(
+	$service = array(
 		'name' => 'What.CD',
 		'match' => '/<a href="(torrents.php?action=download[^"]*?)"/i',
 		'search' => '',
 		'login' => 'http://what.cd/login.php',
 		'loginfail' => '<span class="warning">',
-		'exclude' => 'keeplogged'
+		'exclude' => 'keeplogged',
+		'savepath' => setting('torpath'),
 	);
+	
+	if($type == 'audio')
+		$service['search'] = 'http://what.cd/torrents.php?searchstr=%s';
+	
+	if(isset($settings['torservice_0']))
+		$settings['torservice_0'] = array_merge($settings['torservice_0'], $service);
+		
+	return setting_download_service($settings, 'torservice_0');
 }
 
-function setting_torservice_1($settings)
+function setting_torservice_1($settings, $type = NULL)
 {
-	return array(
+	$service = array(
 		'name' => 'Waffles.FM',
 		'match' => '/<a href="(\/download.php\/[^"]*?)"/i',
 		'search' => '',
@@ -28,31 +37,58 @@ function setting_torservice_1($settings)
 		'passfield' => 'wpPassword',
 		'loginfail' => '/<h2>Login error<\/h2>/i',
 		'exclude' => 'wpMailmypassword,autoLogout,useSSL',
+		'savepath' => setting('torpath'),
 	);
+	
+	if($type == 'audio')
+		$service['search'] = 'https://www.waffles.fm/browse.php?q=%s';
+	
+	if(isset($settings['torservice_1']))
+		$settings['torservice_1'] = array_merge($settings['torservice_1'], $service);
+	
+	return setting_download_service($settings, 'torservice_1');
 }
 
-function setting_torservice_2($settings)
+function setting_torservice_2($settings, $type = NULL)
 {
-	return array(
+	$service = array(
 		'name' => 'TvTorrents',
 		'match' => '/<a href="" onclick="return loadTorrent\(\'([^\']*?)\'/i',
 		'search' => '',
 		'login' => 'http://tvtorrents.com/',
 		'loginfail' => '/<font class="error">/i',
-		'exclude' => 'cookie'
+		'exclude' => 'cookie',
+		'savepath' => setting('torpath'),
 	);
+	
+	if($type == 'television')
+		$service['search'] = 'http://tvtorrents.com/loggedin/search.do?search=%s %d %02d';
+	
+	if(isset($settings['torservice_2']))
+		$settings['torservice_2'] = array_merge($settings['torservice_2'], $service);
+		
+	return setting_download_service($settings, 'torservice_2');
 }
 
-function setting_torservice_3($settings)
+function setting_torservice_3($settings, $type = NULL)
 {
-	return array(
+	$service = array(
 		'name' => 'TheDvdClub',
 		'match' => '/<a id="hltorrent9546" href="([^"]*)"/i',
 		'search' => '',
 		'login' => 'http://thedvdclub.org/login.php',
-		'loginfail' => '/color="red">Error:/i',
-		'exclude' => 'cookie'
+		'loginfail' => '/color="?red"?[^>]*?>Error:/i',
+		'include' => '/<img[^>]*?src=([\'"]?)([^\1]*?)\1[^>]*?>/i/<img src="http://thedvdclub.org/$2">/',
+		'savepath' => setting('torpath'),
 	);
+	
+	if($type == 'movies')
+		$service['search'] = 'http://thedvdclub.org/browse.php?search=%s&cat=0&blah=0&incldead=1';
+	
+	if(isset($settings['torservice_3']))
+		$settings['torservice_3'] = array_merge($settings['torservice_3'], $service);
+		
+	return setting_download_service($settings, 'torservice_3');
 }
 
 /**
@@ -61,10 +97,10 @@ function setting_torservice_3($settings)
  */
 function setting_torpath($settings)
 {
-	if(isset($settings['torpath']) && is_dir($settings['torpath']))
+	if($settings['torpath'] = generic_validate_dir($settings, 'torpath') && is_writable($settings['torpath']))
 		return $settings['torpath'];
 	else
-		return '';
+		return setting('tmp_dir');
 }
 	
 /**
@@ -108,6 +144,8 @@ function configure_torservices($settings)
 			'value' => $settings['torpath'],
 		);
 	}
+	
+	$options = array_merge(configure_services(all_services_module('torservices')), $options);
 	
 	return array('torservices' => array(
 		'name' => 'Torrenting Services',

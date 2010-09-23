@@ -16,7 +16,7 @@ function theme__ampache()
 		$error = $GLOBALS['user_errors'][0];
 		if(strpos($error, ':') !== false)
 		{
-			$err = split(':', $error);
+			$err = explode(':', $error, 2);
 			?><error code="<?php echo $err[0]; ?>"><![CDATA[<?php echo $err[1]; ?>]]></error><?php
 		}
 		?></root><?php

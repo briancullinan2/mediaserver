@@ -167,18 +167,17 @@ function setting_alias_index($settings, $index)
  */
 function setting_alias_rules($settings)
 {
-	if(!isset($settings['alias_rules']))
-		$settings['alias_rules'] = array();
+	$settings['alias_rules'] = array();
 	
 	// make sure all servers with numeric indexes are on the list
 	for($i = 0; $i < 100; $i++)
 	{
 		$alias = setting_alias_index($settings, $i);
 		if(isset($alias))
-			$settings['alias_rules'][$i] = $alias;
+			$settings['alias_rules'][] = $alias;
 	}
 	
-	return array_values($settings['alias_rules']);
+	return $settings['alias_rules'];
 }
 
 function setting_paths_match($settings)

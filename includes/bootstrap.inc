@@ -115,7 +115,7 @@ function setup_mime()
 		$mime_text = fread($handle, filesize(include_path('mime.types')));
 		fclose($handle);
 		
-		$mimes = split("\n", $mime_text);
+		$mimes = explode("\n", $mime_text);
 		
 		$ext_to_mime = array();
 		foreach($mimes as $index => $mime)
@@ -127,7 +127,7 @@ function setup_mime()
 				$file_types = preg_split('/[\s,]+/', $mime);
 				$mime_type = $file_types[0];
 				// general type
-				$tmp_type = split('/', $mime_type);	
+				$tmp_type = explode('/', $mime_type);	
 				$type = $tmp_type[0];
 				// unset mime part to get all its filetypes
 				unset($file_types[0]);

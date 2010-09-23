@@ -302,7 +302,7 @@ function setting_modrewrite($settings)
  */
 function setting_tmp_dir($settings)
 {
-	if(isset($settings['tmp_dir']) && is_dir($settings['tmp_dir']))
+	if($settings['tmp_dir'] = generic_validate_dir($settings, 'tmp_dir'))
 		return $settings['tmp_dir'];
 	else
 	{
@@ -325,17 +325,22 @@ function setting_tmp_dir($settings)
  * @ingroup setting
  * @param name The setting name to get
  */
-function setting($name, $default = NULL)
+function setting($name)
 {
+	$args = func_get_args();
+	array_shift($args);
+	
 	// if by chance settings isn't set up
 	if(!isset($GLOBALS['settings']))
 		preload_settings();
+		
+	array_unshift($args, $GLOBALS['settings']);
 	
 	// if the setting is not found, try to get the default
 	if(function_exists('setting_' . $name))
-		$GLOBALS['settings'][$name] = call_user_func_array('setting_' . $name, array($GLOBALS['settings']));
+		$GLOBALS['settings'][$name] = call_user_func_array('setting_' . $name, $args);
 	elseif(isset($GLOBALS['setting_' . $name]) && is_callable($GLOBALS['setting_' . $name]))
-		$GLOBALS['settings'][$name] = call_user_func_array($GLOBALS['setting_' . $name], array($GLOBALS['settings']));
+		$GLOBALS['settings'][$name] = call_user_func_array($GLOBALS['setting_' . $name], $args);
 	
 	// if the setting is loaded already use that
 	if(isset($GLOBALS['settings'][$name]))
@@ -343,10 +348,6 @@ function setting($name, $default = NULL)
 		
 	// if the setting isn't found in the configuration
 	raise_error('Setting \'' . $name . '\' not found!', E_VERBOSE);
-		
-	// return default setting
-	if($default !== NULL)
-		return $default;
 }
 
 /**
@@ -805,15 +806,6 @@ function status_settings($settings)
  */
 function configure_settings($settings, $request)
 {
-	$settings['system_type'] = setting('system_type');
-	$settings['local_root'] = setting('local_root');
-	$settings['html_root'] = setting('html_root');
-	$settings['html_domain'] = setting('html_domain');
-	$settings['html_name'] = setting('html_name');
-	$settings['debug_mode'] = setting('debug_mode');
-	$settings['deep_select'] = setting('deep_select');
-	$settings['buffer_size'] = setting('buffer_size');
-	
 	$options = array();
 	
 	$reset = array();
@@ -853,6 +845,7 @@ function configure_settings($settings, $request)
 	$general = array();
 	
 	// system type
+	$settings['system_type'] = setting('system_type');
 	$general['system_type'] = array(
 		'name' => lang('system type title', 'System Type'),
 		'status' => '',
@@ -883,7 +876,7 @@ function configure_settings($settings, $request)
 			),
 		),
 		'type' => 'text',
-		'value' => $settings['html_domain'],
+		'value' => setting('html_domain'),
 	);
 
 	$general['html_root'] = array(
@@ -898,7 +891,7 @@ function configure_settings($settings, $request)
 			),
 		),
 		'type' => 'text',
-		'value' => $settings['html_root'],
+		'value' => setting('html_root'),
 	);
 
 	// site name
@@ -911,7 +904,7 @@ function configure_settings($settings, $request)
 			),
 		),
 		'type' => 'text',
-		'value' => $settings['html_name'],
+		'value' => setting('html_name'),
 	);
 	
 	$general['deep_select'] = array(
@@ -925,7 +918,7 @@ function configure_settings($settings, $request)
 			),
 		),
 		'type' => 'boolean',
-		'value' => $settings['deep_select'],
+		'value' => setting('deep_select'),
 		'options' => array(
 			lang('recursive get option 1', 'Turn Deep Select On'),
 			lang('recursive get option 2', 'Do Not Use Deep Select'),
@@ -941,7 +934,7 @@ function configure_settings($settings, $request)
 			),
 		),
 		'type' => 'filesize',
-		'value' => $settings['buffer_size'],
+		'value' => setting('buffer_size'),
 	);
 	
 	$options['general'] = array(

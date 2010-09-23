@@ -199,7 +199,7 @@ function add_menu($module, $menus)
 		if($menus[$path]['type'] == MENU_NORMAL)
 		{
 			// loop through each dir and find gaps in menus
-			$dirs = split('/', $path);
+			$dirs = explode('/', $path);
 			$current = '';
 			// this can be very exhaustive because if the menu is found later it will just replace it
 			foreach($dirs as $i => $item)
@@ -242,7 +242,7 @@ function output_breadcrumbs($current_path)
 {
 	// create a list of breadcrumbs that can be overrided by other modules
 	$breadcrumbs = array();
-	$dirs = split('/', $current_path);
+	$dirs = explode('/', $current_path);
 	$path = '';
 	foreach($dirs as $i => $dir)
 	{

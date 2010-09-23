@@ -29,7 +29,7 @@ function dependency_search($settings)
  */
 function validate_search($request, $column = 'ALL')
 {
-	if($column = 'ALL' && isset($request['search']))
+	if($column == 'ALL' && isset($request['search']))
 		return $request['search'];
 	if(isset($request['search_' . $column]))
 	{
@@ -107,7 +107,7 @@ function search_get_type($search)
 function search_get_pieces($search)
 {
 	// loop through search terms and construct query
-	$pieces = split(' ', $search);
+	$pieces = explode(' ', $search);
 	$pieces = array_unique($pieces);
 	$empty = array_search('', $pieces, true);
 	if($empty !== false) unset($pieces[$empty]);
@@ -201,7 +201,7 @@ function search_get_pieces_query($pieces)
  * Alter a database queries when the search variable is set in the request
  * @ingroup alter_query
  */
-function filter_search($request, &$props)
+function filter_search($request)
 {
 	// do not alter the query if selected is set
 	$request['selected'] = validate($request, 'selected');
@@ -214,7 +214,7 @@ function filter_search($request, &$props)
 	// they can specify multiple columns to search for the same string
 	if(isset($request['columns']))
 	{
-		$columns = split(',', $request['columns']);
+		$columns = explode(',', $request['columns']);
 	}
 	// search every column for the same string
 	else
@@ -233,7 +233,7 @@ function filter_search($request, &$props)
 	{
 		if(isset($request['search_' . $column]))
 			$search = $request['search_' . $column];
-		elseif(isset($request['search']))
+		elseif(isset($request['search']) && $request['search'] != '')
 			$search = $request['search'];
 		else
 			continue;
@@ -332,7 +332,7 @@ function output_search($request)
 			}
 			else
 			{
-				$tmp_parts = array_unique(split(' ', stripslashes($query)));
+				$tmp_parts = array_unique(explode(' ', stripslashes($query)));
 				$search_regexp[$column] = array();
 				foreach($tmp_parts as $i => $part)
 				{

@@ -246,10 +246,10 @@ function rewrite_default($path_info)
 
 	$menu = get_menu_entry($path_info);
 
-	$dirs = split('/', $path_info);
+	$dirs = explode('/', $path_info);
 	
 	// assign to variables based on menu entry
-	$vars = split('/', $menu);
+	$vars = explode('/', $menu);
 	foreach($vars as $i => $var)
 	{
 		if(substr($var, 0, 1) == '%' && isset($dirs[$i]))
@@ -328,7 +328,7 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 		foreach($arr as $i => $value)
 		{
 			// split each part of the query string into name value pairs
-			$x = explode('=', $value);
+			$x = explode('=', $value, 2);
 			
 			// set each part of the query string in our new request array
 			$request[$x[0]] = urldecode(isset($x[1])?$x[1]:'');
@@ -439,7 +439,7 @@ function mime_type($ext)
 {
 	$mime = mime($ext);
 	
-	$type = split('/', $mime);
+	$type = explode('/', $mime);
 	
 	return $type[0];
 }
@@ -453,7 +453,7 @@ function mime_type($ext)
  */
 function get_inner_path($file)
 {
-	$paths = split(DIRECTORY_SEPARATOR, $file);
+	$paths = explode(DIRECTORY_SEPARATOR, $file);
 	$last_path = '';
 	foreach($paths as $i => $tmp_file)
 	{

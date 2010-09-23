@@ -82,7 +82,7 @@ function television_myepisodes_fetch_shows()
 		{
 			$new_episodes['times'][] = $matches[1][$i];
 			$new_episodes['shows'][] = $matches[2][$i];
-			$season_episode = split('x', $matches[3][$i]);
+			$season_episode = explode('x', $matches[3][$i]);
 			$new_episodes['seasons'][] = intval($season_episode[0]);
 			$new_episodes['episodes'][] = intval($season_episode[1]);
 			$new_episodes['combined'][] = $matches[2][$i] . ' ' . $matches[3][$i];

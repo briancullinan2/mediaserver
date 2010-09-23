@@ -131,13 +131,13 @@ function setting_watched($settings, $index)
  * Implementation of setting
  * @ingroup setting
  */
-function setting_watches($settings)
+function setting_watches()
 {
 	$watches = array();
 	
 	for($i = 0; $i < 128; $i++)
 	{
-		$watch = setting_watched($settings, $i);
+		$watch = setting('watched', $i);
 		if(isset($watch) && substr($watch, 0, 1) == '^')
 			$watches[] = substr($watch, 1);
 	}

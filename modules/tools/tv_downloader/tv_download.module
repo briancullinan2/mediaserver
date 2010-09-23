@@ -6,6 +6,9 @@ function menu_tv_download()
 		'admin/tools/television/downloader' => array(
 			'callback' => 'output_tv_download',
 		),
+		'admin/tools/television/downloader/login/%login_index' => array(
+			'callback' => 'output_tv_download_login'
+		),
 		'admin/tools/television/downloader/%info_singular_step_television' => array(
 			'callback' => 'output_tv_download_singular'
 		)
@@ -20,75 +23,6 @@ function setup_tv_download()
 {
 	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'tvdl.singular.inc';
 	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'myepisodes.inc';
-}
-
-function setting_tv_download()
-{
-	$settings = array('myepisodes');
-	
-	// add wrapper functions for validating a service entry
-	for($i = 0; $i < 10; $i++)
-	{
-		$GLOBALS['setting_nzb_television_search_' . $i] = create_function('$settings', 'return setting_nzb_television_search($settings, \'' . $i . '\');');
-		$settings[] = 'nzb_television_search_' . $i;
-	}
-	
-	// add wrapper functions for validating a service entry
-	for($i = 0; $i < 10; $i++)
-	{
-		$GLOBALS['setting_tor_television_search_' . $i] = create_function('$settings', 'return setting_tor_television_search($settings, \'' . $i . '\');');
-		$settings[] = 'tor_television_search_' . $i;
-	}
-	
-	return $settings;
-}
-
-/**
- * Implementation of setting
- * @ingroup setting
- */
-function setting_nzb_television_search($settings, $index)
-{
-	// return the same static service as listed in the nzbservice module
-	if($index == 0)
-		return 'http://nzbmatrix.com/nzb-search.php?cat=6&search=%s%%20s%02de%02d';
-	if($index == 1)
-		return 'http://www.newzbin.com/search/query/?searchaction=Go&category=8&q=%s%%20%dx%02d';
-
-	// don't continue with this if stuff is missing
-	if(isset($settings['nzb_television_search_' . $index]) && 
-		$settings['nzb_television_search_' . $index] != ''
-	)
-		return $settings['nzb_television_search_' . $index];
-	// use default
-	elseif(isset($settings['nzbservice_' . $index]['search']) && 
-		$settings['nzbservice_' . $index]['search'] != ''
-	)
-		return $settings['nzbservice_' . $index]['search'];
-}
-
-/**
- * Implementation of setting
- * @ingroup setting
- */
-function setting_tor_television_search($settings, $index)
-{
-	// the static services to not have movies, only tv and music
-	if($index == 0 || $index == 1)
-		return '';
-	if($index == 2)
-		return 'http://tvtorrents.com/loggedin/search.do?search=%s %d %02d';
-
-	// don't continue with this if stuff is missing
-	if(isset($settings['tor_movie_search_' . $index]) && 
-		$settings['tor_movie_search_' . $index] != ''
-	)
-		return $settings['tor_movie_search_' . $index];
-	// use default
-	elseif(isset($settings['torservice_' . $index]['search']) && 
-		$settings['torservice_' . $index]['search'] != ''
-	)
-		return $settings['torservice_' . $index]['search'];
 }
 
 /**
@@ -178,43 +112,6 @@ function configure_tv_download($settings)
 		'options' => $feeds
 	);
 	
-	$download = array();
-	
-	if(setting('nzbservices_enable') == true)
-	{
-		// add nzb services
-		$nzbservices = configure_nzbservices($settings);
-		$download = array_merge($download, $nzbservices['nzbservices']['options']);
-	}
-	
-	if(setting('torservices_enable') == true)
-	{
-		// add torrent services
-		$torservices = configure_torservices($settings);
-		$download = array_merge($download, $torservices['torservices']['options']);
-	}
-	
-	if(!is_module('torservices') && !is_module('nzbservices'))
-	{
-		$download['services'] = array(
-			'name' => 'Download Services',
-			'status' => 'warn',
-			'description' => array(
-				'list' => array(
-					'This module takes advantage of torrent and news group services.',
-					'In order to use this module, the service modules must also be installed.'
-				),
-			),
-			'text' => 'No download service modules installed!',
-		);
-	}
-	
-	$options['tv_download'] = array(
-		'name' => 'TV Show Downloads',
-		'type' => 'fieldset',
-		'options' => $download
-	);
-	
 	return $options;
 }
 
@@ -242,7 +139,7 @@ function output_tv_download($request)
 		),
 		'type' => 'theme',
 		'value' => 'singular',
-		'href' => url('admin/tools/television/downloader/login', true),
+		'href' => url('admin/tools/television/downloader/login/0', true),
 	);
 	
 	// output info
@@ -264,53 +161,52 @@ function output_tv_download($request)
  * @param episode the episode number
  * @return a status indicating if the file has been downloaded successfully
  */
-function television_fetch_nzb($showname, $season, $episode)
+function television_fetch_show($showname, $season, $episode)
 {
-	// construct search arguments
-	$args = func_get_args();
 	
-	$services = setting('all_nzbservices');
+	$services = setting('all_download_services', 'television');
 	
 	// loop through NZB services until we find the show
 	foreach($services as $i => $config)
 	{
-		$search = setting('nzb_television_search_' . $i);
-		
-		// run query, using television search strings
-		$result = fetch(sprintf($search, urlencode($showname), urlencode($season), urlencode($episode)), array(), array(), session('nzbservices_' . $i));
-		
-		// match nzbs
-		$count = preg_match_all($config['match'], $result['content'], $matches);
-		
-		if($count > 0)
+		if($config['search'] != '')
 		{
-			if($address = generic_validate_hostname(array('address' => $matches[1][0]), 'address'))
-				$file = $matches[1][0];
-			else
+			// run query, using television search strings
+			$result = fetch(sprintf($config['search'] , urlencode($showname), urlencode($season), urlencode($episode)), array(), array(), session('download_services_' . $i));
+			
+			// match nzbs
+			$count = preg_match_all($config['match'], $result['content'], $matches);
+			
+			if($count > 0)
 			{
-				if($address = generic_validate_hostname(array('address' => $config['search']), 'address'))
-					$file = $address . '/' . $matches[1][0];
-				else
+				if($address = generic_validate_hostname(array('address' => $matches[1][0]), 'address'))
 					$file = $matches[1][0];
-			}
+				else
+				{
+					if($address = generic_validate_hostname(array('address' => $config['search']), 'address'))
+						$file = $address . '/' . $matches[1][0];
+					else
+						$file = $matches[1][0];
+				}
+					
+				// download and save
+				$result = fetch($file, array(), array(), session('download_services_' . $i));
 				
-			// download and save
-			$result = fetch($file, array(), array(), session('nzbservices_' . $i));
-			
-			if(strlen($result['content']) == 0)
-				return false;
-			
-			$path = setting('nzbpath') . television_rename_show($showname, $season, $episode, $result['headers']);
-
-			if($fh = fopen($path, 'w'))
-			{
-				fwrite($fh, $result['content']);
-				fclose($fh);
+				if(strlen($result['content']) == 0)
+					return false;
 				
-				return $path;
+				$path = $config['savepath'] . television_rename_show($showname, $season, $episode, $result['headers']);
+	
+				if($fh = fopen($path, 'w'))
+				{
+					fwrite($fh, $result['content']);
+					fclose($fh);
+					
+					return $path;
+				}
+				else
+					return -1;
 			}
-			else
-				return -1;
 		}
 	}
 	

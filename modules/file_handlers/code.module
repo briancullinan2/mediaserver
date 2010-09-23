@@ -40,10 +40,8 @@ function dependency_highlighter($settings)
  * Implementation of configure
  * @ingroup configure
  */
-function configure_code($settings, $request)
+function configure_code()
 {
-	$settings['highlighter'] = setting('highlighter');
-	
 	$options = array();
 	
 	if(dependency('highlighter'))
@@ -58,7 +56,7 @@ function configure_code($settings, $request)
 				),
 			),
 			'type' => 'select',
-			'value' => $settings['highlighter'],
+			'value' => setting('highlighter'),
 			'options' => array(
 				'pear' => 'PEAR Text_Highlighter Extension',
 				'geshi' => 'GeSHi Highligher',
@@ -83,7 +81,7 @@ function configure_code($settings, $request)
 				),
 			),*/
 			'type' => 'select',
-			'value' => $settings['highlighter'],
+			'value' => setting('highlighter'),
 			'options' => array(
 				'pear' => 'PEAR Text_Highlighter Extension',
 				'geshi' => 'GeSHi Highligher',

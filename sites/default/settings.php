@@ -1,7 +1,7 @@
 ;<?php die(); ?>
 db_connect = mysql://media:eVi0FIWJIZVLPwiB@localhost/mediaserver
 database_enable = 1
-debug_mode = "1"
+debug_mode = 1
 deep_select = "1"
 verbose = 1
 movies_enable = "false"

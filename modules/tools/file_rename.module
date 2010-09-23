@@ -1,0 +1,443 @@
+<?php
+
+
+function menu_file_rename()
+{
+	return array(
+		'admin/tools/files/rename' => array(
+			'callback' => 'output_file_rename',
+		),
+	);
+}
+
+/**
+ * Implementation of output
+ * @ingroup output
+ */
+function output_file_rename($request)
+{
+	$infos = array();
+
+	// perform television downloading
+	$infos['regular_expression'] = array(
+		'name' => '(1) Regular Expression',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Match filenames using regular expression.',
+			),
+		),
+		'type' => 'set',
+		'options' => array(
+			'rename_regexp[match]' => array(
+				'name' => 'Match',
+				'type' => 'text',
+				'value' => $request['rename_regexp']['match'],
+			),
+			'rename_regexp[replace]' => array(
+				'name' => 'Replace',
+				'type' => 'text',
+				'value' => $request['rename_regexp']['replace'],
+			),
+			'rename_regexp[include_ext]' => array(
+				'type' => 'checkbox',
+				'value' => $request['rename_regexp']['include_ext'],
+				'options' => array(
+					'true' => 'Include Ext.',
+				)
+			),
+		),
+	);
+	
+	$infos['filename'] = array(
+		'name' => '(2) Filename Changes',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Make changes to the filename only, not including the directory.',
+			),
+		),
+		'type' => 'set',
+		'options' => array(
+			'rename_file[change]' => array(
+				'type' => 'select',
+				'value' => $request['rename_file']['change'],
+				'options' => array('Keep', 'Remove', 'Fixed', 'Reverse')
+			),
+			'rename_file[fixed]' => array(
+				'name' => 'Name',
+				'type' => 'text',
+				'value' => $request['rename_file']['fixed'],
+			),
+		),
+	);
+	
+	$infos['replace'] = array(
+		'name' => '(3) Match and Replace',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Match text in the filename and replace.',
+			),
+		),
+		'type' => 'set',
+		'options' => array(
+			'rename_replace[replace]' => array(
+				'name' => 'Replace',
+				'type' => 'text',
+				'value' => $request['rename_replace']['replace'],
+			),
+			'rename_replace[with]' => array(
+				'name' => 'With',
+				'type' => 'text',
+				'value' => $request['rename_replace']['with'],
+			),
+			'rename_replace[match_case]' => array(
+				'type' => 'checkbox',
+				'value' => $request['rename_replace']['match_case'],
+				'options' => array(
+					'true' => 'Match Case',
+				)
+			),
+		),
+	);
+	
+	$infos['case'] = array(
+		'name' => '(4) Change Case',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Change the case of the filepath.',
+			),
+		),
+		'type' => 'set',
+		'options' => array(
+			'rename_case[case]' => array(
+				'type' => 'select',
+				'value' => $request['rename_case']['case'],
+				'options' => array('Same', 'Lower', 'Upper', 'Title', 'Sentence'),
+			),
+			'rename_case[except]' => array(
+				'name' => 'Exception',
+				'type' => 'text',
+				'value' => $request['rename_case']['except'],
+			),
+		),
+	);
+	
+	$infos['remove'] = array(
+		'name' => '(5) Remove Characters',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Remove characters from the filename.',
+			),
+		),
+		'type' => 'set',
+		'options' => array(
+			'rename_remove[first]' => array(
+				'name' => 'First n',
+				'type' => 'text',
+				'value' => $request['rename_remove']['first'],
+			),
+			'rename_remove[last]' => array(
+				'name' => 'Last n',
+				'type' => 'text',
+				'value' => $request['rename_remove']['last'],
+			),
+			'rename_remove[from]' => array(
+				'name' => 'From',
+				'type' => 'text',
+				'value' => $request['rename_remove']['from'],
+			),
+			'rename_remove[to]' => array(
+				'name' => 'To',
+				'type' => 'text',
+				'value' => $request['rename_remove']['to'],
+			),
+			'rename_remove[chars]' => array(
+				'name' => 'Characters',
+				'type' => 'text',
+				'value' => $request['rename_remove']['chars'],
+			),
+			'rename_remove[words]' => array(
+				'name' => 'Words',
+				'type' => 'text',
+				'value' => $request['rename_remove']['words'],
+			),
+			'rename_remove[crop]' => array(
+				'name' => 'Crop',
+				'type' => 'select',
+				'value' => $request['rename_remove']['crop'],
+				'options' => array('Before', 'After', 'Special'),
+			),
+			'rename_remove[crop_str]' => array(
+				'type' => 'text',
+				'value' => $request['rename_remove']['crop_str'],
+			),
+			'rename_remove[remove]' => array(
+				'type' => 'checkbox',
+				'value' => $request['rename_remove']['remove'],
+				'options' => array('Digits', 'High', 'Trim', 'Double Spaces', 'Accents', 'Characters', 'Symbols')
+			),
+			'rename_remove[lead]' => array(
+				'name' => 'Lead Dots',
+				'type' => 'select',
+				'value' => $request['rename_remove']['lead'],
+				'options' => array('None', '.', '..', 'Both')
+			),
+		),
+	);
+	
+	$infos['move_copy'] = array(
+		'name' => '(6) Move/Copy',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Move and copy characters from one part of the filename to another.',
+			),
+		),
+		'type' => 'set',
+		'options' => array(
+			'rename_move[copy]' => array(
+				'type' => 'select',
+				'value' => $request['rename_move']['copy'],
+				'options' => array('None', 'Copy first n', 'Copy last n', 'Move first n', 'Move last n')
+			),
+			'rename_move[copy_n]' => array(
+				'type' => 'text',
+				'value' => $request['rename_move']['copy_n'],
+			),
+			'rename_move[to]' => array(
+				'type' => 'select',
+				'value' => $request['rename_move']['to'],
+				'options' => array('None', 'To start', 'To end', 'To position')
+			),
+			'rename_move[to_n]' => array(
+				'type' => 'text',
+				'value' => $request['rename_move']['to_n'],
+			),
+			'rename_move[separator]' => array(
+				'name' => 'Separator',
+				'type' => 'text',
+				'value' => $request['rename_move']['separator'],
+			),
+		),
+	);
+	
+	$infos['add'] = array(
+		'name' => '(7) Add',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Add characters to the filename.',
+			),
+		),
+		'type' => 'set',
+		'options' => array(
+			'rename_add[prefix]' => array(
+				'name' => 'Prefix',
+				'type' => 'text',
+				'value' => $request['rename_add']['prefix'],
+			),
+			'rename_add[insert]' => array(
+				'name' => 'Insert',
+				'type' => 'text',
+				'value' => $request['rename_add']['insert'],
+			),
+			'rename_add[pos]' => array(
+				'name' => 'at position',
+				'type' => 'text',
+				'value' => $request['rename_add']['pos'],
+			),
+			'rename_add[suffix]' => array(
+				'name' => 'Suffix',
+				'type' => 'text',
+				'value' => $request['rename_add']['suffix'],
+			),
+			'rename_add[space]' => array(
+				'type' => 'checkbox',
+				'value' => $request['rename_add']['space'],
+				'options' => array('Word Space'),
+			),
+		),
+	);
+	
+	$infos['autodate'] = array(
+		'name' => '(8) Auto Date',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Add characters to the filename.',
+			),
+		),
+		'type' => 'set',
+		'options' => array(
+			'rename_date[mode]' => array(
+				'name' => 'Mode',
+				'type' => 'select',
+				'value' => $request['rename_date']['mode'],
+				'options' => array('None', 'Prefix', 'Suffix'),
+			),
+			'rename_date[type]' => array(
+				'name' => 'Type',
+				'type' => 'select',
+				'value' => $request['rename_date']['type'],
+				'options' => array('Creation (Curr.)', 'Creation (New)', 'Modified (Curr.)', 'Modified (New)', 'Accessed (Curr.)', 'Accessed (New)', 'Current'),
+			),
+			'rename_date[format]' => array(
+				'name' => 'Format',
+				'type' => 'select',
+				'value' => $request['rename_date']['format'],
+				'options' => array('Custom'),
+			),
+			'rename_date[separator]' => array(
+				'name' => 'Separator',
+				'type' => 'text',
+				'value' => $request['rename_date']['separator'],
+			),
+			'rename_date[segment]' => array(
+				'name' => 'Segment',
+				'type' => 'text',
+				'value' => $request['rename_date']['segment'],
+			),
+			'rename_date[custom]' => array(
+				'name' => 'Custom',
+				'type' => 'text',
+				'value' => $request['rename_date']['custom'],
+			),
+			'rename_date[century]' => array(
+				'type' => 'checkbox',
+				'value' => $request['rename_date']['century'],
+				'options' => array('Century'),
+			),
+			'rename_date[offset]' => array(
+				'name' => 'Offset',
+				'type' => 'text',
+				'value' => $request['rename_date']['offset'],
+			),
+		),
+	);
+	
+	$infos['folder_name'] = array(
+		'name' => '(9) Append Folder Name',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Add directories from the filepath to the filename.',
+			),
+		),
+		'type' => 'set',
+		'options' => array(
+			'rename_folder[name]' => array(
+				'name' => 'Name',
+				'type' => 'select',
+				'value' => $request['rename_folder']['name'],
+				'options' => array('None', 'Prefix', 'Suffix'),
+			),
+			'rename_folder[separator]' => array(
+				'name' => 'Separator',
+				'type' => 'text',
+				'value' => $request['rename_folder']['separator'],
+			),
+			'rename_folder[levels]' => array(
+				'name' => 'Levels',
+				'type' => 'text',
+				'value' => $request['rename_folder']['levels'],
+			),
+		),
+	);
+	
+	$bases = array();
+	for($i = 2; $i <= 36; $i++)
+	{
+		if($i == 2)
+			$bases[] = 'Base 2 (Binary)';
+		elseif($i == 8)
+			$bases[] = 'Base 8 (Octal)';
+		elseif($i == 10)
+			$bases[] = 'Base 10 (Decimal)';
+		elseif($i == 16)
+			$bases[] = 'Base 16 (Hex)';
+		else
+			$bases[] = 'Base ' . $i;
+	}
+	$bases[] = 'A-Z';
+	$bases[] = 'a-z';
+	
+	$infos['numbering'] = array(
+		'name' => '(10) Numbering',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Add numbers to part of the filename.',
+			),
+		),
+		'type' => 'set',
+		'options' => array(
+			'rename_numbering[mode]' => array(
+				'name' => 'Mode',
+				'type' => 'select',
+				'value' => $request['rename_numbering']['mode'],
+				'options' => array('None', 'Prefix', 'Suffix', 'Prefix + Suffix', 'Insert'),
+			),
+			'rename_numbering[at]' => array(
+				'name' => 'at',
+				'type' => 'text',
+				'value' => $request['rename_numbering']['at'],
+			),
+			'rename_numbering[start]' => array(
+				'name' => 'Start',
+				'type' => 'text',
+				'value' => $request['rename_numbering']['start'],
+			),
+			'rename_numbering[increment]' => array(
+				'name' => 'Increment',
+				'type' => 'text',
+				'value' => $request['rename_numbering']['increment'],
+			),
+			'rename_numbering[padding]' => array(
+				'name' => 'Padding',
+				'type' => 'text',
+				'value' => $request['rename_numbering']['padding'],
+			),
+			'rename_numbering[separator]' => array(
+				'name' => 'Separator',
+				'type' => 'text',
+				'value' => $request['rename_numbering']['separator'],
+			),
+			'rename_numbering[break]' => array(
+				'name' => 'Break',
+				'type' => 'text',
+				'value' => $request['rename_numbering']['break'],
+			),
+			'rename_numbering[folder]' => array(
+				'type' => 'checkbox',
+				'value' => $request['rename_numbering']['folder'],
+				'options' => array('Folder'),
+			),
+			'rename_numbering[type]' => array(
+				'name' => 'Break',
+				'type' => 'select',
+				'value' => $request['rename_numbering']['type'],
+				'options' => $bases,
+			),
+			'rename_numbering[roman]' => array(
+				'name' => 'Roman Numerals',
+				'type' => 'select',
+				'value' => $request['rename_numbering']['roman'],
+				'options' => array('None', 'Upper', 'Lower'),
+			),
+		),
+	);
+	
+	register_output_vars('infos', array(
+		'file_rename' => array(
+			'name' => 'Rename Options',
+			'type' => 'fieldset',
+			'options' => $infos
+		),
+	));
+	
+	theme('tool_info');
+}

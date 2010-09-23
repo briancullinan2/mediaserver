@@ -3,3 +3,4 @@ description = Provides an API for connecting to download services for searching 
 privilage = 10
 settings = download_services
 package = tools
+session[] = service_search

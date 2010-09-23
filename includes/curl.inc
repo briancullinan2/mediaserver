@@ -38,6 +38,7 @@ function fetch($url, $post = array(), $headers = array(), $cookies = array())
 		curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+		curl_setopt($ch, CURLOPT_BUFFERSIZE, setting('buffer_size'));
 		
 		// setup user agent
 		if(isset($headers['agent']))
@@ -71,9 +72,12 @@ function fetch($url, $post = array(), $headers = array(), $cookies = array())
 		}
 		
 		$cookie = '';
-		foreach ($cookies as $key => $value)
+		if(is_array($cookies))
 		{
-			$cookie .= $key . '=' . $value . '; ';
+			foreach ($cookies as $key => $value)
+			{
+				$cookie .= $key . '=' . $value . '; ';
+			}
 		}
 		curl_setopt($ch, CURLOPT_COOKIE, $cookie);
 		// use a cookie file just because of follow_location
@@ -89,7 +93,7 @@ function fetch($url, $post = array(), $headers = array(), $cookies = array())
 		$content = curl_exec($ch);
 		$status = curl_getinfo($ch, CURLINFO_HTTP_CODE); 	
 		$header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);	
-		$headers_raw = split("\n", substr($content, 0, $header_size));
+		$headers_raw = explode("\n", substr($content, 0, $header_size));
 		$content = substr($content, $header_size);
 		curl_close($ch);
 		
@@ -169,17 +173,15 @@ function get_full_url($url, $fragment)
 		// check if url is valid
 		$address = generic_validate_hostname(array('address' => $url), 'address');
 		
-		// make sure there is a slash on the end
-		if(substr($address, -1) != '/') $address .= '/';
-		
-		// remove extra slashes from beginning of fragment
-		if(substr($fragment, 0, 1) == '/') $fragment = substr($fragment, 1);
-		
 		// get path to prepend to fragment
-		if($path = generic_validate_urlpath(array('path' => $url), 'path'))
+		if($path = generic_validate_urlpath(array('path' => $url), 'path') && 
+			substr($fragment, 0, 1) != '/'
+		)
 		{
 			$path = dirname($path);
 			if(substr($path, 0, 1) == '/') $path = substr($path, 1);
+			// make sure there is a slash on the end
+			if(substr($address, -1) != '/') $address .= '/';
 			
 			return $address . $path . (($path != '')?'/':'') . $fragment;
 		}
@@ -200,22 +202,36 @@ function get_login_form($content, $userfield = 'username')
 		foreach($forms[0] as $i => $form)
 		{
 			// extract form elements
-			if(preg_match_all('/<input[^>]*?name=(["\'])(?P<name>[^\1>]*?)\1[^>]*?>/i', $forms[2][$i], $post_vars) > 0)
+			$result = preg_match_all('/<input[^>]*>/i', $form, $matches);
+			if($result > 0)
 			{
-				$post = array_fill_keys($post_vars['name'], '');
-				$count = preg_match_all('/<input[^>]*?value=(["\'])(?P<value>[^\1>]*?)\1[^>]*?name=(["\'])(?P<name>[^\3>]*?)\3[^>]*?>/i', $forms[2][$i], $post_vars);
-				if($count > 0)
-					$post = array_merge($post, array_combine($post_vars['name'], $post_vars['value']));
-				$count = preg_match_all('/<input[^>]*?name=(["\'])(?P<name>[^\1>]*?)\1[^>]*?value=(["\'])(?P<value>[^\3>]*?)\3[^>]*?>/i', $forms[2][$i], $post_vars);
-				if($count > 0)
-					$post = array_merge($post, array_combine($post_vars['name'], $post_vars['value']));
-					
-				// use form with userfield in the field list
-				if(in_array($userfield, array_keys($post)))
+				$form = array();
+				foreach($matches[0] as $j => $field)
 				{
-		
-					return array(escape_urlquery(htmlspecialchars_decode($forms[1][$i])), $post);
+					$count = preg_match('/name=(["\']?)([^\1]*?)\1/i', $field, $name);
+					$count = preg_match('/value=(["\']?)([^\1]*?)\1/i', $field, $value);
+					$count = preg_match('/type=(["\']?)([^\1]*?)\1/i', $field, $type);
+
+					if(isset($type[2]) && $type[2] == 'password')
+						$type[2] = 'text';
+					if(!isset($value[2]))
+						$value[2] = '';
+					
+					if(isset($name[2]))
+					{
+						$form[$name[2]] = array(
+							'type' => $type[2],
+							'value' => $value[2],
+							'name' => ($type[2]!='hidden')?$name[2]:'',
+						);
+					}
 				}
+				if(isset($form[$userfield]))
+					return array(
+						escape_urlquery(htmlspecialchars_decode($forms[1][$i])),
+						$form,
+						$forms[0][$i]
+					);
 			}
 		}
 	}
@@ -263,7 +279,7 @@ function escape_urlquery($request)
 		foreach($arr as $i => $value)
 		{
 			// split each part of the query string into name value pairs
-			$x = explode('=', $value);
+			$x = explode('=', $value, 2);
 			
 			// set each part of the query string in our new request array
 			$new_query .= (($new_query != '')?'&':'') . $x[0] . '=' . urlencode(isset($x[1])?$x[1]:'');

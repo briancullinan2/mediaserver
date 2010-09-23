@@ -2,5 +2,4 @@ name = Music Downloader
 description = Set up accounts to automatically download music from feeds.
 privilage = 10
 template = false
-settings = music_download
 package = tools

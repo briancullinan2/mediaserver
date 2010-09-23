@@ -160,7 +160,7 @@ function get_info_discogs($file)
 			if(count($files) > 0)
 			{
 				$artist['content'] = $files[0]['ArtistXml'];
-				$fileinfo['Image'] = $files[0]['Image'];
+				//$fileinfo['Image'] = $files[0]['Image'];
 			}
 		}
 	
@@ -192,6 +192,7 @@ function get_info_discogs($file)
 		}
 		
 		// get image
+		/*
 		$images = $album['xml']->xpath('//images/image');
 		if(!isset($fileinfo['Image']) && isset($images[0]))
 		{
@@ -199,7 +200,7 @@ function get_info_discogs($file)
 			$image = fetch($image_attr['uri'], array(), array('Accept-Encoding: gzip'));
 			$fileinfo['Image'] = 'data:' . $image['headers']['content-type'] . ';base64,' . base64_encode($image['content']);
 		}
-		
+		*/
 		
 		$fileinfo['ArtistXml'] = $artist['content'];
 		$fileinfo['ReleaseXml'] = $album['content'];

@@ -338,7 +338,7 @@ function add_all($file, $force = false)
 	}
 	
 	// update ids
-	db_query('UPDATE ids ' . sql_update($ids) . ' WHERE id=' . $fileid['id'], $ids);
+	db_query('UPDATE ids ' . sql_update($ids) . ' WHERE id=' . $fileid['id'], array_values($ids));
 
 }
 
@@ -382,7 +382,7 @@ function add($file, $force = false, $handler = 'files')
 	}
 	
 	// check if it is in the database
-	$files = db_assoc('SELECT id' . (($handler == 'files')?',Filedate':'') . ' FROM ' . $handler . ' WHERE Filepath=? LIMIT 1', array($file));
+	$files = db_assoc('SELECT * FROM ' . $handler . ' WHERE Filepath=? LIMIT 1', array($file));
 	
 	if( count($files) == 0 )
 	{
@@ -412,13 +412,9 @@ function add($file, $force = false, $handler = 'files')
 			
 			// update database
 			$id = db_query('UPDATE files ' . sql_update($fileinfo) . ' WHERE id=' . $files[0]['id'], array_values($fileinfo));
+			
 			return array('id' => $id) + $fileinfo;
 		}
-		else
-		{
-			raise_error('Skipping file: ' . $file, E_DEBUG);
-		}
-		
 	}
 	elseif($force == true)
 	{
@@ -431,14 +427,13 @@ function add($file, $force = false, $handler = 'files')
 		
 		// update database
 		$id = db_query('UPDATE ' . $handler . sql_update($fileinfo) . ' WHERE id=' . $files[0]['id'], array_values($fileinfo));
+		
 		return array('id' => $id) + $fileinfo;
 	}
-	else
-	{
-		return array('id' => $files[0]['id']) + $files[0];
-		
-		raise_error('Skipping ' . $handler . ': ' . $file, E_DEBUG);
-	}
+
+	raise_error('Skipping ' . $handler . ': ' . $file, E_DEBUG);
+	
+	return array('id' => $files[0]['id']) + $files[0];
 }
 
 /**
@@ -795,7 +790,7 @@ function merge_id_info_only(&$files, $handler)
 		if(in_array($file['Filepath'], $cache_updates))
 		{
 			$ids = array_intersect_key($file, array_flip(get_id_fields()));
-			db_query('UPDATE ids ' . sql_update($ids) . ' WHERE id=' . $file['id'], $ids);
+			db_query('UPDATE ids ' . sql_update($ids) . ' WHERE id=' . $file['id'], array_values($ids));
 		}
 	}
 }
@@ -834,23 +829,21 @@ function merge_database_info($files, $handler)
 
 		// add information for the files not found by ID
 		$new_infos = array_diff_key($handler_files, $id_files);
-		foreach($new_infos as $i => $file)
-		{
-			$result = add($file['Filepath'], false, $module);
-			if(is_array($result))
-			{
-				$id_infos[$file['Filepath']] = $result;
-				$cache_updates[] = $file['Filepath'];
-			}
-		}
-		
-		// merge extra information with files
 		foreach($files as $i => $file)
 		{
-			if(isset($id_infos[$file['Filepath']]))
-				$files[$i] = array($module . '_id' => $id_infos[$file['Filepath']]['id']) + 
-				array_merge($id_infos[$file['Filepath']], $files[$i]);
+			if(isset($new_infos[$i]))
+			{
+				$result = add($file['Filepath'], false, $module);
+				if(is_array($result))
+				{
+					$files[$i] = array($module . '_id' => $result['id']) + array_merge($result, $file);
+					$cache_updates[] = $file['Filepath'];
+				}
+			}
+			elseif(isset($id_infos[$file['Filepath']]))
+				$files[$i] = array($module . '_id' => $id_infos[$file['Filepath']]['id']) + array_merge($id_infos[$file['Filepath']], $file);
 		}
+		
 	}
 
 	// update ID caching for later/more efficient use!
@@ -859,7 +852,7 @@ function merge_database_info($files, $handler)
 		if(in_array($file['Filepath'], $cache_updates))
 		{
 			$ids = array_intersect_key($file, array_flip(get_id_fields()));
-			db_query('UPDATE ids ' . sql_update($ids) . ' WHERE id=' . $file['id'], $ids);
+			db_query('UPDATE ids ' . sql_update($ids) . ' WHERE id=' . $file['id'], array_values($ids));
 		}
 	}
 	
@@ -968,7 +961,7 @@ function cleanup($handler = 'files')
 	$directories = array();
 	for($i = 0; $i < count($GLOBALS['watched']); $i++)
 	{
-		$folders = split('/', $GLOBALS['watched'][$i]['Filepath']);
+		$folders = explode('/', $GLOBALS['watched'][$i]['Filepath']);
 		$curr_dir = (realpath('/') == '/')?'/':'';
 		// don't add the watch directory here because it is already added by the previous loop!
 		$length = count($folders);

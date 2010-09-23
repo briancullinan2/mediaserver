@@ -84,7 +84,11 @@ function configure_sitemap($settings)
 function output_robots($request)
 {
 	if(setting('no_bots') == true)
-		print "User-agent: *\nDisallow: /";
+	{
+		header('Content-Type: text/plain');
+		print "User-agent: *
+Disallow: /";
+	}
 }
 
 

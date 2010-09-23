@@ -9,6 +9,11 @@ function menu_tools()
 	);
 }
 
+function setup_tools()
+{
+	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'theme.inc';
+}
+
 function setting_tools()
 {
 	return array();

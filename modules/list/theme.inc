@@ -60,7 +60,7 @@ function theme__m3u()
 			$count = 0;
 			foreach($GLOBALS['output']['files'] as $i => $file)
 			{
-				$type = split('/', $file['Filemime']);
+				$type = explode('/', $file['Filemime']);
 				if($type[0] == 'audio' || $type[0] == 'video')
 				{
 					print $file['Filename'] . '<br />';
@@ -206,7 +206,7 @@ function theme__xml()
 			<name><?php print $file['Filename']; ?></name>
 			<text><?php print $file['Filename']; ?></text>
 			<?php
-			$type_arr = split('/', $file['Filemime']);
+			$type_arr = explode('/', $file['Filemime']);
 			$type = $type_arr[0];
 			?><icon><?php print isset($ext_icons[$file['Filetype']])?$ext_icons[$file['Filetype']]:(isset($type_icons[$type])?$type_icons[$type]:$ext_icons['FILE']); ?></icon>
 			<ext><?php print $file['Filetype']; ?></ext>

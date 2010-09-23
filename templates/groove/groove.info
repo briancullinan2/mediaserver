@@ -1,0 +1,3 @@
+name = "Groove"
+description = "Template based on Groove Shark."
+validate = true

@@ -117,14 +117,14 @@ function live_alter_file($file)
 		{
 			$file['Filepath'] = urlencode_path($file['Filepath']);
 		}
-		elseif(isset($GLOBALS['output']['search_regexp']) && 
+		/*elseif(isset($GLOBALS['output']['search_regexp']) && 
 			isset($GLOBALS['output']['search_regexp'][$column])
 		)
 		{
 			$file[$column] = preg_replace($GLOBALS['output']['search_regexp'][$column], '\'<strong style="background-color:#990;">\' . htmlspecialchars(\'$0\') . \'</strong>\'', $file[$column]);
 		
 			continue;
-		}
+		}*/
 		//$file[$column] = preg_replace('/([^ ]{25})/i', '$1<br />', $file[$column]);
 		elseif($column == 'Filesize')
 			$file['Filesize'] = roundFileSize($file['Filesize']);

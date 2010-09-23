@@ -61,6 +61,11 @@ function theme__info_image($value)
 	?><img src="<?php print htmlspecialchars($value); ?>" alt="image" /><?php
 }
 
+function theme__info_literal($value)
+{
+	print $value;
+}
+
 function theme__info_list($value)
 {
 	?><ul><?php
@@ -170,14 +175,9 @@ function theme__form_object($field_name, $config)
 					?></legend><?php
 				}
 				
-				?><div id="fieldcontainer_<?php print machine($field_name); ?>" <?php print (isset($config['collapsed']) && $config['collapsed'] == true)?'style="display:none;"':''; ?> border="0" cellpadding="0" cellspacing="0"><?php
+				?><div id="fieldcontainer_<?php print machine($field_name); ?>" <?php print (isset($config['collapsed']) && $config['collapsed'] == true)?'style="display:none;"':''; ?>><?php
 				
-				foreach($config['options'] as $name => $field)
-				{
-					?><div class="field_row"><?php
-					theme('form_object', $name, $field);
-					?></div><?php
-				}
+					theme('form_fieldrows', $config['options']);
 				
 				?></div><?php
 				
@@ -215,6 +215,16 @@ function theme__form_object($field_name, $config)
 		?></div><?php
 	}
 	
+}
+
+function theme__form_fieldrows($options)
+{
+	foreach($options as $name => $field)
+	{
+		?><div class="field_row" id="row_<?php print $name; ?>"><?php
+		theme('form_object', $name, $field);
+		?></div><?php
+	}
 }
 
 function theme__form_objects($form)

@@ -29,7 +29,7 @@ function cli_get_max_width($input)
 
 function cli_box($input, $top_line = true, $left_line = true, $bottom_line = true, $right_line = true, $width = 0)
 {
-	$lines = split("\n", $input);
+	$lines = explode("\n", $input);
 	$max = cli_get_max_width($lines);
 	if($width > 0 && $width > $max)
 		$max = $width;
@@ -53,7 +53,7 @@ function cli_merge_boxes()
 	$max_lines = 0;
 	foreach($boxes as $i => $box)
 	{
-		$lines[$i] = split("\n", $box);
+		$lines[$i] = explode("\n", $box);
 		array_pop($lines[$i]);
 		$lasts[$i] = array_pop($lines[$i]);
 		$max_lines = max(count($lines[$i]), $max_lines);
