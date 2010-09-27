@@ -1,0 +1,5 @@
+name = Tag and Rename
+description = Rename and edit ID3 tags for audio files.
+privilage = 10
+settings = tag_rename
+package = tools

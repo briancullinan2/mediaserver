@@ -47,7 +47,7 @@ function request_validate()
 		session('last_request',  $_REQUEST);
 		goto($_SERVER['REQUEST_URI']);
 	}
-	if($last_request = session('last_request'))
+	if(($last_request = session('last_request')))
 	{
 		$_REQUEST = $last_request;
 		// set the method just for reference
@@ -110,7 +110,7 @@ function rewrite_vars(&$request, &$get, &$post)
 	// get path info
 	$request['path_info'] = validate($request, 'path_info');
 
-	if($path = get_menu_entry($request['path_info']))
+	if(($path = get_menu_entry($request['path_info'])))
 	{
 		// merge additional argument overrides for menu entry
 		if(isset($GLOBALS['menus'][$path]['arguments']))
@@ -229,7 +229,9 @@ function generic_validate_url($request, $index)
  */
 function generic_validate_regexp($request, $index)
 {
-	if(isset($request[$index]) && $request[$index] != '' && @preg_match($request[$index], 'test') !== false)
+	if(isset($request[$index]) && $request[$index] != '' &&
+		preg_match($request[$index], 'test') !== false
+	)
 		return $request[$index];
 }
 

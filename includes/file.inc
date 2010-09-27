@@ -48,7 +48,7 @@ function scan_directory($dir, $filter = 'files', $depth = 1)
 	$files = array();
 
 	// return a flat list of files
-	if (is_dir($dir) && $handle = opendir($dir))
+	if (is_dir($dir) && ($handle = opendir($dir)))
 	{
 		// add slash to end
 		if(substr($dir, -strlen(DIRECTORY_SEPARATOR)) != DIRECTORY_SEPARATOR)

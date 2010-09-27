@@ -301,6 +301,10 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 		// get the path part of the request
 		$path = generic_validate_urlpath(array('path' => $request), 'path');
 		
+		// remove html_root from url
+		if(substr($path, 0, strlen(setting('html_root'))) == setting('html_root'))
+			$path = substr($path, strlen(setting('html_root')));
+		
 		// get the menu path
 		$menu = get_menu_entry($path);
 
@@ -341,6 +345,13 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 		{
 			$request[$key] = urldecode((string)$value);
 		}
+		
+		// if pathinfo is set in the request, get the menu
+		if(isset($request['path_info']) && setting('modrewrite') == true)
+		{
+			$path_info = $request['path_info'];
+			unset($request['path_info']);
+		}
 	}
 	
 	// if the caller functionality would like an array returned for further processing such as in theme() return now
@@ -348,7 +359,7 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 		return $request;
 	
 	// check with mod rewrite if paths can actually be printed out as directories
-	if(setting('modrewrite') == true && isset($path))
+	if(setting('modrewrite') == true && isset($menu))
 		$path_info = get_path($request, $menu);
 	elseif(isset($menu))
 		$request['path_info'] = get_path($request, $menu);

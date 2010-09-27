@@ -428,7 +428,7 @@ class archive
 			// download entire image
 			else
 			{
-				if($fp = @fopen($path, 'rb'))
+				if(($fp = @fopen($path, 'rb')))
 				{
 					$this->internal_fp = $fp;
 					$this->internal_length = filesize($path);

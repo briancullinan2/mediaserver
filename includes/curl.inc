@@ -165,7 +165,7 @@ function parse_headers($headers_raw)
  */
 function get_full_url($url, $fragment)
 {
-	if($address = generic_validate_hostname(array('address' => $fragment), 'address'))
+	if(($address = generic_validate_hostname(array('address' => $fragment), 'address')))
 		// already is valid
 		return $fragment;
 	else
@@ -174,7 +174,7 @@ function get_full_url($url, $fragment)
 		$address = generic_validate_hostname(array('address' => $url), 'address');
 		
 		// get path to prepend to fragment
-		if($path = generic_validate_urlpath(array('path' => $url), 'path') && 
+		if(($path = generic_validate_urlpath(array('path' => $url), 'path')) && 
 			substr($fragment, 0, 1) != '/'
 		)
 		{
@@ -240,9 +240,9 @@ function get_login_form($content, $userfield = 'username')
 function get_filename($headers)
 {
 	if(isset($headers['content-disposition']) && 
-		preg_match('/filename="([^"]*)"/i', $headers['content-disposition'], $matches) > 0
+		preg_match('/filename=(["\']?)([^\1]*)\1/i', $headers['content-disposition'], $matches) > 0
 	)
-		$filename = $matches[1];
+		return $matches[2];
 }
 
 function get_xml_list($xpath)

@@ -44,7 +44,7 @@ function preload_settings()
 	// get system settings from a few different locations
 	if(file_exists(setting_settings_file()))
 	{
-		if($GLOBALS['settings'] = parse_ini_file(setting_settings_file(), true))
+		if(($GLOBALS['settings'] = parse_ini_file(setting_settings_file(), true)))
 		{
 			// awesome settings are loaded properly
 			foreach($GLOBALS['settings'] as $name => $value)
@@ -302,7 +302,7 @@ function setting_modrewrite($settings)
  */
 function setting_tmp_dir($settings)
 {
-	if($settings['tmp_dir'] = generic_validate_dir($settings, 'tmp_dir'))
+	if(($settings['tmp_dir'] = generic_validate_dir($settings, 'tmp_dir')))
 		return $settings['tmp_dir'];
 	else
 	{

@@ -96,7 +96,7 @@ function output_list($request)
 		// set some output variables
 		register_output_vars('list', $request['list']);
 		
-		if($session_select = session('select'))
+		if(($session_select = session('select')))
 		{
 			$request['selected'] = $session_select['selected'];
 		}

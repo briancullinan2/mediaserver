@@ -258,7 +258,7 @@ function setting_local_users($settings)
 {
 	$settings['local_root'] = setting('local_root');
 	
-	if($settings['local_users'] = generic_validate_dir($settings, 'local_users'))
+	if(($settings['local_users'] = generic_validate_dir($settings, 'local_users')))
 		return $settings['local_users'];
 	else
 	{

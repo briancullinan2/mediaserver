@@ -23,7 +23,7 @@ function handles_movies($file)
 		return false;
 	
 	// do movies in the folders from the download_movies module
-	if($movie_folders = setting('movie_folders'))
+	if(($movie_folders = setting('movie_folders')))
 	{
 		$is_movie = false;
 		foreach($movie_folders as $i => $folder)
@@ -102,13 +102,13 @@ function setting_movie_folder($settings, $index)
  * Implementation of setting
  * @ingroup setting
  */
-function setting_movie_folders()
+function setting_movie_folders($settings)
 {
 	$movie_folders = array();
 
 	for($i = 0; $i < 50; $i++)
 	{
-		$folder = setting('movie_folder', $i);
+		$folder = setting_movie_folder($settings, $i);
 		if(isset($folder))
 			$movie_folders[] = $folder;
 	}
@@ -137,7 +137,7 @@ function configure_movies($request)
 	$folder_count = count($settings['movie_folders']);
 	
 	// load services from session
-	if($session_movies = session('movie_download'))
+	if(($session_movies = session('movie_download')))
 		$settings['movie_folders'] = $session_movies['folders'];
 	
 	if(dependency('tmdb_api'))

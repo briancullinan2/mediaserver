@@ -11,7 +11,10 @@ function menu_tv_download()
 		),
 		'admin/tools/television/downloader/%info_singular_step_television' => array(
 			'callback' => 'output_tv_download_singular'
-		)
+		),
+		'admin/tools/mustelevisionic/downloader/search/%service_index' => array(
+			'callback' => 'output_music_download_manual'
+		),
 	);
 }
 
@@ -122,25 +125,17 @@ function configure_tv_download($settings)
 function output_tv_download($request)
 {
 	// output configuration link
-	raise_error('You may need to <a href="' . url('admin/module/tv_download') . '">configure</a> this tool in order to use it properly.', E_WARN);
+	raise_error(array(
+		'You may need to ',
+		'link' => array(
+			'url' => 'admin/module/tv_download',
+			'text' => 'configure'
+		),
+		' this tool in order to use it properly.'
+	), E_WARN);
 
 	// perform television downloading
-	// log in to myepisodes
-	$infos['login'] = array(
-		'name' => 'MyEpisodes, Service Login',
-		'status' => '',
-		'description' => array(
-			'list' => array(
-				'Logging in to myepisodes.com and the configured NZB services.',
-			),
-		),
-		'text' => array(
-			'loading' => 'Loading...'
-		),
-		'type' => 'theme',
-		'value' => 'singular',
-		'href' => url('admin/tools/television/downloader/login/0', true),
-	);
+	$infos = get_download_services_login(NULL, 'admin/tools/television/downloader/login/');
 	
 	// output info
 	register_output_vars('infos', array(
@@ -177,13 +172,15 @@ function television_fetch_show($showname, $season, $episode)
 			// match nzbs
 			$count = preg_match_all($config['match'], $result['content'], $matches);
 			
+print_r($config);
+print_r($matches);
 			if($count > 0)
 			{
-				if($address = generic_validate_hostname(array('address' => $matches[1][0]), 'address'))
+				if(($address = generic_validate_hostname(array('address' => $matches[1][0]), 'address')))
 					$file = $matches[1][0];
 				else
 				{
-					if($address = generic_validate_hostname(array('address' => $config['search']), 'address'))
+					if(($address = generic_validate_hostname(array('address' => $config['search']), 'address')))
 						$file = $address . '/' . $matches[1][0];
 					else
 						$file = $matches[1][0];
@@ -191,13 +188,13 @@ function television_fetch_show($showname, $season, $episode)
 					
 				// download and save
 				$result = fetch($file, array(), array(), session('download_services_' . $i));
-				
+
 				if(strlen($result['content']) == 0)
 					return false;
 				
 				$path = $config['savepath'] . television_rename_show($showname, $season, $episode, $result['headers']);
 	
-				if($fh = fopen($path, 'w'))
+				if(($fh = fopen($path, 'w')))
 				{
 					fwrite($fh, $result['content']);
 					fclose($fh);

@@ -1,0 +1,17 @@
+/* CSS Document */
+
+#fieldset_tag_rename #row_variables .field.field_set .field,
+#fieldset_tag_from_name #row_variables .field.field_set .field {
+	float:left;
+	width:120px;
+}
+
+#fieldset_tag_rename #row_variables .field.field_set input,
+#fieldset_tag_from_name #row_variables .field.field_set input {
+	width:120px;
+}
+
+#fieldset_tag_rename #row_variables .field.field_set,
+#fieldset_tag_from_name #row_variables .field.field_set {
+	width:60%;
+}

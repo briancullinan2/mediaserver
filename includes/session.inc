@@ -29,13 +29,13 @@ function setup_session($request = array())
 		session_start();
 	
 		// restore errors if there are errors
-		if($user_errors = session_get('errors', 'user'))
+		if(($user_errors = session_get('errors', 'user')))
 			$GLOBALS['user_errors'] = array_merge($GLOBALS['user_errors'], $user_errors);
-		if($warn_errors = session_get('errors', 'warn'))
+		if(($warn_errors = session_get('errors', 'warn')))
 			$GLOBALS['user_errors'] = array_merge($GLOBALS['warn_errors'], $warn_errors);
-		if($note_errors = session_get('errors', 'note'))
+		if(($note_errors = session_get('errors', 'note')))
 			$GLOBALS['user_errors'] = array_merge($GLOBALS['note_errors'], $note_errors);
-		if($debug_errors = session_get('errors', 'debug'))
+		if(($debug_errors = session_get('errors', 'debug')))
 			$GLOBALS['debug_errors'] = array_merge($GLOBALS['debug_errors'], $debug_errors);
 	}
 }

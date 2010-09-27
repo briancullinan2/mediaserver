@@ -61,7 +61,7 @@ function setting_nzbservice_1($settings, $type = NULL)
  */
 function setting_nzbpath($settings)
 {
-	if($settings['nzbpath'] = generic_validate_dir($settings, 'nzbpath') && is_writable($settings['nzbpath']))
+	if(($settings['nzbpath'] = generic_validate_dir($settings, 'nzbpath')) && is_writable($settings['nzbpath']))
 		return $settings['nzbpath'];
 	else
 		return setting('tmp_dir');

@@ -34,7 +34,7 @@ function theme_live_styles()
 	header('Content-Type: text/css');
 	$styles = array('css/types.css', 'css/colors.css', 'css/search.css', 'css/layout.css', 'css/menu.css', 'css/files.css'
 		, 'css/errors.css', 'css/forms.css', 'css/footer.css', 'css/select.css', 'css/geshi.css', 'css/highlight.css'
-		, 'css/list.css'
+		, 'css/list.css', 'css/file_rename.css', 'css/tag_rename.css'
 	);
 	
 	foreach($styles as $i => $style)

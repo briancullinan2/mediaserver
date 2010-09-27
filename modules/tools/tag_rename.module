@@ -1,0 +1,179 @@
+<?php
+
+
+function menu_tag_rename()
+{
+	return array(
+		'admin/tools/music/tag_rename' => array(
+			'callback' => 'output_tag_rename',
+		),
+	);
+}
+
+/**
+ * Implementation of output
+ * @ingroup output
+ */
+function output_tag_rename($request)
+{
+	$rename = array();
+
+	$rename['rename_mask'] = array(
+		'name' => 'Filename Mask',
+		'type' => 'text',
+		'value' => $request['rename_mask'],
+		'description' => 'Enter the mask for renaming files using the keys below'
+	);
+	
+	$rename['variables'] = array(
+		'name' => 'Variables',
+		'type' => 'set',
+		'options' => array(
+			'artist' => array('type' => 'button', 'action' => '', 'value' => 'Artist (%1)'),
+			'title' => array('type' => 'button', 'action' => '', 'value' => 'Title (%2)'),
+			'album' => array('type' => 'button', 'action' => '', 'value' => 'Album (%3)'),
+			'year' => array('type' => 'button', 'action' => '', 'value' => 'Year (%4)'),
+			'genre' => array('type' => 'button', 'action' => '', 'value' => 'Genre (%5)'),
+			'track' => array('type' => 'button', 'action' => '', 'value' => 'Track (%6)'),
+			'filename' => array('type' => 'button', 'action' => '', 'value' => 'File name (%7)'),
+			'filenumber' => array('type' => 'button', 'action' => '', 'value' => 'File Number (%8)'),
+			'comment' => array('type' => 'button', 'action' => '', 'value' => 'Comment (%9)'),
+			'bitrate' => array('type' => 'button', 'action' => '', 'value' => 'Bitrate (%0)'),
+			'playtime' => array('type' => 'button', 'action' => '', 'value' => 'Play time (%t)'),
+			'bpm' => array('type' => 'button', 'action' => '', 'value' => 'BPM (%b)'),
+			'composer' => array('type' => 'button', 'action' => '', 'value' => 'Composer (%cp)'),
+			'aartist' => array('type' => 'button', 'action' => '', 'value' => 'A. Artist (%aa)'),
+			'conductor' => array('type' => 'button', 'action' => '', 'value' => 'Conductor (%co)'),
+			'disk' => array('type' => 'button', 'action' => '', 'value' => 'Disc # (%#)'),
+			'release' => array('type' => 'button', 'action' => '', 'value' => 'Release Time (%rt)'),
+			'mood' => array('type' => 'button', 'action' => '', 'value' => 'Mood (%md)'),
+			'label' => array('type' => 'button', 'action' => '', 'value' => 'Label (%lb)'),
+			'remix' => array('type' => 'button', 'action' => '', 'value' => 'Remixed by (%rb)'),
+		),
+		'description' => 'Construct the mask using these variables'
+	);
+	
+	$rename['example'] = array(
+		'name' => 'Result example',
+		'type' => 'text',
+		'value' => $example,
+		'disabled' => true,
+	);
+	
+	$rename['saved_masks'] = array(
+		'name' => 'Saved Masks',
+		'type' => 'multiselect',
+		'value' => '',
+		'options' => array(),
+	);
+	
+	$rename['case'] = array(
+		'name' => 'Change Case',
+		'status' => '',
+		'type' => 'set',
+		'options' => array(
+			'rename_case[case]' => array(
+				'type' => 'select',
+				'value' => $request['rename_case']['case'],
+				'options' => array('Same', 'Lower', 'Upper', 'Title', 'Sentence'),
+				'description' => 'Change the case of the filename'
+			),
+			'rename_case[except]' => array(
+				'name' => 'Exception',
+				'type' => 'text',
+				'value' => $request['rename_case']['except'],
+				'description' => 'Words listed here will retain the case as entered'
+			),
+		),
+	);
+	
+	$tag_from_name = array();
+	
+	$tag_from_name['rename_mask'] = array(
+		'name' => 'Filename Mask',
+		'type' => 'text',
+		'value' => $request['rename_mask'],
+		'description' => 'Enter the mask for renaming files using the keys below'
+	);
+	
+	$tag_from_name['variables'] = array(
+		'name' => 'Variables',
+		'type' => 'set',
+		'options' => array(
+			'artist' => array('type' => 'button', 'action' => '', 'value' => 'Artist (%1)'),
+			'title' => array('type' => 'button', 'action' => '', 'value' => 'Title (%2)'),
+			'album' => array('type' => 'button', 'action' => '', 'value' => 'Album (%3)'),
+			'year' => array('type' => 'button', 'action' => '', 'value' => 'Year (%4)'),
+			'genre' => array('type' => 'button', 'action' => '', 'value' => 'Genre (%5)'),
+			'track' => array('type' => 'button', 'action' => '', 'value' => 'Track (%6)'),
+			'comment' => array('type' => 'button', 'action' => '', 'value' => 'Comment (%9)'),
+			'bpm' => array('type' => 'button', 'action' => '', 'value' => 'BPM (%b)'),
+			'composer' => array('type' => 'button', 'action' => '', 'value' => 'Composer (%cp)'),
+			'aartist' => array('type' => 'button', 'action' => '', 'value' => 'A. Artist (%aa)'),
+			'conductor' => array('type' => 'button', 'action' => '', 'value' => 'Conductor (%co)'),
+			'disk' => array('type' => 'button', 'action' => '', 'value' => 'Disc # (%#)'),
+			'release' => array('type' => 'button', 'action' => '', 'value' => 'Release Time (%rt)'),
+			'mood' => array('type' => 'button', 'action' => '', 'value' => 'Mood (%md)'),
+			'label' => array('type' => 'button', 'action' => '', 'value' => 'Label (%lb)'),
+			'remix' => array('type' => 'button', 'action' => '', 'value' => 'Remixed by (%rb)'),
+		),
+		'description' => 'Construct the mask using these variables'
+	);
+	
+	$tag_from_name['example'] = array(
+		'name' => 'Result example',
+		'type' => 'text',
+		'value' => $example,
+		'disabled' => true,
+	);
+	
+	$tag_from_name['saved_masks'] = array(
+		'name' => 'Saved Masks',
+		'type' => 'multiselect',
+		'value' => '',
+		'options' => array(),
+	);
+	
+	$tag_from_name['case'] = array(
+		'name' => 'Change Case',
+		'status' => '',
+		'type' => 'set',
+		'options' => array(
+			'rename_case[case]' => array(
+				'type' => 'select',
+				'value' => $request['rename_case']['case'],
+				'options' => array('Same', 'Lower', 'Upper', 'Title', 'Sentence'),
+				'description' => 'Change the case of the filename'
+			),
+			'rename_case[except]' => array(
+				'name' => 'Exception',
+				'type' => 'text',
+				'value' => $request['rename_case']['except'],
+				'description' => 'Words listed here will retain the case as entered'
+			),
+		),
+	);
+
+	register_output_vars('infos', array(
+		'tag_rename' => array(
+			'name' => 'Rename Files',
+			'type' => 'fieldset',
+			'options' => $rename,
+			'collapsible' => true,
+		),
+		'multi_tag' => array(
+			'name' => 'Multi File Tag Editor',
+			'type' => 'fieldset',
+			'options' => array(),
+			'collapsible' => true,
+		),
+		'tag_from_name' => array(
+			'name' => 'Tags from Filename',
+			'type' => 'fieldset',
+			'options' => $tag_from_name,
+			'collapsible' => true,
+		),
+	));
+	
+	theme('tool_info');
+}

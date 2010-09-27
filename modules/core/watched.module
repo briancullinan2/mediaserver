@@ -62,7 +62,7 @@ function handles_watched($dir)
 				
 				// check for file count inconsistency but don't process anything
 				$count = 0;
-				if (is_readable(str_replace('/', DIRECTORY_SEPARATOR, $dir)) && $dh = opendir(str_replace('/', DIRECTORY_SEPARATOR, $dir)))
+				if (is_readable(str_replace('/', DIRECTORY_SEPARATOR, $dir)) && ($dh = opendir(str_replace('/', DIRECTORY_SEPARATOR, $dir))))
 				{
 					// count files
 					while (($file = readdir($dh)) !== false)
@@ -131,13 +131,13 @@ function setting_watched($settings, $index)
  * Implementation of setting
  * @ingroup setting
  */
-function setting_watches()
+function setting_watches($settings)
 {
 	$watches = array();
 	
 	for($i = 0; $i < 128; $i++)
 	{
-		$watch = setting('watched', $i);
+		$watch = setting_watched($settings, $i);
 		if(isset($watch) && substr($watch, 0, 1) == '^')
 			$watches[] = substr($watch, 1);
 	}

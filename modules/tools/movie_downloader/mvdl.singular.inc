@@ -3,12 +3,11 @@
 
 function output_movie_download_login($request)
 {
-	if($request['login_index'] < count(setting('all_download_services')))
-	{
-		output_download_services_login($request, 'admin/tools/movies/downloader/login/');
-	}
+	$login_index = validate($request, 'login_index');
+	
+	$infos = get_download_services_login($login_index, 'admin/tools/movies/downloader/login/');
 
-	if($request['login_index'] == count(setting('all_download_services'))-1)
+	if($login_index == count(setting('all_download_services'))-1)
 	{
 		// download netflix Q
 		$infos['netflix_movies'] = array(
@@ -26,9 +25,9 @@ function output_movie_download_login($request)
 			'value' => 'singular',
 			'href' => url('admin/tools/movies/downloader/netflix', true),
 		);
-		
-		theme('form_fieldrows', $infos);
 	}
+
+	theme('form_fieldrows', $infos);
 }
 
 function output_movie_download_netflix($request)
@@ -137,7 +136,9 @@ function output_movie_download_netflix($request)
 	session('descriptions', $movies['descriptions']);
 
 	// add manual search
-	$infos = array_merge(get_services_manual_download($request), $infos);
+	$request['service_index'] = validate($request, 'service_index');
+	$request['service_search'] = session('download_services');
+	$infos = array_merge($infos, get_download_services_manual($request['service_index'], $request['service_search'], 'movies'));
 	
 	// begin automatic search
 	if(!isset($request['service_search']) && count($movies['all_movies']) > 0)

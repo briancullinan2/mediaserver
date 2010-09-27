@@ -463,7 +463,7 @@ function output_handler($file, $handler)
 		// load file from file system
 		if(handles($file, $handler) && is_file($file))
 		{
-			if($fp = @fopen($file, 'rb'))
+			if(($fp = @fopen($file, 'rb')))
 			{
 				return $fp;
 			}
@@ -701,7 +701,7 @@ function _get_database_files($request, &$count)
 	}
 
 	// merge in all other information for the files
-	if(!empty($files))
+	if(!empty($files) && validate($request, 'short') == false)
 		$files = merge_database_info($files, $request['handler']);
 	
 	// only get count if the query is not limited by the limit field

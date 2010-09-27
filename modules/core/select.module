@@ -522,7 +522,7 @@ function output_select($request)
 	register_output_vars('total_count', $total_count);
 	
 	// register selected files for templates to use
-	if($session_select = session('select'))
+	if(($session_select = session('select')))
 		register_output_vars('selected', $session_select['selected']);
 
 	// some request variables used primarily by the database

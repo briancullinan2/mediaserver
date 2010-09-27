@@ -43,6 +43,12 @@
 	float:left;
 }
 
+.field_row .field.field_set .fielddesc {
+	width:auto;
+	float:none;
+	color:#999;
+}
+
 .fieldname.valid {
 	background-color:#DDFFDD;
 }

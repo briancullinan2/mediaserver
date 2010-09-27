@@ -295,7 +295,7 @@ function filter_search($request)
 function output_search($request)
 {
 	// output search information
-	if($session_search = session('search'))
+	if(($session_search = session('search')))
 		register_output_vars('search', $session_search);
 
 	// replace search results with highlight

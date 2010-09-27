@@ -93,22 +93,7 @@ function output_movie_download($request)
 		' this tool in order to use it properly.'
 	), E_WARN);
 
-	// perform television downloading
-	$infos['movies_login'] = array(
-		'name' => 'Download Services Login',
-		'status' => '',
-		'description' => array(
-			'list' => array(
-				'Logging in to Downloading Services.',
-			),
-		),
-		'text' => array(
-			'loading' => 'Loading...'
-		),
-		'type' => 'theme',
-		'value' => 'singular',
-		'href' => url('admin/tools/movies/downloader/login/0', true),
-	);
+	$infos = get_download_services_login(NULL, 'admin/tools/movies/downloader/login/');
 	
 	register_output_vars('infos', array(
 		'movie_downloader' => array(

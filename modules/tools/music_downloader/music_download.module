@@ -7,8 +7,14 @@ function menu_music_download()
 		'admin/tools/music/downloader' => array(
 			'callback' => 'output_music_download',
 		),
-		'admin/tools/music/downloader/%info_singular_step_music' => array(
-			'callback' => 'output_music_download_singular'
+		'admin/tools/music/downloader/login/%login_index' => array(
+			'callback' => 'output_music_download_login'
+		),
+		'admin/tools/movies/downloader/login/%login_index' => array(
+			'callback' => 'output_music_download_login'
+		),
+		'admin/tools/music/downloader/search/%service_index' => array(
+			'callback' => 'output_music_download_manual'
 		)
 	);
 }
@@ -16,4 +22,35 @@ function menu_music_download()
 function setup_music_download()
 {
 	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'msdl.singular.inc';
+}
+
+/**
+ * Implementation of output
+ * @ingroup output
+ */
+function output_music_download($request)
+{
+	// output configuration link
+	raise_error(array(
+		'You may need to ',
+		'link' => array(
+			'url' => 'admin/module/music_download',
+			'text' => 'configure'
+		),
+		' this tool in order to use it properly.'
+	), E_WARN);
+
+	// perform television downloading
+	$infos = get_download_services_login(NULL, 'admin/tools/music/downloader/login/');
+	
+	// output info
+	register_output_vars('infos', array(
+		'music_downloader' => array(
+			'name' => 'Music Downloader',
+			'type' => 'fieldset',
+			'options' => $infos
+		),
+	));
+	
+	theme('tool_info');
 }

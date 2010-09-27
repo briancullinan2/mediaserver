@@ -1,0 +1,33 @@
+/* CSS Document */
+
+
+#fieldset_file_rename .field_row .fieldname {
+	width:auto;
+	float:none;
+}
+
+#fieldset_file_rename .field_row {
+	float:left;
+	width:50%;
+	clear:none;
+}
+
+#fieldset_file_rename .field_row .field {
+	float:none;
+}
+
+#fieldset_file_rename #row_replace, #fieldset_file_rename #row_remove, 
+#fieldset_file_rename #row_add, #fieldset_file_rename #row_folder_name,
+#fieldset_file_rename #row_extension, #fieldset_file_rename #row_location {
+	clear:both;
+}
+
+#fieldset_file_rename .field_row .field.field_set .fieldname {
+	display:inline;
+	clear:both;
+	float:left;
+}
+
+#fieldset_file_rename .field_row .field.field_set {
+	width:100%;
+}

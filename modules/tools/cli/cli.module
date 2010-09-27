@@ -67,7 +67,7 @@ function setting_cli_columns($settings)
 		return $settings['cli_columns'];
 	elseif(isset($_ENV['COLUMNS']))
 		return $_ENV['COLUMNS'];
-	elseif($columns = exec('tput cols'))
+	elseif(($columns = exec('tput cols')))
 		return $columns;
 	else
 		return 80;
@@ -83,7 +83,7 @@ function setting_cli_rows($settings)
 		return $_ENV['ROWS'];
 	elseif(isset($_ENV['LINES']))
 		return $_ENV['LINES'];
-	elseif($rows = exec('tput lines'))
+	elseif(($rows = exec('tput lines')))
 		return $rows;
 	else
 		return 60;

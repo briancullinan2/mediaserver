@@ -269,7 +269,7 @@ function configure_alias($settings, $request)
 	// store count for unsetting
 	$rule_count = count($settings['alias_rules']);
 	
-	if($session_alias = session('alias'))
+	if(($session_alias = session('alias')))
 	{
 		// load aliases from session
 		$settings['alias_rules'] = $session_alias['alias_rules'];

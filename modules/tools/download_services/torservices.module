@@ -9,10 +9,11 @@ function setting_torservice_0($settings, $type = NULL)
 {
 	$service = array(
 		'name' => 'What.CD',
-		'match' => '/<a href="(torrents.php?action=download[^"]*?)"/i',
+		'match' => '/<a href="(torrents\.php\?action=download[^"]*?)"/i',
+		'match_title' => '/<tr class="group">[\s\S]*?<td colspan="2">[\s]*(.*?)<span[\s\S]*?<strong>(.*?)</i',
 		'search' => '',
 		'login' => 'http://what.cd/login.php',
-		'loginfail' => '<span class="warning">',
+		'loginfail' => '/<span class="warning">/i',
 		'exclude' => 'keeplogged',
 		'savepath' => setting('torpath'),
 	);
@@ -31,6 +32,7 @@ function setting_torservice_1($settings, $type = NULL)
 	$service = array(
 		'name' => 'Waffles.FM',
 		'match' => '/<a href="(\/download.php\/[^"]*?)"/i',
+		'match_title' => '/<a href="#"><\/a><a href="\/details.php[^>]*?>(.*?)<\/a>/i',
 		'search' => '',
 		'login' => 'https://www.waffles.fm/w/index.php?title=Special%3AUserLogin&returnto=Main_Page',
 		'userfield' => 'wpName',
@@ -62,7 +64,7 @@ function setting_torservice_2($settings, $type = NULL)
 	);
 	
 	if($type == 'television')
-		$service['search'] = 'http://tvtorrents.com/loggedin/search.do?search=%s %d %02d';
+		$service['search'] = 'http://tvtorrents.com/loggedin/search.do?search=%s+%d+%02d';
 	
 	if(isset($settings['torservice_2']))
 		$settings['torservice_2'] = array_merge($settings['torservice_2'], $service);
@@ -97,7 +99,7 @@ function setting_torservice_3($settings, $type = NULL)
  */
 function setting_torpath($settings)
 {
-	if($settings['torpath'] = generic_validate_dir($settings, 'torpath') && is_writable($settings['torpath']))
+	if(($settings['torpath'] = generic_validate_dir($settings, 'torpath')) && is_writable($settings['torpath']))
 		return $settings['torpath'];
 	else
 		return setting('tmp_dir');

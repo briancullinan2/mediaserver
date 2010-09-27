@@ -8,7 +8,7 @@
 function validate_info_singular_step_television($request)
 {
 	if(isset($request['info_singular_step_television']) &&
-		in_array($request['info_singular_step_television'], array('login', 'shows', 'download'))
+		in_array($request['info_singular_step_television'], array('shows', 'download'))
 	)
 		return $request['info_singular_step_television'];
 }
@@ -38,17 +38,14 @@ function output_tv_download_singular($request)
 
 function output_tv_download_login($request)
 {
-	if($request['login_index'] < count(setting('all_download_services')))
-	{
-		output_download_services_login($request, 'admin/tools/television/downloader/login/');
-	}
+	$login_index = validate($request, 'login_index');
+	
+	$infos = get_download_services_login($login_index, 'admin/tools/television/downloader/login/');
 	
 	if($request['login_index'] == count(setting('all_download_services'))-1)
 	{
 		// log in to my episodes
 		$result = television_myepisodes_login();
-		
-		$infos = array();
 		
 		if($result['status'] == false)
 		{
@@ -95,54 +92,54 @@ function output_tv_download_login($request)
 				'href' => url('admin/tools/television/downloader/shows', true),
 			);
 		}
-		
-		theme('form_fieldrows', $infos);
 	}
+	
+	theme('form_fieldrows', $infos);
 }
 
 function output_tv_download_shows($request)
 {
+	// get list of shows
+	$shows = television_myepisodes_fetch_shows();
+	
+	$infos = array();
+	
+	$infos['myepisodes_shows'] = array(
+		'name' => 'MyEpisodes TV Shows',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'These are all the TV Shows you are subscribed to.',
+			),
+		),
+		'value' => array(
+			'TV Shows:',
+			'list' => $shows['all_shows'],
+		),
+	);
+	
+	// list of shows to download
+	$infos['myepisodes_episodes'] = array(
+		'name' => 'New Episodes',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'These are all the new episodes that need to be downloaded.',
+			),
+		),
+		'value' => array(
+			'Episodes for download:',
+			'list' => $shows['new_episodes']['combined']
+		),
+	);
+	
 	// add manual search
-	output_download_services_manual($request);
-	
+	$request['service_index'] = validate($request, 'service_index');
 	$request['service_search'] = session('download_services');
-	
+	$infos = array_merge($infos, get_download_services_manual($request['service_index'], $request['service_search'], 'television'));
+
 	if(!isset($request['service_search']))
 	{
-		// get list of shows
-		$shows = television_myepisodes_fetch_shows();
-		
-		$infos = array();
-		
-		$infos['myepisodes_shows'] = array(
-			'name' => 'MyEpisodes TV Shows',
-			'status' => '',
-			'description' => array(
-				'list' => array(
-					'These are all the TV Shows you are subscribed to.',
-				),
-			),
-			'value' => array(
-				'TV Shows:',
-				'list' => $shows['all_shows'],
-			),
-		);
-		
-		// list of shows to download
-		$infos['myepisodes_episodes'] = array(
-			'name' => 'New Episodes',
-			'status' => '',
-			'description' => array(
-				'list' => array(
-					'These are all the new episodes that need to be downloaded.',
-				),
-			),
-			'value' => array(
-				'Episodes for download:',
-				'list' => $shows['new_episodes']['combined']
-			),
-		);
-	
 		// add an entry for each show
 		foreach($shows['new_episodes']['shows'] as $i => $show)
 		{
@@ -168,9 +165,9 @@ function output_tv_download_shows($request)
 				, true),
 			);
 		}
-	
-		theme('form_fieldrows', $infos);
 	}
+	
+	theme('form_fieldrows', $infos);
 }
 
 function get_tv_download_downloads($request)

@@ -208,7 +208,7 @@ class diskimage
 			$path = substr($path, strlen('diskimage://'));
 			
 		list($path, $subfile) = get_inner_path($path);
-		if(is_file($path) && $fp = @fopen($path, 'rb'))
+		if(is_file($path) && ($fp = @fopen($path, 'rb')))
 		{
 			$this->internal_fp = $fp;
 			$this->internal_pos = 0;
