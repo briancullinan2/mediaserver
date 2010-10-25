@@ -55,5 +55,4 @@ if(isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD']=="POST"){
 	//Paranoia
 	unset($_POST);
 }
-	
-?>
+

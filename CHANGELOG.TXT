@@ -1,3 +1,19 @@
+2010-10-25
+Renamed goto() to location() because of php 5.3
+
+2010-10-19
+Fixed huge security vulnerability in users.inc
+	When password is left blank it was being converted to Password=0 by ADOdb which returns a user entry
+	Session was not changing user when new username and password were entered
+	This allowed invoke_menu to run even if the user had been changed
+
+2010-09-26
+Started tag and rename module
+Started bulk rename module
+Fixed weird problem with using if($setting = generic_validate_*($settings, 'setting'))
+	$setting will be set to true or false if the function call completed but putting it in parenthesis will assign setting but still fail the "if" is there is no return value
+Worked on download_services module
+
 2010-09-20
 Performance improvements
 API fixes

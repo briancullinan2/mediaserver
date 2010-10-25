@@ -298,14 +298,8 @@ function setting_secret($settings)
  */
 function setting_admin_password($settings)
 {
-	if(isset($settings['admin_password']))
-	{
-		if(substr($settings['admin_password'], 0, 5) == 'hash:')
-			return generic_validate_base64($settings, 'admin_password');
-			
-		elseif(preg_match(PASSWORD_COMPLEXITY, $settings['admin_password']) != 0)
-			return 'hash:' . sha1(setting('secret') . $settings['admin_password']);
-	}
+	if(isset($settings['admin_password']) && preg_match(PASSWORD_COMPLEXITY, $settings['admin_password']) != 0)
+		return $settings['admin_password'];
 }
 
 /**
@@ -322,26 +316,17 @@ function validate_users($request)
 /**
  * Implementation of validate
  * @ingroup validate
- * @return an MD5 has of the setting('db_secret') prepended to the inputted password, it can never be decoded or displayed
+ * @return an sha1 hash of the setting('db_secret') prepended to the inputted password, it can never be decoded or displayed
  */
 function validate_password($request)
 {
-	// if the request method is a get then the password must be base64 encoded
-	if(isset($request['password']) && strtoupper($_SERVER['REQUEST_METHOD']) != 'POST' && substr($request['password'], 0, 5) != 'hash:')
-	{
-		// if the previous conditions are not met, then flip the fuck out
-		raise_error('Password not properly encoded, referrer is not this site!', E_DEBUG|E_USER|E_FATAL);
-		
-		return '';
-	}
+	if(isset($request['password']) && !empty($request['password']))
+		return $request['password'];
+}
 
-	if(isset($request['password']))
-	{
-		if(substr($request['password'], 0, 5) == 'hash:')
-			return $request['password'];
-		else
-			return 'hash:' . sha1(setting('secret') . $request['password']);
-	}
+function validate_password_hash($request)
+{
+	return sha1(setting('secret') . $request['password']);
 }
 
 /**
@@ -419,6 +404,32 @@ function handles_users($file)
 	else	
 		return false;
 }
+
+function users_get_guest()
+{
+	if(setting_installed() && setting('database_enable'))
+	{
+		// get guest user
+		$db_user = db_assoc('SELECT * FROM users WHERE id = -2 LIMIT 1');
+		
+		if(is_array($db_user) && count($db_user) > 0)
+		{
+			// just incase a template wants to access the rest of the information; include the user
+			unset($db_user[0]['Password']);
+			
+			$save = $db_user[0];
+			$save['Settings'] = unserialize($save['Settings']);
+			
+			return $save;
+		}
+	}
+	else
+		return array(
+			'Username' => 'guest',
+			'Privilage' => 1
+		);
+}
+
 
 /** 
  * Implementation of handle
@@ -510,6 +521,7 @@ function session_users($request)
 {
 	// validate username and password
 	$request['username'] = validate($request, 'username');
+	$request['password'] = validate($request, 'password_hash');
 
 	// check if user is logged in
 	if( isset($request['username']) && isset($request['password']) && setting_installed() && setting('database_enable') )
@@ -517,7 +529,7 @@ function session_users($request)
 		// lookup username in table
 		$db_user = db_assoc('SELECT * FROM users WHERE Username=? AND Password=? LIMIT 1', array(
 			$request['username'],
-			substr($request['password'], 5),
+			'' . $request['password'],
 		));
 		
 		if( !empty($db_user) )
@@ -533,49 +545,30 @@ function session_users($request)
 		else
 			raise_error('Invalid username or password.', E_USER);
 	}
-	// use guest information
-	elseif(setting_installed() && setting('database_enable'))
-	{
-		// get guest user
-		$db_user = db_assoc('SELECT * FROM users WHERE id = -2 LIMIT 1');
-		
-		if(is_array($db_user) && count($db_user) > 0)
-		{
-			// just incase a template wants to access the rest of the information; include the user
-			unset($db_user[0]['Password']);
-			
-			$save = $db_user[0];
-			$save['Settings'] = unserialize($save['Settings']);
-		}
-	}
 	// use admin account defined in settings
 	elseif( isset($request['username']) && isset($request['password']) )
 	{
-		if($request['username'] == 'admin')
+		if($request['username'] == 'admin' &&
+			$request['password'] == sha1(setting('secret') . setting('admin_password')))
 		{
-			if(substr($request['password'], 5) == substr(setting('admin_password'), 5))
-			{
-				$save = array(
-					'id' => '-1',
-					'Username' => 'admin',
-					'Privilage' => 10,
-				);
-			}
-			else
-				raise_error('Invalid password.', E_USER);
+			$save = array(
+				'id' => '-1',
+				'Username' => 'admin',
+				'Privilage' => 10,
+			);
 		}
 		else
-			raise_error('Invalid username.', E_USER);
+			raise_error('Invalid username or password.', E_USER);
 	}
+
+	// if the save variable hasn't been set yet, use guest account
+	if(!isset($save))
+		$save = users_get_guest();
+
+	// output the user so template can print out login or logout stuff
+	register_output_vars('user', $save);
 	
-	// if the save variable hasn't been set yet, use quest account
-	if(isset($save))
-	{
-		// output the user so template can print out login or logout stuff
-		register_output_vars('user', $save);
-		
-		return $save;
-	}
+	return $save;
 }
 
 /**
@@ -668,7 +661,7 @@ function output_users($request)
 			{
 				if( isset($request['return']) && (!isset($request['required_priv']) || $user['Privilage'] >= $request['required_priv']))
 				{
-					goto($request['return']);
+					location($request['return']);
 				}
 				else
 					raise_error('Already logged in!', E_USER);
@@ -690,7 +683,7 @@ function output_users($request)
 			session_start();
 			
 			if( isset($request['return']))
-				goto($request['return']);
+				location($request['return']);
 		break;
 		// show a list of users, this may have different administrator requirements
 		case 'list':

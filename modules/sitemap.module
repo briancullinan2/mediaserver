@@ -24,7 +24,7 @@ function setup_sitemap()
 		{
 			if(basename($_REQUEST['path_info']) != 'sitemap.xml')
 			{
-				goto('sitemap.xml');
+				location('sitemap.xml');
 			}
 			else
 			{

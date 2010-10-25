@@ -3,6 +3,7 @@ description = Keeps track of changed directories and files.
 internal = true
 package = core
 settings = watched_settings
+privilage = 10
 
 [database]
 Filepath = TEXT

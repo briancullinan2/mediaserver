@@ -1,12 +1,11 @@
 ;<?php die(); ?>
-db_connect = mysql://media:eVi0FIWJIZVLPwiB@localhost/mediaserver
+db_connect = mysql://mediaserver:eVi0FIWJIZVLPwiB@localhost/mediaserver
 database_enable = 1
 debug_mode = 1
 deep_select = 1
-verbose = 2
+verbose = 1
 movies_enable = "false"
-db_connect = "mysql%3A%2F%2Fmedia%3AeVi0FIWJIZVLPwiB%40localhost%2Fmediaserver"
-local_users = "%2Fvar%2Fwww%2Fdev%2Fusers%2F"
+local_users = "%2Fvar%2Fwww%2Fmonolithic%2Fusers%2F"
 admin_password = "Fuckyou123"
 secret = "ynfB67rUWCKYIqKe"
 watched_0 = "%2Fhome%2Fshare%2FMusic%2F"
@@ -34,9 +33,9 @@ paths_replace = "%2F%5E%5C%2Fhome%5C%2F%28share%5C%2F%29%3F%2Fi"
 alias_replace = "%2F%5E%5C%2FShared%5C%2F%2Fi"
 
 [alias_1]
-paths = "%2Fvar%2Fwww%2Fdev%2Fusers%2F"
+paths = "%2Fvar%2Fwww%2Fmonolithic%2Fusers%2F"
 alias = "%2FUsers%2F"
-paths_replace = "%2F%5E%5C%2Fvar%5C%2F%28www%5C%2F%28dev%5C%2F%28users%5C%2F%29%3F%29%3F%29%3F%2Fi"
+paths_replace = "%2F%5E%5C%2Fvar%5C%2F%28www%5C%2F%28monolithic%5C%2F%28users%5C%2F%29%3F%29%3F%29%3F%2Fi"
 alias_replace = "%2F%5E%5C%2FUsers%5C%2F%2Fi"
 
 [nzbservice_0]

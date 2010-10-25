@@ -5,10 +5,31 @@ function bootstrap($mode = 'all')
 {
 	switch($mode)
 	{
+		case 'phpids':
+
+			require_once 'IDS/Init.php';
+			$request = array(
+			  'REQUEST' => $_REQUEST,
+			  'GET' => $_GET,
+			  'POST' => isset($_POST)?$_POST:NULL,
+			  'COOKIE' => $_COOKIE
+			);
+			$init = IDS_Init::init('/var/www/monolithic/includes/Config.ini');
+			$ids = new IDS_Monitor($request, $init);
+			$result = $ids->run();
+			
+			if (!$result->isEmpty()) {
+				raise_error('Impact from PHPIDS: ' . $ids->getReport()->getImpact(), E_DEBUG);
+			}
+			break;
+			
 		case 'database':
 			require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'database.inc';
 			
 			load_module(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'database.inc');
+			
+			if(dependency('database') == false)
+				raise_error('Database not installed properly!', E_DEBUG);
 			
 			break;
 			
@@ -41,6 +62,7 @@ function bootstrap($mode = 'all')
 				require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . $include;
 			}
 			preload_error();
+			bootstrap('phpids');
 			preload_triggers();
 			preload_menu();
 				

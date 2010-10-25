@@ -75,16 +75,16 @@ function validate_dir($request)
 		// add leading slash
 		if(substr($request['dir'], 0, 1) != '/')
 			$request['dir'] = '/' . $request['dir'];
+			
+		// add trailing slash
+		if(substr($request['dir'], -1) != '/' && substr($request['dir'], -1) != '\\')
+			$request['dir'] .= '/';
 		
 		// replace directory with actual path
 		if(setting('alias_enable'))
 			$tmp = alias_replace($request['dir']);
 		else
 			$tmp = $request['dir'];
-			
-		// add trailing slash
-		if(substr($request['dir'], -1) != '/' && substr($request['dir'], -1) != '\\')
-			$request['dir'] .= '/';
 			
 		// this checks the input 'dir' is on the actual file system
 		if(is_dir(realpath($tmp)) || 

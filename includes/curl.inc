@@ -19,7 +19,7 @@ function dependency_curl_installed($settings)
  */
 function fetch($url, $post = array(), $headers = array(), $cookies = array())
 {
-	if(function_exists('curl_init'))
+	if(dependency('curl_installed'))
 	{
 		$ch = curl_init($url);
 		
@@ -104,7 +104,8 @@ function fetch($url, $post = array(), $headers = array(), $cookies = array())
 		// delete cookie jar because they are saved and return in an array instead
 		if($cookie_file !== false) unlink($cookie_file);
 
-		if(dependency('simplexml_installed') && isset($headers['content-type']) && substr($headers['content-type'], 0, 8) == 'text/xml')
+		if(dependency('simplexml_installed') && isset($headers['content-type']) &&
+			substr($headers['content-type'], 0, 8) == 'text/xml')
 		{
 			try {
 				$xml = new SimpleXMLElement($content);

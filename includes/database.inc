@@ -44,7 +44,7 @@ function setup_database()
 	if(function_exists('ADONewConnection'))
 	{
 		$GLOBALS['database'] = ADONewConnection(setting('db_connect'));  # no need for Connect()
-			
+
 		// set fetch mode if the database is set up
 		if($GLOBALS['database'] !== false)
 		{
@@ -64,8 +64,6 @@ function setup_database()
 					install_table($module, $config['database']);
 			}
 		}
-		else
-			unset($GLOBALS['database']);
 	}
 	
 	if(!isset($GLOBALS['database']) || $GLOBALS['database'] === false)
@@ -141,7 +139,7 @@ function status_database($settings)
 	
 	if(dependency('adodb_installed'))
 	{
-		$options['exists_adodb'] = array(
+		$status['exists_adodb'] = array(
 			'name' => 'ADOdb Library',
 			'status' => '',
 			'description' => array(
@@ -156,7 +154,7 @@ function status_database($settings)
 	}
 	else
 	{
-		$options['exists_adodb'] = array(
+		$status['exists_adodb'] = array(
 			'name' => 'ADOdb Library Missing',
 			'status' => 'fail',
 			'description' => array(
@@ -175,9 +173,42 @@ function status_database($settings)
 		);
 	}
 	
+	if(dependency('valid_connection') != false)
+	{
+		$status['valid_connection'] = array(
+			'name' => 'Valid Connection',
+			'status' => '',
+			'description' => array(
+				'list' => array(
+					'The system has detected that the connection to the database is valid.',
+				),
+			),
+			'type' => 'label',
+			'value' => 'Valid Connection',
+		);
+	}
+	else
+	{
+		$status['valid_connection'] = array(
+			'name' => 'Invalid Connection',
+			'status' => 'fail',
+			'description' => array(
+				'list' => array(
+					'The system has detected that the connection to the database has failed.',
+				),
+			),
+			'value' => array(
+				'link' => array(
+					'url' => 'http://dev.mysql.com/doc/refman/5.0/en/database-use.html',
+					'text' => 'Using a Database',
+				),
+			),
+		);
+	}
+	
 	if(dependency('cannot_read') == false)
 	{
-		$options['cannot_read'] = array(
+		$status['cannot_read'] = array(
 			'name' => 'Database Permissions',
 			'status' => 'fail',
 			'description' => array(
@@ -629,7 +660,12 @@ function db_query($query, $args = array())
 	//if(setting('verbose') == true)
 		raise_error('DATABASE: ' . $query, E_DEBUG);
 	
-	return $GLOBALS['database']->Execute($query, $args);
+	$result = $GLOBALS['database']->Execute($query, $args);
+
+	if(isset($result->sql))
+		raise_error('DATABASE: ' . $result->sql, E_DEBUG);
+
+	return $result;
 }
 
 

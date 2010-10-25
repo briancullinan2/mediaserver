@@ -40,7 +40,7 @@ function theme__m3u()
 		header('Content-Type: text/html');
 		if(!isset($GLOBALS['output']['selected']))
 		{
-			goto('list/m3u/' . $_REQUEST['cat']);
+			location('list/m3u/' . $_REQUEST['cat']);
 		}
 		else
 		{

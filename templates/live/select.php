@@ -301,88 +301,91 @@ function theme_live_info($files = array(), $columns = array())
 <tr>
 	<td id="infoBar" class="colors_bg infobar" style="height:<?php print max($biggest+3, 7); ?>em;">
 	<?php
-	foreach($files as $i => $file)
+	if(count($files) != 0)
 	{
-		$html = live_alter_file($file);
-					
-		$info_count = 0;
-		foreach($columns as $j => $column)
+		foreach($files as $i => $file)
 		{
-			if(isset($file[$column]) && $file[$column] != '' && strlen($file[$column]) <= 200 &&
-				substr($column, -3) != '_id' && $column != 'id' && $column != 'Hex' && $column != 'Filepath' && 
-				$column != 'Filename' && $column != 'Filetype'
-			)
-			$info_count++;
-		}
-		
-		$info_count = ceil($info_count / 2);
-		// {if $info_count > $biggest}{assign var=biggest value=$info_count}{/if}
-		
-		//
-		?>
-		<table cellpadding="0" cellspacing="0" border="0" class="fileInfo" id="info_<?php print $file['id']; ?>" style="display:none;">
-			<tr>
-				<td>
-					<table cellpadding="0" cellspacing="0" border="0" class="fileThumb">
-						<tr>
-							<td>
-								<div class="thumb file_ext_<?php print $html['Filetype']; ?> file_type_<?php print isset($html['Filemime'])?str_replace('/', ' file_type_', $html['Filemime']):''; ?>">
-									<img src="<?php print url('template/live/images/s.gif'); ?>" height="48" width="48">
-								</div>
-							</td>
-							<td class="infoCell">
-								<span class="title"><?php print $html['Filename']; ?></span><br />
-								<span><?php print $html['Filetype']; ?></span>
-							</td>
-						</tr>
-					</table>
-				</td>
-				<td>
-				<?php
-				$count = 0;
-				foreach($columns as $j => $column)
-				{
-					if(isset($file[$column]) && $file[$column] != '' && strlen($file[$column]) <= 200 &&
-						substr($column, -3) != '_id' && $column != 'id' && $column != 'Hex' && 
-						$column != 'Filename' && $column != 'Filetype'
-					)
-					{
-						$count++;
-						?>
-						<span class="label colors_fg"><?php print htmlspecialchars($column); ?>:</span>
-						<?php
+			$html = live_alter_file($file);
 						
-						if($column == 'Filepath')
+			$info_count = 0;
+			foreach($columns as $j => $column)
+			{
+				if(isset($file[$column]) && $file[$column] != '' && strlen($file[$column]) <= 200 &&
+					substr($column, -3) != '_id' && $column != 'id' && $column != 'Hex' && $column != 'Filepath' && 
+					$column != 'Filename' && $column != 'Filetype'
+				)
+				$info_count++;
+			}
+			
+			$info_count = ceil($info_count / 2);
+			// {if $info_count > $biggest}{assign var=biggest value=$info_count}{/if}
+			
+			//
+			?>
+			<table cellpadding="0" cellspacing="0" border="0" class="fileInfo" id="info_<?php print $file['id']; ?>" style="display:none;">
+				<tr>
+					<td>
+						<table cellpadding="0" cellspacing="0" border="0" class="fileThumb">
+							<tr>
+								<td>
+									<div class="thumb file_ext_<?php print $html['Filetype']; ?> file_type_<?php print isset($html['Filemime'])?str_replace('/', ' file_type_', $html['Filemime']):''; ?>">
+										<img src="<?php print url('template/live/images/s.gif'); ?>" height="48" width="48">
+									</div>
+								</td>
+								<td class="infoCell">
+									<span class="title"><?php print $html['Filename']; ?></span><br />
+									<span><?php print $html['Filetype']; ?></span>
+								</td>
+							</tr>
+						</table>
+					</td>
+					<td>
+					<?php
+					$count = 0;
+					foreach($columns as $j => $column)
+					{
+						if(isset($file[$column]) && $file[$column] != '' && strlen($file[$column]) <= 200 &&
+							substr($column, -3) != '_id' && $column != 'id' && $column != 'Hex' && 
+							$column != 'Filename' && $column != 'Filetype'
+						)
 						{
-							if(dirname(dirname($file['Filepath'])) != '/')
-								print wordwrap('../../' . basename(dirname($html['Filepath'])) . '/' . basename($html['Filepath']), 45, "<br />", true);
-							else
-								print wordwrap($html['Filepath'], 45, "<br />", true);
-						}
-						else
-							print $html[$column];
-						?>
-						<br />
-						<?php
-						if($count == $info_count && $info_count >= 3)
-						{
+							$count++;
 							?>
-							</td>
-							<td>
+							<span class="label colors_fg"><?php print htmlspecialchars($column); ?>:</span>
 							<?php
+							
+							if($column == 'Filepath')
+							{
+								if(dirname(dirname($file['Filepath'])) != '/')
+									print wordwrap('../../' . basename(dirname($html['Filepath'])) . '/' . basename($html['Filepath']), 45, "<br />", true);
+								else
+									print wordwrap($html['Filepath'], 45, "<br />", true);
+							}
+							else
+								print $html[$column];
+							?>
+							<br />
+							<?php
+							if($count == $info_count && $info_count >= 3)
+							{
+								?>
+								</td>
+								<td>
+								<?php
+							}
 						}
 					}
-				}
-				
-				if($count < $info_count || $info_count < 3)
-				{
-					?></td><td>&nbsp;<?php
-				}
-				?>
-				</td>
-			</tr>
-		</table>
-		<?php
+					
+					if($count < $info_count || $info_count < 3)
+					{
+						?></td><td>&nbsp;<?php
+					}
+					?>
+					</td>
+				</tr>
+			</table>
+			<?php
+		}
 	}
 }
 

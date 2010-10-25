@@ -45,7 +45,7 @@ function request_validate()
 	if(isset($_SERVER['REQUEST_METHOD']) && strtolower($_SERVER['REQUEST_METHOD']) == 'post')
 	{
 		session('last_request',  $_REQUEST);
-		goto($_SERVER['REQUEST_URI']);
+		location($_SERVER['REQUEST_URI']);
 	}
 	if(($last_request = session('last_request')))
 	{

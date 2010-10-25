@@ -387,7 +387,7 @@ function url($request = array(), $not_special = false, $include_domain = false, 
  * Change the header location to the specified request
  * @param request The string or array of request variables containing the location to go to
  */
-function goto($request)
+function location($request)
 {
 	if(!headers_sent())
 	{
