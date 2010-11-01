@@ -320,23 +320,10 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 			$request = invoke_module('rewrite', $GLOBALS['menus'][$menu]['module'], array($path));
 		else
 			$request = invoke_module('rewrite', 'default', array($path));
-		
-		// process the query part
-		//   this is done here because fragment takes precedence over path
-		//   this allows for calling an output function modified request input
-		$arr = explode('&', $query);
-		if(count($arr) == 1 && $arr[0] == '')
-			$arr = array();
-		
-		// loop through all the query string and generate our new request array
-		foreach($arr as $i => $value)
-		{
-			// split each part of the query string into name value pairs
-			$x = explode('=', $value, 2);
 			
-			// set each part of the query string in our new request array
-			$request[$x[0]] = urldecode(isset($x[1])?$x[1]:'');
-		}
+		// merge current request with the query string
+		//  query string overrides request
+		$request = array_merge($request, extract_query($query));
 	}
 	else
 	{
@@ -382,6 +369,31 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 	else
 		return htmlspecialchars($link, ENT_QUOTES);
 }
+
+function extract_query($query)
+{
+	$request = array();
+	
+	// process the query part
+	//   this is done here because fragment takes precedence over path
+	//   this allows for calling an output function modified request input
+	$arr = explode('&', $query);
+	if(count($arr) == 1 && $arr[0] == '')
+		$arr = array();
+	
+	// loop through all the query string and generate our new request array
+	foreach($arr as $i => $value)
+	{
+		// split each part of the query string into name value pairs
+		$x = explode('=', $value, 2);
+		
+		// set each part of the query string in our new request array
+		$request[$x[0]] = urldecode(isset($x[1])?$x[1]:'');
+	}
+	
+	return $request;
+}
+
 
 /**
  * Change the header location to the specified request

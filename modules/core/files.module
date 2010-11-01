@@ -168,7 +168,7 @@ function get_info_files($file)
 	$fileinfo['Filename'] = basename($file);
 	$fileinfo['Filesize'] = file_exists($file)?filesize($file):0;
 	$fileinfo['Filemime'] = mime($file);
-	$fileinfo['Filedate'] = file_exists($file)?date("Y-m-d h:i:s", filemtime($file)):date("Y-m-d h:i:s", 0);
+	$fileinfo['Filedate'] = file_exists($file)?date('Y-m-d h:i:s', filemtime($file)):date('Y-m-d h:i:s', 0);
 	$fileinfo['Filetype'] = type($file);
 	
 	return $fileinfo;
