@@ -29,7 +29,7 @@ function dependency_highlighter($settings)
 	// if that archiver is not installed, return false
 	if($settings['highlighter'] == 'pear' && dependency('pear_installed') != false && include_path('Text/Highlighter.php') !== false)
 		return true;
-	elseif($settings['highlighter'] == 'gheshi' && 
+	elseif($settings['highlighter'] == 'geshi' && 
 		include_path('geshi' . DIRECTORY_SEPARATOR . 'geshi.php') !== false)
 		return true;
 	else

@@ -7,7 +7,7 @@
  * @enum VERSION set version for stuff to reference
  * @enum VERSION_NAME set the name for a text representation of the version
  */
-define('VERSION', 			     '0.90.0');
+define('VERSION', 			     '0.90.1');
 define('VERSION_NAME', 			  'Atlas');
 
 

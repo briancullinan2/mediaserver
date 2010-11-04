@@ -14,7 +14,7 @@ if(ini_get('register_globals')){
 	foreach(get_defined_vars() as $var=>$val){
 		//only keep superglobals we need on this whitelist,  _SESSION will take care of its self:
 		if(!in_array($var,array('_GET','_POST','_COOKIE','_SERVER', '_REQUEST'))){
-			unset($$var);
+			unset($GLOBALS[$var]);
 		}
 	}
 }

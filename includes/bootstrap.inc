@@ -1,5 +1,6 @@
 <?php
 
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'compatibility.inc';
 
 function bootstrap($mode = 'all')
 {
@@ -7,19 +8,22 @@ function bootstrap($mode = 'all')
 	{
 		case 'phpids':
 
-			require_once 'IDS/Init.php';
-			$request = array(
-			  'REQUEST' => $_REQUEST,
-			  'GET' => $_GET,
-			  'POST' => isset($_POST)?$_POST:NULL,
-			  'COOKIE' => $_COOKIE
-			);
-			$init = IDS_Init::init('/var/www/monolithic/includes/Config.ini');
-			$ids = new IDS_Monitor($request, $init);
-			$result = $ids->run();
-			
-			if (!$result->isEmpty()) {
-				raise_error('Impact from PHPIDS: ' . $ids->getReport()->getImpact(), E_DEBUG);
+			if(include_path('IDS/Init.php') != false)
+			{
+				include_once 'IDS/Init.php';
+				$request = array(
+				  'REQUEST' => $_REQUEST,
+				  'GET' => $_GET,
+				  'POST' => isset($_POST)?$_POST:NULL,
+				  'COOKIE' => $_COOKIE
+				);
+				$init = IDS_Init::init('/var/www/monolithic/includes/Config.ini');
+				$ids = new IDS_Monitor($request, $init);
+				$result = $ids->run();
+				
+				if (!$result->isEmpty()) {
+					raise_error('Impact from PHPIDS: ' . $ids->getReport()->getImpact(), E_DEBUG);
+				}
 			}
 			break;
 			
@@ -27,9 +31,12 @@ function bootstrap($mode = 'all')
 			require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'database.inc';
 			
 			load_module(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'database.inc');
-			
+
 			if(dependency('database') == false)
+			{
+				$GLOBALS['database'] = false;
 				raise_error('Database not installed properly!', E_DEBUG);
+			}
 			
 			break;
 			
@@ -45,7 +52,6 @@ function bootstrap($mode = 'all')
 				'request.inc',
 				'template.inc',
 				'session.inc',
-				'compatibility.inc',
 				'users.inc',
 				'theme.inc',
 				'curl.inc',

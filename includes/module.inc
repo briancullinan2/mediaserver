@@ -394,7 +394,7 @@ function get_modules_match($expression)
 
 
 
-function invoke_module($method, $module, $args = NULL)
+function invoke_module($method, $module, $args = array())
 {
 	if(module_implements($method, $module))
 	{

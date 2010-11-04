@@ -1,5 +1,5 @@
 name = Movie Downloader
-description = Set up a Netflix and News Groups account to check if movies in your queue already exist on disk or in news groups or torrents.
+description = "Set up a Netflix and News Groups account to check if movies in your queue already exist on disk or in news groups or torrents."
 privilage = 10
 template = false
 settings[] = netflix_xml
