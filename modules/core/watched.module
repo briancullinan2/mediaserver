@@ -36,8 +36,6 @@ function setting_watched_settings()
  */
 function handles_watched($dir)
 {
-	$dir = str_replace('\\', '/', $dir);
-
 	if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $dir)))
 	{
 		if(is_watched($dir))
@@ -59,7 +57,7 @@ function handles_watched($dir)
 			{
 				// compare the count of files in the database to the file system
 				$db_files = db_assoc('SELECT count(*) FROM files WHERE ' . sql_filepath($dir));
-				
+
 				// check for file count inconsistency but don't process anything
 				$count = 0;
 				if (is_readable(str_replace('/', DIRECTORY_SEPARATOR, $dir)) && ($dh = opendir(str_replace('/', DIRECTORY_SEPARATOR, $dir))))
@@ -67,7 +65,7 @@ function handles_watched($dir)
 					// count files
 					while (($file = readdir($dh)) !== false)
 					{
-						if(is_watched($dir . $file))
+						if(watched_and_files($dir . $file))
 							$count++;
 						
 						// return if count is different from database
@@ -122,8 +120,12 @@ function setting_watched($settings, $index)
 			$settings['watched_' . $index] .= DIRECTORY_SEPARATOR;
 		
 		// confirm that it is a directory
-		if(is_dir($settings['watched_' . $index]))
-			return $prefix . $settings['watched_' . $index];
+		if(!is_dir($settings['watched_' . $index]))
+			raise_error('Watched directory \'' . $settings['watched_' . $index] . '\' is not a directory or does not exists!', E_DEBUG);
+		
+		// don't ever remove configured watched directories because we don't want them removed from the 
+		//   database automatically if they are not currently mounted!
+		return $prefix . $settings['watched_' . $index];
 	}
 }
 
@@ -169,12 +171,19 @@ function setting_ignores($settings)
  */
 function is_watched($dir)
 {
+	// always use forward slash
+	$dir = str_replace('\\', '/', $dir);
+	
+	// add trailing slash just in case
+	if(substr($dir, -1) != '/')
+		$dir .= '/';
+	
 	// check if the file is watched from the list of watched and ignored directories
 	$is_ignored = false;
 	$is_watched = false;
 	foreach(setting('watches') as $i => $watch)
 	{
-		if(substr($dir, 0, strlen($watch)) == $watch)
+		if(substr($dir, 0, min(strlen($dir), strlen($watch))) == $watch)
 		{
 			$is_watched = true;
 		}
@@ -185,7 +194,7 @@ function is_watched($dir)
 	}
 	foreach(setting('ignores') as $i => $ignore)
 	{
-		if(substr($dir, 0, strlen($ignore)) == $ignore)
+		if(substr($dir, 0, min(strlen($dir), strlen($ignore))) == $ignore)
 		{
 			$is_ignored = true;
 		}
@@ -323,6 +332,7 @@ function scan_watched_files($dir, $callback = NULL)
 		if(is_callable($callback))
 			call_user_func_array($callback, array($file));
 	}
+	
 	
 	// get removed files
 	$removed_files = array_diff($database_files, $in_common);

@@ -53,7 +53,7 @@ function theme__info_label($value)
 
 function theme__info_loading($value)
 {
-	?><img src="<?php print url('template/live/images/large-loading.gif'); ?>" alt="loading" /><?php print htmlspecialchars($value); ?><?php
+	?><img src="<?php print url('templates/live/images/large-loading.gif'); ?>" alt="loading" /><?php print htmlspecialchars($value); ?><?php
 }
 
 function theme__info_image($value)

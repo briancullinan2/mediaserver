@@ -299,7 +299,7 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 		$query = generic_validate_query_str(array('query' => $request), 'query');
 
 		// get the path part of the request
-		$path = generic_validate_urlpath(array('path' => $request), 'path');
+		$path = urldecode(generic_validate_urlpath(array('path' => $request), 'path'));
 		
 		// remove html_root from url
 		if(substr($path, 0, strlen(setting('html_root'))) == setting('html_root'))
@@ -348,6 +348,7 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 	// check with mod rewrite if paths can actually be printed out as directories
 	if(setting('modrewrite') == true && isset($menu))
 		$path_info = get_path($request, $menu);
+	// if we aren't using mod_rewrite, add the path info to the query string
 	elseif(isset($menu))
 		$request['path_info'] = get_path($request, $menu);
 
@@ -361,7 +362,7 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 	// generate a link, with optional domain the html root and path info prepended
 	$link = (($include_domain)?setting('html_domain'):'') . 
 		setting('html_root') . 
-		(isset($path_info)?$path_info:'') . (($query != '?')?$query:'');
+		(isset($path_info)?urlencode_path($path_info):'') . (($query != '?')?$query:'');
 	
 	// optionally return a non html special chars converted URL
 	if($not_special)
@@ -467,6 +468,7 @@ function mime_type($ext)
 	return $type[0];
 }
 
+
 /**
  * parses the path inside of a file, useful to handlers like archive and diskimage
  * @param file The filepath to search for the inside part of
@@ -548,8 +550,128 @@ function machine($text)
  */
 function roundFileSize($dirsize)
 {
-	$dirsize = ( $dirsize < 1024 ) ? ($dirsize . " B") : (( $dirsize < 1048576 ) ? (round($dirsize / 1024, 2) . " KB") : (( $dirsize < 1073741824 ) ? (round($dirsize / 1048576, 2) . " MB") : (( $dirsize < 1099511627776 ) ? (round($dirsize / 1073741824, 2) . " GB") : (round($dirsize / 1099511627776, 2) . " TB") ) ) );
+	$dirsize = ( $dirsize < 1024 )
+		?
+		($dirsize . " B")
+		:
+		(
+			( $dirsize < 1048576 )
+			?
+			(round($dirsize / 1024, 2) . " KB")
+			:
+			(
+				( $dirsize < 1073741824 )
+				?
+				(round($dirsize / 1048576, 2) . " MB")
+				:
+				(
+					( $dirsize < 1099511627776 )
+					?
+					(round($dirsize / 1073741824, 2) . " GB")
+					:
+					(round($dirsize / 1099511627776, 2) . " TB")
+				)
+			)
+		);
 	return $dirsize;
+}
+
+
+function format_file($file)
+{
+	foreach($file as $column => $value)
+	{
+		if($column == 'Filepath')
+		{
+			$file['Filepath'] = urlencode_path($file['Filepath']);
+		}
+		/*elseif(isset($GLOBALS['output']['search_regexp']) && 
+			isset($GLOBALS['output']['search_regexp'][$column])
+		)
+		{
+			$file[$column] = preg_replace($GLOBALS['output']['search_regexp'][$column], '\'<strong style="background-color:#990;">\' . htmlspecialchars(\'$0\') . \'</strong>\'', $file[$column]);
+		
+			continue;
+		}*/
+		//$file[$column] = preg_replace('/([^ ]{25})/i', '$1<br />', $file[$column]);
+		elseif($column == 'Filesize')
+			$file['Filesize'] = roundFileSize($file['Filesize']);
+		elseif($column == 'Uncompressed')
+			$file['Uncompressed'] = roundFileSize($file['Uncompressed']);
+		elseif($column == 'Bitrate')
+			$file['Bitrate'] = round($file['Bitrate'] / 1000, 1) . ' kbs';
+		elseif($column == 'Length')
+			$file['Length'] = floor($file['Length'] / 60) . ' minutes ' . floor($file['Length'] % 60) . ' seconds';
+	}
+	return $file;
+}
+
+
+function output_ranges($filesize)
+{
+	//-------------------- THIS IS ALL RANAGES STUFF --------------------
+	// range can only be used when the filesize is known
+	
+	// if the filesize is still not known, just output the stream without any fancy stuff
+	if(isset($filesize))
+	{				
+		// check for range request
+		if(isset($_SERVER['HTTP_RANGE']))
+		{
+			list($size_unit, $range_orig) = explode('=', $_SERVER['HTTP_RANGE'], 2);
+	
+			if ($size_unit == 'bytes')
+			{
+				// multiple ranges could be specified at the same time, but for simplicity only serve the first range
+				// http://tools.ietf.org/id/draft-ietf-http-range-retrieval-00.txt
+				if(strpos($range_orig, ',') !== false)
+					list($range, $extra_ranges) = explode(',', $range_orig, 2);
+				else
+					$range = $range_orig;
+			}
+			else
+			{
+				$range = '-';
+			}
+		}
+		else
+		{
+			$range = '-';
+		}
+		
+		// figure out download piece from range (if set)
+		list($seek_start, $seek_end) = explode('-', $range, 2);
+	
+		// set start and end based on range (if set), else set defaults
+		// also check for invalid ranges.
+		$seek_end = (empty($seek_end)) ? ($filesize - 1) : min(abs(intval($seek_end)),($filesize - 1));
+		//$seek_end = $file['Filesize'] - 1;
+		$seek_start = (empty($seek_start) || $seek_end < abs(intval($seek_start))) ? 0 : max(abs(intval($seek_start)),0);
+		
+		// Only send partial content header if downloading a piece of the file (IE workaround)
+		if ($seek_start > 0 || $seek_end < ($filesize - 1))
+		{
+			header('HTTP/1.1 206 Partial Content');
+		}
+
+		header('Accept-Ranges: bytes');
+		header('Content-Range: bytes ' . $seek_start . '-' . $seek_end . '/' . $filesize);
+	
+		//headers for IE Bugs (is this necessary?)
+		//header("Cache-Control: cache, must-revalidate");  
+		//header("Pragma: public");
+	
+		header('Content-Length: ' . ($seek_end - $seek_start + 1));
+	}
+	
+	//-------------------- END RANAGES STUFF --------------------
+	
+	return array(
+		0 => $seek_start,
+		1 => $seek_end,
+		'start' => $seek_start,
+		'end' => $seek_end
+	);
 }
 
 function output_stream($if, $of, $kill_with_connection = true)

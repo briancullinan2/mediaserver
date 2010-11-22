@@ -56,6 +56,21 @@ function fetch($url, $post = array(), $headers = array(), $cookies = array())
 			unset($headers['referer']);
 		}
 		
+		// setup callback for content
+		if(isset($headers['callback']))
+		{
+			if(is_callable($headers['callback']))
+				curl_setopt($ch, CURLOPT_READFUNCTION, $headers['callback']);
+			unset($headers['callback']);
+		}
+		
+		// check if only the header is needed
+		if(isset($headers['nobody']))
+		{
+			curl_setopt($ch, CURLOPT_NOBODY, true);
+			unset($headers['nobody']);
+		}
+		
 		// curl ssl
 		curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);

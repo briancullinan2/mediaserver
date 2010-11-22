@@ -20,6 +20,8 @@ function theme_live_logo()
 
 function theme_live_scripts()
 {
+	header("Cache-Control: cache");  
+	header("Pragma: public");
 	header('Content-Type: text/javascript');
 	$scripts = array('js/jquery.js', 'js/jquery-ui.js', 'js/player.js', 'js/playlist.js', 'js/utils.js');
 	
@@ -31,6 +33,8 @@ function theme_live_scripts()
 
 function theme_live_styles()
 {
+	header("Cache-Control: cache");  
+	header("Pragma: public");
 	header('Content-Type: text/css');
 	$styles = array('css/types.css', 'css/colors.css', 'css/search.css', 'css/layout.css', 'css/menu.css', 'css/files.css'
 		, 'css/errors.css', 'css/forms.css', 'css/footer.css', 'css/select.css', 'css/geshi.css', 'css/highlight.css'
@@ -109,35 +113,6 @@ function live_get_info_count()
 }
 
 
-function live_alter_file($file)
-{
-	foreach($file as $column => $value)
-	{
-		if($column == 'Filepath')
-		{
-			$file['Filepath'] = urlencode_path($file['Filepath']);
-		}
-		/*elseif(isset($GLOBALS['output']['search_regexp']) && 
-			isset($GLOBALS['output']['search_regexp'][$column])
-		)
-		{
-			$file[$column] = preg_replace($GLOBALS['output']['search_regexp'][$column], '\'<strong style="background-color:#990;">\' . htmlspecialchars(\'$0\') . \'</strong>\'', $file[$column]);
-		
-			continue;
-		}*/
-		//$file[$column] = preg_replace('/([^ ]{25})/i', '$1<br />', $file[$column]);
-		elseif($column == 'Filesize')
-			$file['Filesize'] = roundFileSize($file['Filesize']);
-		elseif($column == 'Uncompressed')
-			$file['Uncompressed'] = roundFileSize($file['Uncompressed']);
-		elseif($column == 'Bitrate')
-			$file['Bitrate'] = round($file['Bitrate'] / 1000, 1) . ' kbs';
-		elseif($column == 'Length')
-			$file['Length'] = floor($file['Length'] / 60) . ' minutes ' . floor($file['Length'] % 60) . ' seconds';
-	}
-	return $file;
-}
-
 function theme_live_pages($start = 0, $limit = 50, $total = 0)
 {
 	// set some variables if they are missing so we can avoid errors
@@ -163,8 +138,8 @@ function theme_live_pages($start = 0, $limit = 50, $total = 0)
 		else
 		{
 			?>
-			<div class="page<?php print (!is_numeric($name) || strlen($name) > 2)?'W':''; ?>"><div class="pageHighlight<?php print (!is_numeric($name) || strlen($name) > 2)?'W':''; ?>" style="visibility:hidden"></div>
-				<a class="pageLink" href="<?php print url($GLOBALS['output']['get'] . '&' . $href); ?>" onmouseout="this.parentNode.firstChild.style.visibility = 'hidden'; return true;" onmouseover="this.parentNode.firstChild.style.visibility = 'visible'; return true;"><?php print $name; ?></a>
+			<div class="page<?php print (!is_numeric($name) || strlen($name) > 2)?'W':''; ?>">
+				<a class="pageLink" href="<?php print url($GLOBALS['output']['get'] . ((strpos($GLOBALS['output']['get'], '?') === false)?'?':'&') . $href); ?>"><?php print $name; ?></a>
 			</div>
 			<?php
 		}
@@ -177,5 +152,5 @@ function theme_live_pages($start = 0, $limit = 50, $total = 0)
 			</td>
 		</tr>
 	</table>
- <?php
+	 <?php
 }

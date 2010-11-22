@@ -191,6 +191,7 @@ function load_module($path)
 		// add to global list
 		if(is_module($config['module']))
 			raise_error('Module \'' . $config['module'] . '\' already exists!', E_DEBUG);
+
 		$GLOBALS['modules'][$config['module']] = $config;
 		
 		return $GLOBALS['modules'][$config['module']];

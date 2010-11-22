@@ -105,7 +105,6 @@ function setup_error()
 	
 	set_exception_handler('exception_wrapper');
 	PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'error_callback');
-	$GLOBALS['tm_start'] = array_sum(explode(' ', microtime()));
 }
 
 /**

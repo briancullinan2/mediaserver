@@ -10,8 +10,8 @@ function theme_live_head($title)
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title><?php print $title . ' : ' . setting('html_name'); ?></title>
 <meta name="google-site-verification" content="K3Em8a7JMI3_1ry5CNVKIHIWofDt-2C3ohovDq3N2cQ" />
-<script language="javascript" type="text/javascript" src="<?php print url('template/live/scripts'); ?>"></script>
-<link rel="stylesheet" href="<?php print url('template/live/styles'); ?>" type="text/css"/>
+<script language="javascript" type="text/javascript" src="<?php print url('templates/live/scripts'); ?>"></script>
+<link rel="stylesheet" href="<?php print url('templates/live/styles'); ?>" type="text/css"/>
 </head>
 	<?php
 }
@@ -36,7 +36,7 @@ function theme_live_breadcrumbs($breadcrumbs = array(), $crumb = NULL)
 {
 	?>
 	<li><a href="<?php print url('select'); ?>"><?php print setting('html_name'); ?></a></li>
-	<li><img src="<?php print url('template/live/images/carat.gif'); ?>" class="crumbsep"></li>
+	<li><img src="<?php print url('templates/live/images/carat.gif'); ?>" class="crumbsep"></li>
 	<?php
 	if(count($breadcrumbs) == 0)
 	{
@@ -51,7 +51,7 @@ function theme_live_breadcrumbs($breadcrumbs = array(), $crumb = NULL)
 			{
 				?>
 				<li><a href="<?php print url($path); ?>"><?php print $menu['name']; ?></a></li>
-				<li><img src="<?php print url('template/live/images/carat.gif'); ?>" class="crumbsep"></li>
+				<li><img src="<?php print url('templates/live/images/carat.gif'); ?>" class="crumbsep"></li>
 				<?php
 			}
 			else

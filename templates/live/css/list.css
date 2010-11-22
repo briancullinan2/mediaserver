@@ -12,7 +12,7 @@
 	font-variant:normal;
 	font-weight:normal;
 	line-height:normal;
-	background:url(?path_info=template/live/images/headerBG_24_~HeaderGradientImageType~.png) repeat scroll center top;
+	background:url(images/headerBG_24_~HeaderGradientImageType~.png) repeat scroll center top;
 	text-align:left;
 	position:fixed;
 	left:0px;
@@ -27,7 +27,7 @@
 }
 
 #collapser .thumbmedium {
-	background-image:url(?path_info=template/live/images/minimize_24x24.png);
+	background-image:url(images/minimize_24x24.png);
 }
 
 .filemedium {
@@ -62,13 +62,13 @@
 
 #playlist div {
 	height:32px;
-	background:#FFF url(?path_info=template/live/images/browse_select_bg.png) no-repeat scroll center bottom;
+	background:#FFF url(images/browse_select_bg.png) no-repeat scroll center bottom;
 	background-position:-1px 0px;
 	border:1px solid #FFF;
 }
 
 #playlist div.highlight {
-	background:#F7FBFF url(?path_info=template/live/images/browse_select_bg.png) repeat-x scroll center bottom;
+	background:#F7FBFF url(images/browse_select_bg.png) repeat-x scroll center bottom;
 	border:1px solid #D8F0FA;
 }
 

@@ -18,7 +18,7 @@ body {
 }
 
 #loading {
-	background-image:url(?path_info=template/live/images/large-loading.gif);
+	background-image:url(images/large-loading.gif);
 	top:50%;
 	left:50%;
 	margin-left:-16px;
@@ -59,7 +59,7 @@ body {
 	font-weight:normal;
 	line-height:normal;
 	width:100%;
-	background:url(?path_info=template/live/images/headerBG_24_~HeaderGradientImageType~.png) repeat scroll center top;
+	background:url(images/headerBG_24_~HeaderGradientImageType~.png) repeat scroll center top;
 	height:39px;
 	text-align:left;
 }
@@ -140,7 +140,7 @@ body {
 }
 
 .sideColumn.right {
-	background-image:url(?path_info=template/live/images/shadow.png);
+	background-image:url(images/shadow.png);
 	background-position:0 0;
 	background-repeat:no-repeat;
 }
@@ -199,7 +199,7 @@ body {
 }
 
 .pageHighlight, .pageHighlightW {
-	background:#F7FBFF url(?path_info=template/live/images/browse_select_bg.png) repeat-x scroll center bottom;
+	background:#F7FBFF url(images/browse_select_bg.png) repeat-x scroll center bottom;
 	border:1px solid #D8F0FA;
 	height:1.5em;
 	left:0;
@@ -217,7 +217,7 @@ body {
 }
 
 .pageLink {
-	background:transparent url(?path_info=template/live/images/transparent.gif) repeat scroll 0 0;
+	background:transparent url(images/transparent.gif) repeat scroll 0 0;
 	color:#0066A7;
 	font-weight:inherit;
 	height:100%;
@@ -250,14 +250,14 @@ body {
 	display:block;
 	border:1px solid #D8F0FA;
 	margin:5px 0px 5px 0px;
-	background: url(?path_info=template/live/images/browse_select_bg.png) repeat-x scroll center bottom #F7FBFF;
+	background: url(images/browse_select_bg.png) repeat-x scroll center bottom #F7FBFF;
 }
 
 .hover.red {
 	display:block;
 	border:1px solid #FAF0D8;
 	margin:5px 0px 5px 0px;
-	background: url(?path_info=template/live/images/browse_select_bg_red.png) repeat-x scroll center bottom #F7FBFF;
+	background: url(images/browse_select_bg_red.png) repeat-x scroll center bottom #F7FBFF;
 }
 
 .nothover {
@@ -274,7 +274,7 @@ body {
 	float:right;
 	height:48px;
 	width:48px;
-	background-image:url(?path_info=template/live/images/button_cancel.png);
+	background-image:url(images/button_cancel.png);
 }
 
 

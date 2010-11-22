@@ -453,13 +453,13 @@ function add($file, $force = false, $handler = 'files')
  */
 function output_handler($file, $handler)
 {
+	$file = str_replace('\\', '/', $file);
+	
+	if(setting('alias_enable'))
+		$file = alias_replace($file);
+	
 	if($handler == 'files')
 	{
-		$file = str_replace('\\', '/', $file);
-		
-		if(setting('alias_enable'))
-			$file = alias_replace($file);
-		
 		// load file from file system
 		if(handles($file, $handler) && is_file($file))
 		{
@@ -507,10 +507,10 @@ function output_files($request)
 	}
 	
 	// set up the output stream
-	$op = fopen('php://output', 'wb');
+	$of = fopen('php://output', 'wb');
 	
 	// get the input stream
-	$fp = output_handler($files[0]['Filepath'], $request['handler']);
+	$if = output_handler($files[0]['Filepath'], $request['handler']);
 	list($headers) = parse_headers(headers_list());
 
 	// set some general headers
@@ -521,84 +521,24 @@ function output_files($request)
 		$files[0]['Filesize'] = $headers['content-length'];
 	header('Content-Disposition: attachment; filename="' . $files[0]['Filename'] . '"');
 	
-	//-------------------- THIS IS ALL RANAGES STUFF --------------------
-	// range can only be used when the filesize is known
-	
-	// if the filesize is still not known, just output the stream without any fancy stuff
-	if(isset($files[0]['Filesize']))
-	{				
-		// check for range request
-		if(isset($_SERVER['HTTP_RANGE']))
-		{
-			list($size_unit, $range_orig) = explode('=', $_SERVER['HTTP_RANGE'], 2);
-	
-			if ($size_unit == 'bytes')
-			{
-				// multiple ranges could be specified at the same time, but for simplicity only serve the first range
-				// http://tools.ietf.org/id/draft-ietf-http-range-retrieval-00.txt
-				if(strpos($range_orig, ',') !== false)
-					list($range, $extra_ranges) = explode(',', $range_orig, 2);
-				else
-					$range = $range_orig;
-			}
-			else
-			{
-				$range = '-';
-			}
-		}
-		else
-		{
-			$range = '-';
-		}
-		
-		// figure out download piece from range (if set)
-		list($seek_start, $seek_end) = explode('-', $range, 2);
-	
-		// set start and end based on range (if set), else set defaults
-		// also check for invalid ranges.
-		$seek_end = (empty($seek_end)) ? ($files[0]['Filesize'] - 1) : min(abs(intval($seek_end)),($files[0]['Filesize'] - 1));
-		//$seek_end = $file['Filesize'] - 1;
-		$seek_start = (empty($seek_start) || $seek_end < abs(intval($seek_start))) ? 0 : max(abs(intval($seek_start)),0);
-		
-		// Only send partial content header if downloading a piece of the file (IE workaround)
-		if ($seek_start > 0 || $seek_end < ($files[0]['Filesize'] - 1))
-		{
-			header('HTTP/1.1 206 Partial Content');
-		}
-
-		header('Accept-Ranges: bytes');
-		header('Content-Range: bytes ' . $seek_start . '-' . $seek_end . '/' . $files[0]['Filesize']);
-	
-		//headers for IE Bugs (is this necessary?)
-		//header("Cache-Control: cache, must-revalidate");  
-		//header("Pragma: public");
-	
-		header('Content-Length: ' . ($seek_end - $seek_start + 1));
-	}
-	
-	//-------------------- END RANAGES STUFF --------------------
-	
 	// close session now so they can keep using the website
 	if(isset($_SESSION)) session_write_close();
 	
-	if(!is_resource($fp) || !is_resource($op))
+	if(!is_resource($if) || !is_resource($of))
 	{
 		raise_error('Cannot open file!', E_USER);
 		theme();
 		return;
 	}
-
+	
+	// output file with ranges from server
+	list($seek_start) = output_ranges($files[0]['Filesize']);
+	
 	// seek to start of missing part
 	if(isset($seek_start))
-		fseek($fp, $seek_start);
+		fseek($if, $seek_start);
 	
-	// output file
-	while (!feof($fp)) {
-		fwrite($op, fread($fp, setting('buffer_size')));
-	}
-	
-	// close file handles and return succeeded
-	fclose($fp);
+	output_stream($if, $of);
 }
 
 /**
@@ -895,15 +835,16 @@ function merge_local_info($files)
 /**
  * Implementation of remove_handler
  */
-function remove($file, $handler = NULL)
+function remove($file, $handler = 'files')
 {
-	if( $handler == NULL )
-		$handler = 'files';
-	
-	if($handler != 'files')
-		invoke_module('remove', $handler, array($file));
-	
 	$file = str_replace('\\', '/', $file);
+	
+	// files always qualify, we are going to log every single one!
+	if(!handles($file, $handler))
+		return false;
+	
+	if(module_implements('remove', $handler))
+		return invoke_module('remove', $handler, array($file));
 	
 	// remove files with inside paths like directories
 	if($file[strlen($file)-1] != '/') $file_dir = $file . '/';

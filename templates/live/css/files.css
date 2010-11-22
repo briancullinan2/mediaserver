@@ -22,7 +22,7 @@
 
 .filesmall .notselected {
 	visibility:hidden;
-	background:#F7FBFF url(?path_info=template/live/images/browse_select_bg.png) repeat-x scroll center bottom;
+	background:#F7FBFF url(images/browse_select_bg.png) repeat-x scroll center bottom;
 	border:1px solid #D8F0FA;
 	height:1.5em;
 	left:0;
@@ -32,7 +32,7 @@
 
 .filesmall .selected {
 	visibility:visible;
-	background:#F7FBFF url(?path_info=template/live/images/browse_select_bg.png) repeat-x scroll center bottom;
+	background:#F7FBFF url(images/browse_select_bg.png) repeat-x scroll center bottom;
 	border:1px solid #D8F0FA;
 	height:1.5em;
 	left:0;
@@ -63,7 +63,7 @@
 }
 
 .filesmall .itemLink {
-	background:transparent url(?path_info=template/live/images/transparent.gif) repeat scroll 0 0;
+	background:transparent url(images/transparent.gif) repeat scroll 0 0;
 	height:100%;
 	left:0;
 	position:absolute;
@@ -99,7 +99,7 @@
 	margin:0.2em 1px;
 	position:relative;
 	width:7em;
-	background:#FFF url(?path_info=template/live/images/browse_select_bg.png) no-repeat scroll center bottom;
+	background:#FFF url(images/browse_select_bg.png) no-repeat scroll center bottom;
 	background-position:-1px 0px;
 	border:1px solid #FFF;
 }
@@ -113,7 +113,7 @@
 }
 
 .file.highlight {
-	background:#F7FBFF url(?path_info=template/live/images/browse_select_bg.png) repeat-x scroll center bottom;
+	background:#F7FBFF url(images/browse_select_bg.png) repeat-x scroll center bottom;
 	border:1px solid #D8F0FA;
 }
 
@@ -144,7 +144,7 @@
 }
 
 .file .itemLink {
-	background:transparent url(?path_info=template/live/images/transparent.gif) repeat scroll 0 0;
+	background:transparent url(images/transparent.gif) repeat scroll 0 0;
 	height:100%;
 	left:0;
 	position:absolute;

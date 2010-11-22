@@ -348,8 +348,6 @@ function get_info_movies($file)
  */
 function output_movies($file)
 {
-	$file = str_replace('\\', '/', $file);
-	
 	if(setting('alias_enable'))
 		$file = alias_replace($file);
 	

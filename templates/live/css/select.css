@@ -18,18 +18,18 @@
 }
 
 .files div.ui-selecting {
-	background:#F7FBFF url(?path_info=template/live/images/browse_select_bg.png) repeat-x scroll center bottom;
+	background:#F7FBFF url(images/browse_select_bg.png) repeat-x scroll center bottom;
 	border:1px solid #D8F0FA;
 }
 .files div.ui-selected {
-	background:#F7FBFF url(?path_info=template/live/images/browse_select_bg.png) repeat-x scroll center bottom;
+	background:#F7FBFF url(images/browse_select_bg.png) repeat-x scroll center bottom;
 	border:1px solid #D8F0FA;
 }
 
 .infobar {
 	border-top:1px solid #E0E0E0;
 	height:64px;
-	background:transparent url(?path_info=template/live/images/middle_fade.png) repeat scroll 0 0;
+	background:transparent url(images/middle_fade.png) repeat scroll 0 0;
 	color:#FFF;
 	width:100%;
 	line-height:normal;

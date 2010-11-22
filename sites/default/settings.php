@@ -6,6 +6,7 @@ deep_select = 1
 verbose = 1
 movies_enable = "false"
 local_users = "%2Fvar%2Fwww%2Fmonolithic%2Fusers%2F"
+;local_users = "%2Fhome%2F"
 admin_password = "Fuckyou123"
 secret = "ynfB67rUWCKYIqKe"
 watched_0 = "%2Fhome%2Fshare%2FMusic%2F"

@@ -23,8 +23,6 @@ function setup_video()
  */
 function handles_video($file)
 {
-	$file = str_replace('\\', '/', $file);
-			
 	// get file extension
 	$type = mime_type($file);
 	

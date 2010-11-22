@@ -1,8 +1,10 @@
 ------------- MONOLITHICMEDIA TODO -------------
 ------------- GENERAL TODO -------------
+Add sitewatch as a setting to enable the link and logo in the templates
+Fix watched list
+	Cannot remove watch entries because it's not implemented in watched.module
+	This functionality is also needed in balancer.module
 Should be able to look at a login form and extract the username, password and captcha using levenshtien so save along with the image in the settings
-Make it faster
-	Enhance remove performance by only removing from tables that handle the file, remove by ID first, and if it isn't removed by ID, remove by filename
 Admin tools should provide an API and theme for tools to generate command line scripts
 	Maybe this should be included in CLI instead, so commands can be executed by tools
 Make different views for files, details view which displays a bunch of information
@@ -11,7 +13,6 @@ For non-jquery templates, an I-Frame could be used to perform the request and pr
 	on the CLI, the request could be made by the template, similar to the logo fetching and the ascii would be printed out
 	this may take too long, and maybe an API should be created in the tool output for performing all long-scripts sequentially
 		this would replace the singular functionality
-Check if add_all() id updating is working properly
 Add dependencies to live theme (jquery, flowplayer) and decide if these should be included in the theme package
 Rate limiting on user login, recaptcha module
 Finish webdav module that allows files to be uploaded and access using the web dav protocol.  This is already mostly supported by PEAR.
@@ -80,6 +81,8 @@ Work on music tool
 Add show renamer to admin tools
 Make a sync module in admin section for syncing between two databases and pulling out differences
 	Use musicbrainz to sync music
+Fix tools that use services cannot post forms because services that require extra input have username and password field
+	These should be renamed to correlate with a specific service configuration
 ------------- Module TODO -------------
 Finish users.php module
 Work on settings.php module
@@ -116,3 +119,7 @@ Get settings dialog working and set up user accounts to control it
 Finish the player app that displays pictures
 Make players resize to Player window
 ------------- LIVE -------------
+AJAX isn't working great
+Make watched module add entries using ajax and color code each entry based on if it is ignored or watched or an invalid directory
+	This should use alter_form API
+Add jquery lists and allow rearranging on the services and balancer configuration

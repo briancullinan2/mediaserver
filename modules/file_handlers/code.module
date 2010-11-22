@@ -127,8 +127,6 @@ function setting_highlighter($settings)
  */
 function handles_code($file)
 {
-	$file = str_replace('\\', '/', $file);
-	
 	$type = mime_type($file);
 	
 	return ( code_get_language(basename($file)) || $type == 'text' );
@@ -482,11 +480,6 @@ function get_code_html($lines, $lang)
  */
 function output_code($file)
 {
-	$file = str_replace('\\', '/', $file);
-	
-	if(setting('alias_enable'))
-		$file = alias_replace($file);
-	
 	$files = db_assoc('SELECT * FROM code WHERE Filepath=? LIMIT 1', array($file));
 	if(count($files) > 0)
 	{				

@@ -36,7 +36,8 @@ function theme_live_footer()
 	if(!isset($GLOBALS['output']['extra']) || $GLOBALS['output']['extra'] != 'inneronly')
 	{
 		?>
-Powered by <a href="http://www.monolithicmedia.org/" style="text-decoration:none;"><img style="border:0px;" src="<?php print url('template/live/logo'); ?>" />MonolithicMedia.org</a>				
+Powered by <a href="http://www.monolithicmedia.org/" style="text-decoration:none;"><img style="border:0px;" src="<?php print url('template/live/logo'); ?>" />MonolithicMedia.org</a>
+<a id=sitewatch_lock target="_blank" href="https://sitewat.ch/Status/dev.bjcullinan.com"><img src="https://sitewat.ch/Marker/dev.bjcullinan.com" alt="Sitewatch is protecting this site from hackers." height="32" width="115" border="0"></a>
 			</div>
 		</div>
 	</div>

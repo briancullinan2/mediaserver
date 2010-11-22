@@ -47,6 +47,11 @@ function validate_path_info($request)
 {
 	if(isset($request['path_info']))
 	{
+		// remove leading slash
+		if(substr($request['path_info'], 0, 1) == '/')
+			$request['path_info'] = substr($request['path_info'], 1);
+		
+		// look up the menu item
 		$result = get_menu_entry($request['path_info']);
 		if(isset($result))
 			return $request['path_info'];
@@ -103,6 +108,7 @@ function invoke_menu($request, $template = false)
 	
 	// check request for path info
 	$request['path_info'] = validate($request, 'path_info');
+	
 	if($path = get_menu_entry($request['path_info']))
 	{
 		$user = session('users');
@@ -113,16 +119,8 @@ function invoke_menu($request, $template = false)
 		else
 			$template = $module['template'];
 		
-		// check module permissions
-		if($module['privilage'] > $user['Privilage'])
-		{
-			raise_error('Access Denied!', E_USER);
-			
-			theme('errors');
-			return;
-		}
 		// permissions are ok
-		else
+		if($user['Privilage'] >= $module['privilage'])
 		{
 			// call the callback specified
 			if(is_callable($menu['callback']) && setting($menu['module'] . '_enable') != false)
@@ -130,7 +128,7 @@ function invoke_menu($request, $template = false)
 			// if there are dependency issues
 			elseif(dependency($menu['module']) == false && setting($menu['module'] . '_enable') == false)
 			{
-				raise_error('The selected module has dependencies that are not yet! <a href="' . 
+				raise_error('The selected module has dependencies that are not met! <a href="' . 
 					url('admin/modules/' . $menu['module']) . '">Configure</a> this module.'
 				, E_DEBUG|E_USER);
 				
@@ -138,13 +136,32 @@ function invoke_menu($request, $template = false)
 				return;
 			}
 		}
-
+		
+		// compress the output
+		if(!ob_start("ob_gzhandler"))
+		{
+			raise_error('Deflating not supported!', E_DEBUG);
+			ob_start();
+		}
+		else
+		{
+			raise_error('Deflating.', E_DEBUG);
+		}
+		
+		// check module permissions
+		if($user['Privilage'] < $module['privilage'])
+		{
+			raise_error('Access Denied!', E_USER);
+			
+			theme('errors');
+			return;
+		}
 		// just return because the output function was already called
-		if($template == false)
+		elseif($template == false)
 		{
 			return;
 		}
-		
+			
 		// if it is set to a callable function to determine the template, then call that
 		elseif(is_callable($template))
 			call_user_func_array($template, array($request));
@@ -260,7 +277,7 @@ function output_breadcrumbs($current_path)
 function output_menus($request)
 {
 	// some templates would like to submit to their own page, generate a string based on the current get variable
-	register_output_vars('get', url($_GET, true));
+	register_output_vars('get', url(array('path_info' => $request['path_info']) + $_GET, true));
 	
 	$current_path = get_menu_entry($request['path_info']);
 

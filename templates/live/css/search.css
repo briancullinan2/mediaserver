@@ -74,7 +74,7 @@
 	font-weight:normal;
 	line-height:normal;
 	width:auto;
-	background:#307C0B url(?path_info=template/live/images/headerBG_24_~HeaderGradientImageType~.png) repeat scroll center center;
+	background:#307C0B url(images/headerBG_24_~HeaderGradientImageType~.png) repeat scroll center center;
 	border:medium none;
 	color:#FFFFFF;
 	margin:0;

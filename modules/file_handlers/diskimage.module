@@ -25,8 +25,6 @@ function setup_diskimage()
  */
 function handles_diskimage($file)
 {
-	$file = str_replace('\\', '/', $file);
-	
 	// parse through the file path and try to find a zip
 	list($file) = get_inner_path($file);
 
@@ -177,11 +175,6 @@ function add_diskimage($file)
  */
 function output_diskimage($file)
 {
-	$file = str_replace('\\', '/', $file);
-	
-	if(setting('alias_enable'))
-		$file = alias_replace($file);
-	
 	$files = db_assoc('SELECT * FROM diskimage WHERE Filepath=? LIMIT 1', array($file));
 	if(count($files) > 0)
 	{

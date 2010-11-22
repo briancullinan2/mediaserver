@@ -56,8 +56,13 @@ function request_validate()
 	}
 	
 	// first fix the REQUEST_URI and pull out what is meant to be pretty dirs
-	if(isset($_SERVER['PATH_INFO']))
-		$_REQUEST['path_info'] = $_SERVER['PATH_INFO'];
+	if(!isset($_REQUEST['path_info']))
+	{
+		if(isset($_SERVER['PATH_INFO']))
+			$_REQUEST['path_info'] = $_SERVER['PATH_INFO'];
+		elseif(isset($_SERVER['REQUEST_URI']))
+			$_REQUEST['path_info'] = urldecode(generic_validate_urlpath($_SERVER, 'REQUEST_URI'));
+	}
 	
 	// call rewrite_vars in order to set some request variables
 	rewrite_vars($_REQUEST, $_GET, $_POST);

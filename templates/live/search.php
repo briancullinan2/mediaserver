@@ -6,8 +6,8 @@ function theme_live_search_block()
 	<table cellpadding="0" cellspacing="0" id="middleArea">
 		<tr>
 			<td class="searchParent"><?php print get_module($GLOBALS['output']['handler'], 'name'); ?> Search:
-				<form action="<?php print $GLOBALS['output']['get']; ?>" method="get" id="search">
-					<span class="searchBorder colors_outer"><span class="innerSearchBorder colors_inner"><input type="text" name="search" value="<?php print isset($GLOBALS['output']['search']['search'])?$GLOBALS['output']['search']['search']:''; ?>" id="searchInput" /><span class="buttonBorder"><input type="submit" value="Search" id="searchButton" /></span></span></span>&nbsp;&nbsp; <a id="advancedSearch" href="<?php echo url('search' . (isset($GLOBALS['output']['dir'])?('?dir=' . $GLOBALS['output']['dir']):'')); ?>">Advanced Search</a></form>
+				<form action="<?php print $GLOBALS['output']['html']['get']; ?>" method="get" id="search">
+					<span class="searchBorder colors_outer"><span class="innerSearchBorder colors_inner"><input type="text" name="search" value="<?php print isset($GLOBALS['output']['html']['search']['search'])?$GLOBALS['output']['html']['search']['search']:''; ?>" id="searchInput" /><span class="buttonBorder"><input type="submit" value="Search" id="searchButton" /></span></span></span>&nbsp;&nbsp; <a id="advancedSearch" href="<?php echo url('search' . (isset($GLOBALS['output']['dir'])?('?dir=' . $GLOBALS['output']['dir']):'')); ?>">Advanced Search</a></form>
 			</td>
 		</tr>
 	</table>
@@ -55,8 +55,8 @@ function theme_live_search()
 	</script>
 	<form action="<?php print url('select'); ?>" method="get">
 		<h3>Search All Available Fields:</h3>
-		Search: <input type="text" name="search" size="40" value="<?php print isset($GLOBALS['output']['search'])?$GLOBALS['output']['search']:''; ?>" /><br /><br />
-		Directory: <input type="text" name="dir" size="40" value="<?php print isset($GLOBALS['output']['dir'])?$GLOBALS['output']['dir']:''; ?>" />
+		Search: <input type="text" name="search" size="40" value="<?php print isset($GLOBALS['output']['html']['search'])?$GLOBALS['output']['html']['search']:''; ?>" /><br /><br />
+		Directory: <input type="text" name="dir" size="40" value="<?php print isset($GLOBALS['output']['html']['dir'])?$GLOBALS['output']['html']['dir']:''; ?>" />
 		<h3>Search Individual Fields:</h3>
 		Category: <select name="handler" onchange="makeVisible(this.value)">
 		<?php
@@ -72,7 +72,7 @@ function theme_live_search()
 		{
 			?>
 			<div id="search_<?php print $column; ?>"><?php print $column; ?>:
-				<input type="text" name="search_<?php print $column; ?>" size="40" value="<?php print isset($GLOBALS['output']['search']['search_' . $column])?$GLOBALS['output']['html']['search']['search_' . $column]:''; ?>" />
+				<input type="text" name="search_<?php print $column; ?>" size="40" value="<?php print isset($GLOBALS['output']['html']['search']['search_' . $column])?$GLOBALS['output']['html']['search']['search_' . $column]:''; ?>" />
 				<br />
 				<br />
 			</div>

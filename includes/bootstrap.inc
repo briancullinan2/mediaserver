@@ -4,6 +4,10 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'compatibility.inc';
 
 function bootstrap($mode = 'all')
 {
+	// start timer
+	if(!isset($GLOBALS['tm_start']))
+		$GLOBALS['tm_start'] = array_sum(explode(' ', microtime()));
+		
 	switch($mode)
 	{
 		case 'phpids':

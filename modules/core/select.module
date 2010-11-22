@@ -194,9 +194,6 @@ function validate_order_by($request)
 	
 	if( !isset($request['order_by']) || !in_array($request['order_by'], $columns) )
 	{
-		if(isset($request['search']))
-			return 'Relevance';
-			
 		// make sure if it is a list that it is all valid columns
 		$columns = explode(',', (isset($request['order_by'])?$request['order_by']:''));
 		foreach($columns as $i => $column)
@@ -436,7 +433,7 @@ function get_select_pages($start, $limit, $total_count)
 	$pages = array();
 	
 	// return here if all the results fit on one page
-	if($total_count < $limit)
+	if($total_count <= $limit)
 		return $pages;
 	
 	$current_page = round($start / $limit);
@@ -514,7 +511,7 @@ function output_select($request)
 
 	// make select call
 	$files = get_files($request, $total_count);
-	
+
 	register_output_vars('files', $files);
 	
 	// count a few types of media for templates to use

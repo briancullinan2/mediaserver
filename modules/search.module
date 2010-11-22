@@ -225,13 +225,12 @@ function filter_search($request)
 	// array for each column
 	$parts = array();
 	
-	
 	$result = array();
 	
 	// loop through each column to compile search query
 	foreach($columns as $i => $column)
 	{
-		if(isset($request['search_' . $column]))
+		if(isset($request['search_' . $column]) && $request['search_' . $column] != '')
 			$search = $request['search_' . $column];
 		elseif(isset($request['search']) && $request['search'] != '')
 			$search = $request['search'];
@@ -283,7 +282,10 @@ function filter_search($request)
 	
 	// set the new props
 	if(count($parts) > 0)
+	{
 		$result['where'] = join((isset($request['search_operator'])?(' ' . $request['search_operator'] . ' '):' OR '), $parts);
+		$result['order'] = 'Relevance DESC';
+	}
 		
 	return $result;
 }

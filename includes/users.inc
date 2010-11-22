@@ -374,7 +374,8 @@ function validate_username($request)
  */
 function validate_return($request)
 {
-	return url(generic_validate_url($request, 'return'));
+	// do not html encode this
+	return url(generic_validate_url($request, 'return'), true);
 }
 
 /**
@@ -394,8 +395,6 @@ function validate_required_priv($request)
  */
 function handles_users($file)
 {
-	$file = str_replace('\\', '/', $file);
-	
 	// handle directories found in the setting('local_users') directory
 	//  automatically create a user entry in the database for those directories
 	$username = validate(array('username' => $file), 'username');
@@ -437,8 +436,6 @@ function users_get_guest()
  */
 function add_users($file, $force = false)
 {
-	$file = str_replace('\\', '/', $file);
-	
 	if(handles($file, 'users'))
 	{
 		$username = validate(array('username' => $file), 'username');
@@ -624,7 +621,7 @@ function output_users($request)
 				if( count($GLOBALS['user_errors']) == 0 )
 				{
 					// create database entry
-					$user_id = add_users(setting('local_users') . $request['username']);
+					$user_id = add(setting('local_users') . $request['username'], false, 'users');
 					
 					// add password and profile information
 					$result = db_query('UPDATE users SET Password=?, Email=? WHERE id=?', array(

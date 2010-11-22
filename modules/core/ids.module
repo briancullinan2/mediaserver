@@ -59,11 +59,9 @@ function get_info_ids($file)
  */
 function remove_ids($file, $handler = NULL)
 {
+	// do the same thing db_file does except update and set handler_id to 0
 	if($handler != NULL)
 	{
-		// do the same thing db_file does except update and set handler_id to 0
-		$file = str_replace('\\', '/', $file);
-		
 		// remove files with inside paths like directories
 		if($file[strlen($file)-1] != '/') $file_dir = $file . '/';
 		else $file_dir = $file;

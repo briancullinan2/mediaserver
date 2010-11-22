@@ -217,11 +217,6 @@ function get_info_discogs($file)
  */
 function output_discogs($file)
 {
-	$file = str_replace('\\', '/', $file);
-	
-	if(setting('alias_enable'))
-		$file = alias_replace($file);
-	
 	$files = db_assoc('SELECT * FROM discogs WHERE Filepath=? LIMIT 1', array($file));
 	if(count($files) > 0)
 	{				

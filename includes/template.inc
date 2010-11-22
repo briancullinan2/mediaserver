@@ -6,7 +6,7 @@ function register_template()
 	return array(
 		'name' => 'Template Output',
 		'description' => 'Display files from the templates directory. Allows for templating CSS and JS files.',
-		'privilage' => 1,
+		'privilage' => 0,
 		'session' => 'template',
 		'template' => false,
 		'settings' => 'template',
@@ -24,6 +24,9 @@ function register_template()
 function menu_template()
 {
 	return array(
+		'templates/%template/%tfile' => array(
+			'callback' => 'output_template',
+		),
 		'template/%template/%tfile' => array(
 			'callback' => 'output_template',
 		),
@@ -265,7 +268,7 @@ function theme($request = '')
 	// if the theme function is being called then the output vars better be set
 	if(!isset($GLOBALS['output']['html']))
 		set_output_vars();
-	
+		
 	// get the arguments to pass on to theme_ functions
 	$args = func_get_args();
 	
@@ -394,85 +397,25 @@ function output_template($request)
 		return;
 	}
 	
-	// close session now so they can keep using the website
-	if(isset($_SESSION)) session_write_close();
-	
 	// set some general headers
 	header('Content-Transfer-Encoding: binary');
 	header('Content-Type: ' . mime($file));
 	
+	// close session now so they can keep using the website
+	if(isset($_SESSION)) session_write_close();
+	
 	// set up the output stream
-	$op = fopen('php://output', 'wb');
+	$of = fopen('php://output', 'wb');
 	
 	// get the input stream
-	$fp = fopen($file, 'rb');
+	$if = fopen($file, 'rb');
 	
-	//-------------------- THIS IS ALL RANAGES STUFF --------------------
+	// output file with ranges from server
+	list($seek_start) = output_ranges($files[0]['Filesize']);
 	
-	// range can only be used when the filesize is known
+	// seek to start of missing part
+	if(isset($seek_start))
+		fseek($if, $seek_start);
 	
-	// check for range request
-	if(isset($_SERVER['HTTP_RANGE']))
-	{
-		list($size_unit, $range_orig) = explode('=', $_SERVER['HTTP_RANGE'], 2);
-
-		if ($size_unit == 'bytes')
-		{
-			// multiple ranges could be specified at the same time, but for simplicity only serve the first range
-			// http://tools.ietf.org/id/draft-ietf-http-range-retrieval-00.txt
-			if(strpos($range_orig, ',') !== false)
-				list($range, $extra_ranges) = explode(',', $range_orig, 2);
-			else
-				$range = $range_orig;
-		}
-		else
-		{
-			$range = '-';
-		}
-	}
-	else
-	{
-		$range = '-';
-	}
-	
-	// figure out download piece from range (if set)
-	list($seek_start, $seek_end) = explode('-', $range, 2);
-
-	// set start and end based on range (if set), else set defaults
-	// also check for invalid ranges.
-	$seek_end = (empty($seek_end)) ? (filesize($file) - 1) : min(abs(intval($seek_end)),(filesize($file) - 1));
-	//$seek_end = $file['Filesize'] - 1;
-	$seek_start = (empty($seek_start) || $seek_end < abs(intval($seek_start))) ? 0 : max(abs(intval($seek_start)),0);
-	
-	// Only send partial content header if downloading a piece of the file (IE workaround)
-	if ($seek_start > 0 || $seek_end < (filesize($file) - 1))
-	{
-		header('HTTP/1.1 206 Partial Content');
-	}
-
-	header('Accept-Ranges: bytes');
-	header('Content-Range: bytes ' . $seek_start . '-' . $seek_end . '/' . filesize($file));
-
-	//headers for IE Bugs (is this necessary?)
-	//header("Cache-Control: cache, must-revalidate");  
-	//header("Pragma: public");
-
-	header('Content-Length: ' . ($seek_end - $seek_start + 1));
-	
-	//-------------------- END RANAGES STUFF --------------------
-	
-	if(is_resource($fp) && is_resource($op))
-	{
-		// seek to start of missing part
-		if(isset($seek_start))
-			fseek($fp, $seek_start);
-		
-		// output file
-		while (!feof($fp)) {
-			fwrite($op, fread($fp, setting('buffer_size', 2*1024*8)));
-		}
-		
-		// close file handles and return succeeded
-		fclose($fp);
-	}
+	output_stream($if, $of);
 }

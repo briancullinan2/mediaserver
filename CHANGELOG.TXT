@@ -1,3 +1,33 @@
+2010-11-21
+Rearranged some code
+Fixed the output in the search box, was vulnerable to XSS
+
+2010-11-16
+Fixed some bugs in url()
+	Links should be inputted into url() as fully qualified urlencoded links
+	url() decode the link piece by piece, and reconstructs it with the correct menu item
+	url() also urlencodes the link
+The register_output_vars('get') url was not being urlencoded, but with the corrections to url() it is
+Improved speed a little bit by altering the way templates work	
+	Added templates/%template/%tfile menu entry
+	Changed all links in live styles to use relative path, which will be inherited from /templates/live/
+	Template files load directly and don't go through the system
+
+2010-11-15
+Fixed watched.module, was scanning every run because handles_watched() wasn't using is_watched() AND handles_files
+Removed extra str_replace('\\', '/' from all handles_() functions, handles is always called using handles() which fixed filepaths before passing it on
+Added gzip deflating to invoke_menu() just before theme() calls
+	This way most of the time stuff will be deflated unless the individual module calls theme() in which case it needs to deflate on it own
+Abstracted the HTTP_RANGES functionality into output_ranges() in common.inc
+	output_files(), output_encode(), and output_template() use new ranges function
+
+2010-11-09
+Fixed a big bug in processing the request
+	mod_rewrite was doing multiple redirects, and the (B) option doesn't seem to url escape anything
+	Instead, the request_validate() function now just grabs the path from PATH_INFO or REQUEST_URI
+	validate_path_info() in menu.inc should enforce the removal of leading '/' because paths are not expressed that way in any of the menu_() configs
+Modeled the general remove_() function after add_() which check if the filepath input is handled by the selected module
+
 2010-11-03
 Lots of corrections to new installation
 

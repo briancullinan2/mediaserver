@@ -11,7 +11,7 @@ function relocate(href)
 	$('#loading').show();
 	
 	// add inner only
-	if(href.indexOf('?'))
+	if(href.indexOf('?') > 0)
 	{
 		href += '&extra=inneronly';
 	} else {
@@ -202,7 +202,7 @@ $(document).ready(function()
 	if($('#player').length > 0)
 	{
 		// set up player
-		$f("player", "?path_info=template/live/res/flowplayer-3.2.4.swf", {
+		$f("player", "res/flowplayer-3.2.4.swf", {
 			clip: {
 				onBeforeBegin: function() {
 					$f("player").close();
@@ -216,7 +216,7 @@ $(document).ready(function()
 					playlist: true
 				},
 				audio: {
-					url: '?path_info=template/live/res/flowplayer.audio-3.2.1.swf'
+					url: 'res/flowplayer.audio-3.2.1.swf'
 				}
 			}
 		

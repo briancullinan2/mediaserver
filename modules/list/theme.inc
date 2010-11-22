@@ -174,11 +174,11 @@ function theme__wpl()
 function theme__xml()
 {
 	$ext_icons = array();
-	$ext_icons['FOLDER'] = url('template/live/images/filetypes/folder_96x96.png');
-	$ext_icons['FILE'] = url('template/live/images/filetypes/file_96x96.png');
+	$ext_icons['FOLDER'] = url('templates/live/images/filetypes/folder_96x96.png');
+	$ext_icons['FILE'] = url('templates/live/images/filetypes/file_96x96.png');
 	
 	$type_icons = array();
-	$type_icons['audio'] = url('template/live/images/filetypes/music_96x96.png');
+	$type_icons['audio'] = url('templates/live/images/filetypes/music_96x96.png');
 
 	print '<?xml version="1.0" encoding="utf-8"?>
 	

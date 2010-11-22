@@ -22,8 +22,6 @@ function setup_audio()
  */
 function handles_audio($file)
 {
-	$file = str_replace('\\', '/', $file);
-	
 	// get file extension
 	$type = mime_type($file);
 	

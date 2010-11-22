@@ -129,8 +129,6 @@ function setting_archiver($settings)
  */
 function handles_archive($file)
 {
-	$file = str_replace('\\', '/', $file);
-	
 	// parse through the file path and try to find a zip
 	list($file) = get_inner_path($file);
 
@@ -386,11 +384,6 @@ function add_archive($file)
  */
 function output_archive($file)
 {
-	$file = str_replace('\\', '/', $file);
-	
-	if(setting('alias_enable'))
-		$file = alias_replace($file);
-	
 	$files = db_assoc('SELECT * FROM archive WHERE Filepath=? LIMIT 1', array($file));
 	if(count($files) > 0)
 	{				
