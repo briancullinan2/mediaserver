@@ -268,25 +268,23 @@ function validate_encode($request)
 {
 	if(!isset($request['encode']))
 	{
-		if(preg_match('/.*(windows-media-player|NSplayer|WMPCE).*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
+		switch(setting('agent_simple'))
 		{
-			$request['encode'] = 'wmv';
-		}
-		elseif(preg_match('/.*(iTunes).*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
-		{
-			$request['encode'] = 'mpg';
-		}
-		elseif(preg_match('/.*(mobile).*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
-		{
-			$request['encode'] = 'mpg';
-		}
-		elseif(preg_match('/.*(vlc).*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
-		{
-			$request['encode'] = 'mp4';
-		}
-		elseif(isset($request['filename']))
-		{
-			$request['encode'] = ext($request['filename']);
+			case 'windows':
+				$request['encode'] = 'wmv';
+				break;
+			case 'itunes':
+				$request['encode'] = 'mp4';
+				break;
+			case 'mobile':
+				$request['encode'] = 'mpg';
+				break;
+			case 'vlc':
+				$request['encode'] = 'mp4';
+				break;
+			default:
+				if(isset($request['filename']))
+					$request['encode'] = ext($request['filename']);
 		}
 	}
 	

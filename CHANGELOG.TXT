@@ -1,3 +1,9 @@
+2010-11-23
+Fixed and colorized CLI
+	In the process of finishing tools using CLI to debug
+Added agent and agent_simple for getting HTTP_USER_AGENT
+Added og_theme for getting the contents of an outputted theme
+
 2010-11-21
 Rearranged some code
 Fixed the output in the search box, was vulnerable to XSS

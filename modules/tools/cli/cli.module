@@ -53,7 +53,7 @@ function rewrite_cli($path_info, $request)
 		print 'Login as: ';
 		$request['username'] = trim(fgets(STDIN));
 		print 'Password: ';
-		$request['password'] = 'hash:' . sha1(setting('secret') . trim(fgets(STDIN)));
+		$request['password'] = trim(fgets(STDIN));
 	}
 	
 	return $request;
@@ -100,10 +100,39 @@ function output_cli($request)
 	if(isset($argv) && isset($argv[1]) && $argv[1] == '-conf')
 	{
 	}
+	
 }
 
 function cli_error_callback($error)
 {
-	print $error->message . "\n";
+	if($error->code & E_VERBOSE)
+		return;
+	
+	if(substr($error->message, 0, 10) == 'PHP ERROR:')
+		print cli_colorize(31);
+	elseif(substr($error->message, 0, 9) == 'DB ERROR:')
+		print cli_colorize(33);
+
+	// get width from theme_stack
+	$width = setting('cli_columns');
+	// get the last call to the specified module's theme
+	$result = false;
+	for($i = count($GLOBALS['theme_stack'])-1; $i >=0; $i--)
+	{
+		$call = $GLOBALS['theme_stack'][$i];
+		if(implements_theme($call['func']) == 'cli')
+		{
+			if(is_numeric($call['args'][count($call['args'])-1]))
+			{
+				$width = $call['args'][count($call['args'])-1];
+				break;
+			}
+		}
+	}
+
+	print cli_wordwrap((isset($error->time)?('[' . $error->time . ']'):'') . $error->message, $width) . "\n";
 	flush();
+	
+	if(substr($error->message, 0, 10) == 'PHP ERROR:' || substr($error->message, 0, 9) == 'DB ERROR:')
+		cli_decolorize();
 }

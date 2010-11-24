@@ -8,8 +8,17 @@ function theme_live_debug_block()
 		?><div id="debug" class="debug hide"><?php
 		foreach($GLOBALS['debug_errors'] as $i => $error)
 		{
+			if(substr($error->message, 0, 10) == 'PHP ERROR:')
+				$class = 'php';
+			elseif(substr($error->message, 0, 9) == 'DB ERROR:')
+				$class = 'db';
+			elseif(substr($error->message, 0, 8) == 'VERBOSE:')
+				$class = 'verbose';
+			else
+				$class = '';
+				
 			?>
-			<a href="#" class="msg <?php print (substr($error->message, 0, 10) == 'PHP ERROR:')?'php':((substr($error->message, 0, 9) == 'DB ERROR:')?'db':((substr($error->message, 0, 8) == 'VERBOSE:')?'verbose':'')); ?>" onClick="$('#error_<?php print $i; ?>').toggle(); return false;"><?php print (isset($error->time)?('[' . $error->time . ']'):'') . htmlspecialchars($error->message) . (isset($error->count)?(' repeated ' . $error->count . ' time(s)'):''); ?></a>
+			<a href="#" class="msg <?php print $class; ?>" onClick="$('#error_<?php print $i; ?>').toggle(); return false;"><?php print (isset($error->time)?('[' . $error->time . ']'):'') . htmlspecialchars($error->message) . (isset($error->count)?(' repeated ' . $error->count . ' time(s)'):''); ?></a>
 			<div id="error_<?php print $i; ?>" style="display:none;">
 				<code>
 					<pre>

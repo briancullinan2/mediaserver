@@ -47,7 +47,7 @@ function fetch($url, $post = array(), $headers = array(), $cookies = array())
 			unset($headers['agent']);
 		}
 		else
-			curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1');
+			curl_setopt($ch, CURLOPT_USERAGENT, setting('agent'));
 			
 		// setup referer
 		if(isset($headers['referer']))
@@ -160,6 +160,8 @@ function parse_headers($headers_raw)
 		// parse cookie
 		if(!strncmp($header, "Set-Cookie:", 11))
 		{
+			print_r($header);
+			print "\n";
 			$cookiestr = trim(substr($header, 11, -1));
 			$cookie = explode(';', $cookiestr);
 			$cookie = explode('=', $cookie[0]);

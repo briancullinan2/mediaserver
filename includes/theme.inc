@@ -355,6 +355,7 @@ function theme__module()
 	// if the status is avaiable print that out first
 	if(isset($GLOBALS['output']['status']))
 		theme('form_object', 'status', array(
+			'name' => 'Module Status',
 			'type' => 'fieldset',
 			'options' => $GLOBALS['output']['status']
 		));

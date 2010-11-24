@@ -137,9 +137,10 @@ function theme_live_pages($start = 0, $limit = 50, $total = 0)
 		}
 		else
 		{
+			$link = url($GLOBALS['output']['get'] . ((strpos($GLOBALS['output']['get'], '?') === false)?'?':'&') . $href);
 			?>
 			<div class="page<?php print (!is_numeric($name) || strlen($name) > 2)?'W':''; ?>">
-				<a class="pageLink" href="<?php print url($GLOBALS['output']['get'] . ((strpos($GLOBALS['output']['get'], '?') === false)?'?':'&') . $href); ?>"><?php print $name; ?></a>
+				<a class="pageLink" href="<?php print $link; ?>"><?php print $name; ?></a>
 			</div>
 			<?php
 		}

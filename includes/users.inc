@@ -631,12 +631,7 @@ function output_users($request)
 					));
 					
 					// send out confirmation email
-					ob_start();
-					theme('confirmation');
-					$confirmation = ob_get_contents();
-					ob_end_clean();
-					
-					mail($request['email'], 'E-Mail Confirmation for ' . setting('html_name'), $confirmation);
+					mail($request['email'], 'E-Mail Confirmation for ' . setting('html_name'), ob_theme('confirmation'));
 				}
 			}
 		break;

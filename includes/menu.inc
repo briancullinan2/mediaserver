@@ -137,16 +137,18 @@ function invoke_menu($request, $template = false)
 			}
 		}
 		
+		// just return because the output function was already called
+		if($template == false)
+			return;
+		
 		// compress the output
-		if(!ob_start("ob_gzhandler"))
-		{
-			raise_error('Deflating not supported!', E_DEBUG);
-			ob_start();
-		}
-		else
+		if(setting('deflate'))
 		{
 			raise_error('Deflating.', E_DEBUG);
+			ob_start("ob_gzhandler");
 		}
+		else
+			raise_error('Deflating not supported!', E_DEBUG);
 		
 		// check module permissions
 		if($user['Privilage'] < $module['privilage'])
@@ -156,12 +158,6 @@ function invoke_menu($request, $template = false)
 			theme('errors');
 			return;
 		}
-		// just return because the output function was already called
-		elseif($template == false)
-		{
-			return;
-		}
-			
 		// if it is set to a callable function to determine the template, then call that
 		elseif(is_callable($template))
 			call_user_func_array($template, array($request));

@@ -43,6 +43,8 @@ function menu_template()
  */
 function setup_template()
 {
+	$GLOBALS['theme_stack'] = array();
+	
 	// load templating system but only if we are using templates
 
 	// get the list of templates
@@ -162,10 +164,9 @@ function validate_template($request, $session = '')
 			return $request['template'];
 		}
 	}
-	elseif(isset($_SERVER['HTTP_USER_AGENT']) && preg_match('/.*mobile.*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
-	{
+	elseif(setting('agent_simple') == 'mobile')
 		return 'mobile';
-	}
+		
 	return setting('local_template');
 }
 
@@ -243,6 +244,16 @@ function theme_implements($method, $theme = '')
 	return function_exists('theme_' . $theme . '_' . $method);
 }
 
+function implements_theme($method)
+{
+	if(substr($method, 0, 7) == 'theme__')
+		return '';
+	elseif(substr($method, 0, 6) == 'theme_')
+		return substr($method, 6, strpos($method, '_', 6) - 6);
+	else
+		return false;
+}
+
 /**
  * Calls theming functions
  * @param request the name of the theme function to call
@@ -269,30 +280,44 @@ function theme($request = '')
 	if(!isset($GLOBALS['output']['html']))
 		set_output_vars();
 		
+	// the request is a string, this is most common
+	// check if function exists in current theme
+	if(theme_implements($request, setting('local_template')))
+		$function = 'theme_' . setting('local_template') . '_' . $request;
+	// check if a default function exists for the theme
+	elseif(theme_implements($request))
+		$function = 'theme__' . $request;
+	else
+	{
+		raise_error('Theme function \'theme_' . validate(array('template' => setting('local_template')), 'template') . '_' . $request . '\' was not found.', $error_code, 'template');
+		return false;
+	}
+		
 	// get the arguments to pass on to theme_ functions
 	$args = func_get_args();
 	
 	// do not pass original theme call argument
 	array_shift($args);
 	
-	raise_error('Theming \'' . $request . '\'.', E_DEBUG);
+	raise_error('Theming \'' . $request . '\' with the function \'' . $function . '\'.', E_VERBOSE);
 	
-	// the request is a string, this is most common
-	// check if function exists in current theme
-	if(theme_implements($request, setting('local_template')))
-	{
-		return call_user_func_array('theme_' . setting('local_template') . '_' . $request, $args);
-	}
-	// check if a default function exists for the theme
-	elseif(theme_implements($request))
-	{
-		return call_user_func_array('theme__' . $request, $args);
-	}
-	// it is possible the whole request
-	else
-		raise_error('Theme function \'theme_' . validate(array('template' => setting('local_template')), 'template') . '_' . $request . '\' was not found.', $error_code, 'template');
+	array_push($GLOBALS['theme_stack'], array('func' => $function, 'args' => $args));
+	
+	$result = call_user_func_array($function, $args);
+	
+	array_pop($GLOBALS['theme_stack']);
 		
-	return false;
+	return $result;
+}
+
+function ob_theme($request = '')
+{
+	$args = func_get_args();
+	ob_start();
+	$result = call_user_func_array('theme', $args);
+	$contents = ob_get_contents();
+	ob_end_clean();
+	return $contents;
 }
 
 /**

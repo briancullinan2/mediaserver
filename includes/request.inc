@@ -33,6 +33,7 @@ function validate($request, $key)
 	return;
 }
 
+
 /**
  * Set up input variables, everything the site needs about the request <br />
  * Validate all variables, and remove the ones that aren't validate
@@ -42,7 +43,7 @@ function request_validate()
 {
 	//Remove annoying POST error message with the page is refreshed 
 	//  better place for this?
-	if(isset($_SERVER['REQUEST_METHOD']) && strtolower($_SERVER['REQUEST_METHOD']) == 'post')
+	if(validate($_REQUEST, 'request_method') == 'post')
 	{
 		session('last_request',  $_REQUEST);
 		location($_SERVER['REQUEST_URI']);

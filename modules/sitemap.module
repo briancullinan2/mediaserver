@@ -20,7 +20,7 @@ function setup_sitemap()
 	if(setting('no_bots'))
 	{
 		// do not let GoogleBot perform searches or file downloads
-		if(preg_match('/.*Googlebot.*/i', $_SERVER['HTTP_USER_AGENT'], $matches) !== 0)
+		if(setting('agent_simple') == 'googlebot')
 		{
 			if(basename($_REQUEST['path_info']) != 'sitemap.xml')
 			{

@@ -16,10 +16,33 @@ function cli_get_columns_lengths($input)
 	return $column_lengths;
 }
 
-function cli_get_max_width($input)
+function cli_colorize($color)
+{
+	// set up colorize stack to be used in theme
+	if(!isset($GLOBALS['cli_colorize']))
+		$GLOBALS['cli_colorize'] = array(0);
+	
+	array_push($GLOBALS['cli_colorize'], $color);
+	print "\033[" . $color . "m";
+}
+
+function cli_decolorize()
+{
+	// remove current color
+	array_pop($GLOBALS['cli_colorize']);
+	
+	// change to last color
+	$color = array_pop($GLOBALS['cli_colorize']);
+	print "\033[" . $color . "m";
+	
+	// save last color
+	array_push($GLOBALS['cli_colorize'], $color);
+}
+
+function cli_get_max_width($lines)
 {
 	$max = 0;
-	foreach($input as $column => $value)
+	foreach($lines as $column => $value)
 	{
 		if(is_string($value))
 			$max = max($max, strlen($value), strlen($column));
@@ -30,7 +53,7 @@ function cli_get_max_width($input)
 function cli_box($input, $top_line = true, $left_line = true, $bottom_line = true, $right_line = true, $width = 0)
 {
 	$lines = explode("\n", $input);
-	$max = cli_get_max_width($lines);
+	$max = cli_get_max_width(preg_replace('/\\033\[[0-9][0-9]?m/i', '', $lines));
 	if($width > 0 && $width > $max)
 		$max = $width;
 	$result = '';
@@ -38,7 +61,8 @@ function cli_box($input, $top_line = true, $left_line = true, $bottom_line = tru
 		$result .= (($left_line)?'.-':'') . sprintf('%\'--' . ($max+2) . 's', '-') . (($right_line)?'.':'') . "\n";
 	foreach($lines as $i => $line)
 	{
-		$result .= (($left_line)?'| ':'') . sprintf('%-' . ($max+2) . 's', $line) . (($right_line)?'|':'') . "\n";
+		$hidden_count = preg_match_all('/\\033\[[0-9][0-9]m/i', $line, $matches)*5+preg_match_all('/\\033\[[0-9]m/i', $line, $matches)*4;
+		$result .= (($left_line)?'| ':'') . sprintf('%-' . ($max+2+$hidden_count) . 's', $line) . (($right_line)?'|':'') . "\n";
 	}
 	if($bottom_line)
 		$result .= (($left_line)?'|_':'') . sprintf('%\'_-' . ($max+2) . 's', '_') . (($right_line)?'|':'') . "\n";
@@ -53,6 +77,11 @@ function cli_merge_boxes()
 	$max_lines = 0;
 	foreach($boxes as $i => $box)
 	{
+		if(!is_string($box))
+		{
+			unset($boxes[$i]);
+			continue;
+		}
 		$lines[$i] = explode("\n", $box);
 		array_pop($lines[$i]);
 		$lasts[$i] = array_pop($lines[$i]);
@@ -69,7 +98,7 @@ function cli_merge_boxes()
 			{
 				$left_border = ((substr($lines[$j][0], 0, 1) == '|')?'|':'');
 				$right_border = ((substr($lines[$j][0], -1) == '|')?'|':'');
-				$result .= $left_border . sprintf('%-' . (strlen($lines[$j][0])-strlen($left_border)-strlen($right_border)) . 's', ' ') . $right_border;
+				$result .= $left_border . sprintf('%-' . (strlen(preg_replace('/\\033\[[0-9][0-9]?m/i', '', $lines[$j][0]))-strlen($left_border)-strlen($right_border)) . 's', ' ') . $right_border;
 			}
 		}
 		$result .= "\n";
@@ -112,15 +141,15 @@ function theme_cli_errors_block()
 {
 	if(count($GLOBALS['user_errors']) > 0)
 		foreach($GLOBALS['user_errors'] as $i => $error)
-			print 'Error: ' . $error . "\n";
+			print cli_colorize(31) . 'Error: ' . $error . cli_decolorize() . "\n";
 			
 	if(count($GLOBALS['warn_errors']) > 0)
 		foreach($GLOBALS['warn_errors'] as $i => $error)
-			print 'Warning: ' . $error . "\n";
+			print cli_colorize(33) . 'Warning: ' . $error . cli_decolorize() . "\n";
 			
 	if(count($GLOBALS['note_errors']) > 0)
 		foreach($GLOBALS['note_errors'] as $i => $error)
-			print 'Note: ' . $error . "\n";
+			print cli_colorize(34) . 'Note: ' . $error . cli_decolorize() . "\n";
 }
 
 function theme_cli_errors()
@@ -135,6 +164,7 @@ function theme_cli_errors()
 
 function theme_cli_footer()
 {
+	print "\033[0m";
 }
 
 function theme_cli_header($title = NULL, $description = NULL)
@@ -153,7 +183,17 @@ function theme_cli_form_object($field_name, $config, $width = 0)
 	{
 		theme('info_objects', $config['name'] . ":\n", $width);
 	}
-		
+	
+	if(isset($config['status']) && $config['type'] != 'fieldset')
+	{
+		if($config['status'] == 'fail')
+			cli_colorize(31);
+		elseif($config['status'] == 'warn')
+			cli_colorize(33);
+		else
+			cli_colorize(32);
+	}
+	
 	switch($config['type'])
 	{
 		case 'form':
@@ -164,15 +204,15 @@ function theme_cli_form_object($field_name, $config, $width = 0)
 				theme('form_submit', $config['reset'], $width);
 			break;
 		case 'fieldset':
-			if(isset($config['name']))
+			if(count($config['options']) > 0)
 			{
 				// box it up
-				ob_start();
-				theme('form_tableset', $config['options'], $width - 4);
-				$contents = ob_get_contents();
-				ob_end_clean();
-				$title = '.-' . $config['name'];
-				$box1 = cli_box($contents);
+				if(isset($config['name']))
+					$title = '.-' . $config['name'];
+				else
+					$title = '';
+					
+				$box1 = cli_box(ob_theme('form_fieldrows', $config['options'], $width - 4));
 				print $title . substr($box1, strlen($title)) . "\n";
 			}
 			break;
@@ -197,7 +237,14 @@ function theme_cli_form_object($field_name, $config, $width = 0)
 			else
 				raise_error('Form type \'' . $config['type'] . '\' not found!', E_DEBUG);
 	}
+	
+	if(isset($config['description']))
+		theme('info_objects', $config['description'], $width);
+		
+	if(isset($config['status']) && $config['type'] != 'fieldset')
+		cli_decolorize();
 }
+
 
 function theme_cli_info_objects($infos, $width)
 {
@@ -233,6 +280,8 @@ function theme_cli_info_objects($infos, $width)
 							break;
 						}
 						break;
+					case 'description':
+					case 'status':
 					case 'name':
 						break;
 					default:
@@ -246,6 +295,16 @@ function theme_cli_info_objects($infos, $width)
 			}
 		}
 	}
+}
+
+function theme_cli_info_text($value, $width)
+{
+	if(is_string($value))
+	{
+		print cli_wordwrap($value, $width);
+	}
+	elseif(is_array($value))
+		theme('info_objects', $value, $width);
 }
 
 function theme_cli_form_objects($form, $width)
@@ -269,28 +328,49 @@ function theme_cli_form_objects($form, $width)
 	}
 }
 
-function theme_cli_form_tableset($options, $width)
+function theme_cli_form_fieldrows($options, $width = 0)
 {
+	if($width == 0)
+		$width = setting('cli_columns');
+		
 	$op_count = 0;
 	foreach($options as $name => $field)
 	{
 		$op_count++;
 		$box1 = cli_box(cli_wordwrap($field['name'], floor($width * .20) - 4), false, false, true, true, floor($width * .20));
 		
-		ob_start();
-		if(is_array($field))
-			theme('form_objects', array($name => array('name' => NULL, 'description' => NULL) + $field), floor($width * .30) - 2);
+		if(isset($field['description']))
+			$inner_width = floor($width * .30);
 		else
-			theme('form_objects', array($name => array('name' => NULL, 'description' => NULL, 'value' => $field)), floor($width * .30) - 2);
-		$box2 = cli_box(ob_get_contents(), false, false, true, false, floor($width * .30));
-		ob_end_clean();
-	
+			$inner_width = floor($width * .60);
+		
+		if(is_array($field))
+			$contents = ob_theme('form_objects', array($name => array('name' => NULL, 'description' => NULL, 'status' => NULL) + $field), $inner_width);
+		else
+			$contents = ob_theme('form_objects', array($name => array('name' => NULL, 'description' => NULL, 'status' => NULL, 'value' => $field)), $inner_width);
+		$box2 = cli_box($contents, false, false, true, false, $inner_width);
+
+		if(isset($field['description']))
+			$box3 = cli_box(ob_theme('info_objects', $field['description'], floor($width * .30) - 2), false, true, true, false, floor($width * .30));
+		
+		if(isset($field['status']))
+		{
+			if($field['status'] == 'fail')
+				cli_colorize(31);
+			elseif($field['status'] == 'warn')
+				cli_colorize(33);
+			else
+				cli_colorize(32);
+		}
+		
 		// box it up
-		ob_start();
-		theme('info_objects', $field['description'], floor($width * .30) - 2);
-		$box3 = cli_box(ob_get_contents(), false, true, true, false, floor($width * .30));
-		ob_end_clean();
-		print cli_merge_boxes($box1, $box2, $box3);
+		if(isset($field['description']))
+			print cli_merge_boxes($box1, $box2, $box3);
+		else
+			print cli_merge_boxes($box1, $box2);
+		
+		if(isset($field['status']))
+			cli_decolorize();
 	}
 }
 
@@ -341,6 +421,11 @@ function theme_cli_info_image($config, $width)
 {
 }
 
+
+function theme_cli_form_label($config, $width)
+{
+	print cli_wordwrap($config['value'], $width);
+}
 
 function theme_cli_form_multiselect($config, $width)
 {
@@ -432,5 +517,11 @@ function theme_cli_select()
 			print call_user_func_array('cli_merge_boxes', $file_boxes);
 		}
 	}
+}
+
+function theme_cli_form_singular($config, $width)
+{
+	extract($config);
+	theme('info_objects', array('type' => 'info') + $config, $width);
 }
 

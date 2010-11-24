@@ -222,6 +222,49 @@ function setting_html_domain($settings)
 		return strtolower(substr($_SERVER['SERVER_PROTOCOL'], 0, strpos($_SERVER['SERVER_PROTOCOL'], '/'))) . '://' . $_SERVER['HTTP_HOST'] . (($_SERVER['SERVER_PORT'] != 80)?':' . $_SERVER['SERVER_PORT']:'');
 }
 
+function setting_request_method()
+{
+	if(isset($_SERVER['REQUEST_METHOD']))
+		return strtolower($_SERVER['REQUEST_METHOD']);
+	else
+		return 'get';
+}
+
+
+function setting_agent()
+{
+	if(isset($_SERVER['HTTP_USER_AGENT']))
+		return $_SERVER['HTTP_USER_AGENT'];
+	else
+		return 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1';
+}
+
+function setting_agent_simple()
+{
+	if(preg_match('/.*(mozilla).*/i', setting('agent'), $matches) !== 0)
+		return 'mozilla';
+	elseif(preg_match('/.*(windows-media-player|NSplayer|WMPCE).*/i', setting('agent'), $matches) !== 0)
+		return 'windows';
+	elseif(preg_match('/.*(iTunes).*/i', setting(array(), 'agent'), $matches) !== 0)
+		return 'itunes';
+	elseif(preg_match('/.*(mobile).*/i', setting(array(), 'agent'), $matches) !== 0)
+		return 'mobile';
+	elseif(preg_match('/.*(vlc).*/i', setting(array(), 'agent'), $matches) !== 0)
+		return 'vlc';
+	elseif(preg_match('/.*Googlebot.*/i', setting(array(), 'agent'), $matches) !== 0)
+		return 'googlebot';
+	else
+		return 'mozilla';
+}
+
+function setting_deflate()
+{
+	if(isset($_SERVER['HTTP_ACCEPT_ENCODING']) && substr_count($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip'))
+		return true;
+	else
+		return false;
+}
+
 /**
  * Implementation of setting
  * @ingroup setting

@@ -72,7 +72,6 @@ function bootstrap($mode = 'all')
 				require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . $include;
 			}
 			preload_error();
-			bootstrap('phpids');
 			preload_triggers();
 			preload_menu();
 				
