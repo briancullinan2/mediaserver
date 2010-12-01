@@ -1,5 +1,33 @@
 <?php
 
+function theme_live_debug_error($id, $error, $no_code = false)
+{
+	if(substr($error->message, 0, 10) == 'PHP ERROR:')
+		$class = 'php';
+	elseif(substr($error->message, 0, 9) == 'DB ERROR:')
+		$class = 'db';
+	elseif(substr($error->message, 0, 8) == 'VERBOSE:')
+		$class = 'verbose';
+	else
+		$class = '';
+		
+	?>
+	<a href="#" class="msg <?php print $class; ?>" onClick="$('#error_<?php print $id; ?>').toggle(); return false;"><?php print (isset($error->time)?('[' . $error->time . ']'):'') . htmlspecialchars($error->message) . (isset($error->count)?(' repeated ' . $error->count . ' time(s)'):''); ?></a>
+	<?php
+	if(!$no_code)
+	{
+		?>
+		<div id="error_<?php print $id; ?>" style="display:none;">
+			<code>
+				<pre>
+	<?php print htmlspecialchars(print_r($error, true)); ?>
+				</pre>
+			</code>
+		</div>
+		<?php
+	}
+}
+
 
 function theme_live_debug_block()
 {
@@ -8,28 +36,24 @@ function theme_live_debug_block()
 		?><div id="debug" class="debug hide"><?php
 		foreach($GLOBALS['debug_errors'] as $i => $error)
 		{
-			if(substr($error->message, 0, 10) == 'PHP ERROR:')
-				$class = 'php';
-			elseif(substr($error->message, 0, 9) == 'DB ERROR:')
-				$class = 'db';
-			elseif(substr($error->message, 0, 8) == 'VERBOSE:')
-				$class = 'verbose';
-			else
-				$class = '';
-				
-			?>
-			<a href="#" class="msg <?php print $class; ?>" onClick="$('#error_<?php print $i; ?>').toggle(); return false;"><?php print (isset($error->time)?('[' . $error->time . ']'):'') . htmlspecialchars($error->message) . (isset($error->count)?(' repeated ' . $error->count . ' time(s)'):''); ?></a>
-			<div id="error_<?php print $i; ?>" style="display:none;">
-				<code>
-					<pre>
-<?php print htmlspecialchars(print_r($error, true)); ?>
-					</pre>
-				</code>
-			</div>
-			<?php
+			theme('debug_error', $i, $error);
 		}
 		
-		$GLOBALS['debug_errors'] = array();
+		if(isset($GLOBALS['output']['requests']) && count($GLOBALS['output']['requests']) > 0)
+		{
+			foreach($GLOBALS['output']['requests'] as $j => $request)
+			{
+				?>
+				<a href="#" class="msg" onClick="$('#request_<?php print $j; ?>').toggle(); return false;">Request made on <?php print $request['Time']; ?></a>
+				<div id="request_<?php print $j; ?>" style="display:none;"><?php
+				$errors = unserialize(gzinflate($request['Errors']));
+				foreach($errors['debug'] as $i => $error)
+				{
+					theme('debug_error', $i, $error, true);
+				}
+				?></div><?php
+			}
+		}
 		
 		?>
 		<a id="hide_link" href="#" onClick="if(this.hidden == false) { document.getElementById('debug').className='debug hide'; this.hidden=true; this.innerHTML = 'Show'; } else { document.getElementById('debug').className='debug'; this.hidden=false; this.innerHTML = 'Hide'; } return false;">Show</a>

@@ -9,6 +9,7 @@ settings = movies
 session[] = add_movie_folder
 session[] = remove_movie_folder
 session[] = reset_configuration
+cron_only = true
 
 [database]
 Filepath = TEXT

@@ -16,9 +16,6 @@ For non-jquery templates, an I-Frame could be used to perform the request and pr
 Add dependencies to live theme (jquery, flowplayer) and decide if these should be included in the theme package
 Rate limiting on user login, recaptcha module
 Finish webdav module that allows files to be uploaded and access using the web dav protocol.  This is already mostly supported by PEAR.
-Look at drupal and find out if there is a better way to save errors to the session at the end of a script
-	Fix session problems with storing errors
-	Consider printing and clearing all possible errors up until the error print out, then save the rest
 Add module called balancer used for load balancing
 	Maybe this modules could help with hard and soft links?
 	Make sure remote balancer is enabled and dependencies are met, add a status print out to the output function of balancer

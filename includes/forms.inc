@@ -253,7 +253,7 @@ function theme__form_hidden($config)
 function theme__form_button($config)
 {
 	extract($config);
-	?><input type="button" <?php print isset($action)?'onClick="' . $action . '"':''; ?> <?php print (isset($disabled) && $disabled == true)?'disabled="disabled"':'';?> name="<?php print machine($name); ?>" value="<?php print htmlspecialchars($value); ?>" /><?php
+	?><input type="button" <?php print isset($action)?'onClick="' . $action . '"':''; ?> <?php print (isset($disabled) && $disabled == true)?'disabled="disabled"':'';?> name="<?php print isset($name)?machine($name):''; ?>" value="<?php print htmlspecialchars($value); ?>" /><?php
 }
 
 function theme__form_submit($config)

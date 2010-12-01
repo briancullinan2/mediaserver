@@ -52,20 +52,24 @@ function cli_get_max_width($lines)
 
 function cli_box($input, $top_line = true, $left_line = true, $bottom_line = true, $right_line = true, $width = 0)
 {
+	$width = floor($width);
 	$lines = explode("\n", $input);
 	$max = cli_get_max_width(preg_replace('/\\033\[[0-9][0-9]?m/i', '', $lines));
 	if($width > 0 && $width > $max)
 		$max = $width;
+
 	$result = '';
-	if($top_line)
-		$result .= (($left_line)?'.-':'') . sprintf('%\'--' . ($max+2) . 's', '-') . (($right_line)?'.':'') . "\n";
+	if(is_string($top_line))
+		$result .= (($left_line)?'.-':'') . sprintf('%\'--' . ($max) . 's', $top_line) . (($right_line)?'.':'') . "\n";
+	elseif($top_line)
+		$result .= (($left_line)?'.-':'') . sprintf('%\'--' . ($max) . 's', '-') . (($right_line)?'.':'') . "\n";
 	foreach($lines as $i => $line)
 	{
 		$hidden_count = preg_match_all('/\\033\[[0-9][0-9]m/i', $line, $matches)*5+preg_match_all('/\\033\[[0-9]m/i', $line, $matches)*4;
-		$result .= (($left_line)?'| ':'') . sprintf('%-' . ($max+2+$hidden_count) . 's', $line) . (($right_line)?'|':'') . "\n";
+		$result .= (($left_line)?'| ':'') . sprintf('%-' . ($max+$hidden_count) . 's', $line) . (($right_line)?'|':'') . "\n";
 	}
 	if($bottom_line)
-		$result .= (($left_line)?'|_':'') . sprintf('%\'_-' . ($max+2) . 's', '_') . (($right_line)?'|':'') . "\n";
+		$result .= (($left_line)?'|_':'') . sprintf('%\'_-' . ($max) . 's', '_') . (($right_line)?'|':'') . "\n";
 	return $result;
 }
 
@@ -118,7 +122,7 @@ function cli_wordwrap($text, $width)
 	if(strlen($text) == 0)
 		return '';
 	else
-		return wordwrap($text, $width, "\n", true);
+		return wordwrap($text, floor($width), "\n", true);
 }
 
 function theme_cli_info_list($value, $width)
@@ -141,15 +145,27 @@ function theme_cli_errors_block()
 {
 	if(count($GLOBALS['user_errors']) > 0)
 		foreach($GLOBALS['user_errors'] as $i => $error)
-			print cli_colorize(31) . 'Error: ' . $error . cli_decolorize() . "\n";
+		{
+			cli_colorize(31);
+			print 'Error: ' . ob_theme('info_objects', $error)  . "\n";
+			cli_decolorize();
+		}
 			
 	if(count($GLOBALS['warn_errors']) > 0)
 		foreach($GLOBALS['warn_errors'] as $i => $error)
-			print cli_colorize(33) . 'Warning: ' . $error . cli_decolorize() . "\n";
-			
+		{
+			cli_colorize(33);
+			print 'Warning: ' . ob_theme('info_objects', $error) . "\n";
+			cli_decolorize();
+		}
+		
 	if(count($GLOBALS['note_errors']) > 0)
 		foreach($GLOBALS['note_errors'] as $i => $error)
-			print cli_colorize(34) . 'Note: ' . $error . cli_decolorize() . "\n";
+		{
+			cli_colorize(34);
+			print 'Note: ' . ob_theme('info_objects', $error) . "\n";
+			cli_decolorize();
+		}
 }
 
 function theme_cli_errors()
@@ -211,9 +227,8 @@ function theme_cli_form_object($field_name, $config, $width = 0)
 					$title = '.-' . $config['name'];
 				else
 					$title = '';
-					
-				$box1 = cli_box(ob_theme('form_fieldrows', $config['options'], $width - 4));
-				print $title . substr($box1, strlen($title)) . "\n";
+				
+				print cli_box(ob_theme('form_fieldrows', $config['options'], $width), $title, false, false, false, $width * .80);
 			}
 			break;
 		case 'set':
@@ -246,8 +261,11 @@ function theme_cli_form_object($field_name, $config, $width = 0)
 }
 
 
-function theme_cli_info_objects($infos, $width)
+function theme_cli_info_objects($infos, $width = 0)
 {
+	if($width == 0)
+		$width = setting('cli_columns');
+		
 	if(is_string($infos))
 	{
 		if(strlen($infos) < 256)
@@ -307,6 +325,15 @@ function theme_cli_info_text($value, $width)
 		theme('info_objects', $value, $width);
 }
 
+function theme_cli_info_loading($value, $width)
+{
+	print cli_wordwrap($value, $width);
+}
+
+function theme_cli_info_image($config, $width)
+{
+}
+
 function theme_cli_form_objects($form, $width)
 {
 	// generate form based on config spec
@@ -337,21 +364,21 @@ function theme_cli_form_fieldrows($options, $width = 0)
 	foreach($options as $name => $field)
 	{
 		$op_count++;
-		$box1 = cli_box(cli_wordwrap($field['name'], floor($width * .20) - 4), false, false, true, true, floor($width * .20));
+		$box1 = cli_box(cli_wordwrap($field['name'], $width * .20 - 4), false, true, true, true, $width * .20);
 		
 		if(isset($field['description']))
-			$inner_width = floor($width * .30);
+			$inner_width = $width * .30;
 		else
-			$inner_width = floor($width * .60);
+			$inner_width = $width * .60 + 2;
 		
 		if(is_array($field))
-			$contents = ob_theme('form_objects', array($name => array('name' => NULL, 'description' => NULL, 'status' => NULL) + $field), $inner_width);
+			$contents = ob_theme('form_objects', array($name => array('name' => NULL, 'description' => NULL, 'status' => NULL) + $field), $inner_width - 2);
 		else
-			$contents = ob_theme('form_objects', array($name => array('name' => NULL, 'description' => NULL, 'status' => NULL, 'value' => $field)), $inner_width);
-		$box2 = cli_box($contents, false, false, true, false, $inner_width);
+			$contents = ob_theme('form_objects', array($name => array('name' => NULL, 'description' => NULL, 'status' => NULL, 'value' => $field)), $inner_width - 2);
+		$box2 = cli_box($contents, false, false, true, !isset($field['description']), $inner_width);
 
 		if(isset($field['description']))
-			$box3 = cli_box(ob_theme('info_objects', $field['description'], floor($width * .30) - 2), false, true, true, false, floor($width * .30));
+			$box3 = cli_box(ob_theme('info_objects', $field['description'], $width * .30 - 4), false, true, true, true, $width * .30);
 		
 		if(isset($field['status']))
 		{
@@ -378,46 +405,34 @@ function theme_cli_form_boolean($config, $width)
 {
 	extract($config);
 	if($value == true)
-		print '[' . (isset($options[0])?cli_wordwrap(machine($name) . ' = ' . $options[0], $width):'true') . ']';
-	else
-		print isset($options[0])?cli_wordwrap($options[0], $width):'true';
-
-	print "\n";
+		print cli_wordwrap('[' . (isset($options[0])?machine($name) . ' = ' . $options[0]:'true') . ']', $width) . "\n";
 		
 	if($value == false)
-		print '[' . (isset($options[1])?wordwrap(machine($name) . ' = ' . $options[1], $width):'false') . ']';
-	else
-		print isset($options[1])?cli_wordwrap($options[1], $width):'false';
-		
-	print "\n";
+		print cli_wordwrap('[' . (isset($options[1])?machine($name) . ' = ' . $options[1]:'false') . ']', $width) . "\n";
 }
 
 function theme_cli_form_text($config, $width)
 {
 	extract($config);
-	print '[' . cli_wordwrap(machine($name) . ' = ' . $value, $width) . ']';
+	print cli_wordwrap('[' . machine($name) . ' = ' . $value . ']', $width);
 	print "\n";
 }
 
 function theme_cli_form_button($config, $width)
 {
 	extract($config);
-	print '[' . cli_wordwrap($name . ' = ' . $value, $width) . ']';
+	print cli_wordwrap('[' . $name . ' = ' . $value . ']', $width);
 	print "\n";
 }
 
 function theme_cli_form_submit($config, $width)
 {
 	extract($config);
-	print '[' . cli_wordwrap($name . ' = ' . $value, $width) . ']';
+	print cli_wordwrap('[' . $name . ' = ' . $value . ']', $width);
 	print "\n";
 }
 
 function theme_cli_form_hidden($config, $width)
-{
-}
-
-function theme_cli_info_image($config, $width)
 {
 }
 
@@ -441,9 +456,9 @@ function theme_cli_form_multiselect($config, $width)
 		foreach($options as $i => $option)
 		{
 			if(in_array($option, $value))
-				$box1 .= '[' . cli_wordwrap(machine($name) . ' = ' . $option, $width-1) . "]\n";
+				$box1 .= cli_wordwrap('[' . machine($name) . ' = ' . $option . ']', $width-1) . "\n";
 			else
-				$box1 .= '[' . cli_wordwrap($option, $width-1) . "]\n";
+				$box1 .= cli_wordwrap('[' . $option . ']', $width-1) . "\n";
 		}
 	}
 	else
@@ -452,12 +467,56 @@ function theme_cli_form_multiselect($config, $width)
 		foreach($options as $option => $text)
 		{
 			if(in_array($option, $value))
-				$box1 .= '[' . cli_wordwrap(machine($name) . ' = ' . $text, $width-1) . "]\n";
+				$box1 .= cli_wordwrap('[' . machine($name) . ' = ' . $text . ']', $width-1) . "\n";
 			else
-				$box1 .= '[' . cli_wordwrap($text, $width-1) . "]\n";
+				$box1 .= cli_wordwrap('[' . $text . ']', $width-1) . "\n";
 		}
 	}
 	print cli_box($box1, true, true, true, true, $width-2);
+}
+
+
+function theme_cli_menu()
+{
+	theme('header', 
+		'Menu: ' . $GLOBALS['output']['current_menu']['name'],
+		$GLOBALS['output']['current_menu']['description']
+	);
+	
+	$width = setting('cli_columns');
+	
+	print cli_merge_boxes(
+		cli_box('Name', true, true, true, true, $width * .30), 
+		cli_box('Path', true, false, true, true, $width * .30), 
+		cli_box('Description', true, false, true, true, $width * .30)
+	);
+	
+	foreach($GLOBALS['output']['menu'] as $path => $config)
+	{
+		$box1 = cli_box(cli_wordwrap($config['name'], $width * .30), false, true, true, true, $width * .30);
+		$box2 = cli_box(cli_wordwrap(url($path), $width * .30), false, false, true, true, $width * .30);
+		$box3 = cli_box(cli_wordwrap($config['description'], $width * .30), false, false, true, true, $width * .30);
+
+		print cli_merge_boxes($box1, $box2, $box3);
+	}
+	
+	theme('footer');
+}
+
+function theme_cli_menu_block()
+{
+	if(isset($GLOBALS['output']['menus']))
+	{
+		print "Menu:\n";
+		foreach($GLOBALS['output']['menus'] as $path => $config)
+		{
+			// this path actually leads to output as is, no need to validate it by using url()
+			if($config['type'] == MENU_NORMAL || $config['type'] == MENU_LIST)
+			{
+				print $config['name'] . ' - ' . url($path) . "\n";
+			}
+		}
+	}
 }
 
 function theme_cli_select()
@@ -474,12 +533,12 @@ function theme_cli_select()
 	
 	if(array_sum($column_lengths) > $width)
 	{
-		$box1 = cli_box('Filepath', true, true, true, true, floor($width * .30));
-		$box2 = cli_box('File Info', true, false, true, true, floor($width * .60));
+		$box1 = cli_box('Filepath', true, true, true, true, $width * .30);
+		$box2 = cli_box('File Info', true, false, true, true, $width * .60);
 		print cli_merge_boxes($box1, $box2);
 		foreach($GLOBALS['output']['files'] as $i => $file)
 		{
-			$box1 = cli_box(cli_wordwrap($file['Filepath'], floor($width * .30)-2), false, true, true, true, floor($width * .30));
+			$box1 = cli_box(cli_wordwrap($file['Filepath'], $width * .30-2), false, true, true, true, $width * .30);
 			$box2 = '';
 			foreach(get_all_columns() as $j => $column)
 			{
@@ -487,9 +546,9 @@ function theme_cli_select()
 					continue;
 				
 				if(isset($file[$column]))
-					$box2 .= cli_wordwrap($column . ': ' . $file[$column], floor($width * .60)-2) . "\n";
+					$box2 .= cli_wordwrap($column . ': ' . $file[$column], $width * .60-2) . "\n";
 			}
-			print cli_merge_boxes($box1, cli_box($box2, false, false, true, true, floor($width * .60)));
+			print cli_merge_boxes($box1, cli_box($box2, false, false, true, true, $width * .60));
 		}
 	}
 	else
@@ -519,9 +578,42 @@ function theme_cli_select()
 	}
 }
 
+function theme_cli_tool_info()
+{
+	global $cli_request_queue;
+	theme('header',
+		'Tools: ' . get_module($GLOBALS['output']['module'], 'name'),
+		get_module($GLOBALS['output']['module'], 'description')
+	);
+	
+	// output configuration if it is set
+	if(isset($GLOBALS['output']['options']))
+		theme('admin_modules_configure');
+	
+	theme('form_object', 'info', array(
+		'action' => $GLOBALS['output']['html']['get'],
+		'options' => $GLOBALS['output']['infos'],
+		'type' => 'form',
+	));
+
+	// go through request queue and get more information since fetches can't be run without javascript
+	while(count($cli_request_queue) > 0)
+	{
+		$request = url(array_pop($cli_request_queue), false, false, true);
+		rewrite_vars($request, $get, $post);
+		invoke_menu($request);
+	}
+
+	theme('footer');
+}
+
+
 function theme_cli_form_singular($config, $width)
 {
+	global $cli_request_queue;
 	extract($config);
 	theme('info_objects', array('type' => 'info') + $config, $width);
+	
+	$cli_request_queue[] = $href;
 }
 

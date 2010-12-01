@@ -218,10 +218,20 @@ function get_info_discogs($file)
 function output_discogs($file)
 {
 	$files = db_assoc('SELECT * FROM discogs WHERE Filepath=? LIMIT 1', array($file));
-	if(count($files) > 0)
-	{				
-		header('Content-Type: ' . substr($files[0]['Image'], 5, strpos($files[0]['Image'], ';')));
-		return fopen('discogsthumb://' . $file, 'rb');
+	if(count($files) > 0 && dependency('simplexml_installed'))
+	{
+		try {
+			$album['xml'] = new SimpleXMLElement($files[0]['ReleaseXml']);
+		} catch (Exception $e) {
+			exception_wrapper($e);
+		}
+		if(isset($album['xml']))
+		{
+			$images = $album['xml']->xpath('//images/image');
+			$image_attr = $images[0]->attributes();
+			//header('Content-Type: ' . substr($files[0]['Image'], 5, strpos($files[0]['Image'], ';')));
+			return fopen($image_attr['uri'], 'rb');
+		}
 	}
 
 	return false;

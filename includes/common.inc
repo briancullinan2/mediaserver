@@ -341,16 +341,20 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 		}
 	}
 	
-	// if the caller functionality would like an array returned for further processing such as in theme() return now
-	if($return_array)
-		return $request;
-	
 	// check with mod rewrite if paths can actually be printed out as directories
 	if(setting('modrewrite') == true && isset($menu))
 		$path_info = get_path($request, $menu);
 	// if we aren't using mod_rewrite, add the path info to the query string
 	elseif(isset($menu))
 		$request['path_info'] = get_path($request, $menu);
+	
+	// if the caller functionality would like an array returned for further processing such as in theme() return now
+	if($return_array)
+	{
+		if(isset($path_info))
+			$request['path_info'] = $path_info;
+		return $request;
+	}
 
 	// generate query string
 	$query = '?';

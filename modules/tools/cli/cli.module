@@ -11,7 +11,9 @@ function setup_cli()
 		if(!isset($_REQUEST['path_info']))
 			$_REQUEST['path_info'] = 'cli';
 		$GLOBALS['settings']['local_template'] = 'cli';
-		$GLOBALS['templates']['cli'] = array();
+		$GLOBALS['templates']['cli'] = array('name' => 'Command Line Interface');
+		
+		$GLOBALS['cli_request_queue'] = array();
 	}
 }
 
@@ -105,24 +107,27 @@ function output_cli($request)
 
 function cli_error_callback($error)
 {
-	if($error->code & E_VERBOSE)
-		return;
+	if(is_array($error->message))
+		$error->message = serialize($error->message);
+		
+	$error_out = '';
 	
 	if(substr($error->message, 0, 10) == 'PHP ERROR:')
-		print cli_colorize(31);
+		$error_out .= "\033[31m";
 	elseif(substr($error->message, 0, 9) == 'DB ERROR:')
-		print cli_colorize(33);
-
+		$error_out .= "\033[33m";
+	
 	// get width from theme_stack
 	$width = setting('cli_columns');
+	
 	// get the last call to the specified module's theme
 	$result = false;
-	for($i = count($GLOBALS['theme_stack'])-1; $i >=0; $i--)
+	for($i = count($GLOBALS['theme_stack'])-1; $i >= 0; $i--)
 	{
 		$call = $GLOBALS['theme_stack'][$i];
 		if(implements_theme($call['func']) == 'cli')
 		{
-			if(is_numeric($call['args'][count($call['args'])-1]))
+			if(isset($call['args'][count($call['args'])-1]) && is_numeric($call['args'][count($call['args'])-1]))
 			{
 				$width = $call['args'][count($call['args'])-1];
 				break;
@@ -130,9 +135,25 @@ function cli_error_callback($error)
 		}
 	}
 
-	print cli_wordwrap((isset($error->time)?('[' . $error->time . ']'):'') . $error->message, $width) . "\n";
-	flush();
+	$error_out .= cli_wordwrap((isset($error->time)?('[' . $error->time . ']'):'') . $error->message, $width) . "\n";
 	
 	if(substr($error->message, 0, 10) == 'PHP ERROR:' || substr($error->message, 0, 9) == 'DB ERROR:')
-		cli_decolorize();
+	{
+		$color = array_pop($GLOBALS['cli_colorize']);
+		$error_out .= "\033[" . $color . "m";
+		array_push($GLOBALS['cli_colorize'], $color);
+	}
+	
+	if(($error->code & E_DEBUG && setting('verbose') != false) || ($error->code & E_VERBOSE && setting('verbose') === 2))
+	{
+		$eh = fopen('php://stderr', 'w');
+		fwrite($eh, $error_out);
+		fflush($eh);
+		fclose($eh);
+	}
+	elseif(setting('debug_mode') && $error->code & E_DEBUG)
+	{
+		print $error_out;
+		flush();
+	}
 }

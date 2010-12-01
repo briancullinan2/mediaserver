@@ -35,7 +35,7 @@ function handles_count($files)
 	foreach(get_handlers() as $handler => $config)
 	{
 		if(count($files) > 0)
-			$modules[$handler . '_count'] = array_sum(array_map('handles', $files, array_fill(0, count($files), $handler)));
+			$modules[$handler . '_count'] = count(handles_all($files, $handler));
 		else
 			$modules[$handler . '_count'] = 0;
 	}
@@ -196,6 +196,19 @@ function handles($file, $handler = 'files')
 		raise_error('Handles called with \'' . $handler . '\' but no \'handles_' . $handler . '()\' function exists!', E_DEBUG);
 	
 	return false;
+}
+
+function handles_all(&$files, $handler = 'files')
+{
+	$result = array();
+	
+	foreach($files as $file)
+	{
+		if(handles($file['Filepath'], $handler))
+			$result[] = $file;
+	}
+	
+	return $result;
 }
 
 /**

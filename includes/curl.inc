@@ -160,8 +160,6 @@ function parse_headers($headers_raw)
 		// parse cookie
 		if(!strncmp($header, "Set-Cookie:", 11))
 		{
-			print_r($header);
-			print "\n";
 			$cookiestr = trim(substr($header, 11, -1));
 			$cookie = explode(';', $cookiestr);
 			$cookie = explode('=', $cookie[0]);

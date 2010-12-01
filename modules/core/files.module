@@ -316,36 +316,9 @@ function filter_files($request, $index)
 }
 
 /**
- * @defgroup handle Handle File Functions
- * Functions that read file information and store in the database
- * @param file the file to add to the database
- * @param force force checking if the file is in the database and add it
- * @return The ID for the file added to the database, or false if nothing was done or it isn't handled
- * @{
- */
- 
-function add_all($file, $force = false)
-{
-	// first add id
-	$fileid = add($file, false, 'ids');
-	
-	$ids = array();
-	foreach(get_handlers(false) as $module => $config)
-	{
-		$fileinfo = add($file, $force, $module);
-		if($fileinfo !== false)
-			$ids[$module . '_id'] = $fileinfo['id'];
-	}
-	
-	// update ids
-	db_query('UPDATE ids ' . sql_update($ids) . ' WHERE id=' . $fileid['id'], array_values($ids));
-
-}
-
-/**
  * Implementation of handle
  */
-function add($file, $force = false, $handler = 'files')
+function add($file, $handler = 'files')
 {
 	$file = str_replace('\\', '/', $file);
 	
@@ -364,6 +337,12 @@ function add($file, $force = false, $handler = 'files')
 		
 		return false;
 	}
+	
+	// check the cron settings on the module because this procedure takes a long time
+	// if the selected module is cron only, and it is currently not running, and deep select is set to a lower mode
+	//   then exit here
+	if(get_module($handler, 'cron_only') && !setting('cron_running') && setting('deep_select') !== 2)
+		return false;
 	
 	// files always qualify, we are going to log every single one!
 	if(!handles($file, $handler))
@@ -415,20 +394,6 @@ function add($file, $force = false, $handler = 'files')
 			
 			return array('id' => $id) + $fileinfo;
 		}
-	}
-	elseif($force == true)
-	{
-		// get file information
-		$fileinfo = invoke_module('get_info', $handler, array($file));
-		if(!isset($fileinfo) || !is_array($fileinfo))
-			return false;
-		
-		raise_error('Modifying ' . $handler . ': ' . $file, E_DEBUG);
-		
-		// update database
-		$id = db_query('UPDATE ' . $handler . sql_update($fileinfo) . ' WHERE id=' . $files[0]['id'], array_values($fileinfo));
-		
-		return array('id' => $id) + $fileinfo;
 	}
 
 	raise_error('Skipping ' . $handler . ': ' . $file, E_DEBUG);
@@ -704,7 +669,7 @@ function merge_id_info(&$files, $handler, &$cache_updates)
 		if(!isset($ids[$file['Filepath']]))
 		{
 			// add id
-			$ids[$file['Filepath']] = add($file['Filepath'], false, 'ids');
+			$ids[$file['Filepath']] = add($file['Filepath'], 'ids');
 			
 			// move passed in file ID
 			$ids[$file['Filepath']][$handler . '_id'] = $file['id'];
@@ -751,7 +716,7 @@ function merge_database_info($files, $handler)
 		$id_infos = array();
 		
 		// select files for this handler
-		$handler_files = array_filter($files, create_function('$file', 'return handles($file, \'' . $module . '\');'));
+		$handler_files = handles_all($files, $module);
 	
 		// select all the information with ids already associated
 		$id_files = array_filter($handler_files, create_function('$file', 'return isset($file[\'' . $module . '_id\']) && $file[\'' . $module . '_id\'] != 0;'));
@@ -773,7 +738,7 @@ function merge_database_info($files, $handler)
 		{
 			if(isset($new_infos[$i]))
 			{
-				$result = add($file['Filepath'], false, $module);
+				$result = add($file['Filepath'], $module);
 				if(is_array($result))
 				{
 					$files[$i] = array($module . '_id' => $result['id']) + array_merge($result, $file);
@@ -840,7 +805,7 @@ function remove($file, $handler = 'files')
 	$file = str_replace('\\', '/', $file);
 	
 	// files always qualify, we are going to log every single one!
-	if(!handles($file, $handler))
+	if(!handles($file, $handler) && $handler != 'files')
 		return false;
 	
 	if(module_implements('remove', $handler))
@@ -969,7 +934,7 @@ function cleanup($handler = 'files')
 	*/
 	
 	// remove any duplicates
-	$files = db_assoc('SELECT MIN(id) as id,Filepath,COUNT(*) as num FROM ' . $handler . ' HAVING num > 1 GROUP BY Filepath');
+	$files = db_assoc('SELECT MIN(id) as id,Filepath,COUNT(*) as num FROM ' . $handler . ' GROUP BY Filepath HAVING num > 1');
 
 	// if files is not an array something must have gone wrong
 	if(!is_array($files))

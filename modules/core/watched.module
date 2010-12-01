@@ -59,6 +59,7 @@ function handles_watched($dir)
 				$db_files = db_assoc('SELECT count(*) FROM files WHERE ' . sql_filepath($dir));
 
 				// check for file count inconsistency but don't process anything
+				raise_error('Counting files', E_DEBUG);
 				$count = 0;
 				if (is_readable(str_replace('/', DIRECTORY_SEPARATOR, $dir)) && ($dh = opendir(str_replace('/', DIRECTORY_SEPARATOR, $dir))))
 				{
@@ -75,8 +76,12 @@ function handles_watched($dir)
 							return true;
 						}
 					}
+						
 					closedir($dh);
+					
+					//$count = count(scan_directory($dir, 'watched_and_files'));
 				}
+				raise_error('Done Counting files', E_DEBUG);
 
 				// if count if less then number of directories in database
 				if($count < $db_files[0]['count(*)'])
@@ -282,7 +287,7 @@ function scan_watched($dir, $current = '')
 				if(is_watched($file))
 					$current_dir = scan_watched($dir, $file);
 					
-				$fileinfo = add($file, false, 'watched');
+				$fileinfo = add($file, 'watched');
 				
 				if( $current_dir !== true || connection_status() != 0)
 				{
@@ -332,7 +337,6 @@ function scan_watched_files($dir, $callback = NULL)
 		if(is_callable($callback))
 			call_user_func_array($callback, array($file));
 	}
-	
 	
 	// get removed files
 	$removed_files = array_diff($database_files, $in_common);

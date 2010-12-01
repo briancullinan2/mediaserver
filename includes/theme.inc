@@ -319,7 +319,10 @@ function theme__logout_block()
 
 function theme__menu()
 {
-	theme('header');
+	theme('header', 
+		'Menu: ' . $GLOBALS['output']['current_menu']['name'],
+		$GLOBALS['output']['current_menu']['description']
+	);
 	
 	theme('menu_block');
 	
@@ -350,7 +353,10 @@ function theme__menu_block()
 
 function theme__module()
 {
-	theme('header');
+	theme('header',
+		'Configuring: ' . get_module($GLOBALS['output']['configure_module'], 'name'), 
+		get_module($GLOBALS['output']['configure_module'], 'description')
+	);
 
 	// if the status is avaiable print that out first
 	if(isset($GLOBALS['output']['status']))

@@ -10,10 +10,15 @@ raise_error('Bootstrap Complete! Processing Request.', E_DEBUG);
 
 invoke_menu($_REQUEST);
 
-session('errors', array(
-	'user' => $GLOBALS['user_errors'],
-	'warn' => $GLOBALS['warn_errors'],
-	'note' => $GLOBALS['note_errors'],
-	'debug' => $GLOBALS['debug_errors'],
+$request_info = array(
+	'Errors' => gzdeflate(serialize(array(
+		'user' => $GLOBALS['user_errors'],
+		'warn' => $GLOBALS['warn_errors'],
+		'note' => $GLOBALS['note_errors'],
+		'debug' => $GLOBALS['debug_errors'],
+	))),
+);
+db_query('UPDATE request ' . sql_update($request_info) . ' WHERE Time=?', array(
+	$request_info['Errors'],
+	date('Y-m-d h:i:s', $GLOBALS['tm_start'])
 ));
-

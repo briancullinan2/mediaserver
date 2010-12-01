@@ -105,7 +105,6 @@ function bootstrap($mode = 'all')
 
 			foreach($modules as $module => $config)
 			{
-				raise_error('bootstrapping \'' . $module . '\'', E_DEBUG);
 				if(dependency($module))
 					invoke_module('setup', $module);
 

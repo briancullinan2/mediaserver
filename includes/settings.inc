@@ -302,7 +302,12 @@ function setting_html_name($settings)
  */
 function setting_deep_select($settings)
 {
-	return generic_validate_boolean_false($settings, 'deep_select');
+	$verbose = generic_validate_boolean_false($settings, 'deep_select');
+
+	if(isset($settings['deep_select']) && ($settings['deep_select'] === "2" || $settings['deep_select'] === 2))
+		return 2;
+	else
+		return $verbose;
 }
 
 /**
@@ -958,13 +963,15 @@ function configure_settings($settings, $request)
 				lang('recursive get description 1', 'This tells to system whether or not it should read directories on the fly and recursively.'),
 				lang('recursive get description 2', 'If some files in a directory haven\'t been loaded, this will load them when the directory is accessed.'),
 				lang('recursive get description 3', 'On large systems, this could cause page response to be VERY SLOW.  This option is not recommended for system where many files change often.'),
+				lang('recursive get description 4', '"Very Deep Select" will load remote content in modules that cache information from the internet.  "Deep Select" only loads the information that can be processed locally.'),
 			),
 		),
-		'type' => 'boolean',
+		'type' => 'select',
 		'value' => setting('deep_select'),
 		'options' => array(
-			lang('recursive get option 1', 'Turn Deep Select On'),
-			lang('recursive get option 2', 'Do Not Use Deep Select'),
+			2 => lang('recursive get option 1', 'Very Deep Select On'),
+			true => lang('recursive get option 2', 'Turn Deep Select On'),
+			false => lang('recursive get option 3', 'Do Not Use Deep Select'),
 		)
 	);
 	
@@ -986,6 +993,8 @@ function configure_settings($settings, $request)
 		'collapsible' => true,
 		'options' => $general
 	);
+	
+	$options = array_merge($options, configure_error($settings, $request));
 	
 	return $options;
 }

@@ -10,6 +10,11 @@ function menu_cron()
 	);
 }
 
+function setup_cron()
+{
+	$GLOBALS['cron_running'] = false;
+}
+
 /**
  * Implementation of status
  * @ingroup status
@@ -229,6 +234,14 @@ function setting_cleanup_threashold($settings)
 		return 5;
 }
 
+function setting_cron_running()
+{
+	if(isset($GLOBALS['cron_running']) && $GLOBALS['cron_running'] == true)
+		return true;
+	else
+		return false;
+}
+
 /**
  * Implementation of validate
  * @ingroup validate
@@ -308,9 +321,39 @@ function validate_scan_skip($request)
 }
 
 
+/**
+ * @defgroup handle Handle File Functions
+ * Functions that read file information and store in the database
+ * @param file the file to add to the database
+ * @param force force checking if the file is in the database and add it
+ * @return The ID for the file added to the database, or false if nothing was done or it isn't handled
+ * @{
+ */
+ 
+function cron_add_all($file)
+{
+	// first add id
+	$fileid = add($file, 'ids');
+	
+	$ids = array();
+	foreach(get_handlers(false) as $module => $config)
+	{
+		$fileinfo = add($file, $module);
+		if($fileinfo !== false)
+			$ids[$module . '_id'] = $fileinfo['id'];
+	}
+	
+	// update ids
+	db_query('UPDATE ids ' . sql_update($ids) . ' WHERE id=' . $fileid['id'], array_values($ids));
+
+}
+
 function output_cron($request)
 {
 	global $log_fp;
+	
+	$GLOBALS['cron_running'] = true;
+	
 	header('Content-type: text/html; charset=UTF-8');
 	
 	// close the session so the site can be used while cron is manually started
@@ -395,11 +438,15 @@ function output_cron($request)
 		$result = db_query('DELETE FROM watched WHERE id=?', array($files[0]['id']));
 		
 		// update files
-		scan_watched_files($files[0]['Filepath'], 'add_all');
+		scan_watched_files($files[0]['Filepath'], 'cron_add_all');
 	}
 	
 	// cleanup
 	fclose($log_fp);
+
+
+	$GLOBALS['cron_running'] = false;
+
 }
 
 function cron_error_callback($error)

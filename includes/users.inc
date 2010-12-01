@@ -621,7 +621,7 @@ function output_users($request)
 				if( count($GLOBALS['user_errors']) == 0 )
 				{
 					// create database entry
-					$user_id = add(setting('local_users') . $request['username'], false, 'users');
+					$user_id = add(setting('local_users') . $request['username'], 'users');
 					
 					// add password and profile information
 					$result = db_query('UPDATE users SET Password=?, Email=? WHERE id=?', array(

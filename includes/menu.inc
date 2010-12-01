@@ -136,11 +136,16 @@ function invoke_menu($request, $template = false)
 				return;
 			}
 		}
+		else
+			$template = 'menu';
 		
 		// just return because the output function was already called
 		if($template == false)
 			return;
-		
+
+		// close the session so that other scripts can load
+		if(isset($_SESSION)) session_write_close();
+
 		// compress the output
 		if(setting('deflate'))
 		{
@@ -150,7 +155,7 @@ function invoke_menu($request, $template = false)
 		else
 			raise_error('Deflating not supported!', E_DEBUG);
 		
-		// check module permissions
+		// check module permissions and always do access denied before calling any of the other themes
 		if($user['Privilage'] < $module['privilage'])
 		{
 			raise_error('Access Denied!', E_USER);

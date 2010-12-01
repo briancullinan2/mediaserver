@@ -1,3 +1,17 @@
+2010-11-30
+Improved error API
+	Errors are stored in a "request" database, so all requests can be referred to
+	This database should periodically be purged, and there needs to be
+Found one of the longest processes (~5 seconds) is due to counting files in watched.module to verify folder integrity
+Configuring errors shows on general settings page
+Using a loop for selecting which files are handled by each module provided a decent speed boost, handles_all() in file.inc
+Invoke_menu() now closes the session after output_() function is called
+Added a 3rd deep select option that also adds information for "cron_only" modules on demand
+Removed "$force" option from all add_ functions, system is smart enough now
+Removed add_all() from files.module since it was only used by cron so it is now in cron.module
+Discogs downloads and displays remote image, this might get slow and needs improvement
+Added request printouts to live theme
+
 2010-11-23
 Fixed and colorized CLI
 	In the process of finishing tools using CLI to debug

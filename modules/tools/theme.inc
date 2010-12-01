@@ -1,6 +1,6 @@
 <?php
 
-function theme_live_tool_info()
+function theme__tool_info()
 {
 	theme('header',
 		'Tools: ' . get_module($GLOBALS['output']['module'], 'name'),

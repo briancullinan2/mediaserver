@@ -6,6 +6,7 @@ depends on[] = discogs_api
 depends on[] = simplexml_installed
 package = file_handlers
 settings[] = discogs_api
+cron_only = true
 
 [database]
 Filepath = TEXT

@@ -250,7 +250,7 @@ function setting_debug_mode($settings)
 }
 
 
-function configure_error()
+function configure_error($settings)
 {
 	$options = array();
 
