@@ -8,7 +8,7 @@ function theme_live_login($username = '')
 	else
 		$return = $GLOBALS['output']['get'];
 	?>	
-	<form action="<?php echo url('users/login?return=' . urlencode($return)); ?>" method="post">
+	<form action="https://dev.bjcullinan.com/users/login?return=<?php echo urlencode($return); ?>" method="post">
 	
 		Username: <input type="text" name="username" value="<?php print $username; ?>" /><br />
 		Password: <input type="password" name="password" value="" /><br />
@@ -25,7 +25,7 @@ function theme_live_login_block($username = '', $return = '')
 	else
 		$return = $GLOBALS['output']['get'];
 	?>
-	<form action="<?php echo url('users/login?return=' . urlencode($return)); ?>" method="post">
+	<form action="https://dev.bjcullinan.com/users/login?return=<?php echo urlencode($return); ?>" method="post">
 		<input class="stndsize" type="text" onmouseout="if(this.value=='' && !this.hasfocus) document.getElementById('username').style.visibility='visible'" onblur="this.hasfocus=false; this.onmouseout();" onfocus="this.hasfocus=true" name="username" value="<?php print $username; ?>" />
 		<input class="stndsize" type="password" onmouseout="if(this.value=='' && !this.hasfocus) document.getElementById('password').style.visibility='visible'" onblur="this.hasfocus=false; this.onmouseout();" onfocus="this.hasfocus=true" name="password" value="" />
 		<input type="submit" value="Login" />

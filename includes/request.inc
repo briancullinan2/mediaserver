@@ -206,9 +206,9 @@ function generic_validate_boolean_true($request, $index)
 {
 	if(isset($request[$index]))
 	{
-		if($request[$index] == true || $request[$index] === 'true')
+		if($request[$index] || $request[$index] === 'true')
 			return true;
-		elseif($request[$index] == false || $request[$index] === 'false')
+		elseif(!$request[$index] || $request[$index] == 'false')
 			return false;
 	}
 	return true;
@@ -221,9 +221,9 @@ function generic_validate_boolean_false($request, $index)
 {
 	if(isset($request[$index]))
 	{
-		if($request[$index] == true || $request[$index] === 'true')
+		if($request[$index] || $request[$index] === 'true')
 			return true;
-		elseif($request[$index] == false || $request[$index] === 'false')
+		elseif(!$request[$index] || $request[$index] === 'false')
 			return false;
 	}
 	return false;

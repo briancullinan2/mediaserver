@@ -475,7 +475,7 @@ function invoke_all_callback($method, $callback)
  
 function disable_module($module)
 {
-	if(dependency($module) == false)
+	if(dependency($module))
 	{
 		$GLOBALS['settings'][$module . '_enable'] = false;
 		// this prevents us from disabling required modules on accident
@@ -491,9 +491,9 @@ function disable_module($module)
  */
 function dependency_writable_settings($settings)
 {
-	if(setting_installed() == false)
+	if(setting_installed())
 		return false;
-	return is_writable(setting('settings_file')) || setting('database_enable') == true;
+	return is_writable(setting('settings_file')) || setting('database_enable');
 }
 
 /**
@@ -633,7 +633,7 @@ function configure_module($settings, $request)
 		);
 		
 		// add some extra info for failed dependencies
-		if(dependency($module) == false)
+		if(dependency($module))
 		{
 			$new_config['status'] = 'fail';
 			if(!in_array($module, get_required_modules()))
@@ -908,7 +908,7 @@ function output_module($request)
 	{
 		// get changed settings
 		$settings_changed = module_get_new_settings($request);
-		if($settings_changed == true)
+		if($settings_changed)
 		{
 			module_save_settings(array_intersect_key($GLOBALS['settings'], $GLOBALS['all_settings']), true);
 		}
@@ -917,7 +917,7 @@ function output_module($request)
 	}
 
 	// output error if can't write to settings
-	if(dependency('writable_settings') == false)
+	if(dependency('writable_settings'))
 		raise_error('Cannot save changes made on this page, the settings file is not writable!', E_USER);
 
 	// this is the configure all code

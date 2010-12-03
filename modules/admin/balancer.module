@@ -390,7 +390,7 @@ function session_balancer($request)
 		if($new_server != NULL)
 		{
 			// redirect session information and user
-			goto($new_server['protocol'] . '://' . $new_server['address'] . substr(url($request, true), 1));
+			location($new_server['protocol'] . '://' . $new_server['address'] . substr(url($request, true), 1));
 		}
 	}
 }

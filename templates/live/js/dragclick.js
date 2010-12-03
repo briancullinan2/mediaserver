@@ -206,7 +206,7 @@ function fileSelect(file, state, evt)
 	{
 		if(state != null)
 		{
-			if(state == true)
+			if(state)
 			{
 				if(file.className.indexOf(' select') == -1)
 				{
@@ -319,7 +319,7 @@ function selectUnder()
 	for(i = 0; i < file_obj.length; i++)
 	{
 		// always select origin
-		if(startY <= file_top[i]+file_height && startY >= file_top[i] && startX <= file_left[i]+file_width && startX >= file_left[i] && file_changed[i] == false)
+		if(startY <= file_top[i]+file_height && startY >= file_top[i] && startX <= file_left[i]+file_width && startX >= file_left[i] && file_changed[i])
 		{
 			file_changed[i] = true;
 			fileSelect(file_obj[i], true);
@@ -328,7 +328,7 @@ function selectUnder()
 		
 		if(file_top[i]+file_height >= tmp_top && file_top[i] <= tmp_bottom && file_left[i]+file_width >= tmp_left && file_left[i] <= tmp_right)
 		{
-			if(file_changed[i] == false)
+			if(file_changed[i])
 			{
 				file_changed[i] = true;
 				fileSelect(file_obj[i]);
@@ -336,7 +336,7 @@ function selectUnder()
 		}
 		else
 		{
-			if(file_changed[i] == true)
+			if(file_changed[i])
 			{
 				fileSelect(file_obj[i]);
 				file_changed[i] = false;
@@ -367,7 +367,7 @@ function startDrag(evt)
 		
 	hideMenu();
 	
-	if(tempY > min_top && tempX > min_left && inited == true)
+	if(tempY > min_top && tempX > min_left && inited)
 	{
 		window_pos = getPositionInWindow();
 		if (IE) {
@@ -409,7 +409,7 @@ function endDrag()
 {
 	if(selector_off)
 		return;
-	if(inited == true)
+	if(inited)
 	{
 		var new_selected = new Array();
 		is_dragging = false;
@@ -459,7 +459,7 @@ var filename = null;
 
 function startRotate(id)
 {
-	if(inited == true)
+	if(inited)
 	{
 		filename = document.getElementById('filename_'+id);
 		rotate_timer = setTimeout(rotate, 100);

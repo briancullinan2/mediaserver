@@ -1,5 +1,7 @@
 <?php
 
+define('NUMBER_OF_DOWNLOAD_SERVICES', 10);
+
 function menu_download_services()
 {
 	return array(
@@ -27,7 +29,7 @@ function setting_download_services()
 	$settings = array();
 	
 	// add wrapper functions for validating a service entry
-	for($i = 0; $i < 10; $i++)
+	for($i = 0; $i < NUMBER_OF_DOWNLOAD_SERVICES; $i++)
 	{
 		$GLOBALS['setting_download_service_' . $i] = create_function('$settings', 'return setting_download_service($settings, \'' . $i . '\');');
 		$settings[] = 'download_service_' . $i;
@@ -139,7 +141,7 @@ function setting_all_download_services($settings, $type = NULL)
 	}
 	
 	// make sure all servers with numeric indexes are on the list
-	for($i = 0; $i < 10; $i++)
+	for($i = 0; $i < NUMBER_OF_DOWNLOAD_SERVICES; $i++)
 	{
 		$service = setting('download_service', $i);
 		if(isset($service))
@@ -311,7 +313,7 @@ function download_services_login($service)
 
 	$config = $services[$service];
 	
-	if(($session_service = session('download_services_' . $service)) && $session_service['logged_in'] == true)
+	if(($session_service = session('download_services_' . $service)) && $session_service['logged_in'])
 		return true;
 	
 	$result = fetch($config['login']);
@@ -368,23 +370,26 @@ function download_services_login($service)
 
 	// construct post
 	$post = array();
-		
-	// loop through each form field and construct post
-	foreach($form as $name => &$field)
+	
+	if(isset($form))
 	{
-		if($name == 'username' || $name == $config['userfield'])
-			$field['value'] = $config['username'];
-		if($name == 'password' || $name == $config['passfield'])
-			$field['value'] = $config['password'];
-		
-		if(in_array($name, $exclude))
+		// loop through each form field and construct post
+		foreach($form as $name => &$field)
 		{
-			unset($form[$name]);
-			continue;
+			if($name == 'username' || $name == $config['userfield'])
+				$field['value'] = $config['username'];
+			if($name == 'password' || $name == $config['passfield'])
+				$field['value'] = $config['password'];
+			
+			if(in_array($name, $exclude))
+			{
+				unset($form[$name]);
+				continue;
+			}
+			
+			if(isset($field['value']))
+				$post[$name] = $field['value'];
 		}
-		
-		if(isset($field['value']))
-			$post[$name] = $field['value'];
 	}
 	
 	// check if there are any empty fields
@@ -596,7 +601,7 @@ function get_download_services_login($login_index = NULL, $override_link = 'admi
 			$status = download_services_login($login_index);
 			$config = $services[$login_index];
 			
-			if($status == false)
+			if($status)
 			{
 				$infos['download_service_' . $login_index] = array(
 					'name' => $config['name'] . ' Login Failed',

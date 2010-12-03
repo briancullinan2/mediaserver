@@ -203,6 +203,11 @@ function setting_system_type($settings)
 	}
 }
 
+function setting_enable_https($settings)
+{
+	return generic_validate_boolean_true($settings, 'enable_https');
+}
+
 /**
  * Implementation of setting
  * @ingroup setting
@@ -912,6 +917,22 @@ function configure_settings($settings, $request)
 		),
 	);
 	
+	
+	// https
+	$general['enable_https'] = array(
+		'name' => lang('enable https title', 'Use HTTPS'),
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				lang('enable https description 1', 'Automatically switch to HTTPS when needed, such as for logins and filetransfer.'),
+			),
+		),
+		'type' => 'checkbox',
+		'options' => array(
+			true => 'Switch to HTTPS'
+		),
+		'value' => setting('enable_https'),
+	);
 	
 	// domain and root
 	$general['html_domain'] = array(

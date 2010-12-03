@@ -236,7 +236,7 @@ function setting_cleanup_threashold($settings)
 
 function setting_cron_running()
 {
-	if(isset($GLOBALS['cron_running']) && $GLOBALS['cron_running'] == true)
+	if(isset($GLOBALS['cron_running']) && $GLOBALS['cron_running'])
 		return true;
 	else
 		return false;

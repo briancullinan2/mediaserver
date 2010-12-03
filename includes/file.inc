@@ -90,7 +90,7 @@ function is_internal($handler)
 	if(!is_handler($handler))
 		return;
 		
-	if(get_module($handler, 'internal') == true)
+	if(get_module($handler, 'internal'))
 	{
 		return true;
 	}
@@ -115,7 +115,7 @@ function is_wrapper($handler)
 		return false;
 	
 	// fs_ handlers are never wrappers
-	if(setting('database_enable') == false)
+	if(setting('database_enable'))
 		return false;
 	if($handler == 'files')
 		return false;
@@ -149,7 +149,7 @@ function handles($file, $handler = 'files')
 	// if it isn't a handler at all, return here
 	if($handler != 'files' && 
 		// check the module is enabled first
-		(!is_handler($handler) || dependency($handler) == false)
+		(!is_handler($handler) || dependency($handler))
 	)
 		return false;
 		

@@ -2,6 +2,24 @@
 
 function preload_error()
 {
+	/** For reference
+	$errorTypes = Array(
+        E_ERROR => 'Fatal Error',
+        E_WARNING => 'Warning',
+        E_PARSE => 'Parse Error',
+        E_NOTICE => 'Notice',
+        E_CORE_ERROR => 'Fatal Core Error',
+        E_CORE_WARNING => 'Core Warning',
+        E_COMPILE_ERROR => 'Compilation Error',
+        E_COMPILE_WARNING => 'Compilation Warning',
+        E_USER_ERROR => 'Triggered Error',
+        E_USER_WARNING => 'Triggered Warning',
+        E_USER_NOTICE => 'Triggered Notice',
+        E_STRICT => 'Deprecation Notice',
+        E_RECOVERABLE_ERROR => 'Catchable Fatal Error'
+    );
+	*/
+	
 	/**
 	 * @name Error Levels
 	 * Error codes so we know which errors to print to the user and which to print to debug

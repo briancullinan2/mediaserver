@@ -27,6 +27,7 @@ function theme_live_admin_module_configure()
 			'type' => 'fieldset',
 			'name' => 'Module Status',
 			'collapsible' => true,
+			'collapsed' => true,
 			'options' => $GLOBALS['output']['status']
 		));
 		

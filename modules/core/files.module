@@ -89,7 +89,7 @@ function validate_dir($request)
 		// this checks the input 'dir' is on the actual file system
 		if(is_dir(realpath($tmp)) || 
 			// this check the 'dir' for directories inside archives and disk images
-			handles($request['dir'], $request['handler']) == true ||
+			handles($request['dir'], $request['handler']) ||
 			// this check the dir for wrappers, wrappers can handle their own dir
 			is_wrapper($request['handler'])
 		)
@@ -120,7 +120,7 @@ function validate_file($request)
 		if(setting('alias_enable'))
 			$tmp = alias_replace($request['file']);
 
-		if(is_file(realpath($tmp)) || handles($request['file'], $request['handler']) == true)
+		if(is_file(realpath($tmp)) || handles($request['file'], $request['handler']))
 			return $request['file'];
 		else
 			raise_error('File does not exist!', E_USER);
@@ -606,7 +606,7 @@ function _get_database_files($request, &$count)
 	}
 
 	// merge in all other information for the files
-	if(!empty($files) && validate($request, 'short') == false)
+	if(!empty($files) && validate($request, 'short'))
 		$files = merge_database_info($files, $request['handler']);
 	
 	// only get count if the query is not limited by the limit field

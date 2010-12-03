@@ -97,7 +97,7 @@ function get_path(&$request, $index)
 function invoke_menu($request, $template = false)
 {
 	// output errors only
-	if(isset($request['errors_only']) && $request['errors_only'] == true)
+	if(isset($request['errors_only']) && $request['errors_only'])
 	{
 		register_output_vars('errors_only', true);
 
@@ -126,7 +126,7 @@ function invoke_menu($request, $template = false)
 			if(is_callable($menu['callback']) && setting($menu['module'] . '_enable') != false)
 				call_user_func_array($menu['callback'], array($request));
 			// if there are dependency issues
-			elseif(dependency($menu['module']) == false && setting($menu['module'] . '_enable') == false)
+			elseif(dependency($menu['module']) && setting($menu['module'] . '_enable'))
 			{
 				raise_error('The selected module has dependencies that are not met! <a href="' . 
 					url('admin/modules/' . $menu['module']) . '">Configure</a> this module.'
@@ -140,7 +140,7 @@ function invoke_menu($request, $template = false)
 			$template = 'menu';
 		
 		// just return because the output function was already called
-		if($template == false)
+		if($template)
 			return;
 
 		// close the session so that other scripts can load

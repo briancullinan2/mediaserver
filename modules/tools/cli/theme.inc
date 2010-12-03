@@ -404,7 +404,7 @@ function theme_cli_form_fieldrows($options, $width = 0)
 function theme_cli_form_boolean($config, $width)
 {
 	extract($config);
-	if($value == true)
+	if($value)
 		print cli_wordwrap('[' . (isset($options[0])?machine($name) . ' = ' . $options[0]:'true') . ']', $width) . "\n";
 		
 	if($value == false)
@@ -436,6 +436,11 @@ function theme_cli_form_hidden($config, $width)
 {
 }
 
+
+function theme_cli_form_select($config, $width)
+{
+	theme('form_multiselect', $config, $width);
+}
 
 function theme_cli_form_label($config, $width)
 {
@@ -614,6 +619,6 @@ function theme_cli_form_singular($config, $width)
 	extract($config);
 	theme('info_objects', array('type' => 'info') + $config, $width);
 	
-	$cli_request_queue[] = $href;
+	array_push($cli_request_queue, $href);
 }
 

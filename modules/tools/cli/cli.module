@@ -6,7 +6,7 @@ function setup_cli()
 	add_error_callback('cli_error_callback');
 	
 	// highjack request here!!
-	if(dependency('run_from_cli') == true)
+	if(dependency('run_from_cli'))
 	{
 		if(!isset($_REQUEST['path_info']))
 			$_REQUEST['path_info'] = 'cli';

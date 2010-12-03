@@ -1,5 +1,15 @@
 <?php
 
+/** examples
+
+"C:\Program Files (x86)\VideoLAN\VLC\vlc" -I dummy --start-time=2550 --run-time=30 "F:\VIDEO_TS\VTS_01_4.VOB" :sout=#transcode{vcodec=mp2v,acodec=mp3,channels=2}:std{mux=ps,access=file,dst="C:\Users\Brian Cullinan\Videos\angels & deamons.mpg"}
+"C:\Program Files (x86)\VideoLAN\VLC\vlc" -I dummy --start-time=72 --run-time=30 "F:\VIDEO_TS\VTS_04_6.VOB" :sout=#transcode{vcodec=mp2v,acodec=mp3,channels=2}:std{mux=ps,access=file,dst="C:\Users\Brian Cullinan\Videos\armageddon"}
+"C:\Program Files (x86)\VideoLAN\VLC\vlc" -I dummy --start-time=4230 --run-time=30 "F:\VIDEO_TS\VTS_04_4.VOB" :sout=#transcode{vcodec=mp2v,acodec=mp3,channels=2}:std{mux=ps,access=file,dst="C:\Users\Brian Cullinan\Videos\final fantasy.mpg"}
+
+
+*/
+
+
 function menu_encode()
 {
 	return array(

@@ -859,7 +859,7 @@ Downloading files with database turned off works by using a hex encoded pathname
 All modules use the appropriate handlers for getting file information
 File.php module uses handlers fully now
 Cron.php module doesn't run if not using a database
-handlers are now required to start with db_ for USE_DATABASE == true, and fs_ for USE_DATABASE == false
+handlers are now required to start with db_ for USE_DATABASE, and fs_ for USE_DATABASE
 Common.php only loads handlers that are needed for the type of USE_DATABASE
 
 2009-02-09

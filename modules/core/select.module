@@ -308,7 +308,7 @@ function filter_order_by($request)
 		return array('order' => 'Relevance DESC,Filepath DESC');
 	else
 	{
-		if(isset($request['order_trimmed']) && $request['order_trimmed'] == true)
+		if(isset($request['order_trimmed']) && $request['order_trimmed'])
 		{
 			return array('order' => 'TRIM(LEADING "a " FROM TRIM(LEADING "an " FROM TRIM(LEADING "the " FROM LOWER( ' . 
 								join(' )))), TRIM(LEADING "a " FROM TRIM(LEADING "an " FROM TRIM(LEADING "the " FROM LOWER( ', explode(',', $request['order_by'])) . 

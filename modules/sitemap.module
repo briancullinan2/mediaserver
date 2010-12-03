@@ -83,7 +83,7 @@ function configure_sitemap($settings)
 
 function output_robots($request)
 {
-	if(setting('no_bots') == true)
+	if(setting('no_bots'))
 	{
 		header('Content-Type: text/plain');
 		print "User-agent: *

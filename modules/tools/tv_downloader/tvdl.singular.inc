@@ -47,7 +47,7 @@ function output_tv_download_login($request)
 		// log in to my episodes
 		$result = television_myepisodes_login();
 		
-		if($result['status'] == false)
+		if($result['status'])
 		{
 			$infos['television_login'] = array(
 				'name' => 'MyEpisodes Login',

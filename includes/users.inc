@@ -526,7 +526,7 @@ function session_users($request)
 		// lookup username in table
 		$db_user = db_assoc('SELECT * FROM users WHERE Username=? AND Password=? LIMIT 1', array(
 			$request['username'],
-			'' . $request['password'],
+			$request['password'],
 		));
 		
 		if( !empty($db_user) )
@@ -545,6 +545,7 @@ function session_users($request)
 	// use admin account defined in settings
 	elseif( isset($request['username']) && isset($request['password']) )
 	{
+		// lookup user in admin settings
 		if($request['username'] == 'admin' &&
 			$request['password'] == sha1(setting('secret') . setting('admin_password')))
 		{
@@ -561,6 +562,14 @@ function session_users($request)
 	// if the save variable hasn't been set yet, use guest account
 	if(!isset($save))
 		$save = users_get_guest();
+	else
+	{
+		// regenerate session and set secure cookie
+		session_regenerate_id(true);
+		$id = session_id();
+		$name = session_name();
+		setcookie($name, $id, time()+session_cache_expire(), NULL, $_SERVER['HTTP_HOST'], true, true);
+	}
 
 	// output the user so template can print out login or logout stuff
 	register_output_vars('user', $save);
@@ -667,6 +676,8 @@ function output_users($request)
 		case 'logout':
 			// delete current session
 			session_destroy();
+			
+			session_regenerate_id(true);
 			
 			// login cookies become irrelevant
 			$_COOKIE = array();
