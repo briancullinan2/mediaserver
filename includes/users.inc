@@ -137,7 +137,7 @@ function setup_users()
  */
 function dependency_users($settings)
 {
-	if(setting_installed() == false || setting('database_enable') == false)
+	if(setting_installed() || setting('database_enable'))
 		return array('template');
 	else
 		return array('template', 'database');
@@ -560,8 +560,9 @@ function session_users($request)
 	}
 
 	// if the save variable hasn't been set yet, use guest account
-	if(!isset($save))
+	if(!isset($save)) {
 		$save = users_get_guest();
+	}
 	else
 	{
 		// regenerate session and set secure cookie
@@ -618,7 +619,7 @@ function output_users($request)
 				{
 					$made = @mkdir(setting('local_users') . $request['username']);
 				
-					if($made == false)
+					if($made)
 					{
 						raise_error('Cannot create user directory.', E_DEBUG|E_USER);
 					}

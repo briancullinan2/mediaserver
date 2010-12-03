@@ -345,7 +345,7 @@ function dependency_modrewrite()
 function setting_modrewrite($settings)
 {
 	return true;
-	return (isset($_REQUEST['modrewrite']) && $_REQUEST['modrewrite'] == true);
+	return (isset($_REQUEST['modrewrite']) && $_REQUEST['modrewrite']);
 }
 
 /**

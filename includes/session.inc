@@ -42,7 +42,7 @@ function session_set_conditional($module, $result)
  */
 function dependency_session($settings)
 {
-	if(setting_installed() == false || setting('database_enable') == false)
+	if(setting_installed() || setting('database_enable'))
 		return array();
 	else
 		return array('database');

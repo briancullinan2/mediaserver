@@ -513,7 +513,7 @@ function configure_balancer($settings, $request)
 	}
 	
 	// TODO: put add server removed from request here
-	//   using GLOBALS['validated'] == false
+	//   using GLOBALS['validated']
 	//  raise_error('Server was not added due to errors')
 	//  put original values back in?
 	

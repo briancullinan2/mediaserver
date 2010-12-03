@@ -213,7 +213,7 @@ function dependency($dependency, $ignore_setting = false, $already_checked = arr
 		}
 	
 		// return false if a module is disabled
-		if(isset($GLOBALS['settings'][$dependency . '_enable']) && $GLOBALS['settings'][$dependency . '_enable'] == false && $ignore_setting == false)
+		if(isset($GLOBALS['settings'][$dependency . '_enable']) && $GLOBALS['settings'][$dependency . '_enable'] && $ignore_setting)
 			return false;
 		
 		// if it has gotten this far through all the disproofs then it must be satisfied
@@ -334,7 +334,7 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 		}
 		
 		// if pathinfo is set in the request, get the menu
-		if(isset($request['path_info']) && setting('modrewrite') == true)
+		if(isset($request['path_info']) && setting('modrewrite'))
 		{
 			$path_info = $request['path_info'];
 			unset($request['path_info']);
@@ -342,7 +342,7 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 	}
 	
 	// check with mod rewrite if paths can actually be printed out as directories
-	if(setting('modrewrite') == true && isset($menu))
+	if(setting('modrewrite') && isset($menu))
 		$path_info = get_path($request, $menu);
 	// if we aren't using mod_rewrite, add the path info to the query string
 	elseif(isset($menu))
