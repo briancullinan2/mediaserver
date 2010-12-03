@@ -263,7 +263,7 @@ function scan_watched($dir, $current = '')
 				
 				// resume scanning
 				// check to see if $dir is above the current directory
-				if(substr($current, 0, strlen($dir)) != $dir && $has_resumed)
+				if(substr($current, 0, strlen($dir)) != $dir && !$has_resumed)
 				{
 					if(substr($dir, 0, strlen($file)) != $file)
 						continue;

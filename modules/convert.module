@@ -19,7 +19,7 @@ function configure_convert($settings)
 	
 	$options = array();
 	
-	if(dependency('converter') != false)
+	if(dependency('converter'))
 	{
 		$options['convert_path'] = array(
 			'name' => lang('convert path title', 'Convert Path'),

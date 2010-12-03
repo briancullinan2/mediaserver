@@ -26,5 +26,8 @@ function setting_tools()
  */
 function validate_info_singular($request)
 {
-	return generic_validate_boolean_false($request, 'info_singular');
+	if(!isset($request['info_singular']))
+		return false;
+	else
+		return $request['info_singular'] == true;
 }

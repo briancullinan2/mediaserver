@@ -601,7 +601,7 @@ function get_download_services_login($login_index = NULL, $override_link = 'admi
 			$status = download_services_login($login_index);
 			$config = $services[$login_index];
 			
-			if($status)
+			if(!$status)
 			{
 				$infos['download_service_' . $login_index] = array(
 					'name' => $config['name'] . ' Login Failed',

@@ -134,7 +134,7 @@ function validate_file($request)
  */
 function validate_dirs_only($request)
 {
-	return generic_validate_boolean_true($request, 'dirs_only');
+	return @$request['dirs_only'] == true;
 }
 
 
@@ -606,7 +606,7 @@ function _get_database_files($request, &$count)
 	}
 
 	// merge in all other information for the files
-	if(!empty($files) && validate($request, 'short'))
+	if(!empty($files) && !validate($request, 'short'))
 		$files = merge_database_info($files, $request['handler']);
 	
 	// only get count if the query is not limited by the limit field

@@ -407,7 +407,7 @@ function theme_cli_form_boolean($config, $width)
 	if($value)
 		print cli_wordwrap('[' . (isset($options[0])?machine($name) . ' = ' . $options[0]:'true') . ']', $width) . "\n";
 		
-	if($value)
+	if(!$value)
 		print cli_wordwrap('[' . (isset($options[1])?machine($name) . ' = ' . $options[1]:'false') . ']', $width) . "\n";
 }
 
@@ -455,7 +455,7 @@ function theme_cli_form_multiselect($config, $width)
 
 	$box1 = '';
 	// check if array is associative or not
-	if(array_keys($options) === array_keys(array_keys($options)) && (!isset($force_numeric) || $force_numeric))
+	if(array_keys($options) === array_keys(array_keys($options)) && (!isset($force_numeric) || !$force_numeric))
 	{
 		// numeric keys
 		foreach($options as $i => $option)

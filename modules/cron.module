@@ -294,7 +294,10 @@ function validate_scan_dir($request)
  */
 function validate_ignore_lock($request)
 {
-	return generic_validate_boolean_false($request, 'ignore_lock');
+	if(!isset($request['ignore_lock']))
+		return false;
+	else
+		return $request['ignore_lock'] == true;
 }
 
 /**
@@ -317,7 +320,10 @@ function validate_clean_count($request)
  */
 function validate_scan_skip($request)
 {
-	return generic_validate_boolean_false($request, 'scan_skip');
+	if(!isset($request['scan_skip']))
+		return false;
+	else
+		return $request['scan_skip'] == true;
 }
 
 

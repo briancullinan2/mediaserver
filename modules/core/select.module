@@ -161,7 +161,10 @@ function validate_off($request)
  */
 function validate_short($request)
 {
-	return generic_validate_boolean_false($request, 'short');
+	if(!isset($request['short']))
+		return false;
+	else
+		return $request['short'] == true;
 }
 
 /**
@@ -211,7 +214,10 @@ function validate_order_by($request)
 
 function validate_order_trimmed($request)
 {
-	return generic_validate_boolean_false($request, 'order_trimmed');
+	if(!isset($request['order_trimmed']))
+		return false;
+	else
+		return $request['order_trimmed'] == true;
 }
 
 /**
