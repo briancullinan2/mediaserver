@@ -361,11 +361,11 @@ function template_variables($request)
  */
 function register_output_vars($name, $value, $append = false)
 {
-	if(isset($GLOBALS['output'][$name]) && $append)
+	if(isset($GLOBALS['output'][$name]) && !$append)
 	{
 		raise_error('Variable "' . $name . '" already set!', E_DEBUG);
 	}
-	if($append)
+	if(!$append)
 		$GLOBALS['output'][$name] = $value;
 	elseif(!isset($GLOBALS['output'][$name]))
 		$GLOBALS['output'][$name] = $value;

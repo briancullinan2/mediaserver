@@ -328,7 +328,7 @@ function selectUnder()
 		
 		if(file_top[i]+file_height >= tmp_top && file_top[i] <= tmp_bottom && file_left[i]+file_width >= tmp_left && file_left[i] <= tmp_right)
 		{
-			if(file_changed[i])
+			if(!file_changed[i])
 			{
 				file_changed[i] = true;
 				fileSelect(file_obj[i]);

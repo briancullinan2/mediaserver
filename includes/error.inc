@@ -99,7 +99,10 @@ function preload_error()
  */
 function validate_errors_only($request)
 {
-	return generic_validate_boolean_false($request, 'errors_only');
+	if(!isset($request['errors_only']))
+		return false;
+	else
+		return $request['errors_only'] == true;
 }
 
 
@@ -249,12 +252,10 @@ function error_callback($error, $callback = NULL)
  */
 function setting_verbose($settings)
 {
-	$verbose = generic_validate_boolean_false($settings, 'verbose');
-
-	if(isset($settings['verbose']) && ($settings['verbose'] === "2" || $settings['verbose'] === 2))
-		return 2;
+	if($settings['verbose'] == 0 || $settings['verbose'] == 1 || $settings['verbose'] == 2)
+		return intval($settings['verbose']);
 	else
-		return $verbose;
+		return false;
 }
 
 /**
@@ -264,7 +265,10 @@ function setting_verbose($settings)
  */
 function setting_debug_mode($settings)
 {
-	return generic_validate_boolean_false($settings, 'debug_mode') || !setting_installed();
+	if(!isset($settings['debug_mode']) || $settings['debug_mode'] == false)
+		return !setting_installed();
+	else
+		return $settings['debug_mode'] == true;
 }
 
 
@@ -300,8 +304,8 @@ function configure_error($settings)
 		'type' => 'select',
 		'value' => setting('verbose'),
 		'options' => array(
-			false => 'Do not show any debug information.',
-			true => 'Show important debug information.',
+			0 => 'Do not show any debug information.',
+			1 => 'Show important debug information.',
 			2 => 'Show all notices and debug information.',
 		),
 	);

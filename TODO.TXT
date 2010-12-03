@@ -1,7 +1,6 @@
 ------------- MONOLITHICMEDIA TODO -------------
 ------------- GENERAL TODO -------------
 Add to error_logging API, allow user to specify output files and what errors to output using the PHP ini bitwise syntax
-Add option to switch to SSL on login
 Add sitewatch as a setting to enable the link and logo in the templates
 Fix watched list
 	Cannot remove watch entries because it's not implemented in watched.module

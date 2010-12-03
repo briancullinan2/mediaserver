@@ -43,7 +43,7 @@ function output_requests($request)
 	db_query('INSERT INTO request ' . sql_insert($request_info), array_values($request_info));
 	
 	// get all recent requests
-	$requests = db_assoc('SELECT * FROM (SELECT * FROM request WHERE Filepath=? ORDER BY Time DESC LIMIT 1,4) a ORDER BY Time ASC', array(serialize($_REQUEST)));
+	$requests = db_assoc('SELECT * FROM (SELECT * FROM request WHERE Filepath=? ORDER BY Time DESC LIMIT 0,4) a ORDER BY Time ASC', array(serialize($_REQUEST)));
 	register_output_vars('requests', $requests);
 	
 }
@@ -189,44 +189,6 @@ function rewrite_vars(&$request, &$get, &$post)
 		$request['bt_request'] = $request;
 	}
 	*/
-}
-
-/**
- * Generic validator
- */
-function generic_validate_boolean($request, $index)
-{
-	return validate($request, $index, 'boolean_true');
-}
-
-/**
- * Generic validator
- */
-function generic_validate_boolean_true($request, $index)
-{
-	if(isset($request[$index]))
-	{
-		if($request[$index] || $request[$index] === 'true')
-			return true;
-		elseif(!$request[$index] || $request[$index] == 'false')
-			return false;
-	}
-	return true;
-}
-
-/**
- * Generic validator
- */
-function generic_validate_boolean_false($request, $index)
-{
-	if(isset($request[$index]))
-	{
-		if($request[$index] || $request[$index] === 'true')
-			return true;
-		elseif(!$request[$index] || $request[$index] === 'false')
-			return false;
-	}
-	return false;
 }
 
 /**

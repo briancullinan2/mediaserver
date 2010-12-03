@@ -115,7 +115,7 @@ function is_wrapper($handler)
 		return false;
 	
 	// fs_ handlers are never wrappers
-	if(setting('database_enable'))
+	if(!setting('database_enable'))
 		return false;
 	if($handler == 'files')
 		return false;
@@ -149,7 +149,7 @@ function handles($file, $handler = 'files')
 	// if it isn't a handler at all, return here
 	if($handler != 'files' && 
 		// check the module is enabled first
-		(!is_handler($handler) || dependency($handler))
+		(!is_handler($handler) || !dependency($handler))
 	)
 		return false;
 		

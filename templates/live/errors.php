@@ -56,7 +56,7 @@ function theme_live_debug_block()
 		}
 		
 		?>
-		<a id="hide_link" href="#" onClick="if(this.hidden) { document.getElementById('debug').className='debug hide'; this.hidden=true; this.innerHTML = 'Show'; } else { document.getElementById('debug').className='debug'; this.hidden=false; this.innerHTML = 'Hide'; } return false;">Show</a>
+		<a id="hide_link" href="#" onClick="if(!this.hidden) { document.getElementById('debug').className='debug hide'; this.hidden=true; this.innerHTML = 'Show'; } else { document.getElementById('debug').className='debug'; this.hidden=false; this.innerHTML = 'Hide'; } return false;">Show</a>
 		</div>
 		<?php
 	}
@@ -104,7 +104,7 @@ function theme_live_errors_block()
 			if(count($GLOBALS[$errors]) > 5)
 			{
 				?></div>
-				And <?php print count($GLOBALS[$errors]) - 5; ?> more: <a href="#" onClick="if(this.hidden) { document.getElementById('inner_<?php print $errors; ?>').className='error hide'; this.hidden=true; this.innerHTML = 'Un Hide'; } else { document.getElementById('inner_<?php print $errors; ?>').className='error'; this.hidden=false; this.innerHTML = 'Hide'; }">Un Hide</a>
+				And <?php print count($GLOBALS[$errors]) - 5; ?> more: <a href="#" onClick="if(!this.hidden) { document.getElementById('inner_<?php print $errors; ?>').className='error hide'; this.hidden=true; this.innerHTML = 'Un Hide'; } else { document.getElementById('inner_<?php print $errors; ?>').className='error'; this.hidden=false; this.innerHTML = 'Hide'; }">Un Hide</a>
 				<?php
 			}
 			?></div><?php
@@ -118,7 +118,7 @@ function theme_live_errors_block()
 		?><div class="titlePadding"></div><?php
 	}
 	
-	if(!isset($GLOBALS['output']['errors_only']) || $GLOBALS['output']['errors_only'])
+	if(!isset($GLOBALS['output']['errors_only']) || !$GLOBALS['output']['errors_only'])
 	{
 		?>
 		<div id="tmp_errors"></div>

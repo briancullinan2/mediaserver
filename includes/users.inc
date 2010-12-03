@@ -137,7 +137,7 @@ function setup_users()
  */
 function dependency_users($settings)
 {
-	if(setting_installed() || setting('database_enable'))
+	if(!setting_installed() || !setting('database_enable'))
 		return array('template');
 	else
 		return array('template', 'database');
@@ -560,7 +560,8 @@ function session_users($request)
 	}
 
 	// if the save variable hasn't been set yet, use guest account
-	if(!isset($save)) {
+	if(!isset($save))
+	{
 		$save = users_get_guest();
 	}
 	else

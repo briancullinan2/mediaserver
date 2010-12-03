@@ -273,7 +273,7 @@ function theme__login()
 {
 	theme('header');
 	
-	if($GLOBALS['output']['user']['Username'] != 'guest' || setting('database_enable'))
+	if($GLOBALS['output']['user']['Username'] != 'guest' || !setting('database_enable'))
 		theme('logout_block');
 	else
 		theme('login_block', $GLOBALS['output']['username']);
@@ -283,7 +283,7 @@ function theme__login()
 
 function theme__login_block()
 {
-	if($GLOBALS['output']['user']['Username'] != 'guest' || setting('database_enable'))
+	if($GLOBALS['output']['user']['Username'] != 'guest' || !setting('database_enable'))
 	{
 		theme('logout_block');
 		return;

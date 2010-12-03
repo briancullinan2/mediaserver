@@ -205,7 +205,7 @@ function setting_system_type($settings)
 
 function setting_enable_https($settings)
 {
-	return generic_validate_boolean_true($settings, 'enable_https');
+	return @$settings['enable_https'] == true;
 }
 
 /**
@@ -307,12 +307,10 @@ function setting_html_name($settings)
  */
 function setting_deep_select($settings)
 {
-	$verbose = generic_validate_boolean_false($settings, 'deep_select');
-
-	if(isset($settings['deep_select']) && ($settings['deep_select'] === "2" || $settings['deep_select'] === 2))
-		return 2;
+	if($settings['deep_select'] === 0 || $settings['deep_select'] == 1 || $settings['deep_select'] == 2)
+		return intval($settings['deep_select']);
 	else
-		return $verbose;
+		return false;
 }
 
 /**

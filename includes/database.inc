@@ -127,7 +127,7 @@ function dependency_cannot_read()
 		
 	// check to see if filesystem is writable
 	$result = @db_query('SELECT "test" INTO OUTFILE "/tmp/mediaserver.log"');
-	return $result;
+	return $result == false;
 }
 
 /**
@@ -206,7 +206,7 @@ function status_database($settings)
 		);
 	}
 	
-	if(dependency('cannot_read'))
+	if(!dependency('cannot_read'))
 	{
 		$status['cannot_read'] = array(
 			'name' => 'Database Permissions',
@@ -489,7 +489,7 @@ function configure_database($settings, $request)
 		'value' => $dsn['hostspec'],
 	);
 	
-	if($settings['dberror'])
+	if(!$settings['dberror'])
 	{
 		$options['db_server']['description']['list'][] = 'WARNING: If this information is wrong, it could take up to 1 minute or more to detect these errors.';
 	}

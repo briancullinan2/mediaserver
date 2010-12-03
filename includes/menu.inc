@@ -126,7 +126,7 @@ function invoke_menu($request, $template = false)
 			if(is_callable($menu['callback']) && setting($menu['module'] . '_enable') != false)
 				call_user_func_array($menu['callback'], array($request));
 			// if there are dependency issues
-			elseif(dependency($menu['module']) && setting($menu['module'] . '_enable'))
+			elseif(!dependency($menu['module']) && !setting($menu['module'] . '_enable'))
 			{
 				raise_error('The selected module has dependencies that are not met! <a href="' . 
 					url('admin/modules/' . $menu['module']) . '">Configure</a> this module.'
@@ -140,7 +140,7 @@ function invoke_menu($request, $template = false)
 			$template = 'menu';
 		
 		// just return because the output function was already called
-		if($template)
+		if(!$template)
 			return;
 
 		// close the session so that other scripts can load
@@ -154,7 +154,7 @@ function invoke_menu($request, $template = false)
 		}
 		else
 			raise_error('Deflating not supported!', E_DEBUG);
-		
+			
 		// check module permissions and always do access denied before calling any of the other themes
 		if($user['Privilage'] < $module['privilage'])
 		{
@@ -168,9 +168,9 @@ function invoke_menu($request, $template = false)
 			call_user_func_array($template, array($request));
 
 		// call the default template based on the module name
-		elseif($template === true || $template === '1')
+		elseif($template === true || $template == 1)
 			theme($menu['module']);
-			
+
 		// if it is set to a string then that must be the theme handler for it
 		elseif(is_string($template))
 			theme($template);

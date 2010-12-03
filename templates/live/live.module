@@ -127,7 +127,7 @@ function theme_live_pages($start = 0, $limit = 50, $total = 0)
 	foreach($GLOBALS['output']['pages'] as $i => $page_link)
 	{
 		list($name, $href) = $page_link;
-		if(isset($page_link[2]) && $page_link[2])
+		if(isset($page_link[2]) && !$page_link[2])
 		{
 			?>
 			<div class="page<?php print (!is_numeric($name) || strlen($name) > 2)?'W':''; ?>">

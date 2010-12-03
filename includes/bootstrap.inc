@@ -36,7 +36,7 @@ function bootstrap($mode = 'all')
 			
 			load_module(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'database.inc');
 
-			if(dependency('database'))
+			if(!dependency('database'))
 			{
 				$GLOBALS['database'] = false;
 				raise_error('Database not installed properly!', E_DEBUG);
@@ -118,7 +118,7 @@ function bootstrap($mode = 'all')
 
 function bootstrap_or_disable($module)
 {
-	if(dependency($module))
+	if(!dependency($module))
 	{
 		$GLOBALS['settings'][$module . '_enable'] = false;
 		// this prevents us from disabling required modules on accident

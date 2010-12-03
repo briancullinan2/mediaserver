@@ -1,3 +1,11 @@
+2010-12-03
+Improved many conventions with booleans throughout the site
+	Appears to be working fine now, settings need to be tested
+Added use_https option in general settings
+	This is so logins can change to https
+	This also sets a secure flag on the session cookie
+Removed generic_validate_boolean() functions from the system
+
 2010-11-30
 Improved error API
 	Errors are stored in a "request" database, so all requests can be referred to

@@ -288,21 +288,9 @@ function theme__form_multiselect($config)
 	// check if array is associative or not
 	if(!is_array($value))
 		$value = array($value);
-	if(array_keys($options) === array_keys(array_keys($options)) && (!isset($force_numeric) || $force_numeric))
+	foreach($options as $option => $text)
 	{
-		// numeric keys
-		foreach($options as $i => $option)
-		{
-			?><option value="<?php print htmlspecialchars($option); ?>" <?php print (in_array($option, $value))?'selected="selected"':''; ?>><?php print htmlspecialchars($option); ?></option><?php
-		}
-	}
-	else
-	{
-		// named keys
-		foreach($options as $option => $text)
-		{
-			?><option value="<?php print htmlspecialchars($option); ?>" <?php print (in_array($option, $value))?'selected="selected"':''; ?>><?php print htmlspecialchars($text); ?></option><?php
-		}
+		?><option value="<?php print htmlspecialchars($option); ?>" <?php print (in_array($option, $value))?'selected="selected"':''; ?>><?php print htmlspecialchars($text); ?></option><?php
 	}
 	?></select><?php
 }
@@ -313,7 +301,7 @@ function theme__form_boolean($config)
 	?>
 	<select <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> name="<?php print machine($name); ?>">
 		<option value="true" <?php print ($value)?'selected="selected"':''; ?>><?php print isset($options[0])?htmlspecialchars($options[0]):'true'; ?></option>
-		<option value="false" <?php print ($value)?'selected="selected"':''; ?>><?php print isset($options[1])?htmlspecialchars($options[1]):'false'; ?></option>
+		<option value="false" <?php print (!$value)?'selected="selected"':''; ?>><?php print isset($options[1])?htmlspecialchars($options[1]):'false'; ?></option>
 	</select>
 	<?php
 }
@@ -342,22 +330,9 @@ function theme__form_select($config)
 {
 	extract($config);
 	?><select <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> name="<?php print machine($name); ?>"><?php
-	// check if array is associative or not
-	if(array_keys($options) === array_keys(array_keys($options)) && (!isset($force_numeric) || $force_numeric))
+	foreach($options as $option => $text)
 	{
-		// numeric keys
-		foreach($options as $i => $option)
-		{
-			?><option value="<?php print htmlspecialchars($option); ?>" <?php print ($value == $option)?'selected="selected"':''; ?>><?php print htmlspecialchars($option); ?></option><?php
-		}
-	}
-	else
-	{
-		// named keys
-		foreach($options as $option => $text)
-		{
-			?><option value="<?php print htmlspecialchars($option); ?>" <?php print ($value == $option)?'selected="selected"':''; ?>><?php print htmlspecialchars($text); ?></option><?php
-		}
+		?><option value="<?php print htmlspecialchars($option); ?>" <?php print ($value == $option)?'selected="selected"':''; ?>><?php print htmlspecialchars($text); ?></option><?php
 	}
 	?></select><?php
 }
@@ -371,21 +346,9 @@ function theme__form_checkbox($config)
 {
 	extract($config);
 	// check if array is associative or not
-	if(array_keys($options) === array_keys(array_keys($options)) && (!isset($force_numeric) || $force_numeric))
+	foreach($options as $option => $text)
 	{
-		// numeric keys
-		foreach($options as $i => $option)
-		{
-			?><input <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> <?php print ($value == $option)?'checked="checked"':''; ?> type="<?php print $type; ?>" value="<?php print htmlspecialchars($option); ?>" name="<?php print machine($name) . (($config['type'] == 'checkbox')?'[]':''); ?>" /><?php print htmlspecialchars($option); ?><br /><?php
-		}
-	}
-	else
-	{
-		// named keys
-		foreach($options as $option => $text)
-		{
-			?><input <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> <?php print ($value == $option)?'checked="checked"':''; ?> type="<?php print $type; ?>" value="<?php print htmlspecialchars($option); ?>" name="<?php print machine($name) . (($config['type'] == 'checkbox')?'[]':''); ?>" /><?php print htmlspecialchars($text); ?><br /><?php
-		}
+		?><input <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> <?php print ($value == $option)?'checked="checked"':''; ?> type="<?php print $type; ?>" value="<?php print htmlspecialchars($option); ?>" name="<?php print machine($name) . (($config['type'] == 'checkbox')?'[]':''); ?>" /><?php print htmlspecialchars($text); ?><br /><?php
 	}
 }
 
