@@ -658,12 +658,12 @@ function db_query($query, $args = array())
 		return false;
 	}
 	//if(setting('verbose'))
-		raise_error('DATABASE: ' . $query, E_DEBUG);
+		raise_error($query, E_DEBUG);
 	
 	$result = $GLOBALS['database']->Execute($query, $args);
 
 	if(isset($result->sql))
-		raise_error('DATABASE: ' . $result->sql, E_DEBUG);
+		raise_error($result->sql, E_DEBUG);
 
 	return $result;
 }

@@ -2,52 +2,6 @@
 
 // this is the request processor
 
-function register_request()
-{
-	return array(
-		'name' => 'Requests',
-		'description' => 'Interface for handling browser requests.',
-		'privilage' => 1,
-		'package' => 'core',
-		'internal' => true,
-		'output' => 'output_requests',
-		'database' => array(
-			'Errors' => 'TEXT',
-			'Time' => 'DATETIME',
-			'Filepath' => 'TEXT',
-		),
-	);
-}
-
-// space hold function for table
-function handles_request()
-{
-	return false;
-}
-
-function output_requests($request)
-{
-	// save errors and stuff in the database
-	ksort($_REQUEST);
-	$request_info = array(
-		'Errors' => gzdeflate(serialize(array(
-			'user' => $GLOBALS['user_errors'],
-			'warn' => $GLOBALS['warn_errors'],
-			'note' => $GLOBALS['note_errors'],
-			'debug' => $GLOBALS['debug_errors'],
-		))),
-		'Time' => date('Y-m-d h:i:s', $GLOBALS['tm_start']),
-		'Filepath' => serialize($_REQUEST)
-	);
-	
-	db_query('INSERT INTO request ' . sql_insert($request_info), array_values($request_info));
-	
-	// get all recent requests
-	$requests = db_assoc('SELECT * FROM (SELECT * FROM request WHERE Filepath=? ORDER BY Time DESC LIMIT 0,4) a ORDER BY Time ASC', array(serialize($_REQUEST)));
-	register_output_vars('requests', $requests);
-	
-}
-
 
 /**
  * Validate request variables for use

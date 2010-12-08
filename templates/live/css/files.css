@@ -112,7 +112,7 @@
 	height:2.5em;
 }
 
-.file.highlight {
+.file.highlight, .filesmall.highlight {
 	background:#F7FBFF url(images/browse_select_bg.png) repeat-x scroll center bottom;
 	border:1px solid #D8F0FA;
 }

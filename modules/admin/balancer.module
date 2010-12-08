@@ -294,7 +294,7 @@ function status_balancer($settings)
 		else
 		{
 			$get_status = '';
-			$other_settings = split("\n", $result['content']);
+			$other_settings = explode("\n", $result['content']);
 			
 			// check contents to make sure it is a config
 			if(preg_match('/version ?= ?.+/i', $other_settings[0]) == 0)

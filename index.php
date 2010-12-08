@@ -18,7 +18,7 @@ $request_info = array(
 		'debug' => $GLOBALS['debug_errors'],
 	))),
 );
-db_query('UPDATE request ' . sql_update($request_info) . ' WHERE Time=?', array(
+db_query('UPDATE error ' . sql_update($request_info) . ' WHERE Time=?', array(
 	$request_info['Errors'],
 	date('Y-m-d h:i:s', $GLOBALS['tm_start'])
 ));

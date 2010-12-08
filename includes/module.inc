@@ -237,7 +237,7 @@ function is_include($file)
 
 function get_required_modules()
 {
-	return array('menu', 'template', 'select', 'files', 'users', 'session', 'watched', 'module', 'ids', 'settings');
+	return array('menu', 'template', 'select', 'files', 'users', 'session', 'watched', 'module', 'ids', 'settings', 'error');
 }
 
 function get_dependencies($dependency, $modules_only = false)
@@ -332,13 +332,18 @@ function get_module($module, $property = NULL)
 /**
  * Function for returning all the modules that match certain criteria
  */
-function get_modules($package = NULL)
+function get_modules($property = NULL)
 {
 	$modules = array();
 	
+	if(!isset($GLOBALS['modules']))
+		return $modules;
+	
 	foreach($GLOBALS['modules'] as $module => $config)
 	{
-		if($package === NULL || $config['package'] == $package)
+		if($property !== NULL && isset($config[$property]))
+			$modules[$module] = $config[$property];
+		else
 			$modules[] = $module;
 	}
 	

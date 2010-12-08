@@ -82,7 +82,7 @@ function tokenize($string)
 	
 	$string = strtolower($string);
 	$valid_pieces = array();
-	$pieces = split('[^a-zA-Z0-9]', $string);
+	$pieces = preg_split('[^a-zA-Z0-9]', $string);
 	$return['All'] = $pieces;
 	$return['Unique'] = array_unique($pieces);
 	for($i = 0; $i < count($pieces); $i++)

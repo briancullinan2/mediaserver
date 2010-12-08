@@ -418,7 +418,7 @@ function get_info_code($file)
 			$buffer = trim(fgets($fp, 4096));
 			if($word_count < 4096)
 			{
-				$symbols = split('[^a-zA-Z0-9]', strtolower($buffer), 512);
+				$symbols = preg_split('[^a-zA-Z0-9]', strtolower($buffer), 512);
 				$words = array_merge($symbols, $words);
 				$word_count = count($words);
 			}

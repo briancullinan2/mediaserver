@@ -14,15 +14,15 @@
 	color:#000;
 }
 
-.debug .msg.php {
-	background-color:#FC5;
-}
-
-.debug .msg.db {
+.debug .msg.php_error {
 	background-color:#F97;
 }
 
-.debug .msg.verbose {
+.debug .msg.db_error {
+	background-color:#FC5;
+}
+
+.debug .msg.verbose_error {
 	background-color:#FF9;
 }
 

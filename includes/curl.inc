@@ -274,35 +274,28 @@ function get_xml_result($xpath)
 {
 	if(count($xpath) > 0)
 		return (string)array_shift($xpath);
-	else
-		return;
 }
 
 function escape_urlquery($request)
 {
-	if(strpos($request, '?') !== false)
+	$host = substr($request, 0, strpos($request, '?') + 1);
+	
+	$new_query = '';
+	
+	// split up the query string by amersands
+	$arr = explode('&', substr($request, strpos($request, '?') + 1));
+	if(count($arr) == 1 && $arr[0] == '')
+		$arr = array();
+	
+	// loop through all the query string and generate our new request array
+	foreach($arr as $i => $value)
 	{
-		$host = substr($request, 0, strpos($request, '?') + 1);
+		// split each part of the query string into name value pairs
+		$x = explode('=', $value, 2);
 		
-		$new_query = '';
-		
-		// split up the query string by amersands
-		$arr = explode('&', substr($request, strpos($request, '?') + 1));
-		if(count($arr) == 1 && $arr[0] == '')
-			$arr = array();
-		
-		// loop through all the query string and generate our new request array
-		foreach($arr as $i => $value)
-		{
-			// split each part of the query string into name value pairs
-			$x = explode('=', $value, 2);
-			
-			// set each part of the query string in our new request array
-			$new_query .= (($new_query != '')?'&':'') . $x[0] . '=' . urlencode(isset($x[1])?$x[1]:'');
-		}
-		
-		return $host . $new_query;
+		// set each part of the query string in our new request array
+		$new_query .= (($new_query != '')?'&':'') . $x[0] . '=' . urlencode(isset($x[1])?$x[1]:'');
 	}
-	else
-		return $request;
+	
+	return $host . $new_query;
 }

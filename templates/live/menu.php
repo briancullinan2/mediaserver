@@ -23,7 +23,7 @@ function theme_live_menu()
 
 function theme_live_menu_block()
 {
-	?><ul class=".menu_block"><?php
+	?><ul class="menu_block"><?php
 	
 	// loop through top items and create a list
 	foreach($GLOBALS['output']['menus'] as $path => $config)
@@ -79,6 +79,7 @@ function theme_live_menu_block()
 function theme_live_context_menu()
 {
 	?>
+	<ul class="menu" id="display-menu"><li><a href="">Thumbnails</a></li><li><a href="">Tiles</a></li><li><a href="">List</a></li><li><a href="">Details</a></li></ul>
 	<ul class="menu" id="menu">
 		<li id="option_download"><a href="#">Download File</a></li>
 		<li id="option_open"><a href="#">Open</a></li>

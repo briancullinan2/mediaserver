@@ -32,7 +32,7 @@
 	margin:2px 2px 0;
 }
 
-.menu li a {
+.menu li a, .display-menu a {
 	border:1px solid #FFFFFF;
 	color:#444444;
 	display:block !important;
@@ -53,4 +53,10 @@
 .menu .sep {
 	border-bottom:1px solid #DCDCDC;
 	margin:2px 2px 0;
+}
+
+.display-menu {
+	position:absolute;
+	right:20px;
+	top:20px;
 }

@@ -24,7 +24,7 @@ function setup_sitemap()
 		{
 			if(basename($_REQUEST['path_info']) != 'sitemap.xml')
 			{
-				location('sitemap.xml');
+				$_REQUEST['path_info'] = 'sitemap.xml';
 			}
 			else
 			{
@@ -49,7 +49,7 @@ function setup_sitemap()
  */
 function setting_no_bots($settings)
 {
-	return @$settings['no_bots'] == true;
+	return (!isset($settings['enable_https']) || @$settings['no_bots'] == true);
 }
 
 

@@ -151,6 +151,7 @@ function file_variables($request)
 	if(isset($request['filename'])) register_output_vars('filename', $request['filename']);
 
 	// most template pieces use the category variable, so set that
+	$request['handler'] = validate($request, 'handler');
 	register_output_vars('handler', $request['handler']);
 }
 

@@ -121,7 +121,7 @@ function set_selectable()
 		}
 	});
 	
-	$('.files div.file').hover(
+	$('.files div.file, .files div.filesmall').hover(
 		function()
 		{
 			$('#info_' + $(this).attr('id')).show();
@@ -146,6 +146,12 @@ function set_selectable()
 		} else { 
 			return true; 
 		} 
+	});
+	
+	$(document).mousedown(function(e) {
+		if( e.button == 0 ) { 
+			$('.menu').hide();
+		}
 	});
 	
 	$(document)[0].oncontextmenu = function() {
@@ -188,7 +194,7 @@ $(document).ready(function()
 	
 	
 	// set up context menu highlighting
-	$('#menu a').hover(
+	$('.menu a').hover(
 		function()
 		{
 			$(this).addClass("itemSelect");

@@ -2,17 +2,17 @@
 
 function theme_live_debug_error($id, $error, $no_code = false)
 {
-	if(substr($error->message, 0, 10) == 'PHP ERROR:')
-		$class = 'php';
-	elseif(substr($error->message, 0, 9) == 'DB ERROR:')
-		$class = 'db';
-	elseif(substr($error->message, 0, 8) == 'VERBOSE:')
-		$class = 'verbose';
+	if($error->code & (E_ALL|E_STRICT))
+		$class = 'php_error';
+	elseif($error->code & E_DATABASE)
+		$class = 'db_error';
+	elseif($error->code & E_VERBOSE)
+		$class = 'verbose_error';
 	else
 		$class = '';
 		
 	?>
-	<a href="#" class="msg <?php print $class; ?>" onClick="$('#error_<?php print $id; ?>').toggle(); return false;"><?php print (isset($error->time)?('[' . $error->time . ']'):'') . htmlspecialchars($error->message) . (isset($error->count)?(' repeated ' . $error->count . ' time(s)'):''); ?></a>
+	<a href="#" class="msg <?php print $class; ?>" onClick="$('#error_<?php print $id; ?>').toggle(); return false;"><?php print (isset($error->time)?('[' . $error->time . ']'):'') . htmlspecialchars($error->message) . ((isset($error->count) && $error->count > 0)?(' repeated ' . $error->count . ' time(s)'):''); ?></a>
 	<?php
 	if(!$no_code)
 	{

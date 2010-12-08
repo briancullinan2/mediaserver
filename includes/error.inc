@@ -1,45 +1,120 @@
 <?php
 
+function register_error()
+{
+	return array(
+		'name' => 'Errors and Logging',
+		'description' => 'Settings for handling fatal errors and logging errors.',
+		'privilage' => 1,
+		'settings' => 'error',
+		'output' => 'output_errors',
+		'internal' => true,
+		'package' => 'core',
+		'database' => array(
+			'Errors' => 'TEXT',
+			'Time' => 'DATETIME',
+			'Filepath' => 'TEXT',
+		),
+	);
+}
+
+function bootstrap_error($module)
+{
+	if(!defined('E_' . strtoupper($module)))
+	{
+		$name = 'E_' . strtoupper($module);
+		$bit = pow(2, count($GLOBALS['error_bits']));
+		define($name, $bit);
+		$GLOBALS['error_bits'][$name] = $bit;
+		$GLOBALS['error_names'][$name] = get_module($module, 'name') . ' Errors';
+	}
+}
+
 function preload_error()
 {
-	/** For reference
-	$errorTypes = Array(
-        E_ERROR => 'Fatal Error',
-        E_WARNING => 'Warning',
-        E_PARSE => 'Parse Error',
-        E_NOTICE => 'Notice',
-        E_CORE_ERROR => 'Fatal Core Error',
-        E_CORE_WARNING => 'Core Warning',
-        E_COMPILE_ERROR => 'Compilation Error',
-        E_COMPILE_WARNING => 'Compilation Warning',
-        E_USER_ERROR => 'Triggered Error',
-        E_USER_WARNING => 'Triggered Warning',
-        E_USER_NOTICE => 'Triggered Notice',
-        E_STRICT => 'Deprecation Notice',
-        E_RECOVERABLE_ERROR => 'Catchable Fatal Error'
-    );
-	*/
-	
 	/**
 	 * @name Error Levels
 	 * Error codes so we know which errors to print to the user and which to print to debug
 	 */
 	//@{
 	/** @enum E_DEBUG the DEBUG level error used for displaying errors in the debug template block */
-	define('E_DEBUG',					2);
-	define('E_VERBOSE',					4);
+	define('E_DEBUG',					32768);
+	define('E_VERBOSE',					65536);
 	/** @enum E_USER USER level errors are printed to the user by the templates */
-	define('E_USER',					8);
+	define('E_USER',					131072);
 	/** @enum E_WARN the WARN level error prints a different color in the error block, this is
 	 * used by parts of the site that cause problems that may not be intentional */
-	define('E_WARN',					16);
+	define('E_WARN',					262144);
 	/** @enum E_FATAL the FATAL errors are ones that cause the script to end at an unexpected point */
-	define('E_FATAL',					32);
+	define('E_FATAL',					524288);
 	/** @enum E_NOTE the NOTE error level is used for displaying positive information to users such as
 	 * "account has been created" */
-	define('E_NOTE',					64);
+	define('E_NOTE',					1048576);
+	
+	define('E_ALL_MEDIA',				E_ALL|E_DEBUG|E_FATAL);
 	//@}
+
+	// set up some globals to keep track of readable error names
+	$GLOBALS['error_bits'] = array(
+		// Media server errors
+		'E_DEBUG' => E_DEBUG,
+		'E_VERBOSE' => E_VERBOSE,
+		'E_USER' => E_USER,
+		'E_WARN' => E_WARN,
+		'E_FATAL' => E_FATAL,
+		'E_NOTE' => E_NOTE,
+		'E_ALL_MEDIA' => E_ALL_MEDIA,
 		
+		// PHP predefined errors
+        'E_ERROR' => E_ERROR,
+        'E_WARNING' => E_WARNING,
+        'E_PARSE' => E_PARSE,
+        'E_NOTICE' => E_NOTICE,
+        'E_CORE_ERROR' => E_CORE_ERROR,
+        'E_CORE_WARNING' => E_CORE_WARNING,
+        'E_COMPILE_ERROR' => E_COMPILE_ERROR,
+        'E_COMPILE_WARNING' => E_COMPILE_WARNING,
+        'E_USER_ERROR' => E_USER_ERROR,
+        'E_USER_WARNING' => E_USER_WARNING,
+        'E_USER_NOTICE' => E_USER_NOTICE,
+        'E_STRICT' => E_STRICT,
+        'E_RECOVERABLE_ERROR' => E_RECOVERABLE_ERROR,
+		'E_DEPRECATED' => E_DEPRECATED,
+		'E_USER_DEPRECATED' => E_USER_DEPRECATED,
+		
+		'E_ALL' => E_ALL,
+    );
+
+	$GLOBALS['error_names'] = array(
+		// Media server errors
+		'E_DEBUG' => 'Media Debug Error',
+		'E_VERBOSE' => 'Media Verbose Error',
+		'E_USER' => 'Media User Error',
+		'E_WARN' => 'Media User Warning',
+		'E_FATAL' => 'Media Fatal Error',
+		'E_NOTE' => 'Media User Notice',
+		'E_ALL_MEDIA' => 'All Errors',
+		
+		// PHP predefined errors
+        'E_ERROR' => 'Fatal Error',
+        'E_WARNING' => 'Warning',
+        'E_PARSE' => 'Parse Error',
+        'E_NOTICE' => 'Notice',
+        'E_CORE_ERROR' => 'Fatal Core Error',
+        'E_CORE_WARNING' => 'Core Warning',
+        'E_COMPILE_ERROR' => 'Compilation Error',
+        'E_COMPILE_WARNING' => 'Compilation Warning',
+        'E_USER_ERROR' => 'Triggered Error',
+        'E_USER_WARNING' => 'Triggered Warning',
+        'E_USER_NOTICE' => 'Triggered Notice',
+        'E_STRICT' => 'Deprecation Notice',
+        'E_RECOVERABLE_ERROR' => 'Catchable Fatal Error',
+		'E_DEPRECATED' => 'Deprecated Error',
+		'E_USER_DEPRECATED' => 'Triggered Deprecated Error',
+		
+		'E_ALL' => 'All PHP Errors',
+    );
+
 	/** require pear for error handling */
 	if(include_once 'PEAR.php')
 	{
@@ -108,24 +183,25 @@ function validate_errors_only($request)
 
 function setup_error()
 {
-	$verbose = setting('verbose');
-
 	// do some extra error stuff since we made it to this point
-	if($verbose === 2)
-	{
-		set_error_handler('phperror_wrapper', E_ALL | E_STRICT);
-		error_reporting(E_ALL);
-	}
-	elseif($verbose === true)
-	{
-		set_error_handler('phperror_wrapper', E_ALL);
-		error_reporting(E_ERROR);
-	}
-	else
-		error_reporting(E_ERROR);
-	
+	set_error_handler('phperror_wrapper', E_ALL | E_STRICT);
+	error_reporting(E_ALL | E_STRICT);
 	set_exception_handler('exception_wrapper');
 	PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'error_callback');
+}
+
+function setting_error()
+{
+	$settings = array();
+	
+	// add wrapper functions for validating a server entry
+	for($i = 0; $i < 10; $i++)
+	{
+		$GLOBALS['setting_error_log_' . $i] = create_function('$settings', 'return setting_error_log($settings, \'' . $i . '\');');
+		$settings[] = 'error_log_' . $i;
+	}
+
+	return $settings;
 }
 
 /**
@@ -139,18 +215,18 @@ function setup_error()
 function phperror_wrapper($error_code, $error_str, $error_file, $error_line)
 {
 	if(substr($error_str, 0, 12) == 'mysql error:')
-		raise_error('DB ERROR:' . substr($error_str, 12), E_DEBUG);
+		raise_error('DB ERROR:' . substr($error_str, 12), $error_code|E_DATABASE);
 	else
-		raise_error('PHP ERROR: ' . $error_str . ' in ' . $error_file . ' on line ' . $error_line, E_DEBUG);
+		raise_error($error_str, $error_code);
 
-	return (setting('verbose') != 2);
+	return !(setting('display_errors') & E_VERBOSE);
 }
 
 function exception_wrapper($exception)
 {
-	raise_error('PHP EXCEPTION: ' . $exception->getMessage(), E_DEBUG);
+	raise_error('PHP EXCEPTION: ' . $exception->getMessage(), $exception->getCode());
 
-	return (setting('verbose') != 2);
+	return !(setting('display_errors') & E_VERBOSE);
 }
 
 function raise_error($str, $code)
@@ -160,7 +236,7 @@ function raise_error($str, $code)
 	$error->message = $str;
 	$error->backtrace = debug_backtrace();
 	
-	if(error_reporting() != 0 || setting('verbose') === 2)
+	if(error_reporting() != 0 || setting('display_errors') & E_VERBOSE)
 		error_callback($error);
 }
 
@@ -176,6 +252,8 @@ function add_error_callback($callback)
 	return false;
 }
 
+
+
 /**
  * The callback function for the PEAR error handler to use
  * @param error the pear error object to add to the error stack
@@ -189,53 +267,41 @@ function error_callback($error, $callback = NULL)
 	if($error->code & E_NOTE)
 		$GLOBALS['note_errors'][] = $error->message;
 	
-	// debug information
-	if($error->code & E_DEBUG || 
-		(
-			(
-				$error->code & E_VERBOSE || 
-				$error->code & E_USER
-			) && setting('verbose') === 2)
-		)
-	{
-		if(count($GLOBALS['debug_errors']) < 200)
-		{
-			if(isset($GLOBALS['tm_start']))
-				$error->time = array_sum(explode(' ', microtime())) - $GLOBALS['tm_start'];
+	$module_paths = get_modules('path');
 
-			// add special error handling based on the origin of the error
-			foreach($error->backtrace as $i => $stack)
-			{
-				if($stack['function'] == 'raise_error')
-					break;
-			}
-			$i++;
-			if(isset($error->backtrace[$i]['file']))
-			{
-				if(dirname($error->backtrace[$i]['file']) == 'modules' && basename($error->backtrace[$i]['file']) == 'template.php')
-				{
-					for($i = $i; $i < count($error->backtrace); $i++)
-					{
-						if(dirname($error->backtrace[$i]['file']) != 'modules' || basename($error->backtrace[$i]['file']) != 'template.php')
-							break;
-					}
-				}
-			
-				$error->message .= ' in ' . $error->backtrace[$i]['file'] . ' on line ' . $error->backtrace[$i]['line'];
-			}
-			
-			if($error->code & E_VERBOSE)
-				$error->message = 'VERBOSE: ' . $error->message;
-			
-			// only show verbose errors if it is really verbose!
-			if($error->code & E_DEBUG || setting('verbose'))
-			{
-				if(isset($GLOBALS['debug_errors'][md5($error->message)]))
-					$error->count = isset($GLOBALS['debug_errors'][md5($error->message)]->count)?$GLOBALS['debug_errors'][md5($error->message)]->count++:2;
-				//$GLOBALS['debug_errors'][] = $error;
-				$GLOBALS['debug_errors'][md5($error->message)] = $error;
-			}
+	// add time to error object
+	if(isset($GLOBALS['tm_start']))
+		$error->time = array_sum(explode(' ', microtime())) - $GLOBALS['tm_start'];
+
+	// determine the module that generate the error from the stack trace
+	foreach($error->backtrace as $i => $stack)
+	{
+		if(($stack['function'] == 'raise_error' || $stack['function'] == 'phperror_wrapper') && 
+			isset($error->backtrace[$i+1]['file']))
+		{
+			$error->message .= ' in ' . $error->backtrace[$i+1]['file'] . ' on line ' . $error->backtrace[$i+1]['line'];
 		}
+		
+		if(isset($stack['file']) && ($module = array_search($stack['file'], $module_paths)) && $module != 'error')
+		{
+			if(defined('E_' . strtoupper($module)))
+				$error->code = $error->code | constant('E_' . strtoupper($module));
+			break;
+		}
+	}
+	
+	// initialize error count
+	$error->count = 0;
+	
+	// debug information
+	if($error->code & setting('display_errors'))
+	{
+		// only show verbose errors if it is really verbose!
+		if(isset($GLOBALS['debug_errors'][md5($error->message)]))
+			$GLOBALS['debug_errors'][md5($error->message)]->count++;
+		else
+			//$GLOBALS['debug_errors'][] = $error;
+			$GLOBALS['debug_errors'][md5($error->message)] = $error;
 	}
 		
 	// calling all callbacks
@@ -246,16 +312,34 @@ function error_callback($error, $callback = NULL)
 }
 
 /**
+ * Implementation of validate
+ * @ingroup validate
+ */
+function validate_add_log($request)
+{
+	if(!isset($request['add_log']['save']))
+		return;
+		
+	return array(
+		'location' => isset($request['add_log']['location'])?$request['add_log']['location']:'',
+		'types' => isset($request['add_log']['types'])?$request['add_log']['types']:'',
+		'connection' => isset($request['add_log']['connection'])?$request['add_log']['connection']:'',
+	);
+}
+
+/**
  * Implementation of setting
  * @ingroup setting
  * @return false by default, set to true to record all notices
  */
-function setting_verbose($settings)
+function setting_display_errors($settings)
 {
-	if($settings['verbose'] == 0 || $settings['verbose'] == 1 || $settings['verbose'] == 2)
-		return intval($settings['verbose']);
+	if(isset($settings['display_errors']) && is_numeric($settings['display_errors']))
+		return $settings['display_errors'];
+	elseif(isset($settings['display_errors']))
+		return @error_code_eval($settings['display_errors']) == true;
 	else
-		return false;
+		return E_ALL_MEDIA | E_STRICT;
 }
 
 /**
@@ -271,9 +355,174 @@ function setting_debug_mode($settings)
 		return $settings['debug_mode'] == true;
 }
 
+function setting_error_log($settings, $index)
+{
+	// don't continue with this if stuff is missing
+	if(!isset($settings['error_log_' . $index]) || !isset($settings['error_log_' . $index]['location']) || 
+		!isset($settings['error_log_' . $index]['types']) || !isset($settings['error_log_' . $index]['connection'])
+	)
+		return;
+		
+	// copy values
+	$log = array(
+		'location' => $settings['error_log_' . $index]['location'],
+		'types' => $settings['error_log_' . $index]['types'],
+		'connection' => $settings['error_log_' . $index]['connection'],
+	);
+	
+	// validate connection type
+	if($log['connection'] != 'local' && $log['connection'] != 'ssh2')
+		return;
+	
+	// all validation feedback is provided in the status for error logs
+	if(empty($log['location']))
+		return;
+	
+	return $log;
+}
+
+
+/**
+ * Implementation of setting
+ * @ingroup setting
+ */
+function setting_error_logs($settings)
+{
+	if(!isset($settings['error_logs']))
+		$settings['error_logs'] = array();
+	
+	// make sure all servers with numeric indexes are on the list
+	for($i = 0; $i < 10; $i++)
+	{
+		$log = setting_error_log($settings, $i);
+		if(isset($log))
+			$settings['error_logs'][$i] = $log;
+	}
+	
+	return array_values($settings['error_logs']);
+}
+
+
+function error_code_eval($code)
+{
+	if(preg_match('/^[a-z0-9_&\|\^~<> ]*$/i', $code))
+	{
+		$code = str_replace(array_keys($GLOBALS['error_bits']), array_values($GLOBALS['error_bits']), $code);
+		if(preg_match('/^[0-9&\|\^~<> ]*$/i', $code) == 0)
+		{
+			return -1;
+		}
+		else
+		{
+			return eval('return @(' . $code . ');');
+		}
+	}
+}
+
+function status_error($settings)
+{
+	$settings['error_logs'] = setting('error_logs');
+	
+	// loop through each error log and check a few things
+	$status = array();
+	
+	// load log list from session
+	if($session_balancer = session('error'))
+		$settings['error_logs'] = $session_balancer['error_logs'];
+	
+	if(count($settings['error_logs']) == 0)
+	{
+		$status['no_logs'] = array(
+			'name' => 'No Logs Defined',
+			'status' => 'warn',
+			'description' => array('Use the form below to define logs for the system to keep track of usage and errors.'),
+			'value' => 'Define a log first!'
+		);
+	}
+	else
+	{
+		foreach($settings['error_logs'] as $i => $log_config)
+		{
+			// check that the log file is accessible and writable
+			
+			// check that the types compiles to valid bitwise
+			$result = error_code_eval($log_config['types']);
+			if(!isset($result))
+			{
+				$status['error_log_' . $i] = array(
+					'name' => 'Error Log ' . $i,
+					'status' => 'fail',
+					'value' => 'Invalid characters in error log ' . $i,
+					'description' => array('Error log located at ' . $log_config['location'] . ' has characters that are not alpha numeric or bitwise operators in the Types field.'),
+				);
+			}
+			elseif($result === false)
+			{
+				$status['error_log_' . $i] = array(
+					'name' => 'Error Log ' . $i,
+					'status' => 'fail',
+					'value' => 'Problem evaluating error log ' . $i,
+					'description' => array('Error log located at ' . $log_config['location'] . ' had problems evaluating.'),
+				);
+			}
+			elseif($result === -1)
+			{
+				$status['error_log_' . $i] = array(
+					'name' => 'Error Log ' . $i,
+					'status' => 'fail',
+					'value' => 'Error Log ' . $i . ' has errors',
+					'description' => array('Error log located at ' . $log_config['location'] . ' has invalid error types.'),
+				);
+			}
+		}
+	}
+	
+	if(count($status) == 0)
+	{
+		$status['error_logs'] = array(
+			'name' => 'All Error Logs',
+			'status' => '',
+			'value' => 'No errors found',
+			'description' => array('No errors found in the configuration for logging.'),
+		);
+	}
+	
+	return $status;
+}
+
+function output_errors($request)
+{
+	// save errors and stuff in the database
+	ksort($_REQUEST);
+	$request_info = array(
+		'Errors' => gzdeflate(serialize(array(
+			'user' => $GLOBALS['user_errors'],
+			'warn' => $GLOBALS['warn_errors'],
+			'note' => $GLOBALS['note_errors'],
+			'debug' => $GLOBALS['debug_errors'],
+		))),
+		'Time' => date('Y-m-d h:i:s', $GLOBALS['tm_start']),
+		'Filepath' => serialize($_REQUEST)
+	);
+	
+	db_query('INSERT INTO error ' . sql_insert($request_info), array_values($request_info));
+	
+	// get all recent requests
+	$requests = db_assoc('SELECT * FROM (SELECT * FROM error WHERE Filepath=? ORDER BY Time DESC LIMIT 0,4) a ORDER BY Time ASC', array(serialize($_REQUEST)));
+	register_output_vars('requests', $requests);
+	
+}
 
 function configure_error($settings)
 {
+	$settings['error_logs'] = setting('error_logs');
+	
+	$error_types = implode(' ', array_keys($GLOBALS['error_bits']));
+	
+	// load log list from session
+	if($session_error = session('error'))
+		$settings['error_logs'] = $session_error['error_logs'];
+	
 	$options = array();
 
 	$options['debug_mode'] = array(
@@ -293,20 +542,131 @@ function configure_error($settings)
 		)
 	);
 	
-	$options['setting_verbose'] = array(
-		'name' => 'Verbosity',
-		'status' => 'fail',
+	$options['setting_display_errors'] = array(
+		'name' => 'Display Errors',
+		'status' => '',
 		'description' => array(
 			'list' => array(
-				'Set the level of errors and warnings to display in the debug bar.',
+				'Set the types of errors and warnings to display in the debug bar.',
 			),
 		),
-		'type' => 'select',
-		'value' => setting('verbose'),
+		'type' => 'text',
+		'value' => setting('display_errors'),
+	);
+	
+	if(count($settings['error_logs']) > 0)
+	{
+		$error_logs = array();
+		
+		// display all rules
+		$has_errors = false;
+		foreach($settings['error_logs'] as $i => $log_config)
+		{
+			$error_logs['setting_error_log_' . $i . '[connection]'] = array(
+				'type' => 'hidden',
+				'value' => $log_config['connection'],
+			);
+			$error_logs['setting_error_log_' . $i . '[location]'] = array(
+				'type' => 'hidden',
+				'value' => $log_config['location'],
+			);
+			$error_logs['setting_error_log_' . $i . '[types]'] = array(
+				'type' => 'hidden',
+				'value' => $log_config['types'],
+			);
+			$error_logs['edit_error_log[' . $i . ']'] = array(
+				'type' => 'submit',
+				'value' => 'Edit',
+				'name' => 'Location: ' . $log_config['location'] . ' Types: ' . $log_config['types'],
+			);
+			$error_logs['remove_error_log[' . $i . ']'] = array(
+				'type' => 'submit',
+				'value' => 'Remove',
+			);
+			
+			if(!error_code_eval($log_config['types']))
+				$has_errors = true;
+		}
+
+		
+		if($has_errors)
+		{
+			$options['error_logs'] = array(
+				'name' => 'Manage Error Logs',
+				'status' => 'warn',
+				'description' => array(
+					'list' => array(
+						'Manage the error logging rules.',
+						'There are errors in the rules, see the Module Status.',
+					),
+				),
+				'type' => 'set',
+				'options' => $error_logs,
+			);
+		}
+		else
+		{
+			$options['error_logs'] = array(
+				'name' => 'Manage Error Logs',
+				'status' => '',
+				'description' => array(
+					'list' => array(
+						'Manage the error logging rules.',
+					),
+				),
+				'type' => 'set',
+				'options' => $error_logs,
+			);
+		}
+	}
+	else
+	{
+		$options['error_logs'] = array(
+			'name' => 'Manage Error Logs',
+			'status' => 'warn',
+			'description' => array(
+				'list' => array(
+					'Use the form below to define some error logs.',
+				),
+			),
+			'value' => 'No logs defined',
+		);
+	}
+	
+	$options['add_log'] = array(
+		'name' => 'Add a New Log',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Select the method you would like to store your log, either on the local filesystem or through and SSH connection (required libssh2 to be installed and configured).',
+				'Specify a location for the log to be stored either locally or remotely.',
+				array('Valid types of errors include all default PHP errors, using the PHP error syntax:', 'list' => array('Example: E_ALL & ~E_NOTICE')),
+				array('Valid error types also include the media server custom error specifications:', 'list' => array('Example: E_ALL & ~E_VERBOSE')),
+				array('Errors can also be include/excluded by module/file name:', 'list' => array('Example: E_SELECT & ~E_TEMPLATE')),
+			),
+		),
+		'type' => 'set',
 		'options' => array(
-			0 => 'Do not show any debug information.',
-			1 => 'Show important debug information.',
-			2 => 'Show all notices and debug information.',
+			'add_log[connection]' => array(
+				'type' => 'select',
+				'options' => array('local' => 'Local Filesystem', 'ssh2' => 'SSH to Log Server'),
+				'name' => 'Connection Type',
+				'description' => 'Type of connection to use to connect to error log',
+				'value' => 'local',
+			),
+			'add_log[location]' => array(
+				'type' => 'text',
+				'name' => 'Location',
+				'value' => '',
+				'description' => 'Location to save error files',
+				'value' => '/tmp/mediaserver.log',
+			),
+			'add_log[types]' => array(
+				'type' => 'text',
+				'name' => 'Error Types',
+				'description' => array('Enter the types of errors you would like to store in the log', $error_types),
+				'value' => 'E_SELECT & ~E_TEMPLATE',
+			),
 		),
 	);
 

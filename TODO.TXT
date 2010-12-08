@@ -30,6 +30,8 @@ Store the remote_address in the session, and if it doesn't match up with what is
 Create a unique id and insert it into forms, this is required when the form is submitted
 Make hard links and soft links, hard links are replaced when they are put in to the database, soft links are replaced when they are read from the database, this will allow us to do more network stuff
 ------------- MEDIA MODULES -------------
+Use beatport API
+	Youtube video search
 Search module could be configured to use a different algorithm for searching, possibly an external site 
 	like Google could display results or one of those cool database searching services that cost money
 Add 'guess' parameter to list module to allow randomly selected files from the same genre

@@ -205,7 +205,7 @@ function setting_system_type($settings)
 
 function setting_enable_https($settings)
 {
-	return @$settings['enable_https'] == true;
+	return (!isset($settings['enable_https']) || @$settings['enable_https'] == true);
 }
 
 /**
@@ -250,13 +250,13 @@ function setting_agent_simple()
 		return 'mozilla';
 	elseif(preg_match('/.*(windows-media-player|NSplayer|WMPCE).*/i', setting('agent'), $matches) !== 0)
 		return 'windows';
-	elseif(preg_match('/.*(iTunes).*/i', setting(array(), 'agent'), $matches) !== 0)
+	elseif(preg_match('/.*(iTunes).*/i', setting('agent'), $matches) !== 0)
 		return 'itunes';
-	elseif(preg_match('/.*(mobile).*/i', setting(array(), 'agent'), $matches) !== 0)
+	elseif(preg_match('/.*(mobile).*/i', setting('agent'), $matches) !== 0)
 		return 'mobile';
-	elseif(preg_match('/.*(vlc).*/i', setting(array(), 'agent'), $matches) !== 0)
+	elseif(preg_match('/.*(vlc).*/i', setting('agent'), $matches) !== 0)
 		return 'vlc';
-	elseif(preg_match('/.*Googlebot.*/i', setting(array(), 'agent'), $matches) !== 0)
+	elseif(preg_match('/.*Googlebot.*/i', setting('agent'), $matches) !== 0)
 		return 'googlebot';
 	else
 		return 'mozilla';
@@ -1012,8 +1012,6 @@ function configure_settings($settings, $request)
 		'collapsible' => true,
 		'options' => $general
 	);
-	
-	$options = array_merge($options, configure_error($settings, $request));
 	
 	return $options;
 }

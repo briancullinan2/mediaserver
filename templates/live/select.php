@@ -22,6 +22,7 @@ function theme_live_select()
 	
 	?>
 	<div class="titlePadding"></div>
+	<div class="display-menu" onclick="$('#display-menu').css({top:0, left:0}).position({my: 'left top',at: 'right top',of: this}).show();"><a href="#">View</a></div>
 	<?php
 	
 	theme('files', $GLOBALS['output']['files']);
@@ -137,55 +138,102 @@ function theme_live_files($files = NULL)
 	}
 	else
 	{
-		$scheme = live_get_scheme();
-		if($scheme == 'code' && is_module('code'))
+		if($GLOBALS['output']['settings']['view'] == 'list')
 		{
-			?><div id="codepreview"><?php print $files[0]['HTML']; ?></div>
-			<div class="filestrip">
-			<div class="files" style="width:4160px;"><?php
+			// get longest filename to base widths off of
+			$length = 0;
+			foreach($GLOBALS['output']['files'] as $i => $file)
+			{
+				if(strlen($file['Filename']) > $length)
+					$length = strlen($file['Filename']);
+			}
+			
+			?><div class="files" style="width:4160px;">
+			<table cellpadding="0" cellspacing="" border="0" style="height:130px;">
+			<tr>
+				<td style="vertical-align:top; width:<?php print ceil($length*.75);?>em;"><?php
 			foreach($files as $i => $file)
 			{
-				// check if we should use an image with preview instead of usual file
-				if(handles($file['Filepath'], 'code'))
+				if($i > 0 && $i % ceil(count($files) / 3) == 0)
 				{
-					theme('file_preview_code', $file);
+					?></td><td style="vertical-align:top; width:<?php print ceil($length*.75);?>em;"><?php
 				}
-				else
+				theme('filesmall', $file, $GLOBALS['output']['handler']);
+			}
+			?></td></tr></table></div><?php
+		}
+		elseif(!isset($GLOBALS['output']['settings']['view']) || $GLOBALS['output']['settings']['view'] == 'tiles')
+		{
+			$scheme = live_get_scheme();
+			if($scheme == 'code' && is_module('code'))
+			{
+				?><div id="codepreview"><?php print $files[0]['HTML']; ?></div>
+				<div class="filestrip">
+				<div class="files" style="width:4160px;"><?php
+				foreach($files as $i => $file)
+				{
+					// check if we should use an image with preview instead of usual file
+					if(handles($file['Filepath'], 'code'))
+					{
+						theme('file_preview_code', $file);
+					}
+					else
+					{
+						theme('file', $file, $GLOBALS['output']['handler']);
+					}
+				}
+				?></div></div><?php
+			}
+			elseif($scheme == 'image' && is_module('convert'))
+			{
+				?><img id="preview" src="<?php print url('convert/png?cheight=500&cwidth=500&id=' . $files[0]['id']); ?>" />
+				<div class="filestrip">
+				<div class="files" style="width:4160px;"><?php
+				foreach($files as $i => $file)
+				{
+					// check if we should use an image with preview instead of usual file
+					if(handles($file['Filepath'], 'image'))
+					{
+						theme('file_preview_image', $file);
+					}
+					else
+					{
+						theme('file', $file, $GLOBALS['output']['handler']);
+					}
+				}
+				?></div></div><?php
+			}
+			else
+			{
+				?><div class="files"><?php
+				foreach($files as $i => $file)
 				{
 					theme('file', $file, $GLOBALS['output']['handler']);
 				}
+				?></div><?php
 			}
-			?></div></div><?php
-		}
-		elseif($scheme == 'image' && is_module('convert'))
-		{
-			?><img id="preview" src="<?php print url('convert/png?cheight=500&cwidth=500&id=' . $files[0]['id']); ?>" />
-			<div class="filestrip">
-			<div class="files" style="width:4160px;"><?php
-			foreach($files as $i => $file)
-			{
-				// check if we should use an image with preview instead of usual file
-				if(handles($file['Filepath'], 'image'))
-				{
-					theme('file_preview_image', $file);
-				}
-				else
-				{
-					theme('file', $file, $GLOBALS['output']['handler']);
-				}
-			}
-			?></div></div><?php
-		}
-		else
-		{
-			?><div class="files"><?php
-			foreach($files as $i => $file)
-			{
-				theme('file', $file, $GLOBALS['output']['handler']);
-			}
-			?></div><?php
 		}
 	}
+}
+
+function theme_live_filesmall($file)
+{
+	$html = format_file($file);
+	
+	?>
+	<div class="filesmall file_ext_<?php print $file['Filetype']; ?> file_type_<?php print str_replace('/', ' file_type_', $file['Filemime']); ?>" id="<?php print $file['id']; ?>">
+		<table class="itemTable" cellpadding="0" cellspacing="0">
+			<tr>
+				<td>
+					<div class="thumbsmall">
+						<img src="<?php print url('templates/live/images/s.gif'); ?>" alt="<?php print $file['Filetype']; ?>" height="16" width="16">
+					</div>
+				</td>
+			</tr>
+		</table>
+		<a class="itemLink" href="<?php print $link; ?>"><span><?php print $html['Filename']; ?></span></a>
+	</div>
+	<?php
 }
 
 function theme_live_file_preview_code($file)
