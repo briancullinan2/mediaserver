@@ -60,7 +60,7 @@ function setting_modules_enable($settings, $module = 'modules')
 		return true;
 		
 	// check boolean value
-	return (!isset($settings[$module . '_enable']) || $settings[$module . '_enable']);
+	return (!isset($settings[$module . '_enable']) || ($settings[$module . '_enable'] && $settings[$module . '_enable'] !== 'false'));
 }
 
 function load_modules($dir)

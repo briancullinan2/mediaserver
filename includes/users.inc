@@ -570,7 +570,8 @@ function session_users($request)
 		session_regenerate_id(true);
 		$id = session_id();
 		$name = session_name();
-		setcookie($name, $id, time()+session_cache_expire(), NULL, $_SERVER['HTTP_HOST'], true, true);
+		if(setting('enable_https'))
+			setcookie($name, $id, time()+session_cache_expire(), NULL, $_SERVER['HTTP_HOST'], true, true);
 	}
 
 	// output the user so template can print out login or logout stuff

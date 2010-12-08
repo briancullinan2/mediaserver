@@ -336,8 +336,8 @@ function setting_display_errors($settings)
 {
 	if(isset($settings['display_errors']) && is_numeric($settings['display_errors']))
 		return $settings['display_errors'];
-	elseif(isset($settings['display_errors']))
-		return @error_code_eval($settings['display_errors']) == true;
+	elseif(isset($settings['display_errors']) && ($code = error_code_eval($settings['display_errors'])))
+		return $code;
 	else
 		return E_ALL_MEDIA | E_STRICT;
 }
@@ -349,7 +349,7 @@ function setting_display_errors($settings)
  */
 function setting_debug_mode($settings)
 {
-	if(!isset($settings['debug_mode']) || $settings['debug_mode'] == false)
+	if(!isset($settings['debug_mode']) || !$settings['debug_mode'])
 		return !setting_installed();
 	else
 		return $settings['debug_mode'] == true;
@@ -505,12 +505,14 @@ function output_errors($request)
 		'Filepath' => serialize($_REQUEST)
 	);
 	
-	db_query('INSERT INTO error ' . sql_insert($request_info), array_values($request_info));
-	
-	// get all recent requests
-	$requests = db_assoc('SELECT * FROM (SELECT * FROM error WHERE Filepath=? ORDER BY Time DESC LIMIT 0,4) a ORDER BY Time ASC', array(serialize($_REQUEST)));
-	register_output_vars('requests', $requests);
-	
+	if(setting('database_enable'))
+	{
+		db_query('INSERT INTO error ' . sql_insert($request_info), array_values($request_info));
+		
+		// get all recent requests
+		$requests = db_assoc('SELECT * FROM (SELECT * FROM error WHERE Filepath=? ORDER BY Time DESC LIMIT 0,4) a ORDER BY Time ASC', array(serialize($_REQUEST)));
+		register_output_vars('requests', $requests);
+	}
 }
 
 function configure_error($settings)

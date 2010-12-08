@@ -148,7 +148,7 @@ function theme_live_files($files = NULL)
 					$length = strlen($file['Filename']);
 			}
 			
-			?><div class="files" style="width:4160px;">
+			?><div class="files" style="width:<?php print count($files) * 83; ?>px;">
 			<table cellpadding="0" cellspacing="" border="0" style="height:130px;">
 			<tr>
 				<td style="vertical-align:top; width:<?php print ceil($length*.75);?>em;"><?php
@@ -169,7 +169,7 @@ function theme_live_files($files = NULL)
 			{
 				?><div id="codepreview"><?php print $files[0]['HTML']; ?></div>
 				<div class="filestrip">
-				<div class="files" style="width:4160px;"><?php
+				<div class="files" style="width:<?php print count($files) * 83; ?>px;;"><?php
 				foreach($files as $i => $file)
 				{
 					// check if we should use an image with preview instead of usual file
@@ -188,7 +188,7 @@ function theme_live_files($files = NULL)
 			{
 				?><img id="preview" src="<?php print url('convert/png?cheight=500&cwidth=500&id=' . $files[0]['id']); ?>" />
 				<div class="filestrip">
-				<div class="files" style="width:4160px;"><?php
+				<div class="files" style="width:<?php print count($files) * 83; ?>px;"><?php
 				foreach($files as $i => $file)
 				{
 					// check if we should use an image with preview instead of usual file

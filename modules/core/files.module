@@ -636,16 +636,24 @@ function _get_local_files($request, &$count)
 	if(!isset($request['dir']))
 		$request['dir'] = validate(array('dir' => '/'), 'dir');
 	
+	// replace aliased path with actual path
+	if(setting('alias_enable'))
+		$request['dir'] = alias_replace($request['dir']);
+	
 	// get all the files from the current directory
-	if(!is_module('watched') || is_watched($request['dir']))
-	{
-		$files = scan_directory($request['dir']);
-	}
+	if(isset($request['selected']) && count($request['selected']) > 0)
+		$files = $request['selected'];
 	else
 	{
-		$count = 0;
-		return array();
+		if(!is_module('watched'))
+			$files = scan_directory($request['dir']);
+		elseif(is_watched($request['dir']))
+			$files = scan_directory($request['dir'], 'watched_and_files');
+		else
+			$files = array();
 	}
+	
+	$count = count($files);
 	
 	// merge in file information
 	foreach($files as $i => $file)

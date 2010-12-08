@@ -205,7 +205,10 @@ function setting_system_type($settings)
 
 function setting_enable_https($settings)
 {
-	return (!isset($settings['enable_https']) || @$settings['enable_https'] == true);
+	if(!isset($settings['enable_https']))
+		return false;
+	else
+		return ($settings['enable_https'] && $settings['enable_https'] !== 'false');
 }
 
 /**

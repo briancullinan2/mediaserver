@@ -213,7 +213,7 @@ function dependency($dependency, $ignore_setting = false, $already_checked = arr
 		}
 	
 		// return false if a module is disabled
-		if(isset($GLOBALS['settings'][$dependency . '_enable']) && !$GLOBALS['settings'][$dependency . '_enable'] && !$ignore_setting)
+		if(!setting($dependency . '_enable') && !$ignore_setting)
 			return false;
 		
 		// if it has gotten this far through all the disproofs then it must be satisfied

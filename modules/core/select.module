@@ -42,7 +42,7 @@ function validate_selected($request)
 		$selected = validate($request, 'item');
 	else
 		$selected = $request['selected'];
-		
+	
 	foreach($selected as $i => $id)
 	{
 		if(!is_numeric($id))
@@ -59,7 +59,12 @@ function validate_selected($request)
 	
 	$request['id'] = validate($request, 'id');
 	if(isset($request['id']))
-		$selected = array($request['id']);
+	{
+		if(!is_numeric($request['id']))
+			$selected = array(pack('H*', $request['id']));
+		else
+			$selected = array($request['id']);
+	}
 	
 	return array_values($selected);
 }
@@ -109,7 +114,7 @@ function validate_item($request)
  */
 function validate_id($request)
 {
-	return generic_validate_numeric($request, 'id');
+	return generic_validate_hex($request, 'id');
 }
 
 /**

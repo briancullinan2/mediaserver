@@ -223,6 +223,15 @@ function generic_validate_alphanumeric($request, $index)
 }
 
 /**
+ * Generic validator
+ */
+function generic_validate_hex($request, $index)
+{
+	if(isset($request[$index]) && $request[$index] != '' && preg_match('/^[abcdef0-9]*$/i', $request[$index]) != 0)
+		return $request[$index];
+}
+
+/**
  * Generic validator, prevents breakout bits, accepts all printable characters
  */
 function generic_validate_all_safe($request, $index)
