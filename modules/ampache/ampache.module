@@ -6,9 +6,13 @@ function menu_ampache()
 		'server/xml.server.php' => array(
 			'callback' => 'output_ampache',
 			'type' => MENU_CALLBACK,
-			'arguments' => 'rewrite_ampache',
 		),
 	);
+}
+
+function setup_ampache()
+{
+	include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'theme.inc';
 }
 
 function rewrite_ampache($path_info, $request)
@@ -68,7 +72,6 @@ function validate_action($request)
  */
 function output_ampache($request)
 {
-	include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'theme.inc';
 	set_time_limit(0);
 	
 	// do some ampache compatibility stuff

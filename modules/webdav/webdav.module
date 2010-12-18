@@ -1,0 +1,41 @@
+<?php
+
+
+function menu_webdav()
+{
+	return array(
+		'webdav' => array(
+			'callback' => 'output_webdav',
+			'type' => MENU_CALLBACK,
+		),
+	);
+}
+
+/**
+ * Implementation of setup
+ * @ingroup setup
+ */
+function setup_webdav()
+{
+	load_include('HTTP/WebDAV/Server.php');
+	
+	// load our class
+	include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'webdav.class.php';
+	
+	$GLOBALS['webdav'] = new Monolithic_WebDAV_Server();
+}
+
+function dependency_pear_webdav()
+{
+	return include_path('HTTP/WebDAV/Server.php') !== false;
+}
+
+/**
+ * Implentation of output
+ * @ingroup output
+ */
+function output_webdav($request)
+{
+	$GLOBALS['webdav']->ServeRequest();
+}
+

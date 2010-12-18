@@ -118,7 +118,7 @@ function invoke_menu($request, $template = false)
 			$template = $menu['template'];
 		else
 			$template = $module['template'];
-		
+
 		// permissions are ok
 		if($user['Privilage'] >= $module['privilage'])
 		{

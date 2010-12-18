@@ -260,12 +260,6 @@ function implements_theme($method)
  */
 function theme($request = '')
 {
-	// set the error code
-	if(setting('verbose') === 2)
-		$error_code = E_DEBUG|E_WARN;
-	else
-		$error_code = E_DEBUG;
-	
 	// if the theme function is just being called without any input
 	//   then call the default theme function
 	if($request == '')

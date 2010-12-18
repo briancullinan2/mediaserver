@@ -168,7 +168,7 @@ function get_info_files($file)
 	$fileinfo['Filepath'] = str_replace('\\', '/', $file);
 	$fileinfo['Filename'] = basename($file);
 	$fileinfo['Filesize'] = file_exists($file)?filesize($file):0;
-	$fileinfo['Filemime'] = mime($file);
+	$fileinfo['Filemime'] = is_dir($file)?'httpd/unix-directory':mime($file);
 	$fileinfo['Filedate'] = file_exists($file)?date('Y-m-d h:i:s', filemtime($file)):date('Y-m-d h:i:s', 0);
 	$fileinfo['Filetype'] = type($file);
 	
@@ -429,19 +429,19 @@ function output_handler($file, $handler)
 		// load file from file system
 		if(handles($file, $handler) && is_file($file))
 		{
-			if(($fp = @fopen($file, 'rb')))
+			if(($fp = fopen($file, 'rb')))
 			{
 				return $fp;
 			}
 		}
-		
+		return false;
 	}
 	elseif(module_implements('output', $handler))
 		return invoke_module('output', $handler, array($file, $handler));
 	elseif(is_wrapper($handler) && module_implements('output', get_module($handler, 'wrapper')))
 		return invoke_module('output', get_module($handler, 'wrapper'), array($file, $handler));
-	
-	return false;
+	else
+		return output_handler($file, 'files');
 }
 
 /**

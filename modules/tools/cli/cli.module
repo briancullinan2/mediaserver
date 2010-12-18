@@ -13,7 +13,7 @@ function setup_cli()
 		$GLOBALS['settings']['local_template'] = 'cli';
 		$GLOBALS['templates']['cli'] = array('name' => 'Command Line Interface');
 		
-		$GLOBALS['cli_request_queue'] = array();
+		$GLOBALS['cli_request_stack'] = array();
 	}
 }
 
@@ -144,7 +144,7 @@ function cli_error_callback($error)
 		array_push($GLOBALS['cli_colorize'], $color);
 	}
 	
-	if(($error->code & E_DEBUG && setting('verbose') != false) || ($error->code & E_VERBOSE && setting('verbose') === 2))
+	if(($error->code & E_DEBUG && setting('display_errors') & E_DEBUG) || ($error->code & E_VERBOSE && setting('display_errors') & E_VERBOSE))
 	{
 		$eh = fopen('php://stderr', 'w');
 		fwrite($eh, $error_out);

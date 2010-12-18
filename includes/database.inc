@@ -43,7 +43,8 @@ function setup_database()
 
 	if(function_exists('ADONewConnection'))
 	{
-		$GLOBALS['database'] = ADONewConnection(setting('db_connect'));  # no need for Connect()
+		$GLOBALS['databases'][setting('db_connect')] = ADONewConnection(setting('db_connect'));  # no need for Connect()
+		$GLOBALS['database'] = $GLOBALS['databases'][setting('db_connect')];
 
 		// set fetch mode if the database is set up
 		if($GLOBALS['database'] !== false)
@@ -580,6 +581,17 @@ function configure_database($settings, $request)
 		'type' => 'fieldset',
 		'options' => $options
 	));
+}
+
+function switch_db($dsn)
+{
+	if(isset($GLOBALS['databases'][$dsn]))
+		$GLOBALS['database'] = $GLOBALS['databases'][setting('db_connect')];
+	elseif(parseDSN($dsn) != false)
+	{
+		$GLOBALS['databases'][$dsn] = ADONewConnection($dsn);  # no need for Connect()
+		$GLOBALS['database'] = $GLOBALS['databases'][$dsn];
+	}
 }
 
 function db_assoc($query, $args = array(), $key = NULL)

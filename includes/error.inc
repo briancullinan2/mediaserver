@@ -527,6 +527,26 @@ function configure_error($settings)
 	
 	$options = array();
 
+	$options['error_action'] = array(
+		'name' => lang('error action title', 'Error Handling'),
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				lang('error action description 1', 'Specify the action to take when a fatal error occurs.'),
+				lang('error action description 2', 'It is important to note that an action will only be taken if it is possible.'),
+				lang('error action description 3', 'This is not the only method of error reporting that should be used.'),
+			),
+		),
+		'type' => 'select',
+		'value' => setting('error_action'),
+		'options' => array(
+			lang('error action option 1', 'No Action'),
+			lang('error action option 2', 'Display Error Page'),
+			lang('error action option 3', 'Error Page and E-mail Admin'),
+			lang('error action option 4', 'Just E-mail Administrator'),
+		)
+	);
+	
 	$options['debug_mode'] = array(
 		'name' => lang('debug mode title', 'Debug Mode'),
 		'status' => '',

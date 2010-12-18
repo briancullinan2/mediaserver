@@ -136,7 +136,7 @@ function setting_encoder($settings, $index)
 	);
 	
 	// validate name
-	if(!($encoder['input_ext'] = generic_validate_alphanumeric(array('input_ext' => $encoder['input_ext']), 'input_ext')))
+	if($encoder['input_ext'] != '*' && !($encoder['input_ext'] = generic_validate_alphanumeric(array('input_ext' => $encoder['input_ext']), 'input_ext')))
 		return;
 	if(!($encoder['output_ext'] = generic_validate_alphanumeric(array('output_ext' => $encoder['output_ext']), 'output_ext')))
 		return;
@@ -175,26 +175,14 @@ function setting_encoder_1($settings)
 
 function setting_encoder_4($settings)
 {
-	$settings['encoder_1'] = array(
+	$settings['encoder_4'] = array(
 		'input_ext' => '*',
 		'output_ext' => 'mp4',
 		'command' => '/usr/bin/vlc',
-		'arguments' => '-I dummy - :sout=\'#transcode{vcodec=h264,acodec=mp4a}:std{mux=mp4,access=file,dst=-}\' vlc://quit' . ((setting('verbose') === 2)?' 2>&1':'')
+		'arguments' => '-I dummy - :sout=\'#transcode{vcodec=h264,acodec=mp4a}:std{mux=mp4,access=file,dst=-}\' vlc://quit' . ((setting('display_errors') & E_VERBOSE)?' 2>&1':'')
 	);
-	return setting_encoder($settings, 1);
+	return setting_encoder($settings, 4);
 }
-
-function setting_encoder_3($settings)
-{
-	$settings['encoder_2'] = array(
-		'input_ext' => '*',
-		'output_ext' => 'mp3',
-		'command' => '/usr/bin/lame',
-		'arguments' => '--mp3input -q 3 -S - -'
-	);
-	return setting_encoder($settings, 2);
-}
-
 
 function setting_encoder_2($settings)
 {
@@ -202,10 +190,11 @@ function setting_encoder_2($settings)
 		'input_ext' => '*',
 		'output_ext' => 'mp3',
 		'command' => '/usr/bin/vlc',
-		'arguments' => '-I dummy - :sout=\'#transcode{acodec=mp3}:std{mux=dummy,access=file,dst=-}\' vlc://quit'
+		'arguments' => '-I dummy - :sout=\'#transcode{vcodec=dummy,acodec=mp3}:std{mux=dummy,access=file,dst=-}\' vlc://quit' . ((setting('display_errors') & E_VERBOSE)?' 2>&1':'')
 	);
 	return setting_encoder($settings, 2);
 }
+
 
 /**
  * Implementation of setting
@@ -559,10 +548,6 @@ function output_encode($request)
 {
 	set_time_limit(0);
 	
-	$fp = fopen('/tmp/test.txt', 'a');
-	fwrite($fp, var_export($_SERVER, true));
-	fclose($fp);
-	
 	if(!isset($request['encode']))
 	{
 		// set file
@@ -604,6 +589,7 @@ function output_encode($request)
 	
 	
 	$encoder = get_encoder($request['encode']);
+	
 	if(!isset($encoder))
 	{
 		raise_error('Encode format not supported!', E_USER);
@@ -615,7 +601,6 @@ function output_encode($request)
 
 	// get the file path from the database
 	$files = get_files($request, $count);
-	
 	if($count > 0)
 	{
 		// fix the encode type
@@ -647,11 +632,8 @@ function output_encode($request)
 		return;
 	}
 	
-	if(setting('verbose') !== 2)
-	{
-		header('Content-Type: ' . mime($encoder['output_ext']));
-		header('Content-Disposition: attachment; filename="' . $files[0]['Filename'] . '"');
-	}
+	header('Content-Type: ' . mime($encoder['output_ext']));
+	header('Content-Disposition: attachment; filename="' . $files[0]['Filename'] . '"');
 	
 	// close session so the client can continue browsing the site
 	if(isset($_SESSION)) session_write_close();
@@ -698,6 +680,8 @@ function output_encode($request)
 	   2 => array("pipe", "w"),  // stderr is a pipe that the child will write to
 	);
 
+	raise_error('Executing ' . $cmd, E_DEBUG);
+	
 	// start process
 	$process = proc_open($cmd, $descriptorspec, $pipes, dirname($encoder['command']), NULL); //array('binary_pipes' => true, 'bypass_shell' => true));
 
@@ -712,7 +696,6 @@ function output_encode($request)
 		output_input_stream($if, $pipes[0], $pipes[1], $of);
 		
 		$status = proc_get_status($process);
-		kill9(basename($encoder['command']), $status['pid']);
 		
 		$return_value = proc_close($process);
 	}

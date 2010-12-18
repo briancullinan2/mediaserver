@@ -7,7 +7,7 @@
  * @enum VERSION set version for stuff to reference
  * @enum VERSION_NAME set the name for a text representation of the version
  */
-define('VERSION', 			      '0.9.2');
+define('VERSION', 			      '0.9.3');
 define('VERSION_NAME', 			  'Atlas');
 
 
@@ -521,14 +521,14 @@ function type($file)
 	{
 		if( is_dir($file) )
 		{
-			return 'FOLDER';
+			return '';
 		}
 		elseif( is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)) )
 		{
 			$ext = ext($file);
 			if( $ext == '' )
 			{
-				return 'FILE';
+				return '';
 			}
 			else
 			{
@@ -710,10 +710,9 @@ function output_input_stream(&$if, &$is, &$os, &$of, $kill_with_connection = tru
 	$in_buffer = '';
 	$if_closed = false;
 	$out_buffer = '';
-	$count == 0;
+	$count = 0;
 	while(!feof($os) || (!$if_closed && !feof($if)))
 	{
-		$count++;
 		// if the connection was interrupted then stop looping
 		if($kill_with_connection && connection_status()!=0)
 		{
@@ -726,15 +725,11 @@ function output_input_stream(&$if, &$is, &$os, &$of, $kill_with_connection = tru
 		
 		if(!$if_closed && feof($if))
 		{
-			fclose($if);
-			fclose($is);
 			$if_closed = true;
 		}
 		
-		if(feof($os))
+		if(feof($os) || $count == 1000)
 		{
-			fclose($os);
-			fclose($of);
 			break;
 		}
 		
@@ -752,9 +747,13 @@ function output_input_stream(&$if, &$is, &$os, &$of, $kill_with_connection = tru
 			$out_buffer = fread($os, setting('buffer_size'));
 			fwrite($of, $out_buffer);
 			fflush($of);
-			if($count > 8 && setting('verbose') === 2)
-				break;
 		}
+		// if the count gets to high and nothing can be read then exit
+		//else
+		//{
+		//	sleep(1);
+		//	$count++;
+		//}
 		
 		// if we can write then write more from the input stream
 		if(in_array($is, $write))

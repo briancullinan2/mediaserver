@@ -1,0 +1,7 @@
+name = WebDav Interface
+description = Allow users to access files through a WebDav client.
+privilage = 1
+package = information_output
+depends on[] = pear_installed
+depends on[] = pear_webdav
+template = false

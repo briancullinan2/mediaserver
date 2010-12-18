@@ -585,7 +585,7 @@ function theme_cli_select()
 
 function theme_cli_tool_info()
 {
-	global $cli_request_queue;
+	global $cli_request_stack;
 	theme('header',
 		'Tools: ' . get_module($GLOBALS['output']['module'], 'name'),
 		get_module($GLOBALS['output']['module'], 'description')
@@ -602,9 +602,9 @@ function theme_cli_tool_info()
 	));
 
 	// go through request queue and get more information since fetches can't be run without javascript
-	while(count($cli_request_queue) > 0)
+	while(count($cli_request_stack) > 0)
 	{
-		$request = url(array_pop($cli_request_queue), false, false, true);
+		$request = url(array_pop($cli_request_stack), false, false, true);
 		rewrite_vars($request, $get, $post);
 		invoke_menu($request);
 	}
@@ -615,10 +615,10 @@ function theme_cli_tool_info()
 
 function theme_cli_form_singular($config, $width)
 {
-	global $cli_request_queue;
+	global $cli_request_stack;
 	extract($config);
 	theme('info_objects', array('type' => 'info') + $config, $width);
 	
-	array_push($cli_request_queue, $href);
+	array_push($cli_request_stack, $href);
 }
 
