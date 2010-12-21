@@ -11,9 +11,18 @@ function menu_download_services()
 		'admin/tools/download/search/%service_index' => array(
 			'callback' => 'output_download_services_manual',
 		),
+		'download' => array(
+			'callback' => 'output_download',
+			'name' => 'Download',
+		),
 	);
 }
 
+
+function setup_download_services()
+{
+	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'theme.inc';
+}
 
 function get_download_services()
 {
@@ -444,12 +453,13 @@ function fetch_service_results($search, $index, $type = NULL)
 
 		// match nzbs
 		$count = preg_match_all($services[$index]['match'], $result['content'], $matches);
+print_r($matches[1]);
+exit;
 		if(isset($services[$index]['match_title']))
 		{
 			// get match and replace patterns
 			$count_titles = preg_match_all($services[$index]['match_title'], $result['content'], $titles);
 		}
-print_r($replace);
 
 		if($count > 0)
 		{
@@ -457,7 +467,7 @@ print_r($replace);
 			{
 				$link = get_full_url($services[$index]['search'], $link);
 				// return list of downloads
-				$downloads[$i] = array('link' => array('url' => $link, 'text' => (isset($titles[1][$i])?$titles[1][$i]:$search)));
+				$downloads[$i] = array('link' => array('url' => htmlspecialchars_decode($link), 'text' => (isset($titles[1][$i])?preg_replace('/<\/?[a-z][a-z0-9]*[^<>]*>/i', '', $titles[1][$i]):$search)));
 			}
 		}
 	}
@@ -565,6 +575,28 @@ function output_download_services_login($request)
 	
 	theme('form_fieldrows', $infos);
 }
+
+
+function output_download($request)
+{
+	$request['service_index'] = validate($request, 'service_index');
+	$request['service_search'] = session('download_services');
+	
+	$infos = get_download_services_manual($request['service_index'], $request['service_search']);
+	
+	register_output_vars('infos', array(
+		'movie_downloader' => array(
+			'name' => 'Movie Downloader',
+			'type' => 'fieldset',
+			'options' => $infos
+		),
+	));
+
+	register_output_vars('service_search', $request['service_search']);
+	
+	theme('download');
+}
+
 
 /**
  * Helper function, creates a return for the singular object

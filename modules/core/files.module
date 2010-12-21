@@ -285,7 +285,7 @@ function filter_dir($request)
 				// put folders at top if the handler supports a filetype
 				if(in_array('Filetype', get_columns($request['handler'])))
 				{
-					$order = '(Filetype = "FOLDER") DESC';
+					$order = '(Filemime = "httpd/unix-directory") DESC';
 				}
 			}
 			// show all results underneath directory

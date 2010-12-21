@@ -7,7 +7,7 @@
 .thumb, .file_ext_ .thumb {
 	background-image:url(images/filetypes/file_48x48.png);
 }
-.file_ext_FOLDER .thumb {
+.file_type_unix-directory .thumb {
 	background-image:url(images/filetypes/folder_48x48.png);
 }
 .file_type_audio .thumb {
@@ -30,7 +30,7 @@
 	background-image:url(images/filetypes/archive_48x48.png);
 }
 
-.file_ext_FOLDER .thumbmedium {
+.file_type_unix-directory .thumbmedium {
 	background-image:url(images/filetypes/folder_24x24.png);
 }
 
@@ -40,7 +40,7 @@
 .thumbsmall, .file_ext_ .thumbsmall {
 	background-image:url(images/filetypes/file_16x16.png);
 }
-.file_ext_FOLDER .thumbsmall {
+.file_type_unix-directory .thumbsmall {
 	background-image:url(images/filetypes/folder_16x16.png);
 }
 .file_type_audio .thumbsmall {

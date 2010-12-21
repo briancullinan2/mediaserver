@@ -289,6 +289,16 @@ function error_callback($error, $callback = NULL)
 			break;
 		}
 	}
+		
+	// calling all callbacks
+	foreach($GLOBALS['error_callback'] as $i => $callback)
+	{
+		$display_errors = call_user_func_array($callback, array($error));
+		
+		// do not continue to storing in an array if a callback returns false to cancel
+		if($display_errors === false)
+			return;
+	}
 	
 	// initialize error count
 	$error->count = 0;
@@ -302,12 +312,6 @@ function error_callback($error, $callback = NULL)
 		else
 			//$GLOBALS['debug_errors'][] = $error;
 			$GLOBALS['debug_errors'][md5($error->message)] = $error;
-	}
-		
-	// calling all callbacks
-	foreach($GLOBALS['error_callback'] as $i => $callback)
-	{
-		call_user_func_array($callback, array($error));
 	}
 }
 

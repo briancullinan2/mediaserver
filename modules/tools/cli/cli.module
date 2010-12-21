@@ -3,7 +3,13 @@
 function setup_cli()
 {
 	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'theme.inc';
+	
+	// add callback for redirecting to a log file
 	add_error_callback('cli_error_callback');
+	
+	// set up colorize stack to be used in theme
+	if(!isset($GLOBALS['cli_colorize']))
+		$GLOBALS['cli_colorize'] = array(0);
 	
 	// highjack request here!!
 	if(dependency('run_from_cli'))
@@ -112,9 +118,9 @@ function cli_error_callback($error)
 		
 	$error_out = '';
 	
-	if(substr($error->message, 0, 10) == 'PHP ERROR:')
+	if($error->code & (E_ALL|E_STRICT))
 		$error_out .= "\033[31m";
-	elseif(substr($error->message, 0, 9) == 'DB ERROR:')
+	elseif($error->code & E_DATABASE)
 		$error_out .= "\033[33m";
 	
 	// get width from theme_stack
@@ -137,23 +143,21 @@ function cli_error_callback($error)
 
 	$error_out .= cli_wordwrap((isset($error->time)?('[' . $error->time . ']'):'') . $error->message, $width) . "\n";
 	
-	if(substr($error->message, 0, 10) == 'PHP ERROR:' || substr($error->message, 0, 9) == 'DB ERROR:')
+	if($error->code & (E_ALL|E_STRICT) || $error->code & E_DATABASE)
 	{
 		$color = array_pop($GLOBALS['cli_colorize']);
 		$error_out .= "\033[" . $color . "m";
 		array_push($GLOBALS['cli_colorize'], $color);
 	}
 	
-	if(($error->code & E_DEBUG && setting('display_errors') & E_DEBUG) || ($error->code & E_VERBOSE && setting('display_errors') & E_VERBOSE))
+	if($error->code & setting('display_errors'))
 	{
 		$eh = fopen('php://stderr', 'w');
 		fwrite($eh, $error_out);
 		fflush($eh);
 		fclose($eh);
 	}
-	elseif(setting('debug_mode') && $error->code & E_DEBUG)
-	{
-		print $error_out;
-		flush();
-	}
+	
+	// do not record errors for displaying in a browser
+	return false;
 }

@@ -179,19 +179,17 @@ function _archive_get_info_id3($filepath)
 			$fileinfo['Filename'] = basename($file['filename']);
 			if($file['filename'][strlen($file['filename'])-1] == '/')
 			{
-				$fileinfo['Filetype'] = 'FOLDER';
+				$fileinfo['Filemime'] = 'httpd/unix-directory';
 				$fileinfo['Filesize'] = 0;
 				$fileinfo['Uncompressed'] = 0;
 			}
 			else
 			{
-				$fileinfo['Filetype'] = strtoupper(ext($file['filename']));
+				$fileinfo['Filemime'] = mime($file['filename']);
 				$fileinfo['Filesize'] = $file['compressed_size'];
 				$fileinfo['Uncompressed'] = $file['uncompressed_size'];
 			}
-			if($fileinfo['Filetype'] == '')
-				$fileinfo['Filetype'] = 'FILE';
-			$fileinfo['Filemime'] = mime($file['filename']);
+			$fileinfo['Filetype'] = type($file['filename']);
 			$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['last_modified_timestamp']);
 		
 			// if looking for a specific file, return here
@@ -254,20 +252,15 @@ function _archive_get_info_pear($filepath)
 			// this is how we determine if and internal file is a folder
 			if($fileinfo['Filepath'][strlen($fileinfo['Filepath'])-1] == '/')
 			{
-				$fileinfo['Filetype'] = 'FOLDER';
+				$fileinfo['Filemime'] = 'httpd/unix-directory';
 				$fileinfo['Uncompressed'] = 0;
 			}
 			else
 			{
-				$fileinfo['Filetype'] = strtoupper(ext($fileinfo['Filename']));
+				$fileinfo['Filemime'] = mime($fileinfo['Filepath']);
 				$fileinfo['Uncompressed'] = @$stat['size'];
 			}
-			if($fileinfo['Filetype'] == '')
-				$fileinfo['Filetype'] = 'FILE';
-			else
-				$fileinfo['Filetype'] = strtoupper($fileinfo['Filetype']);
-				
-			$fileinfo['Filemime'] = mime($fileinfo['Filepath']);
+			$fileinfo['Filetype'] = type($fileinfo['Filetype']);
 			$fileinfo['Filedate'] = date("Y-m-d h:i:s", @$stat['mtime']);
 			
 			// if looking for a specific file, return here

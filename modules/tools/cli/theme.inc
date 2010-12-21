@@ -17,11 +17,7 @@ function cli_get_columns_lengths($input)
 }
 
 function cli_colorize($color)
-{
-	// set up colorize stack to be used in theme
-	if(!isset($GLOBALS['cli_colorize']))
-		$GLOBALS['cli_colorize'] = array(0);
-	
+{	
 	array_push($GLOBALS['cli_colorize'], $color);
 	print "\033[" . $color . "m";
 }
@@ -323,6 +319,22 @@ function theme_cli_info_text($value, $width)
 	}
 	elseif(is_array($value))
 		theme('info_objects', $value, $width);
+}
+
+function theme_cli_info_link($value, $width)
+{
+	cli_colorize(34);
+	if(is_string($value))
+	{
+		print cli_wordwrap('[' . $value . ']', $width);
+	}
+	elseif(is_array($value))
+	{
+		extract($value);
+		print cli_wordwrap('[' . ob_theme('info_objects', $text) . ' = ' . $url . ']', $width);
+	}
+	cli_decolorize();
+	print "\n";
 }
 
 function theme_cli_info_loading($value, $width)

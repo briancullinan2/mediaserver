@@ -278,7 +278,10 @@ function get_xml_result($xpath)
 
 function escape_urlquery($request)
 {
-	$host = substr($request, 0, strpos($request, '?') + 1);
+	if(strpos($request, '?') !== false)
+		$host = substr($request, 0, strpos($request, '?') + 1);
+	else
+		return $request;
 	
 	$new_query = '';
 	

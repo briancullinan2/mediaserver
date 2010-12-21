@@ -1,19 +1,21 @@
 /* CSS Document */
 
-
 #footer {
-	margin-top:0.42em;
-	margin-bottom:100px;
+	clear:both;
 }
 
 #footerCtr {
+	margin-top:0.42em;
+	margin-bottom:120px;
+	margin-left:auto;
+	margin-right:auto;
 	border-color:#F7F3F7;
 	background-color:transparent;
 	border-top-style:solid;
 	border-top-width:1px;
 	color:#444444;
 	font-size:100%;
-	width:100%;
+	width:900px;
 }
 
 #footerCtr td {

@@ -69,13 +69,11 @@ function get_info_diskimage($filepath, $include_offset = false)
 				$fileinfo['Filepath'] = $filepath . $file['filename'];
 				$fileinfo['Filename'] = basename($file['filename']);
 				if($file['filename'][strlen($file['filename'])-1] == '/')
-					$fileinfo['Filetype'] = 'FOLDER';
+					$fileinfo['Filemime'] = 'httpd/unix-directory';
 				else
-					$fileinfo['Filetype'] = strtoupper(ext($file['filename']));
-				if($fileinfo['Filetype'] == '')
-					$fileinfo['Filetype'] = 'FILE';
+					$fileinfo['Filemime'] = mime($file['filename']);
+				$fileinfo['Filetype'] = type($file['filename']);
 				$fileinfo['Filesize'] = $file['filesize'];
-				$fileinfo['Filemime'] = mime($file['filename']);
 				$fileinfo['Filedate'] = date("Y-m-d h:i:s", $file['recording_timestamp']);
 				
 				// include the offset if the caller is trying to use this information to stream

@@ -9,7 +9,7 @@ function setting_torservice_0($settings, $type = NULL)
 {
 	$service = array(
 		'name' => 'What.CD',
-		'match' => '/<a href="(torrents\.php\?action=download[^"]*?)"/i',
+		'match' => '/<a href="(torrents\.php\?action=download[^"]*?)"[\s\S]*?MP3/i',
 		'match_title' => '/<tr class="group">[\s\S]*?<td colspan="2">[\s]*(.*?)<span[\s\S]*?<strong>(.*?)</i',
 		'search' => '',
 		'login' => 'http://what.cd/login.php',
@@ -91,6 +91,30 @@ function setting_torservice_3($settings, $type = NULL)
 		$settings['torservice_3'] = array_merge($settings['torservice_3'], $service);
 		
 	return setting_download_service($settings, 'torservice_3');
+}
+
+function setting_torservice_4($settings, $type = NULL)
+{
+	$service = array(
+		'name' => 'Demonoid.ME',
+		'match' => '/<a href="(\/files\/download\/[^"]*)"/i',
+		'search' => 'http://www.demonoid.me/files/?query=%s',
+		'login' => 'https://www.demonoid.me/account_handler.php',
+		'loginfail' => '/<font class="red"><b>Error:/i',
+		'savepath' => setting('torpath'),
+	);
+	
+	if($type == 'movies')
+		$service['search'] = 'http://www.demonoid.me/files/?query=%s&category=1';
+	elseif($type == 'audio')
+		$service['search'] = 'http://www.demonoid.me/files/?query=%s&category=2';
+	elseif($type == 'television')
+		$service['search'] = 'http://www.demonoid.me/files/?query=%s+%d+%d&category=3';
+	
+	if(isset($settings['torservice_4']))
+		$settings['torservice_4'] = array_merge($settings['torservice_4'], $service);
+		
+	return setting_download_service($settings, 'torservice_4');
 }
 
 /**

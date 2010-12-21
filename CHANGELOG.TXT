@@ -1,3 +1,19 @@
+2010-12-21
+Restructures entire Live and Select theme to be more simple, results look very much the same
+Fixed error coloring in CLI module
+Started download_services interface for downloading from every service automatically
+Fixed huge error in cron script, it was erroring out because the error array was getting too big
+	This is not intentional behavior for cron script since it does print a ton of status information
+	Errors function only stores errors if the error callback does not return false
+
+2010-12-19
+Removed use of Filetype = FOLDER since a file on the system could be .folder
+	Changed all the entries in the database
+	Modified template to use Filemime = httpd/unix-directory
+Changed the use of FILE to use a blank Filetype
+Added Demonoid to torrent services
+Worked on webdav module
+
 2010-12-07
 Improved error API greatly
 	Error codes are now completely bitwise including E_MODULE and custom error codes

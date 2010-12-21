@@ -27,7 +27,7 @@ function relocate(href)
 	// load ajax
 	$('#container').load(href, function() {
 		$('#loading').hide();
-		$('body').attr('class', $('#content').attr('class'))
+		$('body').attr('class', $('#mainColumn').attr('class'))
 		$('a.pageLink, #breadcrumb a').click(ajax_click);	
 		set_selectable();
 		document.title = $('#title').html() + " : " + $('#siteTitle a').html();

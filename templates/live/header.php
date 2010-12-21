@@ -82,23 +82,22 @@ function theme_live_body()
 ?>
 <body class="colors_<?php print $scheme; ?>">
 <?php if(is_module('list')) theme('list_block'); ?>
-<div id="bodydiv">
-	<div id="sizer">
-		<div id="expander">
-			<table id="header" cellpadding="0" cellspacing="0" class="colors_bg header">
-				<tr>
-					<td id="siteTitle"><a href="<?php print url('select'); ?>"><?php print setting('html_name'); ?></a></td>
-					<td>
-						<?php if(dependency('search') != false) theme('search_block'); ?>
-					</td>
-					<td id="templates"><?php theme('template_block'); ?></td>
-				</tr>
-			</table>
-<?php if(setting('debug_mode')) theme('debug_block'); ?>
-			<?php if(dependency('language') != false) theme('language_block'); ?>
-			<div id="loading">&nbsp;</div>
-			<?php theme('context_menu'); ?>
-			<div id="container">
+	<div id="expander">
+		<table id="header" cellpadding="0" cellspacing="0" class="colors_bg header">
+			<tr>
+				<td id="siteTitle"><a href="<?php print url('select'); ?>"><?php print setting('html_name'); ?></a></td>
+				<td>
+					<?php if(dependency('search') != false) theme('search_block'); ?>
+				</td>
+				<td id="templates"><?php theme('template_block'); ?></td>
+			</tr>
+		</table>
+		<?php if(setting('debug_mode')) theme('debug_block'); ?>
+		<?php if(dependency('language') != false) theme('language_block'); ?>
+		<div id="loading">&nbsp;</div>
+		<?php theme('context_menu'); ?>
+		<div id="container">
+			<div class="sideColumn right"></div>
 	<?php
 }
 
@@ -108,40 +107,26 @@ function theme_live_container($title = NULL, $description = NULL)
 	$scheme = live_get_colors();
 
 	?>
-	<table width="100%" cellpadding="5" cellspacing="0">
-		<tr>
-			<td>
-				<div id="breadcrumb">
-					<ul>
-					<?php
-					theme('breadcrumbs', $GLOBALS['output']['breadcrumbs'], $title);
-					?>
-					</ul>
-				</div>
-			</td>
-		</tr>
-	</table>
-	<div id="content" class="colors_<?php print $scheme; ?>">
-		<table id="main" cellpadding="0" cellspacing="0">
-			<tr>
-				<td class="sideColumn"></td>
-				<td id="mainColumn">
-					<table id="mainTable" cellpadding="0" cellspacing="0">
-						<tr>
-							<td>
-	<div class="contentSpacing">
-	<?php
-	
-	if(isset($title))
-	{
-		?><h1 class="title" id="title"><?php print $title; ?></h1><?php
-	}
-	if(isset($description))
-	{
-		?><span class="subText"><?php print $description; ?></span><?php
-	}
-	
-	?><div class="titlePadding"></div><?php
-	
-	theme('errors_block');
+	<div id="breadcrumb">
+		<ul>
+		<?php
+		theme('breadcrumbs', $GLOBALS['output']['breadcrumbs'], $title);
+		?>
+		</ul>
+	</div>
+	<div id="mainColumn" class="colors_<?php print $scheme; ?>" cellpadding="0" cellspacing="0">
+		<?php
+		
+		if(isset($title))
+		{
+			?><h1 class="title" id="title"><?php print $title; ?></h1><?php
+		}
+		if(isset($description))
+		{
+			?><span class="subText"><?php print $description; ?></span><?php
+		}
+		
+		?><div class="titlePadding"></div><?php
+		
+		theme('errors_block');
 }

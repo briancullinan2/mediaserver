@@ -41,21 +41,7 @@
 	width:100%;
 }
 
-.filesmall .itemTable {
-	left:0;
-	position:absolute;
-	top:0;
-}
-
-.filesmall .itemTable tr {
-	height:1.5em;
-}
-
-.filesmall .itemTable td {
-	text-align:left;
-}
-
-.filesmall .itemTable div {
+.filesmall .thumb {
 	text-align:left;
 	margin-left:0.2em;
 	height:16px;
@@ -121,24 +107,11 @@
 	height:2.5em;
 }
 
-.file .itemTable {
-	left:0;
-	position:absolute;
-	top:0;
-}
-
-.file .itemTable tr {
-	height:5.5em;
-}
-
-.file .itemTable td {
+.file .thumb {
 	width:7em;
 	text-align:center;
-}
-
-.file .itemTable div {
-	text-align:center;
 	margin-left:1.2em;
+	margin-top:0.6em;
 	height:48px;
 	width:48px;
 }

@@ -557,9 +557,7 @@ function output_encode($request)
 		//   just call output_select so we can display a file selector
 		output_select(array(
 			'dir' => validate($request, 'dir'),
-			'search_Filemime' => '/audio\/|video\//',
-			'search_operator' => 'OR',
-			'search_Filetype' => 'FOLDER',
+			'search_Filemime' => '/audio\/|video\/|httpd\/unix-directory/',
 			'start' => validate($request, 'start'),
 			'limit' => 54,
 		));
