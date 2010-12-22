@@ -9,8 +9,7 @@ function setting_torservice_0($settings, $type = NULL)
 {
 	$service = array(
 		'name' => 'What.CD',
-		'match' => '/<a href="(torrents\.php\?action=download[^"]*?)"[\s\S]*?MP3/i',
-		'match_title' => '/<tr class="group">[\s\S]*?<td colspan="2">[\s]*(.*?)<span[\s\S]*?<strong>(.*?)</i',
+		'match' => 'torservices_what_match',
 		'search' => '',
 		'login' => 'http://what.cd/login.php',
 		'loginfail' => '/<span class="warning">/i',
@@ -25,6 +24,34 @@ function setting_torservice_0($settings, $type = NULL)
 		$settings['torservice_0'] = array_merge($settings['torservice_0'], $service);
 		
 	return setting_download_service($settings, 'torservice_0');
+}
+
+function torservices_what_match($content)
+{
+	$matches = array(
+		'urls' => array(),
+		'titles' => array(),
+	);
+	
+	$group_count = preg_match_all('/<tr class="group">[\s\S]*?<td colspan="2">[\s\S]*?>(?<title>.*?)<span[\s\S]*?<\/tr>([\s]*<tr class="group_torrent[\s\S]*?<\/tr>)*/i', $content, $groups);
+	
+	if($group_count)
+	{
+		foreach($groups[0] as $i => $group)
+		{
+			$torrent_count = preg_match_all('/<a href="(?<url>torrents\.php\?action=download[^"]*)[\s\S]*?<a href="torrents\.php\?[^>]*>(?<format>[^\/]*\/[^\/]*)/i', $group, $torrents);
+			if($torrent_count)
+			{
+				foreach($torrents['url'] as $j => $link)
+				{
+					$matches['urls'][] = $link;
+					$matches['titles'][] = preg_replace('/<\/?[a-z][a-z0-9]*[^<>]*>/i', '', trim($groups['title'][$i])) . ' (' . trim($torrents['format'][$j]) . ')';
+				}
+			}
+		}
+	}
+
+	return $matches;
 }
 
 function setting_torservice_1($settings, $type = NULL)

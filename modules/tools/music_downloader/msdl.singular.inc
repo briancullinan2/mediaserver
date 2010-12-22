@@ -25,6 +25,7 @@ function output_music_download_manual($request)
 
 	if($service_index == count(setting('all_download_services', 'audio'))-1)
 	{
+		// parse through results and compare with what we already have
 		
 	}
 	

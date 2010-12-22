@@ -4,3 +4,12 @@ privilage = 10
 settings = download_services
 package = tools
 session[] = service_search
+
+[database]
+Service = INT
+Search = TEXT
+Time = DATETIME
+Type = TEXT
+Results = TEXT
+ResultsXML = TEXT
+Filepath = TEXT

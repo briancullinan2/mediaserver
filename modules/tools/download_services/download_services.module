@@ -91,10 +91,11 @@ function setting_download_service($settings, $index)
 	if(!($service['name'] = generic_validate_all_safe(array('service_name' => $service['name']), 'service_name')))
 		return;
 
-	// make sure there is valid regular expression
-	if(!($service['match'] = generic_validate_regexp(array('service_match' => $service['match']), 'service_match')))
+	// make sure there is valid regular expression OR a valid function call
+	if(!is_callable($service['match']) && !($service['match'] = generic_validate_regexp(array('service_match' => $service['match']), 'service_match')))
 		return;
-	if(!($service['match_title'] = generic_validate_regexp(array('service_match_title' => $service['match_title']), 'service_match_title')))
+		
+	$service['match_title'] = generic_validate_regexp(array('service_match_title' => $service['match_title']), 'service_match_title');
 		
 	$service['image'] = generic_validate_all_safe(array('service_image' => $service['image']), 'service_image');
 	
@@ -322,15 +323,17 @@ function download_services_login($service)
 
 	$config = $services[$service];
 	
+	// check if the service was recently logged in to using session
 	if(($session_service = session('download_services_' . $service)) && $session_service['logged_in'])
 		return true;
 	
+	// get login page and form
 	$result = fetch($config['login']);
+	
+	list($login, $form, $form_html) = get_login_form($result['content'], isset($config['userfield'])?$config['userfield']:'username');
 	
 	// save session info
 	session('download_services_' . $service, array('logged_in' => false) + $result['cookies']);
-	
-	list($login, $form, $form_html) = get_login_form($result['content'], isset($config['userfield'])?$config['userfield']:'username');
 	
 	// set up exclude for removal
 	if(isset($config['exclude']))
@@ -443,32 +446,78 @@ function fetch_service_results($search, $index, $type = NULL)
 {
 	$downloads = array();
 	
+	// check database for results
+	if(setting('database_enable'))
+	{
+		$results = db_query('SELECT * FROM download_services WHERE Service=? AND Search=? AND Type=? LIMIT 1', array($index, $search, $type));
+		if(count($results))
+		{
+			return unserialize($results[0]['Results']);
+		}
+	}
+	
 	// get the config
 	$services = setting('all_download_services', $type);
 
 	if($services[$index]['search'] != '')
 	{
 		// run query, using television search strings
-		$result = fetch(sprintf($services[$index]['search'], urlencode($search)), array(), array(), session('download_services_' . $index));
+		$query = sprintf($services[$index]['search'], urlencode($search));
+		$result = fetch($query, array(), array(), session('download_services_' . $index));
 
 		// match nzbs
-		$count = preg_match_all($services[$index]['match'], $result['content'], $matches);
-print_r($matches[1]);
-exit;
-		if(isset($services[$index]['match_title']))
+		if(is_callable($services[$index]['match']))
+			$matches = call_user_func_array($services[$index]['match'], array($result['content']));
+		else
 		{
-			// get match and replace patterns
-			$count_titles = preg_match_all($services[$index]['match_title'], $result['content'], $titles);
+			$count = preg_match_all($services[$index]['match'], $result['content'], $urls);
+			
+			$matches['urls'] = $urls[1];
+			
+			if(isset($services[$index]['match_title']))
+			{
+				// get match and replace patterns
+				$count_titles = preg_match_all($services[$index]['match_title'], $result['content'], $titles);
+				
+				$matches['titles'] = preg_replace('/<\/?[a-z][a-z0-9]*[^<>]*>/i', '', $titles[1]);
+			}
 		}
 
-		if($count > 0)
+		if(count($matches['urls']))
 		{
-			foreach($matches[1] as $i => $link)
+			foreach($matches['urls'] as $i => $link)
 			{
 				$link = get_full_url($services[$index]['search'], $link);
+				
 				// return list of downloads
-				$downloads[$i] = array('link' => array('url' => htmlspecialchars_decode($link), 'text' => (isset($titles[1][$i])?preg_replace('/<\/?[a-z][a-z0-9]*[^<>]*>/i', '', $titles[1][$i]):$search)));
+				$downloads[$i] = array(
+					'link' => array(
+						'url' => htmlspecialchars_decode($link),
+						'text' => isset($matches['titles'][$i])?$matches['titles'][$i]:$search
+					)
+				);
 			}
+		}
+		
+		// save results in database
+		if(setting('database_enable'))
+		{
+			$fileinfo = array();
+			$fileinfo['Service'] = $index;
+			$fileinfo['Search'] = $search;
+			$fileinfo['Time'] = date('Y-m-d h:i:s');
+			$fileinfo['Type'] = (!$type)?'':$type;
+			$fileinfo['Results'] = serialize($downloads);
+			$fileinfo['ResultsXML'] = isset($result['xml'])?$result['xml']:$result['content'];
+			$fileinfo['Filepath'] = $query;
+			
+			$results = db_query('SELECT * FROM download_services WHERE Filepath=?', array($query));
+			// add to database
+			if(count($results) == 0)
+				db_query('INSERT INTO download_services ' . sql_insert($fileinfo), array_values($fileinfo));
+			else
+				db_query('UPDATE download_services ' . sql_update($fileinfo) . ' WHERE id=' . $results[0]['id'], array_values($fileinfo));
+			
 		}
 	}
 	

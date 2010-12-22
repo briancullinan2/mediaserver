@@ -3,6 +3,7 @@
 Add authentication API that allows modifying of login
 	This will enable stuff like AD authentication
 Completely REDO API for permissions, it currently sucks, should be more like Drupal
+	This will make interacting with CLI module easier
 Add sitewatch as a setting to enable the link and logo in the templates
 Fix watched list
 	Cannot remove watch entries because it's not implemented in watched.module

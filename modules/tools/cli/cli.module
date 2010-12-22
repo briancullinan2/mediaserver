@@ -14,6 +14,10 @@ function setup_cli()
 	// highjack request here!!
 	if(dependency('run_from_cli'))
 	{
+		session_destroy();
+		session_id('cli');
+		session_start();
+		
 		if(!isset($_REQUEST['path_info']))
 			$_REQUEST['path_info'] = 'cli';
 		$GLOBALS['settings']['local_template'] = 'cli';

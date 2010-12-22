@@ -10,6 +10,15 @@ function dependency_curl_installed($settings)
 	return function_exists('curl_init');
 }
 
+// specify a static file for storing cookies
+function setting_curl_cookies($settings)
+{
+	if(isset($settings['curl_cookies']) && is_writable($settings['curl_cookies']))
+		return $settings['curl_cookies'];
+	else
+		return tempnam('dummy', 'curl_cookies_');
+}
+
 /**
  * Fetch remote pages using curl
  * @param url the url of the page to fetch
@@ -96,7 +105,7 @@ function fetch($url, $post = array(), $headers = array(), $cookies = array())
 		}
 		curl_setopt($ch, CURLOPT_COOKIE, $cookie);
 		// use a cookie file just because of follow_location
-		$cookie_file = tempnam('dummy', 'cookie_');
+		$cookie_file = setting('curl_cookies');
 		if($cookie_file !== false)
 		{
 			curl_setopt($ch, CURLOPT_COOKIEFILE, $cookie_file);

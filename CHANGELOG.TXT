@@ -1,4 +1,13 @@
 2010-12-21
+Worked on download_services API
+	Downloaders will be able to tie in to the services, make requests, then analyze those requests later
+	Download searches are stored in the database for reference and caching
+Added API for specifying a function for retrieving url/title pairs from search results for each service
+	Many services will use an RSS feed parser in the future
+CLI now uses a static session but works from command line, permissions should be determined by the user running the script
+Added a cookie jar file setting for curl, intended for use from command line, but may not be useful
+
+2010-12-20
 Restructures entire Live and Select theme to be more simple, results look very much the same
 Fixed error coloring in CLI module
 Started download_services interface for downloading from every service automatically
