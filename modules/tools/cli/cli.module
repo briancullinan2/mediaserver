@@ -5,32 +5,41 @@ function setup_cli()
 	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'theme.inc';
 	
 	// add callback for redirecting to a log file
-	add_error_callback('cli_error_callback');
+	add_error_callback('cli_error_callback');	
+	$GLOBALS['settings']['debug_mode'] = false;
 	
 	// set up colorize stack to be used in theme
 	if(!isset($GLOBALS['cli_colorize']))
 		$GLOBALS['cli_colorize'] = array(0);
 	
-	// highjack request here!!
-	if(dependency('run_from_cli'))
+	// use a stack for performing multiple requests
+	$GLOBALS['cli_request_stack'] = array();
+	
+	// this makes it possible to do one time setting changes
+	$settings_changed = module_get_new_settings(cli_parse_argv());
+	
+	// set up persistent session
+	$session = setting('cli_session');
+	if(isset($session))
 	{
 		session_destroy();
-		session_id('cli');
+		session_save_path(dirname($session));
+		session_id(basename($session));
 		session_start();
-		
-		if(!isset($_REQUEST['path_info']))
-			$_REQUEST['path_info'] = 'cli';
-		$GLOBALS['settings']['local_template'] = 'cli';
-		$GLOBALS['templates']['cli'] = array('name' => 'Command Line Interface');
-		
-		$GLOBALS['cli_request_stack'] = array();
 	}
+	
+	// override templates
+	if(!isset($_REQUEST['path_info']))
+		$_REQUEST['path_info'] = 'cli';
+	$GLOBALS['settings']['local_template'] = 'cli';
+	$GLOBALS['templates']['cli'] = array('name' => 'Command Line Interface');
 }
 
-function rewrite_cli($path_info, $request)
+function cli_parse_argv()
 {
 	// this is the bulk of the command line processing
-	$request['path_info'] = $GLOBALS['argv'][1];
+	if(isset($GLOBALS['argv'][1]))
+		$request['path_info'] = $GLOBALS['argv'][1];
 	
 	foreach($GLOBALS['argv'] as $i => $value)
 	{
@@ -48,7 +57,29 @@ function rewrite_cli($path_info, $request)
 			}
 		}
 	}
+	return $request;
+}
+
+// specify a static file for storing cookies
+function setting_cli_session($settings)
+{
+	if(isset($settings['cli_session']) && 
+		((!file_exists($settings['cli_session']) && is_writable(dirname($settings['cli_session']))) || 
+		is_writable($settings['cli_session']))
+	)
+	{
+		if(preg_match('/^[a-zA-Z0-9-,]+$/i', basename($settings['cli_session'])))
+			return $settings['cli_session'];
+		else
+			raise_error('Invalid session name specified!', E_DEBUG|E_ERROR);
+	}
+}
+
+function rewrite_cli($path_info, $request)
+{
+	$request = array_merge($request, cli_parse_argv());
 	
+	// highjack request here!!
 	if(validate($request, 'path_info') != 'cli')
 		rewrite_vars($request, $get, $post);
 	
@@ -109,10 +140,11 @@ function dependency_run_from_cli($settings)
 function output_cli($request)
 {
 	// check if it is being run from the command line and display useful setting information
-	if(isset($argv) && isset($argv[1]) && $argv[1] == '-conf')
+	if(isset($argv[1]) && $argv[1] == '-conf')
 	{
 	}
-	
+	// if nothing is specified display entire menu
+	theme('menu');
 }
 
 function cli_error_callback($error)

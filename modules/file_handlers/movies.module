@@ -297,7 +297,11 @@ function get_info_movies($file)
 	if(empty($names))
 		return $fileinfo;
 	
-	list($distance, $key) = get_closest($search_text, $names);
+	$closest = get_closest($search_text, $names);
+	if(!$closest)
+		return false;
+	else
+		list($distance, $key) = $closest;
 	
 	// if the distance is greater than the bigger string, they are completely different, and can't be paired up
 	if($distance == max($search_text, $names[$key]))

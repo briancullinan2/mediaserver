@@ -6,7 +6,7 @@ function menu_tv_download()
 		'admin/tools/television/downloader' => array(
 			'callback' => 'output_tv_download',
 		),
-		'admin/tools/television/downloader/login/%login_index' => array(
+		'admin/tools/television/downloader/login/%service_index' => array(
 			'callback' => 'output_tv_download_login'
 		),
 		'admin/tools/television/downloader/%info_singular_step_television' => array(

@@ -1,0 +1,4 @@
+name = Artists
+description = Wrapper for displaying artist and album information.
+wrapper = audio
+columns[] = SongCount

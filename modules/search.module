@@ -219,7 +219,7 @@ function filter_search($request)
 	// search every column for the same string
 	else
 	{
-		$columns = get_columns($request['handler']);
+		$columns = get_columns(validate($request, 'handler'));
 	}
 		
 	// array for each column
@@ -278,13 +278,15 @@ function filter_search($request)
 	
 	// remove leading commas
 	if(!empty($result['columns']))
+	{
 		$result['columns'] .= ' AS Relevance';
+		$result['order'] = 'Relevance DESC';
+	}
 	
 	// set the new props
 	if(count($parts) > 0)
 	{
 		$result['where'] = join((isset($request['search_operator'])?(' ' . $request['search_operator'] . ' '):' OR '), $parts);
-		$result['order'] = 'Relevance DESC';
 	}
 		
 	return $result;

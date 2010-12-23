@@ -4,6 +4,7 @@ privilage = 10
 settings = download_services
 package = tools
 session[] = service_search
+internal = true
 
 [database]
 Service = INT
@@ -11,5 +12,5 @@ Search = TEXT
 Time = DATETIME
 Type = TEXT
 Results = TEXT
-ResultsXML = TEXT
+ResultsXml = LONGBLOB
 Filepath = TEXT

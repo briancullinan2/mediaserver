@@ -11,12 +11,19 @@ function register_error()
 		'internal' => true,
 		'package' => 'core',
 		'database' => array(
-			'Errors' => 'TEXT',
+			'Errors' => 'LONGBLOB',
 			'Time' => 'DATETIME',
 			'Filepath' => 'TEXT',
 		),
 	);
 }
+
+// space hold function for table
+function handles_error()
+{
+	return false;
+}
+
 
 function bootstrap_error($module)
 {
@@ -165,6 +172,9 @@ function preload_error()
 	// stores a list of callback functions for error processing
 	$GLOBALS['error_callback'] = array();
 	
+	// error connections
+	$GLOBALS['error_handles'] = array();
+	
 	setup_error();
 }
 
@@ -188,6 +198,25 @@ function setup_error()
 	error_reporting(E_ALL | E_STRICT);
 	set_exception_handler('exception_wrapper');
 	PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'error_callback');
+	
+	// open all the error logs for writing
+	$error_logs = setting('error_logs');
+
+	foreach($error_logs as $i => $config)
+	{
+		if(!isset($GLOBALS['error_handles'][$i]) || !is_resource($GLOBALS['error_handles'][$i]))
+		{
+			if($config['connection'] == 'local')
+				$GLOBALS['error_handles'][$i] = fopen($config['location'], 'w');
+			elseif($config['connection'] == 'ssh2')
+			{
+				$params = parseDSN($config['location']);
+				$GLOBALS['error_handles'][$i] = ssh2_connect($params['hostspec'], isset($params['port'])?$params['port']:22);
+				ssh2_auth_password($GLOBALS['error_handles'][$i], $params['username'], $params['password']);
+				ssh2_exec($GLOBALS['error_handles'][$i], 'echo "" > ' . $params['database']);
+			}
+		}
+	}
 }
 
 function setting_error()
@@ -272,18 +301,18 @@ function error_callback($error, $callback = NULL)
 	// add time to error object
 	if(isset($GLOBALS['tm_start']))
 		$error->time = array_sum(explode(' ', microtime())) - $GLOBALS['tm_start'];
-
+		
 	// determine the module that generate the error from the stack trace
 	foreach($error->backtrace as $i => $stack)
 	{
-		if(($stack['function'] == 'raise_error' || $stack['function'] == 'phperror_wrapper') && 
-			isset($error->backtrace[$i+1]['file']))
+		if(($stack['function'] == 'raise_error' || $stack['function'] == 'phperror_wrapper') && isset($error->backtrace[$i+1]['file']))
 		{
 			$error->message .= ' in ' . $error->backtrace[$i+1]['file'] . ' on line ' . $error->backtrace[$i+1]['line'];
 		}
 		
 		if(isset($stack['file']) && ($module = array_search($stack['file'], $module_paths)) && $module != 'error')
 		{
+			//$error->message = '[' . strtoupper($module) . ']' . $error->message;
 			if(defined('E_' . strtoupper($module)))
 				$error->code = $error->code | constant('E_' . strtoupper($module));
 			break;
@@ -292,19 +321,11 @@ function error_callback($error, $callback = NULL)
 		
 	// calling all callbacks
 	foreach($GLOBALS['error_callback'] as $i => $callback)
-	{
-		$display_errors = call_user_func_array($callback, array($error));
-		
-		// do not continue to storing in an array if a callback returns false to cancel
-		if($display_errors === false)
-			return;
-	}
-	
-	// initialize error count
-	$error->count = 0;
+		call_user_func_array($callback, array($error));
 	
 	// debug information
-	if($error->code & setting('display_errors'))
+	$error->count = 0;
+	if(($error->code & setting('display_errors')) && setting('debug_mode'))
 	{
 		// only show verbose errors if it is really verbose!
 		if(isset($GLOBALS['debug_errors'][md5($error->message)]))
@@ -312,6 +333,29 @@ function error_callback($error, $callback = NULL)
 		else
 			//$GLOBALS['debug_errors'][] = $error;
 			$GLOBALS['debug_errors'][md5($error->message)] = $error;
+	}
+	
+	// write errors to all logs
+	$error_logs = setting('error_logs');
+
+	foreach($error_logs as $i => $config)
+	{
+		if(is_string($config['types']))
+			$config['types'] = error_code_eval($config['types']);
+
+		if($config['types'] == -1)
+			continue;
+
+		if(($error->code & $config['types']) && isset($GLOBALS['error_handles'][$i]) && is_resource($GLOBALS['error_handles'][$i]))
+		{
+			if($config['connection'] == 'local')
+				fwrite($GLOBALS['error_handles'][$i], $error->message . "\n");
+			elseif($config['connection'] == 'ssh2')
+			{
+				$params = parseDSN($config['location']);
+				ssh2_exec($GLOBALS['error_handles'][$i], 'echo "' . addslashes($error->message) . '" >> ' . $params['database']);
+			}
+		}
 	}
 }
 
@@ -381,6 +425,8 @@ function setting_error_log($settings, $index)
 	// all validation feedback is provided in the status for error logs
 	if(empty($log['location']))
 		return;
+	if(strpos($log['location'], '://') === false)
+		$log['location'] = 'ssh://' . $log['location'];
 	
 	return $log;
 }
@@ -421,6 +467,31 @@ function error_code_eval($code)
 			return eval('return @(' . $code . ');');
 		}
 	}
+}
+
+function eval_error_code($code)
+{
+	$result = array();
+
+	// convert the number back in to a string
+	foreach($GLOBALS['error_bits'] as $error => $bits)
+	{
+		if(($code & $bits) == $bits)
+			$result[] = $error;
+	}
+
+	if($code != E_ALL_MEDIA && $code != E_ALL)
+	{
+		$all_errors = explode(' | ', eval_error_code(E_ALL));
+		$all_media_errors = explode(' | ', eval_error_code(E_ALL_MEDIA));
+		
+		if(($code & E_ALL) == E_ALL)
+			$result = array_merge(array('E_ALL'), array_diff($result, array_intersect($result, $all_errors)));
+		if(($code & E_ALL_MEDIA) == E_ALL_MEDIA)
+			$result = array_merge(array('E_ALL_MEDIA'), array_diff($result, array_intersect($result, $all_media_errors)));
+	}
+
+	return implode(' | ', $result);
 }
 
 function status_error($settings)
@@ -577,7 +648,7 @@ function configure_error($settings)
 			),
 		),
 		'type' => 'text',
-		'value' => setting('display_errors'),
+		'value' => eval_error_code(setting('display_errors')),
 	);
 	
 	if(count($settings['error_logs']) > 0)
@@ -603,7 +674,7 @@ function configure_error($settings)
 			$error_logs['edit_error_log[' . $i . ']'] = array(
 				'type' => 'submit',
 				'value' => 'Edit',
-				'name' => 'Location: ' . $log_config['location'] . ' Types: ' . $log_config['types'],
+				'name' => 'Location: ' . $log_config['location'] . ' Types: ' . eval_error_code($log_config['types']),
 			);
 			$error_logs['remove_error_log[' . $i . ']'] = array(
 				'type' => 'submit',
@@ -659,6 +730,10 @@ function configure_error($settings)
 		);
 	}
 	
+	$connection_types = array('local' => 'Local Filesystem');
+	if(dependency('ssh2_installed'))
+		$connection_types['ssh2'] = 'SSH to Log Server';
+		
 	$options['add_log'] = array(
 		'name' => 'Add a New Log',
 		'status' => '',
@@ -675,7 +750,7 @@ function configure_error($settings)
 		'options' => array(
 			'add_log[connection]' => array(
 				'type' => 'select',
-				'options' => array('local' => 'Local Filesystem', 'ssh2' => 'SSH to Log Server'),
+				'options' => $connection_types,
 				'name' => 'Connection Type',
 				'description' => 'Type of connection to use to connect to error log',
 				'value' => 'local',
@@ -690,7 +765,7 @@ function configure_error($settings)
 			'add_log[types]' => array(
 				'type' => 'text',
 				'name' => 'Error Types',
-				'description' => array('Enter the types of errors you would like to store in the log', $error_types),
+				'description' => array('Enter the types of errors you would like to store in the log:' . "\n", $error_types),
 				'value' => 'E_SELECT & ~E_TEMPLATE',
 			),
 		),

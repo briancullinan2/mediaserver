@@ -123,6 +123,7 @@ function cli_wordwrap($text, $width)
 
 function theme_cli_info_list($value, $width)
 {
+	print "\n";
 	if(is_string($value))
 	{
 		print '*' . cli_wordwrap($value, $width) . "\n";
@@ -133,6 +134,7 @@ function theme_cli_info_list($value, $width)
 		{
 			print '*';
 			theme('info_objects', array($key => $text), $width);
+			print "\n";
 		}
 	}
 }
@@ -220,7 +222,7 @@ function theme_cli_form_object($field_name, $config, $width = 0)
 			{
 				// box it up
 				if(isset($config['name']))
-					$title = '.-' . $config['name'];
+					$title = '.-' . $config['name'] . $width;
 				else
 					$title = '';
 				
@@ -250,8 +252,11 @@ function theme_cli_form_object($field_name, $config, $width = 0)
 	}
 	
 	if(isset($config['description']))
+	{
 		theme('info_objects', $config['description'], $width);
-		
+		print "\n";
+	}
+	
 	if(isset($config['status']) && $config['type'] != 'fieldset')
 		cli_decolorize();
 }
@@ -277,7 +282,7 @@ function theme_cli_info_objects($infos, $width = 0)
 			{
 				if(is_string($value))
 				{
-					print cli_wordwrap($value, $width) . "\n";
+					print cli_wordwrap($value, $width);
 				}
 				// treat value like sub info object
 				elseif(is_array($value))
@@ -334,7 +339,6 @@ function theme_cli_info_link($value, $width)
 		print cli_wordwrap('[' . ob_theme('info_objects', $text) . ' = ' . $url . ']', $width);
 	}
 	cli_decolorize();
-	print "\n";
 }
 
 function theme_cli_info_loading($value, $width)
@@ -629,7 +633,7 @@ function theme_cli_form_singular($config, $width)
 {
 	global $cli_request_stack;
 	extract($config);
-	theme('info_objects', array('type' => 'info') + $config, $width);
+	theme('info_objects', array('type' => 'info', 'text' => $text), $width);
 	
 	array_push($cli_request_stack, $href);
 }

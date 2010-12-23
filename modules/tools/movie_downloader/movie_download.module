@@ -6,7 +6,7 @@ function menu_movie_download()
 		'admin/tools/movies/downloader' => array(
 			'callback' => 'output_movie_download',
 		),
-		'admin/tools/movies/downloader/login/%login_index' => array(
+		'admin/tools/movies/downloader/login/%service_index' => array(
 			'callback' => 'output_movie_download_login'
 		),
 		'admin/tools/movies/downloader/netflix' => array(

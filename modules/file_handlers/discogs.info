@@ -13,5 +13,5 @@ Filepath = TEXT
 ReleaseNum = TEXT
 Position = TEXT
 Type = TEXT
-ReleaseXml = TEXT
-ArtistXml = TEXT
+ReleaseXml = LONGBLOB
+ArtistXml = LONGBLOB

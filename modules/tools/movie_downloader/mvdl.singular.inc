@@ -3,11 +3,11 @@
 
 function output_movie_download_login($request)
 {
-	$login_index = validate($request, 'login_index');
+	$service_index = validate($request, 'service_index');
 	
-	$infos = get_download_services_login($login_index, 'admin/tools/movies/downloader/login/');
+	$infos = get_download_services_login($service_index, 'admin/tools/movies/downloader/login/');
 
-	if($login_index == count(setting('all_download_services'))-1)
+	if($service_index == count(setting('all_download_services'))-1)
 	{
 		// download netflix Q
 		$infos['netflix_movies'] = array(

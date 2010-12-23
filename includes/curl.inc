@@ -1,13 +1,13 @@
 <?php
 
-/**
- * Implementation of dependency
- * @ingroup dependency
- * @return true or false if snoopy library is installed in the include directory
- */
 function dependency_curl_installed($settings)
 {
-	return function_exists('curl_init');
+	return extension_loaded('curl');
+}
+
+function dependency_ssh2_installed($settings)
+{
+	return extension_loaded('ssh2');
 }
 
 // specify a static file for storing cookies

@@ -351,7 +351,7 @@ function add($file, $handler = 'files')
 	
 	// if there is an add_handler function specified use that instead
 	if(module_implements('add', $handler))
-		return invoke_module('add', $handler, array($file, $force));
+		return invoke_module('add', $handler, array($file));
 	
 	// return false if there is no info function
 	elseif(!module_implements('get_info', $handler))
@@ -531,14 +531,12 @@ function get_files($request, &$count)
 {
 	// if the handler is set, call that instead
 	if($request['handler'] != 'files' && module_implements('get', $request['handler']))
-		return invoke_module('get', $request['handler'], array($request, $count));
-	elseif(is_wrapper($request['handler']))
-		return get_files(get_module($request['handler'], 'wrapper'));
+		return invoke_module('get', $request['handler'], array($request, &$count));
 	elseif($request['handler'] != 'files')
 	{
 		raise_error('get_files() called with handler \'' . $request['handler'] . '\' but no get_ handler function exists! Defaulting to files', E_DEBUG);
 		
-		// set the cat in the request to the provided handler
+		// set the handler in the request to the provided handler
 		$request['handler'] = validate($request, 'handler');
 	}
 	
@@ -575,6 +573,8 @@ function _get_database_files($request, &$count)
 	// add filters to query
 	$result = trigger('filter', NULL, $request);
 
+	raise_error('Filter results: ' . serialize($result), E_DEBUG, $result);
+	
 	// compile query
 	$where = array();
 	$limit = array();
@@ -594,10 +594,11 @@ function _get_database_files($request, &$count)
 	}
 	
 	// select files
-	$files = db_assoc('SELECT ' . ((count($columns) > 0)?implode(', ', $columns):'') . 
+	$files = db_assoc('SELECT ' . implode(',', $columns) . 
 		' FROM ' . $request['handler'] . ' ' . 
 		((count($where) > 0)?('WHERE (' . implode(') AND (', $where) . ') '):'') . 
-		((count($order) > 0)?('ORDER BY ' . implode(', ', $order)):'') . ' ' .
+		((count($group) > 0)?('GROUP BY ' . implode(',', $group)):'') . ' ' .
+		((count($order) > 0)?('ORDER BY ' . implode(',', $order)):'') . ' ' .
 		((count($limit) > 0)?('LIMIT ' . $limit[0]):'')
 	);
 	if(!is_array($files))

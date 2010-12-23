@@ -37,8 +37,8 @@ function get_info_audio($file)
 {
 	$file = str_replace('/', DIRECTORY_SEPARATOR, $file);
 	
-	$info = $GLOBALS['getID3']->analyze($file);
-	getid3_lib::CopyTagsToComments($info);
+	$info = @$GLOBALS['getID3']->analyze($file);
+	@getid3_lib::CopyTagsToComments($info);
 	
 	if(!isset($info['comments_html']['title'][0])) $info['comments_html']['title'][0] = '';
 	if(!isset($info['comments_html']['artist'][0])) $info['comments_html']['artist'][0] = '';

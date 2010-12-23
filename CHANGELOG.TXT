@@ -1,3 +1,9 @@
+2010-12-22
+Finished error logging to remote servers over SSH2
+Made a lot of progress on download script
+Lots of bug fixes
+Added artists wrapper back in to system
+
 2010-12-21
 Worked on download_services API
 	Downloaders will be able to tie in to the services, make requests, then analyze those requests later
@@ -6,6 +12,10 @@ Added API for specifying a function for retrieving url/title pairs from search r
 	Many services will use an RSS feed parser in the future
 CLI now uses a static session but works from command line, permissions should be determined by the user running the script
 Added a cookie jar file setting for curl, intended for use from command line, but may not be useful
+Lenveshtein used in searching and pairing discogs and movie modules now doesn't store results that are too inaccurate
+Music downloader pairs search results with discogs albums
+	Needs to match search results of different formats
+	Needs to be abstracted to support more than just an artist as a search term
 
 2010-12-20
 Restructures entire Live and Select theme to be more simple, results look very much the same

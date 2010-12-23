@@ -102,7 +102,11 @@ function get_info_discogs($file)
 		$uris = get_xml_list($search_results['xml']->xpath('//result[@type="artist" or @type="release"]/uri'));
 		
 		// find the closest match
-		list($album_artist, $key) = get_closest($search_text, $titles);
+		$closest = get_closest($search_text, $titles);
+		if(!$closest)
+			return false;
+		else
+			list($album_artist, $key) = $closest;
 
 		$result_attr = $results[$key]->attributes();
 		$fileinfo['Type'] = ucfirst($result_attr['type']);
@@ -141,7 +145,11 @@ function get_info_discogs($file)
 				return $fileinfo;
 			
 			// find the closest match
-			list($album, $key) = get_closest($audioinfo['Album'], $albums);
+			$closest_album = get_closest($audioinfo['Album'], $albums);
+			if(!$closest_album)
+				return false;
+			else
+				list($album, $key) = $closest_album;
 			
 			$release_attr = $releases[$key]->attributes();
 			$fileinfo['ReleaseNum'] = $release_attr['id'];
@@ -170,7 +178,11 @@ function get_info_discogs($file)
 			$artists = get_xml_list($album['xml']->xpath('//artist/name'));
 		
 			// find the closest match
-			list($artist) = get_closest($audioinfo['Artist'], $artists);
+			$closest_artist = get_closest($audioinfo['Artist'], $artists);
+			if(!$closest_artist)
+				return false;
+			else
+				list($artist) = $closest_artist;
 			
 			// get album info
 			$query = 'http://www.discogs.com/artist/' . urlencode($artist) . '?f=xml&api_key=' . setting('discogs_api');
@@ -185,6 +197,7 @@ function get_info_discogs($file)
 			$positions = get_xml_list($album['xml']->xpath('//track/position'));
 			
 			// find closest match
+			// keep track closest, if the album and the artist are the same we came use this for error correction
 			list($track, $key) = get_closest($audioinfo['Title'], $tracks);
 			
 			$fileinfo['Position'] = $positions[$key];

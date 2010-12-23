@@ -5,7 +5,7 @@ define('NUMBER_OF_DOWNLOAD_SERVICES', 10);
 function menu_download_services()
 {
 	return array(
-		'admin/tools/download/login/%login_index' => array(
+		'admin/tools/download/login/%service_index' => array(
 			'callback' => 'output_download_services_login',
 		),
 		'admin/tools/download/search/%service_index' => array(
@@ -16,6 +16,12 @@ function menu_download_services()
 			'name' => 'Download',
 		),
 	);
+}
+
+// space hold function for table
+function handles_download_services()
+{
+	return false;
 }
 
 
@@ -304,13 +310,6 @@ function validate_service_index($request)
 	return generic_validate_numeric_zero($request, 'service_index');
 }
 
-function validate_login_index($request)
-{
-	if(!isset($request['login_index']))
-		return;
-	return generic_validate_numeric_zero($request, 'login_index');
-}
-
 /**
  * Helper function
  * Provides fetch functions for logging in to the configured torrent services
@@ -444,12 +443,15 @@ function download_services_login($service)
  */
 function fetch_service_results($search, $index, $type = NULL)
 {
-	$downloads = array();
+	$downloads = array(
+		'urls' => array(),
+		'titles' => array(),
+	);
 	
 	// check database for results
 	if(setting('database_enable'))
 	{
-		$results = db_query('SELECT * FROM download_services WHERE Service=? AND Search=? AND Type=? LIMIT 1', array($index, $search, $type));
+		$results = db_assoc('SELECT * FROM download_services WHERE Service=? AND Search=? AND Type=? LIMIT 1', array($index, $search, $type));
 		if(count($results))
 		{
 			return unserialize($results[0]['Results']);
@@ -490,12 +492,8 @@ function fetch_service_results($search, $index, $type = NULL)
 				$link = get_full_url($services[$index]['search'], $link);
 				
 				// return list of downloads
-				$downloads[$i] = array(
-					'link' => array(
-						'url' => htmlspecialchars_decode($link),
-						'text' => isset($matches['titles'][$i])?$matches['titles'][$i]:$search
-					)
-				);
+				$downloads['urls'][] = htmlspecialchars_decode($link);
+				$downloads['titles'][] = isset($matches['titles'][$i])?$matches['titles'][$i]:$search;
 			}
 		}
 		
@@ -508,10 +506,10 @@ function fetch_service_results($search, $index, $type = NULL)
 			$fileinfo['Time'] = date('Y-m-d h:i:s');
 			$fileinfo['Type'] = (!$type)?'':$type;
 			$fileinfo['Results'] = serialize($downloads);
-			$fileinfo['ResultsXML'] = isset($result['xml'])?$result['xml']:$result['content'];
+			$fileinfo['ResultsXml'] = isset($result['xml'])?$result['xml']:$result['content'];
 			$fileinfo['Filepath'] = $query;
 			
-			$results = db_query('SELECT * FROM download_services WHERE Filepath=?', array($query));
+			$results = db_assoc('SELECT * FROM download_services WHERE Filepath=?', array($query));
 			// add to database
 			if(count($results) == 0)
 				db_query('INSERT INTO download_services ' . sql_insert($fileinfo), array_values($fileinfo));
@@ -550,6 +548,16 @@ function get_download_services_manual($service_index = 0, $service_search = NULL
 		// search for movie on each services
 		$results = fetch_service_results($service_search, $service_index, $type);
 		
+		// convert results to form API
+		$links = array();
+		foreach($results['urls'] as $i => $link)
+		{
+			$links[] = array('link' => array(
+				'url' => $link,
+				'text' => $results['titles'][$i],
+			));
+		}
+		
 		if(count($results) > 0)
 		{
 			$infos['service_search_' . $service_index] = array(
@@ -557,12 +565,12 @@ function get_download_services_manual($service_index = 0, $service_search = NULL
 				'status' => '',
 				'description' => array(
 					'list' => array(
-						'This terms have been searched for on ' . $services[$service_index]['name'] . ', and results were found.',
+						'The terms have been searched for on ' . $services[$service_index]['name'] . ', and results were found.',
 					),
 				),
 				'text' => array(
 					$services[$service_index]['name'],
-					'list' => $results
+					'list' => $links
 				)
 			);
 		}
@@ -618,9 +626,9 @@ function get_download_services_manual($service_index = 0, $service_search = NULL
 
 function output_download_services_login($request)
 {
-	$login_index = validate($request, 'login_index');
+	$service_index = validate($request, 'service_index');
 	
-	$infos = get_download_services_login($login_index);
+	$infos = get_download_services_login($service_index);
 	
 	theme('form_fieldrows', $infos);
 }
@@ -650,13 +658,13 @@ function output_download($request)
 /**
  * Helper function, creates a return for the singular object
  */
-function get_download_services_login($login_index = NULL, $override_link = 'admin/tools/download/login/')
+function get_download_services_login($service_index = NULL, $override_link = 'admin/tools/download/login/')
 {
 	$services = setting('all_download_services');
 	
 	$infos = array();
 	
-	if(!isset($login_index))
+	if(!isset($service_index))
 	{
 		$infos['download_service_login'] = array(
 			'name' => 'Download Services Login',
@@ -677,14 +685,14 @@ function get_download_services_login($login_index = NULL, $override_link = 'admi
 	else
 	{
 		// log in to services here
-		if($login_index < count($services))
+		if($service_index < count($services))
 		{
-			$status = download_services_login($login_index);
-			$config = $services[$login_index];
+			$status = download_services_login($service_index);
+			$config = $services[$service_index];
 			
 			if(!$status)
 			{
-				$infos['download_service_' . $login_index] = array(
+				$infos['download_service_' . $service_index] = array(
 					'name' => $config['name'] . ' Login Failed',
 					'status' => 'fail',
 					'description' => array(
@@ -701,7 +709,7 @@ function get_download_services_login($login_index = NULL, $override_link = 'admi
 					'type' => 'submit',
 					'value' => 'Login',
 				);
-				$infos['download_service_' . $login_index] = array(
+				$infos['download_service_' . $service_index] = array(
 					'name' => $config['name'] . ' Login',
 					'status' => 'warn',
 					'description' => array(
@@ -715,7 +723,7 @@ function get_download_services_login($login_index = NULL, $override_link = 'admi
 			}
 			elseif($status === true)
 			{
-				$infos['download_service_' . $login_index] = array(
+				$infos['download_service_' . $service_index] = array(
 					'name' => $config['name'] . ' Login',
 					'status' => '',
 					'description' => array(
@@ -728,7 +736,7 @@ function get_download_services_login($login_index = NULL, $override_link = 'admi
 			}
 			else
 			{
-				$infos['download_service_' . $login_index] = array(
+				$infos['download_service_' . $service_index] = array(
 					'name' => $config['name'] . ' Login',
 					'status' => '',
 					'description' => array(
@@ -741,11 +749,11 @@ function get_download_services_login($login_index = NULL, $override_link = 'admi
 			}
 		}
 		
-		if($login_index+1 < count($services))
+		if($service_index+1 < count($services))
 		{
-			$config = $services[($login_index+1)];
+			$config = $services[($service_index+1)];
 			
-			$infos['download_service_' . ($login_index+1)] = array(
+			$infos['download_service_' . ($service_index+1)] = array(
 				'name' => $config['name'] . ' Login',
 				'status' => '',
 				'description' => array(
@@ -758,7 +766,7 @@ function get_download_services_login($login_index = NULL, $override_link = 'admi
 				),
 				'type' => 'theme',
 				'value' => 'singular',
-				'href' => url($override_link . ($login_index+1), true),
+				'href' => url($override_link . ($service_index+1), true),
 			);
 		}
 	}

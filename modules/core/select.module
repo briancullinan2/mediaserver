@@ -234,7 +234,7 @@ function validate_group_by($request)
 	$handler = validate($request, 'handler');
 	
 	$columns = get_columns($handler);
-	
+
 	if( isset($request['group_by']) && !in_array($request['group_by'], $columns) )
 	{
 		// make sure if it is a list that it is all valid columns
@@ -306,6 +306,8 @@ function filter_group_by($request)
 		{
 			return array('where' => 'LEFT(' . validate($request, 'group_by') . ', 1) = "' . addslashes($request['group_index']) . '"');
 		}
+		else
+			return array('group' => addslashes($request['group_by']), 'columns' => 'count(*)');
 	}
 }
 
@@ -385,8 +387,8 @@ function filter_select($request, $index)
 			return filter_selected($request);
 		case 'order_by':
 			return filter_order_by($request);
-		case 'order_by':
-			return filter_order_by($request);
+		case 'group_by':
+			return filter_group_by($request);
 		case 'limit':
 			return filter_limit($request);
 	}
@@ -418,6 +420,8 @@ function get_select_breadcrumbs($request)
 	elseif(isset($request['file']))
 		$crumbs = explode('/', $request['file']);
 	$cwd = '/';
+	if(is_wrapper($request['handler']))
+		$breadcrumbs['select/' . $request['handler']] = array('name' => ucwords(get_module($request['handler'], 'name')));
 	foreach($crumbs as $i => $dir)
 	{
 		if($dir != '')
@@ -425,7 +429,7 @@ function get_select_breadcrumbs($request)
 			$cwd .= (($cwd != '/')?'/':'') . $dir;
 			$unaliased = $cwd;
 			if(setting('alias_enable')) $unaliased = alias_replace($unaliased);
-			if(handles($cwd, $request['handler']))
+			if(handles($cwd, $request['handler']) || is_wrapper($request['handler']))
 				$path = 'select/' . $request['handler'] . '/' . urlencode_path($cwd . '/');
 			else
 				$path = 'select/files/' . urlencode_path($cwd . '/');

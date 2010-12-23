@@ -7,16 +7,16 @@ function menu_music_download()
 		'admin/tools/music/downloader' => array(
 			'callback' => 'output_music_download',
 		),
-		'admin/tools/music/downloader/login/%login_index' => array(
-			'callback' => 'output_music_download_login'
+		'admin/tools/music/downloader/%music_download_mode/%service_index' => array(
+			'callback' => 'output_music_download'
 		),
-		'admin/tools/movies/downloader/login/%login_index' => array(
-			'callback' => 'output_music_download_login'
-		),
-		'admin/tools/music/downloader/search/%service_index' => array(
-			'callback' => 'output_music_download_manual'
-		)
 	);
+}
+
+function validate_music_download_mode($request)
+{
+	if(isset($request['music_download_mode']) && in_array($request['music_download_mode'], array('login', 'search')))
+		return $request['music_download_mode'];
 }
 
 function setup_music_download()
@@ -30,27 +30,64 @@ function setup_music_download()
  */
 function output_music_download($request)
 {
-	// output configuration link
-	raise_error(array(
-		'You may need to ',
-		'link' => array(
-			'url' => 'admin/module/music_download',
-			'text' => 'configure'
-		),
-		' this tool in order to use it properly.'
-	), E_WARN);
+	$request['music_download_mode'] = validate($request, 'music_download_mode');
+	
+	if(!isset($request['music_download_mode']))
+	{
+		// output configuration link
+		raise_error(array(
+			'You may need to ',
+			'link' => array(
+				'url' => 'admin/module/music_download',
+				'text' => 'configure'
+			),
+			' this tool in order to use it properly.'
+		), E_WARN);
+			
+		// perform logins
+		$infos = get_download_services_login(NULL, 'admin/tools/music/downloader/login/');
+			
+		// output info
+		register_output_vars('infos', array(
+			'music_downloader' => array(
+				'name' => 'Music Downloader',
+				'type' => 'fieldset',
+				'options' => $infos
+			),
+		));
+		
+		theme('tool_info');
+		
+		return;
+	}
+	
+	$infos = array();
+	
+	if($request['music_download_mode'] == 'login')
+	{
+		$request['service_index'] = validate($request, 'service_index');
+		$request['service_search'] = session('download_services');
+		
+		$infos = get_download_services_login($request['service_index'], 'admin/tools/music/downloader/login/');
 
-	// perform television downloading
-	$infos = get_download_services_login(NULL, 'admin/tools/music/downloader/login/');
+		if($request['service_index'] == count(setting('all_download_services'))-1)
+		{
+			$request['service_index'] = 0;
+			$request['music_download_mode'] = 'search';
+		}
+	}
 	
-	// output info
-	register_output_vars('infos', array(
-		'music_downloader' => array(
-			'name' => 'Music Downloader',
-			'type' => 'fieldset',
-			'options' => $infos
-		),
-	));
+	if($request['music_download_mode'] == 'search')
+	{
+		$request['service_index'] = validate($request, 'service_index');
+		$request['service_search'] = session('download_services');
+		
+		$infos = array_merge($infos, get_download_services_manual($request['service_index'], $request['service_search'], 'audio', 'admin/tools/music/downloader/search/'));
+
+		if(!empty($request['service_search']) && $request['service_index'] == count(setting('all_download_services', 'audio'))-1)
+			$infos = array_merge($infos, get_music_download_manual($request));
+	}
 	
-	theme('tool_info');
+	theme('form_fieldrows', $infos);
+
 }

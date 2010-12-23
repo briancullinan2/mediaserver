@@ -15,7 +15,7 @@ function theme__info_objects($infos)
 			{
 				if(is_string($value))
 				{
-					print htmlspecialchars($value); ?><br /><?php
+					print htmlspecialchars($value);
 				}
 				// treat value like sub info object
 				elseif(is_array($value))
@@ -348,7 +348,7 @@ function theme__form_checkbox($config)
 	// check if array is associative or not
 	foreach($options as $option => $text)
 	{
-		?><input <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> <?php print ($value == $option)?'checked="checked"':''; ?> type="<?php print $type; ?>" value="<?php print htmlspecialchars($option); ?>" name="<?php print machine($name) . (($config['type'] == 'checkbox')?'[]':''); ?>" /><?php print htmlspecialchars($text); ?><br /><?php
+		?><input <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> <?php print ($value == $option)?'checked="checked"':''; ?> type="<?php print $type; ?>" value="<?php print htmlspecialchars($option); ?>" name="<?php print machine($name) . (($config['type'] == 'checkbox')?'[]':''); ?>" /><?php print htmlspecialchars($text);
 	}
 }
 

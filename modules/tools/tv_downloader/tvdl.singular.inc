@@ -38,11 +38,11 @@ function output_tv_download_singular($request)
 
 function output_tv_download_login($request)
 {
-	$login_index = validate($request, 'login_index');
+	$service_index = validate($request, 'service_index');
 	
-	$infos = get_download_services_login($login_index, 'admin/tools/television/downloader/login/');
+	$infos = get_download_services_login($service_index, 'admin/tools/television/downloader/login/');
 	
-	if($request['login_index'] == count(setting('all_download_services'))-1)
+	if($request['service_index'] == count(setting('all_download_services'))-1)
 	{
 		// log in to my episodes
 		$result = television_myepisodes_login();

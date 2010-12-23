@@ -23,7 +23,7 @@ function theme__tool_info()
 function theme__form_singular($config)
 {
 	extract($config);
-	theme('info_objects', array('type' => 'info') + $config);
+	theme('info_objects', array('type' => 'info', 'text' => $text));
 
 	?><script language="javascript">
 	var current_ajax = $.get('<?php print $href; ?>',function(data){
