@@ -47,13 +47,16 @@ function theme_live_styles()
 	}
 }
 
-function validate_live($request)
+function validate_live(&$request)
 {
+raise_error('Template validation', E_DEBUG);
 	if(!isset($request['dir']))
 		$request['dir'] = '/';
 	
 	if(!isset($request['limit']))
 		$request['limit'] = 50;
+	
+	return $request;
 }
 
 function live_get_scheme()

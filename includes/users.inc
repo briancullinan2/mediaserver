@@ -65,7 +65,7 @@ function install_users()
 		$fileinfo = array(
 			'id' => -1,
 			'Username' => 'admin',
-			'Password' => md5(setting('secret') . 'tmppass'),
+			'Password' => validate(array('password' => 'tmppass'), 'password_hash'),
 			'Email' => 'admin@bjcullinan.com',
 			'Settings' => serialize(array()),
 			'Privilage' => 10,

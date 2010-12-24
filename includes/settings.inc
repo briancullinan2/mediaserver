@@ -146,11 +146,11 @@ function setting_settings_file()
 	$port = isset($_SERVER['SERVER_PORT'])?$_SERVER['SERVER_PORT']:'80';
 	$domain = isset($_SERVER['SERVER_NAME'])?$_SERVER['SERVER_NAME']:'localhost';
 	$dirs = array(
-		'$port.$domain',
-		'$domain',
+		$port . '.' . $domain,
+		$domain,
 		'default',
 	);
-	
+
 	// check other directories if it doesn't exist there
 	foreach($dirs as $i => $dir)
 	{
@@ -267,7 +267,9 @@ function setting_agent_simple()
 
 function setting_deflate()
 {
-	if(isset($_SERVER['HTTP_ACCEPT_ENCODING']) && substr_count($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip'))
+	if(isset($_SERVER['HTTP_ACCEPT_ENCODING']) && strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') &&
+		function_exists('ob_gzhandler')
+	)
 		return true;
 	else
 		return false;
@@ -282,6 +284,7 @@ function setting_html_root($settings)
 {
 	$settings['html_domain'] = setting('html_domain');
 	$settings['local_root'] = setting('local_root');
+	$settings['local_root'] = str_replace(DIRECTORY_SEPARATOR, '/', $settings['local_root']);
 	if(substr($_SERVER['DOCUMENT_ROOT'], -1) != '/' && substr($_SERVER['DOCUMENT_ROOT'], -1) != '\\') $_SERVER['DOCUMENT_ROOT'] .= DIRECTORY_SEPARATOR;
 	
 	if(isset($settings['html_root']) && @parse_url($settings['html_domain'] . $settings['html_root']) !== false)
@@ -345,7 +348,6 @@ function dependency_modrewrite()
  */
 function setting_modrewrite($settings)
 {
-	return true;
 	return (isset($_REQUEST['modrewrite']) && $_REQUEST['modrewrite']);
 }
 
@@ -573,6 +575,21 @@ function dependency_simplexml_installed($settings)
 function status_settings($settings)
 {
 	$status = array();
+
+	$status['library_paths'] = array(
+		'name' => 'Library Paths',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'These paths are the locations where libraries can be installed to.',
+			),
+		),
+		'disabled' => true,
+		'value' => array(
+			'Libraries can be isntalled in:',
+			'list' => get_include_paths(),
+		),
+	);
 
 	if(dependency('memory_limit'))
 	{

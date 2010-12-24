@@ -422,7 +422,7 @@ function configure_watched($settings, $request)
 					),
 					'waddpath[folder]' => array(
 						'type' => 'text',
-						'value' => $request['dir'],
+						'value' => validate($request, 'dir'),
 					),
 					'waddpath[add]' => array(
 						'type' => 'submit',

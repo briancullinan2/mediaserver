@@ -51,8 +51,7 @@ function include_path($filename)
 	}
 	
 	// Otherwise, treat as relative path
-	$paths = explode(PATH_SEPARATOR, get_include_path());
-	$paths[] = setting_local_root() . 'includes';
+	$paths = get_include_paths();
 	foreach ($paths as $path)
 	{
 		if (substr($path, -1) == DIRECTORY_SEPARATOR)
@@ -67,6 +66,19 @@ function include_path($filename)
 	}
 	
 	return false;
+}
+
+function get_include_paths()
+{
+	$paths = explode(PATH_SEPARATOR, get_include_path());
+	$paths[] = setting_local_root() . 'includes';
+	foreach($paths as $i => $path)
+	{
+		if(($path = realpath($path)) !== false)
+			$paths[$i] = $path;
+	}
+	
+	return $paths;
 }
 
 
@@ -371,7 +383,7 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 		}
 		
 		// if pathinfo is set in the request, get the menu
-		if(isset($request['path_info']) && setting('modrewrite'))
+		if(isset($request['path_info'])) // && setting('modrewrite'))
 		{
 			$path_info = $request['path_info'];
 			unset($request['path_info']);
@@ -379,11 +391,12 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 	}
 	
 	// check with mod rewrite if paths can actually be printed out as directories
-	if(setting('modrewrite') && isset($menu))
+	//if(setting('modrewrite') && isset($menu))
+	if(isset($menu))
 		$path_info = get_path($request, $menu);
 	// if we aren't using mod_rewrite, add the path info to the query string
-	elseif(isset($menu))
-		$request['path_info'] = get_path($request, $menu);
+	//elseif(isset($menu))
+	//	$request['path_info'] = get_path($request, $menu);
 	
 	// if the caller functionality would like an array returned for further processing such as in theme() return now
 	if($return_array)
@@ -402,7 +415,7 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 	
 	// generate a link, with optional domain the html root and path info prepended
 	$link = (($include_domain)?setting('html_domain'):'') . 
-		setting('html_root') . 
+		setting('html_root') . (setting('modrewrite')?'':'index.php/') . 
 		(isset($path_info)?urlencode_path($path_info):'') . (($query != '?')?$query:'');
 	
 	// optionally return a non html special chars converted URL

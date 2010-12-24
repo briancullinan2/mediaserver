@@ -123,12 +123,14 @@ function preload_error()
     );
 
 	/** require pear for error handling */
-	if(include_once 'PEAR.php')
+	if(@include_once 'PEAR.php')
 	{
 		//include_once 'MIME' . DIRECTORY_SEPARATOR . 'Type.php';
 	}
 	else
 	{
+		define('PEAR_ERROR_CALLBACK',  16);
+		
 		class PEAR_Error
 		{
 			var $code = 0;
@@ -139,20 +141,21 @@ function preload_error()
 		// bootstrap pear error handling but don't load any other pear dependencies
 		class PEAR
 		{
+			var $callback = NULL;
 			static function raiseError($message, $code)
 			{
 				$error = new PEAR_Error();
 				$error->code = $code;
 				$error->message = $message;
 				$error->backtrace = debug_backtrace();
-				call_user_func_array(PEAR_ERROR_CALLBACK, array($error));
+				call_user_func_array($GLOBALS['_callback'], array($error));
 			}
 			
 			static function setErrorHandling($type, $error_func)
 			{
 				if(is_callable($error_func))
 				{
-					define('PEAR_ERROR_CALLBACK', $error_func);
+					$GLOBALS['_callback'] = $error_func;
 				}
 			}
 		}
@@ -206,7 +209,7 @@ function setup_error()
 	{
 		if(!isset($GLOBALS['error_handles'][$i]) || !is_resource($GLOBALS['error_handles'][$i]))
 		{
-			if($config['connection'] == 'local')
+			if($config['connection'] == 'local' && is_writeable($config['location']))
 				$GLOBALS['error_handles'][$i] = fopen($config['location'], 'w');
 			elseif($config['connection'] == 'ssh2' && dependency('ssh2_installed'))
 			{

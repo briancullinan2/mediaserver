@@ -42,6 +42,8 @@ function validate($request, $key)
  */
 function request_validate()
 {
+	raise_error('Request validation (before): ' . serialize($_REQUEST), E_DEBUG, $_REQUEST);
+	
 	//Remove annoying POST error message with the page is refreshed 
 	//  better place for this?
 	if(validate($_REQUEST, 'request_method') == 'post')
@@ -85,6 +87,8 @@ function request_validate()
 		else
 			unset($_GET[$key]);
 	}
+	
+	raise_error('Request validation (after): ' . serialize($_REQUEST), E_DEBUG, $_REQUEST);
 	
 	// call the session save functions
 	trigger('session', 'session_set_conditional', $_REQUEST);
@@ -134,7 +138,7 @@ function rewrite_vars(&$request, &$get, &$post)
 			$request = array_merge($request, $result);
 	}
 
-	$result = trigger_key('validate', NULL, &$request, NULL);
+	$request = trigger_key('validate', NULL, $request, NULL);
 /**
 	// do some modifications to specific modules being used
 	if($request['module'] == 'bt')
