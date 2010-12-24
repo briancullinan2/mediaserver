@@ -24,6 +24,47 @@ function setup_music_download()
 	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'msdl.singular.inc';
 }
 
+function setting_music_formats($settings)
+{
+	if(isset($settings['music_formats']))
+	{
+		$formats = explode(',', $settings['music_formats']);
+		$valid = array();
+		foreach($formats as $i => $format)
+		{
+			$format = generic_validate_all_safe(array('format' => $format), 'format');
+			if(isset($format))
+				$valid[] = $format;
+		}
+		return implode(',', $valid);
+	}
+	return 'MP3 V0,MP3 320,FLAC,MP3';
+}
+
+function configure_music_download($settings)
+{
+	$options = array();
+	
+	$options['music_formats'] = array(
+		'name' => 'Preffered Format',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Enter the formats in the order in which you would like them selected and automatically downloaded, seperate by commas.',
+				'Example: V0,FLAC,MP3 320,MP3',
+			),
+		),
+		'type' => 'text',
+		'values' => setting('music_formats'),
+	);
+	
+	return array(
+		'name' => 'Format Selection',
+		'type' => 'fieldset',
+		'options' => $options
+	);
+}
+
 /**
  * Implementation of output
  * @ingroup output

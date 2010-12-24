@@ -12,7 +12,7 @@ function register_session()
 		'privilage' => 5,
 		'path' => __FILE__,
 		'settings' => 'session',
-		'depends on' => 'session',
+		'depends_on' => 'session',
 		'package' => 'core',
 	);
 }

@@ -21,7 +21,7 @@ function register_settings()
 		),
 		'package' => 'core',
 		'template' => false,
-		'depends on' => 'settings',
+		'depends_on' => 'settings',
 	);
 }
 

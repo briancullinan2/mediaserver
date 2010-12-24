@@ -4,5 +4,5 @@ privilage = 1
 template = false
 settings[] = convert_path
 settings[] = convert_args
-depends on[] = converter
+depends_on[] = converter
 package = file_conversion

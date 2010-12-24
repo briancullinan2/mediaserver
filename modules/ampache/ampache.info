@@ -1,8 +1,8 @@
 name = Ampache Compatibility
 description = Compatibility support for the Ampache XMLRPC protocol.
 privilage = 1
-depends on[] = database
-depends on[] = encode
-depends on[] = modrewrite
+depends_on[] = database
+depends_on[] = encode
+depends_on[] = modrewrite
 template = true
 package = information_output

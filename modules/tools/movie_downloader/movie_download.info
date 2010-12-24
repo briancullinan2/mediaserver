@@ -4,5 +4,5 @@ privilage = 10
 template = false
 settings[] = netflix_xml
 package = tools
-depends on[] = movies
-depends on[] = download_services
+depends_on[] = movies
+depends_on[] = download_services

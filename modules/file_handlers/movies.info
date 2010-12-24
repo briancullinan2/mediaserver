@@ -1,9 +1,9 @@
 name = Movies
 description = Get meta-data for movies in library.
-depends on[] = video
-depends on[] = curl_installed
-depends on[] = tmdb_api
-depends on[] = simplexml_installed
+depends_on[] = video
+depends_on[] = curl_installed
+depends_on[] = tmdb_api
+depends_on[] = simplexml_installed
 package = file_handlers
 settings = movies
 session[] = add_movie_folder

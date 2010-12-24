@@ -3,4 +3,4 @@ description = Interface for controlling the media server from the command line.
 template = false
 privilage = 10
 package = tools
-depends on[] = run_from_cli
+depends_on[] = run_from_cli

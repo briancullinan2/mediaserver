@@ -208,7 +208,7 @@ function setup_error()
 		{
 			if($config['connection'] == 'local')
 				$GLOBALS['error_handles'][$i] = fopen($config['location'], 'w');
-			elseif($config['connection'] == 'ssh2')
+			elseif($config['connection'] == 'ssh2' && dependency('ssh2_installed'))
 			{
 				$params = parseDSN($config['location']);
 				$GLOBALS['error_handles'][$i] = ssh2_connect($params['hostspec'], isset($params['port'])?$params['port']:22);
@@ -425,8 +425,19 @@ function setting_error_log($settings, $index)
 	// all validation feedback is provided in the status for error logs
 	if(empty($log['location']))
 		return;
-	if(strpos($log['location'], '://') === false)
-		$log['location'] = 'ssh://' . $log['location'];
+	if($log['connection'] == 'ssh2')
+	{
+		if(strpos($log['location'], '://') === false)
+			$log['location'] = 'ssh://' . $log['location'];
+			
+		$parsed_dsn = parseDSN($log['location']);
+		$log_config['location'] = 'ssh://' . 
+			(isset($parsed_dsn['username'])?$parsed_dsn['username']:$_ENV['USER']) . 
+			(isset($parsed_dsn['password'])?':******@':'@') . 
+			$parsed_dsn['hostspec'] . 
+			(isset($parsed_dsn['port'])?$parsed_dsn['port']:'') . 
+			$parsed_dsn['database'];
+	}
 	
 	return $log;
 }
@@ -494,6 +505,7 @@ function eval_error_code($code)
 	return implode(' | ', $result);
 }
 
+
 function status_error($settings)
 {
 	$settings['error_logs'] = setting('error_logs');
@@ -518,7 +530,27 @@ function status_error($settings)
 	{
 		foreach($settings['error_logs'] as $i => $log_config)
 		{
+			// check the type of error log
+			if($log_config['connection'] == 'ssh2' && !dependency('ssh2_installed'))
+			{
+				$status['error_log_' . $i] = array(
+					'name' => 'Error Log ' . $i,
+					'status' => 'fail',
+					'value' => 'SSH2 is not properly installed',
+					'description' => array('Error log located at ' . $log_config['location'] . ' required SSH2 to be installed.'),
+				);
+			}
+			
 			// check that the log file is accessible and writable
+			if($log_config['connection'] == 'local' && !is_writable($log_config['location']))
+			{
+				$status['error_log_' . $i] = array(
+					'name' => 'Error Log ' . $i,
+					'status' => 'fail',
+					'value' => 'Log not writable',
+					'description' => array('Error log located at ' . $log_config['location'] . ' cannot be written to, check permissions or change the log location.'),
+				);
+			}
 			
 			// check that the types compiles to valid bitwise
 			$result = error_code_eval($log_config['types']);
@@ -659,6 +691,17 @@ function configure_error($settings)
 		$has_errors = false;
 		foreach($settings['error_logs'] as $i => $log_config)
 		{
+			if($log_config['connection'] == 'ssh2')
+			{
+				$parsed_dsn = parseDSN($log_config['location']);
+				$log_config['location'] = 'ssh://' . 
+					$parsed_dsn['username'] . 
+					(isset($parsed_dsn['password'])?':******@':'@') . 
+					$parsed_dsn['hostspec'] . 
+					(isset($parsed_dsn['port'])?$parsed_dsn['port']:'') . 
+					$parsed_dsn['database'];
+			}
+			
 			$error_logs['setting_error_log_' . $i . '[connection]'] = array(
 				'type' => 'hidden',
 				'value' => $log_config['connection'],
@@ -674,14 +717,14 @@ function configure_error($settings)
 			$error_logs['edit_error_log[' . $i . ']'] = array(
 				'type' => 'submit',
 				'value' => 'Edit',
-				'name' => 'Location: ' . $log_config['location'] . ' Types: ' . eval_error_code($log_config['types']),
+				'name' => 'Location: ' . $log_config['location'] . ' Types: ' . $log_config['types'],
 			);
 			$error_logs['remove_error_log[' . $i . ']'] = array(
 				'type' => 'submit',
 				'value' => 'Remove',
 			);
 			
-			if(!error_code_eval($log_config['types']))
+			if(!error_code_eval($log_config['types']) || ($log_config['connection'] == 'ssh2' && !dependency('ssh2_installed')))
 				$has_errors = true;
 		}
 

@@ -25,7 +25,7 @@ function register_database()
 		'description' => 'Wrapper module for displaying database configuration',
 		'privilage' => 1,
 		'settings' => array('db_connect', 'db_type', 'db_server', 'db_user', 'db_pass', 'db_name'),
-		'depends on' => array('adodb_installed', 'valid_connection', 'cannot_read'),
+		'depends_on' => array('adodb_installed', 'valid_connection', 'cannot_read'),
 		'package' => 'core',
 	);
 }

@@ -248,19 +248,19 @@ function get_dependencies($dependency, $modules_only = false)
 	{
 		$config = get_module($dependency);
 		
-		if(isset($config['depends on']))
+		if(isset($config['depends_on']))
 		{
 			// if the depends on field is a string, call the function and use that as the list of dependencies
-			if(is_string($config['depends on']) && $config['depends on'] == $dependency)
+			if(is_string($config['depends_on']) && $config['depends_on'] == $dependency)
 			{
-				if(function_exists('dependency_' . $config['depends on']))
+				if(function_exists('dependency_' . $config['depends_on']))
 					$depends = invoke_module('dependency', $dependency, array($GLOBALS['settings']));
 				else
 					raise_error('Function dependency_\'' . $dependency . '\' is specified but the function does not exist.', E_DEBUG);
 			}
 			// if the depends on is an array pointing to functions
-			elseif(is_array($config['depends on']))
-				$depends = $config['depends on'];
+			elseif(is_array($config['depends_on']))
+				$depends = $config['depends_on'];
 				
 			// filter out modules if option is true
 			if($modules_only)

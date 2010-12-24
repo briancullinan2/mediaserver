@@ -17,7 +17,7 @@ function register_users()
 		'privilage' => 1,
 		'session' => array('username'),
 		'settings' => array('local_users', 'username_validation', 'admin_password', 'secret'),
-		'depends on' => 'users',
+		'depends_on' => 'users',
 		'filter' => array('user'),
 		'internal' => true,
 		'template' => true,

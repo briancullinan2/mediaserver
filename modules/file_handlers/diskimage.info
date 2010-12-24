@@ -1,6 +1,6 @@
 name = Disk Image
 description = Read ISO disk images.
-depends on[] = getid3_installed
+depends_on[] = getid3_installed
 privilage = 1
 package = file_handlers
 

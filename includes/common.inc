@@ -103,7 +103,7 @@ function tokenize($string, $only_get = NULL)
 			// remove different release information
 			'version', 'unknown', 'compilation', 'compilations', 'remastered', 'itunes', 'music', 'lp',
 			// remove different format information
-			'flac', 'lossless', 'vbr', 'v0', 'v2', 'mp3', '320', '192', '128', 'q8', 'aac', '256', 'ogg', 'vorbis', '24bit', 'ac3', 'dt3'
+			'flac', 'lossless', 'vbr', 'v0', 'v1', 'v2', 'mp3', '320', '192', '128', 'q8', 'aac', '256', 'ogg', 'vorbis', '24bit', 'ac3', 'dt3', 'dts', '768', '448'
 		)))
 		{
 			unset($valid_pieces[$i]);
@@ -135,7 +135,15 @@ function tokenize_groups($strings, $group_by = 'Some')
 	{
 		$tokenized = tokenize($title);
 		$title = implode(' ', $tokenized[$group_by]);
-		if(!isset($groups[$title]))
+		$result = get_closest($title, array_keys($groups));
+		if($result && levenshtein($title, $result['value']) < max(strlen($title), strlen($result['value'])) * .20)
+		{
+//print $title . "\n";
+//print levenshtein($title, $result['value']) . ' - ' . max(strlen($title), strlen($result['value'])) * .70;
+//print_r($result);
+			$groups[$result['value']][] = $i;
+		}
+		elseif(!isset($groups[$title]))
 			$groups[$title] = array($i);
 		else
 			$groups[$title][] = $i;
@@ -173,6 +181,10 @@ function termSort($a, $b)
 
 function get_closest($search_text, $titles)
 {
+	if(count($titles) == 0)
+		return false;
+	
+	$keys = array_keys($titles);
 	$distances = array_map('levenshtein', $titles, array_fill(0, count($titles), $search_text));
 	asort($distances);
 	reset($distances);
@@ -183,10 +195,10 @@ function get_closest($search_text, $titles)
 		return false;
 	
 	return array(
-		$titles[$closest],
-		$closest,
-		'value' => $titles[$closest],
-		'key' => $closest,
+		$titles[$keys[$closest]],
+		$keys[$closest],
+		'value' => $titles[$keys[$closest]],
+		'key' => $keys[$closest],
 	);
 }
 

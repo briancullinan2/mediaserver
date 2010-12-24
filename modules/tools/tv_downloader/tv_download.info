@@ -4,4 +4,4 @@ privilage = 10
 settings[] = myepisodes
 template = false
 package = tools
-depends on[] = tools
+depends_on[] = tools

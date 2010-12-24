@@ -1,9 +1,9 @@
 name = DiscOgs
 description = Get discography information for all music.
-depends on[] = audio
-depends on[] = curl_installed
-depends on[] = discogs_api
-depends on[] = simplexml_installed
+depends_on[] = audio
+depends_on[] = curl_installed
+depends_on[] = discogs_api
+depends_on[] = simplexml_installed
 package = file_handlers
 settings[] = discogs_api
 cron_only = true

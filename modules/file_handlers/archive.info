@@ -1,7 +1,7 @@
 name = Archives
 description = Convert sets of files to an archive using a command line program.
 privilage = 1
-depends on[] = archiver
+depends_on[] = archiver
 settings[] = archiver
 package = file_handlers
 

@@ -3,4 +3,4 @@ description = Provides configuration for News Groups and NZB files.
 privilage = 10
 settings = download_services_nzbservices
 package = tools
-depends on[] = download_services
+depends_on[] = download_services

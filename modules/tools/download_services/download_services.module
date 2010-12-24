@@ -310,6 +310,12 @@ function validate_service_index($request)
 	return generic_validate_numeric_zero($request, 'service_index');
 }
 
+function validate_download_automatically($request)
+{
+	return isset($request['download_automatically']) && $request['download_automatically'] == true;
+}
+
+
 /**
  * Helper function
  * Provides fetch functions for logging in to the configured torrent services
