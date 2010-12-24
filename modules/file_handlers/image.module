@@ -53,14 +53,12 @@ function PRIORITY()
  */
 function get_info_image($file)
 {
-	$file = str_replace('/', DIRECTORY_SEPARATOR, $file);
-	
 	$priority = array_reverse(PRIORITY());
 	$info = $GLOBALS['getID3']->analyze($file);
 
 	// pull information from $info
 	$fileinfo = array();
-	$fileinfo['Filepath'] = str_replace('\\', '/', $file);
+	$fileinfo['Filepath'] = str_replace(DIRECTORY_SEPARATOR, '/', $file);
 	
 	// get information from sections
 	if(isset($info['fileformat']) && isset($info[$info['fileformat']]['exif']))

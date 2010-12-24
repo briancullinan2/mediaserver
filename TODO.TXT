@@ -1,5 +1,10 @@
 ------------- MONOLITHICMEDIA TODO -------------
 ------------- GENERAL TODO -------------
+MULTIPLE FIXES!
+	is_module() should check dependecy()?
+		use search for is_module() to figure this out
+	convert should check for convert.exe that is not version specific
+Support GD graphics
 Add authentication API that allows modifying of login
 	This will enable stuff like AD authentication
 Completely REDO API for permissions, it currently sucks, should be more like Drupal

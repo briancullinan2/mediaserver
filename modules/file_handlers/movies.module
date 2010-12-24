@@ -271,7 +271,7 @@ function session_movies($request)
 function get_info_movies($file)
 {
 	$fileinfo = array();
-	$fileinfo['Filepath'] = str_replace('\\', '/', $file);
+	$fileinfo['Filepath'] = str_replace(DIRECTORY_SEPARATOR, '/', $file);
 	
 	// set up tokens
 	if((ext($file) == 'iso' || strtoupper(basename($file)) == 'VIDEO_TS') && 

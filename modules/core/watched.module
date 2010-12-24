@@ -36,7 +36,7 @@ function setting_watched_settings()
  */
 function handles_watched($dir)
 {
-	if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $dir)))
+	if(is_dir($dir))
 	{
 		if(is_watched($dir))
 		{
@@ -61,7 +61,7 @@ function handles_watched($dir)
 				// check for file count inconsistency but don't process anything
 				raise_error('Counting files', E_DEBUG);
 				$count = 0;
-				if (is_readable(str_replace('/', DIRECTORY_SEPARATOR, $dir)) && ($dh = opendir(str_replace('/', DIRECTORY_SEPARATOR, $dir))))
+				if (is_readable($dir) && ($dh = opendir($dir)))
 				{
 					// count files
 					while (($file = readdir($dh)) !== false)
@@ -99,7 +99,7 @@ function handles_watched($dir)
 function get_info_watched($file)
 {
 	$fileinfo = array();
-	$fileinfo['Filepath'] = str_replace('\\', '/', $file);
+	$fileinfo['Filepath'] = str_replace(DIRECTORY_SEPARATOR, '/', $file);
 	return $fileinfo;
 }
 
@@ -120,9 +120,12 @@ function setting_watched($settings, $index)
 		if($settings['watched_' . $index][0] == '!' || $settings['watched_' . $index][0] == '^')
 			$settings['watched_' . $index] = substr($settings['watched_' . $index], 1);
 		
+		// always use forward slashes
+		$settings['watched_' . $index] = str_replace(DIRECTORY_SEPARATOR, '/', $settings['watched_' . $index]);
+		
 		// add trailing slash
-		if(substr($settings['watched_' . $index], -1) != '/' && substr($settings['watched_' . $index], -1) != '\\')
-			$settings['watched_' . $index] .= DIRECTORY_SEPARATOR;
+		if(substr($settings['watched_' . $index], -1) != '/')
+			$settings['watched_' . $index] .= '/';
 		
 		// confirm that it is a directory
 		if(!is_dir($settings['watched_' . $index]))
@@ -177,12 +180,12 @@ function setting_ignores($settings)
 function is_watched($dir)
 {
 	// always use forward slash
-	$dir = str_replace('\\', '/', $dir);
+	$dir = str_replace(DIRECTORY_SEPARATOR, '/', $dir);
 	
 	// add trailing slash just in case
 	if(substr($dir, -1) != '/')
 		$dir .= '/';
-	
+
 	// check if the file is watched from the list of watched and ignored directories
 	$is_ignored = false;
 	$is_watched = false;
@@ -248,7 +251,7 @@ function scan_watched($dir, $current = '')
 	if($current == '')
 		$current = substr(setting('watched_' . get_watched_index($dir)), 1);
 	
-	if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $current)))
+	if(is_dir($current))
 	{
 		raise_error('Looking for changes in: ' . $current, E_DEBUG);
 	
@@ -257,7 +260,7 @@ function scan_watched($dir, $current = '')
 		// keep going until all files in directory have been read
 		foreach($files as $i => $file)
 		{
-			if(is_dir(str_replace('/', DIRECTORY_SEPARATOR, $file)) && !in_array(realpath($file), $GLOBALS['scan_dirs']))
+			if(is_dir($file) && !in_array(realpath($file), $GLOBALS['scan_dirs']))
 			{
 				$GLOBALS['scan_dirs'][] = realpath($file);
 				
@@ -281,7 +284,7 @@ function scan_watched($dir, $current = '')
 				}
 			
 				// keep processing files
-				$file = str_replace('\\', '/', $file);
+				$file = str_replace(DIRECTORY_SEPARATOR, '/', $file);
 				
 				$current_dir = true;
 				if(is_watched($file))
@@ -316,7 +319,7 @@ function scan_watched_files($dir, $callback = NULL)
 	raise_error('Scanning directory: ' . $dir, E_DEBUG);
 	
 	$local_files = scan_directory($dir, 'watched_and_files');
-	
+
 	// IMPORTANT!  if there are no local files for a watched directory, it must not be mounted
 	//   do not ruin database by removing everything
 	if(count($local_files) == 0 && $dir == setting('watched_' . get_watched_index($dir)))

@@ -63,7 +63,7 @@ function request_validate()
 	if(!isset($_REQUEST['path_info']))
 	{
 		if(isset($_SERVER['PATH_INFO']))
-			$_REQUEST['path_info'] = $_SERVER['PATH_INFO'];
+			$_REQUEST['path_info'] = urldecode($_SERVER['PATH_INFO']);
 		elseif(isset($_SERVER['REQUEST_URI']))
 			$_REQUEST['path_info'] = urldecode(generic_validate_urlpath($_SERVER, 'REQUEST_URI'));
 	}
@@ -317,8 +317,8 @@ function generic_validate_dir($request, $index)
 {
 	if(isset($request[$index]) && is_dir($request[$index]))
 	{
-		if(substr($request[$index], -strlen(DIRECTORY_SEPARATOR)) != DIRECTORY_SEPARATOR) 
+		if(substr($request[$index], -strlen(DIRECTORY_SEPARATOR)) != DIRECTORY_SEPARATOR && substr($request[$index], -1) != '/') 
 			$request[$index] .= DIRECTORY_SEPARATOR;
-		return $request[$index];
+		return str_replace(DIRECTORY_SEPARATOR, '/', $request[$index]);
 	}
 }

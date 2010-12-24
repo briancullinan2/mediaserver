@@ -1,3 +1,10 @@
+2010-12-23
+Got it working on Windows again
+	Bug fixes
+Changed most of the str_replace(DIRECTORY_SEPARATOR and the like
+	Still need to verify the database can't be corrupted
+	If get_info_() is only called by add() or another get_info_() function then add() can just use str_replace(), otherwise str_replace needs to be used in every get_info_() function
+
 2010-12-22
 Finished error logging to remote servers over SSH2
 Made a lot of progress on download script

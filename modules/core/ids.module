@@ -47,7 +47,7 @@ function get_info_ids($file)
 {
 	$fileinfo = array();
 	
-	$fileinfo['Filepath'] = str_replace('\\', '/', $file);
+	$fileinfo['Filepath'] = str_replace(DIRECTORY_SEPARATOR, '/', $file);
 	$fileinfo['Hex'] = bin2hex($file);
 	
 	return $fileinfo;

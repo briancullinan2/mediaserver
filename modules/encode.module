@@ -208,7 +208,12 @@ function setting_encode_path($settings)
 	else
 	{
 		if(setting_system_type($settings) == 'win')
-			return 'C:\Program Files\VideoLAN\VLC\vlc.exe';
+		{
+			if(file_exists('C:\Program Files (x86)\VideoLAN\VLC\vlc.exe'))
+				return 'C:\Program Files (x86)\VideoLAN\VLC\vlc.exe';
+			else
+				return 'C:\Program Files\VideoLAN\VLC\vlc.exe';
+		}
 		else
 			return '/usr/bin/vlc';
 	}

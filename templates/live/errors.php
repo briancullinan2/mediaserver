@@ -56,7 +56,7 @@ function theme_live_debug_block()
 		}
 		
 		?>
-		<a id="hide_link" href="#" onClick="if(!this.hidden) { document.getElementById('debug').className='debug hide'; this.hidden=true; this.innerHTML = 'Show'; } else { document.getElementById('debug').className='debug'; this.hidden=false; this.innerHTML = 'Hide'; } return false;">Show</a>
+		<a id="hide_link" href="#" onClick="if(this.hidden || typeof this.hidden == 'undefined') { document.getElementById('debug').className='debug'; this.hidden=false; this.innerHTML = 'Hide'; } else { document.getElementById('debug').className='debug hide'; this.hidden=true; this.innerHTML = 'Show'; } return false;">Show</a>
 		</div>
 		<?php
 	}

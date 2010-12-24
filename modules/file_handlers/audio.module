@@ -35,8 +35,6 @@ function handles_audio($file)
 
 function get_info_audio($file)
 {
-	$file = str_replace('/', DIRECTORY_SEPARATOR, $file);
-	
 	$info = @$GLOBALS['getID3']->analyze($file);
 	@getid3_lib::CopyTagsToComments($info);
 	
@@ -51,7 +49,7 @@ function get_info_audio($file)
 	if(!isset($info['bitrate'])) $info['bitrate'] = 0;
 
 	$fileinfo = array();
-	$fileinfo['Filepath'] = str_replace('\\', '/', $file);
+	$fileinfo['Filepath'] = str_replace(DIRECTORY_SEPARATOR, '/', $file);
 	
 	$fileinfo['Title'] = $info['comments_html']['title'][0];
 	$fileinfo['Artist'] = $info['comments_html']['artist'][0];

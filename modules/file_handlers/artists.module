@@ -16,7 +16,7 @@ function get_artists($request, &$count)
 	
 	if(isset($request['dir']))
 	{
-		$request['dir'] = str_replace('\\', '/', $request['dir']);
+		$request['dir'] = str_replace(DIRECTORY_SEPARATOR, '/', $request['dir']);
 		if($request['dir'][0] == '/') $request['dir'] = substr($request['dir'], 1);
 		if($request['dir'][strlen($request['dir'])-1] == '/') $request['dir'] = substr($request['dir'], 0, strlen($request['dir'])-1);
 		

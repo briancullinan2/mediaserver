@@ -72,14 +72,16 @@ function validate_dir($request)
 		// this is needed to make sure the directory is handled by something
 		$request['handler'] = validate($request, 'handler');
 		
+		$root = str_replace(DIRECTORY_SEPARATOR, '/', realpath('/'));
+		
 		// add leading slash
-		if(substr($request['dir'], 0, 1) != '/')
-			$request['dir'] = '/' . $request['dir'];
+		if(substr($request['dir'], 0, strlen($root)) != $root)
+			$request['dir'] = $root . (($request['dir'] != '/' && $request['dir'] != DIRECTORY_SEPARATOR)?$request['dir']:'');
 			
 		// add trailing slash
-		if(substr($request['dir'], -1) != '/' && substr($request['dir'], -1) != '\\')
+		if(substr($request['dir'], -1) != '/' && substr($request['dir'], -1) != DIRECTORY_SEPARATOR)
 			$request['dir'] .= '/';
-		
+			
 		// replace directory with actual path
 		if(setting('alias_enable'))
 			$tmp = alias_replace($request['dir']);
@@ -162,10 +164,8 @@ function file_variables($request)
  */
 function get_info_files($file)
 {
-	$file = str_replace('/', DIRECTORY_SEPARATOR, $file);
-	
 	$fileinfo = array();
-	$fileinfo['Filepath'] = str_replace('\\', '/', $file);
+	$fileinfo['Filepath'] = str_replace(DIRECTORY_SEPARATOR, '/', $file);
 	$fileinfo['Filename'] = basename($file);
 	$fileinfo['Filesize'] = file_exists($file)?filesize($file):0;
 	$fileinfo['Filemime'] = is_dir($file)?'httpd/unix-directory':mime($file);
@@ -225,7 +225,7 @@ function filter_file($request)
 {
 	if(isset($request['file']))
 	{
-		$request['file'] = str_replace('\\', '/', $request['file']);
+		$request['file'] = str_replace(DIRECTORY_SEPARATOR, '/', $request['file']);
 		
 		// this is necissary for dealing with windows and cross platform queries coming from templates
 		if($request['file'][0] == DIRECTORY_SEPARATOR) $request['file'] = realpath('/') . substr($request['file'], 1);
@@ -261,7 +261,7 @@ function filter_dir($request)
 		if($request['dir'][0] == '/') $request['dir'] = realpath('/') . substr($request['dir'], 1);
 
 		// replace separator
-		$request['dir'] = str_replace('\\', '/', $request['dir']);
+		$request['dir'] = str_replace(DIRECTORY_SEPARATOR, '/', $request['dir']);
 		
 		// replace aliased path with actual path
 		if(setting('alias_enable'))
@@ -321,7 +321,7 @@ function filter_files($request, $index)
  */
 function add($file, $handler = 'files')
 {
-	$file = str_replace('\\', '/', $file);
+	$file = str_replace(DIRECTORY_SEPARATOR, '/', $file);
 	
 	// maybe a fileinfo was passed in by mistake
 	if(is_array($file))
@@ -419,7 +419,7 @@ function add($file, $handler = 'files')
  */
 function output_handler($file, $handler)
 {
-	$file = str_replace('\\', '/', $file);
+	$file = str_replace(DIRECTORY_SEPARATOR, '/', $file);
 	
 	if(setting('alias_enable'))
 		$file = alias_replace($file);
@@ -812,7 +812,7 @@ function merge_local_info($files)
  */
 function remove($file, $handler = 'files')
 {
-	$file = str_replace('\\', '/', $file);
+	$file = str_replace(DIRECTORY_SEPARATOR, '/', $file);
 	
 	// files always qualify, we are going to log every single one!
 	if(!handles($file, $handler) && $handler != 'files')
@@ -864,7 +864,7 @@ function cleanup($handler = 'files')
 	$watched_where = '';
 	foreach($GLOBALS['watched'] as $i => $watch)
 	{
-		$tmp_watch = str_replace('\\', '/', $watch['Filepath']);
+		$tmp_watch = str_replace(DIRECTORY_SEPARATOR, '/', $watch['Filepath']);
 		// add the files that begin with a path from a watch directory
 		$watched_where .= ' LEFT(Filepath, ' . strlen($tmp_watch) . ') != "' .  addslashes($tmp_watch) . '" AND';
 	}
@@ -932,7 +932,7 @@ function cleanup($handler = 'files')
 		// clean up items that are in the ignore list
 		foreach($GLOBALS['ignored'] as $i => $ignore)
 		{
-			$tmp_ignore = str_replace('\\', '/', $ignore['Filepath']);
+			$tmp_ignore = str_replace(DIRECTORY_SEPARATOR, '/', $ignore['Filepath']);
 			$ignored_where .= ' LEFT(Filepath, ' . strlen($tmp_ignore) . ') = "' . addslashes($tmp_ignore) . '" OR';
 		}
 		// remove last OR

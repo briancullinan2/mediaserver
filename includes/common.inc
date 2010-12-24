@@ -532,17 +532,17 @@ function mime_type($ext)
  */
 function get_inner_path($file)
 {
-	$paths = explode(DIRECTORY_SEPARATOR, $file);
+	$paths = explode('/', $file);
 	$last_path = '';
 	foreach($paths as $i => $tmp_file)
 	{
-		if(file_exists(str_replace('/', DIRECTORY_SEPARATOR, $last_path . $tmp_file)) || $last_path == '')
+		if(file_exists($last_path . $tmp_file) || $last_path == '')
 		{
 			$last_path = $last_path . $tmp_file;
 			if($last_path == '' || $last_path[strlen($last_path)-1] != '/')
 				$last_path .= '/';
 		} else {
-			if(file_exists(str_replace('/', DIRECTORY_SEPARATOR, $last_path)))
+			if(file_exists($last_path))
 				break;
 		}
 	}
@@ -567,13 +567,13 @@ function get_inner_path($file)
  */
 function type($file)
 {
-	if( file_exists( str_replace('/', DIRECTORY_SEPARATOR, $file) ) )
+	if( file_exists($file) )
 	{
 		if( is_dir($file) )
 		{
 			return '';
 		}
-		elseif( is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)) )
+		elseif( is_file($file) )
 		{
 			$ext = ext($file);
 			if( $ext == '' )

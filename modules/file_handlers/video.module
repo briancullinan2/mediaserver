@@ -40,8 +40,6 @@ function handles_video($file)
  */
 function get_info_video($file)
 {
-	$file = str_replace('/', DIRECTORY_SEPARATOR, $file);
-	
 	$info = $GLOBALS['getID3']->analyze($file);
 	getid3_lib::CopyTagsToComments($info);
 	
@@ -57,7 +55,7 @@ function get_info_video($file)
 	if(!isset($info['video']['frame_rate'])) $info['video']['frame_rate'] = 0;
 	
 	$fileinfo = array();
-	$fileinfo['Filepath'] = str_replace('\\', '/', $file);
+	$fileinfo['Filepath'] = str_replace(DIRECTORY_SEPARATOR, '/', $file);
 	
 	$fileinfo['Title'] = $info['comments_html']['title'][0];
 	$fileinfo['Comments'] = $info['comments_html']['comments'][0];

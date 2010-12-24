@@ -83,7 +83,7 @@ function get_info_discogs($file)
 	if(!empty($audioinfo['Artist']) && !empty($audioinfo['Album']))
 	{
 		$fileinfo = array();
-		$fileinfo['Filepath'] = str_replace('\\', '/', $file);
+		$fileinfo['Filepath'] = str_replace(DIRECTORY_SEPARATOR, '/', $file);
 		
 		$search_text = $audioinfo['Artist'] . ' - ' . $audioinfo['Album'];
 		$search = 'http://www.discogs.com/search?type=all&q=' . urlencode($search_text) . '&f=xml&api_key=' . setting('discogs_api');

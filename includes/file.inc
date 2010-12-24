@@ -51,7 +51,7 @@ function scan_directory($dir, $filter = 'files', $depth = 1)
 	if (is_dir($dir) && ($handle = opendir($dir)))
 	{
 		// add slash to end
-		if(substr($dir, -strlen(DIRECTORY_SEPARATOR)) != DIRECTORY_SEPARATOR)
+		if(substr($dir, -strlen(DIRECTORY_SEPARATOR)) != DIRECTORY_SEPARATOR && substr($dir, -1) != '/')
 			$dir .= DIRECTORY_SEPARATOR;
 		
 		while (FALSE !== ($file = readdir($handle)))
@@ -68,15 +68,15 @@ function scan_directory($dir, $filter = 'files', $depth = 1)
 			elseif(function_exists($filter))
 			{
 				if(call_user_func_array($filter, array($dir . $file)))
-					$files[] = $dir . $file;
+					$files[] = str_replace(DIRECTORY_SEPARATOR, '/', $dir . $file);
 			}
 			elseif(is_handler($filter))
 			{
 				if(handles($dir . $file, $filter))
-					$files[] = $dir . $file;
+					$files[] = str_replace(DIRECTORY_SEPARATOR, '/', $dir . $file);
 			}
 			elseif(handles($dir . $file, 'files'))
-				$files[] = $dir . $file;
+				$files[] = str_replace(DIRECTORY_SEPARATOR, '/', $dir . $file);
 		}
 	}
 	
@@ -162,7 +162,7 @@ function handles($file, $handler = 'files')
 		return false;
 	
 	// always use forward slash
-	$file = str_replace('\\', '/', $file);
+	$file = str_replace(DIRECTORY_SEPARATOR, '/', $file);
 
 	// replace the file alias with actual path
 	if(setting('alias_enable')) $file = alias_replace($file);
@@ -172,9 +172,9 @@ function handles($file, $handler = 'files')
 	{
 		// check if the given file is a directory or file
 		if(
-			is_dir(str_replace('/', DIRECTORY_SEPARATOR, $file)) || 
+			is_dir($file) || 
 			(
-				is_file(str_replace('/', DIRECTORY_SEPARATOR, $file)) && $file[strlen($file)-1] != '/'
+				is_file($file) && $file[strlen($file)-1] != '/'
 			)
 		)
 		{

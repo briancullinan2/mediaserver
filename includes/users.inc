@@ -267,9 +267,9 @@ function setting_local_users($settings)
 		elseif(setting('system_type') == 'mac')
 			return '/Users/';
 		elseif(file_exists(realpath('/') . 'Users'))
-			return realpath('/') . 'Users' . DIRECTORY_SEPARATOR;
+			return str_replace(DIRECTORY_SEPARATOR, '/', realpath('/') . 'Users' . DIRECTORY_SEPARATOR);
 		else
-			return realpath('/') . 'Documents and Settings' . DIRECTORY_SEPARATOR;
+			return str_replace(DIRECTORY_SEPARATOR, '/', realpath('/') . 'Documents and Settings' . DIRECTORY_SEPARATOR);
 	}
 }
 

@@ -267,7 +267,7 @@ function setting_agent_simple()
 
 function setting_deflate()
 {
-	if(isset($_SERVER['HTTP_ACCEPT_ENCODING']) && strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') &&
+	if(isset($_SERVER['HTTP_ACCEPT_ENCODING']) && strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== false &&
 		function_exists('ob_gzhandler')
 	)
 		return true;
@@ -576,21 +576,6 @@ function status_settings($settings)
 {
 	$status = array();
 
-	$status['library_paths'] = array(
-		'name' => 'Library Paths',
-		'status' => '',
-		'description' => array(
-			'list' => array(
-				'These paths are the locations where libraries can be installed to.',
-			),
-		),
-		'disabled' => true,
-		'value' => array(
-			'Libraries can be isntalled in:',
-			'list' => get_include_paths(),
-		),
-	);
-
 	if(dependency('memory_limit'))
 	{
 		$status['memory_limit'] = array(
@@ -633,6 +618,23 @@ function status_settings($settings)
 			),
 		);
 	}
+
+	$status['deflate_support'] = array(
+		'name' => 'Deflating Support',
+		'status' => function_exists('ob_gzhandler')?'':'warn',
+		'description' => array(
+			'list' => array(
+				'Deflating the page helps reduce network traffic and speeds up output for users.',
+				'This requires Zlib be installed.'
+			),
+		),
+		'value' => array(
+			'link' => array(
+				'url' => 'http://www.php.net/manual/en/book.zlib.php',
+				'text' => 'Zlib Extension',
+			),
+		),
+	);
 	
 	$corrections = array();
 	$files = get_system_files($settings);
@@ -673,6 +675,19 @@ function status_settings($settings)
 		);
 	}
 	
+	$status['library_paths'] = array(
+		'name' => 'Library Paths',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'These paths are the locations where libraries can be installed to.',
+			),
+		),
+		'value' => array(
+			'Libraries can be installed in:',
+			'list' => get_include_paths(),
+		),
+	);
 	
 	// move these to proper handlers
 	$pear_libs = array('File/Archive.php' => 'File_Archive', 'MIME/Type.php' => 'MIME_Type');
