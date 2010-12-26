@@ -472,14 +472,14 @@ function fetch_service_results($search, $index, $type = NULL)
 		// run query, using television search strings
 		$query = sprintf($services[$index]['search'], urlencode($search));
 		$result = fetch($query, array(), array(), session('download_services_' . $index));
-
+		
 		// match nzbs
 		if(is_callable($services[$index]['match']))
 			$matches = call_user_func_array($services[$index]['match'], array($result['content']));
 		else
 		{
 			$count = preg_match_all($services[$index]['match'], $result['content'], $urls);
-			
+
 			$matches['urls'] = $urls[1];
 			
 			if(isset($services[$index]['match_title']))

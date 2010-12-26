@@ -147,10 +147,15 @@ function invoke_menu($request, $template = false)
 		if(isset($_SESSION)) session_write_close();
 
 		// compress the output
-		if(setting('deflate'))
+		if(setting('deflate') && !headers_sent())
 		{
+			// this prevents browsers from showing encoding errors
+			$contents = ob_get_contents();
+			if($contents)
+				ob_end_clean();
 			raise_error('Deflating.', E_DEBUG);
 			ob_start("ob_gzhandler");
+			print $contents;
 		}
 		else
 			raise_error('Deflating not supported!', E_DEBUG);

@@ -4,13 +4,13 @@ function setup_cli()
 {
 	require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'theme.inc';
 	
-	// add callback for redirecting to a log file
-	add_error_callback('cli_error_callback');	
-	$GLOBALS['settings']['debug_mode'] = false;
-	
 	// set up colorize stack to be used in theme
 	if(!isset($GLOBALS['cli_colorize']))
 		$GLOBALS['cli_colorize'] = array(0);
+	
+	// add callback for redirecting to a log file
+	add_error_callback('cli_error_callback');	
+	$GLOBALS['settings']['debug_mode'] = false;
 	
 	// use a stack for performing multiple requests
 	$GLOBALS['cli_request_stack'] = array();
@@ -156,7 +156,7 @@ function cli_error_callback($error)
 	
 	if($error->code & (E_ALL|E_STRICT))
 		$error_out .= "\033[31m";
-	elseif($error->code & E_DATABASE)
+	elseif(defined('E_DATABASE') && ($error->code & E_DATABASE))
 		$error_out .= "\033[33m";
 	
 	// get width from theme_stack
@@ -179,7 +179,7 @@ function cli_error_callback($error)
 
 	$error_out .= cli_wordwrap((isset($error->time)?('[' . $error->time . ']'):'') . $error->message, $width) . "\n";
 	
-	if($error->code & (E_ALL|E_STRICT) || $error->code & E_DATABASE)
+	if($error->code & (E_ALL|E_STRICT) || (defined('E_DATABASE') && ($error->code & E_DATABASE)))
 	{
 		$color = array_pop($GLOBALS['cli_colorize']);
 		$error_out .= "\033[" . $color . "m";

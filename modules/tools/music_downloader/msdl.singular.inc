@@ -23,6 +23,8 @@ function get_music_download_manual($request)
 	{
 		// parse through results and compare with what we already have
 		$service_results = db_assoc('SELECT * FROM download_services WHERE Search=? AND Type="audio"', array(session('download_services')));
+		if(!isset($service_results[0]))
+			return array();
 		$results = unserialize($service_results[0]['Results']);
 		
 		// group results
@@ -64,13 +66,13 @@ function get_music_download_manual($request)
 			merge_id_info($artist_albums, 'audio', $cache_updates);
 			foreach($artist_albums as $i => $artist)
 			{
-				if($artist['discogs_id'] == 0 && handles($artist['Filepath'], 'discogs'))
+				if($artist['discogs_id'] == 0)
 				{
 					$GLOBALS['settings']['deep_select'] = 2;
 					$result = add($artist['Filepath'], 'discogs');
 					if(is_array($result))
 					{
-						$artists[$i] = array('discogs_id' => $result['id']) + array_merge($result, $artist);
+						$artist_albums[$i] = array('discogs_id' => $result['id']) + array_merge($result, $artist);
 						$ids = array_intersect_key($artist_albums[$i], array_flip(get_id_fields()));
 						db_query('UPDATE ids ' . sql_update($ids) . ' WHERE id=' . $artist['id'], array_values($ids));
 					}
@@ -85,9 +87,17 @@ function get_music_download_manual($request)
 			
 			// get list of missing albums from discogs artist
 			try {
-				$artist_xml = new SimpleXMLElement($artist_albums[0]['ArtistXml']);
+				$discogs_titles = array();
+				foreach($artist_albums as $i => $artist_album)
+				{
+					if(isset($artist_album['ArtistXml']))
+					{
+						$artist_xml = new SimpleXMLElement($artist_album['ArtistXml']);
 			
-				$discogs_titles = get_xml_list($artist_xml->xpath('//release[@type="Main"]/title'));
+						$discogs_titles = get_xml_list($artist_xml->xpath('//release[@type="Main"]/title'));
+						break;
+					}
+				}
 				
 				$discogs_albums = tokenize_groups($discogs_titles);
 				unset($discogs_albums['']);
@@ -148,8 +158,6 @@ function get_music_download_manual($request)
 				
 				$album_formats = array_intersect_key($results['titles'], array_flip($search_groups[$album]));
 
-print_r($album_formats);
-exit;
 				// select the preffered format
 				$music_formats = explode(',', setting('music_formats'));
 				foreach($music_formats as $i => $format)
@@ -163,6 +171,8 @@ exit;
 				}
 			}
 			$selected = array_unique($selected);
+//print_r(array_intersect_key($results['titles'], array_flip($selected)));
+//exit;
 			
 			if(validate($request, 'download_automatically') || true)
 			{
@@ -185,7 +195,7 @@ exit;
 					$filename = get_filename($result['headers']);
 					if(!$filename)
 						$filename = $results['titles'][$key] . '.torrent';
-					$path = $download_services[$service_results[0]['Service']]['savepath'] . $filename;
+					$path = $download_services[$service_results[0]['Service']]['savepath'] . generic_validate_filename(array('filename' => $filename), 'filename');
 					
 					// write the streams
 					if(($fh = fopen($path, 'w')))

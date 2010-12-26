@@ -97,7 +97,6 @@ function theme_live_body()
 		<div id="loading">&nbsp;</div>
 		<?php theme('context_menu'); ?>
 		<div id="container">
-			<div class="sideColumn right"></div>
 	<?php
 }
 

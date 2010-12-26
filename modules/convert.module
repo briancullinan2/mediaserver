@@ -99,10 +99,10 @@ function setting_convert_path($settings)
 	{
 		if(setting_system_type($settings) == 'win')
 		{
-			if(file_exists('C:\Program Files (x86)\ImageMagick-6.4.9-Q16\convert.exe'))
-				return 'C:\Program Files (x86)\ImageMagick-6.4.9-Q16\convert.exe';
+			if(($file = file_exists_regexp('C:\/Program Files( \(x86\))?\/ImageMagick.*?\/convert.exe')) != false)
+				return $file;
 			else
-				return 'C:\Program Files\ImageMagick-6.4.9-Q16\convert.exe';
+				return 'C:\Program Files\ImageMagick\convert.exe';
 		}
 		else
 			return '/usr/bin/convert';
@@ -121,7 +121,7 @@ function setting_convert_args($settings)
 	else
 	{
 		if(setting_system_type($settings) == 'win')
-			return '"%IF" %FM:-';
+			return '"%IF" -resize "%TWx%TH" %FM:-';
 		else
 			return '"%IF" -resize "%TWx%TH" %FM:-';
 	}
@@ -202,8 +202,6 @@ function validate_cwidth($request)
  */
 function output_convert($request)
 {
-	print 'hit';
-	exit;
 	set_time_limit(0);
 
 	if(!isset($request['convert']))

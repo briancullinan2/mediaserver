@@ -290,7 +290,14 @@ function setting_html_root($settings)
 	if(isset($settings['html_root']) && @parse_url($settings['html_domain'] . $settings['html_root']) !== false)
 		return $settings['html_root'];
 	else
-		return '/' . ((substr($settings['local_root'], 0, strlen($_SERVER['DOCUMENT_ROOT'])) == $_SERVER['DOCUMENT_ROOT'])?substr($settings['local_root'], strlen($_SERVER['DOCUMENT_ROOT'])):'');
+		return '/' . 
+			((substr($settings['local_root'], 0, strlen($_SERVER['DOCUMENT_ROOT'])) == $_SERVER['DOCUMENT_ROOT'])
+			?
+				substr($settings['local_root'], strlen($_SERVER['DOCUMENT_ROOT']))
+				:
+				''
+			) . 
+			(setting('modrewrite')?'':'index.php/');
 }
 
 /**

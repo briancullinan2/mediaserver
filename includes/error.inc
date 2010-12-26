@@ -247,7 +247,7 @@ function setting_error()
 function phperror_wrapper($error_code, $error_str, $error_file, $error_line)
 {
 	if(substr($error_str, 0, 12) == 'mysql error:')
-		raise_error('DB ERROR:' . substr($error_str, 12), $error_code|E_DATABASE);
+		raise_error('DB ERROR:' . substr($error_str, 12), $error_code|(defined('E_DATABASE')?E_DATABASE:0));
 	else
 		raise_error($error_str, $error_code);
 
@@ -278,6 +278,11 @@ function add_error_callback($callback)
 	if(is_callable($callback) && !in_array($callback, $GLOBALS['error_callback']))
 	{
 		$GLOBALS['error_callback'][] = $callback;
+		// call the callback with all the buffered errors since it was just added
+		foreach($GLOBALS['debug_errors'] as $i => $error)
+		{
+			call_user_func_array($callback, array($error));
+		}
 		return true;
 	}
 	

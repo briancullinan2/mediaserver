@@ -206,7 +206,8 @@ function load_module($path)
 
 function load_include($path)
 {
-	include_once(include_path($path));
+	$include = include_path($path);
+	include_once $include;
 }
 
 function is_module($file)

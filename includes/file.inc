@@ -65,7 +65,7 @@ function scan_directory($dir, $filter = 'files', $depth = 1)
 			{
 				$files = array_merge($files, scan_directory($dir . $file, $filter, ($depth == 0)?$depth:($depth - 1)));
 			}
-			elseif(function_exists($filter))
+			elseif(is_callable($filter))
 			{
 				if(call_user_func_array($filter, array($dir . $file)))
 					$files[] = str_replace(DIRECTORY_SEPARATOR, '/', $dir . $file);
@@ -83,6 +83,29 @@ function scan_directory($dir, $filter = 'files', $depth = 1)
 	sort($files);
 	
 	return array_unique($files);
+}
+
+function directories()
+{
+	
+}
+
+function file_exists_regexp($file)
+{
+	$dirs = preg_split('/\\\\\/|\\\\\\\\/i', $file);
+	$current = 0;
+	$possible = array($dirs[0]);
+	for($i = 0; $i < count($possible); $i++)
+	{
+		$current = max(substr_count($possible[$i], '/')-1, 0);
+		$possible = array_merge($possible, scan_directory(realpath($possible[$i]), create_function('$file', 'return preg_match("/' . $dirs[$current+1] . '/i", basename($file));')));
+	}
+	// double check to make sure the file actually matches
+	$result = array_pop($possible);
+	if(preg_match('/' . $file . '/i', $result))
+		return $result;
+	else
+		return false;
 }
 
 function is_internal($handler)

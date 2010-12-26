@@ -38,7 +38,7 @@ function setting_music_formats($settings)
 		}
 		return implode(',', $valid);
 	}
-	return 'MP3 V0,MP3 320,FLAC,MP3';
+	return 'MP3 V0 VBR,MP3 320,FLAC LOSSLESS,MP3';
 }
 
 function configure_music_download($settings)
@@ -120,13 +120,21 @@ function output_music_download($request)
 	
 	if($request['music_download_mode'] == 'search')
 	{
-		$request['service_index'] = validate($request, 'service_index');
-		$request['service_search'] = session('download_services');
+		$artists = db_assoc('SELECT * FROM audio GROUP BY Artist');
 		
-		$infos = array_merge($infos, get_download_services_manual($request['service_index'], $request['service_search'], 'audio', 'admin/tools/music/downloader/search/'));
-
-		if(!empty($request['service_search']) && $request['service_index'] == count(setting('all_download_services', 'audio'))-1)
-			$infos = array_merge($infos, get_music_download_manual($request));
+		foreach($artists as $i => $artist)
+		{
+			session('download_services', $artist['Artist']);
+			$request['service_index'] = validate($request, 'service_index');
+			$request['service_search'] = session('download_services');
+			
+			$infos = array_merge($infos, get_download_services_manual($request['service_index'], $request['service_search'], 'audio', 'admin/tools/music/downloader/search/'));
+	
+			if(!empty($request['service_search']) && $request['service_index'] == count(setting('all_download_services', 'audio'))-1)
+			{
+				$infos = array_merge($infos, get_music_download_manual($request));
+			}
+		}
 	}
 	
 	theme('form_fieldrows', $infos);

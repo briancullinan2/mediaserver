@@ -168,8 +168,6 @@ function theme_live_files($files = NULL)
 			}
 			elseif($scheme == 'image' && is_module('convert'))
 			{
-print url('convert/png?cheight=500&cwidth=500&id=' . $files[0]['id']);
-exit;
 				?><img id="preview" src="<?php print url('convert/png?cheight=500&cwidth=500&id=' . $files[0]['id']); ?>" />
 				<div class="filestrip">
 				<div class="files" style="width:<?php print count($files) * 83; ?>px;"><?php
@@ -235,8 +233,6 @@ function theme_live_file_preview_image($file)
 	$html = format_file($file);
 	
 	$link = "$('#preview').attr('src', '" . url('convert/png?cheight=500&cwidth=500&id=' . $html['id']) . "')";
-print_r(url('convert/png?cheight=56&cwidth=56&id=' . $html['id']));
-exit;
 	?>
 	<div class="file preview file_ext_<?php print $html['Filetype']; ?> file_type_<?php print isset($html['Filemime'])?str_replace('/', ' file_type_', $html['Filemime']):''; ?>" id="<?php print $html['id']; ?>">
 		<div class="thumb">

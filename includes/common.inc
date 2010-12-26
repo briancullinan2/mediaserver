@@ -415,7 +415,7 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 	
 	// generate a link, with optional domain the html root and path info prepended
 	$link = (($include_domain)?setting('html_domain'):'') . 
-		setting('html_root') . (setting('modrewrite')?'':'index.php/') . 
+		setting('html_root') . 
 		(isset($path_info)?urlencode_path($path_info):'') . (($query != '?')?$query:'');
 	
 	// optionally return a non html special chars converted URL
