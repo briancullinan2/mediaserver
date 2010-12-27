@@ -46,7 +46,7 @@ function configure_code()
 	
 	if(dependency('highlighter'))
 	{
-		$options['highlighter'] = array(
+		$options['setting_highlighter'] = array(
 			'name' => lang('highlighter title', 'Highlighter'),
 			'status' => '',
 			'description' => array(
@@ -65,7 +65,7 @@ function configure_code()
 	}
 	else
 	{
-		$options['highlighter'] = array(
+		$options['setting_highlighter'] = array(
 			'name' => lang('highlighter title', 'Highlighter Not Installed'),
 			'status' => 'fail',
 			'description' => array(

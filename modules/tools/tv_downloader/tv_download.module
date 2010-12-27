@@ -86,7 +86,7 @@ function configure_tv_download($settings)
 	
 	$feeds = array();
 	
-	$feeds['myepisodes'] = array(
+	$feeds['setting_myepisodes'] = array(
 		'name' => 'My Episodes Account',
 		'status' => '',
 		'description' => array(

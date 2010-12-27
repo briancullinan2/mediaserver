@@ -16,7 +16,37 @@ function register_session()
 		'package' => 'core',
 	);
 }
- 
+
+function new_session($secure = false, $id = NULL)
+{
+    session_destroy();
+
+    if(isset($id))
+    {
+        if(dirname($id) != '' && dirname($id) != '/')
+    		session_save_path(dirname($id));
+        if(basename($id) != '')
+            session_id(basename($id));
+
+    }
+    else
+        // regenerate session and set secure cookie
+        session_regenerate_id(true);
+
+	session_start();
+    session('created', time());
+    session('remote_ip', setting('remote_ip'));
+    
+    if($secure)
+    {
+        $id = session_id();
+        $name = session_name();
+        if(setting('enable_https'))
+            setcookie($name, $id, time()+session_cache_expire(), NULL, $_SERVER['HTTP_HOST'], true, true);
+    }
+}
+
+
 /**
  * Set up the triggers for saving a session
  * @ingroup setup
@@ -28,6 +58,12 @@ function setup_session($request = array())
 		/** always begin the session */
 		session_start();
 	}
+
+    // check access times for expiry
+    if(time() - session('created') > 1800 || setting('remote_ip') != session('remote_ip'))
+        new_session();
+
+    session('last_activity', time());
 }
 
 function session_set_conditional($module, $result)

@@ -201,7 +201,7 @@ function configure_users($settings, $request)
 	
 	if(is_writable($settings['local_users']))
 	{
-		$options['local_users'] = array(
+		$options['setting_local_users'] = array(
 			'name' => 'User Files',
 			'status' => '',
 			'description' => array(
@@ -215,7 +215,7 @@ function configure_users($settings, $request)
 	}
 	else
 	{
-		$options['local_users'] = array(
+		$options['setting_local_users'] = array(
 			'name' => 'User Files',
 			'status' => 'fail',
 			'description' => array(
@@ -229,7 +229,7 @@ function configure_users($settings, $request)
 		);
 	}
 
-	$options['username_validation'] = array(
+	$options['setting_username_validation'] = array(
 		'name' => 'Username Validation',
 		'status' => '',
 		'description' => array(
@@ -565,14 +565,7 @@ function session_users($request)
 		$save = users_get_guest();
 	}
 	else
-	{
-		// regenerate session and set secure cookie
-		session_regenerate_id(true);
-		$id = session_id();
-		$name = session_name();
-		if(setting('enable_https'))
-			setcookie($name, $id, time()+session_cache_expire(), NULL, $_SERVER['HTTP_HOST'], true, true);
-	}
+        new_session(setting('enable_https'));
 
 	// output the user so template can print out login or logout stuff
 	register_output_vars('user', $save);

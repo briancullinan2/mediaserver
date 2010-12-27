@@ -21,7 +21,7 @@ function configure_convert($settings)
 	
 	if(dependency('converter'))
 	{
-		$options['convert_path'] = array(
+		$options['setting_convert_path'] = array(
 			'name' => lang('convert path title', 'Convert Path'),
 			'status' => '',
 			'description' => array(
@@ -37,7 +37,7 @@ function configure_convert($settings)
 	}
 	else
 	{
-		$options['convert_path'] = array(
+		$options['setting_convert_path'] = array(
 			'name' => lang('convert path title', 'Convert Path'),
 			'status' => 'fail',
 			'description' => array(
@@ -51,7 +51,7 @@ function configure_convert($settings)
 		);
 	}
 	
-	$options['convert_args'] = array(
+	$options['setting_convert_args'] = array(
 		'name' => lang('convert args title', 'Convert Arguments'),
 		'status' => '',
 		'description' => array(

@@ -35,7 +35,7 @@ function configure_encode($settings, $request)
 	
 	if(dependency('encoder') != false)
 	{
-		$options['encode_path'] = array(
+		$options['setting_encode_path'] = array(
 			'name' => 'Encode Path',
 			'status' => '',
 			'description' => array(
@@ -51,7 +51,7 @@ function configure_encode($settings, $request)
 	}
 	else
 	{
-		$options['encode_path'] = array(
+		$options['setting_encode_path'] = array(
 			'name' => 'Encode Path',
 			'status' => 'fail',
 			'description' => array(
@@ -65,7 +65,7 @@ function configure_encode($settings, $request)
 		);
 	}
 	
-	$options['encode_args'] = array(
+	$options['setting_encode_args'] = array(
 		'name' => 'Encode Arguments',
 		'status' => '',
 		'description' => array(

@@ -57,7 +57,7 @@ function configure_sitemap($settings)
 {
 	$settings['no_bots'] = setting('no_bots');
 	
-	$options['no_bots'] = array(
+	$options['setting_no_bots'] = array(
 		'name' => lang('no bots title', 'Robots Handling'),
 		'status' => '',
 		'description' => array(

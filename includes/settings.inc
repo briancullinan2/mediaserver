@@ -17,7 +17,7 @@ function register_settings()
 		'description' => 'Contains basic settings for site operation.',
 		'privilage' => 10,
 		'settings' => array('database_reset', 'all_reset', 'installed', 'system_type', 'local_root', 'settings_file', 'modrewrite', 
-			'html_domain', 'html_root', 'html_name', 'debug_mode', 'deep_select', 'buffer_size', 'verbose',
+			'html_domain', 'html_root', 'html_name', 'deep_select', 'buffer_size',
 		),
 		'package' => 'core',
 		'template' => false,
@@ -73,6 +73,8 @@ function preload_settings()
 		
 		// try and forward them to the install page
 		if(!isset($_REQUEST['module'])) $_REQUEST['module'] = 'admin_install';
+
+        raise_error('Site settings not configured, use the admin_password setting to see what\'s wrong!', E_DEBUG|E_USER);
 	}
 }
 
@@ -158,7 +160,7 @@ function setting_settings_file()
 		if(file_exists($settings))
 			return $settings;
 	}
-	
+
 	return $settings;
 }
 
@@ -238,6 +240,13 @@ function setting_request_method()
 		return 'get';
 }
 
+function setting_remote_ip()
+{
+    if(isset($_SERVER['REMOTE_ADDR']))
+        return $_SERVER['REMOTE_ADDR'];
+    else
+        return NULL;
+}
 
 function setting_agent()
 {
@@ -268,7 +277,7 @@ function setting_agent_simple()
 function setting_deflate()
 {
 	if(isset($_SERVER['HTTP_ACCEPT_ENCODING']) && strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== false &&
-		function_exists('ob_gzhandler')
+                function_exists('ob_gzhandler')
 	)
 		return true;
 	else
@@ -285,18 +294,11 @@ function setting_html_root($settings)
 	$settings['html_domain'] = setting('html_domain');
 	$settings['local_root'] = setting('local_root');
 	$settings['local_root'] = str_replace(DIRECTORY_SEPARATOR, '/', $settings['local_root']);
-	if(substr($_SERVER['DOCUMENT_ROOT'], -1) != '/' && substr($_SERVER['DOCUMENT_ROOT'], -1) != '\\') $_SERVER['DOCUMENT_ROOT'] .= DIRECTORY_SEPARATOR;
-	
+
 	if(isset($settings['html_root']) && @parse_url($settings['html_domain'] . $settings['html_root']) !== false)
 		return $settings['html_root'];
 	else
-		return '/' . 
-			((substr($settings['local_root'], 0, strlen($_SERVER['DOCUMENT_ROOT'])) == $_SERVER['DOCUMENT_ROOT'])
-			?
-				substr($settings['local_root'], strlen($_SERVER['DOCUMENT_ROOT']))
-				:
-				''
-			) . 
+		return dirname($_SERVER['SCRIPT_NAME']) . '/' .
 			(setting('modrewrite')?'':'index.php/');
 }
 
@@ -320,7 +322,8 @@ function setting_html_name($settings)
  */
 function setting_deep_select($settings)
 {
-	if($settings['deep_select'] === 0 || $settings['deep_select'] == 1 || $settings['deep_select'] == 2)
+	if(isset($settings['deep_select']) &&
+        ($settings['deep_select'] === 0 || $settings['deep_select'] == 1 || $settings['deep_select'] == 2))
 		return intval($settings['deep_select']);
 	else
 		return false;
@@ -417,7 +420,7 @@ function setting($name)
  * Get all the default settings
  * @ingroup setting
  */
-function get_default_settings($settings)
+function get_default_settings($global_settings)
 {
 	// existing settings are passed in to this function incase a default depends on something already set up
 	
@@ -431,9 +434,9 @@ function get_default_settings($settings)
 		foreach($settings as $i => $setting)
 		{
 			if(function_exists('setting_' . $setting))
-				$new_setting = call_user_func_array('setting_' . $setting, array($settings));
+				$new_setting = call_user_func_array('setting_' . $setting, array($global_settings));
 			elseif(isset($GLOBALS['setting_' . $setting]) && is_callable($GLOBALS['setting_' . $setting]))
-				$new_setting = $GLOBALS['setting_' . $setting]($settings);
+				$new_setting = $GLOBALS['setting_' . $setting]($global_settings);
 			else
 				raise_error('Setting \'' . $setting . '\' is specified without a validate function in the ' . $module . ' module.', E_DEBUG);
 		
@@ -903,7 +906,7 @@ function configure_settings($settings, $request)
 	
 	$reset = array();
 	
-	$reset['database_reset'] = array(
+	$reset['setting_database_reset'] = array(
 		'name' => 'Database Settings',
 		'status' => 'warn',
 		'description' => array(
@@ -915,7 +918,7 @@ function configure_settings($settings, $request)
 		'value' => 'Reset',
 	);
 	
-	$reset['all_reset'] = array(
+	$reset['setting_all_reset'] = array(
 		'name' => 'All Settings',
 		'status' => 'fail',
 		'description' => array(
@@ -939,7 +942,7 @@ function configure_settings($settings, $request)
 	
 	// system type
 	$settings['system_type'] = setting('system_type');
-	$general['system_type'] = array(
+	$general['setting_system_type'] = array(
 		'name' => lang('system type title', 'System Type'),
 		'status' => '',
 		'description' => array(
@@ -959,7 +962,7 @@ function configure_settings($settings, $request)
 	
 	
 	// https
-	$general['enable_https'] = array(
+	$general['setting_enable_https'] = array(
 		'name' => lang('enable https title', 'Use HTTPS'),
 		'status' => '',
 		'description' => array(
@@ -975,7 +978,7 @@ function configure_settings($settings, $request)
 	);
 	
 	// domain and root
-	$general['html_domain'] = array(
+	$general['setting_html_domain'] = array(
 		'name' => lang('html domain title', 'HTML Domain'),
 		'status' => '',
 		'description' => array(
@@ -988,7 +991,7 @@ function configure_settings($settings, $request)
 		'value' => setting('html_domain'),
 	);
 
-	$general['html_root'] = array(
+	$general['setting_html_root'] = array(
 		'name' => lang('html root title', 'HTML Root'),
 		'status' => '',
 		'description' => array(
@@ -1004,7 +1007,7 @@ function configure_settings($settings, $request)
 	);
 
 	// site name
-	$general['html_name'] = array(
+	$general['setting_html_name'] = array(
 		'name' => lang('html name title', 'Site Name'),
 		'status' => '',
 		'description' => array(
@@ -1016,7 +1019,7 @@ function configure_settings($settings, $request)
 		'value' => setting('html_name'),
 	);
 	
-	$general['deep_select'] = array(
+	$general['setting_deep_select'] = array(
 		'name' => lang('recursive get title', 'Deep Select'),
 		'status' => '',
 		'description' => array(
@@ -1036,7 +1039,7 @@ function configure_settings($settings, $request)
 		)
 	);
 	
-	$general['buffer_size'] = array(
+	$general['setting_buffer_size'] = array(
 		'name' => lang('buffer size title', 'Buffer Size'),
 		'status' => '',
 		'description' => array(

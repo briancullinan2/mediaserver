@@ -1,3 +1,12 @@
+2010-12-26
+Worked on Music Downloader script
+Fixed up some session features
+    Abstracted to new_session() for users.inc module and cli module to use
+Started settings.php.dist-gen script to generate all possible settings and their default values
+	Just needs some fancy handlers for different options such as text numbers or enums
+Added a files_exist_regexp() that checks for files paths using a regular expression
+Fixed all the setting_ entries in configure_() functions
+
 2010-12-23
 Got it working on Windows again
 	Bug fixes

@@ -224,7 +224,7 @@ function setup_error()
 
 function setting_error()
 {
-	$settings = array();
+	$settings = array('error_action', 'debug_mode', 'display_errors');
 	
 	// add wrapper functions for validating a server entry
 	for($i = 0; $i < 10; $i++)
@@ -396,6 +396,14 @@ function setting_display_errors($settings)
 		return $code;
 	else
 		return E_ALL_MEDIA | E_STRICT;
+}
+
+function setting_error_action($settings)
+{
+	if(isset($settings['error_action']) && in_array($settings['error_action'], action('no_action', 'error_page', 'error_and_email', 'email_only')))
+		return $settings['error_action'];
+	else
+		return 'error_and_email';
 }
 
 /**
@@ -642,7 +650,7 @@ function configure_error($settings)
 	
 	$options = array();
 
-	$options['error_action'] = array(
+	$options['setting_error_action'] = array(
 		'name' => lang('error action title', 'Error Handling'),
 		'status' => '',
 		'description' => array(
@@ -655,14 +663,14 @@ function configure_error($settings)
 		'type' => 'select',
 		'value' => setting('error_action'),
 		'options' => array(
-			lang('error action option 1', 'No Action'),
-			lang('error action option 2', 'Display Error Page'),
-			lang('error action option 3', 'Error Page and E-mail Admin'),
-			lang('error action option 4', 'Just E-mail Administrator'),
+			'no_action' => lang('error action option 1', 'No Action'),
+			'error_page' => lang('error action option 2', 'Display Error Page'),
+			'error_and_email' => lang('error action option 3', 'Error Page and E-mail Admin'),
+			'error_only' => lang('error action option 4', 'Just E-mail Administrator'),
 		)
 	);
 	
-	$options['debug_mode'] = array(
+	$options['setting_debug_mode'] = array(
 		'name' => lang('debug mode title', 'Debug Mode'),
 		'status' => '',
 		'description' => array(

@@ -489,6 +489,41 @@ function ext($file)
 		return '';
 }
 
+function array_search_key($key, $haystack, $_prefix = '')
+{
+    // only attempt if it is an array
+    if(is_array($haystack))
+    {
+        foreach($haystack as $index => $value)
+        {
+            // return the found key
+            if($index == $key && ($index !== 0 || $index === $key))
+                return array(
+                    0 => $value,
+                    1 => $_prefix . '/' . $index,
+                    'value' => $value,
+                    'address' => $_prefix . '/' . $index,
+                );
+
+			if(is_array($value))
+            {
+                // search recursively
+                $result = array_search_key($key, $value, $_prefix . '/' . $index);
+				if(isset($result['value']))
+					return $result;
+            }
+        }
+    }
+
+    // key not found
+    return array(
+        0 => NULL,
+        1 => NULL,
+        'value' => NULL,
+        'address' => NULL,
+    );
+}
+
 /**
  * get mime type based on file extension
  * @param ext the extension or filename to get the mime type of

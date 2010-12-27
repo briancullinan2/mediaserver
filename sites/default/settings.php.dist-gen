@@ -1,0 +1,48 @@
+<?php
+
+error_reporting(E_ALL | E_STRICT);
+
+require_once dirname(dirname(dirname(__FILE__))) . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'bootstrap.inc';
+
+bootstrap();
+
+$defaults = get_default_settings(array());
+
+// loop through every module and get the settings and descriptions from configure
+foreach(get_modules_implements('configure', true) as $i => $module)
+{
+    $configure_settings = invoke_module('configure', $module, array(array(), array()));
+    $module_settings = get_settings($module);
+
+	$name = get_module($module, 'name');
+	printf('%\';' . (strlen($name) + 4) . 's', ';');
+	print "\n";
+	print '; ' . $name . " ;\n";
+	printf('%\';' . (strlen($name) + 4) . 's', ';');
+	print "\n";
+
+    foreach($module_settings as $setting)
+    {
+        $infos = array_search_key('setting_' . $setting, $configure_settings);
+		if(isset($infos['value']) && isset($infos['value']['description']))
+		{
+			$text = ob_theme('info_objects', $infos['value']['description']);
+
+			if(substr($text, -1) == "\n")
+				$text = substr($text, 0, -1);
+			print '; ' . str_replace("\n", "\n; ", $text) . "\n";
+			if(isset($defaults[$setting]))
+				print $setting . ' = ' . $defaults[$setting] . "\n";
+			else
+			{
+				print $setting . " = \n";
+			}
+		}
+		else
+		{
+			print 'No description for ' . $setting . "\n";
+		}
+    }
+
+	print "\n";
+}

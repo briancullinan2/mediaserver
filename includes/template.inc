@@ -78,7 +78,7 @@ function configure_template($settings, $request)
 		$templates[$template] = $config['name'];
 	}
 	
-	$options['local_template'] = array(
+	$options['setting_local_template'] = array(
 		'name' => 'Local Template',
 		'status' => '',
 		'description' => array(

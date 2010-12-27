@@ -94,7 +94,7 @@ function configure_cron($settings, $request)
 	);
 	
 	// dir seek time
-	$options['dir_seek_time'] = array(
+	$options['setting_dir_seek_time'] = array(
 		'name' => 'Directory Seek Time',
 		'status' => '',
 		'description' => array(
@@ -108,7 +108,7 @@ function configure_cron($settings, $request)
 	);
 	
 	// file seek time
-	$options['file_seek_time'] = array(
+	$options['setting_file_seek_time'] = array(
 		'name' => 'File Seek Time',
 		'status' => '',
 		'description' => array(
@@ -120,7 +120,7 @@ function configure_cron($settings, $request)
 		'value' => $settings['dir_seek_time'],
 	);
 	
-	$options['cleanup_buffer_time'] = array(
+	$options['setting_cleanup_buffer_time'] = array(
 		'name' => 'Clean-Up Buffer Time',
 		'status' => '',
 		'description' => array(
@@ -132,7 +132,7 @@ function configure_cron($settings, $request)
 		'value' => $settings['cleanup_buffer_time'],
 	);
 	
-	$options['cleanup_theashold'] = array(
+	$options['setting_cleanup_threashold'] = array(
 		'name' => 'Clean-Up Threashold',
 		'status' => '',
 		'description' => array(

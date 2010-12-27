@@ -21,22 +21,19 @@ function setup_cli()
 	// set up persistent session
 	$session = setting('cli_session');
 	if(isset($session))
-	{
-		session_destroy();
-		session_save_path(dirname($session));
-		session_id(basename($session));
-		session_start();
-	}
+        new_session(false, $session);
 	
 	// override templates
 	if(!isset($_REQUEST['path_info']))
 		$_REQUEST['path_info'] = 'cli';
-	$GLOBALS['settings']['local_template'] = 'cli';
 	$GLOBALS['templates']['cli'] = array('name' => 'Command Line Interface');
+	$GLOBALS['settings']['local_template'] = 'cli';
 }
 
 function cli_parse_argv()
 {
+    $request = array();
+
 	// this is the bulk of the command line processing
 	if(isset($GLOBALS['argv'][1]))
 		$request['path_info'] = $GLOBALS['argv'][1];

@@ -3,3 +3,4 @@ description = Set up accounts to automatically download music from feeds.
 privilage = 10
 template = false
 package = tools
+settings[] = music_formats

@@ -45,7 +45,7 @@ function configure_music_download($settings)
 {
 	$options = array();
 	
-	$options['music_formats'] = array(
+	$options['setting_music_formats'] = array(
 		'name' => 'Preffered Format',
 		'status' => '',
 		'description' => array(
