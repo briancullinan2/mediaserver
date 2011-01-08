@@ -1,5 +1,24 @@
 <?php
 
+function get_form($name, $request = array())
+{
+	if(function_exists('form_' . $name))
+	{
+		return call_user_func_array('form_' . $name, array($request));
+	}
+}
+
+
+function get_output_form($form)
+{
+	return ob_theme('form', $form);
+}
+
+
+function theme__form($form)
+{
+}
+
 
 function theme__info_objects($infos)
 {
@@ -119,10 +138,6 @@ function theme__form_object($field_name, $config)
 	// check that all global keys are machine readable
 	// check options keys when they are used
 	
-	
-	// encode the settings
-	$config_html = traverse_array($config);
-	
 	if(!isset($config['type']))
 		$config['type'] = 'info';
 	
@@ -137,53 +152,6 @@ function theme__form_object($field_name, $config)
 	
 	switch($config['type'])
 	{
-		case 'form':
-			?>
-			<form name="<?php print htmlspecialchars($field_name, ENT_QUOTES); ?>" action="<?php print isset($config_html['action'])?$config_html['action']:$GLOBALS['output']['get']; ?>" method="<?php print isset($config_html['method'])?$config_html['method']:'post'; ?>">
-				<?php
-				theme('form_objects', $config['options']);
-				
-				if(isset($config['submit']))
-					theme('form_submit', $config['submit']);
-				if(isset($config['reset']))
-					theme('form_submit', $config['reset']);
-			
-			?></form><?php
-		break;
-		case 'fieldset':
-			if(isset($config['name']) || count($config['options']) > 0)
-			{
-				?><fieldset id="fieldset_<?php print machine($field_name); ?>"><?php
-				
-				if(isset($config['name']))
-				{
-					?><legend><?php
-					if(isset($config['collapsible']) && $config['collapsible'])
-					{
-						$id = htmlspecialchars($field_name, ENT_QUOTES);
-						$script = "if($('#fieldcontainer_" . $id . "').css('display')=='none'){" . 
-							"$('#fieldcontainer_" . $id . "').slideDown('fast');" . 
-						"}else{" .
-							"$('#fieldcontainer_" . $id . "').slideUp('fast');" . 
-						"}return false;";
-						?><a href="#" onclick="<?php print $script; ?>"><?php print htmlspecialchars($config['name']); ?></a><?php
-					}
-					else
-					{
-						print $config['name'];
-					}
-					?></legend><?php
-				}
-				
-				?><div id="fieldcontainer_<?php print machine($field_name); ?>" <?php print (isset($config['collapsed']) && $config['collapsed'])?'style="display:none;"':''; ?>><?php
-				
-					theme('form_fieldrows', $config['options']);
-				
-				?></div><?php
-				
-				?></fieldset><?php
-			}
-		break;
 		case 'set':
 			// This provides an API for submitting multiple fields to an associative array
 			theme('form_objects', $config['options']);
@@ -195,12 +163,12 @@ function theme__form_object($field_name, $config)
 				theme('info_objects', $config['value']);
 		break;
 		case 'theme':
-			theme('form_' . $config['value'], array('name' => $field_name) + $config);
+			theme('form_' . $config['value'], array('field' => $field_name) + $config);
 		break;
 		default:
 			if(theme_implements('form_' . $config['type']))
 			{
-				theme('form_' .  $config['type'], array('name' => $field_name) + $config);
+				theme('form_' .  $config['type'], array('field' => $field_name) + $config);
 			}
 			else
 				raise_error('Form type \'' . $config['type'] . '\' not found!', E_DEBUG);
@@ -215,6 +183,59 @@ function theme__form_object($field_name, $config)
 		?></div><?php
 	}
 	
+}
+
+function theme__form_form($config)
+{
+	$config_html = traverse_array($config);
+	?>
+	<form name="<?php print htmlspecialchars($config['field'], ENT_QUOTES); ?>" action="<?php print isset($config_html['action'])?$config_html['action']:$GLOBALS['output']['get']; ?>" method="<?php print isset($config_html['method'])?$config_html['method']:'post'; ?>">
+		<?php
+		theme('form_objects', $config['options']);
+		
+		if(isset($config['submit']))
+			theme('form_submit', $config['submit']);
+		if(isset($config['reset']))
+			theme('form_submit', $config['reset']);
+	
+	?></form><?php
+}
+
+function theme__form_fieldset($config)
+{
+	extract($config);
+	if(isset($name) || count($options) > 0)
+	{
+		?><fieldset id="fieldset_<?php print machine($field); ?>"><?php
+			
+			if(isset($name))
+			{
+				?><legend><?php
+				if(isset($collapsible) && $collapsible)
+				{
+					$id = htmlspecialchars($field, ENT_QUOTES);
+					$script = "if($('#fieldcontainer_" . $id . "').css('display')=='none'){" . 
+						"$('#fieldcontainer_" . $id . "').slideDown('fast');" . 
+					"}else{" .
+						"$('#fieldcontainer_" . $id . "').slideUp('fast');" . 
+					"}return false;";
+					?><a href="#" onclick="<?php print $script; ?>"><?php print htmlspecialchars($name); ?></a><?php
+				}
+				else
+				{
+					print htmlspecialchars($name);
+				}
+				?></legend><?php
+			}
+			
+			?><div id="fieldcontainer_<?php print machine($field); ?>" <?php print (isset($collapsed) && $collapsed)?'style="display:none;"':''; ?>><?php
+			
+				theme('form_fieldrows', $options);
+			
+			?></div><?php
+			
+		?></fieldset><?php
+	}
 }
 
 function theme__form_fieldrows($options)
@@ -247,33 +268,33 @@ function theme__form_objects($form)
 function theme__form_hidden($config)
 {
 	extract($config);
-	?><input type="hidden" name="<?php print machine($name); ?>" value="<?php print htmlspecialchars($value); ?>" /><?php
+	?><input type="hidden" name="<?php print machine($field); ?>" value="<?php print htmlspecialchars($value); ?>" /><?php
 }
 
 function theme__form_button($config)
 {
 	extract($config);
-	?><input type="button" <?php print isset($action)?'onClick="' . $action . '"':''; ?> <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> name="<?php print isset($name)?machine($name):''; ?>" value="<?php print htmlspecialchars($value); ?>" /><?php
+	?><input type="button" <?php print isset($action)?'onClick="' . $action . '"':''; ?> <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> name="<?php print isset($name)?machine($field):''; ?>" value="<?php print htmlspecialchars($value); ?>" /><?php
 }
 
 function theme__form_submit($config)
 {
 	extract($config);
-	?><input type="submit" <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> name="<?php print machine($name); ?>" value="<?php print htmlspecialchars($value); ?>" /><?php
+	?><input type="submit" <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> name="<?php print machine($field); ?>" value="<?php print htmlspecialchars($value); ?>" /><?php
 }
 
 function theme__form_filesize($config)
 {
 	extract($config);
 	?>
-		<select <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> name="<?php print machine($name); ?>[value]" style="width:150px; display:inline; margin-right:0px;">
+		<select <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> name="<?php print machine($field); ?>[value]" style="width:150px; display:inline; margin-right:0px;">
 		<?php
 		for($i = 0; $i < 10; $i++)
 		{
 			?><option value="<?php echo pow(2, $i); ?>" <?php print ($value / 1024 == pow(2, $i) || $value / 1048576 == pow(2, $i) || $value / 1073741824 == pow(2, $i))?'selected="selected"':''; ?>><?php print pow(2, $i); ?></option><?php
 		}
 		?>
-		</select><select <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> name="<?php print machine($name); ?>[multiplier]" style="width:50px; display:inline; margin-right:0px;">
+		</select><select <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> name="<?php print machine($field); ?>[multiplier]" style="width:50px; display:inline; margin-right:0px;">
 			<option value="1024" <?php print ($value / 1024 >= 1 && $value / 1024 < 1048576)?'selected="selected"':''; ?>>KB</option>
 			<option value="1048576" <?php print ($value / 1048576 >= 1 && $value / 1048576 < 1073741824)?'selected="selected"':''; ?>>MB</option>
 			<option value="1073741824" <?php print ($value / 1073741824 >= 1)?'selected="selected"':''; ?>>GB</option>
@@ -284,7 +305,7 @@ function theme__form_filesize($config)
 function theme__form_multiselect($config)
 {
 	extract($config);
-	?><select <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> name="<?php print machine($name); ?>" size="5" multiple="multiple"><?php
+	?><select <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> name="<?php print machine($field); ?>" size="5" multiple="multiple"><?php
 	// check if array is associative or not
 	if(!is_array($value))
 		$value = array($value);
@@ -295,11 +316,41 @@ function theme__form_multiselect($config)
 	?></select><?php
 }
 
+function theme__form_ordered($config)
+{
+	extract($config);
+	$current = 0;
+	?><input name="<?php print machine($field); ?>" type="hidden" value="<?php print implode(',', array_keys($options)); ?>" /><?php
+	foreach($options as $option => $text)
+	{
+		?><div><?php print htmlspecialchars($text); ?>
+		
+		<?php
+		if($current > 0)
+		{
+			$switched = array_keys($options);
+			$temp = $switched[$current]; $switched[$current] = $switched[$current-1]; $switched[$current-1] = $temp;
+			?><button type="submit" name="<?php print machine($field); ?>" value="<?php print implode(',', $switched); ?>" <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?>>Up</button><?
+		}
+		
+		if($current < count($options)-1)
+		{
+			$switched = array_keys($options);
+			$temp = $switched[$current]; $switched[$current] = $switched[$current+1]; $switched[$current+1] = $temp;
+			?><button type="submit" name="<?php print machine($field); ?>" value="<?php print implode(',', $switched); ?>" <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?>>Down</button><?
+		}
+		
+		?></div><?php
+		
+		$current++;
+	}
+}
+
 function theme__form_boolean($config)
 {
 	extract($config);
 	?>
-	<select <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> name="<?php print machine($name); ?>">
+	<select <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> name="<?php print machine($field); ?>">
 		<option value="true" <?php print ($value)?'selected="selected"':''; ?>><?php print isset($options[0])?htmlspecialchars($options[0]):'true'; ?></option>
 		<option value="false" <?php print (!$value)?'selected="selected"':''; ?>><?php print isset($options[1])?htmlspecialchars($options[1]):'false'; ?></option>
 	</select>
@@ -310,7 +361,7 @@ function theme__form_time($config)
 {
 	extract($config);
 	?>
-	<select <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> name="<?php print machine($name); ?>[value]" style="width:100px; display:inline; margin-right:0px;">
+	<select <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> name="<?php print machine($field); ?>[value]" style="width:100px; display:inline; margin-right:0px;">
 	<?php
 	for($i = 1; $i < 60; $i++)
 	{
@@ -318,7 +369,7 @@ function theme__form_time($config)
 	}
 	?>
 	</select>
-	<select <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> name="<?php print machine($name); ?>[multiplier]" style="width:100px; display:inline; margin-right:0px;">
+	<select <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> name="<?php print machine($field); ?>[multiplier]" style="width:100px; display:inline; margin-right:0px;">
 		<option value="1" <?php print ($value >= 1 && $value < 60)?'selected="selected"':''; ?>>Seconds</option>
 		<option value="60" <?php print ($value / 60 >= 1 && $value / 60 < 60)?'selected="selected"':''; ?>>Minutes</option>
 		<option value="360" <?php print ($value / 360 >= 1)?'selected="selected"':''; ?>>Hours</option>
@@ -329,7 +380,7 @@ function theme__form_time($config)
 function theme__form_select($config)
 {
 	extract($config);
-	?><select <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> name="<?php print machine($name); ?>"><?php
+	?><select <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> name="<?php print machine($field); ?>"><?php
 	foreach($options as $option => $text)
 	{
 		?><option value="<?php print htmlspecialchars($option); ?>" <?php print ($value == $option)?'selected="selected"':''; ?>><?php print htmlspecialchars($text); ?></option><?php
@@ -348,14 +399,20 @@ function theme__form_checkbox($config)
 	// check if array is associative or not
 	foreach($options as $option => $text)
 	{
-		?><input <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> <?php print ($value == $option)?'checked="checked"':''; ?> type="<?php print $type; ?>" value="<?php print htmlspecialchars($option); ?>" name="<?php print machine($name) . (($config['type'] == 'checkbox')?'[]':''); ?>" /><?php print htmlspecialchars($text);
+		?><input <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> <?php print ($value == $option)?'checked="checked"':''; ?> type="<?php print $type; ?>" value="<?php print htmlspecialchars($option); ?>" name="<?php print machine($field) . (($config['type'] == 'checkbox')?'[]':''); ?>" /><?php print htmlspecialchars($text);
 	}
 }
 
 function theme__form_text($config)
 {
 	extract($config);
-	?><input <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> type="text" value="<?php print htmlspecialchars($value); ?>" name="<?php print machine($name); ?>" /><?php
+	?><input <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> type="text" value="<?php print htmlspecialchars($value); ?>" name="<?php print machine($field); ?>" /><?php
+}
+
+function theme__form_file($config)
+{
+	extract($config);
+	?><input <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> type="file" value="<?php print htmlspecialchars($value); ?>" name="<?php print machine($field); ?>" /><?php
 }
 
 function theme__form_label($config)

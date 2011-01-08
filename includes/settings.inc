@@ -295,10 +295,13 @@ function setting_html_root($settings)
 	$settings['local_root'] = setting('local_root');
 	$settings['local_root'] = str_replace(DIRECTORY_SEPARATOR, '/', $settings['local_root']);
 
+	$script_name = dirname($_SERVER['SCRIPT_NAME']);
+	if($script_name == '/')
+		$script_name = '';
 	if(isset($settings['html_root']) && @parse_url($settings['html_domain'] . $settings['html_root']) !== false)
 		return $settings['html_root'];
 	else
-		return dirname($_SERVER['SCRIPT_NAME']) . '/' .
+		return $script_name . '/' .
 			(setting('modrewrite')?'':'index.php/');
 }
 

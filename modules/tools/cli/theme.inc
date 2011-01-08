@@ -188,80 +188,6 @@ function theme_cli_header($title = NULL, $description = NULL)
 	theme('errors_block');
 }
 
-function theme_cli_form_object($field_name, $config, $width = 0)
-{
-	if($width == 0)
-		$width = setting('cli_columns');
-	
-	if(isset($config['name']) && $config['type'] != 'fieldset')
-	{
-		theme('info_objects', $config['name'] . ":\n", $width);
-	}
-	
-	if(isset($config['status']) && $config['type'] != 'fieldset')
-	{
-		if($config['status'] == 'fail')
-			cli_colorize(31);
-		elseif($config['status'] == 'warn')
-			cli_colorize(33);
-		else
-			cli_colorize(32);
-	}
-	
-	switch($config['type'])
-	{
-		case 'form':
-			theme('form_objects', $config['options'], $width);
-			if(isset($config['submit']))
-				theme('form_submit', $config['submit'], $width);
-			if(isset($config['reset']))
-				theme('form_submit', $config['reset'], $width);
-			break;
-		case 'fieldset':
-			if(count($config['options']) > 0)
-			{
-				// box it up
-				if(isset($config['name']))
-					$title = '.-' . $config['name'] . $width;
-				else
-					$title = '';
-				
-				print cli_box(ob_theme('form_fieldrows', $config['options'], $width), $title, false, false, false, $width * .80);
-			}
-			break;
-		case 'set':
-			// This provides an API for submitting multiple fields to an associative array
-			theme('form_objects', $config['options'], $width);
-			break;
-		case 'info':
-			if(!isset($config['value']))
-				theme('info_objects', $config, $width);
-			else
-				theme('info_objects', $config['value'], $width);
-			break;
-		case 'theme':
-			theme('form_' . $config['value'], array('name' => $field_name) + $config, $width);
-			break;
-		default:
-			if(theme_implements('form_' . $config['type'], 'cli'))
-			{
-				theme('form_' .  $config['type'], array('name' => $field_name) + $config, $width);
-			}
-			else
-				raise_error('Form type \'' . $config['type'] . '\' not found!', E_DEBUG);
-	}
-	
-	if(isset($config['description']))
-	{
-		theme('info_objects', $config['description'], $width);
-		print "\n";
-	}
-	
-	if(isset($config['status']) && $config['type'] != 'fieldset')
-		cli_decolorize();
-}
-
-
 function theme_cli_info_objects($infos, $width = 0)
 {
 	if($width == 0)
@@ -350,6 +276,80 @@ function theme_cli_info_image($config, $width)
 {
 }
 
+function theme_cli_form_object($field_name, $config, $width = 0)
+{
+	if($width == 0)
+		$width = setting('cli_columns');
+	
+	if(isset($config['name']) && $config['type'] != 'fieldset')
+	{
+		theme('info_objects', $config['name'] . ":\n", $width);
+	}
+	
+	if(isset($config['status']) && $config['type'] != 'fieldset')
+	{
+		if($config['status'] == 'fail')
+			cli_colorize(31);
+		elseif($config['status'] == 'warn')
+			cli_colorize(33);
+		else
+			cli_colorize(32);
+	}
+	
+	switch($config['type'])
+	{
+		case 'form':
+			theme('form_objects', $config['options'], $width);
+			if(isset($config['submit']))
+				theme('form_submit', $config['submit'], $width);
+			if(isset($config['reset']))
+				theme('form_submit', $config['reset'], $width);
+			break;
+		case 'fieldset':
+			if(count($config['options']) > 0)
+			{
+				// box it up
+				if(isset($config['name']))
+					$title = '.-' . $config['name'] . $width;
+				else
+					$title = '';
+				
+				print cli_box(ob_theme('form_fieldrows', $config['options'], $width), $title, false, false, false, $width * .80);
+			}
+			break;
+		case 'set':
+			// This provides an API for submitting multiple fields to an associative array
+			theme('form_objects', $config['options'], $width);
+			break;
+		case 'info':
+			if(!isset($config['value']))
+				theme('info_objects', $config, $width);
+			else
+				theme('info_objects', $config['value'], $width);
+			break;
+		case 'theme':
+			theme('form_' . $config['value'], array('field' => $field_name) + $config, $width);
+			break;
+		default:
+			if(theme_implements('form_' . $config['type'], 'cli'))
+			{
+				theme('form_' .  $config['type'], array('field' => $field_name) + $config, $width);
+			}
+			else
+				raise_error('Form type \'' . $config['type'] . '\' not found!', E_DEBUG);
+	}
+	
+	if(isset($config['description']))
+	{
+		theme('info_objects', $config['description'], $width);
+		print "\n";
+	}
+	
+	if(isset($config['status']) && $config['type'] != 'fieldset')
+		cli_decolorize();
+}
+
+
 function theme_cli_form_objects($form, $width)
 {
 	// generate form based on config spec
@@ -421,16 +421,16 @@ function theme_cli_form_boolean($config, $width)
 {
 	extract($config);
 	if($value)
-		print cli_wordwrap('[' . (isset($options[0])?machine($name) . ' = ' . $options[0]:'true') . ']', $width) . "\n";
+		print cli_wordwrap('[' . (isset($options[0])?machine($field) . ' = ' . $options[0]:'true') . ']', $width) . "\n";
 		
 	if(!$value)
-		print cli_wordwrap('[' . (isset($options[1])?machine($name) . ' = ' . $options[1]:'false') . ']', $width) . "\n";
+		print cli_wordwrap('[' . (isset($options[1])?machine($field) . ' = ' . $options[1]:'false') . ']', $width) . "\n";
 }
 
 function theme_cli_form_text($config, $width)
 {
 	extract($config);
-	print cli_wordwrap('[' . machine($name) . ' = ' . $value . ']', $width);
+	print cli_wordwrap('[' . machine($field) . ' = ' . $value . ']', $width);
 	print "\n";
 }
 
@@ -477,7 +477,7 @@ function theme_cli_form_multiselect($config, $width)
 		foreach($options as $i => $option)
 		{
 			if(in_array($option, $value))
-				$box1 .= cli_wordwrap('[' . machine($name) . ' = ' . $option . ']', $width-1) . "\n";
+				$box1 .= cli_wordwrap('[' . machine($field) . ' = ' . $option . ']', $width-1) . "\n";
 			else
 				$box1 .= cli_wordwrap('[' . $option . ']', $width-1) . "\n";
 		}
@@ -488,7 +488,7 @@ function theme_cli_form_multiselect($config, $width)
 		foreach($options as $option => $text)
 		{
 			if(in_array($option, $value))
-				$box1 .= cli_wordwrap('[' . machine($name) . ' = ' . $text . ']', $width-1) . "\n";
+				$box1 .= cli_wordwrap('[' . machine($field) . ' = ' . $text . ']', $width-1) . "\n";
 			else
 				$box1 .= cli_wordwrap('[' . $text . ']', $width-1) . "\n";
 		}

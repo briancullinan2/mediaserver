@@ -49,7 +49,9 @@ function setup_template()
 
 	// get the list of templates
 	$GLOBALS['templates'] = load_modules(setting_local_root() . 'templates');
-	
+
+	// bootstrap the modules and setup
+	bootstrap('modules', $GLOBALS['templates']);
 }
 
 /**
@@ -107,6 +109,10 @@ function setting_local_template($settings)
 {
 	if(isset($settings['local_template']) && in_array($settings['local_template'], array_keys($GLOBALS['templates'])))
 		return $settings['local_template'];
+	elseif(isset($_REQUEST['template']))
+		return validate($_REQUEST, 'template');
+	elseif(($template = session('template')))
+		return $template;
 	else
 		return 'live';
 }
@@ -160,13 +166,11 @@ function validate_template($request, $session = '')
 			
 		// check to make sure template is valid
 		if(in_array($request['template'], array_keys($GLOBALS['templates'])))
-		{
 			return $request['template'];
-		}
 	}
 	elseif(setting('agent_simple') == 'mobile')
 		return 'mobile';
-		
+
 	return setting('local_template');
 }
 
@@ -182,7 +186,7 @@ function validate_extra($request)
  */
 function session_template($request)
 {
-	return $request['template'];
+	return validate($request, 'template');
 }
 
 /**

@@ -7,7 +7,7 @@ function menu_balancer()
 		'admin/balancer' => array(
 			'callback' => 'output_module',
 			'template' => 'module',
-			'arguments' => array(
+			'request' => array(
 				'configure_module' => 'balancer',
 			),
 		),

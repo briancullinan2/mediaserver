@@ -124,7 +124,13 @@ function invoke_menu($request, $template = false)
 		{
 			// call the callback specified
 			if(is_callable($menu['callback']) && setting($menu['module'] . '_enable') != false)
-				call_user_func_array($menu['callback'], array($request));
+			{
+				if(isset($menu['arguments']))
+					call_user_func_array($menu['callback'], array_merge($menu['arguments'], array($request)));
+				else
+					call_user_func_array($menu['callback'], array($request));
+			}
+			
 			// if there are dependency issues
 			elseif(!dependency($menu['module']) && !setting($menu['module'] . '_enable'))
 			{

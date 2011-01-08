@@ -310,6 +310,32 @@ function validate_service_index($request)
 	return generic_validate_numeric_zero($request, 'service_index');
 }
 
+function validate_service_order($request)
+{
+	$services = setting('all_download_services');
+
+	if(isset($request['service_order']))
+	{
+		if(is_string($request['service_order']))
+			$request['service_order'] = explode(',', $request['service_order']);
+		
+		$ordered = array();
+		foreach($request['service_order'] as $i => $key)
+		{
+			if(is_numeric($key) && $key >= 0 && $key < count($services))
+				$ordered[] = $key;
+		}
+		
+		if(!empty($ordered))
+			$ordered = array_unique(array_merge($ordered, range(0, count($services)-1)));
+	}
+	
+	if(!isset($ordered) || empty($ordered))
+		return range(0, count($services)-1);
+		
+	return $ordered;
+}
+
 function validate_download_automatically($request)
 {
 	return isset($request['download_automatically']) && $request['download_automatically'] == true;
@@ -425,12 +451,12 @@ function download_services_login($service)
 	// try to check if the login was successful
 	if(isset($config['loginfail']))
 	{
-		if(preg_match($config['loginfail'], $result['content']) != 0)
+		if(preg_match($config['loginfail'], $result['content']))
 			$status = false;
 		else
 			$status = $result['status'];
 	}
-	elseif(preg_match('/access denied|error/i', $result['content']) != 0)
+	elseif(preg_match('/access denied|error/i', $result['content']))
 	{
 		$status = false;
 	}
@@ -660,17 +686,55 @@ function output_download($request)
 	theme('download');
 }
 
+function form_download_services($request)
+{
+	$form = array();
+	
+	$services = setting('all_download_services');
+	
+	// display login summary based on session
+	
+	// order services
+	$request['service_order'] = validate($request, 'service_order');
+	$ordered = array();
+	foreach($services as $i => $config)
+	{
+		$ordered[$request['service_order'][$i]] = $services[$request['service_order'][$i]]['name'];
+	}
+	$form['service_order'] = array(
+		'name' => 'Service Order',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Order the the services, this is the order that the services will be scanned for search results.',
+			),
+		),
+		'type' => 'ordered',
+		'options' => $ordered,
+	);
+	
+	return array('download_services' => array(
+		'name' => 'Download Services',
+		'type' => 'fieldset',
+		'options' => $form
+	));
+}
 
 /**
  * Helper function, creates a return for the singular object
  */
-function get_download_services_login($service_index = NULL, $override_link = 'admin/tools/download/login/')
+function form_download_services_login($request)
 {
+	$request['service_index'] = validate($request, 'service_index');
+		
+	if(!isset($request['override_link']))
+		$request['override_link'] = 'admin/tools/download/login/';
+	
 	$services = setting('all_download_services');
 	
 	$infos = array();
 	
-	if(!isset($service_index))
+	if(!isset($request['service_index']))
 	{
 		$infos['download_service_login'] = array(
 			'name' => 'Download Services Login',
@@ -685,20 +749,20 @@ function get_download_services_login($service_index = NULL, $override_link = 'ad
 			),
 			'type' => 'theme',
 			'value' => 'singular',
-			'href' => url($override_link . '0', true),
+			'href' => url($request['override_link'] . '0', true),
 		);
 	}
 	else
 	{
 		// log in to services here
-		if($service_index < count($services))
+		if($request['service_index'] < count($services))
 		{
-			$status = download_services_login($service_index);
-			$config = $services[$service_index];
+			$status = download_services_login($request['service_index']);
+			$config = $services[$request['service_index']];
 			
 			if(!$status)
 			{
-				$infos['download_service_' . $service_index] = array(
+				$infos['download_service_' . $request['service_index']] = array(
 					'name' => $config['name'] . ' Login Failed',
 					'status' => 'fail',
 					'description' => array(
@@ -715,7 +779,7 @@ function get_download_services_login($service_index = NULL, $override_link = 'ad
 					'type' => 'submit',
 					'value' => 'Login',
 				);
-				$infos['download_service_' . $service_index] = array(
+				$infos['download_service_' . $request['service_index']] = array(
 					'name' => $config['name'] . ' Login',
 					'status' => 'warn',
 					'description' => array(
@@ -729,7 +793,7 @@ function get_download_services_login($service_index = NULL, $override_link = 'ad
 			}
 			elseif($status === true)
 			{
-				$infos['download_service_' . $service_index] = array(
+				$infos['download_service_' . $request['service_index']] = array(
 					'name' => $config['name'] . ' Login',
 					'status' => '',
 					'description' => array(
@@ -742,7 +806,7 @@ function get_download_services_login($service_index = NULL, $override_link = 'ad
 			}
 			else
 			{
-				$infos['download_service_' . $service_index] = array(
+				$infos['download_service_' . $request['service_index']] = array(
 					'name' => $config['name'] . ' Login',
 					'status' => '',
 					'description' => array(
@@ -755,11 +819,11 @@ function get_download_services_login($service_index = NULL, $override_link = 'ad
 			}
 		}
 		
-		if($service_index+1 < count($services))
+		if($request['service_index']+1 < count($services))
 		{
-			$config = $services[($service_index+1)];
+			$config = $services[($request['service_index']+1)];
 			
-			$infos['download_service_' . ($service_index+1)] = array(
+			$infos['download_service_' . ($request['service_index']+1)] = array(
 				'name' => $config['name'] . ' Login',
 				'status' => '',
 				'description' => array(
@@ -772,7 +836,7 @@ function get_download_services_login($service_index = NULL, $override_link = 'ad
 				),
 				'type' => 'theme',
 				'value' => 'singular',
-				'href' => url($override_link . ($service_index+1), true),
+				'href' => url($request['override_link'] . ($request['service_index']+1), true),
 			);
 		}
 	}

@@ -20,7 +20,8 @@ $request_info = array(
 );
 
 if(setting('database_enable'))
-	db_query('UPDATE error ' . sql_update($request_info) . ' WHERE Time=?', array(
+	db_query('UPDATE error ' . sql_update($request_info) . ' WHERE Time=? AND Filepath=? LIMIT 1', array(
 		$request_info['Errors'],
-		date('Y-m-d h:i:s', $GLOBALS['tm_start'])
+		date('Y-m-d h:i:s', $GLOBALS['tm_start']),
+		md5(serialize($_REQUEST))
 	));

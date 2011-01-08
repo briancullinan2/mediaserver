@@ -6,7 +6,7 @@ function menu_watched()
 		'admin/watched' => array(
 			'callback' => 'output_module',
 			'template' => 'module',
-			'arguments' => array(
+			'request' => array(
 				'configure_module' => 'watched',
 			),
 		)

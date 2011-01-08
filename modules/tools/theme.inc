@@ -31,3 +31,4 @@ function theme__form_singular($config)
 	}, 'text');
 	</script><?php
 }
+

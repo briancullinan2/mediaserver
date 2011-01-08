@@ -1,6 +1,7 @@
 name = Artists
 description = Wrapper for displaying artist and album information.
 wrapper = audio
+package = information_output
 
 [database]
 SongCount = INT

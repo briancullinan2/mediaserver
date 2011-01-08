@@ -1,0 +1,99 @@
+<?php
+
+
+
+function form_configure_download_input($settings)
+{
+	$form = array();
+	
+	// allow cron jobs to be scheduled for every type of input
+	
+	
+	return array('download_input' => array(
+		'name' => 'Cron Scheduling',
+		'type' => 'fieldset',
+		'options' => $form
+	));
+}
+
+
+function form_download_input($request)
+{
+	$request['manual_search'] = validate($request, 'manual_search');
+	
+	$form = array();
+	
+	// manual input
+	$form['manual_search'] = array(
+		'name' => 'Manual Input',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Enter terms to search on all of the download services.',
+			),
+		),
+		'type' => 'text',
+		'value' => $request['manual_search'],
+	);
+	
+	// flat file input
+	$form['file_input'] = array(
+		'name' => 'File List',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Enter a file list or upload a list of terms to search for.',
+			),
+		),
+		'type' => 'set',
+		'options' => array(
+			'file_input[path]' => array(
+				'type' => 'text',
+				'value' => '',
+				'name' => 'File Path'
+			),
+			'file_input[file]' => array(
+				'type' => 'file',
+				'value' => '',
+				'name' => 'Upload a File'
+			),
+			'file_input[delim]' => array(
+				'type' => 'text',
+				'value' => '\n',
+				'name' => 'Term Delimiter'
+			),
+		),
+	);
+	
+	// rss input
+	$form['rss_feed'] = array(
+		'name' => 'RSS Feed',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Enter hyperlink to an RSS feed for downloading and parsing for search terms.',
+			),
+		),
+		'type' => 'text',
+		'value' => '',
+	);
+	
+	
+	return array('download_input' => array(
+		'name' => 'Search Input',
+		'type' => 'fieldset',
+		'options' => $form
+	));
+}
+
+
+function configure_download_input($settings, $request)
+{
+	$input = get_form('download_input', $request);
+	$services = get_form('download_services', $request);
+	
+	return array_merge($input, $services);
+}
+
+
+

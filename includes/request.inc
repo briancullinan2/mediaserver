@@ -46,7 +46,7 @@ function request_validate()
 	
 	//Remove annoying POST error message with the page is refreshed 
 	//  better place for this?
-	if(validate($_REQUEST, 'request_method') == 'post')
+	if(setting('request_method') == 'post')
 	{
 		session('last_request',  $_REQUEST);
 		location($_SERVER['REQUEST_URI']);
@@ -124,8 +124,8 @@ function rewrite_vars(&$request, &$get, &$post)
 	if(($path = get_menu_entry($request['path_info'])))
 	{
 		// merge additional argument overrides for menu entry
-		if(isset($GLOBALS['menus'][$path]['arguments']))
-			$request = array_merge($request, $GLOBALS['menus'][$path]['arguments']);
+		if(isset($GLOBALS['menus'][$path]['request']))
+			$request = array_merge($request, $GLOBALS['menus'][$path]['request']);
 		
 		// call a modules rewrite function for further rewriting
 		if(module_implements('rewrite', $GLOBALS['menus'][$path]['module']))

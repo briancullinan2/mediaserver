@@ -625,15 +625,20 @@ function output_errors($request)
 			'debug' => $GLOBALS['debug_errors'],
 		))),
 		'Time' => date('Y-m-d h:i:s', $GLOBALS['tm_start']),
-		'Filepath' => serialize($_REQUEST)
+		'Filepath' => md5(serialize($_REQUEST)) // has it for quicker reference, this is trivial
 	);
 	
 	if(setting('database_enable'))
 	{
+		// insert the new request
 		db_query('INSERT INTO error ' . sql_insert($request_info), array_values($request_info));
 		
 		// get all recent requests
-		$requests = db_assoc('SELECT * FROM (SELECT * FROM error WHERE Filepath=? ORDER BY Time DESC LIMIT 0,4) a ORDER BY Time ASC', array(serialize($_REQUEST)));
+		$requests = db_assoc('SELECT * FROM (SELECT * FROM error WHERE Filepath=? ORDER BY Time DESC LIMIT 0,4) a ORDER BY Time ASC', array(md5(serialize($_REQUEST))));
+		
+		// truncate old results
+		
+		
 		register_output_vars('requests', $requests);
 	}
 }
