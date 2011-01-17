@@ -14,7 +14,7 @@ function theme_live_form_form($config)
 			theme('form_submit', $config['reset']);
 	
 		?>
-		<script language="javascript">
+		<script type="text/javascript">
 			$( ".field_fieldset" ).accordion();
 			$( ".collapsible:parent" ).accordion("option", "collapsible", true);
 			$( "button, input:submit, input:button, input:reset" ).button();
@@ -60,7 +60,7 @@ function theme_live_form_ordered($config)
 	
 	?>
 	</ul>
-	<script language="javascript">
+	<script type="text/javascript">
 		$( "#<?php print machine($field); ?>_sortable" ).sortable({ axis: 'y', stop: function() {
 			var order = "";
 			$( "#<?php print machine($field); ?>_sortable li" ).each(function () {

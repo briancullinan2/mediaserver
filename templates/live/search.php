@@ -5,9 +5,26 @@ function theme_live_search_block()
 	?>
 	<table cellpadding="0" cellspacing="0" id="middleArea">
 		<tr>
-			<td class="searchParent"><?php print get_module($GLOBALS['output']['handler'], 'name'); ?> Search:
+			<td class="searchParent">
 				<form action="<?php print $GLOBALS['output']['html']['get']; ?>" method="get" id="search">
-					<span class="searchBorder colors_outer"><span class="innerSearchBorder colors_inner"><input type="text" name="search" value="<?php print isset($GLOBALS['output']['html']['search']['search'])?$GLOBALS['output']['html']['search']['search']:''; ?>" id="searchInput" /><span class="buttonBorder"><input type="submit" value="Search" id="searchButton" /></span></span></span>&nbsp;&nbsp; <a id="advancedSearch" href="<?php echo url('search' . (isset($GLOBALS['output']['dir'])?('?dir=' . $GLOBALS['output']['dir']):'')); ?>">Advanced Search</a></form>
+					<p><span class="searchBorder colors_outer"><span class="innerSearchBorder colors_inner"><input type="text" name="search" value="<?php print isset($GLOBALS['output']['html']['search']['search'])?$GLOBALS['output']['html']['search']['search']:''; ?>" id="searchInput" /><span class="buttonBorder"><input type="submit" value="Search" id="searchButton" /></span></span></span>&nbsp;&nbsp; <a id="advancedSearch" href="<?php echo url('search' . (isset($GLOBALS['output']['dir'])?('?dir=' . $GLOBALS['output']['dir']):'')); ?>">Advanced Search</a></p></form>
+			<script type="text/javascript">
+			// <!--
+				$('#searchInput').focus(function () {
+					if($(this).val() == '<?php print get_module($GLOBALS['output']['handler'], 'name'); ?> Search' && $(this).css('color') == 'grey')
+						$(this).val('').css('color', 'black');
+				}).blur(function() {
+					if($(this).val() == '')
+						$(this).val('<?php print get_module($GLOBALS['output']['handler'], 'name'); ?> Search').css('color', 'grey');
+				}).mouseover(function () {
+					$(this).trigger('focus');	
+				}).mouseout(function () {
+					$(this).trigger('blur');	
+				})
+				
+				$('#searchInput').trigger('blur');
+			// -->
+			</script>
 			</td>
 		</tr>
 	</table>
@@ -27,7 +44,7 @@ function theme_live_search()
 	);
 	
 	?>
-	<script language="javascript">
+	<script type="text/javascript">
 	noselect = true;
 	
 	var cat_columns = [];
@@ -79,7 +96,7 @@ function theme_live_search()
 			<?php
 		}
 		?>
-		<script language="javascript">
+		<script type="text/javascript">
 		makeVisible('<?php print $GLOBALS['output']['html']['handler']; ?>');
 		</script>
 		</div>

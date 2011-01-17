@@ -363,6 +363,11 @@ function add_code($file)
 		$code_id = $files[0]['id'];
 		
 	$fileinfo = get_info_code($file);
+	// something went wrong
+	if(!isset($fileinfo))
+		return false;
+	
+	// save lines for later use
 	$lines = $fileinfo['lines'];
 	unset($fileinfo['lines']);
 	
@@ -443,6 +448,11 @@ function get_info_code($file)
 		{
 			$fileinfo['Language'] = '';
 		}
+	}
+	else
+	{
+		raise_error('Something went wrong while trying to read input file \'' . $file . '\'.', E_DEBUG);
+		return;
 	}
 	
 	return $fileinfo;

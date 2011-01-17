@@ -18,15 +18,15 @@ function theme_live_footer()
 				?>
 				<div style="clear:both; text-align:center;">
 				Powered by <a href="http://www.monolithicmedia.org/" style="text-decoration:none;">
-					<img style="border:0px;" src="<?php print url('template/live/logo'); ?>" />MonolithicMedia.org
+					<img style="border:0px;" src="<?php print url('template/live/logo'); ?>" alt="*" />MonolithicMedia.org
 				</a>
 				<br />
-				<a id=sitewatch_lock target="_blank" href="https://sitewat.ch/Status/dev.bjcullinan.com">
-					<img src="https://sitewat.ch/Marker/dev.bjcullinan.com" alt="Sitewatch is protecting this site from hackers." height="32" width="115" border="0">
+				<a id="sitewatch_lock" href="https://sitewat.ch/Status/dev.bjcullinan.com">
+					<img src="https://sitewat.ch/Marker/dev.bjcullinan.com" alt="Sitewatch is protecting this site from hackers." height="32" width="115" />
 				</a>
 				</div>
 			</div>
-			<script language="javascript">
+			<script type="text/javascript">
 			if(document.getElementById("debug")) {
 				header_height = document.getElementById("header").clientHeight + document.getElementById("debug").clientHeight;
 			} else {

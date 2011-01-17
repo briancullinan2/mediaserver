@@ -1,3 +1,7 @@
+2011-03-13
+Compliance corrections
+Jquery search textbox and login textboxes
+
 2010-12-26
 Worked on Music Downloader script
 Fixed up some session features

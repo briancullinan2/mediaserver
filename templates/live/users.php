@@ -9,11 +9,11 @@ function theme_live_login($username = '')
 		$return = $GLOBALS['output']['get'];
 	?>	
 	<form action="<?php print url('users/login?return=' . urlencode($return)); ?>" method="post">
-	
+		<p>
 		Username: <input type="text" name="username" value="<?php print $username; ?>" /><br />
 		Password: <input type="password" name="password" value="" /><br />
 		<input type="submit" value="Login" /><input type="reset" value="Reset" />
-		
+		</p>
 	</form>
 	<?php
 }
@@ -26,11 +26,40 @@ function theme_live_login_block($username = '', $return = '')
 		$return = $GLOBALS['output']['get'];
 	?>
 	<form action="<?php print url('users/login?return=' . urlencode($return)); ?>" method="post">
-		<input class="stndsize" type="text" onmouseout="if(this.value=='' && !this.hasfocus) document.getElementById('username').style.visibility='visible'" onblur="this.hasfocus=false; this.onmouseout();" onfocus="this.hasfocus=true" name="username" value="<?php print $username; ?>" />
-		<input class="stndsize" type="password" onmouseout="if(this.value=='' && !this.hasfocus) document.getElementById('password').style.visibility='visible'" onblur="this.hasfocus=false; this.onmouseout();" onfocus="this.hasfocus=true" name="password" value="" />
+		<p>
+		<input class="stndsize" id="login_block_username" type="text" name="username" value="<?php print $username; ?>" />
+		<input class="stndsize" id="login_block_password" type="password" name="password" value="" />
+		<script type="text/javascript">
+		// <!--
+			$('#login_block_username').focus(function () {
+				if($(this).val() == 'Username' && $(this).css('color') == 'grey')
+					$(this).val('').css('color', 'black');
+			}).blur(function() {
+				if($(this).val() == '')
+					$(this).val('Username').css('color', 'grey');
+			}).mouseover(function () {
+				$(this).trigger('focus');	
+			}).mouseout(function () {
+				$(this).trigger('blur');	
+			})
+			
+			$('#login_block_password').focus(function () {
+				if($(this).val() == 'Password' && $(this).css('color') == 'grey')
+					$(this).val('').css('color', 'black');
+			}).blur(function() {
+				if($(this).val() == '')
+					$(this).val('Password').css('color', 'grey');
+			}).mouseover(function () {
+				$(this).trigger('focus');	
+			}).mouseout(function () {
+				$(this).trigger('blur');	
+			})
+			
+			$('#login_block_username, #login_block_password').trigger('blur');
+		// -->
+		</script>
 		<input type="submit" value="Login" />
-		<span id="username" onmouseover="this.style.visibility='hidden'">Username</span>
-		<span id="password" onmouseover="this.style.visibility='hidden'">Password</span>
+		</p>
 	</form>
 	<?php
 }

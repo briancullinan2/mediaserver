@@ -620,7 +620,7 @@ function theme_cli_tool_info()
 	// go through request queue and get more information since fetches can't be run without javascript
 	while(count($cli_request_stack) > 0)
 	{
-		$request = url(array_pop($cli_request_stack), false, false, true);
+		$request = url(array_shift($cli_request_stack), false, false, true);
 		rewrite_vars($request, $get, $post);
 		invoke_menu($request);
 	}

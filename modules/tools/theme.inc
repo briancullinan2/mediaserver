@@ -25,7 +25,7 @@ function theme__form_singular($config)
 	extract($config);
 	theme('info_objects', array('type' => 'info', 'text' => $text));
 
-	?><script language="javascript">
+	?><script type="text/javascript">
 	var current_ajax = $.get('<?php print $href; ?>',function(data){
 		$('#row_<?php print $name; ?>').replaceWith(data);
 	}, 'text');

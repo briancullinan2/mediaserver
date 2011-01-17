@@ -590,7 +590,7 @@ function theme__scripts($scripts = array())
 	foreach($scripts as $link)
 	{
 		?>
-		<script language="javascript" type="text/javascript" src="<?php print url($link); ?>"></script>
+		<script type="text/javascript" src="<?php print url($link); ?>"></script>
 		<?php
 	}
 }

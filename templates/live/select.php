@@ -43,7 +43,7 @@ function theme_live_select_block()
 		</div>
 		<div class="file file_ext_FOLDER file_type_" id="0">
 			<div class="thumb">
-				<img src="<?php print url('templates/live/images/s.gif'); ?>" alt="FOLDER" height="48" width="48">
+				<img src="<?php print url('templates/live/images/s.gif'); ?>" alt="FOLDER" height="48" width="48" />
 			</div>
 			<a class="itemLink" href="<?php print url($GLOBALS['output']['get'] . '&dir=/'); ?>"><span>Top Directory</span></a>
 		</div>
@@ -56,7 +56,7 @@ function theme_live_select_block()
 		<b>There are no files to display</b><br />
 		<div class="filesmall file_ext_FOLDER file_type_" id="0">
 			<div class="thumbsmall">
-				<img src="<?php print url('templates/live/images/s.gif'); ?>" alt="FOLDER" height="48" width="48">
+				<img src="<?php print url('templates/live/images/s.gif'); ?>" alt="FOLDER" height="48" width="48" />
 			</div>
 			<a class="itemLink" href="<?php print $link; ?>" onmouseout="this.parentNode.firstChild.className = 'notselected';" onmouseover="this.parentNode.firstChild.className = 'selected';"><span>&lt;- Back</span></a>
 		</div>
@@ -95,7 +95,7 @@ function theme_live_select_block()
 			?>
 			<div class="filesmall file_ext_<?php print $file['Filetype']; ?> file_type_<?php print str_replace('/', ' file_type_', $file['Filemime']); ?>" id="<?php print $file['id']; ?>">
 				<div class="thumbsmall">
-					<img src="<?php print url('templates/live/images/s.gif'); ?>" alt="<?php print $file['Filetype']; ?>" height="16" width="16">
+					<img src="<?php print url('templates/live/images/s.gif'); ?>" alt="<?php print $file['Filetype']; ?>" height="16" width="16" />
 				</div>
 				<a class="itemLink" href="<?php print $link; ?>"><span><?php print $GLOBALS['output']['html']['files'][$i]['Filename']; ?></span></a>
 			</div>
@@ -203,9 +203,9 @@ function theme_live_filesmall($file)
 	$html = format_file($file);
 	
 	?>
-	<div class="filesmall file_ext_<?php print $file['Filetype']; ?> file_type_<?php print str_replace('/', ' file_type_', $file['Filemime']); ?>" id="<?php print $file['id']; ?>">
+	<div class="filesmall file_ext_<?php print $file['Filetype']; ?> file_type_<?php print str_replace('/', ' file_type_', $file['Filemime']); ?>" id="file_<?php print $file['id']; ?>">
 		<div class="thumbsmall">
-			<img src="<?php print url('templates/live/images/s.gif'); ?>" alt="<?php print $file['Filetype']; ?>" height="16" width="16">
+			<img src="<?php print url('templates/live/images/s.gif'); ?>" alt="<?php print $file['Filetype']; ?>" height="16" width="16" />
 		</div>
 		<a class="itemLink" href="<?php print $link; ?>"><span><?php print $html['Filename']; ?></span></a>
 	</div>
@@ -219,9 +219,9 @@ function theme_live_file_preview_code($file)
 	$link = "$('#codepreview').load('" . url('files/code/' . $html['id']) . "/" . urlencode($file['Filename']) . "')";
 	
 	?>
-	<div class="file preview file_ext_<?php print $html['Filetype']; ?> file_type_<?php print isset($html['Filemime'])?str_replace('/', ' file_type_', $html['Filemime']):''; ?>" id="<?php print $html['id']; ?>">
+	<div class="file preview file_ext_<?php print $html['Filetype']; ?> file_type_<?php print isset($html['Filemime'])?str_replace('/', ' file_type_', $html['Filemime']):''; ?>" id="file_<?php print $html['id']; ?>">
 		<div class="thumb">
-			<img src="<?php print url('templates/live/images/s.gif'); ?>" alt="<?php print $file['Filetype']; ?>" height="48" width="48">
+			<img src="<?php print url('templates/live/images/s.gif'); ?>" alt="<?php print $file['Filetype']; ?>" height="48" width="48" />
 		</div>
 		<a class="itemLink" href="#" onclick="<?php print $link; ?>; return false;"><span><?php print $html['Filename']; ?></span></a>
 	</div>
@@ -234,9 +234,9 @@ function theme_live_file_preview_image($file)
 	
 	$link = "$('#preview').attr('src', '" . url('convert/png?cheight=500&cwidth=500&id=' . $html['id']) . "')";
 	?>
-	<div class="file preview file_ext_<?php print $html['Filetype']; ?> file_type_<?php print isset($html['Filemime'])?str_replace('/', ' file_type_', $html['Filemime']):''; ?>" id="<?php print $html['id']; ?>">
+	<div class="file preview file_ext_<?php print $html['Filetype']; ?> file_type_<?php print isset($html['Filemime'])?str_replace('/', ' file_type_', $html['Filemime']):''; ?>" id="file_<?php print $html['id']; ?>">
 		<div class="thumb">
-			<img src="<?php print url('templates/live/images/s.gif'); ?>" alt="<?php print $html['Filetype']; ?>" style="background-image:url(<?php print url('convert/png?cheight=56&cwidth=56&id=' . $html['id']); ?>);" height="48" width="48">
+			<img src="<?php print url('templates/live/images/s.gif'); ?>" alt="<?php print $html['Filetype']; ?>" style="background-image:url(<?php print url('convert/png?cheight=56&cwidth=56&id=' . $html['id']); ?>);" height="48" width="48" />
 		</div>
 		<a class="itemLink" href="#" onclick="<?php print $link; ?>; return false;"><span><?php print $html['Filename']; ?></span></a>
 	</div>
@@ -268,24 +268,24 @@ function theme_live_file($file, $current_handler = 'files')
 
 	unset($new_handler);
 	?>
-	<div class="file file_ext_<?php print $file['Filetype']; ?> file_type_<?php print isset($file['Filemime'])?str_replace('/', ' file_type_', $file['Filemime']):''; ?>" id="<?php print $html['id']; ?>">
+	<div class="file file_ext_<?php print $file['Filetype']; ?> file_type_<?php print isset($file['Filemime'])?str_replace('/', ' file_type_', $file['Filemime']):''; ?>" id="file_<?php print $html['id']; ?>">
 		<div class="thumb">
 			<?php
 			if(handles($file['Filepath'], 'image') && is_module('convert'))
 			{
-				?><img src="<?php print url('templates/live/images/s.gif'); ?>" alt="<?php print $file['Filetype']; ?>" style="background-image:url(<?php print url('convert/png?cheight=56&cwidth=56&id=' . $html['id']); ?>);" height="48" width="48"><?php
+				?><img src="<?php print url('templates/live/images/s.gif'); ?>" alt="<?php print $file['Filetype']; ?>" style="background-image:url(<?php print url('convert/png?cheight=56&cwidth=56&id=' . $html['id']); ?>);" height="48" width="48" /><?php
 			}
 			elseif(handles($file['Filepath'], 'movies') && is_module('convert'))
 			{
-				?><img src="<?php print url('templates/live/images/s.gif'); ?>" alt="<?php print $file['Filetype']; ?>" style="background-image:url(<?php print url('convert/png?handler=movies&cheight=56&cwidth=56&id=' . $html['id']); ?>);" height="48" width="48"><?php
+				?><img src="<?php print url('templates/live/images/s.gif'); ?>" alt="<?php print $file['Filetype']; ?>" style="background-image:url(<?php print url('convert/png?handler=movies&cheight=56&cwidth=56&id=' . $html['id']); ?>);" height="48" width="48" /><?php
 			}
 			elseif(handles($file['Filepath'], 'discogs') && is_module('convert'))
 			{
-				?><img src="<?php print url('templates/live/images/s.gif'); ?>" alt="<?php print $file['Filetype']; ?>" style="background-image:url(<?php print url('convert/png?handler=discogs&cheight=56&cwidth=56&id=' . $html['id']); ?>);" height="48" width="48"><?php
+				?><img src="<?php print url('templates/live/images/s.gif'); ?>" alt="<?php print $file['Filetype']; ?>" style="background-image:url(<?php print url('convert/png?handler=discogs&cheight=56&cwidth=56&id=' . $html['id']); ?>);" height="48" width="48" /><?php
 			}
 			else
 			{
-				?><img src="<?php print url('templates/live/images/s.gif'); ?>" alt="<?php print $file['Filetype']; ?>" height="48" width="48"><?php
+				?><img src="<?php print url('templates/live/images/s.gif'); ?>" alt="<?php print $file['Filetype']; ?>" height="48" width="48" /><?php
 			}
 			?>
 		</div>
@@ -331,7 +331,7 @@ function theme_live_info($files = array(), $columns = array())
 				<tr>
 					<td class="title">
 						<div class="thumb">
-							<img src="<?php print url('templates/live/images/s.gif'); ?>" height="48" width="48">
+							<img src="<?php print url('templates/live/images/s.gif'); ?>" height="48" width="48" alt="<?php print $html['Filetype']; ?>" />
 						</div>
 					</td>
 					<td class="infoCell">

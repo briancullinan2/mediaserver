@@ -64,16 +64,18 @@ function theme_live_debug_block()
 	{
 		if(isset($GLOBALS['output']['users']) && $GLOBALS['output']['users'] == 'login')
 		{
-			?><div id="debug" class="debug">Administrators: Log in below to select debug options.</div><?php
+			?><div id="debug" class="debug"><p>Administrators: Log in below to select debug options.</p></div><?php
 		}
 		else
 		{
 			?><div id="debug" class="debug">
 			<form action="<?php print url('users/login?return=' . urlencode($GLOBALS['output']['get'])); ?>" method="post">
+			<p>
 				Administrators: Log in to select debug options. Username: <input type="text" name="username" value="" />
 				Password: <input type="password" name="password" value="" />
 				<input type="submit" value="Login" />
 				<input type="reset" value="Reset" />
+			</p>
 			</form>
 			</div>
 			<?php
@@ -122,7 +124,7 @@ function theme_live_errors_block()
 	{
 		?>
 		<div id="tmp_errors"></div>
-		<script language="javascript">
+		<script type="text/javascript">
 			$(document).ready(function() {
 				$.get('<?php print url('select?errors_only=true', true); ?>',function(data, status, xhr){
 					$('#tmp_errors').html(data);

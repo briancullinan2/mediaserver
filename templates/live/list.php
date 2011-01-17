@@ -41,7 +41,7 @@ function theme_live_list_block()
 					<tr>
 						<td>
 							<div class="thumbmedium file_ext_FOLDER file_type_">
-								<img src="<?php print url('templates/live/images/s.gif'); ?>" alt="FOLDER" height="24" width="24">
+								<img src="<?php print url('templates/live/images/s.gif'); ?>" alt="FOLDER" height="24" width="24" />
 							</div>
 						</td>
 					</tr>
@@ -53,7 +53,7 @@ function theme_live_list_block()
 					<tr>
 						<td>
 							<div class="thumbmedium">
-								<img src="<?php print url('templates/live/images/s.gif'); ?>" alt="FOLDER" height="24" width="24">
+								<img src="<?php print url('templates/live/images/s.gif'); ?>" alt="FOLDER" height="24" width="24" />
 							</div>
 						</td>
 					</tr>

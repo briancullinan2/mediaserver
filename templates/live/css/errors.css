@@ -1,5 +1,8 @@
 /* CSS Document */
 
+form p {
+	margin:0px;
+}
 
 .debug {
 	border:3px solid #FC0;

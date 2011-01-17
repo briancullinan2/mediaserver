@@ -593,6 +593,7 @@ function _get_database_files($request, &$count)
 		}
 	}
 	
+	
 	// select files
 	$files = db_assoc('SELECT ' . implode(',', $columns) . 
 		' FROM ' . $request['handler'] . ' ' . 
