@@ -28,7 +28,6 @@ function theme_live_debug_error($id, $error, $no_code = false)
 	}
 }
 
-
 function theme_live_debug_block()
 {
 	if($GLOBALS['output']['user']['Username'] != 'guest')
@@ -44,7 +43,7 @@ function theme_live_debug_block()
 			foreach($GLOBALS['output']['requests'] as $j => $request)
 			{
 				?>
-				<a href="#" class="msg" onClick="$('#request_<?php print $j; ?>').toggle(); return false;">Request made on <?php print $request['Time']; ?></a>
+				<a href="#" class="msg" onclick="$('#request_<?php print $j; ?>').toggle(); return false;"><?php print lang('Request made on ', 'debug request made on'); ?> <?php print $request['Time']; ?></a>
 				<div id="request_<?php print $j; ?>" style="display:none;"><?php
 				$errors = unserialize(gzinflate($request['Errors']));
 				foreach($errors['debug'] as $i => $error)
@@ -56,7 +55,13 @@ function theme_live_debug_block()
 		}
 		
 		?>
-		<a id="hide_link" href="#" onClick="if(this.hidden || typeof this.hidden == 'undefined') { document.getElementById('debug').className='debug'; this.hidden=false; this.innerHTML = 'Hide'; } else { document.getElementById('debug').className='debug hide'; this.hidden=true; this.innerHTML = 'Show'; } return false;">Show</a>
+		<a id="hide_link" href="#"><?php print lang('Show / Hide', 'debug show hide'); ?></a>
+		<script type="text/javascript">
+			$('#hide_link').click(function () {
+				$('#debug').toggleClass('hide');
+				return false;
+			})
+		</script>
 		</div>
 		<?php
 	}
@@ -64,17 +69,17 @@ function theme_live_debug_block()
 	{
 		if(isset($GLOBALS['output']['users']) && $GLOBALS['output']['users'] == 'login')
 		{
-			?><div id="debug" class="debug"><p>Administrators: Log in below to select debug options.</p></div><?php
+			?><div id="debug" class="debug"><p><?php print lang('Administrators: Log in below to select debug options.', 'debug admin login'); ?></p></div><?php
 		}
 		else
 		{
 			?><div id="debug" class="debug">
 			<form action="<?php print url('users/login?return=' . urlencode($GLOBALS['output']['get'])); ?>" method="post">
 			<p>
-				Administrators: Log in to select debug options. Username: <input type="text" name="username" value="" />
-				Password: <input type="password" name="password" value="" />
-				<input type="submit" value="Login" />
-				<input type="reset" value="Reset" />
+				<?php print lang('Administrators: Log in to select debug options.', 'admin login to debug'); ?> <?php print lang('Username', 'username'); ?>: <input type="text" name="username" value="" />
+				<?php print lang('Password', 'password'); ?>: <input type="password" name="password" value="" />
+				<input type="submit" value="<?php print lang('Login', T_IN_ATTRIBUTE, 'debug login'); ?>" />
+				<input type="reset" value="<?php print lang('Reset', T_IN_ATTRIBUTE, 'debug reset'); ?>" />
 			</p>
 			</form>
 			</div>
@@ -83,7 +88,7 @@ function theme_live_debug_block()
 	}
 }
 
-function theme_live_errors_block()
+function theme_live_errors_block($errors_only = false)
 {
 	$error_list = array('warn_errors', 'user_errors', 'note_errors');
 	
@@ -120,13 +125,13 @@ function theme_live_errors_block()
 		?><div class="titlePadding"></div><?php
 	}
 	
-	if(!isset($GLOBALS['output']['errors_only']) || !$GLOBALS['output']['errors_only'])
+	if(!$errors_only)
 	{
 		?>
 		<div id="tmp_errors"></div>
 		<script type="text/javascript">
 			$(document).ready(function() {
-				$.get('<?php print url('select?errors_only=true', true); ?>',function(data, status, xhr){
+				$.get('<?php print url('errors_only', true); ?>',function(data, status, xhr){
 					$('#tmp_errors').html(data);
 					
 					$('#warn_errors').append($('#warn_errors_only'));

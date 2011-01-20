@@ -276,7 +276,7 @@ function status_balancer($settings)
 	if($session_balancer = session('balancer'))
 		$settings['balance_servers'] = $session_balancer['servers'];
 	
-	$additional_info = lang('balence server status description', 'This server is up and running and ready for balancing.');
+	$additional_info = lang('This server is up and running and ready for balancing.', 'balence server status description');
 	
 	// loop through each server and check status
 	foreach($settings['balance_servers'] as $i => $server)
@@ -289,7 +289,7 @@ function status_balancer($settings)
 		if($result['status'] != 200)
 		{
 			$get_status = 'fail';
-			$additional_info = lang('balance server status fail request status', 'The connection to the balance server has failed either because the request did not return a status 200 OK, instead it returned ' . $result['status'] . '.');
+			$additional_info = lang('The connection to the balance server has failed either because the request did not return a status 200 OK, instead it returned ' . $result['status'] . '.', 'balance server status fail request status');
 		}
 		else
 		{
@@ -300,14 +300,14 @@ function status_balancer($settings)
 			if(preg_match('/version ?= ?.+/i', $other_settings[0]) == 0)
 			{
 				$get_status = 'fail';
-				$additional_info = lang('balance server status fail parse ini', 'The balancer could not parse this servers settings, there may be a problem with the path to the balancing server.');
+				$additional_info = lang('The balancer could not parse this servers settings, there may be a problem with the path to the balancing server.', 'balance server status fail parse ini');
 			}
 			
 			// check the versions are the same
 			elseif(preg_match('/version ?= ?' . preg_quote(VERSION) . '/i', $other_settings[0])  == 0)
 			{
 				$get_status = 'fail';
-				$additional_info = lang('balance server status fail version', 'This balence server is not the same version as the current server.');
+				$additional_info = lang('This balence server is not the same version as the current server.', 'balance server status fail version');
 			}
 		}
 			
@@ -648,8 +648,8 @@ function configure_balancer($settings, $request)
 			'status' => 'warn',
 			'description' => array(
 				'list' => array(
-					lang('balance rules empty description', 'There are no rules defined for balancing.'),
-					lang('balance rules empty description', 'Rules have a waterfall effect.  That is, when a request is made, the rule is tested on each condition.  The last condition to satisfy the request is the server it is transfered to.'),
+					lang('There are no rules defined for balancing.', 'balance rules empty description'),
+					lang('Rules have a waterfall effect.  That is, when a request is made, the rule is tested on each condition.  The last condition to satisfy the request is the server it is transfered to.', 'balance rules empty description'),
 				),
 			),
 			'value' => 'No rules defined',
@@ -662,8 +662,8 @@ function configure_balancer($settings, $request)
 			'status' => 'fail',
 			'description' => array(
 				'list' => array(
-					lang('balance rules fail description 1', 'You must first specify a balancing server!'),
-					lang('balance rules fail description 2', 'There are no rules defined for balancing.'),
+					lang('You must first specify a balancing server!', 'balance rules fail description 1'),
+					lang('There are no rules defined for balancing.', 'balance rules fail description 2'),
 				),
 			),
 			'value' => 'Define a server first!',

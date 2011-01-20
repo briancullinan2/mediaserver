@@ -31,7 +31,10 @@ function trigger_key($trigger, $callback, $input, $key)
 			{
 				$return = $result;
 				// also set it here so it can be passed to next validator
-				$input[$key] = $result;
+				if($key == NULL)
+					$input = array_merge($input, $result);
+				else
+					$input[$key] = $result;
 			}
 		}
 		

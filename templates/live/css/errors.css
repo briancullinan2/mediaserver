@@ -34,7 +34,7 @@ form p {
 	visibility:hidden;
 }
 
-.debug.hide #hide_link {
+.debug.hide #hide_link, .debug.hide #hide_link * {
 	display:block;
 	visibility:visible;
 }

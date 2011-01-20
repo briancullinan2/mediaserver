@@ -8,10 +8,11 @@ function theme_live_head($title)
 <head>
 <?php theme('redirect_block'); ?>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title><?php print $title . ' : ' . setting('html_name'); ?></title>
+<title><?php print escape($title, 'plain') . ' : ' . setting('html_name'); ?></title>
 <meta name="google-site-verification" content="K3Em8a7JMI3_1ry5CNVKIHIWofDt-2C3ohovDq3N2cQ" />
 <script type="text/javascript" src="<?php print url('templates/live/scripts'); ?>"></script>
 <link rel="stylesheet" href="<?php print url('templates/live/styles'); ?>" type="text/css"/>
+<?php if(dependency('language') != false) theme('language_header'); ?>
 </head>
 	<?php
 }
@@ -40,7 +41,7 @@ function theme_live_breadcrumbs($breadcrumbs = array(), $crumb = NULL)
 	<?php
 	if(count($breadcrumbs) == 0)
 	{
-		?><li><strong><?php print $crumb; ?></strong></li><?php
+		?><li><strong><?php print escape($crumb); ?></strong></li><?php
 	}
 	else
 	{
@@ -50,13 +51,13 @@ function theme_live_breadcrumbs($breadcrumbs = array(), $crumb = NULL)
 			if($count != count($breadcrumbs) - 1)
 			{
 				?>
-				<li><a href="<?php print url($path); ?>"><?php print $menu['name']; ?></a></li>
+				<li><a href="<?php print url($path); ?>"><?php print escape($menu['name']); ?></a></li>
 				<li><img src="<?php print url('templates/live/images/carat.gif'); ?>" class="crumbsep" alt="&gt;" /></li>
 				<?php
 			}
 			else
 			{
-				?><li><strong><?php print $menu['name']; ?></strong></li><?php
+				?><li><strong><?php print escape($menu['name']); ?></strong></li><?php
 			}
 			$count++;
 		}
@@ -118,11 +119,11 @@ function theme_live_container($title = NULL, $description = NULL)
 		
 		if(isset($title))
 		{
-			?><h1 class="title" id="title"><?php print $title; ?></h1><?php
+			?><h1 class="title" id="title"><?php print escape($title); ?></h1><?php
 		}
 		if(isset($description))
 		{
-			?><span class="subText"><?php print $description; ?></span><?php
+			?><span class="subText"><?php print theme('info_objects', $description); ?></span><?php
 		}
 		
 		?><div class="titlePadding"></div><?php

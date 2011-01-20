@@ -47,12 +47,12 @@ function configure_code()
 	if(dependency('highlighter'))
 	{
 		$options['setting_highlighter'] = array(
-			'name' => lang('highlighter title', 'Highlighter'),
+			'name' => lang('Highlighter', 'highlighter title'),
 			'status' => '',
 			'description' => array(
 				'list' => array(
-					lang('highlighter description 1', 'This script comes equiped with 2 code highlighting tools.'),
-					lang('highlighter description 2', 'PEAR::Text_Highlighter may be used, or the popular GeSHi highlighter.'),
+					lang('This script comes equiped with 2 code highlighting tools.', 'highlighter description 1'),
+					lang('PEAR::Text_Highlighter may be used, or the popular GeSHi highlighter.', 'highlighter description 2'),
 				),
 			),
 			'type' => 'select',
@@ -66,12 +66,12 @@ function configure_code()
 	else
 	{
 		$options['setting_highlighter'] = array(
-			'name' => lang('highlighter title', 'Highlighter Not Installed'),
+			'name' => lang('Highlighter Not Installed', 'highlighter title'),
 			'status' => 'fail',
 			'description' => array(
 				'list' => array(
-					lang('highlighter description fail 1', 'Either there is no highlighter installed, or the chosen highlighter is missing.'),
-					lang('highlighter description fail 2', 'PEAR::Text_Highlighter may be used, or the popular GeSHi highlighter.'),
+					lang('Either there is no highlighter installed, or the chosen highlighter is missing.', 'highlighter description fail 1'),
+					lang('PEAR::Text_Highlighter may be used, or the popular GeSHi highlighter.', 'highlighter description fail 2'),
 				),
 			),
 			/*'value' => array(

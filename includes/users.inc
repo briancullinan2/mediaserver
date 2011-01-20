@@ -154,11 +154,11 @@ function status_users()
 	if(dependency('database'))
 	{
 		$status['users'] = array(
-			'name' => lang('users status title', 'Users'),
+			'name' => lang('Users', 'users status title'),
 			'status' => '',
 			'description' => array(
 				'list' => array(
-					lang('users status description', 'User functionality is supported because the database is properly installed.'),
+					lang('User functionality is supported because the database is properly installed.', 'users status description'),
 				),
 			),
 			'value' => array(
@@ -171,11 +171,11 @@ function status_users()
 	else
 	{
 		$status['users'] = array(
-			'name' => lang('users status title', 'Users'),
+			'name' => lang('Users', 'users status title'),
 			'status' => 'fail',
 			'description' => array(
 				'list' => array(
-					lang('users status fail description', 'User functionality is disabled because the database is not configured.'),
+					lang('User functionality is disabled because the database is not configured.', 'users status fail description'),
 				),
 			),
 			'value' => array(

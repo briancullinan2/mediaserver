@@ -48,12 +48,15 @@ function request_validate()
 	//  better place for this?
 	if(setting('request_method') == 'post')
 	{
+		$_REQUEST['URI'] = $_SERVER['REQUEST_URI'];
 		session('last_request',  $_REQUEST);
-		location($_SERVER['REQUEST_URI']);
+		if(!isset($_REQUEST['no_redirect']))
+			location($_SERVER['REQUEST_URI']);
 	}
-	if(($last_request = session('last_request')))
+	if(($last_request = session('last_request')) && $last_request['URI'] == $_SERVER['REQUEST_URI'])
 	{
 		$_REQUEST = $last_request;
+		
 		// set the method just for reference
 		$_SERVER['REQUEST_METHOD'] = 'POST';
 		session('last_request', NULL);
@@ -68,8 +71,13 @@ function request_validate()
 			$_REQUEST['path_info'] = urldecode(generic_validate_urlpath($_SERVER, 'REQUEST_URI'));
 	}
 	
+	// remove root
+	if(substr($_REQUEST['path_info'], 0, strlen(setting('html_root'))) == setting('html_root'))
+		$_REQUEST['path_info'] = substr($_REQUEST['path_info'], strlen(setting('html_root')));
+		
 	// call rewrite_vars in order to set some request variables
 	rewrite_vars($_REQUEST, $_GET, $_POST);
+	
 	
 	$GLOBALS['validated'] = array();
 	// go through the rest of the request and validate all the variables with the modules they are for
@@ -137,8 +145,8 @@ function rewrite_vars(&$request, &$get, &$post)
 		if(isset($result))
 			$request = array_merge($request, $result);
 	}
-
 	$request = trigger_key('validate', NULL, $request, NULL);
+
 /**
 	// do some modifications to specific modules being used
 	if($request['module'] == 'bt')

@@ -18,6 +18,17 @@ function register_error()
 	);
 }
 
+function menu_error()
+{
+	return array(
+		'errors_only' => array(
+			'callback' => 'theme',
+			'arguments' => array('errors_block', true),
+			'type' => MENU_CALLBACK,
+		),
+	);
+}
+
 // space hold function for table
 function handles_error()
 {
@@ -643,6 +654,26 @@ function output_errors($request)
 	}
 }
 
+
+function end_errors()
+{
+	$request_info = array(
+		'Errors' => gzdeflate(serialize(array(
+			'user' => $GLOBALS['user_errors'],
+			'warn' => $GLOBALS['warn_errors'],
+			'note' => $GLOBALS['note_errors'],
+			'debug' => $GLOBALS['debug_errors'],
+		))),
+	);
+
+	if(setting('database_enable'))
+		db_query('UPDATE error ' . sql_update($request_info) . ' WHERE Time=? AND Filepath=? LIMIT 1', array(
+			$request_info['Errors'],
+			date('Y-m-d h:i:s', $GLOBALS['tm_start']),
+			md5(serialize($_REQUEST))
+		));
+}
+
 function configure_error($settings)
 {
 	$settings['error_logs'] = setting('error_logs');
@@ -656,22 +687,22 @@ function configure_error($settings)
 	$options = array();
 
 	$options['setting_error_action'] = array(
-		'name' => lang('error action title', 'Error Handling'),
+		'name' => lang('Error Handling', 'error action title'),
 		'status' => '',
 		'description' => array(
 			'list' => array(
-				lang('error action description 1', 'Specify the action to take when a fatal error occurs.'),
-				lang('error action description 2', 'It is important to note that an action will only be taken if it is possible.'),
-				lang('error action description 3', 'This is not the only method of error reporting that should be used.'),
+				lang('Specify the action to take when a fatal error occurs.',
+				'It is important to note that an action will only be taken if it is possible.',
+				'This is not the only method of error reporting that should be used.', 'error action description'),
 			),
 		),
 		'type' => 'select',
 		'value' => setting('error_action'),
 		'options' => array(
-			'no_action' => lang('error action option 1', 'No Action'),
-			'error_page' => lang('error action option 2', 'Display Error Page'),
-			'error_and_email' => lang('error action option 3', 'Error Page and E-mail Admin'),
-			'error_only' => lang('error action option 4', 'Just E-mail Administrator'),
+			'no_action' => lang('No Action', 'error action option 1'),
+			'error_page' => lang('Display Error Page', 'error action option 2'),
+			'error_and_email' => lang('Error Page and E-mail Admin', 'error action option 3'),
+			'error_only' => lang('Just E-mail Administrator', 'error action option 4'),
 		)
 	);
 	
@@ -680,15 +711,15 @@ function configure_error($settings)
 		'status' => '',
 		'description' => array(
 			'list' => array(
-				lang('debug mode description 1', 'Debug mode is used by many templates to display debugging options on the page.'),
-				lang('debug mode description 2', 'This is usefull for viewing information about file system and database problems and to test if the system is running properly.'),
+				lang('Debug mode is used by many templates to display debugging options on the page.', 'debug mode description 1'),
+				lang('This is usefull for viewing information about file system and database problems and to test if the system is running properly.', 'debug mode description 2'),
 			),
 		),
 		'type' => 'boolean',
 		'value' => setting('debug_mode'),
 		'options' => array(
-			lang('debug mode option 1', 'Turn Debug Mode On'),
-			lang('debug mode option 2', 'Do Not Use Debug Mode'),
+			lang('Turn Debug Mode On', 'debug mode option 1'),
+			lang('Do Not Use Debug Mode', 'debug mode option 2'),
 		)
 	);
 	

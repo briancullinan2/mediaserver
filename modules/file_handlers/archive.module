@@ -57,12 +57,12 @@ function configure_archive($settings, $request)
 	if(dependency('archiver'))
 	{
 		$options['setting_archiver'] = array(
-			'name' => lang('archiver title', 'Archiver'),
+			'name' => lang('Archiver', 'archiver title'),
 			'status' => '',
 			'description' => array(
 				'list' => array(
-					lang('archiver description 1', 'This script comes equiped with 3 archive analyzers.'),
-					lang('archiver description 2', 'The built in PHP archiver, getID3 which is used by other handlers, and PEAR::Archive.'),
+					lang('This script comes equiped with 3 archive analyzers.', 'archiver description 1'),
+					lang('The built in PHP archiver, getID3 which is used by other handlers, and PEAR::Archive.', 'archiver description 2'),
 				),
 			),
 			'type' => 'select',
@@ -77,12 +77,12 @@ function configure_archive($settings, $request)
 	else
 	{
 		$options['setting_archiver'] = array(
-			'name' => lang('archiver title', 'Archiver Not Installed'),
+			'name' => lang('Archiver Not Installed', 'archiver title'),
 			'status' => 'fail',
 			'description' => array(
 				'list' => array(
-					lang('archiver description fail 1', 'Either there is no archiver installed, or the chosen archiver is missing.'),
-					lang('archiver description fail 2', 'The built in PHP archiver, getID3 which is used by other handlers, and PEAR::Archive.'),
+					lang('Either there is no archiver installed, or the chosen archiver is missing.', 'archiver description fail 1'),
+					lang('The built in PHP archiver, getID3 which is used by other handlers, and PEAR::Archive.', 'archiver description fail 2'),
 				),
 			),
 			'type' => 'select',

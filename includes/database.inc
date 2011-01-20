@@ -344,11 +344,11 @@ function configure_database($settings, $request)
 	$dsn = parseDSN($settings['db_connect']);
 	
 	$options['db_type'] = array(
-		'name' => 'Database Type',
+		'name' => lang('Database Type', 'database type'),
 		'status' => '',
 		'description' => array(
 			'list' => array(
-				'This site supports a variety of databases, select your database type.',
+				lang('This site supports a variety of databases, select your database type.', 'database description 1'),
 			),
 		),
 		'type' => 'select',
@@ -357,11 +357,11 @@ function configure_database($settings, $request)
 	);
 	
 	$options['db_server'] = array(
-		'name' => 'Database Server',
+		'name' => lang('Database Server', 'database server'),
 		'status' => ($settings['dberror'] !== false && (strpos($settings['dberror'], 'Can\'t connect') !== false || strpos($settings['dberror'], 'Connection error') !== false))?'fail':(($settings['dberror'] !== false && strpos($settings['dberror'], 'Access denied') !== false)?'':'warn'),
 		'description' => array(
 			'list' => array(
-				'Please specify an address of the database server to connect to.',
+				lang('Please specify an address of the database server to connect to.', 'database description 2'),
 			),
 		),
 		'type' => 'text',
@@ -370,19 +370,19 @@ function configure_database($settings, $request)
 	
 	if(!$settings['dberror'])
 	{
-		$options['db_server']['description']['list'][] = 'WARNING: If this information is wrong, it could take up to 1 minute or more to detect these errors.';
+		$options['db_server']['description']['list'][] = lang('WARNING: If this information is wrong, it could take up to 1 minute or more to detect these errors.', 'database warning');
 	}
 	elseif($settings['dberror'] !== false && strpos($settings['dberror'], 'Can\'t connect') !== false)
 	{
-		$options['db_server']['description']['list'][] = 'The server reported an error with the connection to the database, please check to make sure the address entered is correct and accessible.';
+		$options['db_server']['description']['list'][] = lang('The server reported an error with the connection to the database, please check to make sure the address entered is correct and accessible.', 'database error');
 	}
 	
 	$options['db_user'] = array(
-		'name' => 'Database User Name',
+		'name' => lang('Database User Name', 'database username'),
 		'status' => ($settings['dberror'] !== false && strpos($settings['dberror'], 'Access denied') !== false)?'fail':'',
 		'description' => array(
 			'list' => array(
-				'Please specify a username to log in to the database.',
+				lang('Please specify a username to log in to the database.', 'database description 3'),
 			),
 		),
 		'type' => 'text',
@@ -395,11 +395,11 @@ function configure_database($settings, $request)
 	}
 	
 	$options['db_pass'] = array(
-		'name' => 'Database Password',
+		'name' => lang('Database Password', 'database password'),
 		'status' => ($settings['dberror'] !== false && strpos($settings['dberror'], 'Access denied') !== false)?'fail':'',
 		'description' => array(
 			'list' => array(
-				'Please specify a password to log in to the database.',
+				lang('Please specify a password to log in to the database.', 'database description 3'),
 			),
 		),
 		'type' => 'text',
@@ -412,12 +412,12 @@ function configure_database($settings, $request)
 	}
 				
 	$options['db_name'] = array(
-		'name' => 'Database Name',
+		'name' => lang('Database Name', 'database name'),
 		'status' => '',
 		'description' => array(
 			'list' => array(
-				'Please specify the name of the database to use.',
-				'This database will not be created for you, it must be created ahead of time with the proper permission settings.',
+				lang('Please specify the name of the database to use.', 'database description 4'),
+				lang('This database will not be created for you, it must be created ahead of time with the proper permission settings.', 'database description 5'),
 			),
 		),
 		'type' => 'text',
@@ -427,12 +427,12 @@ function configure_database($settings, $request)
 	if($settings['dberror'] !== false && strpos($settings['dberror'], 'already exists') !== false)
 	{
 		$options['drop'] = array(
-			'name' => 'Tables Already Exist',
+			'name' => lang('Tables Already Exist', 'database tables exist'),
 			'status' => 'fail',
 			'description' => array(
 				'list' => array(
-					'It seems there are already tables in this database with the same name.',
-					'If you drop these tables, it could cause an irreversable loss of database information.',
+					lang('It seems there are already tables in this database with the same name.', 'database description 6'),
+					lang('If you drop these tables, it could cause an irreversable loss of database information.', 'database description 7'),
 				),
 			),
 			'type' => 'submit',
@@ -442,11 +442,11 @@ function configure_database($settings, $request)
 	elseif($settings['dberror'] == 'tables dropped')
 	{
 		$options['drop'] = array(
-			'name' => 'Tables Dropped',
+			'name' => lang('Tables Dropped', 'database tables dropped'),
 			'status' => 'fail',
 			'description' => array(
 				'list' => array(
-					'The tables have been successfully dropped.  You may now return to the install page.',
+					lang('The tables have been successfully dropped.  You may now return to the install page.', 'database description 8'),
 				),
 			),
 			'type' => 'label',
@@ -455,7 +455,7 @@ function configure_database($settings, $request)
 	}
 	
 	return array('connection' => array(
-		'name' => 'Connection Settings',
+		'name' => lang('Connection Settings', 'database connection settings'),
 		'type' => 'fieldset',
 		'options' => $options
 	));

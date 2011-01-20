@@ -58,19 +58,19 @@ function configure_sitemap($settings)
 	$settings['no_bots'] = setting('no_bots');
 	
 	$options['setting_no_bots'] = array(
-		'name' => lang('no bots title', 'Robots Handling'),
+		'name' => lang('Robots Handling', 'no bots title'),
 		'status' => '',
 		'description' => array(
 			'list' => array(
-				lang('no bots description 1', 'Some services like Google like to scan websites.  This option will prevent robots from downloading and scanning files on your site.'),
-				lang('no bots description 2', 'This will also enable robots to view a customizable sitemap.php module that provides them with the information they deserve.'),
+				lang('Some services like Google like to scan websites.  This option will prevent robots from downloading and scanning files on your site.', 'no bots description 1'),
+				lang('This will also enable robots to view a customizable sitemap.php module that provides them with the information they deserve.', 'no bots description 2'),
 			),
 		),
 		'type' => 'boolean',
 		'value' => $settings['no_bots'],
 		'options' => array(
-			lang('no bots option 1', 'Disable Robots'),
-			lang('no bots option 2', 'Allow Robots to Scan my Files'),
+			lang('Disable Robots', 'no bots option 1'),
+			lang('Allow Robots to Scan my Files', 'no bots option 2'),
 		)
 	);
 	

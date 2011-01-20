@@ -33,6 +33,7 @@ function theme_live_footer()
 				header_height = document.getElementById("header").clientHeight;}
 			</script>
 		</div>
+		<?php if(dependency('language') != false) theme('language_footer'); ?>
 	</body>
 </html>
 <?php

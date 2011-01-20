@@ -25,7 +25,7 @@ function theme_live_admin_module_configure()
 	if(isset($GLOBALS['output']['status']))
 		theme('form_object', 'status', array(
 			'type' => 'fieldset',
-			'name' => 'Module Status',
+			'name' => lang('Module Status', 'module status'),
 			'collapsible' => true,
 			'collapsed' => true,
 			'options' => $GLOBALS['output']['status']
@@ -37,11 +37,11 @@ function theme_live_admin_module_configure()
 		'type' => 'form',
 		'submit' => array(
 			'name' => 'save_configuration',
-			'value' => 'Save',
+			'value' => lang('Save', T_IN_ATTRIBUTE, 'save'),
 		),
 		'reset' => array(
 			'name' => 'reset_configuration',
-			'value' => 'Reset to Defaults',
+			'value' => lang('Reset to Defaults', T_IN_ATTRIBUTE, 'reset defaults'),
 		),
 	));
 	

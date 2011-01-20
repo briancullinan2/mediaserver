@@ -96,16 +96,6 @@ function get_path(&$request, $index)
 
 function invoke_menu($request, $template = false)
 {
-	// output errors only
-	if(isset($request['errors_only']) && $request['errors_only'])
-	{
-		register_output_vars('errors_only', true);
-
-		theme('errors_block');
-		
-		return;
-	}
-	
 	// check request for path info
 	$request['path_info'] = validate($request, 'path_info');
 	

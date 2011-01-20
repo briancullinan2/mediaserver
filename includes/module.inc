@@ -145,7 +145,7 @@ function load_module($path)
 		
 		// set the module name for reference
 		$config['module'] = $module;
-	
+		
 		// set the path to the module
 		if(!isset($config['path']))
 			$config['path'] = $path;
@@ -207,7 +207,10 @@ function load_module($path)
 function load_include($path)
 {
 	$include = include_path($path);
-	include_once $include;
+	if($include)
+		include_once $include;
+	else
+		raise_error('Count not load include \'' . $path . '\'!', E_DEBUG);
 }
 
 function is_module($file)
@@ -513,11 +516,11 @@ function status_admin_modules($settings)
 	if(dependency('writable_settings'))
 	{
 		$status['writable_settings'] = array(
-			'name' => lang('settings access title', 'Access to Settings'),
+			'name' => lang('Access to Settings', 'settings access title'),
 			'status' => '',
 			'description' => array(
 				'list' => array(
-					lang('settings access description', 'The system has detected that is has access to the settings file.  Write permissions should be removed when this installation is complete.'),
+					lang('The system has detected that it has access to the settings file.  Write permissions should be removed when this installation is complete.', 'settings access description'),
 				),
 			),
 			'type' => 'text',
@@ -528,12 +531,12 @@ function status_admin_modules($settings)
 	else
 	{
 		$status['writable_settings'] = array(
-			'name' => lang('settings access title', 'Access to Settings'),
+			'name' => lang('Access to Settings', 'settings access title'),
 			'status' => 'fail',
 			'description' => array(
 				'list' => array(
-					lang('settings access fail description 1', 'The system would like access to the following file.  This is so it can write all the settings when we are done with the install.'),
-					lang('settings access fail description 2', 'Please create this file, and grant it Read/Write permissions.'),
+					lang('The system would like access to the following file.  This is so it can write all the settings when we are done with the install.', 'settings access fail description 1'),
+					lang('Please create this file, and grant it Read/Write permissions.', 'settings access fail description 2'),
 				),
 			),
 			'type' => 'text',
@@ -555,13 +558,13 @@ function configure_module($settings, $request)
 	
 	$options = array();
 
-	$required_str = lang('modules enable option 1', 'Enabled (Required)');
-	$recommend = lang('modules enable option 2', 'Enabled (Recommended)');
-	$optional = lang('modules enable option 3', 'Enabled (Optional)');
-	$disabled = lang('modules enable option 4', 'Disabled');
-	$description_1 = lang('modules enable description 1', 'Choose whether or not to enable the module.');
-	$description_2 = lang('modules enable description 2', 'Click configure to configure additional options for a specific module.');
-	$description_fail = lang('modules enable fail description', 'This module has been forcefully disabled because of dependency issues.');
+	$required_str = lang('Enabled (Required)', 'modules enable option 1');
+	$recommend = lang('Enabled (Recommended)', 'modules enable option 2');
+	$optional = lang('Enabled (Optional)', 'modules enable option 3');
+	$disabled = lang('Disabled', 'modules enable option 4');
+	$description_1 = lang('Choose whether or not to enable the module.', 'modules enable description 1');
+	$description_2 = lang('Click configure to configure additional options for a specific module.', 'modules enable description 2');
+	$description_fail = lang('This module has been forcefully disabled because of dependency issues.', 'modules enable fail description');
 	
 	$options['all'] = array(
 		'name' => 'Configure All Modules',

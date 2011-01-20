@@ -4,7 +4,7 @@ function theme_live_form_form($config)
 {
 	$config_html = traverse_array($config);
 	?>
-	<form name="<?php print htmlspecialchars($config['field'], ENT_QUOTES); ?>" id="<?php print htmlspecialchars($config['field'], ENT_QUOTES); ?>_form" action="<?php print isset($config_html['action'])?$config_html['action']:$GLOBALS['output']['get']; ?>" method="<?php print isset($config_html['method'])?$config_html['method']:'post'; ?>">
+	<form name="<?php print escape($config['field']); ?>" id="<?php print escape($config['field']); ?>_form" action="<?php print isset($config_html['action'])?$config_html['action']:$GLOBALS['output']['get']; ?>" method="<?php print isset($config_html['method'])?$config_html['method']:'post'; ?>">
 		<?php
 		theme('form_objects', $config['options']);
 		
@@ -30,7 +30,7 @@ function theme_live_form_fieldset($config)
 	{
 		if(isset($name))
 		{
-			?><h3><a href="#"><?php print htmlspecialchars($name); ?></a></h3><?php
+			?><h3><a href="#"><?php print escape($name); ?></a></h3><?php
 		}
 
 		?><div id="fieldcontainer_<?php print machine($field); ?>" class="<?php print (isset($collapsible) && $collapsible)?'collapsible':''; ?>" <?php print (isset($collapsed) && $collapsed)?'style="display:none;"':''; ?>><?php
@@ -55,7 +55,7 @@ function theme_live_form_ordered($config)
 	
 	foreach($options as $option => $text)
 	{
-		?><li id="<?php print machine($field); ?>_<?php print $option; ?>" class="ui-state-default"><span class="ui-icon ui-icon-arrowthick-2-n-s"></span><?php print htmlspecialchars($text); ?></li><?php
+		?><li id="<?php print machine($field); ?>_<?php print $option; ?>" class="ui-state-default"><span class="ui-icon ui-icon-arrowthick-2-n-s"></span><?php print escape($text); ?></li><?php
 	}
 	
 	?>

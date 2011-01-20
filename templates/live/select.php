@@ -4,16 +4,16 @@ function theme_live_select()
 {
 	$current = isset($GLOBALS['output']['html']['dir'])?ucwords(basename($GLOBALS['output']['html']['dir'])):'';
 	
-	$description = 'Click to browse files. Drag to select files, and right click for download options.';
+	$description = array(lang('Click to browse files. Drag to select files, and right click for download options.', 'select description'));
 	if(count($GLOBALS['user_errors']) == 0 && count($GLOBALS['output']['files']) > 0)
 	{
-		$description .= '<br />Displaying items ' . ($GLOBALS['output']['html']['start']+1) .
+		$description[] = 'Displaying items ' . ($GLOBALS['output']['html']['start']+1) .
 			' through ' . min($GLOBALS['output']['start'] + count($GLOBALS['output']['files']), $GLOBALS['output']['start'] + $GLOBALS['output']['limit']) . 
 			' out of ' . $GLOBALS['output']['html']['total_count'] . ' file(s).';
 	}
 	
 	theme('header',
-		($current == '')?'Select Files':$current,
+		($current == '')?lang('Select Files', 'select heading'):$current,
 		$description
 	);
 	

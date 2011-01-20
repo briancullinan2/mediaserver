@@ -7,7 +7,7 @@ function theme_live_search_block()
 		<tr>
 			<td class="searchParent">
 				<form action="<?php print $GLOBALS['output']['html']['get']; ?>" method="get" id="search">
-					<p><span class="searchBorder colors_outer"><span class="innerSearchBorder colors_inner"><input type="text" name="search" value="<?php print isset($GLOBALS['output']['html']['search']['search'])?$GLOBALS['output']['html']['search']['search']:''; ?>" id="searchInput" /><span class="buttonBorder"><input type="submit" value="Search" id="searchButton" /></span></span></span>&nbsp;&nbsp; <a id="advancedSearch" href="<?php echo url('search' . (isset($GLOBALS['output']['dir'])?('?dir=' . $GLOBALS['output']['dir']):'')); ?>">Advanced Search</a></p></form>
+					<p><span class="searchBorder colors_outer"><span class="innerSearchBorder colors_inner"><input type="text" name="search" value="<?php print isset($GLOBALS['output']['html']['search']['search'])?$GLOBALS['output']['html']['search']['search']:''; ?>" id="searchInput" /><span class="buttonBorder"><input type="submit" value="<?php print lang('Search', T_IN_ATTRIBUTE, 'search button'); ?>" id="searchButton" /></span></span></span>&nbsp;&nbsp; <a id="advancedSearch" href="<?php echo url('search' . (isset($GLOBALS['output']['dir'])?('?dir=' . $GLOBALS['output']['dir']):'')); ?>"><?php print lang('Advanced Search', 'advanced search'); ?></a></p></form>
 			<script type="text/javascript">
 			// <!--
 				$('#searchInput').focus(function () {

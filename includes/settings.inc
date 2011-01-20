@@ -949,12 +949,12 @@ function configure_settings($settings, $request)
 	// system type
 	$settings['system_type'] = setting('system_type');
 	$general['setting_system_type'] = array(
-		'name' => lang('system type title', 'System Type'),
+		'name' => lang('System Type', 'system type title'),
 		'status' => '',
 		'description' => array(
 			'list' => array(
-				lang('system type description 1', 'The system has detected that you are running ' . (($settings['system_type']=='win')?'Windows':(($settings['system_type']=='nix')?'Linux or Unix':'Mac OS')) . '.'),
-				lang('system type description 2', 'If this is not correct, you must specify the system type so the media server can be optimized for your system.'),
+				lang('The system has detected that you are running ' . (($settings['system_type']=='win')?'Windows':(($settings['system_type']=='nix')?'Linux or Unix':'Mac OS')) . '.', 'system type description 1'),
+				lang('If this is not correct, you must specify the system type so the media server can be optimized for your system.', 'system type description 2'),
 			),
 		),
 		'type' => 'select',
@@ -969,11 +969,11 @@ function configure_settings($settings, $request)
 	
 	// https
 	$general['setting_enable_https'] = array(
-		'name' => lang('enable https title', 'Use HTTPS'),
+		'name' => lang('Use HTTPS', 'enable https title'),
 		'status' => '',
 		'description' => array(
 			'list' => array(
-				lang('enable https description 1', 'Automatically switch to HTTPS when needed, such as for logins and filetransfer.'),
+				lang('Automatically switch to HTTPS when needed, such as for logins and filetransfer.', 'enable https description 1'),
 			),
 		),
 		'type' => 'checkbox',
@@ -985,12 +985,12 @@ function configure_settings($settings, $request)
 	
 	// domain and root
 	$general['setting_html_domain'] = array(
-		'name' => lang('html domain title', 'HTML Domain'),
+		'name' => lang('HTML Domain', 'html domain title'),
 		'status' => '',
 		'description' => array(
 			'list' => array(
-				lang('html domain description 1', 'This is the path that you would like to access the site.'),
-				lang('html domain description 2', 'This path is used when someone tries to view the from the wrong path, when this happens, the site can redirect the user to the right place.'),
+				lang('This is the path that you would like to access the site.', 'html domain description 1'),
+				lang('This path is used when someone tries to view the from the wrong path, when this happens, the site can redirect the user to the right place.', 'html domain description 2'),
 			),
 		),
 		'type' => 'text',
@@ -998,14 +998,14 @@ function configure_settings($settings, $request)
 	);
 
 	$general['setting_html_root'] = array(
-		'name' => lang('html root title', 'HTML Root'),
+		'name' => lang('HTML Root', 'html root title'),
 		'status' => '',
 		'description' => array(
 			'list' => array(
-				lang('html root description 1', 'This is the directory that the site is accessed through.'),
-				lang('html root description 2', 'This allows the site to run along site another website, in the specified directory.  This is needed so that templates can find the right path to images and styles.'),
-				lang('html root description 3', 'This path must also end with the HTTP separator /.'),
-				lang('html root description 4', 'The server reports the DOCUMENT ROOT is ' . $_SERVER['DOCUMENT_ROOT']),
+				lang('This is the directory that the site is accessed through.', 'html root description 1'),
+				lang('This allows the site to run along site another website, in the specified directory.  This is needed so that templates can find the right path to images and styles.', 'html root description 2'),
+				lang('This path must also end with the HTTP separator /.', 'html root description 3'),
+				lang('The server reports the DOCUMENT ROOT is ' . $_SERVER['DOCUMENT_ROOT'], 'html root description 4'),
 			),
 		),
 		'type' => 'text',
@@ -1018,7 +1018,7 @@ function configure_settings($settings, $request)
 		'status' => '',
 		'description' => array(
 			'list' => array(
-				lang('html name description', 'Some templates can display a name for this media server.  Set this here.'),
+				lang('Some templates can display a name for this media server.  Set this here.', 'html name description'),
 			),
 		),
 		'type' => 'text',
@@ -1026,31 +1026,31 @@ function configure_settings($settings, $request)
 	);
 	
 	$general['setting_deep_select'] = array(
-		'name' => lang('recursive get title', 'Deep Select'),
+		'name' => lang('Deep Select', 'recursive get title'),
 		'status' => '',
 		'description' => array(
 			'list' => array(
-				lang('recursive get description 1', 'This tells to system whether or not it should read directories on the fly and recursively.'),
-				lang('recursive get description 2', 'If some files in a directory haven\'t been loaded, this will load them when the directory is accessed.'),
-				lang('recursive get description 3', 'On large systems, this could cause page response to be VERY SLOW.  This option is not recommended for system where many files change often.'),
-				lang('recursive get description 4', '"Very Deep Select" will load remote content in modules that cache information from the internet.  "Deep Select" only loads the information that can be processed locally.'),
+				lang('This tells to system whether or not it should read directories on the fly and recursively.', 'recursive get description 1'),
+				lang('If some files in a directory haven\'t been loaded, this will load them when the directory is accessed.', 'recursive get description 2'),
+				lang('On large systems, this could cause page response to be VERY SLOW.  This option is not recommended for system where many files change often.', 'recursive get description 3'),
+				lang('"Very Deep Select" will load remote content in modules that cache information from the internet.  "Deep Select" only loads the information that can be processed locally.', 'recursive get description 4'),
 			),
 		),
 		'type' => 'select',
 		'value' => setting('deep_select'),
 		'options' => array(
-			2 => lang('recursive get option 1', 'Very Deep Select On'),
-			true => lang('recursive get option 2', 'Turn Deep Select On'),
-			false => lang('recursive get option 3', 'Do Not Use Deep Select'),
+			2 => lang('Very Deep Select On', 'recursive get option 1'),
+			true => lang('Turn Deep Select On', 'recursive get option 2'),
+			false => lang('Do Not Use Deep Select', 'recursive get option 3'),
 		)
 	);
 	
 	$general['setting_buffer_size'] = array(
-		'name' => lang('buffer size title', 'Buffer Size'),
+		'name' => lang('Buffer Size', 'buffer size title'),
 		'status' => '',
 		'description' => array(
 			'list' => array(
-				lang('buffer size description', 'Some modules and modules require open file streams of a specific size.  This allows you to set what size these streams should try to remain below.'),
+				lang('Some modules and modules require open file streams of a specific size.  This allows you to set what size these streams should try to remain below.', 'buffer size description'),
 			),
 		),
 		'type' => 'filesize',

@@ -14,6 +14,16 @@ function get_output_form($form)
 	return ob_theme('form', $form);
 }
 
+function escape($text, $type = 'not plain')
+{
+	if(is_a($text, 'translation'))
+		if($type == 'plain')
+			return $text->translation;
+		else
+			return '' . $text;
+	else
+		return htmlspecialchars($text, ENT_QUOTES);
+}
 
 function theme__form($form)
 {
@@ -22,9 +32,10 @@ function theme__form($form)
 
 function theme__info_objects($infos)
 {
-	if(is_string($infos))
+	// don't use is_string because we want to account for translations
+	if(!is_array($infos))
 	{
-		print $infos;
+		print escape($infos);
 	}
 	else
 	{
@@ -32,13 +43,11 @@ function theme__info_objects($infos)
 		{
 			if(is_numeric($key))
 			{
-				if(is_string($value))
-				{
-					print htmlspecialchars($value);
-				}
 				// treat value like sub info object
-				elseif(is_array($value))
+				if(is_array($value))
 					theme('info_objects', $value);
+				else
+					print escape($value) . '<br />';
 			}
 			else
 			{
@@ -67,17 +76,17 @@ function theme__info_objects($infos)
 
 function theme__info_label($value)
 {
-	?><span><?php print htmlspecialchars($value); ?>: </span><?php
+	?><span><?php print escape($value); ?>: </span><?php
 }
 
 function theme__info_loading($value)
 {
-	?><img src="<?php print url('templates/live/images/large-loading.gif'); ?>" alt="loading" /><?php print htmlspecialchars($value); ?><?php
+	?><img src="<?php print url('templates/live/images/large-loading.gif'); ?>" alt="loading" /><?php print escape($value); ?><?php
 }
 
 function theme__info_image($value)
 {
-	?><img src="<?php print htmlspecialchars($value); ?>" alt="image" /><?php
+	?><img src="<?php print escape($value); ?>" alt="image" /><?php
 }
 
 function theme__info_literal($value)
@@ -88,16 +97,16 @@ function theme__info_literal($value)
 function theme__info_list($value)
 {
 	?><ul><?php
-	if(is_string($value))
-	{
-		?><li><?php print htmlspecialchars($value); ?></li><?php
-	}
-	elseif(is_array($value))
+	if(is_array($value))
 	{
 		foreach($value as $key => $text)
 		{
 			?><li><?php theme('info_objects', array($key => $text)); ?></li><?php
 		}
+	}
+	else
+	{
+		?><li><?php print escape($value); ?></li><?php
 	}
 	?></ul><?php
 }
@@ -106,7 +115,7 @@ function theme__info_link($value)
 {
 	if(is_string($value))
 	{
-		?><a href="<?php print url($value); ?>"><?php print htmlspecialchars($value); ?></a><?php
+		?><a href="<?php print url($value); ?>"><?php print escape($value); ?></a><?php
 	}
 	elseif(is_array($value))
 	{
@@ -122,12 +131,10 @@ function theme__info_code($value)
 
 function theme__info_text($value)
 {
-	if(is_string($value))
-	{
-		print htmlspecialchars($value);
-	}
-	elseif(is_array($value))
+	if(is_array($value))
 		theme('info_objects', $value);
+	else
+		print escape($value);
 }
 
 function theme__form_object($field_name, $config)
@@ -143,7 +150,7 @@ function theme__form_object($field_name, $config)
 	
 	if(isset($config['name']) && $config['type'] != 'fieldset')
 	{
-		?><div class="fieldname <?php print isset($config['status'])?$config['status']:''; ?>"><?php
+		?><div class="fieldname <?php print escape(isset($config['status'])?$config['status']:''); ?>"><?php
 		theme('info_objects', $config['name']);
 		?></div><?php
 	}
@@ -189,7 +196,7 @@ function theme__form_form($config)
 {
 	$config_html = traverse_array($config);
 	?>
-	<form name="<?php print htmlspecialchars($config['field'], ENT_QUOTES); ?>" action="<?php print isset($config_html['action'])?$config_html['action']:$GLOBALS['output']['get']; ?>" method="<?php print isset($config_html['method'])?$config_html['method']:'post'; ?>">
+	<form name="<?php print escape($config['field']); ?>" action="<?php print isset($config_html['action'])?$config_html['action']:$GLOBALS['output']['get']; ?>" method="<?php print isset($config_html['method'])?$config_html['method']:'post'; ?>">
 		<?php
 		theme('form_objects', $config['options']);
 		
@@ -213,17 +220,17 @@ function theme__form_fieldset($config)
 				?><legend><?php
 				if(isset($collapsible) && $collapsible)
 				{
-					$id = htmlspecialchars($field, ENT_QUOTES);
+					$id = escape($field);
 					$script = "if($('#fieldcontainer_" . $id . "').css('display')=='none'){" . 
 						"$('#fieldcontainer_" . $id . "').slideDown('fast');" . 
 					"}else{" .
 						"$('#fieldcontainer_" . $id . "').slideUp('fast');" . 
 					"}return false;";
-					?><a href="#" onclick="<?php print $script; ?>"><?php print htmlspecialchars($name); ?></a><?php
+					?><a href="#" onclick="<?php print $script; ?>"><?php print escape($name); ?></a><?php
 				}
 				else
 				{
-					print htmlspecialchars($name);
+					print escape($name);
 				}
 				?></legend><?php
 			}
@@ -268,19 +275,19 @@ function theme__form_objects($form)
 function theme__form_hidden($config)
 {
 	extract($config);
-	?><input type="hidden" name="<?php print machine($field); ?>" value="<?php print htmlspecialchars($value); ?>" /><?php
+	?><input type="hidden" name="<?php print machine($field); ?>" value="<?php print escape($value); ?>" /><?php
 }
 
 function theme__form_button($config)
 {
 	extract($config);
-	?><input type="button" <?php print isset($action)?'onClick="' . $action . '"':''; ?> <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> name="<?php print isset($name)?machine($field):''; ?>" value="<?php print htmlspecialchars($value); ?>" /><?php
+	?><input type="button" <?php print isset($action)?'onClick="' . $action . '"':''; ?> <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> name="<?php print isset($name)?machine($field):''; ?>" value="<?php print escape($value); ?>" /><?php
 }
 
 function theme__form_submit($config)
 {
 	extract($config);
-	?><input type="submit" <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> name="<?php print machine($field); ?>" value="<?php print htmlspecialchars($value); ?>" /><?php
+	?><input type="submit" <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> name="<?php print machine($field); ?>" value="<?php print escape($value); ?>" /><?php
 }
 
 function theme__form_filesize($config)
@@ -311,7 +318,7 @@ function theme__form_multiselect($config)
 		$value = array($value);
 	foreach($options as $option => $text)
 	{
-		?><option value="<?php print htmlspecialchars($option); ?>" <?php print (in_array($option, $value))?'selected="selected"':''; ?>><?php print htmlspecialchars($text); ?></option><?php
+		?><option value="<?php print htmlspecialchars($option); ?>" <?php print (in_array($option, $value))?'selected="selected"':''; ?>><?php print escape($text); ?></option><?php
 	}
 	?></select><?php
 }
@@ -323,21 +330,21 @@ function theme__form_ordered($config)
 	?><input name="<?php print machine($field); ?>" type="hidden" value="<?php print implode(',', array_keys($options)); ?>" /><?php
 	foreach($options as $option => $text)
 	{
-		?><div><?php print htmlspecialchars($text); ?>
+		?><div><?php print escape($text); ?>
 		
 		<?php
 		if($current > 0)
 		{
 			$switched = array_keys($options);
 			$temp = $switched[$current]; $switched[$current] = $switched[$current-1]; $switched[$current-1] = $temp;
-			?><button type="submit" name="<?php print machine($field); ?>" value="<?php print implode(',', $switched); ?>" <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?>>Up</button><?
+			?><button type="submit" name="<?php print machine($field); ?>" value="<?php print implode(',', $switched); ?>" <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?>><?php print lang('Up', 'form up'); ?></button><?
 		}
 		
 		if($current < count($options)-1)
 		{
 			$switched = array_keys($options);
 			$temp = $switched[$current]; $switched[$current] = $switched[$current+1]; $switched[$current+1] = $temp;
-			?><button type="submit" name="<?php print machine($field); ?>" value="<?php print implode(',', $switched); ?>" <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?>>Down</button><?
+			?><button type="submit" name="<?php print machine($field); ?>" value="<?php print implode(',', $switched); ?>" <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?>><?php print lang('Down', 'form down'); ?></button><?
 		}
 		
 		?></div><?php
@@ -351,8 +358,8 @@ function theme__form_boolean($config)
 	extract($config);
 	?>
 	<select <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> name="<?php print machine($field); ?>">
-		<option value="true" <?php print ($value)?'selected="selected"':''; ?>><?php print isset($options[0])?htmlspecialchars($options[0]):'true'; ?></option>
-		<option value="false" <?php print (!$value)?'selected="selected"':''; ?>><?php print isset($options[1])?htmlspecialchars($options[1]):'false'; ?></option>
+		<option value="true" <?php print ($value)?'selected="selected"':''; ?>><?php print isset($options[0])?escape($options[0]):'true'; ?></option>
+		<option value="false" <?php print (!$value)?'selected="selected"':''; ?>><?php print isset($options[1])?escape($options[1]):'false'; ?></option>
 	</select>
 	<?php
 }
@@ -383,7 +390,7 @@ function theme__form_select($config)
 	?><select <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> name="<?php print machine($field); ?>"><?php
 	foreach($options as $option => $text)
 	{
-		?><option value="<?php print htmlspecialchars($option); ?>" <?php print ($value == $option)?'selected="selected"':''; ?>><?php print htmlspecialchars($text); ?></option><?php
+		?><option value="<?php print escape($option); ?>" <?php print ($value == $option)?'selected="selected"':''; ?>><?php print escape($text); ?></option><?php
 	}
 	?></select><?php
 }
@@ -399,23 +406,23 @@ function theme__form_checkbox($config)
 	// check if array is associative or not
 	foreach($options as $option => $text)
 	{
-		?><input <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> <?php print ($value == $option)?'checked="checked"':''; ?> type="<?php print $type; ?>" value="<?php print htmlspecialchars($option); ?>" name="<?php print machine($field) . (($config['type'] == 'checkbox')?'[]':''); ?>" /><?php print htmlspecialchars($text);
+		?><input <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> <?php print ($value == $option)?'checked="checked"':''; ?> type="<?php print $type; ?>" value="<?php print escape($option); ?>" name="<?php print machine($field) . (($config['type'] == 'checkbox')?'[]':''); ?>" /><?php print htmlspecialchars($text);
 	}
 }
 
 function theme__form_text($config)
 {
 	extract($config);
-	?><input <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> type="text" value="<?php print htmlspecialchars($value); ?>" name="<?php print machine($field); ?>" /><?php
+	?><input <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> type="text" value="<?php print escape($value); ?>" name="<?php print machine($field); ?>" /><?php
 }
 
 function theme__form_file($config)
 {
 	extract($config);
-	?><input <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> type="file" value="<?php print htmlspecialchars($value); ?>" name="<?php print machine($field); ?>" /><?php
+	?><input <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> type="file" value="<?php print escape($value); ?>" name="<?php print machine($field); ?>" /><?php
 }
 
 function theme__form_label($config)
 {
-	?><label><?php print htmlspecialchars($config['value']); ?></label><?php
+	?><label><?php print escape($config['value']); ?></label><?php
 }

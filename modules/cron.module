@@ -26,11 +26,11 @@ function status_cron()
 	if(dependency('database'))
 	{
 		$status['cron'] = array(
-			'name' => lang('cron status title', 'Cron'),
+			'name' => lang('Cron', 'cron status title'),
 			'status' => '',
 			'description' => array(
 				'list' => array(
-					lang('cron status description', 'Cron updating functionality is available.'),
+					lang('Cron updating functionality is available.', 'cron status description'),
 				),
 			),
 			'value' => array(
@@ -43,11 +43,11 @@ function status_cron()
 	else
 	{
 		$status['users'] = array(
-			'name' => lang('users status title', 'Cron'),
+			'name' => lang('Cron', 'users status title'),
 			'status' => 'fail',
 			'description' => array(
 				'list' => array(
-					lang('cron status fail description', 'Cron cannot update the database because it is not configured.'),
+					lang('Cron cannot update the database because it is not configured.', 'cron status fail description'),
 				),
 			),
 			'value' => array(
