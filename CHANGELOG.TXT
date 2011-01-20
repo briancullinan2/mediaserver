@@ -1,4 +1,7 @@
-2011-03-13
+2011-01-20
+Worked hard on language plugin, mostly working, Google API needs more corrections
+
+2011-01-13
 Compliance corrections
 Jquery search textbox and login textboxes
 

@@ -79,7 +79,7 @@ function setup_language()
 	$GLOBALS['language_cache'] = array();
 	foreach($translations as $i => $translation)
 	{
-		if(!isset($GLOBALS['language_cache'][$translation['Filepath']]) || $GLOBALS['language_cache'][$translation['Filepath']]->language == 'en')
+		if(!isset($GLOBALS['language_cache'][$translation['Filepath']]) || $translation['Language'] == validate($_REQUEST, 'language'))
 			$GLOBALS['language_cache'][$translation['Filepath']] = new translation($translation['Filepath'], $translation['Language'], $translation['Translation'], true);
 	}
 }
@@ -171,8 +171,16 @@ function lang($text, $cache_id)
 		if(is_a($arg, 'translation'))
 			// already a lang object
 			$return[] = $arg;
+		
 		if(is_string($arg))
-			$return[] = new translation($cache_id, $language, $text);
+			// check if translation is in the cache
+			if(isset($GLOBALS['language_cache'][$cache_id]) && $GLOBALS['language_cache'][$cache_id]->language == $language)
+				$return[] = $GLOBALS['language_cache'][$cache_id];
+			// set language to NULL to replace with javascript
+			else
+				$return[] = new translation($cache_id, NULL, $text);
+		
+		// process T_IN_ATTRIBUTE option that allows for placing lang inside value="" for buttons and stuff
 		if($arg === T_IN_ATTRIBUTE && is_object($return[count($return)-1]))
 		{
 			if(isset($args[$i+1]) && is_array($args[$i+1]))
@@ -180,6 +188,8 @@ function lang($text, $cache_id)
 			else
 				$return[count($return)-1]->in_attribute = true;
 		}
+		
+		// this tells the translation opbjext not to output a surrounding <span> element, this is useful for placing language inside javascript, but it cannot update with the page
 		if($arg === T_NO_SPAN && is_object($return[count($return)-1]))
 			$return[count($return)-1]->style = '';
 	}
@@ -373,13 +383,13 @@ class translation
 	
 		if($this->in_attribute === true)
 		{
-			if($this->language != 'en')
+			if($this->language == NULL)
 				translation::$javascript_queue[$js_id] = $this->id;
 			return $this->translation . '" id="t_' . $js_id . '"' . $this->style;
 		}
 		elseif(is_array($this->in_attribute))
 		{
-			if($this->language != 'en')
+			if($this->language == NULL)
 				translation::$javascript_queue[$js_id] = $this->id;
 			$return = '<' . $this->in_attribute[0];
 			foreach($this->in_attribute as $name => $value)
@@ -391,7 +401,7 @@ class translation
 			}
 			return $return . '" id="t_' . $js_id . '"' . $this->style . ' />';
 		}
-		elseif($this->language == 'en')
+		elseif($this->language != NULL)
 			return '<span' . $this->style . '>' . $this->translation . '</span>';
 		else
 			// this is where we add a template call to insert the jquery
