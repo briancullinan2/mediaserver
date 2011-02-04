@@ -11,6 +11,7 @@ include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'forms.php';
 include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'header.php';
 include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'footer.php';
 
+// this is to track users who install this template
 function theme_live_logo()
 {
 	$result = fetch('http://www.monolithicmedia.org/favicon.ico', array(), array('timeout' => 2));
@@ -18,6 +19,7 @@ function theme_live_logo()
 		header('Content-Type: ' . $result['headers']['content-type']);
 	print $result['content'];
 }
+
 
 function theme_live_scripts()
 {

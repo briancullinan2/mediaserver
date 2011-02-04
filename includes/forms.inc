@@ -21,8 +21,10 @@ function escape($text, $type = 'not plain')
 			return $text->translation;
 		else
 			return '' . $text;
+	elseif(is_array($text))
+		return implode("\n", array_map('escape', $text));
 	else
-		return htmlspecialchars($text, ENT_QUOTES);
+		return htmlspecialchars($text,ENT_QUOTES,'UTF-8');
 }
 
 function theme__form($form)

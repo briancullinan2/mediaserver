@@ -17,18 +17,25 @@ function setup_ampache()
 
 function rewrite_ampache($path_info, $request)
 {
-	$return = invoke_module('rewrite', 'core', array($path_info));
-	
+	$result = invoke_module('rewrite', 'core', array($path_info, $request));
+		
+	// merge result
+	if(isset($result))
+		$request = array_merge($request, $result);
+
 	// rewrite some variables
+	// this is used by the ampache API, it uses the offset variable instead of start
 	if(isset($request['offset']))
-		$return['start'] = $request['offset'];
+		$result['start'] = $request['offset'];
 	
 	if(isset($request['filter']) && $request['action'] != 'search_songs')
-		$return['id'] = $request['filter'];
+	// select id of item, ampache uses filter for multiple inputs
+		$result['id'] = $request['filter'];
+	// ampache uses filter instead of search, so we must convert
 	elseif(isset($request['filter']))
-		$return['search'] = $request['filter'];
+		$result['search'] = $request['filter'];
 	
-	return $return;
+	return $result;
 }
 
 /**

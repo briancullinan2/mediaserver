@@ -78,8 +78,8 @@ function theme_live_debug_block()
 			<p>
 				<?php print lang('Administrators: Log in to select debug options.', 'admin login to debug'); ?> <?php print lang('Username', 'username'); ?>: <input type="text" name="username" value="" />
 				<?php print lang('Password', 'password'); ?>: <input type="password" name="password" value="" />
-				<input type="submit" value="<?php print lang('Login', T_IN_ATTRIBUTE, 'debug login'); ?>" />
-				<input type="reset" value="<?php print lang('Reset', T_IN_ATTRIBUTE, 'debug reset'); ?>" />
+				<input type="submit" value="<?php print lang('Login', T_IN_ATTRIBUTE, 'login'); ?>" />
+				<input type="reset" value="<?php print lang('Reset', T_IN_ATTRIBUTE, 'reset'); ?>" />
 			</p>
 			</form>
 			</div>

@@ -284,34 +284,6 @@ function dependency($dependency, $ignore_setting = false, $already_checked = arr
  * @}
  */
 
-/**
- * Parse a request from the path
- * @param path_info The part of a request that relects pretty dirs and contains slashes
- * @return all the request information retrieved from the path in an associative array
- */
-function rewrite_default($path_info)
-{
-	$request = array();
-
-	$menu = get_menu_entry($path_info);
-
-	$dirs = explode('/', $path_info);
-	
-	// assign to variables based on menu entry
-	$vars = explode('/', $menu);
-	foreach($vars as $i => $var)
-	{
-		if(substr($var, 0, 1) == '%' && isset($dirs[$i]))
-		{
-			$var = substr($var, 1);
-			$request[$var] = ($i == count($vars)-1)?implode('/', $dirs):$dirs[$i];
-		}
-		unset($dirs[$i]);
-	}
-
-	return $request;
-}
-
 function urlencode_path($file)
 {
 	$dirs = explode('/', $file);

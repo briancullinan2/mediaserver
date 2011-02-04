@@ -28,15 +28,6 @@ function validate_files($request)
 }
 
 
-function validate_handler($request)
-{
-	if(isset($request['handler']) && is_handler($request['handler']))
-		return $request['handler'];
-	else
-		return 'files';
-}
-
-
 /**
  * Implementation of validate
  * @ingroup validate

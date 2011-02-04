@@ -8,7 +8,7 @@ function theme_live_head($title)
 <head>
 <?php theme('redirect_block'); ?>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title><?php print escape($title, 'plain') . ' : ' . setting('html_name'); ?></title>
+<title id="title"><?php print escape($title, 'plain') . ' : ' . setting('html_name'); ?></title>
 <meta name="google-site-verification" content="K3Em8a7JMI3_1ry5CNVKIHIWofDt-2C3ohovDq3N2cQ" />
 <script type="text/javascript" src="<?php print url('templates/live/scripts'); ?>"></script>
 <link rel="stylesheet" href="<?php print url('templates/live/styles'); ?>" type="text/css"/>

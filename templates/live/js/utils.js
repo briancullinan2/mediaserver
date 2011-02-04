@@ -84,8 +84,8 @@ function play_selected()
 			$f('player').addClip({
 				url: '?path_info=encode/mp3/' + $(this).attr('id') + '/files/file.mp3',
 				title: $('a', this).text(),
-				img: $('img', this).css("background-image").replace(/"/g,"").replace(/url\(|\)$/ig, ""),
-				class: (($('#playlist div').length % 2 == 0) ? 'even' : 'odd')
+				//img: $('img', this).css("background-image").replace(/"/g,"").replace(/url\(|\)$/ig, ""),
+				//class: (($('#playlist div').length % 2 == 0) ? 'even' : 'odd')
 			}, 0);
 			$('#playlist div').hover(
 				function()

@@ -32,16 +32,24 @@ function bootstrap($mode = 'all')
 			break;
 			
 		case 'database':
-			require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'database.inc';
-			
 			load_module(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'database.inc');
 
-			if(!dependency('database'))
+			if(!is_module('database') || !dependency('database'))
 			{
 				$GLOBALS['database'] = false;
 				raise_error('Database not installed properly!', E_DEBUG);
 			}
 			
+			break;
+			
+		case 'language':
+			load_module(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'language.inc');
+			
+			if(!function_exists('lang'))
+			{
+				define('T_URL', 2);define('T_SKIP', 4);define('T_REPLACE', 8);define('T_NEW_CONTEXT', 16);define('T_IN_ATTRIBUTE', 32);define('T_NO_SPAN', 64);
+				function lang($text, $key) { $args = array_filter(array_slice(func_get_args(), 0, func_num_args() - 1), 'is_string'); return (count($args) < 2)?array_shift($args):$args; };
+			}
 			break;
 			
 		case 'all':
@@ -59,7 +67,6 @@ function bootstrap($mode = 'all')
 				'users.inc',
 				'theme.inc',
 				'curl.inc',
-				'language.inc',
 				'forms.inc',
 			);
 			
@@ -74,6 +81,9 @@ function bootstrap($mode = 'all')
 			preload_error();
 			preload_triggers();
 			preload_menu();
+			
+			// try to run language options
+			bootstrap('language');
 				
 			// run register functions and add to modules
 			foreach($includes as $i => $include)

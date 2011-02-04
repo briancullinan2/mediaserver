@@ -74,7 +74,9 @@ function request_validate()
 	// remove root
 	if(substr($_REQUEST['path_info'], 0, strlen(setting('html_root'))) == setting('html_root'))
 		$_REQUEST['path_info'] = substr($_REQUEST['path_info'], strlen(setting('html_root')));
-		
+	
+	// store unaltered request for modules to use
+	
 	// call rewrite_vars in order to set some request variables
 	rewrite_vars($_REQUEST, $_GET, $_POST);
 	
@@ -141,7 +143,7 @@ function rewrite_vars(&$request, &$get, &$post)
 		else
 			$result = invoke_module('rewrite', 'default', array($request['path_info'], $request));
 			
-		// merge result, but current request takes precedence
+		// merge result
 		if(isset($result))
 			$request = array_merge($request, $result);
 	}
@@ -155,6 +157,34 @@ function rewrite_vars(&$request, &$get, &$post)
 		$request['bt_request'] = $request;
 	}
 	*/
+}
+
+/**
+ * Parse a request from the path
+ * @param path_info The part of a request that relects pretty dirs and contains slashes
+ * @return all the request information retrieved from the path in an associative array
+ */
+function rewrite_default($path_info)
+{
+	$request = array();
+
+	$menu = get_menu_entry($path_info);
+
+	$dirs = explode('/', trim($path_info, '/'));
+	
+	// assign to variables based on menu entry
+	$vars = explode('/', $menu);
+	foreach($vars as $i => $var)
+	{
+		if(substr($var, 0, 1) == '%' && isset($dirs[$i]))
+		{
+			$var = substr($var, 1);
+			$request[$var] = ($i == count($vars)-1)?implode('/', $dirs):$dirs[$i];
+		}
+		unset($dirs[$i]);
+	}
+
+	return $request;
 }
 
 /**

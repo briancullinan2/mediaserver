@@ -1,3 +1,7 @@
+2011-01-31
+Finished language plugin, still need to replace all the text with the lang call
+Big fixes
+
 2011-01-20
 Worked hard on language plugin, mostly working, Google API needs more corrections
 

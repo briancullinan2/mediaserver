@@ -138,7 +138,7 @@ function load_module($path)
 		}
 		// return here because there is not configuration for the module
 		else
-			return;
+			return false;
 		
 		if(isset($buffer) && strlen($buffer) > 0)
 			raise_error('Output detected while loading modules \'' . $path . '\'.', E_VERBOSE);

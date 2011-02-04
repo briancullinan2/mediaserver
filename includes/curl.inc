@@ -311,3 +311,58 @@ function escape_urlquery($request)
 	
 	return $host . $new_query;
 }
+
+
+# Original PHP code by Chirp Internet: www.chirp.com.au
+# Please acknowledge use of this code by including this header.
+
+function robots_allowed($url, $useragent = false)
+{
+	# parse url to retrieve host and path
+	$parsed = parse_url($url);
+	
+	$agents = array(preg_quote('*'));
+	if($useragent)
+		$agents[] = preg_quote($useragent);
+	$agents = implode('|', $agents);
+	
+	# location of robots.txt file
+	$robotstxt = @file("http://{$parsed['host']}/robots.txt");
+	if(!$robotstxt)
+		return true;
+	
+	$rules = array();
+	$ruleapplies = false;
+	foreach($robotstxt as $line)
+	{
+		# skip blank lines
+		if(!$line = trim($line))
+			continue;
+		
+		# following rules only apply if User-agent matches $useragent or '*'
+		if(preg_match('/User-agent: (.*)/i', $line, $match))
+		{
+			$ruleapplies = preg_match("/($agents)/i", $match[1]);
+		}
+		
+		if($ruleapplies && preg_match('/Disallow:(.*)/i', $line, $regs))
+		{
+			# an empty rule implies full access - no further tests required
+			if(!$regs[1])
+				return true;
+				
+			# add rules that apply to array for testing
+			$rules[] = preg_quote(trim($regs[1]), '/');
+		}
+	}
+	
+	foreach($rules as $rule)
+	{
+		# check if page is disallowed to us
+		if(preg_match("/^$rule/", $parsed['path'])) return false;
+	}
+	
+	# page is not disallowed
+	return true;
+}
+

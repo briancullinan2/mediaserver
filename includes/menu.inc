@@ -47,9 +47,8 @@ function validate_path_info($request)
 {
 	if(isset($request['path_info']))
 	{
-		// remove leading slash
-		if(substr($request['path_info'], 0, 1) == '/')
-			$request['path_info'] = substr($request['path_info'], 1);
+		// remove leading/trailing slash
+		$request['path_info'] = trim($request['path_info'], '/');
 		
 		// look up the menu item
 		$result = get_menu_entry($request['path_info']);
@@ -293,9 +292,25 @@ function output_menus($request)
 	$menus = array();
 	foreach($GLOBALS['menus'] as $path => $config)
 	{
-		// only add menus that are normal types and menu types
-		if($config['type'] == MENU_NORMAL || $config['type'] == MENU_LIST)
+		if($path == 'select')
 		{
+			// translate menu
+			$config['name'] = lang($config['name'], 'menu ' . machine($path));
+			$menus[$path] = $config;
+			foreach(get_handlers() as $handler => $handler_config)
+			{
+				$handler_path = 'select/' . $handler;
+				// translate menu
+				$config['name'] = lang($handler_config['name'], 'menu ' . machine($handler_path));
+				$menus[$handler_path] = $config;
+			}
+
+		}
+		// only add menus that are normal types and menu types
+		elseif($config['type'] == MENU_NORMAL || $config['type'] == MENU_LIST)
+		{
+			// translate menu
+			$config['name'] = lang($config['name'], 'menu ' . machine($path));
 			$menus[$path] = $config;
 		}
 	}

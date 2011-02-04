@@ -60,19 +60,7 @@ function theme_live_menu_block()
 		}
 	}
 	
-	?>
-		<li class="top_menu">File Types<br />
-			<ul>
-			<?php
-			foreach(get_handlers() as $handler => $config)
-			{
-				$name = $config['name'];
-				?><li><a href="<?php print url('select/' . $handler); ?>"><?php echo $name; ?></a></li><?php
-			}
-			?>
-			</ul>
-		</li>
-	</ul><?php
+	?></ul><?php
 }
 
 

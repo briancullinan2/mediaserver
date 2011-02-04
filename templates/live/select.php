@@ -22,7 +22,7 @@ function theme_live_select()
 	
 	?>
 	<div class="titlePadding"></div>
-	<div class="display-menu" onclick="$('#display-menu').css({top:0, left:0}).position({my: 'left top',at: 'right top',of: this}).show();"><a href="#">View</a></div>
+	<div class="display-menu" onclick="$('#display-menu').css({top:0, left:0}).position({my: 'left top',at: 'right top',of: this}).show();"><a href="#"><?php print lang('View', 'view'); ?></a></div>
 	<?php
 	
 	theme('files', $GLOBALS['output']['files']);

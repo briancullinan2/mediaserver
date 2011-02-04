@@ -7,15 +7,22 @@ function theme_live_search_block()
 		<tr>
 			<td class="searchParent">
 				<form action="<?php print $GLOBALS['output']['html']['get']; ?>" method="get" id="search">
-					<p><span class="searchBorder colors_outer"><span class="innerSearchBorder colors_inner"><input type="text" name="search" value="<?php print isset($GLOBALS['output']['html']['search']['search'])?$GLOBALS['output']['html']['search']['search']:''; ?>" id="searchInput" /><span class="buttonBorder"><input type="submit" value="<?php print lang('Search', T_IN_ATTRIBUTE, 'search button'); ?>" id="searchButton" /></span></span></span>&nbsp;&nbsp; <a id="advancedSearch" href="<?php echo url('search' . (isset($GLOBALS['output']['dir'])?('?dir=' . $GLOBALS['output']['dir']):'')); ?>"><?php print lang('Advanced Search', 'advanced search'); ?></a></p></form>
+					<p><label id="search_label"><?php print lang(get_module($GLOBALS['output']['handler'], 'name') . ' Search', T_NO_SPAN, array('id' => 'search_label_func'), $GLOBALS['output']['handler'] . ' search'); ?>: </label><span class="searchBorder colors_outer"><span class="innerSearchBorder colors_inner"><input type="text" name="search" value="<?php print isset($GLOBALS['output']['html']['search']['search'])?$GLOBALS['output']['html']['search']['search']:''; ?>" id="searchInput" /><span class="buttonBorder"><input type="submit" value="<?php print lang('Search', T_IN_ATTRIBUTE, 'searchButton'); ?>" /></span></span></span>&nbsp;&nbsp; <a id="advancedSearch" href="<?php echo url('search' . (isset($GLOBALS['output']['dir'])?('?dir=' . $GLOBALS['output']['dir']):'')); ?>"><?php print lang('Advanced Search', 'advanced search'); ?></a></p></form>
 			<script type="text/javascript">
 			// <!--
+				function $search_label_func(translation)
+				{
+					if($('#searchInput').val() == $('#search_label').text() && $('#searchInput').css('color') == 'grey')
+						$('#searchInput').val(translation);
+					$('#search_label').html(translation);
+				}
+				$('#search_label').hide();
 				$('#searchInput').focus(function () {
-					if($(this).val() == '<?php print get_module($GLOBALS['output']['handler'], 'name'); ?> Search' && $(this).css('color') == 'grey')
+					if($(this).val() == $('#search_label').text() && $(this).css('color') == 'grey')
 						$(this).val('').css('color', 'black');
 				}).blur(function() {
 					if($(this).val() == '')
-						$(this).val('<?php print get_module($GLOBALS['output']['handler'], 'name'); ?> Search').css('color', 'grey');
+						$(this).val($('#search_label').text()).css('color', 'grey');
 				}).mouseover(function () {
 					$(this).trigger('focus');	
 				}).mouseout(function () {

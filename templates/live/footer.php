@@ -17,14 +17,13 @@ function theme_live_footer()
 					theme('menu_block');
 				?>
 				<div style="clear:both; text-align:center;">
-				Powered by <a href="http://www.monolithicmedia.org/" style="text-decoration:none;">
+				<?php print lang('Powered by', 'powered by'); ?> <a href="http://www.monolithicmedia.org/" style="text-decoration:none;">
 					<img style="border:0px;" src="<?php print url('template/live/logo'); ?>" alt="*" />MonolithicMedia.org
 				</a>
 				<br />
-				<a id="sitewatch_lock" href="https://sitewat.ch/Status/dev.bjcullinan.com">
-					<img src="https://sitewat.ch/Marker/dev.bjcullinan.com" alt="Sitewatch is protecting this site from hackers." height="32" width="115" />
+				<a id="sitewatch_lock" href="https://sitewat.ch/Status/<?php print preg_replace('/[a-z]*?:\/\//i', '', setting('html_domain')); ?>">
+					<img src="https://sitewat.ch/Marker/<?php print preg_replace('/[a-z]*?:\/\//i', '', setting('html_domain')); ?>" alt="Sitewatch is protecting this site from hackers." height="32" width="115" />
 				</a>
-				</div>
 			</div>
 			<script type="text/javascript">
 			if(document.getElementById("debug")) {

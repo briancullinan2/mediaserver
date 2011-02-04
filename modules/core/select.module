@@ -3,7 +3,7 @@
 // handle selecting of files
 function menu_select()
 {
-	return array(
+	$menus = array(
 		'select/%handler/%dir' => array(
 			'callback' => 'output_select',
 		),
@@ -12,6 +12,8 @@ function menu_select()
 		),
 		'select' => 'Select Files', // this is the default item
 	);
+	
+	return $menus;
 }
 
 /**
@@ -29,6 +31,15 @@ function validate_select($request)
 			return 'None';
 	}
 }
+
+function validate_handler($request)
+{
+	if(isset($request['handler']) && is_handler($request['handler']))
+		return $request['handler'];
+	else
+		return 'files';
+}
+
 
 /**
  * Implmenetation of validate, combine and manipulate the IDs from a request

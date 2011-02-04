@@ -46,7 +46,7 @@ function theme_live_list_block()
 						</td>
 					</tr>
 				</table>
-				<a class="itemLink" href="<?php print url('select/files/' . setting('local_users')); ?>"><span>User Directory</span></a>
+				<a class="itemLink" href="<?php print url('select/files/' . setting('local_users')); ?>"><span><?php print lang('User Directory', 'user directory'); ?></span></a>
 			</div>
 			<div class="filemedium FOLDER" id="collapser">
 				<table class="itemTable" cellpadding="0" cellspacing="0">
@@ -58,7 +58,7 @@ function theme_live_list_block()
 						</td>
 					</tr>
 				</table>
-				<a class="itemLink" href="#"><span>Collapse</span></a>
+				<a class="itemLink" href="#"><span><?php print lang('Collapse', 'collapse'); ?></span></a>
 			</div>
 		</div>
 		<div id="playlist-outer" class="colors_outer">

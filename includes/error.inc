@@ -211,7 +211,7 @@ function setup_error()
 	set_error_handler('phperror_wrapper', E_ALL | E_STRICT);
 	error_reporting(E_ALL | E_STRICT);
 	set_exception_handler('exception_wrapper');
-	PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'error_callback');
+	@PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'error_callback');
 	
 	// open all the error logs for writing
 	$error_logs = setting('error_logs');

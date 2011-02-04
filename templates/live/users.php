@@ -10,9 +10,9 @@ function theme_live_login($username = '')
 	?>	
 	<form action="<?php print url('users/login?return=' . urlencode($return)); ?>" method="post">
 		<p>
-		Username: <input type="text" name="username" value="<?php print $username; ?>" /><br />
-		Password: <input type="password" name="password" value="" /><br />
-		<input type="submit" value="Login" /><input type="reset" value="Reset" />
+		<?php print lang('Username', 'username'); ?>: <input type="text" name="username" value="<?php print $username; ?>" /><br />
+		<?php print lang('Password', 'password'); ?>: <input type="password" name="password" value="" /><br />
+		<input type="submit" value="<?php print lang('Login', T_IN_ATTRIBUTE, 'login'); ?>" /><input type="reset" value="<?php print lang('Reset', T_IN_ATTRIBUTE, 'reset'); ?>" />
 		</p>
 	</form>
 	<?php
@@ -31,12 +31,19 @@ function theme_live_login_block($username = '', $return = '')
 		<input class="stndsize" id="login_block_password" type="password" name="password" value="" />
 		<script type="text/javascript">
 		// <!--
+			var username = "<?php print lang('Username', T_NO_SPAN, array('id' => 'username_func'), 'login username'); ?>";
+			function $username_func(translation)
+			{
+				if($('#login_block_username').val() == 'Username' && $('#login_block_username').css('color') == 'grey')
+					$('#login_block_username').val(translation);
+				username = translation;
+			}
 			$('#login_block_username').focus(function () {
-				if($(this).val() == 'Username' && $(this).css('color') == 'grey')
+				if($(this).val() == username && $(this).css('color') == 'grey')
 					$(this).val('').css('color', 'black');
 			}).blur(function() {
 				if($(this).val() == '')
-					$(this).val('Username').css('color', 'grey');
+					$(this).val(username).css('color', 'grey');
 			}).mouseover(function () {
 				$(this).trigger('focus');	
 			}).mouseout(function () {
@@ -58,7 +65,7 @@ function theme_live_login_block($username = '', $return = '')
 			$('#login_block_username, #login_block_password').trigger('blur');
 		// -->
 		</script>
-		<input type="submit" value="Login" />
+		<input type="submit" value="<?php print lang('Login', T_IN_ATTRIBUTE, 'login'); ?>" />
 		</p>
 	</form>
 	<?php
