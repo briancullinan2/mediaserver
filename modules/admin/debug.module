@@ -1,0 +1,55 @@
+<?php
+
+
+function menu_debug()
+{
+	/*
+	subtools = array(
+array(
+name = Remote Proceedure Call
+privilage = 10
+)
+array(
+privilage = 10
+)
+)
+*/
+	return array(
+		'admin/tools/debug' => array(
+			'callback' => 'output_debug',
+		),
+		'admin/tools/rpc' => array(
+			'callback' => 'output_rpc',
+			'name' => 'Remote Proceedure Call',
+			'description' => 'Make function calls remotely for running scripts and managing database entries.',
+		),
+		'admin/tools/export' => array(
+			'callback' => 'output_export',
+			'name' => 'Script Exporter',
+			'description' => 'Compile and export PHP scripts with all the necessary template files included.',
+		),
+	);
+}
+
+
+function output_export()
+{
+	$path = '/var/www/monolithic/includes/language.inc';
+	
+	$fh = fopen($path, 'r');
+	
+	$tmp_code = fread($fh, filesize($path));
+	
+	preg_match_all('~ { ( (?>[^{}]+) | (?R) )* } ~x', $tmp_code, $blocks, PREG_OFFSET_CAPTURE);
+	
+	$functions = array();
+	foreach($blocks[0] as $i => $match)
+	{
+		list($text, $offset) = $match;
+		$start = strrpos(substr($tmp_code, 0, $offset), '}');
+		if(preg_match('/function[\s]*([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)[\s]*\(.*?\)[\s]*\{/i', substr($tmp_code, $start, $offset - $start + 1), $matches))
+			$functions[$matches[1]] = $matches[0] . $text;
+	}
+	print_r($functions);
+	exit;
+}

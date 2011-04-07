@@ -1,0 +1,4 @@
+name = Debug Tools
+description = Tools for displaying debug information for modules and the site as a whole.
+privilage = 10
+template = false

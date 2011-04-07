@@ -1,0 +1,170 @@
+<?php
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'select.php';
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'users.php';
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'search.php';
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'errors.php';
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'modules.php';
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'menu.php';
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'list.php';
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'forms.php';
+
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'header.php';
+include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'footer.php';
+
+function menu_extjs()
+{
+	return array(
+		'templates/extjs/ext-3.3.1/resources/css/style' => array(
+			'callback' => 'theme',
+			'arguments' => array('styles'),
+			'type' => MENU_CALLBACK,
+		),
+	);
+}
+
+function theme_extjs_logo()
+{
+	$result = fetch('http://www.monolithicmedia.org/favicon.ico', array(), array('timeout' => 2));
+	if(isset($result['headers']['content-type']))
+		header('Content-Type: ' . $result['headers']['content-type']);
+	print $result['content'];
+}
+
+function theme_extjs_scripts()
+{
+	header("Cache-Control: cache");  
+	header("Pragma: public");
+	header('Content-Type: text/javascript');
+	$scripts = array('ext-3.3.1/adapter/ext/ext-base.js', 'ext-3.3.1/ext-all.js');
+	
+	foreach($scripts as $i => $script)
+	{
+		print file_get_contents(dirname(__FILE__) . DIRECTORY_SEPARATOR . $script);
+	}
+}
+
+function theme_extjs_styles()
+{
+	header("Cache-Control: cache");  
+	header("Pragma: public");
+	header('Content-Type: text/css');
+	$styles = array('ext-3.3.1/resources/css/ext-all.css', 'ext-3.3.1/resources/css/xtheme-blue.css'
+	);
+	
+	foreach($styles as $i => $style)
+	{
+		print file_get_contents(dirname(__FILE__) . DIRECTORY_SEPARATOR . $style);
+	}
+}
+
+function validate_extjs(&$request)
+{
+raise_error('Template validation', E_DEBUG);
+	if(!isset($request['dir']))
+		$request['dir'] = '/';
+	
+	if(!isset($request['limit']))
+		$request['limit'] = 50;
+	
+	return $request;
+}
+
+function extjs_get_scheme()
+{
+	if(!isset($GLOBALS['output']['file_counts']))
+		return 'files';
+	
+	$scheme_count = 0;
+	$scheme = '';
+	foreach($GLOBALS['output']['file_counts'] as $key => $count)
+	{
+		if($count > $scheme_count && $key != 'files_count')
+		{
+			$scheme_count = $count;
+			$scheme = $key;
+		}
+	}
+	if($GLOBALS['output']['file_counts']['files_count'] - $scheme_count > $scheme_count)
+		$scheme = 'files_count';
+		
+	$scheme = substr($scheme, 0, -6);
+	
+	return $scheme;
+}
+
+function extjs_get_colors()
+{
+	$color_schemes = array('files', 'audio', 'image', 'video', 'code', 'movies');
+
+	$scheme = extjs_get_scheme();
+	
+	if(in_array($scheme, $color_schemes))
+		return $scheme;
+	else
+		return 'files';
+}
+
+function extjs_get_info_count()
+{
+	$biggest = 0;
+	if(!isset($GLOBALS['output']['files'])) return $biggest;
+	foreach($GLOBALS['output']['files'] as $file)
+	{
+		$info_count = 0;
+		foreach($GLOBALS['output']['columns'] as $column)
+		{
+			if(isset($file[$column]) && $file[$column] != '' && strlen($file[$column]) <= 200 &&
+				substr($column, -3) != '_id' && $column != 'id' && $column != 'Hex' && $column != 'Filename' && $column != 'Filetype')
+			$info_count++;
+		}
+		
+		$info_count = ceil($info_count/2);
+		if($info_count > $biggest) $biggest = $info_count;
+	}
+	
+	return $biggest;
+}
+
+
+function theme_extjs_pages($start = 0, $limit = 50, $total = 0)
+{
+	// set some variables if they are missing so we can avoid errors
+	?>
+	<table cellpadding="0" cellspacing="0" class="pageTable">
+		<tr>
+			<td align="center">
+				<table cellpadding="0" cellspacing="0">
+					<tr>
+						<td>
+	<?php
+	foreach($GLOBALS['output']['pages'] as $i => $page_link)
+	{
+		list($name, $href) = $page_link;
+		if(isset($page_link[2]) && !$page_link[2])
+		{
+			?>
+			<div class="page<?php print (!is_numeric($name) || strlen($name) > 2)?'W':''; ?>">
+				<strong><?php print $name; ?></strong>
+			</div>
+			<?php
+		}
+		else
+		{
+			$link = url($GLOBALS['output']['get'] . ((strpos($GLOBALS['output']['get'], '?') === false)?'?':'&') . $href);
+			?>
+			<div class="page<?php print (!is_numeric($name) || strlen($name) > 2)?'W':''; ?>">
+				<a class="pageLink" href="<?php print $link; ?>"><?php print $name; ?></a>
+			</div>
+			<?php
+		}
+	}
+	?>
+	
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+	</table>
+	 <?php
+}

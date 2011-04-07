@@ -1,0 +1,87 @@
+/* CSS Document */
+
+
+.list_block {
+	color:white;
+	-x-system-font:none;
+	font-family:Verdana,Arial,sans-serif;
+	font-size:100%;
+	font-size-adjust:none;
+	font-stretch:normal;
+	font-style:normal;
+	font-variant:normal;
+	font-weight:normal;
+	line-height:normal;
+	background:url(images/headerBG_24_~HeaderGradientImageType~.png) repeat scroll center top;
+	text-align:left;
+	position:fixed;
+	left:0px;
+	bottom:0px;
+	z-index:1000;
+}
+
+.list_block form {
+	margin:5px 5px 5px 5px;
+	overflow:hidden;
+	height:26px;
+}
+
+#collapser .thumbmedium {
+	background-image:url(images/minimize_24x24.png);
+}
+
+.filemedium {
+	margin:8px 1px 8px 5em;
+	position:relative;
+	width:inherit;
+	float:left;
+}
+
+.filemedium .itemLink span {
+	bottom:0px;
+	cursor:pointer;
+	display:block;
+	left:1.5em;
+	overflow:hidden;
+	position:absolute;
+	text-align:center;
+	width:6em;
+	color:#FFF;
+}
+
+#playlist, #playlist-outer {
+	border-style:solid;
+	border-width:1px;
+}
+
+#playlist {
+	background-color:#FFF;
+	height:300px;
+	overflow:auto;
+}
+
+#playlist div {
+	height:32px;
+	background:#FFF url(images/browse_select_bg.png) no-repeat scroll center bottom;
+	background-position:-1px 0px;
+	border:1px solid #FFF;
+}
+
+#playlist div.highlight {
+	background:#F7FBFF url(images/browse_select_bg.png) repeat-x scroll center bottom;
+	border:1px solid #D8F0FA;
+}
+
+#playlist div.even {
+	background-color:#CCC;
+}
+
+.listitem {
+	text-decoration:none;
+}
+
+
+.listitem span {
+	display:block;
+	
+}

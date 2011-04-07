@@ -16,9 +16,17 @@ function get_output_form($form)
 
 function escape($text, $type = 'not plain')
 {
-	if(is_a($text, 'translation'))
-		if($type == 'plain')
+	if($text instanceof translation)
+		if($type === T_NO_SPAN)
 			return $text->translation;
+		elseif($type === T_IN_ATTRIBUTE)
+		{
+			$in_attr = $text->in_attribute;
+			$text->in_attribute = true;
+			$return = '' . $text;
+			$text->in_attribute = $in_attr;
+			return $return;
+		}
 		else
 			return '' . $text;
 	elseif(is_array($text))
@@ -283,7 +291,7 @@ function theme__form_hidden($config)
 function theme__form_button($config)
 {
 	extract($config);
-	?><input type="button" <?php print isset($action)?'onClick="' . $action . '"':''; ?> <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> name="<?php print isset($name)?machine($field):''; ?>" value="<?php print escape($value); ?>" /><?php
+	?><input type="button" <?php print isset($action)?'onClick="' . $action . '"':''; ?> <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> name="<?php print isset($name)?machine($field):''; ?>" value="<?php print escape($value, T_IN_ATTRIBUTE); ?>" /><?php
 }
 
 function theme__form_submit($config)

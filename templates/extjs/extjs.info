@@ -1,0 +1,3 @@
+name = "ExtJS"
+description = "Template based on the ExtJS technology."
+validate = true

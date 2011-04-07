@@ -296,12 +296,15 @@ function output_menus($request)
 		{
 			// translate menu
 			$config['name'] = lang($config['name'], 'menu ' . machine($path));
+			$config['description'] = lang($config['description'], 'menu description ' . machine($path));
 			$menus[$path] = $config;
+			
 			foreach(get_handlers() as $handler => $handler_config)
 			{
 				$handler_path = 'select/' . $handler;
 				// translate menu
 				$config['name'] = lang($handler_config['name'], 'menu ' . machine($handler_path));
+				$config['description'] = lang($handler_config['description'], 'menu description ' . machine($handler_path));
 				$menus[$handler_path] = $config;
 			}
 
@@ -311,6 +314,7 @@ function output_menus($request)
 		{
 			// translate menu
 			$config['name'] = lang($config['name'], 'menu ' . machine($path));
+			$config['description'] = lang($config['description'], 'menu description ' . machine($path));
 			$menus[$path] = $config;
 		}
 	}
@@ -337,11 +341,17 @@ function output_menu($request)
 			$current != $path && 
 			// only show menus that are at this level, not lower levels
 			strpos($path, '/', strlen($current) + 1) === false
-		)
+			)
+		{
+			// translate menu
+			$config['name'] = lang($config['name'], 'menu ' . machine($path));
+			$config['description'] = lang($config['description'], 'menu description ' . machine($path));
+			
 			// add to current menu
 			$current_menu[$path] = $config;
+		}
 	}
-	
+
 	// registers
 	register_output_vars('current_menu', $GLOBALS['menus'][$current]);
 	register_output_vars('menu', $current_menu);

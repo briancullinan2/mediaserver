@@ -199,7 +199,7 @@ function lang($text, $cache_id)
 	// process arguments
 	foreach($args as $i => $arg)
 	{
-		if(is_a($arg, 'translation'))
+		if($arg instanceof translation)
 			// already a lang object
 			$return[] = $arg;
 		
@@ -262,6 +262,53 @@ function end_language()
 	
 		$result = db_query('INSERT INTO language (Filepath, Translation, Language) VALUES (' . implode('),(', array_fill(0, count($insert)/3, '?,?,?')) . ')', $insert);
 	}
+}
+
+function configure_language($settings)
+{
+	$options = array();
+	
+	$options['language_cache'] = array(
+		'name' => 'Clear language cache',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Clear the stored languages.  The translations will be regenerated the next time a user visits that page in the selected language.',
+			),
+		),
+		'type' => 'submit',
+		'value' => 'Clear now',
+	);
+	
+	$options['default_language'] = array(
+		'name' => 'Default language',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Select the default languages users will see when they visit your site.',
+			),
+		),
+		'type' => 'select',
+		'options' => array(),
+	);
+	
+	$options['ajaxify'] = array(
+		'name' => 'Use AJAX',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Translate the page with AJAX so the user doesn\'t have to refresh the page when they switch languages.',
+			),
+		),
+		'type' => 'boolean',
+		'options' => array('Turn AJAX on', 'Do not use AJAX'),
+	);
+	
+	return array('language' => array(
+		'name' => 'Languages',
+		'type' => 'fieldset',
+		'options' => $options
+	));
 }
 
 function output_language($request)
@@ -329,17 +376,18 @@ function output_translations($request)
 	}
 }
 
+
 function utf8_html_decode($matches){
    return html_entity_decode('&#x'.$matches[1].';', ENT_QUOTES, 'UTF-8');
 }
 
 function unescapeUTF8EscapeSeq($str) {
-   $str=preg_replace_callback("/\\\u([0-9a-f]{4})/i", 'utf8_html_decode', $str);
+   $str=preg_replace_callback('/\\\\u([0-9a-f]{4})/i', 'utf8_html_decode', $str);
    $str=html_entity_decode($str, ENT_QUOTES,"UTF-8");
    $str=stripslashes(trim($str));
    $str=str_replace('<s/>', " %s ", $str);
    $str=str_replace('</s>', " %s ", $str);
-   $str=str_replace('<br>',"\\n", $str);
+   //$str=str_replace('<br />',"\n", $str);
    return $str;
 }
 
@@ -390,16 +438,16 @@ function translate($text,$lang_code,$source_lang='en'){
             execute("insert into translate_cache (origonal_text,origonal_lang,translated_lang) values (?,?.?)",array($t,$source_lang,$lang_code));
          }
       }*/
-      $post=implode("&q=",$text);
+      $post=implode("&q=", array_map('urlencode', $text));
       $post="q=".$post;
    }else{
-      $post="q=".$text;
+      $post="q=".urlencode($text);
    }
-   $post = str_replace("\\n","<br>",$post);
-   $post = str_replace("%s","<s/>",$post);
-   //$post=str_replace("\n","||", $post);
+   
+   $post=str_replace(array("\r\n", "\n"),"<br />",$post);
+   $post=str_replace("%s","<s/>",$post);
 
-   $url = "http://ajax.googleapis.com/ajax/services/language/translate?v=1.0&langpair=$source_lang%7C$lang_code&callback=foo&context=bar";
+   $url="http://ajax.googleapis.com/ajax/services/language/translate?v=1.0&langpair=$source_lang%7C$lang_code&callback=foo&context=bar";
    $data = fetch($url,$post);
    if(strpos($data['content'], 'translatedText') === false)
       raise_error('Tranlation failed: ' . $data['content'], E_DEBUG);
@@ -436,7 +484,6 @@ function translate($text,$lang_code,$source_lang='en'){
    return $translated;
 }
 
-
 function theme__language_block()
 {
 	?><form id="language-block" action="<?php print $GLOBALS['output']['get']; ?>" method="get">
@@ -452,7 +499,7 @@ function theme__language_block()
 	<script type="text/javascript">
 		$('#language_select').change(function () { $('#language-block').submit(); }).next('input').hide();
 	</script>
-	<div id="tmp_translations"></div>
+	<div id="tmp_translations" style="display:none;"></div>
 	<?php
 }
 
@@ -530,7 +577,7 @@ class translation
 	{
 		$this->id = $id;
 		$this->language = $language;
-		$this->translation = escape($translation);
+		$this->translation = $translation;
 	}
 	
 	function __toString()
@@ -554,13 +601,13 @@ class translation
 		if($this->no_span)
 		{
 			// we still need to request the translation
-			return $this->translation;
+			return escape($this->translation);
 		}
 		
 		// if attribute is not an array or if there is only and id element do this
 		elseif($this->in_attribute === true || (count($this->in_attribute) === 1 && isset($this->in_attribute['id'])))
 		{
-			return $this->translation . '" id="' . $js_id . '"' . translation::$style;
+			return escape($this->translation) . '" id="' . $js_id . '"' . translation::$style;
 		}
 		
 		// contruct the element from the in_attribute property
@@ -570,7 +617,7 @@ class translation
 			foreach($this->in_attribute as $name => $value)
 			{
 				if(strpos($value, '%s') !== false)
-					$return .= ' ' . $name . '="' . sprintf($value, $this->translation) . '"';
+					$return .= ' ' . $name . '="' . sprintf($value, escape($this->translation)) . '"';
 				elseif($name)
 					$return .= ' ' . $name . '="' . $value . '"';
 			}
@@ -582,12 +629,12 @@ class translation
 		
 		// if the language is set, then the text is already translated
 		elseif($this->language != NULL)
-			return '<span' . translation::$style . '>' . $this->translation . '</span>';
+			return '<span' . translation::$style . '>' . escape($this->translation) . '</span>';
 		
 		// translate the text in-line!
 		else
 			// this is where we add a template call to insert the jquery
-			return '<span' . translation::$style . ' id="' . $js_id . '">' . $this->translation . '</span>';
+			return '<span' . translation::$style . ' id="' . $js_id . '">' . escape($this->translation) . '</span>';
 	}
 }
 

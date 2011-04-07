@@ -1,0 +1,84 @@
+
+
+#advancedSearch {
+	font-size:12px;
+	font-weight:normal;
+	color:#FFF;
+}
+
+.searchParent {
+	padding:0;
+	white-space:nowrap;
+	vertical-align:middle;
+	text-align:center;
+}
+
+#search {
+	display:inline;
+}
+
+.searchBorder {
+	border-color:#88BBDD #66AACC #5599BB;
+	border-style:solid;
+	border-width:1px;
+	padding-bottom:5px;
+	padding-top:3px;
+}
+
+.innerSearchBorder {
+	background-color:#FFFFFF;
+	border-style:solid;
+	border-width:1px;
+	padding-bottom:4px;
+	padding-top:2px;
+}
+
+#searchInput {
+	margin:0px;
+	border:0px;
+	border-right:1px solid #8F8F8F;
+	border-style:none solid none none;
+	padding-bottom:3px;
+	padding-left:2px;
+	padding-top:3px;
+	width:21em;
+	vertical-align:middle;
+	-x-system-font:none;
+	font-family:Verdana,Arial,sans-serif;
+	font-size:100%;
+	font-size-adjust:none;
+	font-stretch:normal;
+	font-style:normal;
+	font-variant:normal;
+	font-weight:normal;
+	line-height:normal;
+}
+
+.buttonBorder {
+	border-color:#CFE3C4 #99C383 #5DA253 #99C383;
+	border-style:solid;
+	border-width:1px;
+	padding-bottom:3px;
+	padding-top:1px;
+	background-color:#307C0B;
+}
+
+#searchButton {
+	vertical-align:middle;
+	font-family:Verdana,Arial,sans-serif;
+	font-size:100%;
+	font-size-adjust:none;
+	font-stretch:normal;
+	font-style:normal;
+	font-variant:normal;
+	font-weight:normal;
+	line-height:normal;
+	width:auto;
+	background:#307C0B url(images/headerBG_24_~HeaderGradientImageType~.png) repeat scroll center center;
+	border:medium none;
+	color:#FFFFFF;
+	margin:0;
+	padding-bottom:1px;
+	padding-top:1px;
+}
+

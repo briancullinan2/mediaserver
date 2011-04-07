@@ -1,0 +1,62 @@
+/* CSS Document */
+
+.menu {
+	background:#FCFCFC none repeat scroll 0 0;
+	border:1px solid #CCCCCC;
+	display:none;
+	list-style-image:none;
+	list-style-position:outside;
+	list-style-type:none;
+	margin:0;
+	min-width:120px;
+	padding:0 0 2px;
+	position:absolute;
+	z-index:2000001;
+}
+
+.menuShadow {
+	background-color:#000000;
+	display:none;
+	-moz-opacity:.5;
+	opacity: .5;
+	filter:alpha(opacity=50);
+	position:absolute;
+	z-index:2000000;
+}
+
+.menu li {
+	display:block;
+	list-style-image:none;
+	list-style-position:outside;
+	list-style-type:none;
+	margin:2px 2px 0;
+}
+
+.menu li a, .display-menu a {
+	border:1px solid #FFFFFF;
+	color:#444444;
+	display:block !important;
+	overflow:visible;
+	padding:3px 6px 5px;
+	text-align:left;
+	text-decoration:none;
+	white-space:nowrap;
+	cursor:pointer;
+	font-weight:inherit;
+}
+
+.menu .itemSelect {
+	background:#F7FBFF url(images/browse_select_bg.png) repeat-x scroll center bottom;
+	border:1px solid #D8F0FA;
+}
+
+.menu .sep {
+	border-bottom:1px solid #DCDCDC;
+	margin:2px 2px 0;
+}
+
+.display-menu {
+	position:absolute;
+	right:20px;
+	top:20px;
+}

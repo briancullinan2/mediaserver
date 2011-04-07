@@ -41,7 +41,7 @@ function get_download_services()
  */
 function setting_download_services()
 {
-	$settings = array();
+	$settings = array('service_order');
 	
 	// add wrapper functions for validating a service entry
 	for($i = 0; $i < NUMBER_OF_DOWNLOAD_SERVICES; $i++)
@@ -308,6 +308,12 @@ function validate_service_search($request)
 function validate_service_index($request)
 {
 	return generic_validate_numeric_zero($request, 'service_index');
+}
+
+// this function allows us to save a default order in the settings, and below, provide an option to order each automatic search
+function setting_service_order($settings)
+{
+	return validate_service_order($settings);
 }
 
 function validate_service_order($request)
@@ -695,13 +701,16 @@ function form_download_services($request)
 	// display login summary based on session
 	
 	// order services
-	$request['service_order'] = validate($request, 'service_order');
+	if(!isset($request['service_order']))
+		$request['service_order'] = setting('service_order');
+	else
+		$request['service_order'] = validate($request, 'service_order');
 	$ordered = array();
 	foreach($services as $i => $config)
 	{
 		$ordered[$request['service_order'][$i]] = $services[$request['service_order'][$i]]['name'];
 	}
-	$form['service_order'] = array(
+	$form['setting_service_order'] = array(
 		'name' => 'Service Order',
 		'status' => '',
 		'description' => array(

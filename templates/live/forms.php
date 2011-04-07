@@ -15,8 +15,8 @@ function theme_live_form_form($config)
 	
 		?>
 		<script type="text/javascript">
-			$( ".field_fieldset" ).accordion();
-			$( ".collapsible:parent" ).accordion("option", "collapsible", true);
+			$( ".field_fieldset" ).accordion({collapsible:true});
+			//$( ".collapsible:parent" ).accordion("option", "collapsible", true);
 			$( "button, input:submit, input:button, input:reset" ).button();
 		</script>
 	</form>
@@ -33,7 +33,7 @@ function theme_live_form_fieldset($config)
 			?><h3><a href="#"><?php print escape($name); ?></a></h3><?php
 		}
 
-		?><div id="fieldcontainer_<?php print machine($field); ?>" class="<?php print (isset($collapsible) && $collapsible)?'collapsible':''; ?>" <?php print (isset($collapsed) && $collapsed)?'style="display:none;"':''; ?>><?php
+		?><div id="fieldcontainer_<?php print machine($field); ?>" class="<?php print (isset($collapsible) && $collapsible)?'collapsible':''; ?> <?php print (isset($collapsed) && $collapsed)?'collapsed-start':''; ?>"><?php
 		
 			theme('form_fieldrows', $options);
 		

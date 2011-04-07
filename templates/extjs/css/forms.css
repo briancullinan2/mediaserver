@@ -1,0 +1,90 @@
+.submit {
+	display:block;
+	clear:both;
+	padding-top:30px;
+}
+
+.field.field_fieldset, .field_row .field.field_fieldset {
+	width:100%;
+}
+
+.field_row {
+	clear:both;
+}
+
+.field_row .fieldname {
+	width:30%;
+	float:left;
+	height:3em;
+	font-weight:bold;
+	background-color:#DDFFDD;
+}
+
+.field_row .field.field_set .fieldname {
+	width:auto;
+	float:none;
+	font-weight:normal;
+	height:auto;
+	background-color:inherit;
+}
+
+.field_row .field {
+	width:30%;
+	float:left;
+}
+
+.field_row .field.field_set .field {
+	width:auto;
+	float:none;
+}
+
+.field_row .fielddesc {
+	width:40%;
+	float:left;
+}
+
+.field_row .field.field_set .fielddesc {
+	width:auto;
+	float:none;
+	color:#999;
+}
+
+.fieldname.valid {
+	background-color:#DDFFDD;
+}
+
+.fieldname.fail {
+	background-color:#FFEEEE;
+	color:#990000;
+}
+
+.fieldname.warn {
+	background-color:#FFFFCC;
+	color:inherit;
+}
+
+table.install {
+	width:100%;
+}
+
+table.install td {
+	text-align:center;
+}
+
+#username, #password {
+	width:154px;
+	position:relative;
+	color:#666;
+	display:block;
+	top:-24px;
+	height:24px;
+}
+
+#password {
+	top:-48px;
+	left:160px;
+}
+
+input.stndsize {
+	width:150px;
+}

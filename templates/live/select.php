@@ -13,7 +13,7 @@ function theme_live_select()
 	}
 	
 	theme('header',
-		($current == '')?lang('Select Files', 'select heading'):$current,
+		($current == '')?lang('Select Files', 'select heading'):escape($current),
 		$description
 	);
 	

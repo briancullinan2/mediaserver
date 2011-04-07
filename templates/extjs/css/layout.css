@@ -1,0 +1,274 @@
+/* CSS Document */
+
+body, html {
+	height:100%;
+	width:100%;
+}
+
+body {
+	margin:0px;
+	background-color:#FFFFFF;
+	background-image:none;
+	background-repeat:repeat;
+	background-position:top left;
+	font-family:Verdana, Arial, sans-serif;
+	font-size:70%;
+	color:#444444;
+	direction:ltr;
+}
+
+#loading {
+	background-image:url(images/large-loading.gif);
+	top:50%;
+	left:50%;
+	margin-left:-16px;
+	margin-top:-16px;
+	position:absolute;
+	z-index:1000;
+	display:none;
+	height:32px;
+	width:32px;
+}
+
+.template_box a {
+	color:#FFF;
+	padding-right:10px;
+}
+
+#bodydiv {
+	padding:0 400px 0 400px
+}
+#sizer {
+	width:100%
+}
+#expander {
+	position:relative;
+	min-width:800px;
+}
+
+.header {
+	color:white;
+	-x-system-font:none;
+	font-family:Verdana,Arial,sans-serif;
+	font-size:100%;
+	font-size-adjust:none;
+	font-stretch:normal;
+	font-style:normal;
+	font-variant:normal;
+	font-weight:normal;
+	line-height:normal;
+	width:100%;
+	background:url(images/headerBG_24_~HeaderGradientImageType~.png) repeat scroll center top;
+	height:39px;
+	text-align:left;
+}
+
+#header * {
+	line-height:normal;
+}
+
+#header td {
+	white-space:nowrap;
+	vertical-align:middle;
+}
+
+#siteTitle, #templates {
+	padding:0;
+	white-space:nowrap;
+	vertical-align:middle;
+	width:0.1%;
+	font-family:Verdana,Arial,sans-serif;
+	font-size:125%;
+	line-height:normal;
+	font-weight:bold;
+}
+
+#siteTitle a {
+	color:#FFF;
+	text-decoration:none;
+}
+
+#siteTitle {
+	padding:0px 0px 0px 10px;
+}
+
+#middleArea {
+	margin-left:auto;
+	margin-right:auto;
+}
+#container {
+	margin:auto;
+	width:900px;
+}
+
+#breadcrumb {
+	color:#444444;
+	margin-left:9px;
+	margin-top:5px;
+	margin-bottom:5px;
+	overflow:hidden;
+	width:99%;
+}
+
+#breadcrumb ul {
+	list-style-image:none;
+	list-style-position:outside;
+	list-style-type:none;
+	margin:0;
+	padding-left:0;
+	padding:0 0 0 1em;
+}
+
+#breadcrumb li {
+	display:block;
+	float:left;
+	margin:0;
+}
+
+#breadcrumb a {
+	color:#0066A7;
+	text-decoration:none;
+}
+
+.sideColumn.right {
+	width:10px;
+	height:250px;
+	background-image:url(images/shadow.png);
+	background-position:0 0;
+	background-repeat:no-repeat;
+	float:right;
+	position:relative;
+	top:20px;
+}
+
+#mainColumn {
+	height:100%;
+	table-layout:fixed;
+	border:1px solid #E0E0E0;
+	vertical-align:top;
+	padding:1.25em;
+	overflow:hidden;
+	position:relative;
+}
+
+.title {
+	font-size:160%;
+	font-weight:normal;
+	margin:0;
+	overflow:hidden;
+	padding:0 0 0.2em;
+	line-height:145%;
+}
+
+.titlePadding {
+	clear:both;
+	height:1.25em;
+	width:1em;
+}
+
+.pageTable {
+	width:100%;
+}
+
+.page, .pageW {
+	border:1px solid #FEFEFE;
+	margin:0.2em 1px;
+	position:relative;
+	height:1.5em;
+	float:left;
+	text-align:center;
+}
+
+.page {
+	width:1.5em;
+}
+
+.pageW {
+	width:2.5em;
+}
+
+.pageHighlight, .pageHighlightW {
+	background:#F7FBFF url(images/browse_select_bg.png) repeat-x scroll center bottom;
+	border:1px solid #D8F0FA;
+	height:1.5em;
+	left:0;
+	position:absolute;
+	top:0;
+	visibility:hidden;
+}
+
+.pageHighlight {
+	width:1.5em;
+}
+
+.pageHighlightW {
+	width:2.5em;
+}
+
+.pageLink {
+	background:transparent url(images/transparent.gif) repeat scroll 0 0;
+	color:#0066A7;
+	font-weight:inherit;
+	height:100%;
+	left:0;
+	position:absolute;
+	text-decoration:none;
+	top:0;
+	width:100%;
+	z-index:100;
+}
+
+
+.crumbsep {
+	display:inline-block;
+	height:8px;
+	margin:2px 8px 4px;
+	vertical-align:middle;
+	width:8px;
+}
+
+.subText {
+	color:#8B8B8B;
+	display:block;
+	overflow:hidden;
+	padding-bottom:0.1em;
+	width:100%;
+}
+
+.hover {
+	display:block;
+	border:1px solid #D8F0FA;
+	margin:5px 0px 5px 0px;
+	background: url(images/browse_select_bg.png) repeat-x scroll center bottom #F7FBFF;
+}
+
+.hover.red {
+	display:block;
+	border:1px solid #FAF0D8;
+	margin:5px 0px 5px 0px;
+	background: url(images/browse_select_bg_red.png) repeat-x scroll center bottom #F7FBFF;
+}
+
+.nothover {
+	display:block;
+	border:1px solid #FFF;
+	margin:5px 0px 5px 0px;
+}
+
+.disablebtn {
+	display:block;
+	position:relative;
+	top:24px;
+	right:24px;
+	float:right;
+	height:48px;
+	width:48px;
+	background-image:url(images/button_cancel.png);
+}
+
+
+#language-block
+{
+	float:right;
+	margin-bottom:-40px;
+}

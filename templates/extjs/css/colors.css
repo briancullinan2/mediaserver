@@ -1,0 +1,105 @@
+/* CSS Document */
+
+.colors_files .colors_bg {
+	background-color:#06A;
+}
+
+.colors_files .colors_fg {
+	color:#6CF;
+}
+
+.colors_files .colors_inner {
+	border-color:#446688 #335588 #115577;
+}
+
+.colors_files .colors_outer {
+	border-color:#88BBDD #66AACC #5599BB;
+}
+
+
+.colors_audio .colors_bg {
+	background-color:#900;
+}
+
+.colors_audio .colors_fg {
+	color:#F66;
+}
+
+.colors_audio .colors_inner {
+	border-color:#883333 #883322 #772211;
+}
+
+.colors_audio .colors_outer {
+	border-color:#BB8888 #AA6666 #995555;
+}
+
+
+.colors_image .colors_bg {
+	background-color:#990;
+}
+
+.colors_image .colors_fg {
+	color:#FFA;
+}
+
+.colors_image .colors_inner {
+	border-color:#888844 #888833 #777722;
+}
+
+.colors_image .colors_outer {
+	border-color:#BBBBAA #AAAACC #9999BB;
+}
+
+
+.colors_video .colors_bg {
+	background-color:#093;
+}
+
+.colors_video .colors_fg {
+	color:#6FA;
+}
+
+.colors_video .colors_inner {
+	border-color:#668866 #448844 #447744;
+}
+
+.colors_video .colors_outer {
+	border-color:#88DDBB #66CCAA #55BB99;
+}
+
+
+
+.colors_code .colors_bg {
+	background-color:#707;
+}
+
+.colors_code .colors_fg {
+	color:#FAF;
+}
+
+.colors_code .colors_inner {
+	border-color:#884488 #883388 #772277;
+}
+
+.colors_code .colors_outer {
+	border-color:#BB99BB #AA77AA #996699;
+}
+
+
+
+.colors_movies .colors_bg {
+	background-color:#075;
+}
+
+.colors_movies .colors_fg {
+	color:#6DA;
+}
+
+.colors_movies .colors_inner {
+	border-color:#668888 #448866 #447766;
+}
+
+.colors_movies .colors_outer {
+	border-color:#88BBAA #66AA99 #559988;
+}
+

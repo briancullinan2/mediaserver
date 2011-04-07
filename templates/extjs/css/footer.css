@@ -1,0 +1,53 @@
+/* CSS Document */
+
+#footer {
+	clear:both;
+}
+
+#footerCtr {
+	margin-top:0.42em;
+	margin-bottom:120px;
+	margin-left:auto;
+	margin-right:auto;
+	border-color:#F7F3F7;
+	background-color:transparent;
+	border-top-style:solid;
+	border-top-width:1px;
+	color:#444444;
+	font-size:100%;
+	width:900px;
+}
+
+#footerCtr td {
+	padding:8px 0;
+	vertical-align:top;
+}
+
+#footerCtr ul {
+	list-style-image:none;
+	list-style-position:outside;
+	list-style-type:none;
+	margin:0px;
+}
+
+.top_menu {
+	border:1px solid #CCC;
+	float:left;
+	margin:5px;
+	background-color:#EEE;
+}
+
+.top_menu ul
+{
+	background-color:#FFF;
+}
+
+#footerCtr ul li a {
+	color:#444444;
+	text-decoration:none;
+	font-weight:inherit;
+}
+
+#footerCtr ul li.last {
+	border-right-style:none;
+}

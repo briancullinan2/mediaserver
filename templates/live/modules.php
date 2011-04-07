@@ -36,11 +36,11 @@ function theme_live_admin_module_configure()
 		'options' => $GLOBALS['output']['options'],
 		'type' => 'form',
 		'submit' => array(
-			'name' => 'save_configuration',
+			'field' => 'save_configuration',
 			'value' => lang('Save', T_IN_ATTRIBUTE, 'save'),
 		),
 		'reset' => array(
-			'name' => 'reset_configuration',
+			'field' => 'reset_configuration',
 			'value' => lang('Reset to Defaults', T_IN_ATTRIBUTE, 'reset defaults'),
 		),
 	));

@@ -78,17 +78,21 @@ function preload_settings()
 	}
 }
 
+
 /**
  * set up all the default site settings
  * @ingroup setup
  */
 function setup_settings()
 {
+	if(!isset($GLOBALS['settings']))
+		preload_settings();
+		
 	// load settings from database
 	if(setting_installed() && setting('database_enable'))
 	{
 		$return = db_assoc('SELECT * FROM users WHERE id = -1 LIMIT 1');
-			
+		
 		// make sure the query succeeded
 		if(is_array($return) && count($return) > 0)
 		{
@@ -119,6 +123,9 @@ function bootstrap_settings($module)
 	}
 	else
 		raise_error('Settings is not an array for module \'' . $module . '\'.', E_DEBUG);
+		
+	if($module == 'database')
+		setup_settings();
 }
 
 function get_settings($module)

@@ -17,6 +17,11 @@ function form_configure_download_input($settings)
 }
 
 
+function setting_download_input($settings)
+{
+	return array('file_input', 'rss_feed');
+}
+
 function form_download_input($request)
 {
 	$request['manual_search'] = validate($request, 'manual_search');

@@ -567,17 +567,17 @@ function configure_module($settings, $request)
 	$description_fail = lang('This module has been forcefully disabled because of dependency issues.', 'modules enable fail description');
 	
 	$options['all'] = array(
-		'name' => 'Configure All Modules',
+		'name' => lang('Configure All Modules', 'configure all modules'),
 		'value' => array(
 			'link' => array(
-				'text' => 'Configure All',
+				'text' => lang('Configure All', 'configure all'),
 				'url' => 'admin/module/all'
 			),
 		),
 		'description' => array(
 			'list' => array(
-				'This option allows you to configure all the modules on one page.',
-				'Note:  This page may take a while to load and may be difficult to navigate.'
+				lang('This option allows you to configure all the modules on one page.', 'configure modules descriptions 1'),
+				lang('Note:  This page may take a while to load and may be difficult to navigate.', 'configure modules descriptions 2')
 			)
 		)
 	);
@@ -623,11 +623,11 @@ function configure_module($settings, $request)
 		
 		// set up config for this module
 		$new_config = array(
-			'name' => get_module($module, 'name'),
+			'name' => lang(get_module($module, 'name'), $module . ' title'),
 			'status' => '',
 			'description' => array(
 				'list' => array(
-					get_module($module, 'description'),
+					lang(get_module($module, 'description'), $module . ' description'),
 					$description_1,
 					$description_2,
 				),
@@ -672,7 +672,7 @@ function configure_module($settings, $request)
 			$new_config['options']['return'] = array(
 				'link' => array(
 					'url' => 'admin/module/' . $module,
-					'text' => 'Configure',
+					'text' => lang('Configure', 'configure'),
 				)
 			);
 		}
@@ -682,7 +682,7 @@ function configure_module($settings, $request)
 		if(count($depends) > 0)
 			// add to options
 			$new_config['options'][] = array(
-				'value' => '<br />Depends on:<br />' . (is_array($depends)?implode(', ', $depends):'Failed to retrieve dependencies!'),
+				'value' => array(lang('Depends on:', 'depends on'), (is_array($depends)?implode(', ', $depends):lang('Failed to retrieve dependencies!', 'dependencies failed'))),
 			);
 		
 		// add new config to the fieldset
@@ -845,7 +845,7 @@ function _module_save_fs_settings($settings)
 	
 		if($fh !== false)
 		{
-			fwrite($fh, ';<?php die(); ?>' . "\n" . $settings);
+			fwrite($fh, ";<?php die(); ?>\n" . $settings);
 			fclose($fh);
 			
 			return true;
@@ -919,7 +919,7 @@ function output_module($request)
 		$settings_changed = module_get_new_settings($request);
 		if($settings_changed)
 		{
-			module_save_settings(array_intersect_key($GLOBALS['settings'], $GLOBALS['all_settings']), true);
+			module_save_settings(array_intersect_key($GLOBALS['settings'], $GLOBALS['all_settings']));
 		}
 		else
 			raise_error('No settings changed.', E_WARN);

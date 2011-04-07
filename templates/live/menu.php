@@ -12,7 +12,7 @@ function theme_live_menu()
 		?>
 		<div class="nothover" onMouseOver="this.className='hover';" onMouseOut="this.className='nothover';">
 			<a href="<?php print url($path); ?>" style="font-size:14px;"><?php print $config['name']; ?></a><br /><br />
-			Description: <?php print $config['description']; ?>
+			<?php print lang('Description', 'description'); ?>: <?php print $config['description']; ?>
 			<br /><br />
 		</div>
 		<?php
