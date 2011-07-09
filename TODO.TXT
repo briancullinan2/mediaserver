@@ -1,5 +1,12 @@
 ------------- MONOLITHICMEDIA TODO -------------
 ------------- GENERAL TODO -------------
+Fix CLI
+Fix Live Javascript and use address.push API implemented in Safari and Firefox
+Redirect user to the last inneronly adddress they used, do this is a hook in the Live template only
+Fix Live window title not changing after page change
+Improve performance by caching the module list, this should refresh if a dependency is not met
+Use NZBGetter: 
+	http://sourceforge.net/projects/nzbgetter/
 MULTIPLE FIXES!
 	is_module() should check dependecy()?
 		use search for is_module() to figure this out

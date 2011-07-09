@@ -60,7 +60,7 @@ function setup_session($request = array())
 	}
 
     // check access times for expiry
-    if(time() - session('created') > 1800 || setting('remote_ip') != session('remote_ip'))
+    if(session('last_activity') - session('created') > session_cache_expire() * 60 || setting('remote_ip') != session('remote_ip'))
         new_session();
 
     session('last_activity', time());

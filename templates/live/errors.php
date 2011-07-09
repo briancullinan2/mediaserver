@@ -12,7 +12,7 @@ function theme_live_debug_error($id, $error, $no_code = false)
 		$class = '';
 		
 	?>
-	<a href="#" class="msg <?php print $class; ?>" onClick="$('#error_<?php print $id; ?>').toggle(); return false;"><?php print (isset($error->time)?('[' . $error->time . ']'):'') . htmlspecialchars($error->message) . ((isset($error->count) && $error->count > 0)?(' repeated ' . $error->count . ' time(s)'):''); ?></a>
+	<a href="#" class="msg <?php print $class; ?>" onClick="$('#error_<?php print $id; ?>').toggle(); return false;"><?php print (isset($error->time)?('[' . $error->time . ']'):'') . ($error->htmlspecialchars ? htmlspecialchars($error->message) : $error->message) . ((isset($error->count) && $error->count > 0)?(' repeated ' . $error->count . ' time(s)'):''); ?></a>
 	<?php
 	if(!$no_code)
 	{

@@ -87,7 +87,8 @@ function output_robots($request)
 	{
 		header('Content-Type: text/plain');
 		print "User-agent: *
-Disallow: /";
+Disallow: /
+";
 	}
 }
 

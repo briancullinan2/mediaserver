@@ -41,7 +41,7 @@ function menu_template()
  * Generate a list of templates
  * @ingroup setup
  */
-function setup_template()
+function preload_template()
 {
 	$GLOBALS['theme_stack'] = array();
 	
@@ -49,9 +49,12 @@ function setup_template()
 
 	// get the list of templates
 	$GLOBALS['templates'] = load_modules(setting_local_root() . 'templates');
+}
 
+function setup_template()
+{
 	// bootstrap the modules and setup
-	bootstrap('modules', $GLOBALS['templates']);
+	bootstrap('modules', array_keys($GLOBALS['templates']));
 }
 
 /**

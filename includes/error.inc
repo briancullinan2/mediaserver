@@ -272,7 +272,7 @@ function exception_wrapper($exception)
 	return !(setting('display_errors') & E_VERBOSE);
 }
 
-function raise_error($str, $code)
+function raise_error($str, $code, $htmlspecialchars = true)
 {
 	$error = new StdClass;
 	$error->code = $code;
@@ -280,7 +280,7 @@ function raise_error($str, $code)
 	$error->backtrace = debug_backtrace();
 	
 	if(error_reporting() != 0 || setting('display_errors') & E_VERBOSE)
-		error_callback($error);
+		error_callback($error, NULL, $htmlspecialchars);
 }
 
 
@@ -306,8 +306,13 @@ function add_error_callback($callback)
  * The callback function for the PEAR error handler to use
  * @param error the pear error object to add to the error stack
  */
-function error_callback($error, $callback = NULL)
+function error_callback($error, $callback = NULL, $htmlspecialchars = true)
 {
+	if($htmlspecialchars)
+		$error->htmlspecialchars = true;
+	else
+		$error->htmlspecialchars = false;
+	
 	if($error->code & E_USER)
 		$GLOBALS['user_errors'][] = $error->message;
 	if($error->code & E_WARN)

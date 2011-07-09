@@ -184,6 +184,17 @@ function setting_encoder_4($settings)
 	return setting_encoder($settings, 4);
 }
 
+function setting_encoder_3($settings)
+{
+	$settings['encoder_3'] = array(
+		'input_ext' => '*',
+		'output_ext' => 'webm',
+		'command' => '/usr/bin/vlc',
+		'arguments' => '-I dummy - :sout=\'#transcode{vcodec=VP80,acodec=vorbis}:std{mux="ffmpeg{mux=webm}",access=file,dst=-}\' vlc://quit' . ((setting('display_errors') & E_VERBOSE)?' 2>&1':'')
+	);
+	return setting_encoder($settings, 3);
+}
+
 function setting_encoder_2($settings)
 {
 	$settings['encoder_2'] = array(

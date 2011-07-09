@@ -642,7 +642,7 @@ function configure_module($settings, $request)
 		);
 		
 		// add some extra info for failed dependencies
-		if(!dependency($module))
+		if(!dependency($module, true))
 		{
 			$new_config['status'] = 'fail';
 			if(!in_array($module, get_required_modules()))

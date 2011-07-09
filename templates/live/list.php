@@ -62,10 +62,13 @@ function theme_live_list_block()
 			</div>
 		</div>
 		<div id="playlist-outer" class="colors_outer">
-		<div id="playlist" class="colors_inner" style="height:32px; width:421px;"></div>
+			<div id="playlist" class="colors_inner" style="height:32px; width:421px;"></div>
 		</div>
-		<a style="display:block;width:425px;height:30px;" id="player"></a>
 		<?php
+		//<video width="450" height="256">
+		//	<source src="/encode/webm/454168/files/test.webm" type="video/x-webm"></source>
+		//<video>
+		//<a style="display:block;width:425px;height:30px;" id="player"></a>
 	}
 	?>
 	</div>

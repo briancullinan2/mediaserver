@@ -37,7 +37,11 @@ function bootstrap($mode = 'all')
 			if(!is_module('database') || !dependency('database'))
 			{
 				$GLOBALS['database'] = false;
-				raise_error('Database not installed properly!', E_DEBUG);
+				raise_error('Database not installed properly!', E_DEBUG|E_USER);
+			}
+			else
+			{
+				
 			}
 			
 			break;
@@ -81,6 +85,7 @@ function bootstrap($mode = 'all')
 			preload_error();
 			preload_triggers();
 			preload_menu();
+			preload_template();
 			
 			// try to run language options
 			bootstrap('language');
@@ -100,7 +105,7 @@ function bootstrap($mode = 'all')
 			bootstrap('mime');
 		
 			// bootstrap the modules and setup
-			bootstrap('modules', $GLOBALS['modules']);
+			bootstrap('modules', array_keys($GLOBALS['modules']));
 
 			request_validate();
 			
@@ -113,7 +118,7 @@ function bootstrap($mode = 'all')
 		case 'modules':
 			$modules = func_get_arg(1);
 
-			foreach($modules as $module => $config)
+			foreach($modules as $i => $module)
 			{
 				if(dependency($module))
 					invoke_module('setup', $module);

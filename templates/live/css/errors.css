@@ -17,6 +17,11 @@ form p {
 	color:#000;
 }
 
+.debug .msg pre {
+	word-wrap:break-word;
+	white-space:normal;
+}
+
 .debug .msg.php_error {
 	background-color:#F97;
 }

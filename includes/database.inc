@@ -547,14 +547,30 @@ function db_query($query, $args = array())
 		raise_error('Database queried but is not set up!', E_DEBUG);
 		return false;
 	}
+	
 	//if(setting('verbose'))
+	if(dependency('code'))
+	{
+		setup_code();
+		$code = get_code_html($query, 'mysql');
+		raise_error($code['HTML'], E_DEBUG, false);
+	}
+	else
 		raise_error($query, E_DEBUG);
 	
 	$result = $GLOBALS['database']->Execute($query, $args);
 
 	if(isset($result->sql))
-		raise_error($result->sql, E_DEBUG);
-
+	{
+		if(dependency('code'))
+		{
+			$code = get_code_html($result->sql, 'mysql');
+			raise_error($code, E_DEBUG, false);
+		}
+		else
+			raise_error($result->sql, E_DEBUG);
+	}
+	
 	return $result;
 }
 

@@ -10,7 +10,6 @@ function setup_cli()
 	
 	// add callback for redirecting to a log file
 	add_error_callback('cli_error_callback');	
-	$GLOBALS['settings']['debug_mode'] = false;
 	
 	// use a stack for performing multiple requests
 	$GLOBALS['cli_request_stack'] = array();
