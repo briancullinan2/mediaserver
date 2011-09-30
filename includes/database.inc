@@ -549,26 +549,13 @@ function db_query($query, $args = array())
 	}
 	
 	//if(setting('verbose'))
-	if(dependency('code'))
-	{
-		setup_code();
-		$code = get_code_html($query, 'mysql');
-		raise_error($code['HTML'], E_DEBUG, false);
-	}
-	else
-		raise_error($query, E_DEBUG);
+	raise_error($query, E_DEBUG);
 	
 	$result = $GLOBALS['database']->Execute($query, $args);
 
 	if(isset($result->sql))
 	{
-		if(dependency('code'))
-		{
-			$code = get_code_html($result->sql, 'mysql');
-			raise_error($code, E_DEBUG, false);
-		}
-		else
-			raise_error($result->sql, E_DEBUG);
+		raise_error($result->sql, E_DEBUG);
 	}
 	
 	return $result;
