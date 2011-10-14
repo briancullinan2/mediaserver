@@ -98,7 +98,7 @@ function theme__files()
 		
 		foreach($GLOBALS['output']['html']['files'] as $i => $file)
 		{
-			$file = alter_file($GLOBALS['output']['files'][$i], $column_lengths);
+			$file = $GLOBALS['output']['files'][$i];
 			$GLOBALS['output']['html']['files'][$i] = $file;
 			// make links browsable
 			if(handles($GLOBALS['output']['files'][$i]['Filepath'], 'archive')) $handler = 'archive';

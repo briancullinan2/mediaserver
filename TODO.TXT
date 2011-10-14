@@ -1,5 +1,11 @@
 ------------- MONOLITHICMEDIA TODO -------------
 ------------- GENERAL TODO -------------
+add speech recognition: https://github.com/taf2/speech2text/blob/master/lib/speech/audio_to_text.rb
+Write a Grooveshark module
+Fix balancer to work with any server, and rename it to "Connector" or something and sync transactions between servers
+Improve time added API to help with connector
+Redo user permissions to be group based defined in the configuration, allow for function calls in privilage setting in info files as well as group names
+Fix directory counting and deep select option, it is still doing it even when it is turned off
 Fix CLI
 Fix Live Javascript and use address.push API implemented in Safari and Firefox
 Redirect user to the last inneronly adddress they used, do this is a hook in the Live template only
@@ -12,7 +18,12 @@ MULTIPLE FIXES!
 		use search for is_module() to figure this out
 Support GD graphics
 Add authentication API that allows modifying of login
-	This will enable stuff like AD authentication
+	This will enable stuff like AD authentication, auth_pam for php and linux, basic auth
+	if ($_SERVER['PHP_AUTH_USER'] == "") {
+            header('WWW-Authenticate: Basic realm="site.com Admin"');
+            header('HTTP/1.0 401 Unauthorized');
+            $error =  "Sorry you are not authorized";                        
+	mod_auth_kerb or http://php.net/manual/en/book.w32api.php or http://www.php.net/manual/en/book.com.php for Windows authentication
 Completely REDO API for permissions, it currently sucks, should be more like Drupal
 	This will make interacting with CLI module easier
 Add sitewatch as a setting to enable the link and logo in the templates
@@ -38,6 +49,7 @@ Add module called balancer used for load balancing
 		Redirection based on percentage will not be possible if it cannot count the sessions\
 		If a database is set up load that first and use that for session comparing
 Install script is severely broken
+	just show general options and modules with unmet dependencies so the user can see what to resolve
 Add a register script to the install process that allows users to register a username, password, and domain for their site, with the monolithicmedia drupal site.
 	Include a key that is unique to every download, to prevent spamming.
 Store the remote_address in the session, and if it doesn't match up with what is in the session then kill the session and die

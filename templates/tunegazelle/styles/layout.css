@@ -1,0 +1,48 @@
+/* CSS Document */
+
+body, html {
+	font-family: Arial, Helvetica, sans-serif;
+}
+
+body, html, #heading h1, #left-menu,
+#left-menu ul, #left-menu ol {
+	margin:0px;
+	padding:0px;
+}
+
+#heading {
+	width:100%;
+	font-size:x-large;
+	padding:5px 0px;
+	float:left;
+}
+
+
+#heading h1 {
+	font-size:x-large;
+	margin:0px 5px;
+}
+
+#left-menu {
+	width:200px;
+	float:left;
+}
+
+#left-menu li {
+	line-height: 16px;
+	list-style: none outside none;
+	padding:5px;
+}
+
+#left-menu li:hover, #left-menu li a:hover {
+	cursor:pointer;
+	border-radius:3px 3px 3px 3px;
+}
+
+#left-menu ul, #left-menu ol {
+    list-style: none outside none;
+}
+
+#inner-list {
+	margin:10px;
+}

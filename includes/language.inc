@@ -73,8 +73,8 @@ function setup_language()
 	
 	$GLOBALS['language_queue'] = array();
 
-	if(setting('debug_mode'))
-		translation::$style = ' style="background-color:#CC3;border:1px solid #C00;"';
+	//if(setting('debug_mode'))
+	//	translation::$style = ' style="background-color:#CC3;border:1px solid #C00;"';
 }
 
 function load_language_cache($prefix = NULL, $lang = NULL)

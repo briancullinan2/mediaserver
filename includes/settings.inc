@@ -1021,7 +1021,7 @@ function configure_settings($settings, $request)
 
 	// site name
 	$general['setting_html_name'] = array(
-		'name' => lang('html name title', 'Site Name'),
+		'name' => lang('Site Name', 'html name title'),
 		'status' => '',
 		'description' => array(
 			'list' => array(

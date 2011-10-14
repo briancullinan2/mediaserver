@@ -9,6 +9,14 @@ form p {
 	background-color:#FF6;
 }
 
+.debug .hl-main {
+	display:inline;
+}
+.debug .hl-main pre {
+	margin:0px;
+	display:inline;
+}
+
 .debug .msg {
 	display:block;
 	cursor:pointer;

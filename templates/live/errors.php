@@ -13,13 +13,13 @@ function theme_live_debug_error($id, $error, $no_code = false)
 		
 	if(($error->code & E_DATABASE) > 0 && dependency('code'))
 	{
-		$code = get_code_html($query, 'mysql');
+		$code = get_code_html($error->message, 'sql');
 		$error->message = $code['HTML'];
 		$error->htmlspecialchars = false;
 	}
 	else
 	?>
-	<a href="#" class="msg <?php print $class; ?>" onClick="$('#error_<?php print $id; ?>').toggle(); return false;"><?php print (isset($error->time)?('[' . $error->time . ']'):'') . ($error->htmlspecialchars ? htmlspecialchars($error->message) : $error->message) . ((isset($error->count) && $error->count > 0)?(' repeated ' . $error->count . ' time(s)'):''); ?></a>
+	<a href="#" class="msg <?php print $class; ?>" onClick="$('#error_<?php print $id; ?>').toggle(); return false;"><?php print (isset($error->time)?('[' . round($error->time, 3) . ']'):'') . ($error->htmlspecialchars ? htmlspecialchars($error->message) : $error->message) . ((isset($error->count) && $error->count > 0)?(' repeated ' . $error->count . ' time(s)'):''); ?></a>
 	<?php
 	if(!$no_code)
 	{

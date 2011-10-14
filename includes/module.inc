@@ -628,8 +628,6 @@ function configure_module($settings, $request)
 			'description' => array(
 				'list' => array(
 					lang(get_module($module, 'description'), $module . ' description'),
-					$description_1,
-					$description_2,
 				),
 			),
 			'type' => 'set',
@@ -660,6 +658,7 @@ function configure_module($settings, $request)
 		}
 		else
 		{
+			$new_config['description']['list'][] = $description_1;
 			$new_config['options'][$key]['options'] = array(
 				(in_array($module, $recommended)?$recommend:$optional),
 				$disabled,
@@ -669,6 +668,8 @@ function configure_module($settings, $request)
 		// add configure button
 		if(module_implements('configure', $module))
 		{
+			// add click configure description
+			$new_config['description']['list'][] = $description_2;
 			$new_config['options']['return'] = array(
 				'link' => array(
 					'url' => 'admin/module/' . $module,
@@ -687,7 +688,13 @@ function configure_module($settings, $request)
 		
 		// add new config to the fieldset
 		$options[$config['package']]['options'][$module . '_enable'] = $new_config;
+		
+		// sort packages by module name
+		ksort($options[$config['package']]['options']);
 	}
+
+	// sort by package key
+	ksort($options);
 
 	return $options;
 }

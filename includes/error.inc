@@ -312,7 +312,7 @@ function error_callback($error, $callback = NULL, $htmlspecialchars = true)
 		$error->htmlspecialchars = true;
 	else
 		$error->htmlspecialchars = false;
-	
+		
 	if($error->code & E_USER)
 		$GLOBALS['user_errors'][] = $error->message;
 	if($error->code & E_WARN)
@@ -381,6 +381,7 @@ function error_callback($error, $callback = NULL, $htmlspecialchars = true)
 			}
 		}
 	}
+
 }
 
 /**
@@ -416,7 +417,7 @@ function setting_display_errors($settings)
 
 function setting_error_action($settings)
 {
-	if(isset($settings['error_action']) && in_array($settings['error_action'], action('no_action', 'error_page', 'error_and_email', 'email_only')))
+	if(isset($settings['error_action']) && in_array($settings['error_action'], array('no_action', 'error_page', 'error_and_email', 'email_only')))
 		return $settings['error_action'];
 	else
 		return 'error_and_email';
@@ -696,9 +697,9 @@ function configure_error($settings)
 		'status' => '',
 		'description' => array(
 			'list' => array(
-				lang('Specify the action to take when a fatal error occurs.',
-				'It is important to note that an action will only be taken if it is possible.',
-				'This is not the only method of error reporting that should be used.', 'error action description'),
+				lang('Specify the action to take when a fatal error occurs.', 'error action description 1'),
+				lang('It is important to note that an action will only be taken if it is possible.', 'error action description 2'),
+				lang('This is not the only method of error reporting that should be used.', 'error action description 3'),
 			),
 		),
 		'type' => 'select',
@@ -712,7 +713,7 @@ function configure_error($settings)
 	);
 	
 	$options['setting_debug_mode'] = array(
-		'name' => lang('debug mode title', 'Debug Mode'),
+		'name' => lang('Debug Mode', 'debug mode title'),
 		'status' => '',
 		'description' => array(
 			'list' => array(
