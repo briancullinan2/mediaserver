@@ -29,5 +29,5 @@ function validate_info_singular($request)
 	if(!isset($request['info_singular']))
 		return false;
 	else
-		return $request['info_singular'] == true;
+		return filter_var($request['info_singular'], FILTER_VALIDATE_BOOLEAN);
 }

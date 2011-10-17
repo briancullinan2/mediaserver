@@ -297,7 +297,7 @@ function validate_ignore_lock($request)
 	if(!isset($request['ignore_lock']))
 		return false;
 	else
-		return $request['ignore_lock'] == true;
+		return filter_var($request['ignore_lock'], FILTER_VALIDATE_BOOLEAN);
 }
 
 /**
@@ -323,7 +323,7 @@ function validate_scan_skip($request)
 	if(!isset($request['scan_skip']))
 		return false;
 	else
-		return $request['scan_skip'] == true;
+		return filter_var($request['scan_skip'], FILTER_VALIDATE_BOOLEAN);
 }
 
 

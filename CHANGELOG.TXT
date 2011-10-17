@@ -1,3 +1,7 @@
+2011-10-16
+Started TuneGazelle template
+Remove AdoDB, system now uses MySQLi
+
 2011-01-31
 Finished language plugin, still need to replace all the text with the lang call
 Big fixes

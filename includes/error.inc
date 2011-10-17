@@ -201,7 +201,7 @@ function validate_errors_only($request)
 	if(!isset($request['errors_only']))
 		return false;
 	else
-		return $request['errors_only'] == true;
+		return filter_var($request['errors_only'], FILTER_VALIDATE_BOOLEAN);
 }
 
 
@@ -426,14 +426,14 @@ function setting_error_action($settings)
 /**
  * Implementation of setting
  * @ingroup setting
- * @return false by default
+ * @return true if the system is not installed, false by default
  */
 function setting_debug_mode($settings)
 {
 	if(!isset($settings['debug_mode']) || !$settings['debug_mode'])
 		return !setting_installed();
 	else
-		return $settings['debug_mode'] == true;
+		return filter_var($settings['debug_mode'], FILTER_VALIDATE_BOOLEAN);
 }
 
 function setting_error_log($settings, $index)

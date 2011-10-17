@@ -180,7 +180,7 @@ function validate_short($request)
 	if(!isset($request['short']))
 		return false;
 	else
-		return $request['short'] == true;
+		return filter_var($request['short'], FILTER_VALIDATE_BOOLEAN);
 }
 
 /**
@@ -233,7 +233,7 @@ function validate_order_trimmed($request)
 	if(!isset($request['order_trimmed']))
 		return false;
 	else
-		return $request['order_trimmed'] == true;
+		return filter_var($request['order_trimmed'], FILTER_VALIDATE_BOOLEAN);
 }
 
 /**

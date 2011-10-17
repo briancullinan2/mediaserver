@@ -25,13 +25,13 @@ function menu_template()
 {
 	return array(
 		'templates/%template/%tfile' => array(
-			'callback' => 'output_template',
+			'callback' => 'output_template_file',
 		),
 		'template/%template/%tfile' => array(
-			'callback' => 'output_template',
+			'callback' => 'output_template_file',
 		),
 		'template/%tfile' => array(
-			'callback' => 'output_template',
+			'callback' => 'output_template_file',
 		),
 	);
 }
@@ -117,7 +117,7 @@ function setting_local_template($settings)
 	elseif(($template = session('template')))
 		return $template;
 	else
-		return 'live';
+		return 'tunegazelle';
 }
 
 /**
@@ -396,11 +396,51 @@ function set_output_vars()
 	}
 }
 
+function output_template_file($request)
+{
+	$request['template'] = validate($request, 'template');
+	$request['tfile'] = validate($request, 'tfile');
+
+	$file = setting('local_root') . 'templates' . DIRECTORY_SEPARATOR . $request['template'] . DIRECTORY_SEPARATOR . $request['tfile'];
+	
+	if(file_exists($file))
+	{
+			
+		// set some general headers
+		header('Content-Transfer-Encoding: binary');
+		header('Content-Type: ' . mime($file));
+		
+		// close session now so they can keep using the website
+		if(isset($_SESSION)) session_write_close();
+		
+		// set up the output stream
+		$of = fopen('php://output', 'wb');
+		
+		// get the input stream
+		$if = fopen($file, 'rb');
+		
+		// output file with ranges from server
+		list($seek_start) = output_ranges($files[0]['Filesize']);
+		
+		// seek to start of missing part
+		if(isset($seek_start))
+			fseek($if, $seek_start);
+		
+		output_stream($if, $of);
+	}
+	else
+	{
+		raise_error('File not found!', E_USER);
+		theme();
+	}
+}
+
+
 /**
  * Implementation of output
  * @ingroup output
  */
-function output_template($request)
+/*function output_template($request)
 {
 	$request['template'] = validate($request, 'template');
 	$request['tfile'] = validate($request, 'tfile');
@@ -445,3 +485,4 @@ function output_template($request)
 	
 	output_stream($if, $of);
 }
+*/

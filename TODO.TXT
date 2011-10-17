@@ -1,10 +1,15 @@
 ------------- MONOLITHICMEDIA TODO -------------
 ------------- GENERAL TODO -------------
+Secure making database calls
 add speech recognition: https://github.com/taf2/speech2text/blob/master/lib/speech/audio_to_text.rb
+Package with XAMPP for people to download and create satallite websites
+Run from a thumb drive and connect to tunegazelle automatically
 Write a Grooveshark module
 Fix balancer to work with any server, and rename it to "Connector" or something and sync transactions between servers
 Improve time added API to help with connector
 Redo user permissions to be group based defined in the configuration, allow for function calls in privilage setting in info files as well as group names
+	Add per-user settings API
+	Create a permissions settings in the user module that allows for groups and per module, per module setting to be set for each user
 Fix directory counting and deep select option, it is still doing it even when it is turned off
 Fix CLI
 Fix Live Javascript and use address.push API implemented in Safari and Firefox
@@ -91,6 +96,7 @@ Start implementing lang() calls
 		submitting the translations back to the server for caching
 		Or pulling out the translations for later use
 ------------- BITTORRENT MODULE -------------
+Should only create torrent files for whole directories
 FIX bt.php module to work with command line torrent seeder on Windows
 bt module should have a configurable ctorrent settings that uses %IF for the torrent file to start seeding server side
 	Should also check dependencies for bttracker and ctorrent

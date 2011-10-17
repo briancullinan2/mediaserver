@@ -127,7 +127,7 @@ function validate_file($request)
  */
 function validate_dirs_only($request)
 {
-	return @$request['dirs_only'] == true;
+	return filter_var($request['dirs_only'], FILTER_VALIDATE_BOOLEAN);
 }
 
 
@@ -137,6 +137,9 @@ function validate_dirs_only($request)
  */
 function file_variables($request)
 {
+	// dirs only
+	if(validate($request, 'dirs_only')) register_output_vars('dirs_only', true);
+	
 	// some templates refer to the dir to determine their own location
 	if(isset($request['dir'])) register_output_vars('dir', $request['dir']);
 	

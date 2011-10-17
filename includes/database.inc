@@ -25,7 +25,7 @@ function register_database()
 		'description' => 'Wrapper module for displaying database configuration',
 		'privilage' => 1,
 		'settings' => array('db_connect', 'db_type', 'db_server', 'db_user', 'db_pass', 'db_name'),
-		'depends_on' => array('adodb_installed', 'valid_connection', 'cannot_read'),
+		'depends_on' => array('pdo_installed', 'valid_connection', 'cannot_read'),
 		'package' => 'core',
 	);
 }
@@ -37,22 +37,25 @@ function register_database()
 function setup_database()
 {
 	// load database stuff
-	define('ADODB_ERROR_HANDLER_TYPE', E_USER_WARNING);
-	include_once include_path('adodb5' . DIRECTORY_SEPARATOR . 'adodb-errorhandler.inc.php');
-	include_once include_path('adodb5' . DIRECTORY_SEPARATOR . 'adodb.inc.php');
 
-	if(function_exists('ADONewConnection'))
+	if(function_exists('mysqli_connect'))
 	{
-		$GLOBALS['databases'][setting('db_connect')] = ADONewConnection(setting('db_connect'));  # no need for Connect()
+		$connection = parseDSN(setting('db_connect'));
+		$GLOBALS['databases'][setting('db_connect')] = new PDO($connection['dbsyntax'] . ':host=' . $connection['hostspec'] . ';dbname=' . $connection['database'], $connection['username'], $connection['password']);
 		$GLOBALS['database'] = $GLOBALS['databases'][setting('db_connect')];
 
 		// set fetch mode if the database is set up
 		if($GLOBALS['database'] !== false)
 		{
-			$GLOBALS['database']->SetFetchMode(ADODB_FETCH_ASSOC);
-		
-			$tables_installed = $GLOBALS['database']->MetaTables();
-			
+			$stmt = $GLOBALS['database']->prepare('show tables');
+			$stmt->execute();
+			$result = $stmt->fetchAll();
+			$tables_installed = array();
+			foreach($result as $i => $table)
+			{
+				$tables_installed[] = $table[0];
+			}
+						
 			// install tables
 			foreach(get_handlers(false, true) as $module => $config)
 			{
@@ -100,12 +103,11 @@ function install_table($handler, $struct, $callback = NULL)
 /**
  * Implementation of dependency
  * @ingroup dependency
- * @return true or false if adodb is installed in the include directory
+ * @return true or false if mysqli is installed in the include directory
  */
-function dependency_adodb_installed($settings)
+function dependency_pdo_installed($settings)
 {
-	// the adodb set up also depends on PEAR for error handling make sure pear is installed as well
-	return include_path('adodb5' . DIRECTORY_SEPARATOR . 'adodb.inc.php') !== false;
+	return class_exists('PDO');
 }
 
 /**
@@ -138,37 +140,34 @@ function status_database($settings)
 {
 	$status = array();
 	
-	if(dependency('adodb_installed'))
+	if(dependency('pdo_installed'))
 	{
-		$status['exists_adodb'] = array(
-			'name' => 'ADOdb Library',
+		$status['exists_mysqli'] = array(
+			'name' => 'MySQLi Library',
 			'status' => '',
 			'description' => array(
 				'list' => array(
-					'The system has detected that ADOdb is installed in the includes directory.',
-					'ADOdb is a common PHP database abstraction layer that can connect to dozens of SQL databases.',
+					'The system has detected that MySQLi is installed.',
 				),
 			),
 			'type' => 'label',
-			'value' => 'ADOdb Detected',
+			'value' => 'MySQLi Detected',
 		);
 	}
 	else
 	{
-		$status['exists_adodb'] = array(
-			'name' => 'ADOdb Library Missing',
+		$status['exists_mysqli'] = array(
+			'name' => 'MySQLi Not Compiled',
 			'status' => 'fail',
 			'description' => array(
 				'list' => array(
-					'The system has detected that ADOdb is NOT INSTALLED.',
-					'The root of the ADOdb Library must be placed in &lt;site root&gt;/include/adodb5',
-					'ADOdb is a common PHP database abstraction layer that can connect to dozens of SQL databases.',
+					'The system has detected that MySQLi is NOT INSTALLED with this distribution of PHP.',
 				),
 			),
 			'value' => array(
 				'link' => array(
-					'url' => 'http://adodb.sourceforge.net/',
-					'text' => 'Get ADOdb',
+					'url' => 'http://www.php.net/manual/en/book.mysqli.php',
+					'text' => 'Help on MySQLi',
 				),
 			),
 		);
@@ -465,29 +464,23 @@ function switch_db($dsn)
 {
 	if(isset($GLOBALS['databases'][$dsn]))
 		$GLOBALS['database'] = $GLOBALS['databases'][setting('db_connect')];
-	elseif(parseDSN($dsn) != false)
+	elseif($connection = parseDSN($dsn))
 	{
-		$GLOBALS['databases'][$dsn] = ADONewConnection($dsn);  # no need for Connect()
+		$GLOBALS['databases'][$dsn] = new PDO($connection['dbsyntax'] . ':host=' . $connection['hostspec'] . ';dbname=' . $connection['database'], $connection['username'], $connection['password']);
 		$GLOBALS['database'] = $GLOBALS['databases'][$dsn];
 	}
 }
 
 function db_assoc($query, $args = array(), $key = NULL)
 {
-	$result = db_query($query, $args);
+	$stmt = db_query($query, $args);
 	
 	$output = array();
 	
-	if($result)
+	if($stmt)
 	{
-		while (!$result->EOF)
-		{
-			if($key !== NULL && isset($result->fields[$key]))
-				$output[$result->fields[$key]] = $result->fields;
-			else
-				$output[] = $result->fields;
-			$result->MoveNext();
-		}
+		while ($row = $stmt->fetch(PDO::FETCH_NUM))
+			$output[] = $row;
 	}
 	
 	return $output;
@@ -501,11 +494,10 @@ function db_list($query, $args = array(), $key = 'Filepath')
 	
 	if($result)
 	{
-		while (!$result->EOF)
+		while ($row = $stmt->fetch(PDO::FETCH_NUM))
 		{
-			if(isset($result->fields[$key]))
-				$output[] = $result->fields[$key];
-			$result->MoveNext();
+			if(isset($row[$key]))
+				$output[] = $row[$key];
 		}
 	}
 	
@@ -528,10 +520,9 @@ function db_select($query, $args = array(), $callback)
 	
 	if($result && isset($callback))
 	{
-		while (!$result->EOF)
+		while ($row = $stmt->fetch(PDO::FETCH_NUM))
 		{
-			call_user_func_array($callback, array($result->fields));
-			$result->MoveNext();
+			call_user_func_array($callback, array($row));
 		}
 	}
 	
@@ -540,25 +531,34 @@ function db_select($query, $args = array(), $callback)
 
 function db_query($query, $args = array())
 {
-//print '<span style="color:#F00">' . $query . '</span><br />' . "\n";
-
 	if(!isset($GLOBALS['database']) || !is_object($GLOBALS['database']))
 	{
 		raise_error('Database queried but is not set up!', E_DEBUG);
 		return false;
 	}
 	
-	//if(setting('verbose'))
 	raise_error($query, E_DEBUG);
 	
-	$result = $GLOBALS['database']->Execute($query, $args);
-
-	if(isset($result->sql))
+	$stmt = $GLOBALS['database']->prepare($query);
+	foreach($args as $i => $arg)
 	{
-		raise_error($result->sql, E_DEBUG);
+		if(is_bool($arg))
+			$stmt->bindParam($i, $arg, PDO::PARAM_BOOL);
+		elseif(is_null($arg))
+			$stmt->bindParam($i, $arg, PDO::PARAM_NULL);
+		elseif(is_int($arg))
+			$stmt->bindParam($i, $arg, PDO::PARAM_INT);
+		elseif(is_string($arg))
+			$stmt->bindParam($i, $arg, PDO::PARAM_STR);
+		elseif(strlen($arg) > 4096)
+			$stmt->bindParam($i, $arg, PDO::PARAM_LOB);
+		else
+			$stmt->bindParam($i, $arg, PDO::PARAM_STR);		
 	}
+
+	$result = $stmt->execute();
 	
-	return $result;
+	return $stmt;
 }
 
 

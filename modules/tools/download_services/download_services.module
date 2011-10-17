@@ -344,7 +344,7 @@ function validate_service_order($request)
 
 function validate_download_automatically($request)
 {
-	return isset($request['download_automatically']) && $request['download_automatically'] == true;
+	return isset($request['download_automatically']) && filter_var($request['download_automatically'], FILTER_VALIDATE_BOOLEAN);
 }
 
 
