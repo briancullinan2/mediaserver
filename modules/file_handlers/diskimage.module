@@ -69,7 +69,7 @@ function get_info_diskimage($filepath, $include_offset = false)
 				$fileinfo['Filepath'] = $filepath . $file['filename'];
 				$fileinfo['Filename'] = basename($file['filename']);
 				if($file['filename'][strlen($file['filename'])-1] == '/')
-					$fileinfo['Filemime'] = 'httpd/unix-directory';
+					$fileinfo['Filemime'] = FOLDER_MIME;
 				else
 					$fileinfo['Filemime'] = mime($file['filename']);
 				$fileinfo['Filetype'] = type($file['filename']);

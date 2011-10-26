@@ -11,7 +11,7 @@ function register_session()
 		'description' => 'Control all session functionality and provide a database.',
 		'privilage' => 5,
 		'path' => __FILE__,
-		'settings' => 'session',
+		'settings' => array('storage_type'),
 		'depends_on' => 'session',
 		'package' => 'core',
 	);
@@ -53,7 +53,9 @@ function new_session($secure = false, $id = NULL)
  */
 function setup_session($request = array())
 {
+	// don't load session is path has it disabled
 	if(!isset($_SESSION))
+	// && (!($path = get_menu_entry($request['path_info'])) || !isset($GLOBALS['menus'][$path]['no_session']) || $GLOBALS['menus'][$path]['no_session'] == false))
 	{
 		/** always begin the session */
 		session_start();

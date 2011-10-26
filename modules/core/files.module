@@ -127,7 +127,7 @@ function validate_file($request)
  */
 function validate_dirs_only($request)
 {
-	return filter_var($request['dirs_only'], FILTER_VALIDATE_BOOLEAN);
+	return isset($request['dirs_only']) && filter_var($request['dirs_only'], FILTER_VALIDATE_BOOLEAN);
 }
 
 
@@ -162,7 +162,7 @@ function get_info_files($file)
 	$fileinfo['Filepath'] = str_replace(DIRECTORY_SEPARATOR, '/', $file);
 	$fileinfo['Filename'] = basename($file);
 	$fileinfo['Filesize'] = file_exists($file)?filesize($file):0;
-	$fileinfo['Filemime'] = is_dir($file)?'httpd/unix-directory':mime($file);
+	$fileinfo['Filemime'] = is_dir($file)?FOLDER_MIME:mime($file);
 	$fileinfo['Filedate'] = file_exists($file)?date('Y-m-d h:i:s', filemtime($file)):date('Y-m-d h:i:s', 0);
 	$fileinfo['Filetype'] = type($file);
 	
@@ -279,7 +279,7 @@ function filter_dir($request)
 				// put folders at top if the handler supports a filetype
 				if(in_array('Filetype', get_columns($request['handler'])))
 				{
-					$order = '(Filemime = "httpd/unix-directory") DESC';
+					$order = '(Filemime = "' . FOLDER_MIME . '") DESC';
 				}
 			}
 			// show all results underneath directory
@@ -548,9 +548,9 @@ function get_files($request, &$count)
 	// do alterations
 	if(isset($files))
 	{
-		foreach($files as $i => $file)
+		if(setting('alias_enable'))
 		{
-			if(setting('alias_enable'))
+			foreach($files as $i => $file)
 			{
 				$files[$i]['Filepath'] = paths_replace($file['Filepath']);
 				// check if the replaced path was the entire alias path
@@ -558,6 +558,7 @@ function get_files($request, &$count)
 				$files[$i]['Filename'] = basename($files[$i]['Filepath']);
 			}
 		}
+		raise_error('Get_files() complete.', E_VERBOSE);
 		return $files;
 	}
 }
@@ -705,6 +706,24 @@ function merge_id_info_only(&$files, $handler)
 	}
 }
 
+function __handles_all_with_id($files, $handler)
+{
+	$files_handled_by = array();
+	$files_with_id = array();
+	
+	foreach($files as $file)
+	{
+		if(handles($file['Filepath'], $handler))
+		{
+			$files_handled_by[] = $file;
+			if(isset($file[$handler . '_id']) && $file[$handler . '_id'] != 0)
+				$files_with_id[] = $file;
+		}
+	}
+
+	return array($files_handled_by, $files_with_id);
+}
+
 function merge_database_info($files, $handler)
 {
 	// this is used for determining which files have changes made to the IDs
@@ -712,27 +731,29 @@ function merge_database_info($files, $handler)
 	
 	merge_id_info($files, $handler, $cache_updates);
 	
+	// peripheral handlers_count for use in templates because it takes an entire second!
+	$GLOBALS['last_get_files_handlers_count'] = array($handler . '_count' => count($files));
+	
 	// loop through handlers to efficiently extract IDs
-	foreach(get_handlers(false) as $module => $config)
+	foreach(get_handlers(false) as $other_handler_to_add => $config)
 	{
-		if($handler == $module)
+		if($handler == $other_handler_to_add)
 			continue;
 	
 		$id_infos = array();
 		
-		// select files for this handler
-		$handler_files = handles_all($files, $module);
-	
-		// select all the information with ids already associated
-		$id_files = array_filter($handler_files, create_function('$file', 'return isset($file[\'' . $module . '_id\']) && $file[\'' . $module . '_id\'] != 0;'));
-
+		// select files for this handler AND select all the information with ids already associated
+		list($handler_files, $id_files) = __handles_all_with_id($files, $other_handler_to_add);
+		raise_error(count($handler_files) . ' files handled by ' . $other_handler_to_add, E_VERBOSE);
+		$GLOBALS['last_get_files_handlers_count'][$other_handler_to_add . '_count'] = count($handler_files);
+		
 		// only search for ids in handler table if there are ids available
 		if(count($id_files) > 0)
 		{
-			$columns = get_columns($module);
+			$columns = get_columns($other_handler_to_add);
 			if(!in_array('id', $columns))
 				$columns[] = 'id';
-			$id_infos = db_assoc('SELECT ' . sql_columns($columns) . ' FROM ' . $module . ' WHERE ' . sql_ids_files($id_files, $module) . ' LIMIT ' . count($id_files), array(), 'Filepath');
+			$id_infos = db_assoc('SELECT ' . sql_columns($columns) . ' FROM ' . $other_handler_to_add . ' WHERE ' . sql_ids_files($id_files, $other_handler_to_add) . ' LIMIT ' . count($id_files), array(), 'Filepath');
 		}
 		else
 			$id_infos = array();
@@ -743,15 +764,15 @@ function merge_database_info($files, $handler)
 		{
 			if(isset($new_infos[$i]))
 			{
-				$result = add($file['Filepath'], $module);
+				$result = add($file['Filepath'], $other_handler_to_add);
 				if(is_array($result))
 				{
-					$files[$i] = array($module . '_id' => $result['id']) + array_merge($result, $file);
+					$files[$i] = array($other_handler_to_add . '_id' => $result['id']) + array_merge($result, $file);
 					$cache_updates[] = $file['Filepath'];
 				}
 			}
 			elseif(isset($id_infos[$file['Filepath']]))
-				$files[$i] = array($module . '_id' => $id_infos[$file['Filepath']]['id']) + array_merge($id_infos[$file['Filepath']], $file);
+				$files[$i] = array($other_handler_to_add . '_id' => $id_infos[$file['Filepath']]['id']) + array_merge($id_infos[$file['Filepath']], $file);
 		}
 		
 	}

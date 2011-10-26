@@ -71,7 +71,12 @@ function get_menu_entry($current_path)
 		$path_regexp = preg_replace(array('/\\//i', '/\\/%[a-z][a-z0-9_]*/i'), array('\/', '/[^\/]*?'), addslashes($path));
 		if(preg_match('/^' . $path_regexp . '/i', $current_path) > 0)
 		{
-			if(substr_count($path, '/') > substr_count($highest_match, '/') || $highest_match == '')
+			// get path that matches most number of variables
+			if(substr_count($path, '/') > substr_count($highest_match, '/') || (
+				// if the same number of variables choose the one that has the least number of variables in it
+				substr_count($path, '/') == substr_count($highest_match, '/') && substr_count($path, '%') < substr_count($highest_match, '%')
+				// highest_match hasn't been set yet
+				) || $highest_match == '')
 				$highest_match = $path;
 		}
 	}
@@ -111,11 +116,16 @@ function invoke_menu($request, $template = false)
 		// permissions are ok
 		if($user['Privilage'] >= $module['privilage'])
 		{
+			raise_error('Invoking path: ' . $path . ' : ' . $menu['callback'], E_DEBUG);
 			// call the callback specified
 			if(is_callable($menu['callback']) && setting($menu['module'] . '_enable') != false)
 			{
-				if(isset($menu['arguments']))
+				// if the keys are named, merge with request
+				if(isset($menu['arguments']) && array_keys($menu['arguments']) == range(0, count($menu['arguments']) - 1))
 					call_user_func_array($menu['callback'], array_merge($menu['arguments'], array($request)));
+				// if the keys are numeric, they take the place of arguments
+				elseif(isset($menu['arguments']))
+					call_user_func_array($menu['callback'], array(array_merge($menu['arguments'], $request)));
 				else
 					call_user_func_array($menu['callback'], array($request));
 			}
@@ -130,6 +140,8 @@ function invoke_menu($request, $template = false)
 				theme('errors');
 				return;
 			}
+			
+			raise_error('Path invokation complete.  Themeing.', E_DEBUG);
 		}
 		else
 			$template = 'menu';
@@ -160,7 +172,7 @@ function invoke_menu($request, $template = false)
 		{
 			raise_error('Access Denied!', E_USER);
 			
-			theme('errors');
+			theme('login');
 			return;
 		}
 		// if it is set to a callable function to determine the template, then call that
@@ -292,25 +304,8 @@ function output_menus($request)
 	$menus = array();
 	foreach($GLOBALS['menus'] as $path => $config)
 	{
-		if($path == 'select')
-		{
-			// translate menu
-			$config['name'] = lang($config['name'], 'menu ' . machine($path));
-			$config['description'] = lang($config['description'], 'menu description ' . machine($path));
-			$menus[$path] = $config;
-			
-			foreach(get_handlers() as $handler => $handler_config)
-			{
-				$handler_path = 'select/' . $handler;
-				// translate menu
-				$config['name'] = lang($handler_config['name'], 'menu ' . machine($handler_path));
-				$config['description'] = lang($handler_config['description'], 'menu description ' . machine($handler_path));
-				$menus[$handler_path] = $config;
-			}
-
-		}
 		// only add menus that are normal types and menu types
-		elseif($config['type'] == MENU_NORMAL || $config['type'] == MENU_LIST)
+		if($config['type'] == MENU_NORMAL || $config['type'] == MENU_LIST)
 		{
 			// translate menu
 			$config['name'] = lang($config['name'], 'menu ' . machine($path));
@@ -320,15 +315,19 @@ function output_menus($request)
 	}
 	register_output_vars('menus', $menus);
 	
+	// always output current menu for use
+	$current = get_menu_entry($request['path_info']);
+
+	// registers
+	register_output_vars('current_menu', $GLOBALS['menus'][$current]);
+	register_output_vars('menu', get_menu($current));
+	
 	output_breadcrumbs($request['path_info']);
 }
 
-function output_menu($request)
+function get_menu($current)
 {
 	$current_menu = array();
-	
-	// output menu template instead of template from module
-	$current = get_menu_entry($request['path_info']);
 
 	// only output menus under current menu item
 	foreach($GLOBALS['menus'] as $path => $config)
@@ -344,16 +343,55 @@ function output_menu($request)
 			)
 		{
 			// translate menu
-			$config['name'] = lang($config['name'], 'menu ' . machine($path));
+			$config['name'] = lang($config['name'], 'menu ' . machine($config['name']));
 			$config['description'] = lang($config['description'], 'menu description ' . machine($path));
 			
 			// add to current menu
 			$current_menu[$path] = $config;
 		}
 	}
-
-	// registers
-	register_output_vars('current_menu', $GLOBALS['menus'][$current]);
-	register_output_vars('menu', $current_menu);
+	
+	return $current_menu;
 }
 
+function output_menu($request)
+{
+	// output menu template instead of template from module
+}
+
+function theme__menu()
+{
+	theme('header', 
+		'Menu: ' . $GLOBALS['output']['current_menu']['name'],
+		$GLOBALS['output']['current_menu']['description']
+	);
+	
+	theme('menu_block');
+	
+	theme('footer');
+}
+
+function theme__menu_block($menu = NULL)
+{
+	if(!isset($menu) && isset($GLOBALS['output']['menu']))
+		$menu = $GLOBALS['output']['menu'];
+		
+	if(isset($menu))
+	{
+		?><ul><?php
+		
+		foreach($menu as $path => $config)
+		{
+			if(isset($config['icon']))
+			{
+				?><li><span class="icon" style="background-image:url('<?php print url($config['icon']); ?>');"></span><a href="<?php print url($path); ?>"><?php echo $config['name']; ?></a></li><?php
+			}
+			else
+			{
+				?><li><a href="<?php print url($path); ?>"><?php echo $config['name']; ?></a></li><?php
+			}
+		}
+		
+		?></ul><?php
+	}
+}

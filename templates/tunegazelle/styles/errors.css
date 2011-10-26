@@ -1,0 +1,98 @@
+/* CSS Document */
+
+form p {
+	margin:0px;
+}
+
+.debug {
+	border-bottom:1px solid #CCCCCC;
+	background-color:#DDDDDD;
+	position:absolute;
+	top:0px;
+	left:0px;
+	z-index:100;
+	min-width:100%;
+	font-size:10px;
+	padding-top:13px;
+}
+
+.debug .hl-main {
+	display:inline;
+}
+.debug .hl-main pre {
+	margin:0px;
+	display:inline;
+}
+
+.debug .msg {
+	display:block;
+	cursor:pointer;
+	background-color:#FF6;
+	text-decoration:none;
+	color:#000;
+}
+
+.debug .msg pre {
+	word-wrap:break-word;
+	white-space:normal;
+}
+
+.debug .msg.php_error {
+	background-color:#F97;
+}
+
+.debug .msg.db_error {
+	background-color:#FC5;
+}
+
+.debug .msg.verbose_error {
+	background-color:#EEE;
+}
+
+.debug.hide {
+	height:5px;
+	padding-top:0px;
+}
+
+.debug.hide * {
+	display:none;
+	visibility:hidden;
+}
+
+#hide_link {
+	display:block;
+	visibility:visible;
+	text-align:center;
+	font-size:8px;
+	position:fixed;
+	z-index:101;
+	width:100%;
+	top:0px;
+}
+
+#hide_link * {
+	display:inline-block;
+	visibility:visible;
+	text-align:center;
+	font-size:8px;
+	background-color:#DDDDDD;
+	border:1px solid #CCCCCC;
+}
+
+.error.hide b, .error.hide br {
+	display:none;
+	visibility:hidden;
+}
+
+#user_errors {
+	border:2px solid #C00;
+	background-color:#F99;
+}
+#note_errors {
+	border:2px solid #09F;
+	background-color:#CEF;
+}
+#warn_errors {
+	border:2px solid #CC0;
+	background-color:#FF9;
+}

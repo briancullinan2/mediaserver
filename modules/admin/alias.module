@@ -14,6 +14,19 @@ function menu_alias()
 	);
 }
 
+function preload_alias()
+{
+	// cache the alias settings for speed
+	if(!isset($GLOBALS['alias_match_cache']))
+		$GLOBALS['alias_match_cache'] = setting('alias_match');
+	if(!isset($GLOBALS['replace_paths_cache']))
+		$GLOBALS['replace_paths_cache'] = setting('replace_paths');
+	if(!isset($GLOBALS['paths_match_cache']))
+		$GLOBALS['paths_match_cache'] = setting('paths_match');
+	if(!isset($GLOBALS['replace_alias_cache']))
+		$GLOBALS['replace_alias_cache'] = setting('replace_alias');
+}
+
 
 /**
  * Implementation of validate
@@ -386,12 +399,16 @@ function configure_alias($settings, $request)
 
 function alias_replace($file)
 {
-	return preg_replace(setting('alias_match'), setting('replace_paths'), $file);
+	if(!isset($GLOBALS['alias_match_cache']) || !isset($GLOBALS['replace_paths_cache']))
+		preload_alias();
+	return preg_replace($GLOBALS['alias_match_cache'], $GLOBALS['replace_paths_cache'], $file);
 }
 
 function paths_replace($file)
 {
-	return preg_replace(setting('paths_match'), setting('replace_alias'), $file);
+	if(!isset($GLOBALS['paths_match_cache']) || !isset($GLOBALS['replace_alias_cache']))
+		preload_alias();
+	return preg_replace($GLOBALS['paths_match_cache'], $GLOBALS['replace_alias_cache'], $file);
 }
 
 

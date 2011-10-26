@@ -59,7 +59,7 @@ function handles_watched($dir)
 				$db_files = db_assoc('SELECT count(*) FROM files WHERE ' . sql_filepath($dir));
 
 				// check for file count inconsistency but don't process anything
-				raise_error('Counting files', E_DEBUG);
+				raise_error('Counting files on disk', E_DEBUG);
 				$count = 0;
 				if (is_readable($dir) && ($dh = opendir($dir)))
 				{
@@ -152,7 +152,7 @@ function setting_watches($settings)
 			$watches[] = substr($watch, 1);
 	}
 	$watches[] = setting('local_users');
-	
+
 	return $watches;
 }
 

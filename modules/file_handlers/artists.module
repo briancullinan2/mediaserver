@@ -58,7 +58,7 @@ function get_artists($request, &$count)
 					$files[$i]['Artist'] = '$Unknown$';
 				if($files[$i]['Album'] == '')
 					$files[$i]['Album'] = '$Unknown$';
-				$files[$i]['Filemime'] = 'httpd/unix-directory';
+				$files[$i]['Filemime'] = FOLDER_MIME;
 				$files[$i]['Filesize'] = '0';
 				$files[$i]['Filepath'] = '/' . $files[$i]['Artist'] . '/' . $files[$i]['Album'] . '/';
 				$files[$i]['Filename'] = $files[$i]['Album'];
@@ -85,7 +85,7 @@ function get_artists($request, &$count)
 		{
 			if($files[$i]['Artist'] == '')
 				$files[$i]['Artist'] = '$Unknown$';
-			$files[$i]['Filemime'] = 'httpd/unix-directory';
+			$files[$i]['Filemime'] = FOLDER_MIME;
 			$files[$i]['Filesize'] = '0';
 			$files[$i]['Filepath'] = '/' . $files[$i]['Artist'] . '/';
 			$files[$i]['Filename'] = $files[$i]['Artist'];

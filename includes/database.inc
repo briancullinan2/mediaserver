@@ -38,7 +38,7 @@ function setup_database()
 {
 	// load database stuff
 
-	if(function_exists('mysqli_connect'))
+	if(class_exists('PDO'))
 	{
 		$connection = parseDSN(setting('db_connect'));
 		$GLOBALS['databases'][setting('db_connect')] = new PDO($connection['dbsyntax'] . ':host=' . $connection['hostspec'] . ';dbname=' . $connection['database'], $connection['username'], $connection['password']);
@@ -103,7 +103,7 @@ function install_table($handler, $struct, $callback = NULL)
 /**
  * Implementation of dependency
  * @ingroup dependency
- * @return true or false if mysqli is installed in the include directory
+ * @return true or false if PDO is installed in the include directory
  */
 function dependency_pdo_installed($settings)
 {
@@ -130,6 +130,7 @@ function dependency_cannot_read()
 		
 	// check to see if filesystem is writable
 	$result = @db_query('SELECT "test" INTO OUTFILE "/tmp/mediaserver.log"');
+
 	return $result == false;
 }
 
@@ -142,32 +143,32 @@ function status_database($settings)
 	
 	if(dependency('pdo_installed'))
 	{
-		$status['exists_mysqli'] = array(
-			'name' => 'MySQLi Library',
+		$status['exists_pdo'] = array(
+			'name' => 'PDO Library',
 			'status' => '',
 			'description' => array(
 				'list' => array(
-					'The system has detected that MySQLi is installed.',
+					'The system has detected that PDO is installed.',
 				),
 			),
 			'type' => 'label',
-			'value' => 'MySQLi Detected',
+			'value' => 'PDO Detected',
 		);
 	}
 	else
 	{
-		$status['exists_mysqli'] = array(
-			'name' => 'MySQLi Not Compiled',
+		$status['exists_pdo'] = array(
+			'name' => 'PDO Not Compiled',
 			'status' => 'fail',
 			'description' => array(
 				'list' => array(
-					'The system has detected that MySQLi is NOT INSTALLED with this distribution of PHP.',
+					'The system has detected that PDO is NOT INSTALLED with this distribution of PHP.',
 				),
 			),
 			'value' => array(
 				'link' => array(
-					'url' => 'http://www.php.net/manual/en/book.mysqli.php',
-					'text' => 'Help on MySQLi',
+					'url' => 'http://php.net/manual/en/book.pdo.php',
+					'text' => 'Help on PDO',
 				),
 			),
 		);
@@ -236,7 +237,7 @@ function status_database($settings)
  */
 function setting_db_type($settings)
 {
-	if(isset($settings['db_type']) && in_array($settings['db_type'], get_supported_databases()))
+	if(isset($settings['db_type']) && in_array($settings['db_type'], array_keys(get_supported_databases())))
 		return $settings['db_type'];
 	else
 		return 'mysql';
@@ -244,7 +245,9 @@ function setting_db_type($settings)
 
 function get_supported_databases()
 {
-	return array('access','ado','ado_access','ado_mssql','db2','odbc_db2','vfp','fbsql','ibase','firebird','borland_ibase','informix','informix72','ldap','mssql','mssqlpo','mysql','mysqli','mysqlt','maxsql','oci8','oci805','oci8po','odbc','odbc_mssql','odbc_oracle','odbtp','odbtp_unicode','oracle','netezza','pdo','postgres','postgres64','postgres7','postgres8','sapdb','sqlanywhere','sqlite','sqlitepo','sybase');
+	return array('cubrid' => 'CUBRID', 'mssql' => 'Microsoft SQL Server', 'sybase' => 'Sybase', 'dblib' => 'DBlib', 
+		'firebird' => 'Firebird / Interbase', 'ibm' => 'DB2', 'informix' => 'Informix', 'mysql' => 'MySQL', 'oci' => 'Oracle',
+		'odbc' => 'ODBC', 'pgsql' => 'PostgreSQL', 'sqlite' => 'SQLite', 'sqlite2' => 'SQLite 2', '4D' => '4D');
 }
 
 /**
@@ -473,14 +476,19 @@ function switch_db($dsn)
 
 function db_assoc($query, $args = array(), $key = NULL)
 {
-	$stmt = db_query($query, $args);
+	$result = db_query($query, $args);
 	
 	$output = array();
 	
-	if($stmt)
+	if($result)
 	{
-		while ($row = $stmt->fetch(PDO::FETCH_NUM))
-			$output[] = $row;
+		while ($row = $result->fetch(PDO::FETCH_ASSOC))
+		{
+			if(isset($key) && isset($row[$key]))
+				$output[$row[$key]] = $row;
+			else
+				$output[] = $row;
+		}
 	}
 	
 	return $output;
@@ -494,7 +502,7 @@ function db_list($query, $args = array(), $key = 'Filepath')
 	
 	if($result)
 	{
-		while ($row = $stmt->fetch(PDO::FETCH_NUM))
+		while ($row = $result->fetch(PDO::FETCH_ASSOC))
 		{
 			if(isset($row[$key]))
 				$output[] = $row[$key];
@@ -509,7 +517,7 @@ function db_insert($query, $args = array())
 	$result = db_query($query, $args);
 	
 	if($result)
-		return $GLOBALS['database']->Insert_ID();
+		return $GLOBALS['database']->lastInsertId();
 	else
 		return false;
 }
@@ -520,7 +528,7 @@ function db_select($query, $args = array(), $callback)
 	
 	if($result && isset($callback))
 	{
-		while ($row = $stmt->fetch(PDO::FETCH_NUM))
+		while ($row = $result->fetch(PDO::FETCH_ASSOC))
 		{
 			call_user_func_array($callback, array($row));
 		}
@@ -542,22 +550,24 @@ function db_query($query, $args = array())
 	$stmt = $GLOBALS['database']->prepare($query);
 	foreach($args as $i => $arg)
 	{
+		$key = is_numeric($i) && isset($args[0]) ? ($i + 1) : $i;
 		if(is_bool($arg))
-			$stmt->bindParam($i, $arg, PDO::PARAM_BOOL);
+			$stmt->bindValue($key, $arg, PDO::PARAM_BOOL);
 		elseif(is_null($arg))
-			$stmt->bindParam($i, $arg, PDO::PARAM_NULL);
+			$stmt->bindValue($key, $arg, PDO::PARAM_NULL);
 		elseif(is_int($arg))
-			$stmt->bindParam($i, $arg, PDO::PARAM_INT);
+			$stmt->bindValue($key, $arg, PDO::PARAM_INT);
 		elseif(is_string($arg))
-			$stmt->bindParam($i, $arg, PDO::PARAM_STR);
+			$stmt->bindValue($key, $arg, PDO::PARAM_STR);
 		elseif(strlen($arg) > 4096)
-			$stmt->bindParam($i, $arg, PDO::PARAM_LOB);
+			$stmt->bindValue($key, $arg, PDO::PARAM_LOB);
 		else
-			$stmt->bindParam($i, $arg, PDO::PARAM_STR);		
+			$stmt->bindValue($key, $arg, PDO::PARAM_STR);		
 	}
 
-	$result = $stmt->execute();
-	
+	if(!$stmt->execute())
+		return false;
+
 	return $stmt;
 }
 

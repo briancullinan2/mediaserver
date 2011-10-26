@@ -7,7 +7,10 @@ function bootstrap($mode = 'all')
 	// start timer
 	if(!isset($GLOBALS['tm_start']))
 		$GLOBALS['tm_start'] = array_sum(explode(' ', microtime()));
-		
+	
+	if(function_exists('raise_error'))	
+		raise_error('Bootstrapping ' . $mode, E_DEBUG);
+
 	switch($mode)
 	{
 		case 'phpids':
@@ -82,10 +85,13 @@ function bootstrap($mode = 'all')
 					
 				require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . $include;
 			}
+			
 			preload_error();
 			preload_triggers();
 			preload_menu();
 			preload_template();
+			
+			raise_error('Preload complete. Includes loaded.', E_VERBOSE);
 			
 			// try to run language options
 			bootstrap('language');
@@ -96,18 +102,26 @@ function bootstrap($mode = 'all')
 				$config = load_module(dirname(__FILE__) . DIRECTORY_SEPARATOR . $include);
 			}
 			
+			raise_error('Core modules loaded.', E_DEBUG);
+			
 			if(setting('database_enable'))
 				bootstrap('database');
 			
 			// load all modules in to global
 			load_modules(setting_local_root() . 'modules');
+			
+			raise_error('All module loading complete.', E_DEBUG);
 
 			bootstrap('mime');
 		
 			// bootstrap the modules and setup
 			bootstrap('modules', array_keys($GLOBALS['modules']));
+			
+			raise_error('Bootstrap complete! Processing request.', E_DEBUG);
 
 			request_validate();
+			
+			raise_error('Request completed.  Moving on', E_VERBOSE);
 			
 			break;
 		
@@ -116,8 +130,9 @@ function bootstrap($mode = 'all')
 			break;
 			
 		case 'modules':
-			$modules = func_get_arg(1);
-
+			// put them in order by dependency
+			$modules = array_intersect(get_modules(), func_get_arg(1));
+			
 			foreach($modules as $i => $module)
 			{
 				if(dependency($module))
@@ -128,6 +143,9 @@ function bootstrap($mode = 'all')
 
 			break;
 	}
+		
+	if(function_exists('raise_error'))	
+		raise_error('Bootstrapping ' . $mode . ' complete', E_DEBUG);
 	
 }
 
@@ -152,6 +170,9 @@ function bootstrap_or_disable($module)
  */
 function setup_mime()
 {
+	if(!defined('FOLDER_MIME'))
+		define('FOLDER_MIME', 'httpd/unix-directory');
+	
 	// this will load the mime-types from a linux dist mime.types file stored in includes
 	// this will organize the types for easy lookup
 	if(file_exists(include_path('mime.types')))

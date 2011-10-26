@@ -37,7 +37,7 @@ class Monolithic_WebDAV_Server extends HTTP_WebDAV_Server
 			$info['props'][] = $this->mkprop('creationdate',    strtotime($file['Filedate']));
 			$info['props'][] = $this->mkprop('getlastmodified', strtotime($file['Filedate']));
 			$info['props'][] = $this->mkprop('resourcetype', 'collection');
-			$info['props'][] = $this->mkprop('getcontenttype', 'httpd/unix-directory');
+			$info['props'][] = $this->mkprop('getcontenttype', FOLDER_MIME);
 		  
 			$files['files'][] = $info;
 		}

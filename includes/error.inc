@@ -23,7 +23,7 @@ function menu_error()
 	return array(
 		'errors_only' => array(
 			'callback' => 'theme',
-			'arguments' => array('errors_block', true),
+			'arguments' => array('errors_block'),
 			'type' => MENU_CALLBACK,
 		),
 	);
@@ -262,6 +262,7 @@ function phperror_wrapper($error_code, $error_str, $error_file, $error_line)
 	else
 		raise_error($error_str, $error_code);
 
+	return true;
 	return !(setting('display_errors') & E_VERBOSE);
 }
 
@@ -877,4 +878,45 @@ function configure_error($settings)
 		'type' => 'fieldset',
 		'options' => $options
 	));
+}
+
+function theme__errors()
+{
+	theme('header',
+		'Module: ' . get_module($GLOBALS['output']['module'], 'name'),
+		'There were errors while processing your request.'
+	);
+
+	theme('footer');
+}
+
+function theme__errors_block()
+{
+	if(count($GLOBALS['user_errors']) > 0)
+	{
+		?><div class="user_errors"><?php
+		foreach($GLOBALS['user_errors'] as $i => $error)
+		{
+			?><span><?php print $error; ?></span><?php
+		}
+		?></div><?php
+	}
+	if(count($GLOBALS['warn_errors']) > 0)
+	{
+		?><div class="warn_errors"><?php
+		foreach($GLOBALS['warn_errors'] as $i => $error)
+		{
+			?><span><?php print $error; ?></span><?php
+		}
+		?></div><?php
+	}
+	if(count($GLOBALS['note_errors']) > 0)
+	{
+		?><div class="note_errors"><?php
+		foreach($GLOBALS['note_errors'] as $i => $error)
+		{
+			?><span><?php print $error; ?></span><?php
+		}
+		?></div><?php
+	}
 }

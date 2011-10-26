@@ -3,7 +3,6 @@
 
 function theme_live_module()
 {
-	
 	$title = 'Configuring: ' . get_module($GLOBALS['output']['configure_module'], 'name');
 	if(module_implements('output', $GLOBALS['output']['configure_module']))
 		$html_title = ' (<a href="' . url('module=' . $GLOBALS['output']['configure_module']) . '">View</a>)';

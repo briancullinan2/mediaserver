@@ -1,0 +1,9 @@
+name = Google Auth
+description = Allows users to authenticate through Google.
+privilage = 1
+template = true
+package = Authentication
+depends_on[] = enable_https
+settings[] = google_client_id
+settings[] = google_client_secret
+settings[] = google_redirect_url

@@ -26,12 +26,25 @@ function menu_template()
 	return array(
 		'templates/%template/%tfile' => array(
 			'callback' => 'output_template_file',
+			'no_session' => true,
 		),
 		'template/%template/%tfile' => array(
 			'callback' => 'output_template_file',
+			'no_session' => true,
 		),
 		'template/%tfile' => array(
 			'callback' => 'output_template_file',
+			'no_session' => true,
+		),
+		'template/%template/styles' => array(
+			'callback' => 'theme',
+			'arguments' => array('styles'),
+			'type' => MENU_CALLBACK,
+		),
+		'template/%template/scripts' => array(
+			'callback' => 'theme',
+			'arguments' => array('scripts'),
+			'type' => MENU_CALLBACK,
 		),
 	);
 }
@@ -54,7 +67,7 @@ function preload_template()
 function setup_template()
 {
 	// bootstrap the modules and setup
-	bootstrap('modules', array_keys($GLOBALS['templates']));
+	//bootstrap('modules', array_keys($GLOBALS['templates']));
 }
 
 /**
@@ -276,6 +289,10 @@ function theme($request = '')
 		call_user_func_array('output_' . $request['template'], array());
 		return;
 	}
+	elseif(is_array($request))
+	{
+		$request = array_shift($request);
+	}
 	
 	// if the theme function is being called then the output vars better be set
 	if(!isset($GLOBALS['output']['html']))
@@ -432,6 +449,166 @@ function output_template_file($request)
 	{
 		raise_error('File not found!', E_USER);
 		theme();
+	}
+}
+
+function theme__default()
+{
+	theme('header',
+		'Module: ' . get_module($GLOBALS['output']['module'], 'name'),
+		'This page requires special parameters that have not been set.  This default page is a placeholder.'
+	);
+
+	theme('footer');
+}
+
+function theme__footer()
+{
+	if($GLOBALS['output']['module'] != 'users')
+		theme('login_block');
+	
+	?>
+	Modules:
+<ul>
+<?php
+foreach(get_modules() as $i => $module)
+{
+	if(get_module($module, 'privilage') > $GLOBALS['output']['user']['Privilage'])
+		continue;
+		
+	if(!module_implements('output', $module))
+		$link = 'admin/modules/' . $module;
+	else
+		$link = $name;
+									
+	?><li><a href="<?php print url($link); ?>"><?php echo get_module($module, 'name'); ?></a></li><?php
+}
+?>
+</ul>
+</body>
+</html>
+	<?php
+}
+
+function theme__header($title = NULL, $description = NULL)
+{
+	if(!isset($title))
+		$title = htmlspecialchars(get_module($GLOBALS['output']['module'], 'name')) . ' : ' . setting('html_name');
+	
+	?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<?php theme('redirect_block'); ?>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title><?php print $title; ?></title>
+</head>
+
+<body>
+<h1><?php print $title; ?></h1><?php
+	
+	theme('errors_block');
+}
+
+function theme__redirect()
+{
+	theme('header');
+	
+	?>You are being redirected...<?php
+	
+	theme('footer');
+}
+
+function theme__redirect_block()
+{
+	if(isset($GLOBALS['output']['html']['redirect']))
+	{
+		?><META HTTP-EQUIV="refresh" CONTENT="1;URL=<?php print $GLOBALS['output']['html']['redirect']; ?>"><?php
+	}
+}
+
+function theme__template()
+{
+	theme('header');
+	
+	theme('template_block');
+
+	theme('footer');
+}
+
+function theme__template_block()
+{
+	?>
+	<br /><br />Select a Template:<br />
+	<?php
+	foreach($GLOBALS['templates'] as $name => $template)
+	{
+		if(isset($template['name']))
+		{
+			?><a href="<?php print url('template=' . $name, false, true); ?>"><?php print $template['name']; ?></a><br /><?php
+		}
+	}
+}
+
+function theme__scripts($scripts = array(), $combined = false)
+{
+	if(!isset($scripts) && isset($GLOBALS['output']['scripts']))
+		$scripts = $GLOBALS['output']['scripts'];
+	elseif(!isset($scripts))
+		return;
+		
+	if(is_string($scripts)) $scripts = array($scripts);
+
+	if($combined)
+	{
+		header("Cache-Control: cache");  
+		header("Pragma: public");
+		header('Content-Type: text/javascript');
+		
+		foreach($scripts as $i => $script)
+		{
+			print file_get_contents(setting('local_root') . 'templates' . DIRECTORY_SEPARATOR . setting('local_template') . DIRECTORY_SEPARATOR . validate(array('tfile' => $script), 'tfile'));
+		}
+	}
+	else
+	{
+		foreach($scripts as $link)
+		{
+			?>
+			<script type="text/javascript" src="<?php print url($link); ?>"></script>
+			<?php
+		}
+	}
+}
+
+function theme__styles($styles = array(), $combined = false)
+{
+	if(!isset($styles) && isset($GLOBALS['output']['styles']))
+		$styles = $GLOBALS['output']['styles'];
+	elseif(!isset($styles))
+		return;
+		
+	if(is_string($styles)) $styles = array($styles);
+	
+	if($combined)
+	{
+		header("Cache-Control: cache");  
+		header("Pragma: public");
+		header('Content-Type: text/css');
+		
+		foreach($styles as $i => $style)
+		{
+			print file_get_contents(setting('local_root') . 'templates' . DIRECTORY_SEPARATOR . setting('local_template') . DIRECTORY_SEPARATOR . validate(array('tfile' => $style), 'tfile'));
+		}
+	}
+	else
+	{
+		foreach($styles as $link)
+		{
+			?>
+			<link rel="stylesheet" href="<?php print url($link); ?>" type="text/css"/>
+			<?php
+		}
 	}
 }
 

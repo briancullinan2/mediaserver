@@ -6,8 +6,12 @@ function __tunegazelle_css_header()
 }
 
 
-function tunegazelle_colors()
+function theme_tunegazelle_colors()
 {
+	header("Cache-Control: cache");  
+	header("Pragma: public");
+	header('Content-Type: text/css');
+	
 	?>
 	html, body {
 		color:#443322;
@@ -16,6 +20,7 @@ function tunegazelle_colors()
 	#heading {
 		background:url("images/10-20.png") repeat-x scroll 50% 50% #FFEEBB;
 		border-bottom:1px solid #AA9988;
+		text-shadow:0 1px 1px rgba(255, 255, 255, 0.40), 2px 0 1px rgba(255, 255, 255, 0.40)
 	}
 	
 	#heading h1 {
@@ -23,8 +28,13 @@ function tunegazelle_colors()
 		padding-left:30px;
 	}
 	
-	#heading h1 {
-		text-shadow:0 1px 1px rgba(255, 255, 255, 0.40), 2px 0 1px rgba(255, 255, 255, 0.40)
+	#heading a {
+		color:#332211;
+	}
+
+	#heading a:hover {
+		color:#443322;
+		text-shadow:0px 1px 2px rgba(255, 255, 255, 0.60), 3px 1px 2px rgba(255, 255, 255, 0.60)
 	}
 	
 	#left-menu {
@@ -40,7 +50,6 @@ function tunegazelle_colors()
 	#controls {
 		color:#DDCCBB;
 		background:url("images/0-20-white.png") repeat-x scroll 50% 50% #332211;
-		box-shadow:2px 3px 3px rgba(0, 0, 0, .5)
 	}
 	
 	#search-box {
@@ -104,7 +113,11 @@ function tunegazelle_colors()
 		box-shadow:none;
 	}
 	
-	.inactive-handler:hover {
+	#handlers a {
+		color:#DDCCBB;
+	}
+	
+	#handlers a:hover {
 		color:#FFFFFF;
 	}
 	
@@ -114,7 +127,6 @@ function tunegazelle_colors()
 	}
 	
 	.folders {
-		box-shadow:2px 3px 3px rgba(0, 0, 0, .5);
 		background-color:#FFFFFF;
 		border-right:1px solid #AA9988;
 		border-left:1px solid #AA9988;
@@ -148,6 +160,19 @@ function tunegazelle_colors()
 	#right-menu {
 		border-left:1px solid #AA9988;
 		background-color:#FFFFFF;
+	}
+	
+	.file a {
+		color:#443322;
+		text-decoration:none;
+	}
+	
+	.file.even {
+		background-color:#DDCCBB;
+	}
+	
+	.file:hover {
+		background-color:#FFEEDD;
 	}
 	
 	<?

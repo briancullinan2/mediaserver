@@ -7,7 +7,6 @@ function preload_triggers()
 		'filter' => array(),
 		'output' => array(),
 		'validate' => array(),
-		'bootstrap' => array(),
 	);
 }
 

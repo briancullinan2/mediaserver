@@ -1,0 +1,77 @@
+<?php
+
+
+
+function menu_google()
+{
+	return array(
+		'users/google' => array(
+			'callback' => 'output_google',
+			'name' => 'Google',
+			'icon' => 'images/google-icon.png',
+		),
+		'oauth2callback' => array(
+			'callback' => 'output_google',
+			'type' => MENU_CALLBACK,
+		),
+		'images/google-icon.png' => array(
+			'callback' => 'google_output_icon',
+			'type' => MENU_CALLBACK,
+		),
+		setting('redirect_url') => array(
+			'callback' => 'output_google',
+			'type' => MENU_CALLBACK,
+		),
+	);
+}
+
+function authenticate_google()
+{
+	return array(
+		'login' => 'users/login/google',
+		'logout' => '',
+	);
+}
+
+function output_google($request)
+{
+	
+}
+
+function setting_google_client_id($settings)
+{
+	return generic_validate_all_safe($settings, 'google_client_id');
+}
+
+function setting_google_redirect_url($settings)
+{
+	if(isset($settings['google_redirect_url']))
+		return generic_validate_urlpath($settings, 'google_redirect_url');
+	else
+		return 'oauth2callback';
+}
+
+function google_output_icon()
+{
+	$file = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'google-icon.png';
+	
+	if(file_exists($file))
+	{
+		header('Content-Transfer-Encoding: binary');
+		header('Content-Type: image/png');
+		
+		print file_get_contents($file);
+	}
+}
+
+function theme__google_block()
+{
+	/*
+	?>You will be redirected to Google to sign in, if you accept, you will return here with an account which you can save playlists, download lists, upload files, and more!<br />
+	<a href="https://accounts.google.com/o/oauth2/auth?client_id=<?php print setting('google_client_id'); ?>&redirect_uri=<?php print url(setting('redirect_url'), false, true); 
+		?>&scope=https://www.google.com/m8/feeds/&response_type=token" name="google_auth">Click Here</a><?php
+		*/
+	?><iframe id="auth_google" src="https://accounts.google.com/o/oauth2/auth?client_id=<?php print setting('google_client_id'); ?>&redirect_uri=<?php 
+		print url(setting('google_redirect_url'), false, true); 
+		?>&scope=https://www.google.com/m8/feeds/&response_type=token"></iframe><?php
+}

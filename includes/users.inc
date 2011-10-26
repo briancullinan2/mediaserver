@@ -82,6 +82,16 @@ function menu_users()
 		'users/%users' => array(
 			'callback' => 'output_users',
 		),
+		'users/login' => array(
+			'name' => 'Login',
+			'callback' => 'output_users',
+			'arguments' => array('users' => 'login'),
+		),
+		'users/register' => array(
+			'name' => 'Create an account',
+			'callback' => 'output_users',
+			'arguments' => array('users' => 'register'),
+		),
 	);
 }
 
@@ -95,10 +105,7 @@ function setup_users()
 	if(!isset($session_user))
 	{
 		// prepare the session that stores user information
-		$session_user = array(
-			'Username' => 'guest',
-			'Privilage' => 1
-		);
+		$session_user = users_get_guest();
 		session('users', $session_user);
 	}
 
@@ -138,9 +145,9 @@ function setup_users()
 function dependency_users($settings)
 {
 	if(!setting_installed() || !setting('database_enable'))
-		return array('template');
+		return array('session', 'template');
 	else
-		return array('template', 'database');
+		return array('session', 'template', 'database');
 }
 
 /**
@@ -698,4 +705,99 @@ function output_users($request)
 	if(isset($request['username'])) register_output_vars('username', $request['username']);
 	if(isset($request['email'])) register_output_vars('email', $request['email']);
 	if(isset($request['return'])) register_output_vars('return', $request['return']);
+}
+
+function theme__users()
+{
+	switch($GLOBALS['output']['users'])
+	{
+		case 'login':
+			theme('login');
+		break;
+		default:
+			theme('default');
+	}
+}
+
+function theme__login()
+{
+	theme('header');
+	
+	if($GLOBALS['output']['user']['Username'] != 'guest' || !setting('database_enable'))
+		theme('logout_block');
+	else
+		theme('login_block');
+	
+	theme('footer');
+}
+
+function theme__login_block()
+{
+	if($GLOBALS['output']['user']['Username'] != 'guest' || !setting('database_enable'))
+	{
+		theme('logout_block');
+		return;
+	}
+	if(isset($GLOBALS['output']['return']))
+		$return = $GLOBALS['output']['return'];
+	else
+		$return = $GLOBALS['output']['get'];
+	?>	
+	<div id="login">
+		<div id="auth_users">
+			<form action="<?php print url('users/login?return=' . urlencode($return)); ?>" method="post">
+				<p>
+				<?php print lang('Username', 'username'); ?>: <input type="text" name="username" value="<?php print $username; ?>" /><br />
+				<?php print lang('Password', 'password'); ?>: <input type="password" name="password" value="" /><br />
+				<input type="submit" value="<?php print lang('Login', T_IN_ATTRIBUTE, 'login'); ?>" /><input type="reset" value="<?php print lang('Cancel', T_IN_ATTRIBUTE, 'cancel'); ?>" />
+				</p>
+			</form>
+		</div>
+		<div id="auth_google">
+			<?php theme('google_block'); ?>
+		</div>
+	</div>
+	<?php
+}
+
+function theme__logout_block()
+{
+	if(isset($GLOBALS['output']['return']))
+		$return = $GLOBALS['output']['return'];
+	else
+		$return = $GLOBALS['output']['get'];
+	?>
+	<div id="logout">
+		<form action="<?php echo url('users/logout?return=' . urlencode($return)); ?>" method="post">
+			<input type="submit" value="Logout" />
+		</form>
+	</div>
+	<?php
+}
+
+function theme__register()
+{
+	theme('header');
+	
+	?>	
+	<form action="<?php echo url('users/register'); ?>" method="post">
+	
+		Username: <input type="text" name="username" value="<?php print isset($GLOBALS['output']['username'])?$GLOBALS['output']['username']:''; ?>" /><br />
+		E-mail: <input type="text" name="email" value="<?php print isset($GLOBALS['output']['email'])?$GLOBALS['output']['email']:''; ?>" /><br />
+		Password: <input type="password" name="password" value="" /><br />
+		<input type="submit" value="Register" /><input type="reset" value="Reset" />
+		
+	</form>
+	<?php
+	
+	theme('footer');
+}
+
+function theme__confirmation()
+{
+	theme('header');
+	
+	?>Thanks for signing up!<?php
+	
+	theme('footer');
 }

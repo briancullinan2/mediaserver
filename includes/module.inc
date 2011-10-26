@@ -27,6 +27,20 @@ function menu_module()
 	);
 }
 
+function bootstrap_module($module)
+{
+	if(module_implements('configure', $module))
+		add_menu('module', array(
+			'admin/module/' . $module => array(
+				'name' => get_module($module, 'name'),
+				'callback' => 'output_module',
+				'arguments' => array('configure_module' => $module),
+				'type' => MENU_NORMAL,
+				'description' => get_module($module, 'description'),
+			)
+		));
+}
+
 function setting_module($settings)
 {
 	$settings = array();
@@ -60,7 +74,7 @@ function setting_modules_enable($settings, $module = 'modules')
 		return true;
 		
 	// check boolean value
-	return (!isset($settings[$module . '_enable']) || ($settings[$module . '_enable'] && $settings[$module . '_enable'] !== 'false'));
+	return (!isset($settings[$module . '_enable']) || filter_var($settings[$module . '_enable'], FILTER_VALIDATE_BOOLEAN));
 }
 
 function load_modules($dir)
@@ -71,7 +85,7 @@ function load_modules($dir)
 		
 	$modules = array();
 	
-	$files = scan_directory($dir, 'is_info', 0);
+	$files = scan_directory($dir, 'is_info', 3);
 
 	foreach($files as $i => $file)
 	{
@@ -957,7 +971,11 @@ function output_module($request)
 		// add status to configuration
 		$status = invoke_module('status', $request['configure_module'], array($GLOBALS['settings']));
 		if(isset($status))
-			register_output_vars('status', $status);
+			register_output_vars('status', array(
+			'name' => 'Module Status',
+			'type' => 'fieldset',
+			'options' => $status,
+		));
 		
 		// find invalid parameters
 		$settings = get_settings($request['configure_module']);
@@ -976,6 +994,34 @@ function output_module($request)
 		}
 	}
 	
-	register_output_vars('options', $options);
+	register_output_vars('form_object', array(
+		'action' => url('admin/modules/' . $request['configure_module'], true),
+		'options' => $options,
+		'type' => 'form',
+		'submit' => array(
+			'name' => 'save_configuration',
+			'value' => 'Save',
+		),
+		'reset' => array(
+			'name' => 'reset_configuration',
+			'value' => 'Reset to Defaults',
+		),
+	));
 	register_output_vars('configure_module', $request['configure_module']);
+}
+
+function theme__module()
+{
+	theme('header',
+		'Configuring: ' . get_module($GLOBALS['output']['configure_module'], 'name'), 
+		get_module($GLOBALS['output']['configure_module'], 'description')
+	);
+
+	// if the status is avaiable print that out first
+	if(isset($GLOBALS['output']['status']))
+		theme('form_object', 'status', $GLOBALS['output']['status']);
+		
+	theme('form_object', 'setting', $GLOBALS['form_object']);
+	
+	theme('footer');
 }

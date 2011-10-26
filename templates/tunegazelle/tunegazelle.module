@@ -7,19 +7,34 @@ function menu_tunegazelle()
 	return array(
 		'template/tunegazelle/styles' => array(
 			'callback' => 'theme',
-			'arguments' => array('styles'),
+			'arguments' => array('styles', array('styles/layout.css', 'styles/errors.css', 'styles/highlight.css'), true),
 			'type' => MENU_CALLBACK,
 		),
 		'template/tunegazelle/scripts' => array(
 			'callback' => 'theme',
-			'arguments' => array('scripts'),
+			'arguments' => array('scripts', array('js/jquery.js', 'js/jquery-ui.js'), true),
 			'type' => MENU_CALLBACK,
+		),
+		'template/tunegazelle/colors.css' => array(
+			'callback' => 'theme',
+			'arguments' => array('colors'),
+			'type' => MENU_CALLBACK,
+		),
+		'users/login' => array(
+			'name' => 'Tune Gazelle',
+			'callback' => 'output_users',
+			'icon' => 'template/tunegazelle/images/logo-tiny.png',
+			'arguments' => array('users' => 'login'),
+			'module' => 'users'
 		),
 	);
 }
 
 function theme_tunegazelle_header($title)
 {
+	if(isset($GLOBALS['output']['dirs_only']))
+		return;
+	
 	?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -30,73 +45,106 @@ function theme_tunegazelle_header($title)
 <meta name="google-site-verification" content="K3Em8a7JMI3_1ry5CNVKIHIWofDt-2C3ohovDq3N2cQ" />
 <script type="text/javascript" src="<?php print url('template/tunegazelle/scripts'); ?>"></script>
 <link rel="stylesheet" href="<?php print url('template/tunegazelle/styles'); ?>" type="text/css"/>
+<link rel="stylesheet" href="<?php print url('template/tunegazelle/colors.css'); ?>" type="text/css"/>
 <script type="text/javascript">
 	var new_folders = null;
 	var new_folder_timer = null
-	$(window).resize(resize_panels);
-	$(window).scroll(scroll_panels);
 	
 	$(document).ready(function() {
 		
-		// set the panels to the right side, below
-		resize_panels();
-		$(document).delay(100, resize_panels).delay(100, resize_panels)
-		
 		setup_folders($('.folders'));
 		
+		// set up some ajax buttons
+		$('#heading .settings').click(function () {
+			if(!$('#tab-strip .settings').is('.current-tab'))
+			{
+				$('#tab-strip .current-tab').removeClass('current-tab').addClass('inactive-tab');
+				$('#tab-strip .settings').removeClass('inactive-tab').addClass('current-tab');
+				$('.folders').addClass('hidden').hide();
+				$('.folders.settings').removeClass('hidden').width(0).animate({width:200}, 300);
+			}
+			return false;
+		});
+		
+		// set up login form
+		$('#heading .login').click(function () {
+			if(!$('#tab-strip .login').is('.current-tab'))
+			{
+				$('#tab-strip .current-tab').removeClass('current-tab').addClass('inactive-tab');
+				$('#tab-strip .login').removeClass('inactive-tab').addClass('current-tab');
+				$('.folders').addClass('hidden').hide();
+				$('.folders.login').removeClass('hidden').width(0).animate({width:200}, 300);
+			}
+			return false;
+		});
+		
+		$('#login iframe').load(function () {
+			alert(this.contentDocument.body.scrollHeight);
+			$(this).height(this.contentDocument.body.scrollHeight);
+		});
 	});
 	
 	function setup_folders(selector)
 	{
-		selector.css('position', 'fixed').offset({left:200});
-		
+
 		if(selector.is('.loaded'))
 		{
-			selector.mouseenter(function () {
-				$(this).removeClass('loaded')
-				.prev('.folders').addClass('hidden')
-				//.animate({width: 0}, 500, function () {
-				//	$(this).hide();
-				//	selector.unbind('mouseenter');
-				//});
-			});
+			if(selector.find('a').length > 0)
+			{
+				selector.mouseenter(function () {
+					$(this).removeClass('loaded')
+					.animate({left:200}, 500);
+					$(this).prevAll('.folders:not(.hidden):last')
+					.animate({width: 0}, 500, function () {
+						$(this).addClass('hidden');
+						selector.unbind('mouseenter');
+					});
+				});
+			}
+			else
+			{
+				selector.hover(function () {
+					$(this).removeClass('loaded')
+				}, function () {
+					$(this).animate({width:0}, 200, function() {
+						$(this).remove();
+					});
+				});
+			}
 		}
-		
+				
 		selector.mouseenter(function () {
 			$(this).animate({width: 200});
 		});
 		
 		// set up folder hover actions
 		selector.find('li').hover(function () {
+			// change max-width so the hover doesn't go outside the menu
+			$(this).css('max-width', $(window).width() - 230);
+			
 			// pause for a second and start ajax request
 			clear_folder_load();
-			//if($(this).find('a').length > 0)
-			//	new_folder_timer = setTimeout('load_folders("' + $(this).find('a').attr('href')+ '")', 1000)
+			if($(this).find('a').length > 0)
+				new_folder_timer = setTimeout('load_folders("' + $(this).find('a').attr('href')+ '")', 1000)
 			
 			// clear old animations and stop the scroller
-			$('.folders').focus();
+			$(this).parent().stop().focus();
 			
 			// if we get to the bottom of the scroller, move it up
 			if($(this).offset().top + $(this).outerHeight() + 10 > $('#details').offset().top)
 			{
-				$(this).parents('.folders').animate({ 
-					scrollTop: $(this).offset().top + $(this).outerHeight() - 
-					$(this).parents('.folders').outerHeight() - $(this).parents('.folders').offset().top + 
-					$(this).parents('.folders').scrollTop() + 15
+				$(this).parent().animate({ 
+					top: $('#details').offset().top - ($(this).offset().top - $(this).parent().offset().top) - $(this).outerHeight() - 15
 				}, {
-					step: sync_hover_folder,
-					complete: sync_hover_folder,
 					duration: 300
 				});
 			} 
 			// if we get to the top of the scroller move it down
-			else if ($(this).offset().top - 10 < $('#controls').offset().top + $('#controls').outerHeight())
+			else if ($(this).offset().top - 76 - 10 < 0)
 			{
-				$(this).parents('.folders').animate({ 
-					scrollTop: $(this).offset().top - $(this).parents('.folders').offset().top + $(this).parents('.folders').scrollTop() - 15
+				$(this).parent().animate({ 
+					top: -($(this).offset().top - $(this).parent().offset().top) + 76 + 15
 				}, {
-					step: sync_hover_folder,
-					complete: sync_hover_folder,
 					duration: 300
 				});
 			}
@@ -108,16 +156,25 @@ function theme_tunegazelle_header($title)
 	
 	function load_folders(path)
 	{
-		$('<div class="folders loading" style="width:0px;"><div class="loading-icon"></div></div>').insertAfter($('.folders:last'))
+		$('<div class="folders loading" style="width:0px; position:fixed; left:400px;"><div class="loading-icon"></div></div>')
+		 .insertAfter($('.folders:last'))
 		 .animate({width: 200}, 300);
 		
-		// resize the panels so the height of the new folders gets set
-		resize_panels();
-		
-		new_folders = $.get(path, {
-			dirs_only: true
-		}, function(data, status, xhr) {
-			setup_folders($('.folders.loading').append($(data)).removeClass('loading').addClass('loaded'));
+		new_folders = $.ajax({
+			url: path,
+			data: {dirs_only: true},
+			async: true,
+			success: function(data, status, xhr) {
+				if(status)
+				{
+					var loaded = $('.folders.loading');
+					loaded.append($(data)).removeClass('loading').addClass('loaded')
+					 .find('.loading-icon').remove();
+					setup_folders(loaded);
+				}
+			},
+			error: function () {
+			}
 		});
 	}
 	
@@ -125,6 +182,7 @@ function theme_tunegazelle_header($title)
 	{
 		if(new_folders)
 		{
+			$('.folders.loading').addClass('aborting').removeClass('loading').animate({width:0}, function() {$(this).remove()});
 			new_folders.abort();
 			new_folders = null;
 		}
@@ -137,33 +195,14 @@ function theme_tunegazelle_header($title)
 		setTimeout('$(".folders.loaded").animate({width:0}, 200, function() { $(this).remove()})', 300);
 	}
 	
-	function sync_hover_folder()
-	{
-		$('.folders li[style*="absolute"]').offset({top: placeholder.offset().top});
-	}
-	
-	function resize_panels() {
-		$('#left-menu').height($(window).height() - $('#details').height());
-		$('.folders, #folder-pre').height($(window).height() - $('#details').height());
-		$('.folders li').css('max-width', $(window).width() - 200);
-		$('#right-menu').height($(window).height() - $('#details').height());
-	}
-	
-	function scroll_panels() {
-		if($(window).scrollTop() > $('#left-menu').offset().top)
-		{
-			$('#left-menu').css('position', 'fixed').offset({top:0});
-		}
-		else
-		{
-			$('#left-menu').css('position', 'fixed').offset({top:0});
-		}
-	}
-	
 </script>
 </head>
 <body>
-	<div id="heading"><h1><?php print setting('html_name'); ?></h1></div>
+	<div id="heading">
+		<h1><?php print setting('html_name'); ?></h1>
+		<a href="<?php print url('admin'); ?>" class="settings"><span><?php print lang('Settings', 'settings'); ?></span></a>
+		<a href="<?php print url('users/login'); ?>" class="login"><span><?php print lang('Login', 'login'); ?></span></a>
+	</div>
 	<div id="left-menu">
 		<div id="inner-list">
 			<ul>
@@ -177,25 +216,86 @@ function theme_tunegazelle_header($title)
 	</div>
 	<div id="controls">
 		<div id="tab-strip">
-			<div class="current-tab"><?php print lang('Files', 'files'); ?></div>
-			<div class="inactive-tab"><?php print lang('Settings', 'settings'); ?></div>
+			<div class="<?php print $GLOBALS['output']['module'] == 'select' ? 'current-tab' : 'inactive-tab'; ?> files"><?php print lang('Files', 'files'); ?></div>
+			<div class="<?php print $GLOBALS['output']['module'] == 'module' ? 'current-tab' : 'inactive-tab'; ?> settings"><?php print lang('Settings', 'settings'); ?></div>
+			<div class="<?php print $GLOBALS['output']['module'] == 'users' ? 'current-tab' : 'inactive-tab'; ?> login"><?php print lang('Login', 'login'); ?></div>
+			<div class="<?php print $GLOBALS['output']['module'] == 'menu' ? 'current-tab' : 'inactive-tab'; ?> menu"><?php print $GLOBALS['output']['current_menu']['name']; ?></div>
 		</div>
 		<div id="search-box"><div id="search-icon"></div><input type="text" id="search" name="search" value="Search" /></div>
-		<div id="handlers"><div id="files_handler" class="active-handler"><div>Files</div></div><div id="audio_handler" class="inactive-handler"><div>Audio</div></div></div>
+		<div id="handlers"><?php theme('menu_block', get_menu('select')); ?></div>
 		<div id="list-tabs">
 			<div class="current-tab"><?php print lang('Playlist', 'playlist'); ?></div>
 			<div class="inactive-tab"><?php print lang('Downloads', 'downloads'); ?></div>
 		</div>
 		<div id="view-control"></div>
 	</div>
-	<div id="folder-pre"></div>
-	<div class="folders">
-		<?php theme('select_block', true); ?>
-	</div>
-	<div id="right-menu">
-	</div>
-	<div id="details"><img class="icon" /><span class="filename">Shared</span><span class="filetype">Folder</span></div>
+	<div id="folder-previous"></div>
+	<?php 
+	if($GLOBALS['output']['module'] == 'select') 
+	{ 
+		?><div class="folders"><?php theme('select_block', true); ?></div><?php 
+	}
+	?>
+	<div class="folders settings <?php print $GLOBALS['output']['module'] != 'module' ? 'hidden' : ''; ?>"><?php theme('menu_block', get_menu('admin/module')); ?></div>
+	<div class="folders login <?php print $GLOBALS['output']['module'] != 'users' ? 'hidden' : ''; ?>"><?php theme('menu_block', get_menu('users')); ?></div>
+	<div class="folders menu <?php print $GLOBALS['output']['module'] != 'menu' ? 'hidden' : ''; ?>"><?php theme('menu_block'); ?></div>
+	<div id="content">
 	<?php
+}
+
+
+function theme_tunegazelle_module()
+{
+	if(!isset($GLOBALS['output']['dirs_only']) || !$GLOBALS['output']['dirs_only'])
+	{
+		theme('header',
+			'Configuring: ' . get_module($GLOBALS['output']['configure_module'], 'name'), 
+			get_module($GLOBALS['output']['configure_module'], 'description')
+		);
+	
+		// if the status is avaiable print that out first
+		if(isset($GLOBALS['output']['status']))
+			theme('form_object', 'status', $GLOBALS['output']['status']);
+			
+		theme('form_object', 'setting', $GLOBALS['form_object']);
+		
+		theme('footer');
+	}
+	else
+	{
+		theme('menu_block');
+	}
+}
+
+function theme_tunegazelle_menu()
+{
+	if(!isset($GLOBALS['output']['dirs_only']) || !$GLOBALS['output']['dirs_only'])
+	{
+		theme('header');
+		
+		theme('menu_block');
+		
+		theme('footer');
+	}
+	else
+	{
+		theme('menu_block');
+	}
+}
+
+function theme_tunegazelle_users()
+{
+	if(!isset($GLOBALS['output']['dirs_only']) || !$GLOBALS['output']['dirs_only'])
+	{
+		switch($GLOBALS['output']['users'])
+		{
+			case 'login':
+				theme('login');
+			break;
+			default:
+				theme('default');
+		}
+	}
 }
 
 function theme_tunegazelle()
@@ -205,91 +305,181 @@ function theme_tunegazelle()
 	theme('footer');
 }
 
+function theme_tunegazelle_debug_error($id, $error, $no_code = false)
+{
+	if($error->code & (E_ALL|E_STRICT))
+		$class = 'php_error';
+	elseif($error->code & E_DATABASE)
+		$class = 'db_error';
+	elseif($error->code & E_VERBOSE)
+		$class = 'verbose_error';
+	else
+		$class = '';
+		
+	if(($error->code & E_DATABASE) > 0 && dependency('code'))
+	{
+		$code = get_code_html($error->message, 'sql');
+		$error->message = $code['HTML'];
+		$error->htmlspecialchars = false;
+	}
+	else
+	?>
+	<a href="#" class="msg <?php print $class; ?>" onClick="$('#error_<?php print $id; ?>').toggle(); return false;"><?php print (isset($error->time)?('[' . round($error->time, 3) . ']'):'') . ($error->htmlspecialchars ? htmlspecialchars($error->message) : $error->message) . ((isset($error->count) && $error->count > 0)?(' repeated ' . $error->count . ' time(s)'):''); ?></a>
+	<?php
+	if(!$no_code)
+	{
+		?>
+		<div id="error_<?php print $id; ?>" style="display:none;">
+			<code>
+				<pre>
+	<?php print htmlspecialchars(print_r($error, true)); ?>
+				</pre>
+			</code>
+		</div>
+		<?php
+	}
+}
+
+function theme_tunegazelle_debug_block()
+{
+	?><div id="debug" class="debug hide">
+	<a id="hide_link" href="#"><?php print lang('Show / Hide', 'debug show hide'); ?></a>
+	<script type="text/javascript">
+		$('#hide_link').click(function () {
+			$('#debug').toggleClass('hide');
+			return false;
+		})
+	</script>
+	<?php
+	foreach($GLOBALS['debug_errors'] as $i => $error)
+	{
+		theme('debug_error', $i, $error);
+	}
+	
+	if(isset($GLOBALS['output']['requests']) && count($GLOBALS['output']['requests']) > 0)
+	{
+		foreach($GLOBALS['output']['requests'] as $j => $request)
+		{
+			?>
+			<a href="#" class="msg" onclick="$('#request_<?php print $j; ?>').toggle(); return false;"><?php print lang('Request made on ', 'debug request made on'); ?> <?php print $request['Time']; ?></a>
+			<div id="request_<?php print $j; ?>" style="display:none;"><?php
+			$errors = unserialize(gzinflate($request['Errors']));
+			foreach($errors['debug'] as $i => $error)
+			{
+				theme('debug_error', $i, $error, true);
+			}
+			?></div><?php
+		}
+	}
+	
+	?></div><?php
+}
+
 function theme_tunegazelle_select()
 {
 	if(!isset($GLOBALS['output']['dirs_only']) || !$GLOBALS['output']['dirs_only'])
 	{
 		theme('header');
 		
+		theme('select_block');
 		
 		theme('footer');
 	}
 	else
 	{
-		theme('select_block', true);
+		theme('select_block');
 	}
 }
 
-function theme_tunegazelle_select_block($folders = false)
+function theme_tunegazelle_select_block()
 {
-	?><ul><?php
-	 
-	$count = 0;
-	foreach($GLOBALS['output']['files'] as $i => $file) { 
-		$html = format_file($file);
-		
-		// make links browsable
-		if(handles($file['Filepath'], 'archive')) $handler = 'archive';
-		elseif(handles($file['Filepath'], 'playlist')) $handler = 'playlist';
-		elseif(handles($file['Filepath'], 'diskimage')) $handler = 'diskimage';
-		else $handler = $GLOBALS['output']['handler'];
-	
-		if($GLOBALS['output']['handler'] != $handler || $file['Filemime'] == 'httpd/unix-directory')
+	if(!$folders)
+	{
+		?><table id="files"><?php
+
+		$columns = get_all_columns();
+		$count = 0;
+		if(isset($GLOBALS['output']['files']))
 		{
-			if(substr($file['Filepath'], -1) != '/') $file['Filepath'] .= '/';
-			$new_handler = $handler;
+			foreach($GLOBALS['output']['files'] as $i => $file) { 
+				$html = format_file($file);
 			
-			$link = url('select/' . $new_handler . '/' . $html['Filepath']);
+				// make links browsable
+				if($file['Filemime'] == FOLDER_MIME)
+					$link = url('select/' . $handler . '/' . $html['Filepath']);
+				else
+					$link = url('files/' . $GLOBALS['output']['handler'] . '/' . $file['id'] . '/' . urlencode($file['Filename']));
+				
+				if(!$GLOBALS['output']['dirs_only'] || $file['Filemime'] != FOLDER_MIME)
+				{
+					$count++;
+					
+					?><tr class="file <?php print $i % 2 ? 'even' : 'odd'; ?>" style="top:<?php print $i * 22; ?>px"><?php
+					foreach($columns as $j => $column)
+					{
+						?><td class="cell column_<?php print strtolower(htmlspecialchars($column, ENT_QUOTES)); ?>"><div><a href="<?php print $link; ?>"><?php print isset($html[$column]) ? $html[$column] : ''; ?></a></div></td><?php
+					}
+					
+					?></tr><?php
+				}
+			}
+		}
+		
+		if($count == 0) { ?>
+			<tr><td colspan="<?php count(get_all_columns()); ?>"><?php print lang('No files to display.', 'no files'); ?></td></tr>
+		<?php }
+		
+		?></table><?php
+	}
+	else
+	{
+		?><ul><?php
+		 
+		$count = 0;
+		if(isset($GLOBALS['output']['files']))
+		{
+			foreach($GLOBALS['output']['files'] as $i => $file)
+			{
+				if(!$GLOBALS['output']['dirs_only'] || $file['Filemime'] == FOLDER_MIME)
+				{
+					$html = format_file($file);
+					
+					$link = url('select/' . $handler . '/' . $html['Filepath']);
 			
-			if (isset($new_handler) || $file['Filemime'] == 'httpd/unix-directory' && $folders) {
-				$count++;
-				?><li><span class="folder-icon"></span><a href="<?php print $link; ?>"><?php print $html['Filename']; ?></a></li><?php 
+					if(substr($file['Filepath'], -1) != '/') $file['Filepath'] .= '/';
+					$new_handler = $handler;
+					
+					$link = url('select/' . $new_handler . '/' . $html['Filepath']);
+				
+					$count++;
+					?><li><span class="folder-icon"></span><a href="<?php print $link; ?>"><?php print $html['Filename']; ?></a></li><?php 
+				}
 			} 
 		}
 		
-		unset($new_handler);
-	} 
-	
-	if($count == 0) { ?>
-		<li><?php print lang('No folders to display.', 'no folders'); ?></li>
-	<?php } 
-	
-	?></ul><?
+		if($count == 0) { ?>
+			<li><?php print lang('No folders to display.', 'no folders'); ?></li>
+		<?php } 
+		
+		?></ul><?
+	}
 }
 
 function theme_tunegazelle_footer()
 {
-	?></body>
+	if(isset($GLOBALS['output']['dirs_only']))
+		return;
+		
+	?>
+	</div>
+	<div id="right-menu">
+	</div>
+	<div id="details"><img class="icon" /><span class="filename">Shared</span><span class="filetype">Folder</span></div>
+	<?php
+	theme('debug_block');
+	?>
+	</body>
 	</html>
 	
 	<?php
 }
-
-function theme_tunegazelle_styles()
-{
-	header("Cache-Control: cache");  
-	header("Pragma: public");
-	header('Content-Type: text/css');
-	$styles = array('styles/layout.css');
-	
-	foreach($styles as $i => $style)
-	{
-		print file_get_contents(dirname(__FILE__) . DIRECTORY_SEPARATOR . $style);
-	}
-	
-	tunegazelle_colors();
-}
-
-function theme_tunegazelle_scripts()
-{
-	header("Cache-Control: cache");  
-	header("Pragma: public");
-	header('Content-Type: text/javascript');
-	$scripts = array('js/jquery.js', 'js/jquery-ui.js');
-	
-	foreach($scripts as $i => $script)
-	{
-		print file_get_contents(dirname(__FILE__) . DIRECTORY_SEPARATOR . $script);
-	}
-}
-

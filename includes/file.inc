@@ -32,12 +32,17 @@ function handles_count($files)
 {
 	$modules = array();
 	
-	foreach(get_handlers() as $handler => $config)
+	// loop through files and determine how many handlers there are for each file
+	foreach($files as $i => $file)
 	{
-		if(count($files) > 0)
-			$modules[$handler . '_count'] = count(handles_all($files, $handler));
-		else
-			$modules[$handler . '_count'] = 0;
+		$handlers = file_handlers($file['Filepath']);
+		foreach($handlers as $j => $handler)
+		{
+			if(!isset($modules[$handler . '_count']))
+				$modules[$handler . '_count'] = 1;
+			else
+				$modules[$handler . '_count']++;
+		}
 	}
 	
 	return $modules;
@@ -155,6 +160,18 @@ function is_handler($handler)
 		return false;
 }
 
+function file_handlers($file)
+{
+	// loop through handlers and return a list that handles a file
+	$handlers = array();
+	foreach(get_handlers() as $handler => $config)
+	{
+		if(handles($file, $handler))
+			$handlers[] = $handler;
+	}
+	return $handlers;
+}
+
 
 function handles_files($file)
 {
@@ -225,6 +242,7 @@ function handles_all(&$files, $handler = 'files')
 {
 	$result = array();
 	
+	// loop through files and determine which files are handled by the specified module
 	foreach($files as $file)
 	{
 		if(handles($file['Filepath'], $handler))
@@ -276,3 +294,8 @@ function get_all_columns()
 
 	return $columns;
 }
+
+
+
+
+

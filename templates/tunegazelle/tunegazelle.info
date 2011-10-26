@@ -1,3 +1,4 @@
 name = "TuneGazelle"
 description = "Template for the tunegazelle.com website."
 validate = true
+depends_on[] = users

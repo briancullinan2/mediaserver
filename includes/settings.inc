@@ -212,12 +212,17 @@ function setting_system_type($settings)
 	}
 }
 
+function dependency_enable_https($settings)
+{
+	return setting('enable_https');
+}
+
 function setting_enable_https($settings)
 {
 	if(!isset($settings['enable_https']))
 		return false;
 	else
-		return ($settings['enable_https'] && $settings['enable_https'] !== 'false');
+		return filter_var($settings['enable_https'], FILTER_VALIDATE_BOOLEAN);
 }
 
 /**
@@ -322,7 +327,7 @@ function setting_html_name($settings)
 	if(isset($settings['html_name']))
 		return $settings['html_name'];
 	else
-		return 'Brian\'s Media Website';
+		return 'My Media Website';
 }
 
 /**
@@ -444,19 +449,22 @@ function get_default_settings($global_settings)
 	foreach(get_modules() as $i => $module)
 	{
 		$settings = get_settings($module);
-		foreach($settings as $i => $setting)
+		if(is_array($settings))
 		{
-			if(function_exists('setting_' . $setting))
-				$new_setting = call_user_func_array('setting_' . $setting, array($global_settings));
-			elseif(isset($GLOBALS['setting_' . $setting]) && is_callable($GLOBALS['setting_' . $setting]))
-				$new_setting = $GLOBALS['setting_' . $setting]($global_settings);
-			else
-				raise_error('Setting \'' . $setting . '\' is specified without a validate function in the ' . $module . ' module.', E_DEBUG);
-		
-			if(isset($new_setting))
-				$default_settings[$setting] = $new_setting;
-			else
-				unset($default_settings[$setting]);
+			foreach($settings as $i => $setting)
+			{
+				if(function_exists('setting_' . $setting))
+					$new_setting = call_user_func_array('setting_' . $setting, array($global_settings));
+				elseif(isset($GLOBALS['setting_' . $setting]) && is_callable($GLOBALS['setting_' . $setting]))
+					$new_setting = $GLOBALS['setting_' . $setting]($global_settings);
+				else
+					raise_error('Setting \'' . $setting . '\' is specified without a validate function in the ' . $module . ' module.', E_DEBUG);
+			
+				if(isset($new_setting))
+					$default_settings[$setting] = $new_setting;
+				else
+					unset($default_settings[$setting]);
+			}
 		}
 	}
 	

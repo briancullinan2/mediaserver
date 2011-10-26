@@ -88,7 +88,7 @@ function theme_live_select_block()
 			elseif(handles($file['Filepath'], 'diskimage')) $handler = 'diskimage';
 			else $handler = $GLOBALS['output']['handler'];
 			
-			if($GLOBALS['output']['handler'] != $handler || $file['Filemime'] == 'httpd/unix-directory') $new_handler = $handler;
+			if($GLOBALS['output']['handler'] != $handler || $file['Filemime'] == FOLDER_MIME) $new_handler = $handler;
 			
 			$link = isset($new_handler)?url($GLOBALS['output']['get'] . '&start=0&handler=' . $new_handler . '&dir=' . urlencode($file['Filepath'])):url($GLOBALS['output']['get'] . '&dir=&id=' . urlencode($file['id']) . '&filename=' . urlencode($file['Filename']));
 			
@@ -253,7 +253,7 @@ function theme_live_file($file, $current_handler = 'files')
 	elseif(handles($file['Filepath'], 'diskimage')) $handler = 'diskimage';
 	else $handler = $current_handler;
 
-	if($current_handler != $handler || $file['Filemime'] == 'httpd/unix-directory')
+	if($current_handler != $handler || $file['Filemime'] == FOLDER_MIME)
 	{
 		if(substr($file['Filepath'], -1) != '/') $file['Filepath'] .= '/';
 		$new_handler = $handler;

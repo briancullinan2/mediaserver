@@ -413,7 +413,6 @@ function theme__form_radio($config)
 function theme__form_checkbox($config)
 {
 	extract($config);
-	// check if array is associative or not
 	foreach($options as $option => $text)
 	{
 		?><input <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> <?php print ($value == $option)?'checked="checked"':''; ?> type="<?php print $type; ?>" value="<?php print escape($option); ?>" name="<?php print machine($field) . (($config['type'] == 'checkbox')?'[]':''); ?>" /><?php print htmlspecialchars($text);
