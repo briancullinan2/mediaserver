@@ -2,10 +2,7 @@
 
 function theme__tool_info()
 {
-	theme('header',
-		'Tools: ' . get_module($GLOBALS['output']['module'], 'name'),
-		get_module($GLOBALS['output']['module'], 'description')
-	);
+	theme('header');
 	
 	// output configuration if it is set
 	if(isset($GLOBALS['output']['options']))

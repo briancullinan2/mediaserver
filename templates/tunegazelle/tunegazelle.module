@@ -17,22 +17,150 @@ function menu_tunegazelle()
 		),
 		'template/tunegazelle/colors.css' => array(
 			'callback' => 'theme',
-			'arguments' => array('colors'),
 			'type' => MENU_CALLBACK,
+			'template' => 'colors',
 		),
 		'users/login' => array(
 			'name' => 'Tune Gazelle',
-			'callback' => 'output_users',
 			'icon' => 'template/tunegazelle/images/logo-tiny.png',
-			'arguments' => array('users' => 'login'),
-			'module' => 'users'
 		),
 	);
 }
 
-function theme_tunegazelle_header($title)
+function setting_tunegazelle_text_color($settings)
 {
-	if(isset($GLOBALS['output']['dirs_only']))
+	if(isset($settings['tunegazelle_text_color']) && preg_match('/#[a-f0-9]{3}([a-f0-9]{3})?/i', $settings['tunegazelle_text_color'], $matches) > 0)
+		return $matches[0];
+	else
+		return '#443322';
+}
+
+function setting_tunegazelle_text_secondary_color($settings)
+{
+	if(isset($settings['tunegazelle_text_secondary_color']) && preg_match('/#[a-f0-9]{3}([a-f0-9]{3})?/i', $settings['tunegazelle_text_secondary_color'], $matches) > 0)
+		return $matches[0];
+	else
+		return '#DDCCBB';
+}
+
+function setting_tunegazelle_main_color($settings)
+{
+	if(isset($settings['tunegazelle_main_color']) && preg_match('/#[a-f0-9]{3}([a-f0-9]{3})?/i', $settings['tunegazelle_main_color'], $matches) > 0)
+		return $matches[0];
+	else
+		return '#FFEEBB';
+}
+
+function setting_tunegazelle_secondary_color($settings)
+{
+	if(isset($settings['tunegazelle_secondary_color']) && preg_match('/#[a-f0-9]{3}([a-f0-9]{3})?/i', $settings['tunegazelle_secondary_color'], $matches) > 0)
+		return $matches[0];
+	else
+		return '#332211';
+}
+
+function setting_tunegazelle_menu_color($settings)
+{
+	if(isset($settings['tunegazelle_menu_color']) && preg_match('/#[a-f0-9]{3}([a-f0-9]{3})?/i', $settings['tunegazelle_menu_color'], $matches) > 0)
+		return $matches[0];
+	else
+		return '#FFFFFF';
+}
+
+function setting_tunegazelle_border_color($settings)
+{
+	if(isset($settings['tunegazelle_border_color']) && preg_match('/#[a-f0-9]{3}([a-f0-9]{3})?/i', $settings['tunegazelle_border_color'], $matches) > 0)
+		return $matches[0];
+	else
+		return '#AA9988';
+}
+
+function configure_tunegazelle()
+{
+	$options = array();
+	
+	$options['tunegazelle_main_color'] = array(
+		'name' => lang('Primary color', 'primary color'),
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				lang('This is title bar color', 'title color description'),
+			),
+		),
+		'type' => 'theme',
+		'value' => 'color_picker',
+	);
+	
+	$options['tunegazelle_secondary_color'] = array(
+		'name' => lang('Secondary color', 'secondary color'),
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				lang('This is control panel color', 'secondary menu color description'),
+			),
+		),
+		'type' => 'theme',
+		'value' => 'color_picker',
+	);
+	
+	$options['tunegazelle_text_color'] = array(
+		'name' => lang('Font-color', 'font color'),
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				lang('This is the main font color', 'main font color description'),
+			),
+		),
+		'type' => 'theme',
+		'value' => 'color_picker',
+	);
+	
+	$options['tunegazelle_text_secondary_color'] = array(
+		'name' => lang('Secondary font-color', 'secondary font color'),
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				lang('This is the secondary font color', 'secondary font color description'),
+			),
+		),
+		'type' => 'theme',
+		'value' => 'color_picker',
+	);
+	
+	$options['tunegazelle_menu_color'] = array(
+		'name' => lang('Menu color', 'menu color'),
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				lang('This is main menu color', 'main menu color description'),
+			),
+		),
+		'type' => 'theme',
+		'value' => 'color_picker',
+	);
+	
+	$options['tunegazelle_border_color'] = array(
+		'name' => lang('Border color', 'border color'),
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				lang('This is border color', 'border color description'),
+			),
+		),
+		'type' => 'theme',
+		'value' => 'color_picker',
+	);
+	
+	return array('colors' => array(
+		'name' => lang('Color Settings', 'color settings'),
+		'type' => 'fieldset',
+		'options' => $options
+	));
+}
+
+function theme_tunegazelle_header()
+{	
+	if(isset($GLOBALS['output']['is_callback']))
 		return;
 	
 	?>
@@ -49,6 +177,20 @@ function theme_tunegazelle_header($title)
 <script type="text/javascript">
 	var new_folders = null;
 	var new_folder_timer = null
+	
+	$(window).scroll(function(e) {
+		var max_height = 0;
+		$('.folders:not(.hidden) ul, #content').each(function () {
+			max_height = Math.max(max_height, $(this).height());
+		});
+		$('#content').height(max_height);
+		$('.folders:not(.hidden) ul').each(function () {
+			if($('#heading').outerHeight() + $('#controls').outerHeight() - $(window).scrollTop() < ($(window).height() - $('#details:not(:hidden)').outerHeight()) + $(window).scrollTop() - $(this).height())
+				$(this).offset({top: ($(window).height() - $('#details:not(:hidden)').outerHeight()) + $(window).scrollTop() - $(this).height()});
+			else
+				$(this).offset({top: $('#heading').outerHeight() + $('#controls').outerHeight() - $(window).scrollTop()});
+		});
+	});
 	
 	$(document).ready(function() {
 		
@@ -79,8 +221,8 @@ function theme_tunegazelle_header($title)
 		});
 		
 		$('#login iframe').load(function () {
-			alert(this.contentDocument.body.scrollHeight);
-			$(this).height(this.contentDocument.body.scrollHeight);
+			//alert(this.contentDocument.body.scrollHeight);
+			//$(this).height(this.contentDocument.body.scrollHeight);
 		});
 	});
 	
@@ -131,19 +273,21 @@ function theme_tunegazelle_header($title)
 			$(this).parent().stop().focus();
 			
 			// if we get to the bottom of the scroller, move it up
-			if($(this).offset().top + $(this).outerHeight() + 10 > $('#details').offset().top)
+			var compare_bottom = $('#details:not(:hidden)').length > 0 ? $('#details').offset().top : ($(window).height() + $(window).scrollTop());
+			var compare_top = $('#heading').outerHeight() + $('#controls').outerHeight() + $(window).scrollTop();
+			if($(this).offset().top + $(this).outerHeight() + 10 > compare_bottom)
 			{
 				$(this).parent().animate({ 
-					top: $('#details').offset().top - ($(this).offset().top - $(this).parent().offset().top) - $(this).outerHeight() - 15
+					top: (compare_bottom - $(window).scrollTop()) - ($(this).offset().top - $(this).parent().offset().top) - $(this).outerHeight() - 15
 				}, {
 					duration: 300
 				});
 			} 
 			// if we get to the top of the scroller move it down
-			else if ($(this).offset().top - 76 - 10 < 0)
+			else if ($(this).offset().top - 10 < compare_top)
 			{
 				$(this).parent().animate({ 
-					top: -($(this).offset().top - $(this).parent().offset().top) + 76 + 15
+					top: -($(this).offset().top - $(this).parent().offset().top) + (compare_top - $(window).scrollTop()) + 15
 				}, {
 					duration: 300
 				});
@@ -160,11 +304,17 @@ function theme_tunegazelle_header($title)
 		 .insertAfter($('.folders:last'))
 		 .animate({width: 200}, 300);
 		
+		var get_data = {is_callback: true};
+		if(path.match(/\/select\//i))
+			get_data.dirs_only = true;
+		else
+			get_data.menus_only = true;
 		new_folders = $.ajax({
 			url: path,
-			data: {dirs_only: true},
+			data: get_data,
 			async: true,
 			success: function(data, status, xhr) {
+				return;
 				if(status)
 				{
 					var loaded = $('.folders.loading');
@@ -195,13 +345,112 @@ function theme_tunegazelle_header($title)
 		setTimeout('$(".folders.loaded").animate({width:0}, 200, function() { $(this).remove()})', 300);
 	}
 	
-</script>
+	function hexFromRGB(r, g, b) {
+		var hex = [
+			r.toString( 16 ),
+			g.toString( 16 ),
+			b.toString( 16 )
+		];
+		$.each( hex, function( nr, val ) {
+			if ( val.length === 1 ) {
+				hex[ nr ] = "0" + val;
+			}
+		});
+		return hex.join( "" ).toUpperCase();
+	}
+	
+	function HueToRgb(m1, m2, hue) {
+		var v;
+		if (hue < 0)
+			hue += 1;
+		else if (hue > 1)
+			hue -= 1;
+	
+		if (6 * hue < 1)
+			v = m1 + (m2 - m1) * hue * 6;
+		else if (2 * hue < 1)
+			v = m2;
+		else if (3 * hue < 2)
+			v = m1 + (m2 - m1) * (2/3 - hue) * 6;
+		else
+			v = m1;
+	
+		return 255 * v;
+	}
+	
+	function rgbFromHSL(h, s, l) {
+		var m1, m2, hue;
+		var r, g, b
+		s /= 100;
+		l /= 100;
+		if (s == 0)
+			r = g = b = (l * 255);
+		else {
+			if (l <= 0.5)
+				m2 = l * (s + 1);
+			else
+				m2 = l + s - l * s;
+			m1 = l * 2 - m2;
+			hue = h / 360;
+			r = HueToRgb(m1, m2, hue + 1/3);
+			g = HueToRgb(m1, m2, hue);
+			b = HueToRgb(m1, m2, hue - 1/3);
+		}
+		return {red: Math.round(r), green: Math.round(g), blue: Math.round(b)};
+	}	
+	
+	function refreshSwatch() {
+		
+		var index = $(this).is('.picker_hue') ? $(this).index('.picker_hue') : ($(this).is('.picker_sat') ? $(this).index('.picker_sat') : $(this).index('.picker_lum')),
+			hue = $( '.picker_hue:eq(' + index + ')' ).slider( "value" ),
+			sat = $( '.picker_sat:eq(' + index + ')' ).slider( "value" ),
+			lum = $( '.picker_lum:eq(' + index + ')' ).slider( "value" ),
+			rgb = rgbFromHSL( hue, sat, lum ),
+			hex = hexFromRGB( rgb.red, rgb.green, rgb.blue ),
+			bg = rgbFromHSL( $( '.picker_hue:eq(' + index + ')' ).slider( "value" ), 100, 50 );
+		$( '.swatch:eq(' + index + ')' ).css( 'background-color', "#" + hex );
+		$( '.picker_text:eq(' + index + ')' ).val( "#" + hex );
+		$( '.picker_sat:eq(' + index + ')' ).css( 'background-color', "#" + hexFromRGB( bg.red, bg.green, bg.blue ) );
+		$( '.picker_lum:eq(' + index + ')' ).css( 'background-color', "#" + hexFromRGB( bg.red, bg.green, bg.blue ) );
+
+		if(index == 0 && $('#auto_color').is(':checked'))
+		{			
+			var main_hue = $( '.picker_hue:eq(0)' ).slider( "value" );
+			var main_sat = $( '.picker_sat:eq(0)' ).slider( "value" );
+			var main_lum = $( '.picker_lum:eq(0)' ).slider( "value" );
+			<?php
+			// use defaults to set differences
+			$default_colors = get_default_settings(array(), 'tunegazelle');
+			$count = 1;
+			foreach($default_colors as $setting => $default_value)
+			{
+				if(substr($setting, -6) == '_color' && $setting != 'tunegazelle_main_color')
+				{
+					list($picker0_hue, $picker0_sat, $picker0_lum) = RGBToHSL($default_colors['tunegazelle_main_color']);
+					list($picker1_hue, $picker1_sat, $picker1_lum) = RGBToHSL($default_colors[$setting]);
+					
+					?>
+					$( '.picker_hue:eq(<?php print $count; ?>)' ).slider('value', main_hue - <?php print $picker0_hue - $picker1_hue; ?> < 0 ? main_hue - <?php print $picker0_hue - $picker1_hue; ?> + 360 : main_hue - <?php print $picker0_hue - $picker1_hue; ?>);
+					$( '.picker_sat:eq(<?php print $count; ?>)' ).slider('value', main_sat - <?php print $picker0_sat - $picker1_sat; ?> < 0 ? main_sat - <?php print $picker0_sat - $picker1_sat; ?> + 100 : main_sat - <?php print $picker0_sat - $picker1_sat; ?>);
+					$( '.picker_lum:eq(<?php print $count; ?>)' ).slider('value', main_lum - <?php print $picker0_lum - $picker1_lum; ?> < 0 ? main_lum - <?php print $picker0_lum - $picker1_lum; ?> + 100 : main_lum - <?php print $picker0_lum - $picker1_lum; ?>);
+					<?php
+					
+					$count++;
+				}
+			} 
+			?>
+		}
+	}
+	
+	</script>
 </head>
-<body>
+<body class="<?php print $GLOBALS['output']['module']; ?>">
 	<div id="heading">
 		<h1><?php print setting('html_name'); ?></h1>
 		<a href="<?php print url('admin'); ?>" class="settings"><span><?php print lang('Settings', 'settings'); ?></span></a>
-		<a href="<?php print url('users/login'); ?>" class="login"><span><?php print lang('Login', 'login'); ?></span></a>
+		<a href="<?php print $GLOBALS['output']['user']['Username'] == 'guest' ? url('users/login') : url('users/logout'); ?>" class="<?php print $GLOBALS['output']['user']['Username'] == 'guest' ? 'login' : 'logout'; ?>">
+			<span><?php print $GLOBALS['output']['user']['Username'] == 'guest' ? lang('Login', 'login') : lang('Logout', 'logout'); ?></span>
+		</a>
 	</div>
 	<div id="left-menu">
 		<div id="inner-list">
@@ -243,58 +492,69 @@ function theme_tunegazelle_header($title)
 	<?php
 }
 
+function RGBToHSL($hex) {
+  $r = hexdec(substr($hex, 1, 2)) / 255;
+  $g = hexdec(substr($hex, 3, 2)) / 255;
+  $b = hexdec(substr($hex, 5, 2)) / 255;
+  $min = min($r, min($g, $b));
+  $max = max($r, max($g, $b));
+  $delta = $max - $min;
+  $l = ($min + $max) / 2;
+  $s = 0;
+  if ($l > 0 && $l < 1) {
+    $s = $delta / ($l < 0.5 ? (2 * $l) : (2 - 2 * $l));
+  }
+  $h = 0;
+  if ($delta > 0) {
+    if ($max == $r && $max != $g) $h += ($g - $b) / $delta;
+    if ($max == $g && $max != $b) $h += (2 + ($b - $r) / $delta);
+    if ($max == $b && $max != $r) $h += (4 + ($r - $g) / $delta);
+    $h /= 6;
+  }
+  return array($h * 360, round($s * 100), round($l * 100));
+}
 
-function theme_tunegazelle_module()
+function theme_tunegazelle_form_color_picker($config)
 {
-	if(!isset($GLOBALS['output']['dirs_only']) || !$GLOBALS['output']['dirs_only'])
-	{
-		theme('header',
-			'Configuring: ' . get_module($GLOBALS['output']['configure_module'], 'name'), 
-			get_module($GLOBALS['output']['configure_module'], 'description')
-		);
+	list($hue, $sat, $lum) = RGBToHSL(setting($config['field']));
 	
-		// if the status is avaiable print that out first
-		if(isset($GLOBALS['output']['status']))
-			theme('form_object', 'status', $GLOBALS['output']['status']);
-			
-		theme('form_object', 'setting', $GLOBALS['form_object']);
+	?>
+	<div id="picker_hue_<?php print $config['field']; ?>" class="picker_hue"></div>
+	<div id="picker_sat_<?php print $config['field']; ?>" class="picker_sat"></div>
+	<div id="picker_lum_<?php print $config['field']; ?>" class="picker_lum"></div>
+	
+	<div class="swatch"></div>
+	<input type="text" name="setting_<?php print $config['field']; ?>" value="<?php print setting($config['field']); ?>" class="picker_text" />
+	<script type="text/javascript">
+	$(document).ready(function() {
+		$('#picker_hue_<?php print $config['field']; ?>').slider({
+			orientation: "horizontal",
+			range: "min",
+			max: 360,
+			value: 127,
+			slide: refreshSwatch,
+			change: refreshSwatch
+		});
 		
-		theme('footer');
-	}
-	else
+		$( "#picker_sat_<?php print $config['field']; ?>, #picker_lum_<?php print $config['field']; ?>" ).slider({
+			orientation: "horizontal",
+			range: "min",
+			max: 100,
+			value: 50,
+			slide: refreshSwatch,
+			change: refreshSwatch
+		});
+		$( "#picker_hue_<?php print $config['field']; ?>" ).slider( "value", <?php print $hue; ?> );
+		$( "#picker_sat_<?php print $config['field']; ?>" ).slider( "value", <?php print $sat; ?> );
+		$( "#picker_lum_<?php print $config['field']; ?>" ).slider( "value", <?php print $lum; ?> );
+	});
+	</script>
+	<?php
+	
+	if($config['field'] == 'tunegazelle_main_color')
 	{
-		theme('menu_block');
-	}
-}
-
-function theme_tunegazelle_menu()
-{
-	if(!isset($GLOBALS['output']['dirs_only']) || !$GLOBALS['output']['dirs_only'])
-	{
-		theme('header');
-		
-		theme('menu_block');
-		
-		theme('footer');
-	}
-	else
-	{
-		theme('menu_block');
-	}
-}
-
-function theme_tunegazelle_users()
-{
-	if(!isset($GLOBALS['output']['dirs_only']) || !$GLOBALS['output']['dirs_only'])
-	{
-		switch($GLOBALS['output']['users'])
-		{
-			case 'login':
-				theme('login');
-			break;
-			default:
-				theme('default');
-		}
+		?><input type="checkbox" id="auto_color" /><?php print lang('Automatically set the colors below.', 'auto color below'); ?>
+		<?php
 	}
 }
 
@@ -387,11 +647,11 @@ function theme_tunegazelle_select()
 	}
 	else
 	{
-		theme('select_block');
+		theme('select_block', true);
 	}
 }
 
-function theme_tunegazelle_select_block()
+function theme_tunegazelle_select_block($folders = false)
 {
 	if(!$folders)
 	{
@@ -406,11 +666,11 @@ function theme_tunegazelle_select_block()
 			
 				// make links browsable
 				if($file['Filemime'] == FOLDER_MIME)
-					$link = url('select/' . $handler . '/' . $html['Filepath']);
+					$link = url('select/' . $GLOBALS['output']['handler'] . '/' . $html['Filepath']);
 				else
 					$link = url('files/' . $GLOBALS['output']['handler'] . '/' . $file['id'] . '/' . urlencode($file['Filename']));
 				
-				if(!$GLOBALS['output']['dirs_only'] || $file['Filemime'] != FOLDER_MIME)
+				if($file['Filemime'] != FOLDER_MIME)
 				{
 					$count++;
 					
@@ -440,21 +700,16 @@ function theme_tunegazelle_select_block()
 		{
 			foreach($GLOBALS['output']['files'] as $i => $file)
 			{
-				if(!$GLOBALS['output']['dirs_only'] || $file['Filemime'] == FOLDER_MIME)
+				if($file['Filemime'] == FOLDER_MIME)
 				{
 					$html = format_file($file);
 					
-					$link = url('select/' . $handler . '/' . $html['Filepath']);
-			
-					if(substr($file['Filepath'], -1) != '/') $file['Filepath'] .= '/';
-					$new_handler = $handler;
-					
-					$link = url('select/' . $new_handler . '/' . $html['Filepath']);
+					$link = url('select/' . $GLOBALS['output']['handler'] . '/' . $html['Filepath']);
 				
 					$count++;
 					?><li><span class="folder-icon"></span><a href="<?php print $link; ?>"><?php print $html['Filename']; ?></a></li><?php 
 				}
-			} 
+			}
 		}
 		
 		if($count == 0) { ?>
@@ -467,14 +722,14 @@ function theme_tunegazelle_select_block()
 
 function theme_tunegazelle_footer()
 {
-	if(isset($GLOBALS['output']['dirs_only']))
+	if(isset($GLOBALS['output']['is_callback']))
 		return;
 		
 	?>
 	</div>
 	<div id="right-menu">
 	</div>
-	<div id="details"><img class="icon" /><span class="filename">Shared</span><span class="filetype">Folder</span></div>
+	<div id="details" <?php print $GLOBALS['output']['module'] == 'select' ? '' : 'style="display:none;"'; ?>><img class="icon" /><span class="filename">Shared</span><span class="filetype">Folder</span></div>
 	<?php
 	theme('debug_block');
 	?>

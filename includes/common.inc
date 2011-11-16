@@ -341,7 +341,7 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 			$request = invoke_module('rewrite', $GLOBALS['menus'][$menu]['module'], array($path));
 		else
 			$request = invoke_module('rewrite', 'default', array($path));
-			
+		
 		// merge current request with the query string
 		//  query string overrides request
 		$request = array_merge($request, extract_query($query));
@@ -386,7 +386,8 @@ function url($request = array(), $not_special = false, $include_domain = false, 
 	}
 	
 	// generate a link, with optional domain the html root and path info prepended
-	$link = (($include_domain)?setting('html_domain'):'') . 
+	// also switch to HTTPS if the setting calls for it
+	$link = (($include_domain || (setting('enable_https') && strpos(strtolower($_SERVER['SERVER_PROTOCOL']), 'https')) === NULL) ? setting('html_domain') : '') . 
 		setting('html_root') . 
 		(isset($path_info)?urlencode_path($path_info):'') . (($query != '?')?$query:'');
 	

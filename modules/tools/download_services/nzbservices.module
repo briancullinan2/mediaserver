@@ -81,7 +81,7 @@ function configure_nzbservices($settings)
 	{
 		$options['setting_nzbpath'] = array(
 			'name' => 'NZB Save path',
-			'status' => '',
+			'status' => 'pass',
 			'description' => array(
 				'list' => array(
 					'Select a path to save the NZB files to.',

@@ -23,8 +23,8 @@ function menu_error()
 	return array(
 		'errors_only' => array(
 			'callback' => 'theme',
-			'arguments' => array('errors_block'),
 			'type' => MENU_CALLBACK,
+			'template' => 'errors_block',
 		),
 	);
 }
@@ -374,11 +374,11 @@ function error_callback($error, $callback = NULL, $htmlspecialchars = true)
 		if(($error->code & $config['types']) && isset($GLOBALS['error_handles'][$i]) && is_resource($GLOBALS['error_handles'][$i]))
 		{
 			if($config['connection'] == 'local')
-				fwrite($GLOBALS['error_handles'][$i], $error->message . "\n");
+				fwrite($GLOBALS['error_handles'][$i], $error->message . ($error->code & E_FATAL ? $error->backtrace : '') . "\n");
 			elseif($config['connection'] == 'ssh2')
 			{
 				$params = parseDSN($config['location']);
-				ssh2_exec($GLOBALS['error_handles'][$i], 'echo "' . addslashes($error->message) . '" >> ' . $params['database']);
+				ssh2_exec($GLOBALS['error_handles'][$i], 'echo "' . addslashes($error->message . ($error->code & E_FATAL ? $error->backtrace : '')) . '" >> ' . $params['database']);
 			}
 		}
 	}
@@ -622,7 +622,7 @@ function status_error($settings)
 	{
 		$status['error_logs'] = array(
 			'name' => 'All Error Logs',
-			'status' => '',
+			'status' => 'pass',
 			'value' => 'No errors found',
 			'description' => array('No errors found in the configuration for logging.'),
 		);
@@ -634,25 +634,25 @@ function status_error($settings)
 function output_errors($request)
 {
 	// save errors and stuff in the database
-	ksort($_REQUEST);
+	ksort($request);
 	$request_info = array(
 		'Errors' => gzdeflate(serialize(array(
-			'user' => $GLOBALS['user_errors'],
-			'warn' => $GLOBALS['warn_errors'],
-			'note' => $GLOBALS['note_errors'],
-			'debug' => $GLOBALS['debug_errors'],
+		//	'user' => $GLOBALS['user_errors'],
+		//	'warn' => $GLOBALS['warn_errors'],
+		//	'note' => $GLOBALS['note_errors'],
+		//	'debug' => $GLOBALS['debug_errors'],
 		))),
 		'Time' => date('Y-m-d h:i:s', $GLOBALS['tm_start']),
-		'Filepath' => md5(serialize($_REQUEST)) // has it for quicker reference, this is trivial
+		'Filepath' => md5(serialize($request)) // has it for quicker reference, this is trivial
 	);
-	
+
 	if(setting('database_enable'))
 	{
 		// insert the new request
 		db_query('INSERT INTO error ' . sql_insert($request_info), array_values($request_info));
 		
 		// get all recent requests
-		$requests = db_assoc('SELECT * FROM (SELECT * FROM error WHERE Filepath=? ORDER BY Time DESC LIMIT 0,4) a ORDER BY Time ASC', array(md5(serialize($_REQUEST))));
+		$requests = db_assoc('SELECT * FROM (SELECT * FROM error WHERE Filepath=? ORDER BY Time DESC LIMIT 0,4) a ORDER BY Time ASC', array(md5(serialize($request))));
 		
 		// truncate old results
 		
@@ -688,7 +688,7 @@ function configure_error($settings)
 	$error_types = implode(' ', array_keys($GLOBALS['error_bits']));
 	
 	// load log list from session
-	if($session_error = session('error'))
+	if(($session_error = session('error')))
 		$settings['error_logs'] = $session_error['error_logs'];
 	
 	$options = array();
@@ -807,7 +807,7 @@ function configure_error($settings)
 		{
 			$options['error_logs'] = array(
 				'name' => 'Manage Error Logs',
-				'status' => '',
+				'status' => 'pass',
 				'description' => array(
 					'list' => array(
 						'Manage the error logging rules.',
@@ -882,10 +882,7 @@ function configure_error($settings)
 
 function theme__errors()
 {
-	theme('header',
-		'Module: ' . get_module($GLOBALS['output']['module'], 'name'),
-		'There were errors while processing your request.'
-	);
+	theme('header');
 
 	theme('footer');
 }

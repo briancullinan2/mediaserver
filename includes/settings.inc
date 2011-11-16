@@ -47,18 +47,7 @@ function preload_settings()
 		if(($GLOBALS['settings'] = parse_ini_file(setting_settings_file(), true)))
 		{
 			// awesome settings are loaded properly
-			foreach($GLOBALS['settings'] as $name => $value)
-			{
-				if(is_array($value))
-				{
-					foreach($value as $subsetting => $subvalue)
-					{
-						$GLOBALS['settings'][$name][$subsetting] = urldecode($subvalue);
-					}
-				}
-				else
-					$GLOBALS['settings'][$name] = urldecode($value);
-			}
+			$GLOBALS['settings'] = decode_recursive($GLOBALS['settings']);
 		}
 	}
 	
@@ -78,6 +67,19 @@ function preload_settings()
 	}
 }
 
+function decode_recursive($settings)
+{
+	foreach($settings as $name => $value)
+	{
+		if(is_array($value))
+		{
+			$settings[$name] = decode_recursive($value);
+		}
+		else
+			$settings[$name] = urldecode($value);
+	}
+	return $settings;
+}
 
 /**
  * set up all the default site settings
@@ -219,10 +221,7 @@ function dependency_enable_https($settings)
 
 function setting_enable_https($settings)
 {
-	if(!isset($settings['enable_https']))
-		return false;
-	else
-		return filter_var($settings['enable_https'], FILTER_VALIDATE_BOOLEAN);
+	return filter_var($settings['enable_https'], FILTER_VALIDATE_BOOLEAN);
 }
 
 /**
@@ -232,16 +231,29 @@ function setting_enable_https($settings)
  */
 function setting_html_domain($settings)
 {
-	if(!isset($_SERVER['SERVER_PROTOCOL']))
-		$_SERVER['SERVER_PROTOCOL'] = 'HTTP/1.0';
-	if(!isset($_SERVER['HTTP_HOST']))
-		$_SERVER['HTTP_HOST'] = 'localhost';
-	if(!isset($_SERVER['SERVER_PORT']))
-		$_SERVER['SERVER_PORT'] = 80;
-	if(isset($settings['html_domain']) && @parse_url($settings['html_domain']) !== false)
-		return $settings['html_domain'];
+	if(isset($settings['html_domain']))
+		$url = parse_url($settings['html_domain']);
+	
+	if(setting('enable_https'))
+		$scheme = 'https';
+	elseif(isset($url['scheme']))
+		$scheme = $url['scheme'];
+	elseif(isset($_SERVER['SERVER_PROTOCOL']))
+		$scheme = strtolower(substr($_SERVER['SERVER_PROTOCOL'], 0, strpos($_SERVER['SERVER_PROTOCOL'], '/')));
 	else
-		return strtolower(substr($_SERVER['SERVER_PROTOCOL'], 0, strpos($_SERVER['SERVER_PROTOCOL'], '/'))) . '://' . $_SERVER['HTTP_HOST'] . (($_SERVER['SERVER_PORT'] != 80)?':' . $_SERVER['SERVER_PORT']:'');
+		$scheme = 'http';
+
+	if(isset($url['host']))
+		$host = $url['host'];
+	elseif(isset($_SERVER['HTTP_HOST']))
+		$host = $_SERVER['HTTP_HOST'];
+	else
+		$host = 'localhost';
+		
+	if(isset($_SERVER['SERVER_PORT']))
+		$port = $_SERVER['SERVER_PORT'];
+	
+	return $scheme . '://' . $host . (isset($port) && $port != 80 ? (':' . $port):'');
 }
 
 function setting_request_method()
@@ -438,20 +450,20 @@ function setting($name)
  * Get all the default settings
  * @ingroup setting
  */
-function get_default_settings($global_settings)
+function get_default_settings($global_settings, $module = NULL)
 {
 	// existing settings are passed in to this function incase a default depends on something already set up
 	
 	// new settings to return
 	$default_settings = array();
 	
-	// loop through each module and get the default settings
-	foreach(get_modules() as $i => $module)
+	// get settings for a spacific module
+	if(isset($module))
 	{
 		$settings = get_settings($module);
 		if(is_array($settings))
 		{
-			foreach($settings as $i => $setting)
+			foreach($settings as $setting)
 			{
 				if(function_exists('setting_' . $setting))
 					$new_setting = call_user_func_array('setting_' . $setting, array($global_settings));
@@ -465,6 +477,14 @@ function get_default_settings($global_settings)
 				else
 					unset($default_settings[$setting]);
 			}
+		}
+	}
+	else
+	{
+		// loop through each module and get the default settings
+		foreach(get_modules() as $module)
+		{
+			$default_settings = array_merge($default_settings, get_default_settings($global_settings, $module));
 		}
 	}
 	
@@ -611,7 +631,7 @@ function status_settings($settings)
 	{
 		$status['memory_limit'] = array(
 			'name' => 'Memory Limit',
-			'status' => '',
+			'status' => 'pass',
 			'description' => array(
 				'list' => array(
 					'The system has detected that the set memory limit is enough to function properly.',
@@ -632,7 +652,7 @@ function status_settings($settings)
 	{
 		$status['memory_limit'] = array(
 			'name' => 'Memory Limit',
-			'status' => '',
+			'status' => 'warn',
 			'description' => array(
 				'list' => array(
 					'The system has detected that the set memory limit is NOT ENOUGH for the system to function properly.',
@@ -678,7 +698,7 @@ function status_settings($settings)
 	{
 		$status['writable_system_files'] = array(
 			'name' => 'Writeable System Files',
-			'status' => '',
+			'status' => 'pass',
 			'description' => array(
 				'list' => array(
 					'The system has detected that the the correct permissions are set on critical system files.',
@@ -750,7 +770,7 @@ function status_settings($settings)
 	{
 		$status['pear_installed'] = array(
 			'name' => 'PEAR Installed',
-			'status' => (count($not_installed) > 0)?'warn':'',
+			'status' => (count($not_installed) > 0)?'warn':'pass',
 			'description' => array(
 				'list' => array(
 					'The system has detected that PEAR is installed properly.',
@@ -806,7 +826,7 @@ function status_settings($settings)
 	{
 		$status['getid3_installed'] = array(
 			'name' => 'getID3() Library',
-			'status' => '',
+			'status' => 'pass',
 			'description' => array(
 				'list' => array(
 					'The system has detected that getID3() library is installed in the includes directory.',
@@ -842,7 +862,7 @@ function status_settings($settings)
 	{
 		$status['curl_installed'] = array(
 			'name' => 'cUrl API',
-			'status' => '',
+			'status' => 'pass',
 			'description' => array(
 				'list' => array(
 					'The system has detected that the cUrl API is installed in the includes directory.',
@@ -877,7 +897,7 @@ function status_settings($settings)
 	{
 		$status['extjs_installed'] = array(
 			'name' => 'EXT JS',
-			'status' => '',
+			'status' => 'pass',
 			'description' => array(
 				'list' => array(
 					'The system has detected that EXT JS is installed in the templates/plain/extjs directory.',

@@ -151,7 +151,7 @@ function bootstrap($mode = 'all')
 
 function bootstrap_or_disable($module)
 {
-	if(!dependency($module))
+	if(!dependency($module) && !in_array($module, get_required_modules()))
 	{
 		$GLOBALS['settings'][$module . '_enable'] = false;
 		// this prevents us from disabling required modules on accident

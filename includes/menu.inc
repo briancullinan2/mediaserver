@@ -58,6 +58,16 @@ function validate_path_info($request)
 	return 'select';
 }
 
+function validate_is_callback($request)
+{
+	return isset($request['is_callback']) && filter_var($request['is_callback'], FILTER_VALIDATE_BOOLEAN);
+}
+
+function validate_menus_only($request)
+{
+	if(isset($request['menus_only']) && filter_var($request['menus_only'], FILTER_VALIDATE_BOOLEAN))
+		return true;
+}
 
 function get_menu_entry($current_path)
 {
@@ -68,15 +78,18 @@ function get_menu_entry($current_path)
 	$highest_match = '';
 	foreach($GLOBALS['menus'] as $path => $config)
 	{
+		if($path == '')
+			continue;
+			
 		$path_regexp = preg_replace(array('/\\//i', '/\\/%[a-z][a-z0-9_]*/i'), array('\/', '/[^\/]*?'), addslashes($path));
 		if(preg_match('/^' . $path_regexp . '/i', $current_path) > 0)
 		{
 			// get path that matches most number of variables
-			if(substr_count($path, '/') > substr_count($highest_match, '/') || (
+			if(substr_count($path, '/') > substr_count($highest_match, '/') || 
 				// if the same number of variables choose the one that has the least number of variables in it
-				substr_count($path, '/') == substr_count($highest_match, '/') && substr_count($path, '%') < substr_count($highest_match, '%')
+				(substr_count($path, '/') == substr_count($highest_match, '/') && substr_count($path, '%') < substr_count($highest_match, '%')) ||
 				// highest_match hasn't been set yet
-				) || $highest_match == '')
+				$highest_match == '')
 				$highest_match = $path;
 		}
 	}
@@ -113,6 +126,11 @@ function invoke_menu($request, $template = false)
 		else
 			$template = $module['template'];
 
+		// TODO: fix this, change all permissions to use users.inc module API, redirect to login
+		if($user['Privilage'] < $module['privilage'])
+		{
+			location('users/login?required_priv=' . $module['privilage'] . '&return=' . $request['path_info']);
+		}
 		// permissions are ok
 		if($user['Privilage'] >= $module['privilage'])
 		{
@@ -121,7 +139,7 @@ function invoke_menu($request, $template = false)
 			if(is_callable($menu['callback']) && setting($menu['module'] . '_enable') != false)
 			{
 				// if the keys are named, merge with request
-				if(isset($menu['arguments']) && array_keys($menu['arguments']) == range(0, count($menu['arguments']) - 1))
+				if(isset($menu['arguments']) && array_keys($menu['arguments']) === range(0, count($menu['arguments']) - 1))
 					call_user_func_array($menu['callback'], array_merge($menu['arguments'], array($request)));
 				// if the keys are numeric, they take the place of arguments
 				elseif(isset($menu['arguments']))
@@ -134,7 +152,7 @@ function invoke_menu($request, $template = false)
 			elseif(!dependency($menu['module']) && !setting($menu['module'] . '_enable'))
 			{
 				raise_error('The selected module has dependencies that are not met! <a href="' . 
-					url('admin/modules/' . $menu['module']) . '">Configure</a> this module.'
+					url('admin/module/' . $menu['module']) . '">Configure</a> this module.'
 				, E_DEBUG|E_USER);
 				
 				theme('errors');
@@ -145,14 +163,17 @@ function invoke_menu($request, $template = false)
 		}
 		else
 			$template = 'menu';
-		
+
+		// if the request is a menu's only request, use the path info and set the template
+		if(validate($request, 'menus_only'))
+			$template = 'menu';
 		// just return because the output function was already called
 		if(!$template)
 			return;
 
 		// close the session so that other scripts can load
 		if(isset($_SESSION)) session_write_close();
-
+		
 		// compress the output
 		if(setting('deflate') && !headers_sent())
 		{
@@ -180,7 +201,7 @@ function invoke_menu($request, $template = false)
 			call_user_func_array($template, array($request));
 
 		// call the default template based on the module name
-		elseif($template === true || $template == 1)
+		elseif(filter_var($template, FILTER_VALIDATE_BOOLEAN))
 			theme($menu['module']);
 
 		// if it is set to a string then that must be the theme handler for it
@@ -264,8 +285,20 @@ function add_menu($module, $menus)
 		// add module to menu info
 		if(!isset($menus[$path]['module']))
 			$menus[$path]['module'] = $module;
+			
+		// merge with GLOBAL working copy
+		// only merge name and icon if something has overriden then menu, this is for safety
+		if(isset($GLOBALS['menus'][$path]))
+		{
+			if(isset($menus[$path]['name']))
+				$GLOBALS['menus'][$path]['name'] = $menus[$path]['name'];
+			if(isset($menus[$path]['icon']))
+				$GLOBALS['menus'][$path]['icon'] = $menus[$path]['icon'];
+		}
+		else
+			$GLOBALS['menus'][$path] = &$menus[$path];
 	}
-	$GLOBALS['menus'] = array_merge($GLOBALS['menus'], $menus);
+
 }
 
 function output_breadcrumbs($current_path)
@@ -289,6 +322,14 @@ function output_breadcrumbs($current_path)
  */
 function output_menus($request)
 {
+	// set is callback for use in template
+	if(validate($request, 'is_callback'))
+		register_output_vars('is_callback', true);
+		
+	// set is callback for use in template
+	if(validate($request, 'menus_only'))
+		register_output_vars('menus_only', true);
+	
 	// some templates would like to submit to their own page, generate a string based on the current get variable
 	register_output_vars('get', url(array('path_info' => $request['path_info']) + $_GET, true));
 	
@@ -359,16 +400,51 @@ function output_menu($request)
 	// output menu template instead of template from module
 }
 
-function theme__menu()
+function theme__breadcrumbs($crumb = NULL)
 {
-	theme('header', 
-		'Menu: ' . $GLOBALS['output']['current_menu']['name'],
-		$GLOBALS['output']['current_menu']['description']
-	);
-	
-	theme('menu_block');
-	
-	theme('footer');
+	?>
+	<ul>
+		<li><a href="<?php print url('select'); ?>"><?php print setting('html_name'); ?></a></li>
+		<?php
+		if(count($GLOBALS['output']['breadcrumbs']) == 0)
+		{
+			?><li><strong><?php print get_module($GLOBALS['output']['module'], 'name'); ?></strong></li><?php
+		}
+		else
+		{
+			$count = 0;
+			foreach($GLOBALS['output']['breadcrumbs'] as $path  => $menu)
+			{
+				if($count != count($GLOBALS['output']['breadcrumbs']) - 1)
+				{
+					?>
+					<li><a href="<?php print url($path); ?>"><?php print $menu['name']; ?></a></li>
+					<?php
+				}
+				else
+				{
+					?><li><strong><?php print $menu['name']; ?></strong></li><?php
+				}
+				$count++;
+			}
+		}
+	?></ul><?php
+}
+
+function theme_tunegazelle_menu()
+{
+	if(!isset($GLOBALS['output']['menus_only']) || !$GLOBALS['output']['menus_only'])
+	{
+		theme('header');
+		
+		theme('menu_block');
+		
+		theme('footer');
+	}
+	else
+	{
+		theme('menu_block');
+	}
 }
 
 function theme__menu_block($menu = NULL)
@@ -382,7 +458,7 @@ function theme__menu_block($menu = NULL)
 		
 		foreach($menu as $path => $config)
 		{
-			if(isset($config['icon']))
+			if(!empty($config['icon']))
 			{
 				?><li><span class="icon" style="background-image:url('<?php print url($config['icon']); ?>');"></span><a href="<?php print url($path); ?>"><?php echo $config['name']; ?></a></li><?php
 			}

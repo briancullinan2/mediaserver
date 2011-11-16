@@ -4,10 +4,7 @@
 
 function theme__download()
 {
-	theme('header',
-		'Download',
-		'Use the form below to search and download any artist, album, torrent, or news group collection.'
-	);
+	theme('header');
 	
 	if(!isset($GLOBALS['output']['service_search']))
 	{

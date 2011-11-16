@@ -11,36 +11,117 @@ function menu_google()
 			'icon' => 'images/google-icon.png',
 		),
 		'oauth2callback' => array(
-			'callback' => 'output_google',
+			'callback' => 'output_users',
 			'type' => MENU_CALLBACK,
+			'arguments' => array('users' => 'login'),
 		),
 		'images/google-icon.png' => array(
 			'callback' => 'google_output_icon',
 			'type' => MENU_CALLBACK,
 		),
 		setting('redirect_url') => array(
-			'callback' => 'output_google',
+			'callback' => 'output_users',
 			'type' => MENU_CALLBACK,
+			'arguments' => array('users' => 'login'),
 		),
-	);
-}
-
-function authenticate_google()
-{
-	return array(
-		'login' => 'users/login/google',
-		'logout' => '',
 	);
 }
 
 function output_google($request)
 {
+
+}
+
+function authenticate_google($request)
+{
+	$request['google_session'] = validate($request, 'google_session');
+	if(isset($request['google_session']))
+	{
+		$result = fetch('https://www.googleapis.com/oauth2/v1/userinfo?' . $request['google_session']);
+		$count = preg_match('/"id"\s*:\s*"(.*?)"/i', $result['content'], $id);
+		$count = preg_match('/"email"\s*:\s*"(.*?)"/i', $result['content'], $email);
+		$google_session = session('google');
+		// create a profile for the user from google and save refresh_token
+		$user = array(
+			'Username' => 'google_' . $id[1],
+			'Password' => isset($google_session['refresh_token']) ? $google_session['refresh_token'] : '',
+			'Email' => $email[1],
+			'Settings' => serialize(array()),
+			'Privilage' => 1,
+			'PrivateKey' => md5(microtime()),
+		);
+
+		// make sure user doesn't already exist
+		$db_user = db_assoc('SELECT * FROM users WHERE Username=? LIMIT 1', array($request['username']));
+		if(count($db_user) > 0)
+			$user['id'] = $db_user[0]['id'];
+		else
+			// create database entry
+			$user['id'] = add(setting('local_users') . $user['Username'], 'users');
+		
+		
+		// add password and profile information
+		$result = db_query('UPDATE users SET Password=?, Email=? WHERE id=?', array(
+			$user['Password'],
+			$user['Email'],
+			$user['id'],
+		));
+		
+		return $user;
+	}
+}
+
+function session_google($request)
+{
+	// if a code is specified use that to get the access token
+	$save = session('google') or array();
+	// never retry to the code, that won't work
+	if(isset($request['code']) && validate_google_code($request) && 
+		(!isset($save['code']) || $save['code'] != $request['code']))
+	{
+		$save['code'] = $request['code'];
+		$result = fetch('https://accounts.google.com/o/oauth2/token', array(
+			'code' => validate_google_code($request),
+			'client_id' => setting('google_client_id'),
+			'client_secret' => setting('google_client_secret'),
+			'redirect_uri' => url(setting('google_redirect_url'), false, true),
+			'grant_type' => 'authorization_code',
+		));
+		$count = preg_match('/"expires_in"\s*:\s*(.*?),/i', $result['content'], $matches);
+		$save['expires'] = time() + intval($matches[1]);
+		$count = preg_match('/"refresh_token"\s*:\s*"(.*?)"/i', $result['content'], $refresh);
+		$save['refresh_token'] = $refresh[1];
+		$count = preg_match('/"access_token"\s*:\s*"(.*?)"/i', $result['content'], $matches);
+		$save['token'] = 'access_token=' . $matches[1];
+	}
+	// if the refresh token is saved, get a new access_token
+	elseif(isset($save['refresh_token']))
+	{
+		$result = fetch('https://accounts.google.com/o/oauth2/token', array(
+			'client_id'=> setting('google_client_id'),
+			'client_secret' => setting('google_client_secret'),
+			'refresh_token' => $save['refresh_token'],
+			'grant_type' => 'refresh_token',
+		));
+		$count = preg_match('/"expires_in"\s*:\s*(.*?),/i', $result['content'], $matches);
+		$save['expires'] = time() + intval($matches[1]);
+		$count = preg_match('/"access_token"\s*:\s*"(.*?)"/i', $result['content'], $matches);
+		$save['token'] = 'access_token=' . $matches[1];
+	}
 	
+	session('users', invoke_module('authenticate', 'google', array($request)));
+	
+	return $save;
 }
 
 function setting_google_client_id($settings)
 {
 	return generic_validate_all_safe($settings, 'google_client_id');
+}
+
+function setting_google_client_secret($settings)
+{
+	return generic_validate_all_safe($settings, 'google_client_secret');
 }
 
 function setting_google_redirect_url($settings)
@@ -64,14 +145,41 @@ function google_output_icon()
 	}
 }
 
+function validate_google_code($request)
+{
+	if(isset($request['code']) && 
+		preg_match('/4\/.*/i', $request['code'], $matches))
+		return $matches[0];
+}
+
+function validate_google_session($request)
+{
+	// if the callback type of authentication is used, return access_token
+	if(isset($request['google_session']) && 
+		preg_match('/access_token=(.*?)(&|$)/i', $request['google_session'], $matches))
+		$request['google_session'] = 'access_token=' . $matches[1];
+	if(($google_session = session('google')) && isset($google_session['token']) && time() < $google_session['expires'])
+		return $google_session['token'];
+}
+
+function theme__google()
+{
+	theme('header');
+	
+	theme('google_block');
+
+	theme('footer');
+}
+
 function theme__google_block()
 {
+	?><p>You will be redirected to Google to sign in, if you accept, you will return here with an account which you can save playlists, download lists, upload files, and more!<br /></p>
+	<p><a href="https://accounts.google.com/o/oauth2/auth?client_id=<?php print setting('google_client_id'); ?>&redirect_uri=<?php print url(setting('google_redirect_url'), false, true); 
+		?>&scope=https://www.googleapis.com/auth/userinfo.email+https://www.googleapis.com/auth/userinfo.profile&state=/profile&response_type=code" name="google_auth" id="google_auth">Click Here</a></p><?php
+		
 	/*
-	?>You will be redirected to Google to sign in, if you accept, you will return here with an account which you can save playlists, download lists, upload files, and more!<br />
-	<a href="https://accounts.google.com/o/oauth2/auth?client_id=<?php print setting('google_client_id'); ?>&redirect_uri=<?php print url(setting('redirect_url'), false, true); 
-		?>&scope=https://www.google.com/m8/feeds/&response_type=token" name="google_auth">Click Here</a><?php
-		*/
 	?><iframe id="auth_google" src="https://accounts.google.com/o/oauth2/auth?client_id=<?php print setting('google_client_id'); ?>&redirect_uri=<?php 
 		print url(setting('google_redirect_url'), false, true); 
 		?>&scope=https://www.google.com/m8/feeds/&response_type=token"></iframe><?php
+	*/
 }

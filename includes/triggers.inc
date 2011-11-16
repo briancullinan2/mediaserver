@@ -68,7 +68,7 @@ function trigger($trigger, $callback = NULL, $input = array())
 				raise_error('Trigger \'' . $trigger . '\' function specified by \'' . $module . '\' but it is not callable.', E_DEBUG);
 		}
 	}
-	
+
 	// call triggers based on input
 	foreach($input as $key => $value)
 	{

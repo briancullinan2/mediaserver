@@ -215,7 +215,7 @@ function configure_services($services)
 		
 		$options['download_service_' . $i] = array(
 			'name' => $config['name'],
-			'status' => (isset($config['login']) && $config['username'] == '')?'warn':'',
+			'status' => (isset($config['login']) && $config['username'] == '')?'warn':'pass',
 			'type' => 'set',
 			'options' => $service,
 			'description' => array(
@@ -804,7 +804,7 @@ function form_download_services_login($request)
 			{
 				$infos['download_service_' . $request['service_index']] = array(
 					'name' => $config['name'] . ' Login',
-					'status' => '',
+					'status' => 'pass',
 					'description' => array(
 						'list' => array(
 							'Login to ' . $config['login'] . ' for ' . $config['name'] . ' successful!',

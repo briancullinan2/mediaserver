@@ -23,7 +23,7 @@ function configure_convert($settings)
 	{
 		$options['setting_convert_path'] = array(
 			'name' => lang('Convert Path', 'convert path title'),
-			'status' => '',
+			'status' => 'pass',
 			'description' => array(
 				'list' => array(
 					lang('A converter has been set and detected, you may change this path to specify a new converter.', 'convert path description 1'),

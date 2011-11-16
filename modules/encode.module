@@ -37,7 +37,7 @@ function configure_encode($settings, $request)
 	{
 		$options['setting_encode_path'] = array(
 			'name' => 'Encode Path',
-			'status' => '',
+			'status' => 'pass',
 			'description' => array(
 				'list' => array(
 					'An encoder has been set and detected, you may change this path to specify a new encoder.',

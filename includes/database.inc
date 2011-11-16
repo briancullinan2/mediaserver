@@ -76,6 +76,37 @@ function setup_database()
 	}
 }
 
+function authenticate_database($request)
+{
+	$save = array();
+	
+	// check if user is logged in
+	if( isset($request['username']) && isset($request['password']) )
+	{
+		// lookup username in table
+		$db_user = db_assoc('SELECT * FROM users WHERE Username=? AND Password=? LIMIT 1', array(
+			$request['username'],
+			$request['password'],
+		));
+		
+		if( !empty($db_user) )
+		{
+			// just incase a template wants to access the rest of the information; include the user
+			unset($db_user[0]['Password']);
+			
+			$save = $db_user[0];
+			
+			// deserialize settings
+			$save['Settings'] = unserialize($save['Settings']);
+			
+			return $save;
+		}
+		else
+			raise_error('Invalid username or password.', E_USER);
+	}
+	
+}
+
 function install_table($handler, $struct, $callback = NULL)
 {
 	$query = 'CREATE TABLE IF NOT EXISTS ' . $handler . ' (';
@@ -145,7 +176,7 @@ function status_database($settings)
 	{
 		$status['exists_pdo'] = array(
 			'name' => 'PDO Library',
-			'status' => '',
+			'status' => 'pass',
 			'description' => array(
 				'list' => array(
 					'The system has detected that PDO is installed.',
@@ -178,7 +209,7 @@ function status_database($settings)
 	{
 		$status['valid_connection'] = array(
 			'name' => 'Valid Connection',
-			'status' => '',
+			'status' => 'pass',
 			'description' => array(
 				'list' => array(
 					'The system has detected that the connection to the database is valid.',

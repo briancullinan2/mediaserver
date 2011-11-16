@@ -170,7 +170,7 @@ function configure_torservices($settings)
 	{
 		$options['setting_torpath'] = array(
 			'name' => 'Torrent Save path',
-			'status' => '',
+			'status' => 'pass',
 			'description' => array(
 				'list' => array(
 					'Select a path to save the torrent files to.',

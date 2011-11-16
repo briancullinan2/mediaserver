@@ -160,12 +160,12 @@ function theme__form_object($field_name, $config)
 	
 	if(isset($config['name']) && $config['type'] != 'fieldset')
 	{
-		?><div class="fieldname <?php print escape(isset($config['status'])?$config['status']:''); ?>"><?php
+		?><div class="fieldname <?php print escape(isset($config['status'])?$config['status']:''); ?> <?php print !isset($config['description']) ? 'expand' : ''; ?>"><?php
 		theme('info_objects', $config['name']);
 		?></div><?php
 	}
 	
-	?><div class="field field_<?php print $config['type']; ?>"><?php
+	?><div class="field field_<?php print $config['type']; ?> <?php print !isset($config['description']) ? 'expand' : ''; ?>"><?php
 	
 	switch($config['type'])
 	{
@@ -211,9 +211,9 @@ function theme__form_form($config)
 		theme('form_objects', $config['options']);
 		
 		if(isset($config['submit']))
-			theme('form_submit', $config['submit']);
+			theme('form_submit', array('field' => $config['submit']['name']) + $config['submit']);
 		if(isset($config['reset']))
-			theme('form_submit', $config['reset']);
+			theme('form_submit', array('field' => $config['reset']['name']) + $config['reset']);
 	
 	?></form><?php
 }
@@ -259,7 +259,7 @@ function theme__form_fieldrows($options)
 {
 	foreach($options as $name => $field)
 	{
-		?><div class="field_row" id="row_<?php print $name; ?>"><?php
+		?><div class="field_row <?php print isset($field['status']) ? $field['status'] : ''; ?>" id="row_<?php print $name; ?>"><?php
 		theme('form_object', $name, $field);
 		?></div><?php
 	}
@@ -413,9 +413,17 @@ function theme__form_radio($config)
 function theme__form_checkbox($config)
 {
 	extract($config);
+	$counter = 0;
 	foreach($options as $option => $text)
 	{
-		?><input <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> <?php print ($value == $option)?'checked="checked"':''; ?> type="<?php print $type; ?>" value="<?php print escape($option); ?>" name="<?php print machine($field) . (($config['type'] == 'checkbox')?'[]':''); ?>" /><?php print htmlspecialchars($text);
+		?><input <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> 
+			<?php print (is_string($value) && $value == $option) || (is_array($value) && in_array($option, $value)) ? 'checked="checked"' : ''; ?> 
+			type="<?php print $type; ?>" 
+			value="<?php print escape($option); ?>" 
+			name="<?php print machine($field) . (($config['type'] == 'checkbox')?'[]':''); ?>" 
+			id="<?php print machine($field) . '_' . $counter; ?>" />
+			<label for="<?php print machine($field) . '_' . $counter; ?>"><?php print htmlspecialchars($text); ?></label><?php
+		$counter++;
 	}
 }
 

@@ -83,7 +83,7 @@ function output_movie_download_netflix($request)
 		
 		$infos['disk_repeat_movies'] = array(
 			'name' => 'Repeat Movies On Disk',
-			'status' => '',
+			'status' => 'pass',
 			'description' => array(
 				'list' => array(
 					'No duplicate movies have been found on disk.',
@@ -119,7 +119,7 @@ function output_movie_download_netflix($request)
 	{
 		$infos['netflix_repeat_movies'] = array(
 			'name' => 'Repeat Movies On Netflix',
-			'status' => '',
+			'status' => 'pass',
 			'description' => array(
 				'list' => array(
 					'There are no duplicates found.',
@@ -188,7 +188,7 @@ function output_movie_download_search($request)
 		{
 			$infos['netflix_movies_' . $request['movie_index']] = array(
 				'name' => 'Searched for ' . $all_movies[$request['movie_index']],
-				'status' => '',
+				'status' => 'pass',
 				'description' => array(
 					'list' => array(
 						'This movie has been searched for, and results were found.',

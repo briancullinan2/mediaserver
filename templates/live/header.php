@@ -33,37 +33,6 @@ function theme_live_header($title = NULL, $description = NULL, $html_title = NUL
 	theme('container', isset($html_title)?$html_title:escape($title), $description);
 }
 
-function theme_live_breadcrumbs($breadcrumbs = array(), $crumb = NULL)
-{
-	?>
-	<li><a href="<?php print url('select'); ?>"><?php print setting('html_name'); ?></a></li>
-	<li><img src="<?php print url('templates/live/images/carat.gif'); ?>" class="crumbsep" alt="&gt;" /></li>
-	<?php
-	if(count($breadcrumbs) == 0)
-	{
-		?><li><strong><?php print $crumb; ?></strong></li><?php
-	}
-	else
-	{
-		$count = 0;
-		foreach($breadcrumbs as $path  => $menu)
-		{
-			if($count != count($breadcrumbs) - 1)
-			{
-				?>
-				<li><a href="<?php print url($path); ?>"><?php print $menu['name']; ?></a></li>
-				<li><img src="<?php print url('templates/live/images/carat.gif'); ?>" class="crumbsep" alt="&gt;" /></li>
-				<?php
-			}
-			else
-			{
-				?><li><strong><?php print $menu['name']; ?></strong></li><?php
-			}
-			$count++;
-		}
-	}
-}
-
 function theme_live_template_block()
 {
 	?><div class="template_box"><?php
@@ -108,11 +77,9 @@ function theme_live_container($title = NULL, $description = NULL)
 
 	?>
 	<div id="breadcrumb">
-		<ul>
 		<?php
-		theme('breadcrumbs', $GLOBALS['output']['breadcrumbs'], $title);
+		theme('breadcrumbs', $title);
 		?>
-		</ul>
 	</div>
 	<div id="mainColumn" class="colors_<?php print $scheme; ?>">
 		<?php

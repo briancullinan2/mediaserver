@@ -27,7 +27,7 @@ function status_cron()
 	{
 		$status['cron'] = array(
 			'name' => lang('Cron', 'cron status title'),
-			'status' => '',
+			'status' => 'pass',
 			'description' => array(
 				'list' => array(
 					lang('Cron updating functionality is available.', 'cron status description'),

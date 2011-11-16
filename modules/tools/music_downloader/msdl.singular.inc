@@ -237,7 +237,7 @@ function get_music_download_manual($request)
 				}
 				$infos['succeeded_downloads'] = array(
 					'name' => 'Successfully Downloaded',
-					'status' => '',
+					'status' => 'pass',
 					'description' => array(
 						'list' => array(
 							'These files have been downloaded and saved to.',

@@ -48,7 +48,7 @@ function configure_code()
 	{
 		$options['setting_highlighter'] = array(
 			'name' => lang('Highlighter', 'highlighter title'),
-			'status' => '',
+			'status' => 'pass',
 			'description' => array(
 				'list' => array(
 					lang('This script comes equiped with 2 code highlighting tools.', 'highlighter description 1'),

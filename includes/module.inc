@@ -17,12 +17,12 @@ function register_module()
 function menu_module()
 {
 	return array(
-		'admin/module/%configure_module' => array(
-			'callback' => 'output_module',
-		),
 		'admin/module' => array(
 			'callback' => 'output_module',
 			'name' => 'Configure Modules',
+		),
+		'admin/module/%configure_module' => array(
+			'callback' => 'output_module',
 		),
 	);
 }
@@ -531,7 +531,7 @@ function status_admin_modules($settings)
 	{
 		$status['writable_settings'] = array(
 			'name' => lang('Access to Settings', 'settings access title'),
-			'status' => '',
+			'status' => 'pass',
 			'description' => array(
 				'list' => array(
 					lang('The system has detected that it has access to the settings file.  Write permissions should be removed when this installation is complete.', 'settings access description'),
@@ -638,7 +638,7 @@ function configure_module($settings, $request)
 		// set up config for this module
 		$new_config = array(
 			'name' => lang(get_module($module, 'name'), $module . ' title'),
-			'status' => '',
+			'status' => 'pass',
 			'description' => array(
 				'list' => array(
 					lang(get_module($module, 'description'), $module . ' description'),
@@ -802,13 +802,14 @@ function module_save_settings($settings, $force_file = false)
 /**
  * Helper function for converting an array of settings to a string
  */
-function _module_settings_to_string($settings)
+function _module_settings_to_string($settings, $prefix = NULL)
 {
 	$new_settings = '';
 		
 	// do the non array settings first
 	foreach($settings as $setting => $value)
 	{
+		$setting = machine((!empty($prefix) ? ($prefix . '[') : '') . $setting . (!empty($prefix) ? ']' : ''));
 		if(!is_array($value))
 		{
 			if(is_string($value))
@@ -823,12 +824,17 @@ function _module_settings_to_string($settings)
 	// now list the array settings
 	foreach($settings as $setting => $value)
 	{
+		$setting = machine($setting);
 		if(is_array($value))
 		{
-			$new_settings .= "\n[" . $setting . "]\n";
-			foreach($value as $subsetting => $subvalue)
+			if($prefix !== NULL)
 			{
-				$new_settings .= $subsetting . ' = "' . urlencode($subvalue) . "\"\n";
+				$new_settings .= _module_settings_to_string($value, (!empty($prefix) ? ($prefix . '[') : '') . $setting . (!empty($prefix) ? ']' : ''));
+			}
+			else
+			{
+				$new_settings .= "\n[" . $setting . "]\n";
+				$new_settings .= _module_settings_to_string($value, '');
 			}
 		}
 	}
@@ -934,7 +940,15 @@ function output_module($request)
 	$request['save_configuration'] = validate($request, 'save_configuration');
 	$request['reset_configuration'] = validate($request, 'reset_configuration');
 
-	if(isset($request['save_configuration']))
+	if(isset($request['reset_configuration']) && $request['reset_configuration'])
+	{
+		$defaults = get_default_settings(array(), $request['configure_module']);
+		foreach($defaults as $setting => $value)
+		{
+			$request['setting_' . $setting] = $value;
+		}
+	}
+	if((isset($request['save_configuration']) && $request['save_configuration']) || (isset($request['reset_configuration']) && $request['reset_configuration']))
 	{
 		// get changed settings
 		$settings_changed = module_get_new_settings($request);
@@ -993,9 +1007,9 @@ function output_module($request)
 			raise_error('Option \'' . $key . '\' listed in the output options for ' . $request['configure_module'] . ' but not listed in the module config!', E_VERBOSE);
 		}
 	}
-	
+
 	register_output_vars('form_object', array(
-		'action' => url('admin/modules/' . $request['configure_module'], true),
+		'action' => url('admin/module/' . $request['configure_module'], true),
 		'options' => $options,
 		'type' => 'form',
 		'submit' => array(
@@ -1012,16 +1026,13 @@ function output_module($request)
 
 function theme__module()
 {
-	theme('header',
-		'Configuring: ' . get_module($GLOBALS['output']['configure_module'], 'name'), 
-		get_module($GLOBALS['output']['configure_module'], 'description')
-	);
+	theme('header');
 
 	// if the status is avaiable print that out first
 	if(isset($GLOBALS['output']['status']))
 		theme('form_object', 'status', $GLOBALS['output']['status']);
 		
-	theme('form_object', 'setting', $GLOBALS['form_object']);
+	theme('form_object', 'setting', $GLOBALS['output']['form_object']);
 	
 	theme('footer');
 }

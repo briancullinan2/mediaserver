@@ -38,13 +38,13 @@ function menu_template()
 		),
 		'template/%template/styles' => array(
 			'callback' => 'theme',
-			'arguments' => array('styles'),
 			'type' => MENU_CALLBACK,
+			'template' => 'styles',
 		),
 		'template/%template/scripts' => array(
 			'callback' => 'theme',
-			'arguments' => array('scripts'),
 			'type' => MENU_CALLBACK,
+			'template' => 'scripts',
 		),
 	);
 }
@@ -286,7 +286,8 @@ function theme($request = '')
 	{
 		$request['template'] = validate(array(), 'template');
 		set_output_vars();
-		call_user_func_array('output_' . $request['template'], array());
+		if($request['template'] != '')
+			theme($request['template'], array());
 		return;
 	}
 	elseif(is_array($request))
@@ -454,10 +455,7 @@ function output_template_file($request)
 
 function theme__default()
 {
-	theme('header',
-		'Module: ' . get_module($GLOBALS['output']['module'], 'name'),
-		'This page requires special parameters that have not been set.  This default page is a placeholder.'
-	);
+	theme('header');
 
 	theme('footer');
 }
@@ -477,7 +475,7 @@ foreach(get_modules() as $i => $module)
 		continue;
 		
 	if(!module_implements('output', $module))
-		$link = 'admin/modules/' . $module;
+		$link = 'admin/module/' . $module;
 	else
 		$link = $name;
 									

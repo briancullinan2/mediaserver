@@ -15,7 +15,7 @@ function register_users()
 		'name' => 'Users',
 		'description' => 'Allows for managing and displaying users.',
 		'privilage' => 1,
-		'session' => array('username'),
+		'session' => array('username' => 'authenticate_users'),
 		'settings' => array('local_users', 'username_validation', 'admin_password', 'secret'),
 		'depends_on' => 'users',
 		'filter' => array('user'),
@@ -113,7 +113,7 @@ function setup_users()
 	$GLOBALS['user_cache'] = array();
 	
 	// get users associated with the keys
-	if(isset($session_user['Settings']['keys']))
+	if(isset($session_user['Settings']['keys']) && is_array($session_user['Settings']['keys']))
 	{
 		$return = db_assoc('SELECT * FROM users WHERE PrivateKey=' . 
 			implode(' OR PrivateKey=', array_fill(0, count($session_user['Settings']['keys']), '?')) . 
@@ -162,7 +162,7 @@ function status_users()
 	{
 		$status['users'] = array(
 			'name' => lang('Users', 'users status title'),
-			'status' => '',
+			'status' => 'pass',
 			'description' => array(
 				'list' => array(
 					lang('User functionality is supported because the database is properly installed.', 'users status description'),
@@ -204,13 +204,18 @@ function configure_users($settings, $request)
 	$settings['local_users'] = setting('local_users');
 	$settings['username_validation'] = setting('username_validation');
 	
+	// load groups from settings and session
+	$settings['user_groups'] = setting('user_groups');
+	if(($user_groups = session('user_groups')))
+		$settings['user_groups'] = $user_groups;
+
 	$options = array();
 	
 	if(is_writable($settings['local_users']))
 	{
 		$options['setting_local_users'] = array(
 			'name' => 'User Files',
-			'status' => '',
+			'status' => 'pass',
 			'description' => array(
 				'list' => array(
 					'This directory will be used for uploaded user files.  This will also be included in the directories that are watched by the server.',
@@ -249,11 +254,75 @@ function configure_users($settings, $request)
 		'value' => $settings['username_validation'],
 	);
 	
+	
+	// display user groups options
+	$options['setting_user_groups'] = array(
+		'name' => 'User groups',
+		'status' => '',
+		'type' => 'set',
+		'options' => array(),
+	);
+	
+	$options['setting_group_permissions'] = array(
+		'name' => 'Group permissions',
+		'status' => '',
+		'type' => 'set',
+		'options' => array(),
+	);
+
+	foreach($settings['user_groups'] as $group => $users)
+	{
+		$options['setting_user_groups']['options'][$group . '[username]'] = array(
+			'name' => ucwords($group),
+			'status' => '',
+			'type' => 'multiselect',
+			'options' => $users,
+		);
+	}
+		
+	// list groups and permissions
+	
+	foreach(get_modules() as $module)
+	{
+		$options['setting_group_permissions']['options'][$module] = array(
+			'name' => get_module($module, 'name'),
+			'status' => '',
+			'type' => 'set',
+			'options' => array(),
+		);
+		$options['setting_group_permissions']['options'][$module]['options']['users_' . $module . '_view'] = array(
+			'name' => 'View',
+			'type' => 'checkbox',
+			'options' => array_map('ucwords', array_keys($settings['user_groups'])),
+		);
+		$options['setting_group_permissions']['options'][$module]['options']['users_' . $module . '_configure'] = array(
+			'name' => 'Configure',
+			'type' => 'checkbox',
+			'options' => array_map('ucwords', array_keys($settings['user_groups'])),
+		);
+	}
+	
 	return array('users' => array(
 		'name' => 'User File Settings',
 		'type' => 'fieldset',
 		'options' => $options
 	));
+}
+
+function setting_user_groups($settings)
+{
+	if(isset($settings['user_groups']) && is_array($settings['user_groups']))
+	{
+		$groups = array();
+		foreach($settings['user_groups'] as $group => $users)
+		{
+			if(preg_match(setting('username_validation'), $group) != 0)
+			{
+				$groups[$group] = preg_filter(setting('username_validation'), '$0', $users);
+			}
+		}
+		return $groups;
+	}
 }
 
 /**
@@ -309,6 +378,15 @@ function setting_admin_password($settings)
 		return $settings['admin_password'];
 }
 
+function validate_authentication_method($request)
+{
+	if(isset($request['users']) && module_implements('authenticate', $request['users']))
+		return $request['users'];
+	elseif(setting_installed() && setting('database_enable'))
+		return 'database';
+	else
+		return 'users';
+}
 /**
  * Implementation of validate
  * @ingroup validate
@@ -446,7 +524,7 @@ function add_users($file, $force = false)
 	if(handles($file, 'users'))
 	{
 		$username = validate(array('username' => $file), 'username');
-		
+
 		// check if it is in the database
 		$db_user = db_assoc('SELECT * FROM users WHERE Username=? LIMIT 1', array($username));
 		
@@ -454,7 +532,7 @@ function add_users($file, $force = false)
 		{
 			// just set up the user with default information
 			//   if they don't use the module, this creates a system user
-			return db_insert('INSERT INTO users (Username, Settings, Privilage, PrivateKey) VALUES ("?", "?", "?", "?")', array(
+			return db_insert('INSERT INTO users (Username, Settings, Privilage, PrivateKey) VALUES (?, ?, ?, ?)', array(
 				$username,
 				serialize(array()),
 				1,
@@ -521,36 +599,21 @@ function cleanup_users()
  * @ingroup session
  * @return the username and password for user validation and reference
  */
-function session_users($request)
+function authenticate_users($request)
 {
 	// validate username and password
 	$request['username'] = validate($request, 'username');
 	$request['password'] = validate($request, 'password_hash');
+	$request['authentication_method'] = validate($request, 'authentication_method');
 
-	// check if user is logged in
-	if( isset($request['username']) && isset($request['password']) && setting_installed() && setting('database_enable') )
+	// call another authentication method
+	if($request['authentication_method'] != 'users')
 	{
-		// lookup username in table
-		$db_user = db_assoc('SELECT * FROM users WHERE Username=? AND Password=? LIMIT 1', array(
-			$request['username'],
-			$request['password'],
-		));
-		
-		if( !empty($db_user) )
-		{
-			// just incase a template wants to access the rest of the information; include the user
-			unset($db_user[0]['Password']);
-			
-			$save = $db_user[0];
-			
-			// deserialize settings
-			$save['Settings'] = unserialize($save['Settings']);
-		}
-		else
-			raise_error('Invalid username or password.', E_USER);
+		$save = invoke_module('authenticate', $request['authentication_method'], array($request));
 	}
+	
 	// use admin account defined in settings
-	elseif( isset($request['username']) && isset($request['password']) )
+	if( isset($request['username']) && isset($request['password']) && empty($save))
 	{
 		// lookup user in admin settings
 		if($request['username'] == 'admin' &&
@@ -567,13 +630,12 @@ function session_users($request)
 	}
 
 	// if the save variable hasn't been set yet, use guest account
-	if(!isset($save))
+	if(empty($save))
 	{
 		$save = users_get_guest();
 	}
 	else
         new_session(setting('enable_https'));
-
 	// output the user so template can print out login or logout stuff
 	register_output_vars('user', $save);
 	
@@ -711,6 +773,9 @@ function theme__users()
 {
 	switch($GLOBALS['output']['users'])
 	{
+		case 'logout':
+			theme('logout');
+		break;
 		case 'login':
 			theme('login');
 		break;
@@ -723,21 +788,22 @@ function theme__login()
 {
 	theme('header');
 	
-	if($GLOBALS['output']['user']['Username'] != 'guest' || !setting('database_enable'))
-		theme('logout_block');
-	else
-		theme('login_block');
+	theme('login_block');
+	
+	theme('footer');
+}
+
+function theme__logout()
+{
+	theme('header');
+	
+	theme('logout_block');
 	
 	theme('footer');
 }
 
 function theme__login_block()
 {
-	if($GLOBALS['output']['user']['Username'] != 'guest' || !setting('database_enable'))
-	{
-		theme('logout_block');
-		return;
-	}
 	if(isset($GLOBALS['output']['return']))
 		$return = $GLOBALS['output']['return'];
 	else
@@ -745,10 +811,14 @@ function theme__login_block()
 	?>	
 	<div id="login">
 		<div id="auth_users">
-			<form action="<?php print url('users/login?return=' . urlencode($return)); ?>" method="post">
+			<form action="<?php print url('users/login?return=' . urlencode($return), false, true); ?>" method="post">
 				<p>
-				<?php print lang('Username', 'username'); ?>: <input type="text" name="username" value="<?php print $username; ?>" /><br />
+				<?php print lang('Username', 'username'); ?>: <input type="text" name="username" value="<?php print $GLOBALS['output']['user']['Username']; ?>" /><br />
+				</p>
+				<p>
 				<?php print lang('Password', 'password'); ?>: <input type="password" name="password" value="" /><br />
+				</p>
+				<p>
 				<input type="submit" value="<?php print lang('Login', T_IN_ATTRIBUTE, 'login'); ?>" /><input type="reset" value="<?php print lang('Cancel', T_IN_ATTRIBUTE, 'cancel'); ?>" />
 				</p>
 			</form>
@@ -780,7 +850,7 @@ function theme__register()
 	theme('header');
 	
 	?>	
-	<form action="<?php echo url('users/register'); ?>" method="post">
+	<form action="<?php echo url('users/register', false, true); ?>" method="post">
 	
 		Username: <input type="text" name="username" value="<?php print isset($GLOBALS['output']['username'])?$GLOBALS['output']['username']:''; ?>" /><br />
 		E-mail: <input type="text" name="email" value="<?php print isset($GLOBALS['output']['email'])?$GLOBALS['output']['email']:''; ?>" /><br />

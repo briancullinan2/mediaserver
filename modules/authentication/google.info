@@ -4,6 +4,12 @@ privilage = 1
 template = true
 package = Authentication
 depends_on[] = enable_https
+depends_on[] = session
+depends_on[] = curl_installed
+session[] = google_session
+session[] = code
 settings[] = google_client_id
 settings[] = google_client_secret
 settings[] = google_redirect_url
+[validate]
+code = validate_google_code

@@ -101,7 +101,7 @@ function status_alias()
 	{
 		$status['admin_alias_enable'] = array(
 			'name' => 'Aliasing',
-			'status' => '',
+			'status' => 'pass',
 			'description' => array(
 				'list' => array(
 					'Aliasing is enabled.',

@@ -111,13 +111,13 @@ function setting_watched($settings, $index)
 	if(isset($settings['watched_' . $index]))
 	{
 		// add prefix
-		if($settings['watched_' . $index][0] == '!')
+		if(substr($settings['watched_' . $index], 0, 1) == '!')
 			$prefix = '!';
 		else
 			$prefix = '^';
 		
 		// remove leading symbol
-		if($settings['watched_' . $index][0] == '!' || $settings['watched_' . $index][0] == '^')
+		if(substr($settings['watched_' . $index], 0, 1) == '!' || substr($settings['watched_' . $index], 0, 1) == '^')
 			$settings['watched_' . $index] = substr($settings['watched_' . $index], 1);
 		
 		// always use forward slashes

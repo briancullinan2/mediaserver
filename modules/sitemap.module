@@ -49,7 +49,7 @@ function setup_sitemap()
  */
 function setting_no_bots($settings)
 {
-	return (!isset($settings['enable_https']) || filter_var($settings['no_bots'], FILTER_VALIDATE_BOOLEAN));
+	return (!isset($settings['no_bots']) || filter_var($settings['no_bots'], FILTER_VALIDATE_BOOLEAN));
 }
 
 

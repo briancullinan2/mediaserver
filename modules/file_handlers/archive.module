@@ -58,7 +58,7 @@ function configure_archive($settings, $request)
 	{
 		$options['setting_archiver'] = array(
 			'name' => lang('Archiver', 'archiver title'),
-			'status' => '',
+			'status' => 'pass',
 			'description' => array(
 				'list' => array(
 					lang('This script comes equiped with 3 archive analyzers.', 'archiver description 1'),

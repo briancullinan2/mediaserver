@@ -287,9 +287,9 @@ function validate_group_index($request)
 {
 	if(isset($request['group_index']))
 	{
-		if($request['group_index'] === true || $request['group_index'] === 'true')
+		if(filter_var($request['group_index'], FILTER_VALIDATE_BOOLEAN))
 			return true;
-		elseif($request['group_index'] === false || $request['group_index'] === 'false')
+		elseif(!filter_var($request['group_index'], FILTER_VALIDATE_BOOLEAN))
 			return false;
 		elseif(is_string($request['group_index']))
 			return strtolower($request['group_index'][0]);
@@ -323,16 +323,16 @@ function filter_group_by($request)
 {
 	if(isset($request['group_by'])) 
 	{
-		if(isset($request['group_index']) && $request['group_index'] === true)
+		if(validate($request, 'group_index') === true)
 		{
 			return array('group' => 'SUBSTRING(' . validate($request, 'group_by') . ', 1, 1)');
 		}
-		elseif(isset($request['group_index']) && is_string($request['group_index']))
+		elseif(is_string(validate($request, 'group_index')))
 		{
-			return array('where' => 'LEFT(' . validate($request, 'group_by') . ', 1) = "' . addslashes($request['group_index']) . '"');
+			return array('where' => 'LEFT(' . validate($request, 'group_by') . ', 1) = "' . addslashes(validate($request, 'group_index')) . '"');
 		}
 		else
-			return array('group' => addslashes($request['group_by']), 'columns' => 'count(*)');
+			return array('group' => addslashes(validate($request, 'group_by')), 'columns' => 'count(*)');
 	}
 }
 

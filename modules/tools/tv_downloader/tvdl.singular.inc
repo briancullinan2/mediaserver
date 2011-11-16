@@ -65,7 +65,7 @@ function output_tv_download_login($request)
 			// login succeeded
 			$infos['television_login'] = array(
 				'name' => 'MyEpisodes Login',
-				'status' => '',
+				'status' => 'pass',
 				'description' => array(
 					'list' => array(
 						'Login to myepisodes.com successful!',
@@ -106,7 +106,7 @@ function output_tv_download_shows($request)
 	
 	$infos['myepisodes_shows'] = array(
 		'name' => 'MyEpisodes TV Shows',
-		'status' => '',
+		'status' => 'pass',
 		'description' => array(
 			'list' => array(
 				'These are all the TV Shows you are subscribed to.',
@@ -228,7 +228,7 @@ function get_tv_download_downloads($request)
 	{
 		$infos['myepisodes_shows_' . $request['show_index']] = array(
 			'name' => 'Downloaded ' . $request['showname'],
-			'status' => '',
+			'status' => 'pass',
 			'description' => array(
 				'list' => array(
 					'The episode for ' . $show_title . ' was successfully downloaded to ' . $status . '.',

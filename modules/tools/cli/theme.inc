@@ -166,16 +166,6 @@ function theme_cli_errors_block()
 		}
 }
 
-function theme_cli_errors()
-{
-	theme('header',
-		'Module: ' . get_module($GLOBALS['output']['module'], 'name'),
-		'There were errors while processing your request.'
-	);
-
-	theme('footer');
-}
-
 function theme_cli_footer()
 {
 	print "\033[0m";
@@ -499,10 +489,7 @@ function theme_cli_form_multiselect($config, $width)
 
 function theme_cli_menu()
 {
-	theme('header', 
-		'Menu: ' . $GLOBALS['output']['current_menu']['name'],
-		$GLOBALS['output']['current_menu']['description']
-	);
+	theme('header');
 	
 	$width = setting('cli_columns');
 	
@@ -542,10 +529,7 @@ function theme_cli_menu_block()
 
 function theme_cli_select()
 {
-	theme('header',
-		'Select Files',
-		get_module('files', 'description')
-	);
+	theme('header');
 	
 	$width = setting('cli_columns');
 	
@@ -602,10 +586,7 @@ function theme_cli_select()
 function theme_cli_tool_info()
 {
 	global $cli_request_stack;
-	theme('header',
-		'Tools: ' . get_module($GLOBALS['output']['module'], 'name'),
-		get_module($GLOBALS['output']['module'], 'description')
-	);
+	theme('header');
 	
 	// output configuration if it is set
 	if(isset($GLOBALS['output']['options']))

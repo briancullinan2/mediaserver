@@ -506,7 +506,6 @@ function configure_balancer($settings, $request)
 				'type' => 'submit',
 				'value' => 'Remove',
 			);
-			$balence_options[] = array('value' => '<br />');
 		}
 		
 		$options['manage_servers']['options'] = $balence_options;
@@ -540,32 +539,20 @@ function configure_balancer($settings, $request)
 				'type' => 'text',
 				'value' => 'www2.example.com'
 			),
-			array(
-				'value' => '<br />'
-			),
 			'add_server[username]' => array(
 				'type' => 'text',
 				'name' => 'Username',
 				'value' => '',
-			),
-			array(
-				'value' => '<br />'
 			),
 			'add_server[password]' => array(
 				'type' => 'text',
 				'name' => 'Password',
 				'value' => '',
 			),
-			array(
-				'value' => '<br />'
-			),
 			'add_server[nickname]' => array(
 				'type' => 'text',
 				'name' => 'Nickname',
 				'value' => '',
-			),
-			array(
-				'value' => '<br />'
 			),
 			'add_server[save]' => array(
 				'type' => 'submit',
@@ -626,17 +613,16 @@ function configure_balancer($settings, $request)
 			$balence_options['edit_rule[' . $i . ']'] = array(
 				'type' => 'submit',
 				'value' => 'Edit',
-				'name' => 'Rule module: ' . $GLOBALS['modules'][$rule['module']]['name'] . '<br />' . 
-					'Condition: ' . $rule['condition'] . '<br />' . 
-					(isset($rule['input'])?'Input: ' . $rule['input'] . '<br />':'') . 
-					'Value: ' . $rule['value'] . '<br />' . 
+				'name' => 'Rule module: ' . $GLOBALS['modules'][$rule['module']]['name'] . 
+					'Condition: ' . $rule['condition'] . 
+					(isset($rule['input'])?'Input: ' . $rule['input']:'') . 
+					'Value: ' . $rule['value'] . 
 					'Server: ' . (isset($settings['balance_servers'][$rule['server']]['nickname'])?$settings['balance_servers'][$rule['server']]['nickname']:('Balance Server ' . $rule['server'])),
 			);
 			$balence_options['remove_rule[' . $i . ']'] = array(
 				'type' => 'submit',
 				'value' => 'Remove',
 			);
-			$balence_options[] = array('value' => '<br />');
 		}
 		
 		$options['manage_rules']['options'] = $balence_options;
@@ -702,9 +688,6 @@ function configure_balancer($settings, $request)
 				'value' => 'encode',
 				'name' => 'Module',
 			),
-			array(
-				'value' => '<br />'
-			),
 			'add_rule[condition]' => array(
 				'type' => 'select',
 				'options' => array(
@@ -715,33 +698,21 @@ function configure_balancer($settings, $request)
 				'value' => 'request',
 				'name' => 'Condition',
 			),
-			array(
-				'value' => '<br />'
-			),
 			'add_rule[input]' => array(
 				'type' => 'text',
 				'value' => 'dir',
 				'name' => 'Input',
-			),
-			array(
-				'value' => '<br />'
 			),
 			'add_rule[value]' => array(
 				'type' => 'text',
 				'value' => '/Share/Music/',
 				'name' => 'Value',
 			),
-			array(
-				'value' => '<br />'
-			),
 			'add_rule[server]' => array(
 				'type' => 'select',
 				'options' => $servers,
 				'value' => 0,
 				'name' => 'Server',
-			),
-			array(
-				'value' => '<br />'
 			),
 			'add_rule[save]' => array(
 				'type' => 'submit',
@@ -818,24 +789,15 @@ function configure_balancer($settings, $request)
 				'value' => 'encode',
 				'name' => 'Module',
 			),
-			array(
-				'value' => '<br />'
-			),
 			'test_rules[request]' => array(
 				'type' => 'text',
 				'value' => $test_request,
 				'name' => 'Request Variables',
 			),
-			array(
-				'value' => '<br />'
-			),
 			'test_rules[server]' => array(
 				'type' => 'text',
 				'value' => $test_server,
 				'name' => 'Server Variables',
-			),
-			array(
-				'value' => '<br />'
 			),
 			'test_rules[test]' => array(
 				'type' => 'submit',

@@ -144,7 +144,7 @@ function configure_movies($request)
 	{
 		$options['setting_tmdb_api'] = array(
 			'name' => 'API Key',
-			'status' => '',
+			'status' => 'pass',
 			'description' => array(
 				'list' => array(
 					'You have specified a TMDB API key.',

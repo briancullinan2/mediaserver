@@ -23,7 +23,7 @@ function configure_discogs($settings)
 	{
 		$options['setting_discogs_api'] = array(
 			'name' => 'API Key',
-			'status' => '',
+			'status' => 'pass',
 			'description' => array(
 				'list' => array(
 					'You have specified a DiscOgs API key.',
