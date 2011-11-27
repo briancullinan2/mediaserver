@@ -278,7 +278,9 @@ function raise_error($str, $code, $htmlspecialchars = true)
 	$error = new StdClass;
 	$error->code = $code;
 	$error->message = $str;
-	$error->backtrace = debug_backtrace();
+	// check if memory usage is too high
+	if(memory_get_usage() < setting('memory_limit') - setting('memory_min'))
+		$error->backtrace = debug_backtrace();
 	
 	if(error_reporting() != 0 || setting('display_errors') & E_VERBOSE)
 		error_callback($error, NULL, $htmlspecialchars);
@@ -309,6 +311,8 @@ function add_error_callback($callback)
  */
 function error_callback($error, $callback = NULL, $htmlspecialchars = true)
 {
+	$error->memory_usage = memory_get_usage(true);
+	
 	if($htmlspecialchars)
 		$error->htmlspecialchars = true;
 	else
@@ -374,11 +378,11 @@ function error_callback($error, $callback = NULL, $htmlspecialchars = true)
 		if(($error->code & $config['types']) && isset($GLOBALS['error_handles'][$i]) && is_resource($GLOBALS['error_handles'][$i]))
 		{
 			if($config['connection'] == 'local')
-				fwrite($GLOBALS['error_handles'][$i], $error->message . ($error->code & E_FATAL ? $error->backtrace : '') . "\n");
+				fwrite($GLOBALS['error_handles'][$i], (isset($error->time)?('[' . round($error->time, 3) . ']'):'') . (isset($error->memory_usage)?('[' . format_bytes($error->memory_usage, 2) . ']'):'') . $error->message . ($error->code & E_FATAL ? $error->backtrace : '') . "\n");
 			elseif($config['connection'] == 'ssh2')
 			{
 				$params = parseDSN($config['location']);
-				ssh2_exec($GLOBALS['error_handles'][$i], 'echo "' . addslashes($error->message . ($error->code & E_FATAL ? $error->backtrace : '')) . '" >> ' . $params['database']);
+				ssh2_exec($GLOBALS['error_handles'][$i], 'echo "' . addslashes((isset($error->time)?('[' . round($error->time, 3) . ']'):'') . (isset($error->memory_usage)?('[' . format_bytes($error->memory_usage, 2) . ']'):'') . $error->message . ($error->code & E_FATAL ? $error->backtrace : '')) . '" >> ' . $params['database']);
 			}
 		}
 	}

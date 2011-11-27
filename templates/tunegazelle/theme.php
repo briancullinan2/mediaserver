@@ -126,8 +126,7 @@ function theme_tunegazelle_colors()
 		border:1px solid <?php print setting('tunegazelle_text_secondary_color'); ?>;
 	}
 
-	#controls, 
-	#row_setting_group_permissions > .field_set > .field_set > .field {
+	#controls {
 		color:<?php print setting('tunegazelle_text_secondary_color'); ?>;
 		background:url("<?php print $secondary_lum > 50 ? 'images/0-20.png' : 'images/0-20-white.png'; ?>") repeat-x scroll 50% 50% <?php print setting('tunegazelle_secondary_color'); ?>;
 	}

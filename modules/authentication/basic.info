@@ -1,0 +1,4 @@
+name = Basic Auth
+description = Allows users to authenticate through a stateless session.
+privilage = 1
+package = Authentication

@@ -206,6 +206,7 @@ function configure_users($settings, $request)
 	
 	// load groups from settings and session
 	$settings['user_groups'] = setting('user_groups');
+	$settings['user_groups'] = setting('user_groups');
 	if(($user_groups = session('user_groups')))
 		$settings['user_groups'] = $user_groups;
 
@@ -254,6 +255,34 @@ function configure_users($settings, $request)
 		'value' => $settings['username_validation'],
 	);
 	
+	// display the authentication methods that are available
+	$authentication_methods = array();
+	foreach(get_modules_implements('authenticate', true) as $module)
+	{
+		$authentication_methods['authenticate_' . $module] = get_module($module, 'name');
+	}
+	$options['setting_authentication_methods'] = array(
+		'name' => 'Authentication Methods',
+		'status' => '',
+		'description' => array(
+			'list' => array(
+				'Select the authentication methods allowing users to log in and save their profile/playlists.',
+				'',
+			),
+		),
+		'type' => 'set',
+		'options' => array(
+			array(
+				'type' => 'checkbox',
+				'options' => array('authenticate_users' => 'User session'),
+				'disabled' => true,
+			),
+			array(
+				'type' => 'checkbox',
+				'options' => $authentication_methods,
+			),
+		),
+	);
 	
 	// display user groups options
 	$options['setting_user_groups'] = array(
@@ -270,6 +299,7 @@ function configure_users($settings, $request)
 		'options' => array(),
 	);
 
+	$groups = array();
 	foreach($settings['user_groups'] as $group => $users)
 	{
 		$options['setting_user_groups']['options'][$group . '[username]'] = array(
@@ -278,6 +308,7 @@ function configure_users($settings, $request)
 			'type' => 'multiselect',
 			'options' => $users,
 		);
+		$groups[$group] = ucwords($group);
 	}
 		
 	// list groups and permissions
@@ -290,15 +321,23 @@ function configure_users($settings, $request)
 			'type' => 'set',
 			'options' => array(),
 		);
+		$values = array();
+		foreach($settings['group_permissions'] as $group => $permissions)
+		{
+			if(in_array($module . '_view', $permissions)) $values[] = $group;
+			if(in_array($module . '_configure', $permissions)) $values[] = $group;
+		}
 		$options['setting_group_permissions']['options'][$module]['options']['users_' . $module . '_view'] = array(
 			'name' => 'View',
 			'type' => 'checkbox',
-			'options' => array_map('ucwords', array_keys($settings['user_groups'])),
+			'options' => $groups,
+			'value' => $values,
 		);
 		$options['setting_group_permissions']['options'][$module]['options']['users_' . $module . '_configure'] = array(
 			'name' => 'Configure',
 			'type' => 'checkbox',
-			'options' => array_map('ucwords', array_keys($settings['user_groups'])),
+			'options' => $groups,
+			'value' => $values,
 		);
 	}
 	
@@ -307,6 +346,22 @@ function configure_users($settings, $request)
 		'type' => 'fieldset',
 		'options' => $options
 	));
+}
+
+function setting_group_permissions($settings)
+{
+	if(isset($settings['group_permissions']) && is_array($settings['group_permissions']))
+	{
+		$groups = array();
+		foreach($settings['group_permissions'] as $group => $users)
+		{
+			if(preg_match(setting('username_validation'), $group) != 0)
+			{
+				$groups[$group] = preg_filter(setting('username_validation'), '$0', $users);
+			}
+		}
+		return $groups;
+	}
 }
 
 function setting_user_groups($settings)
@@ -380,8 +435,8 @@ function setting_admin_password($settings)
 
 function validate_authentication_method($request)
 {
-	if(isset($request['users']) && module_implements('authenticate', $request['users']))
-		return $request['users'];
+	if(isset($request['authentication_method']) && module_implements('authenticate', $request['authentication_method']))
+		return $request['authentication_method'];
 	elseif(setting_installed() && setting('database_enable'))
 		return 'database';
 	else

@@ -187,6 +187,7 @@ function settings_language()
 // requires at least 2 parameters
 function lang($text, $cache_id)
 {
+	return $text;
 	$args = func_get_args();
 	$cache_id = array_pop($args);
 	$language = validate($_REQUEST, 'language');

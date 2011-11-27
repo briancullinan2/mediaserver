@@ -58,11 +58,11 @@ function configure_music_download($settings)
 		'values' => setting('music_formats'),
 	);
 	
-	return array(
+	return array('music_download' => array(
 		'name' => 'Format Selection',
 		'type' => 'fieldset',
 		'options' => $options
-	);
+	));
 }
 
 /**

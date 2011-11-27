@@ -188,7 +188,9 @@ function theme__form_object($field_name, $config)
 				theme('form_' .  $config['type'], array('field' => $field_name) + $config);
 			}
 			else
+			{
 				raise_error('Form type \'' . $config['type'] . '\' not found!', E_DEBUG);
+			}
 	}
 	?></div><?php
 	
@@ -416,12 +418,7 @@ function theme__form_checkbox($config)
 	$counter = 0;
 	foreach($options as $option => $text)
 	{
-		?><input <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> 
-			<?php print (is_string($value) && $value == $option) || (is_array($value) && in_array($option, $value)) ? 'checked="checked"' : ''; ?> 
-			type="<?php print $type; ?>" 
-			value="<?php print escape($option); ?>" 
-			name="<?php print machine($field) . (($config['type'] == 'checkbox')?'[]':''); ?>" 
-			id="<?php print machine($field) . '_' . $counter; ?>" />
+		?><input <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?> <?php print (is_string($value) && $value == $option) || (is_array($value) && in_array($option, $value)) ? 'checked="checked"' : ''; ?> type="<?php print $type; ?>" value="<?php print escape($option); ?>" name="<?php print machine($field) . (($config['type'] == 'checkbox')?'[]':''); ?>" id="<?php print machine($field) . '_' . $counter; ?>" />
 			<label for="<?php print machine($field) . '_' . $counter; ?>"><?php print htmlspecialchars($text); ?></label><?php
 		$counter++;
 	}

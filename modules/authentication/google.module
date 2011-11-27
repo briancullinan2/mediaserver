@@ -34,13 +34,13 @@ function output_google($request)
 
 function authenticate_google($request)
 {
-	$request['google_session'] = validate($request, 'google_session');
-	if(isset($request['google_session']))
+	if(($google_session = session('google')))
 	{
-		$result = fetch('https://www.googleapis.com/oauth2/v1/userinfo?' . $request['google_session']);
+		// use the google access token
+		$result = fetch('https://www.googleapis.com/oauth2/v1/userinfo?' . $google_session['token']);
 		$count = preg_match('/"id"\s*:\s*"(.*?)"/i', $result['content'], $id);
 		$count = preg_match('/"email"\s*:\s*"(.*?)"/i', $result['content'], $email);
-		$google_session = session('google');
+
 		// create a profile for the user from google and save refresh_token
 		$user = array(
 			'Username' => 'google_' . $id[1],
@@ -51,21 +51,24 @@ function authenticate_google($request)
 			'PrivateKey' => md5(microtime()),
 		);
 
-		// make sure user doesn't already exist
-		$db_user = db_assoc('SELECT * FROM users WHERE Username=? LIMIT 1', array($request['username']));
-		if(count($db_user) > 0)
-			$user['id'] = $db_user[0]['id'];
-		else
-			// create database entry
-			$user['id'] = add(setting('local_users') . $user['Username'], 'users');
-		
-		
-		// add password and profile information
-		$result = db_query('UPDATE users SET Password=?, Email=? WHERE id=?', array(
-			$user['Password'],
-			$user['Email'],
-			$user['id'],
-		));
+		if(setting('database_enabled'))
+		{
+			// make sure user doesn't already exist
+			$db_user = db_assoc('SELECT * FROM users WHERE Username=? LIMIT 1', array($user['Username']));
+			if(count($db_user) > 0)
+				$user['id'] = $db_user[0]['id'];
+			else
+				// create database entry
+				$user['id'] = add(setting('local_users') . $user['Username'], 'users');
+			
+			// add password and profile information, in this case, the refresh_token is set as the password
+			// TODO: encrypt refresh tokens
+			$result = db_query('UPDATE users SET Password=?, Email=? WHERE id=?', array(
+				$user['Password'],
+				$user['Email'],
+				$user['id'],
+			));
+		}
 		
 		return $user;
 	}
@@ -150,16 +153,6 @@ function validate_google_code($request)
 	if(isset($request['code']) && 
 		preg_match('/4\/.*/i', $request['code'], $matches))
 		return $matches[0];
-}
-
-function validate_google_session($request)
-{
-	// if the callback type of authentication is used, return access_token
-	if(isset($request['google_session']) && 
-		preg_match('/access_token=(.*?)(&|$)/i', $request['google_session'], $matches))
-		$request['google_session'] = 'access_token=' . $matches[1];
-	if(($google_session = session('google')) && isset($google_session['token']) && time() < $google_session['expires'])
-		return $google_session['token'];
 }
 
 function theme__google()

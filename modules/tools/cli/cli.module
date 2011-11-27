@@ -173,7 +173,7 @@ function cli_error_callback($error)
 		}
 	}
 
-	$error_out .= cli_wordwrap((isset($error->time)?('[' . $error->time . ']'):'') . $error->message, $width) . "\n";
+	$error_out .= cli_wordwrap((isset($error->time)?('[' . round($error->time, 3) . ']'):'') . (isset($error->memory_usage)?('[' . format_bytes($error->memory_usage, 2) . ']'):'') . $error->message, $width) . "\n";
 	
 	if($error->code & (E_ALL|E_STRICT) || (defined('E_DATABASE') && ($error->code & E_DATABASE)))
 	{

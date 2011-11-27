@@ -1,3 +1,11 @@
+2011-11-26
+Bug fixes
+Rearranged some code
+Worked on tunegazelle template
+In the process of removing language stuff
+Added basic authentication module, needs further testing
+Expanded authentication API
+
 2011-10-16
 Started TuneGazelle template
 Remove AdoDB, system now uses MySQLi

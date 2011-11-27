@@ -17,7 +17,7 @@ function setup_ampache()
 
 function rewrite_ampache($path_info, $request)
 {
-	$result = invoke_module('rewrite', 'core', array($path_info, $request));
+	$result = invoke_module('rewrite', 'default', array($path_info, $request));
 		
 	// merge result
 	if(isset($result))

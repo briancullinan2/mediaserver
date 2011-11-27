@@ -490,6 +490,8 @@ function theme_tunegazelle_header()
 	<div class="folders menu <?php print $GLOBALS['output']['module'] != 'menu' ? 'hidden' : ''; ?>"><?php theme('menu_block'); ?></div>
 	<div id="content">
 	<?php
+	
+	theme('errors_block');
 }
 
 function RGBToHSL($hex) {
@@ -584,7 +586,7 @@ function theme_tunegazelle_debug_error($id, $error, $no_code = false)
 	}
 	else
 	?>
-	<a href="#" class="msg <?php print $class; ?>" onClick="$('#error_<?php print $id; ?>').toggle(); return false;"><?php print (isset($error->time)?('[' . round($error->time, 3) . ']'):'') . ($error->htmlspecialchars ? htmlspecialchars($error->message) : $error->message) . ((isset($error->count) && $error->count > 0)?(' repeated ' . $error->count . ' time(s)'):''); ?></a>
+	<a href="#" class="msg <?php print $class; ?>" onClick="$('#error_<?php print $id; ?>').toggle(); return false;"><?php print (isset($error->time)?('[' . round($error->time, 3) . ']'):'') . (isset($error->memory_usage)?('[' . format_bytes($error->memory_usage, 2) . ']'):'') . ($error->htmlspecialchars ? htmlspecialchars($error->message) : $error->message) . ((isset($error->count) && $error->count > 0)?(' repeated ' . $error->count . ' time(s)'):''); ?></a>
 	<?php
 	if(!$no_code)
 	{
@@ -633,6 +635,64 @@ function theme_tunegazelle_debug_block()
 	}
 	
 	?></div><?php
+}
+
+function theme_tunegazelle_errors_block()
+{
+	$error_list = array('warn_errors', 'user_errors', 'note_errors');
+	
+	$has_errors = false;
+	foreach($error_list as $i => $errors)
+	{
+		if(count($GLOBALS[$errors]) > 0)
+		{
+			$has_errors = true;
+			?><div id="<?php print (isset($GLOBALS['output']['errors_only']) && 
+				$GLOBALS['output']['errors_only'])?($errors . '_only'):$errors; ?>"><?php
+			foreach($GLOBALS[$errors] as $i => $error)
+			{
+				if($i == 5)
+				{
+					?><div id="inner_<?php print $errors; ?>" class="error hide"><?php
+				}
+				?><b><?php print theme('info_objects', $error); ?></b><br /><?php
+			}
+			if(count($GLOBALS[$errors]) > 5)
+			{
+				?></div>
+				And <?php print count($GLOBALS[$errors]) - 5; ?> more: <a href="#" onClick="if(!this.hidden) { document.getElementById('inner_<?php print $errors; ?>').className='error hide'; this.hidden=true; this.innerHTML = 'Un Hide'; } else { document.getElementById('inner_<?php print $errors; ?>').className='error'; this.hidden=false; this.innerHTML = 'Hide'; }">Un Hide</a>
+				<?php
+			}
+			?></div><?php
+			
+			$GLOBALS[$errors] = array();
+		}
+	}
+	
+	if($has_errors)
+	{
+		?><div class="titlePadding"></div><?php
+	}
+	
+	if(!$errors_only)
+	{
+		?>
+		<div id="tmp_errors"></div>
+		<script type="text/javascript">
+			$(document).ready(function() {
+				$.get('<?php print url('errors_only', true); ?>',function(data, status, xhr){
+					$('#tmp_errors').html(data);
+					
+					$('#warn_errors').append($('#warn_errors_only'));
+					$('#user_errors').append($('#user_errors_only'));
+					$('#note_errors').append($('#note_errors_only'));
+					
+					$('#tmp_errors').remove();
+				}, 'html');
+			});
+		</script>
+		<?php
+	}
 }
 
 function theme_tunegazelle_select()

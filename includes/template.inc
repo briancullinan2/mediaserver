@@ -286,6 +286,7 @@ function theme($request = '')
 	{
 		$request['template'] = validate(array(), 'template');
 		set_output_vars();
+		flush();
 		if($request['template'] != '')
 			theme($request['template'], array());
 		return;
@@ -308,7 +309,7 @@ function theme($request = '')
 		$function = 'theme__' . $request;
 	else
 	{
-		raise_error('Theme function \'theme_' . validate(array('template' => setting('local_template')), 'template') . '_' . $request . '\' was not found.', $error_code, 'template');
+		raise_error('Theme function \'theme_' . validate(array('template' => setting('local_template')), 'template') . '_' . $request . '\' was not found.', E_DEBUG);
 		return false;
 	}
 		

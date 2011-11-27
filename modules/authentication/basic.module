@@ -1,0 +1,58 @@
+<?php
+
+
+function menu_basic()
+{
+	return array(
+		'users/basic' => array(
+			'callback' => 'output_basic',
+			'arguments' => array('users' => 'login'),
+			'name' => 'Basic Auth',
+			'icon' => 'images/google-icon.png',
+		),
+		'images/basic-icon.png' => array(
+			'callback' => 'basic_output_icon',
+			'type' => MENU_CALLBACK,
+		),
+	);
+}
+
+function rewrite_basic($path_info, $request)
+{
+	$result = invoke_module('rewrite', 'default', array($path_info, $request));
+
+	$session = session('users');
+	if ($session['Username'] == 'guest')
+	{
+		if(isset($_SERVER['PHP_AUTH_USER']))
+			$result['username'] = $_SERVER['PHP_AUTH_USER'];
+		if(isset($_SERVER['PHP_AUTH_PW']))
+			$result['password'] = validate(array('password' => $_SERVER['PHP_AUTH_PW']), 'password');
+	}
+	
+	return $result;
+}
+
+function authenticate_basic($request)
+{
+	// check for cookie with prefered authentication method
+	
+	// check for php user header
+	return array();
+}
+
+function output_basic($request)
+{
+	$session = session('users');
+	if (!isset($_SERVER['PHP_AUTH_USER']) || $session['Username'] == 'guest')
+	{
+		header('WWW-Authenticate: Basic realm="' . setting('html_name') . '"');
+		header('HTTP/1.0 401 Unauthorized');
+		exit;
+	}
+	else
+	{
+		invoke_module('output', 'users', array($request));
+	}
+}
+

@@ -185,23 +185,6 @@ function load_module($path)
 				$config['package'] = 'other';
 		}
 
-		// loop through all available triggers and call register
-		foreach($GLOBALS['triggers'] as $trigger => $triggers)
-		{
-			register_trigger($trigger, $config, $module);
-		}
-		
-		// create enabled functions
-		// if the module supplys it's own function for checking if it is enabled
-		//   this is useful if the enable state depends on more then the dependencies and needs logic to figure it out
-		if(!function_exists('setting_' . $module . '_enable'))
-		{
-			if(!in_array($module, get_required_modules()))
-				$GLOBALS['setting_' . $module . '_enable'] = create_function('$request', 'return setting_modules_enable($request, \'' . $module . '\');');
-			else
-				$GLOBALS['setting_' . $module . '_enable'] = create_function('$request', 'return true;');
-		}
-		
 		// add to global list
 		if(is_module($config['module']))
 			raise_error('Module \'' . $config['module'] . '\' already exists!', E_DEBUG);
@@ -1028,6 +1011,8 @@ function theme__module()
 {
 	theme('header');
 
+print 'hit';
+exit;
 	// if the status is avaiable print that out first
 	if(isset($GLOBALS['output']['status']))
 		theme('form_object', 'status', $GLOBALS['output']['status']);

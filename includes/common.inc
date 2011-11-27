@@ -668,6 +668,16 @@ function format_file($file)
 	return $file;
 }
 
+function format_bytes($bytes, $precision = 0)
+{
+	$bytes = intval($bytes);
+	if($bytes / (1024 * 1024 * 1024) > 1)
+		return round($bytes / (1024 * 1024 * 1024), $precision) . 'G';
+	if($bytes / (1024 * 1024) > 1)
+		return round($bytes / (1024 * 1024), $precision) . 'M';
+	if($bytes / 1024)
+		return round($bytes / 1024, $precision) . 'K';
+}
 
 function output_ranges($filesize)
 {

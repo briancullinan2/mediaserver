@@ -106,7 +106,7 @@ form > input[type='submit'] {
 	border-left-width:10px;
 }
 
-.field_row > *:last-child {
+.field_row > *:nth-last-child(2) {
 	border-right-style:solid;
 	border-right-width:5px;
 }
@@ -135,8 +135,34 @@ form > input[type='submit'] {
 }
 
 #row_setting_group_permissions > .field_set > .field_set > div {
-	display:table-cell;
+	display:inline;
 	padding:5px;
+	white-space:nowrap;
+	float:left;
+}
+
+#row_setting_group_permissions > .field_set > .field_set > .fieldname {
+	clear:both;
+}
+
+#row_setting_group_permissions > .field_set > .field_set > .field {
+	margin:0px;
+}
+
+#row_setting_group_permissions > .field_set > .field_set > .fieldname {
+	clear:both;
+	margin:0px;
+    white-space: normal;
+    width: 200px;
+	border-left:0px;
+}
+
+#row_setting_group_permissions > .field_set > .field_set > .fieldname:nth-last-child(2) {
+	border-bottom:0px;
+}
+
+#row_setting_group_permissions > .field_set > .field_set > .field > label {
+	clear:both;
 }
 
 .ui-slider .ui-slider-handle {
@@ -158,6 +184,7 @@ form > input[type='submit'] {
 #content a, #content input, #content select {
 	padding:5px;
 	border-radius:3px;
+	display:inline-block;
 }
 
 a {

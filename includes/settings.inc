@@ -112,6 +112,17 @@ function setup_settings()
 
 function bootstrap_settings($module)
 {
+	// create enabled functions
+	// if the module supplys it's own function for checking if it is enabled
+	//   this is useful if the enable state depends on more then the dependencies and needs logic to figure it out
+	if(!function_exists('setting_' . $module . '_enable'))
+	{
+		if(!in_array($module, get_required_modules()))
+			$GLOBALS['setting_' . $module . '_enable'] = create_function('$request', 'return setting_modules_enable($request, \'' . $module . '\');');
+		else
+			$GLOBALS['setting_' . $module . '_enable'] = create_function('$request', 'return true;');
+	}
+		
 	// loop through the modules and call settings functions on them if they are set to callbacks
 	$settings = get_settings($module);
 	
@@ -547,6 +558,24 @@ function get_system_files($settings)
 	return $paths;
 }
  
+function setting_memory_min()
+{
+	return 10 * 1024 * 1024;
+}
+
+function setting_memory_limit()
+{
+	$int = trim(ini_get('memory_limit'));
+	if(strtolower(substr($int, -1)) == 'g')
+		$int = intval($int) * 1024 * 1024 * 1024;
+	if(strtolower(substr($int, -1)) == 'm')
+		$int = intval($int) * 1024 * 1024;
+	if(strtolower(substr($int, -1)) == 'k')
+		$int = intval($int) * 1024;
+	
+	return $int;
+}
+
 /**
  * Implementation of dependency
  * @ingroup dependency
@@ -554,7 +583,7 @@ function get_system_files($settings)
  */
 function dependency_memory_limit()
 {
-	return (intval(ini_get('memory_limit')) >= 96);
+	return (setting('memory_limit') >= 96 * 1024 * 1024 + setting('debug_mode') ? (96 * 1024 * 1024) : 0);
 }
 
 /**

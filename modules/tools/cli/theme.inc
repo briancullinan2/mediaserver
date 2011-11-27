@@ -46,7 +46,7 @@ function cli_get_max_width($lines)
 	return $max;
 }
 
-function cli_box($input, $top_line = true, $left_line = true, $bottom_line = true, $right_line = true, $width = 0)
+function cli_box($input, $top_line = true, $left_line = true, $bottom_line = true, $right_line = true, $width = 0, $color = NULL)
 {
 	$width = floor($width);
 	$lines = explode("\n", $input);
@@ -54,18 +54,26 @@ function cli_box($input, $top_line = true, $left_line = true, $bottom_line = tru
 	if($width > 0 && $width > $max)
 		$max = $width;
 
+	// get current text color
+	$current_color = array_pop($GLOBALS['cli_colorize']);
+	array_push($GLOBALS['cli_colorize'], $current_color);
+	if(!isset($current_color)) $current_color = 32;
+
 	$result = '';
 	if(is_string($top_line))
-		$result .= (($left_line)?'.-':'') . sprintf('%\'--' . ($max) . 's', $top_line) . (($right_line)?'.':'') . "\n";
+		$result .= (is_int($color) ? ("\033[" . $color . 'm') : '') . (($left_line)?'.-':'') . sprintf('%\'--' . ($max) . 's', $top_line) . (($right_line)?'.':'') . (is_int($color) ? ("\033[" . $current_color . 'm') : '') . "\n";
 	elseif($top_line)
-		$result .= (($left_line)?'.-':'') . sprintf('%\'--' . ($max) . 's', '-') . (($right_line)?'.':'') . "\n";
+		$result .= (is_int($color) ? ("\033[" . $color . 'm') : '') . (($left_line)?'.-':'') . sprintf('%\'--' . ($max) . 's', '-') . (($right_line)?'.':'') . (is_int($color) ? ("\033[" . $current_color . 'm') : '') . "\n";
 	foreach($lines as $i => $line)
 	{
 		$hidden_count = preg_match_all('/\\033\[[0-9][0-9]m/i', $line, $matches)*5+preg_match_all('/\\033\[[0-9]m/i', $line, $matches)*4;
-		$result .= (($left_line)?'| ':'') . sprintf('%-' . ($max+$hidden_count) . 's', $line) . (($right_line)?'|':'') . "\n";
+		if(is_int($color))
+			$result .= "\033[" . $color . 'm' . (($left_line)?'| ':'') . "\033[" . $current_color . 'm' . sprintf('%-' . ($max+$hidden_count) . 's', $line) . "\033[" . $color . 'm' . (($right_line)?'|':'') . "\033[" . $current_color . 'm' . "\n";
+		else
+			$result .= (($left_line)?'| ':'') . sprintf('%-' . ($max+$hidden_count) . 's', $line) . (($right_line)?'|':'') . "\n";
 	}
 	if($bottom_line)
-		$result .= (($left_line)?'|_':'') . sprintf('%\'_-' . ($max) . 's', '_') . (($right_line)?'|':'') . "\n";
+		$result .= (is_int($color) ? ("\033[" . $color . 'm') : '') . (($left_line)?'|_':'') . sprintf('%\'_-' . ($max) . 's', '_') . (($right_line)?'|':'') . (is_int($color) ? ("\033[" . $current_color . 'm') : '') . "\n";
 	return $result;
 }
 
@@ -96,9 +104,12 @@ function cli_merge_boxes()
 				$result .= $box[$i];
 			else
 			{
-				$left_border = ((substr($lines[$j][0], 0, 1) == '|')?'|':'');
-				$right_border = ((substr($lines[$j][0], -1) == '|')?'|':'');
-				$result .= $left_border . sprintf('%-' . (strlen(preg_replace('/\\033\[[0-9][0-9]?m/i', '', $lines[$j][0]))-strlen($left_border)-strlen($right_border)) . 's', ' ') . $right_border;
+				$left_count = preg_match('/^(\\033\[[0-9][0-9]?m)*[\|\.]/i', $box[0], $left_border);
+				$right_count = preg_match('/[\|\.](\\033\[[0-9][0-9]?m)*$/i', $box[0], $right_border);
+				$hidden_count = preg_match_all('/\\033\[[0-9][0-9]m/i', $box[0], $matches)*5+preg_match_all('/\\033\[[0-9]m/i', $box[0], $matches)*4;
+				$result .= ($left_count ? $left_border[0] : '') . 
+								sprintf('%-' . (strlen($box[0]) - $hidden_count - $left_count - $right_count) . 's', ' ') . 
+									($right_count ? $right_border[0] : '');
 			}
 		}
 		$result .= "\n";
@@ -254,6 +265,7 @@ function theme_cli_info_link($value, $width)
 		extract($value);
 		print cli_wordwrap('[' . ob_theme('info_objects', $text) . ' = ' . $url . ']', $width);
 	}
+	print "\n";
 	cli_decolorize();
 }
 
@@ -300,7 +312,7 @@ function theme_cli_form_object($field_name, $config, $width = 0)
 			{
 				// box it up
 				if(isset($config['name']))
-					$title = '.-' . $config['name'] . $width;
+					$title = '.-' . $config['name'];
 				else
 					$title = '';
 				
@@ -369,8 +381,19 @@ function theme_cli_form_fieldrows($options, $width = 0)
 	$op_count = 0;
 	foreach($options as $name => $field)
 	{
+		$color = NULL;
+		if(isset($field['status']))
+		{
+			if($field['status'] == 'fail')
+				$color = 31;
+			elseif($field['status'] == 'warn')
+				$color = 33;
+			else
+				$color = 32;
+		}
+		
 		$op_count++;
-		$box1 = cli_box(cli_wordwrap($field['name'], $width * .20 - 4), false, true, true, true, $width * .20);
+		$box1 = cli_box(cli_wordwrap($field['name'], $width * .20 - 4), false, true, true, true, $width * .20, $color);
 		
 		if(isset($field['description']))
 			$inner_width = $width * .30;
@@ -381,29 +404,18 @@ function theme_cli_form_fieldrows($options, $width = 0)
 			$contents = ob_theme('form_objects', array($name => array('name' => NULL, 'description' => NULL, 'status' => NULL) + $field), $inner_width - 2);
 		else
 			$contents = ob_theme('form_objects', array($name => array('name' => NULL, 'description' => NULL, 'status' => NULL, 'value' => $field)), $inner_width - 2);
-		$box2 = cli_box($contents, false, false, true, !isset($field['description']), $inner_width);
+			
+		$box2 = cli_box($contents, false, false, true, !isset($field['description']), $inner_width, $color);
 
 		if(isset($field['description']))
-			$box3 = cli_box(ob_theme('info_objects', $field['description'], $width * .30 - 4), false, true, true, true, $width * .30);
-		
-		if(isset($field['status']))
-		{
-			if($field['status'] == 'fail')
-				cli_colorize(31);
-			elseif($field['status'] == 'warn')
-				cli_colorize(33);
-			else
-				cli_colorize(32);
-		}
+			$box3 = cli_box(ob_theme('info_objects', $field['description'], $width * .30 - 4), false, true, true, true, $width * .30, $color);
 		
 		// box it up
 		if(isset($field['description']))
 			print cli_merge_boxes($box1, $box2, $box3);
 		else
 			print cli_merge_boxes($box1, $box2);
-		
-		if(isset($field['status']))
-			cli_decolorize();
+
 	}
 }
 
