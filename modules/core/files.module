@@ -25,6 +25,7 @@ function validate_files($request)
 {
 	// just about everything uses the cat variable so always validate and add this
 	$request['handler'] = validate($request, 'handler');
+	return $request;
 }
 
 

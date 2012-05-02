@@ -1,6 +1,5 @@
 name = "TuneGazelle"
 description = "Template for the tunegazelle.com website."
-validate = true
 depends_on[] = users
 settings[] = tunegazelle_background_color
 settings[] = tunegazelle_main_color

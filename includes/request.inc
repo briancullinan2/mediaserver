@@ -93,7 +93,8 @@ function request_validate()
 			unset($_REQUEST[$key]);
 			
 		// set the get variable also, so that when url($_GET) is used it is an accurate representation of the current page
-		if(isset($_GET[$key]) && isset($_REQUEST[$key])) $_GET[$key] = $_REQUEST[$key];
+		if(isset($_GET[$key]) && isset($_REQUEST[$key])) 
+			$_GET[$key] = $_REQUEST[$key];
 		else
 			unset($_GET[$key]);
 	}

@@ -10,7 +10,16 @@ function preload_triggers()
 	);
 }
 
-function trigger_key($trigger, $callback, $input, $key)
+function bootstrap_triggers($module)
+{
+	// loop through all available triggers and call register
+	foreach($GLOBALS['triggers'] as $trigger => $triggers)
+	{
+		register_trigger($trigger, get_module($module));
+	}
+}
+
+function trigger_key($trigger, $callback, $input, $key = NULL)
 {
 	$args = func_get_args();
 	
@@ -18,7 +27,7 @@ function trigger_key($trigger, $callback, $input, $key)
 	{
 		foreach($GLOBALS['triggers'][$trigger][$key] as $module => $function)
 		{
-			unset($result);
+			$result = array();
 			
 			if(is_callable($function))
 				$result = call_user_func_array($function, array(&$input, $key));

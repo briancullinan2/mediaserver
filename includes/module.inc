@@ -29,6 +29,10 @@ function menu_module()
 
 function bootstrap_module($module)
 {
+	// triggers does actually have a module for it yet, maybe someday it could trigger other services, such as posting to FB when the song changes
+	//   for now just call it from here
+	bootstrap_triggers($module);
+	
 	if(module_implements('configure', $module))
 		add_menu('module', array(
 			'admin/module/' . $module => array(
@@ -1011,8 +1015,6 @@ function theme__module()
 {
 	theme('header');
 
-print 'hit';
-exit;
 	// if the status is avaiable print that out first
 	if(isset($GLOBALS['output']['status']))
 		theme('form_object', 'status', $GLOBALS['output']['status']);

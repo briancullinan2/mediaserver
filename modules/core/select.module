@@ -212,7 +212,7 @@ function validate_start($request)
  */
 function validate_limit($request)
 {
-	return generic_validate_numeric_default($request, 'limit', 15);
+	return ($input = filter_var($request['limit'], FILTER_VALIDATE_INT, FILTER_FLAG_ALLOW_OCTAL | FILTER_FLAG_ALLOW_HEX)) ? $input : 15;
 }
 
 /**
