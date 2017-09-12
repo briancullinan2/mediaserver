@@ -67,7 +67,13 @@ function preload_template()
 function setup_template()
 {
 	// bootstrap the modules and setup
-	//bootstrap('modules', array_keys($GLOBALS['templates']));
+    /*
+	bootstrap('modules', array_keys($GLOBALS['templates']));
+
+	foreach(array_keys($GLOBALS['templates']) as $k) {
+        invoke_module('bootstrap', 'menu', array($k));
+    }
+    */
 }
 
 /**
@@ -89,7 +95,6 @@ function configure_template($settings, $request)
 	$settings['local_template'] = setting('local_template');
 	
 	$options = array();
-	
 	$templates = array();
 	foreach($GLOBALS['templates'] as $template => $config)
 	{
@@ -295,7 +300,7 @@ function theme($request = '')
 	{
 		$request = array_shift($request);
 	}
-	
+
 	// if the theme function is being called then the output vars better be set
 	if(!isset($GLOBALS['output']['html']))
 		set_output_vars();
@@ -322,7 +327,6 @@ function theme($request = '')
 	raise_error('Theming \'' . $request . '\' with the function \'' . $function . '\'.', E_VERBOSE);
 	
 	array_push($GLOBALS['theme_stack'], array('func' => $function, 'args' => $args));
-	
 	$result = call_user_func_array($function, $args);
 	
 	array_pop($GLOBALS['theme_stack']);

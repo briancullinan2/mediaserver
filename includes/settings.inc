@@ -27,8 +27,9 @@ function register_settings()
 
 function dependency_settings()
 {
-	$depends_on = array('memory_limit', 'writable_system_files', 'pear_installed', 
-		'getid3_installed', 'curl_installed', 'extjs_installed');
+	$depends_on = array('memory_limit', 'pear_installed',
+//		'writable_system_files', 'getid3_installed', 'curl_installed', 'extjs_installed'
+    );
 	
 	if(setting('database_enable'))
 		$depends_on[] = 'database';
@@ -256,8 +257,8 @@ function setting_html_domain($settings)
 
 	if(isset($url['host']))
 		$host = $url['host'];
-	elseif(isset($_SERVER['HTTP_HOST']))
-		$host = $_SERVER['HTTP_HOST'];
+	elseif(isset($_SERVER['SERVER_NAME']))
+		$host = $_SERVER['SERVER_NAME'];
 	else
 		$host = 'localhost';
 		

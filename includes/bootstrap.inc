@@ -1,4 +1,6 @@
 <?php
+error_reporting(E_ALL);
+ini_set('short_open_tag', true);
 
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'compatibility.inc';
 
@@ -24,7 +26,7 @@ function bootstrap($mode = 'all')
 				  'POST' => isset($_POST)?$_POST:NULL,
 				  'COOKIE' => $_COOKIE
 				);
-				$init = IDS_Init::init('/var/www/monolithic/includes/Config.ini');
+				$init = IDS_Init::init(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'Config.ini');
 				$ids = new IDS_Monitor($request, $init);
 				$result = $ids->run();
 				
@@ -72,7 +74,6 @@ function bootstrap($mode = 'all')
 				'template.inc',
 				'session.inc',
 				'users.inc',
-				'theme.inc',
 				'curl.inc',
 				'forms.inc',
 			);
@@ -81,17 +82,17 @@ function bootstrap($mode = 'all')
 			foreach($includes as $i => $include)
 			{
 				if(!file_exists(dirname(__FILE__) . DIRECTORY_SEPARATOR . $include))
-					die('Includes are corrupted, please reinstall!');
-					
+					die('Missing ' . dirname(__FILE__) . DIRECTORY_SEPARATOR . $include . ' : Includes are corrupted, please reinstall!');
+
 				require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . $include;
 			}
-			
+
 			preload_error();
 			preload_triggers();
 			preload_menu();
 			preload_template();
-			
-			raise_error('Preload complete. Includes loaded.', E_VERBOSE);
+
+            raise_error('Preload complete. Includes loaded.', E_VERBOSE);
 			
 			// try to run language options
 			bootstrap('language');
@@ -135,8 +136,9 @@ function bootstrap($mode = 'all')
 			
 			foreach($modules as $i => $module)
 			{
-				if(dependency($module))
-					invoke_module('setup', $module);
+                if(dependency($module) || in_array($module, get_required_modules())) {
+                    invoke_module('setup', $module);
+                }
 
 				bootstrap_or_disable($module);
 			}

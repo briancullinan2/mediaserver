@@ -1,0 +1,5 @@
+2017-09-12 03:12:05,805 CRIT Supervisor running as root (no user in config file)
+2017-09-12 03:12:05,821 INFO supervisord started with pid 1
+2017-09-12 03:12:06,825 INFO spawned: 'apache2' with pid 9
+2017-09-12 03:12:07,862 INFO success: apache2 entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2017-09-12 03:15:28,494 INFO exited: apache2 (exit status 0; expected)

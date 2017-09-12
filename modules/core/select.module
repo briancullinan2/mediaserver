@@ -659,7 +659,7 @@ function theme__pages()
 		{
 			if($i == $page_int)
 			{
-				?><b><?php print $page_int + 1; ?></b><?
+				?><b><?php print $page_int + 1; ?></b><?php
 			}
 			else
 			{

@@ -516,6 +516,7 @@ body, html, #heading h1, #left-menu,
 }
 
 #content {
+	padding-top:100px;
 	padding-left:420px;
 	padding-right:240px;
 	float:none;

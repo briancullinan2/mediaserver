@@ -776,7 +776,7 @@ function theme_tunegazelle_select_block($folders = false)
 			<li><?php print lang('No folders to display.', 'no folders'); ?></li>
 		<?php } 
 		
-		?></ul><?
+		?></ul><?php
 	}
 }
 

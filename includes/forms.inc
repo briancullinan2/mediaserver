@@ -150,23 +150,23 @@ function theme__info_text($value)
 function theme__form_object($field_name, $config)
 {
 	// do some checks for convenience
-	
+
 	// check that the field_name hasn't been used before
 	// check that all global keys are machine readable
 	// check options keys when they are used
-	
+
 	if(!isset($config['type']))
 		$config['type'] = 'info';
-	
+
 	if(isset($config['name']) && $config['type'] != 'fieldset')
 	{
 		?><div class="fieldname <?php print escape(isset($config['status'])?$config['status']:''); ?> <?php print !isset($config['description']) ? 'expand' : ''; ?>"><?php
 		theme('info_objects', $config['name']);
 		?></div><?php
 	}
-	
+
 	?><div class="field field_<?php print $config['type']; ?> <?php print !isset($config['description']) ? 'expand' : ''; ?>"><?php
-	
+
 	switch($config['type'])
 	{
 		case 'set':
@@ -193,7 +193,7 @@ function theme__form_object($field_name, $config)
 			}
 	}
 	?></div><?php
-	
+
 	// print description
 	if(isset($config['description']))
 	{
@@ -201,22 +201,22 @@ function theme__form_object($field_name, $config)
 		theme('info_objects', $config['description']);
 		?></div><?php
 	}
-	
+
 }
 
 function theme__form_form($config)
 {
 	$config_html = traverse_array($config);
 	?>
-	<form name="<?php print escape($config['field']); ?>" action="<?php print isset($config_html['action'])?$config_html['action']:$GLOBALS['output']['get']; ?>" method="<?php print isset($config_html['method'])?$config_html['method']:'post'; ?>">
+	<form name="<?php print escape($config['field']); ?>" action="<?php print isset($config_html['action'])?$config_html['action']:$GLOBALS['output']['get']; ?>" method="<?php print (isset($config_html['method'])?$config_html['method']:'post'); ?>">
 		<?php
 		theme('form_objects', $config['options']);
-		
+
 		if(isset($config['submit']))
 			theme('form_submit', array('field' => $config['submit']['name']) + $config['submit']);
 		if(isset($config['reset']))
 			theme('form_submit', array('field' => $config['reset']['name']) + $config['reset']);
-	
+
 	?></form><?php
 }
 
@@ -226,17 +226,17 @@ function theme__form_fieldset($config)
 	if(isset($name) || count($options) > 0)
 	{
 		?><fieldset id="fieldset_<?php print machine($field); ?>"><?php
-			
+
 			if(isset($name))
 			{
 				?><legend><?php
 				if(isset($collapsible) && $collapsible)
 				{
 					$id = escape($field);
-					$script = "if($('#fieldcontainer_" . $id . "').css('display')=='none'){" . 
-						"$('#fieldcontainer_" . $id . "').slideDown('fast');" . 
+					$script = "if($('#fieldcontainer_" . $id . "').css('display')=='none'){" .
+						"$('#fieldcontainer_" . $id . "').slideDown('fast');" .
 					"}else{" .
-						"$('#fieldcontainer_" . $id . "').slideUp('fast');" . 
+						"$('#fieldcontainer_" . $id . "').slideUp('fast');" .
 					"}return false;";
 					?><a href="#" onclick="<?php print $script; ?>"><?php print escape($name); ?></a><?php
 				}
@@ -246,13 +246,13 @@ function theme__form_fieldset($config)
 				}
 				?></legend><?php
 			}
-			
-			?><div id="fieldcontainer_<?php print machine($field); ?>" <?php print (isset($collapsed) && $collapsed)?'style="display:none;"':''; ?>><?php
-			
+
+			?><div id="fieldcontainer_<?php print machine($field); ?>" <?php print (isset($collapsed) && $collapsed?'style="display:none;"':''); ?>><?php
+
 				theme('form_fieldrows', $options);
-			
+
 			?></div><?php
-			
+
 		?></fieldset><?php
 	}
 }
@@ -343,24 +343,24 @@ function theme__form_ordered($config)
 	foreach($options as $option => $text)
 	{
 		?><div><?php print escape($text); ?>
-		
+
 		<?php
 		if($current > 0)
 		{
 			$switched = array_keys($options);
 			$temp = $switched[$current]; $switched[$current] = $switched[$current-1]; $switched[$current-1] = $temp;
-			?><button type="submit" name="<?php print machine($field); ?>" value="<?php print implode(',', $switched); ?>" <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?>><?php print lang('Up', 'form up'); ?></button><?
+			?><button type="submit" name="<?php print machine($field); ?>" value="<?php print implode(',', $switched); ?>" <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?>><?php print lang('Up', 'form up'); ?></button><?php
 		}
-		
+
 		if($current < count($options)-1)
 		{
 			$switched = array_keys($options);
 			$temp = $switched[$current]; $switched[$current] = $switched[$current+1]; $switched[$current+1] = $temp;
-			?><button type="submit" name="<?php print machine($field); ?>" value="<?php print implode(',', $switched); ?>" <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?>><?php print lang('Down', 'form down'); ?></button><?
+			?><button type="submit" name="<?php print machine($field); ?>" value="<?php print implode(',', $switched); ?>" <?php print (isset($disabled) && $disabled)?'disabled="disabled"':'';?>><?php print lang('Down', 'form down'); ?></button><?php
 		}
-		
+
 		?></div><?php
-		
+
 		$current++;
 	}
 }

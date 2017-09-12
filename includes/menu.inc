@@ -119,6 +119,7 @@ function invoke_menu($request, $template = false)
 	if($path = get_menu_entry($request['path_info']))
 	{
 		$user = session('users');
+        $user['Privilage'] = 10;
 		$menu = $GLOBALS['menus'][$path];
 		$module = get_module($menu['module']);
 		if(isset($menu['template']))
@@ -151,7 +152,7 @@ function invoke_menu($request, $template = false)
 			// if there are dependency issues
 			elseif(!dependency($menu['module']) && !setting($menu['module'] . '_enable'))
 			{
-				raise_error('The selected module has dependencies that are not met! <a href="' . 
+				raise_error('The selected module has dependencies that are not met! <a href="' .
 					url('admin/module/' . $menu['module']) . '">Configure</a> this module.'
 				, E_DEBUG|E_USER);
 				

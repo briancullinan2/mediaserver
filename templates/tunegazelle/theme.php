@@ -272,7 +272,7 @@ function theme_tunegazelle_colors()
 	}
 
 	
-	<?
+	<?php
 }
 
 function __tunegazelle_css_footer()

@@ -171,10 +171,10 @@ function preload_error()
 			}
 		}
 	}
-	
+
 	/** Set the error handler to use our custom function for storing errors */
 	error_reporting(E_ALL);
-	
+
 	/** stores a list of all user errors */
 	$GLOBALS['user_errors'] = array();
 	/** stores a list of all warnings */
